@@ -457,6 +457,94 @@
       ],
       "chosen": "Only while work open",
       "decided": "2026-11-07"
+    },
+    {
+      "id": "D21",
+      "question": "B9: after a status change, mark-published refuses a copy older than the record until pending --refresh and a second publish. How to fix?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Refuse early, name steps",
+          "summary": "mark-published names the exact steps; the end-of-turn hook says to run pending after the last status change.",
+          "recommended": true
+        },
+        {
+          "label": "Status changes refresh copy",
+          "summary": "set-task-status and task-add rewrite the publish copy themselves."
+        },
+        {
+          "label": "Both",
+          "summary": "Refresh on every change and name the steps."
+        }
+      ],
+      "chosen": "Refuse early, name steps",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D22",
+      "question": "B10: --expected \"DD Mon HH:MM\" without ~ is refused (R6.6). What should happen?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Accept, store with ~",
+          "summary": "Accept the form without ~ and store it as \"DD Mon ~HH:MM\".",
+          "recommended": true
+        },
+        {
+          "label": "Accept, store as typed",
+          "summary": "Both forms valid in the record."
+        },
+        {
+          "label": "Keep refusing, better message",
+          "summary": "The error shows the corrected value."
+        }
+      ],
+      "chosen": "Accept, store with ~",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D23",
+      "question": "B12: task-add needs --expected even for a To do task with no schedule. What should change?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "To do may omit Expected",
+          "summary": "Optional for To do and On hold, shown as Not scheduled; required again from Running or Waiting.",
+          "recommended": true
+        },
+        {
+          "label": "Explicit --unscheduled flag",
+          "summary": "To do needs --expected or --unscheduled."
+        },
+        {
+          "label": "No change",
+          "summary": "Keep requiring a date."
+        }
+      ],
+      "chosen": "To do may omit Expected",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D24",
+      "question": "AR60: when the stop state write still fails after its retries, what should the hook do?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Warn and go on",
+          "summary": "Skip that write with a one-line warning; the next write catches up.",
+          "recommended": true
+        },
+        {
+          "label": "Raise as today",
+          "summary": "The hook errors on that call."
+        }
+      ],
+      "chosen": "Warn and go on",
+      "decided": "2026-11-07"
     }
   ]
 }

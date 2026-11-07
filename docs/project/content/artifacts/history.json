@@ -1,5 +1,9 @@
 [
   {
+    "date": "07 Nov 00:38",
+    "change": "AR62 item changed from \"Release AR60 AR61 (luismc-artifacts patch)\" to \"Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)\""
+  },
+  {
     "date": "01 Nov 22:45",
     "change": "RELEASE-30 live 22:44, CI green on 99ed7b3"
   },

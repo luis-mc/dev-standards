@@ -2450,6 +2450,189 @@
       "decided": "2026-11-06",
       "task": "DL89",
       "owner_words": "Guard + setup detect (Recommended)"
+    },
+    {
+      "id": "D108",
+      "question": "Bugs from a consuming project: who writes the fixes?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Cloud agents, pool local",
+          "summary": "Cloud agents for B5-B12; one local agent for the Docker pool bugs B1-B4.",
+          "recommended": true
+        },
+        {
+          "label": "All cloud",
+          "summary": "Cloud agents for everything; pool checks in CI only."
+        },
+        {
+          "label": "Session codes directly",
+          "summary": "The session fixes all of them itself."
+        }
+      ],
+      "chosen": "Cloud agents, pool local",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D109",
+      "question": "B1: compose.yaml requires RUNNER_SHA256 but the setup never writes it to the pool .env. Which fix?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Write to .env + doctor",
+          "summary": "Setup writes it; the doctor fails on any ${VAR:?} with no value.",
+          "recommended": true
+        },
+        {
+          "label": "Build-time only",
+          "summary": "Make it a build arg so a no-build up never needs it."
+        }
+      ],
+      "chosen": "Write to .env + doctor",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D110",
+      "question": "B2: a changed pool cap is written to .env but the container is never recreated. What should the step do?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Recreate when idle",
+          "summary": "Recreate when no job runs, else print the command as a by-hand step; the doctor compares docker inspect with .env.",
+          "recommended": true
+        },
+        {
+          "label": "Print command only",
+          "summary": "Always a by-hand step, plus the doctor check."
+        }
+      ],
+      "chosen": "Recreate when idle",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D111",
+      "question": "B3: what floor should the pool setup refuse to go below?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "4 GiB / 2 CPUs",
+          "summary": "Enough for an install and typecheck of a mid monorepo.",
+          "recommended": true
+        },
+        {
+          "label": "2 GiB / 1 CPU",
+          "summary": "Lower floor for small PCs."
+        },
+        {
+          "label": "8 GiB / 4 CPUs",
+          "summary": "Safe for browsers and e2e."
+        }
+      ],
+      "chosen": "4 GiB / 2 CPUs",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D112",
+      "question": "B6: how should DL-31 accept an ETA that waits on a person?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "\"~HH:MM if <action> by HH:MM\"",
+          "summary": "An assumed start named as such; past durations are not checked as ETAs.",
+          "recommended": true
+        },
+        {
+          "label": "\"<duration> after <action>\"",
+          "summary": "A duration with no clock time."
+        }
+      ],
+      "chosen": "\"~HH:MM if <action> by HH:MM\"",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D113",
+      "question": "B8: which branches should join cleanup skip?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Both guards",
+          "summary": "Skip branches newer than the join start and branches with a running agent in the ledger; list what was skipped.",
+          "recommended": true
+        },
+        {
+          "label": "Only ledger-running",
+          "summary": "Skip only branches with a running agent."
+        },
+        {
+          "label": "Only train branches",
+          "summary": "Delete only the train's own branches."
+        }
+      ],
+      "chosen": "Both guards",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D114",
+      "question": "B11: a routine created without mcp_connections gets every connector. What fix?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Template + hook refuses",
+          "summary": "The template sets no connectors in the create body; the launch hook refuses a create without it unless the brief names connectors.",
+          "recommended": true
+        },
+        {
+          "label": "Template only",
+          "summary": "No hook enforcement."
+        }
+      ],
+      "chosen": "Template + hook refuses",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D115",
+      "question": "B5: one cloud launch has a trigger id and a run session id. How to track it?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Link, one agent",
+          "summary": "Store the run id under its trigger; every command accepts either id.",
+          "recommended": true
+        },
+        {
+          "label": "Track only the run id",
+          "summary": "Drop the trigger id once the run id is known."
+        }
+      ],
+      "chosen": "Link, one agent",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D116",
+      "question": "B4 and B7: report a memory kill as such in ci_watch.py, and stop an older-version watcher at SessionStart?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, both as described",
+          "summary": "Ship both as written.",
+          "recommended": true
+        },
+        {
+          "label": "B4 only, B7 later",
+          "summary": "Hold B7."
+        }
+      ],
+      "chosen": "Yes, both as described",
+      "decided": "2026-11-07"
     }
   ]
 }

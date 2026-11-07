@@ -888,14 +888,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-06T10:29+00:00">06 Nov 10:29</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T00:39+00:00">07 Nov 00:39</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 00:28</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">31 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">10 tasks</span></summary>
+<ul>
+<li data-glance-task="DL92"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256 <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL93"><span class="task-id">DL93</span>B2 pool cap change applied <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL94"><span class="task-id">DL94</span>B3 pool sizing floor <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL95"><span class="task-id">DL95</span>B4 ci_watch reports memory kills <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL96"><span class="task-id">DL96</span>B5 one agent, two cloud ids <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL97"><span class="task-id">DL97</span>B6 DL-31 accepts a person-start ETA <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL98"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL99"><span class="task-id">DL99</span>B8 join.py keeps fresh agent branches <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL100"><span class="task-id">DL100</span>B11 cloud launch sets no connectors <span class="glance-expected">07 Nov ~02:15</span></li>
+<li data-glance-task="DL91"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery) <span class="glance-expected">07 Nov ~03:00</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">13 tasks</span></summary>
 <ul>
 <li data-glance-task="DL88"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</li>
 <li data-glance-task="DL89"><span class="task-id">DL89</span>DL89: e2e gate skips the Chromium download when one is preinstalled</li>
@@ -905,12 +919,26 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL87"><span class="task-id">DL87</span>DL87: per-agent TMPDIR and /tmp cleanup (bug 18)</li>
 <li data-glance-task="DL82"><span class="task-id">DL82</span><span class="release-name">RELEASE-56</span>RELEASE: pool parallelism per agent</li>
 <li data-glance-task="DL83"><span class="task-id">DL83</span>Pool: CI_MAX_PARALLEL split across agents; doctor warns on memory per agent</li>
-<li class="glance-more">and 23 more</li>
+<li class="glance-more">and 5 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">90</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">90</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">10</div><div class="label">tasks running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">10 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL92"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Setup writes it; doctor fails on any ${VAR:?} in compose.yaml with no value. D109. Local agent (Docker).</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL93"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL93</span>B2 pool cap change applied<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Recreate the pool when idle, else print the command; doctor compares docker inspect with .env. D110. Local agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL94"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL94</span>B3 pool sizing floor<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Find the 0.5g/1 CPU sizing cause; refuse caps below 4 GiB / 2 CPUs. D111. Local agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL95"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL95</span>B4 ci_watch reports memory kills<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Exit 137 or Killed reads as killed for memory with the live cap, not a stale lockfile; same for a 30-min Set up runner. D116. Local agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL96"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL96</span>B5 one agent, two cloud ids<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Link cse_ run id under its trig_; eta/done/last_checked on either id apply to both. D115. Cloud agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL97"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL97</span>B6 DL-31 accepts a person-start ETA<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Accept ~HH:MM if &lt;action&gt; by HH:MM; past durations not checked. D112. Cloud agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL98"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL98</span>B7 SessionStart replaces an old watcher<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Stop a delivery_watch from an older plugin version and start the newest. D116. Cloud agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL99"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL99</span>B8 join.py keeps fresh agent branches<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Skip branches newer than the join start or with a running agent; list skipped. D113. Cloud agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL100"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL100</span>B11 cloud launch sets no connectors<span class="release-line"><span class="release-name">RELEASE-60</span></span></td><td data-label="Detail">Template create body clears connectors; launch hook refuses a create without it unless the brief names connectors. D114. Cloud agent.</td><td data-label="Expected">07 Nov ~02:15</td></tr>
+<tr data-task="DL91"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL91</span><span class="release-name">RELEASE-60</span>Release delivery bug fixes B1-B8 B11 (luismc-delivery)</td><td data-label="Detail">Three agents (one local for the Docker pool, two cloud), light join on main, CI, install, cleanup, message the reporting session.</td><td data-label="Expected">07 Nov ~03:00</td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">90 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL88"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</td><td data-label="Detail">Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message moobable.</td><td data-label="Expected">06 Nov</td></tr>
@@ -1038,6 +1066,144 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D116">
+<h3 class="decision-head"><span class="decision-id">D116</span> <span class="decision-question">B4 and B7: report a memory kill as such in ci_watch.py, and stop an older-version watcher at SessionStart?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, both as described</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Ship both as written.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">B4 only, B7 later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hold B7.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D115">
+<h3 class="decision-head"><span class="decision-id">D115</span> <span class="decision-question">B5: one cloud launch has a trigger id and a run session id. How to track it?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Link, one agent</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Store the run id under its trigger; every command accepts either id.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Track only the run id</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Drop the trigger id once the run id is known.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D114">
+<h3 class="decision-head"><span class="decision-id">D114</span> <span class="decision-question">B11: a routine created without mcp_connections gets every connector. What fix?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Template + hook refuses</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">The template sets no connectors in the create body; the launch hook refuses a create without it unless the brief names connectors.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Template only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No hook enforcement.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D113">
+<h3 class="decision-head"><span class="decision-id">D113</span> <span class="decision-question">B8: which branches should join cleanup skip?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both guards</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Skip branches newer than the join start and branches with a running agent in the ledger; list what was skipped.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only ledger-running</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Skip only branches with a running agent.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only train branches</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete only the train&#x27;s own branches.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D112">
+<h3 class="decision-head"><span class="decision-id">D112</span> <span class="decision-question">B6: how should DL-31 accept an ETA that waits on a person?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">&quot;~HH:MM if &lt;action&gt; by HH:MM&quot;</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">An assumed start named as such; past durations are not checked as ETAs.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">&quot;&lt;duration&gt; after &lt;action&gt;&quot;</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A duration with no clock time.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D111">
+<h3 class="decision-head"><span class="decision-id">D111</span> <span class="decision-question">B3: what floor should the pool setup refuse to go below?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">4 GiB / 2 CPUs</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Enough for an install and typecheck of a mid monorepo.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">2 GiB / 1 CPU</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Lower floor for small PCs.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">8 GiB / 4 CPUs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Safe for browsers and e2e.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D110">
+<h3 class="decision-head"><span class="decision-id">D110</span> <span class="decision-question">B2: a changed pool cap is written to .env but the container is never recreated. What should the step do?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Recreate when idle</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Recreate when no job runs, else print the command as a by-hand step; the doctor compares docker inspect with .env.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Print command only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Always a by-hand step, plus the doctor check.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D109">
+<h3 class="decision-head"><span class="decision-id">D109</span> <span class="decision-question">B1: compose.yaml requires RUNNER_SHA256 but the setup never writes it to the pool .env. Which fix?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Write to .env + doctor</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Setup writes it; the doctor fails on any ${VAR:?} with no value.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build-time only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Make it a build arg so a no-build up never needs it.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D108">
+<h3 class="decision-head"><span class="decision-id">D108</span> <span class="decision-question">Bugs from a consuming project: who writes the fixes?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Cloud agents, pool local</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Cloud agents for B5-B12; one local agent for the Docker pool bugs B1-B4.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">All cloud</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Cloud agents for everything; pool checks in CI only.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Session codes directly</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The session fixes all of them itself.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D107">
 <h3 class="decision-head"><span class="decision-id">D107</span> <span class="decision-question">Bug 19: the TS e2e gate step always downloads Chromium, which cloud sandboxes block. How should the template skip the download?</span></h3>
 <p class="decision-meta">Asked 06 Nov · Decided 06 Nov · Task DL89</p>

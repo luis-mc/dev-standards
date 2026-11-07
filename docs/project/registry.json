@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T00:37+00:00",
+  "updated": "2026-11-07T00:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -625,29 +625,69 @@
       "owner": "artifacts",
       "app": "luismc-artifacts",
       "status": "Running",
-      "item": "Release AR60 AR61 (luismc-artifacts patch)",
+      "item": "Release AR60 AR61 B9 B10 B12 (luismc-artifacts patch)",
       "detail": "Fixes on main by the session, touched suites, fold, push, CI on main, install the plugin, delete the temp files.",
-      "expected": "07 Nov ~01:40",
-      "changed": "2026-11-07T00:19+00:00",
+      "expected": "07 Nov ~02:30",
+      "changed": "2026-11-07T00:38+00:00",
       "release": 59,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-07T00:20+00:00",
-          "end": "2026-11-07T00:50+00:00"
+          "start": "2026-11-07T00:45+00:00",
+          "end": "2026-11-07T01:50+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-07T01:50+00:00",
+          "end": "2026-11-07T02:00+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-07T00:50+00:00",
-          "end": "2026-11-07T01:20+00:00"
-        },
-        {
-          "name": "merge",
-          "start": "2026-11-07T01:20+00:00",
-          "end": "2026-11-07T01:40+00:00"
+          "start": "2026-11-07T02:00+00:00",
+          "end": "2026-11-07T02:30+00:00"
         }
       ],
-      "started": "2026-11-07T00:19+00:00"
+      "started": "2026-11-07T00:19+00:00",
+      "risk": {
+        "label": "agent retry",
+        "minutes": 40
+      }
+    },
+    {
+      "id": "AR63",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "B9 mark-published names the publish steps",
+      "detail": "Refusal names pending --json --refresh, publish, mark again; end-of-turn hook says to run pending after the last status change. Decision D21. Cloud agent.",
+      "expected": "07 Nov ~01:50",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "AR62",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "AR64",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "B10 --expected accepts DD Mon HH:MM",
+      "detail": "Accepted and stored as DD Mon ~HH:MM; R6.6 updated. Decision D22. Cloud agent.",
+      "expected": "07 Nov ~01:50",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "AR62",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "AR65",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "B12 To do without Expected",
+      "detail": "Expected optional for To do and On hold (Not scheduled), required from Running or Waiting. Decision D23. Cloud agent.",
+      "expected": "07 Nov ~01:50",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "AR62",
+      "started": "2026-11-07T00:38+00:00"
     },
     {
       "id": "DL1",
@@ -1970,6 +2010,147 @@
       "changed": "2026-11-06T10:29+00:00",
       "rides": "DL88",
       "started": "2026-11-06T09:32+00:00"
+    },
+    {
+      "id": "DL91",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "Release delivery bug fixes B1-B8 B11 (luismc-delivery)",
+      "detail": "Three agents (one local for the Docker pool, two cloud), light join on main, CI, install, cleanup, message the reporting session.",
+      "expected": "07 Nov ~03:00",
+      "changed": "2026-11-07T00:38+00:00",
+      "release": 60,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-07T00:50+00:00",
+          "end": "2026-11-07T02:15+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-07T02:15+00:00",
+          "end": "2026-11-07T02:30+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-07T02:30+00:00",
+          "end": "2026-11-07T03:00+00:00"
+        }
+      ],
+      "risk": {
+        "label": "agent retry",
+        "minutes": 40
+      },
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL92",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B1 pool .env gets RUNNER_SHA256",
+      "detail": "Setup writes it; doctor fails on any ${VAR:?} in compose.yaml with no value. D109. Local agent (Docker).",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL93",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B2 pool cap change applied",
+      "detail": "Recreate the pool when idle, else print the command; doctor compares docker inspect with .env. D110. Local agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL94",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B3 pool sizing floor",
+      "detail": "Find the 0.5g/1 CPU sizing cause; refuse caps below 4 GiB / 2 CPUs. D111. Local agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL95",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B4 ci_watch reports memory kills",
+      "detail": "Exit 137 or Killed reads as killed for memory with the live cap, not a stale lockfile; same for a 30-min Set up runner. D116. Local agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL96",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B5 one agent, two cloud ids",
+      "detail": "Link cse_ run id under its trig_; eta/done/last_checked on either id apply to both. D115. Cloud agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL97",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B6 DL-31 accepts a person-start ETA",
+      "detail": "Accept ~HH:MM if <action> by HH:MM; past durations not checked. D112. Cloud agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL98",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B7 SessionStart replaces an old watcher",
+      "detail": "Stop a delivery_watch from an older plugin version and start the newest. D116. Cloud agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:38+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "DL99",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B8 join.py keeps fresh agent branches",
+      "detail": "Skip branches newer than the join start or with a running agent; list skipped. D113. Cloud agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:39+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:39+00:00"
+    },
+    {
+      "id": "DL100",
+      "owner": "delivery-speed",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "B11 cloud launch sets no connectors",
+      "detail": "Template create body clears connectors; launch hook refuses a create without it unless the brief names connectors. D114. Cloud agent.",
+      "expected": "07 Nov ~02:15",
+      "changed": "2026-11-07T00:39+00:00",
+      "rides": "DL91",
+      "started": "2026-11-07T00:39+00:00"
     },
     {
       "id": "DS1",
