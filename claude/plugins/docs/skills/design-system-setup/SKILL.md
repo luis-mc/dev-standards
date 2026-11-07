@@ -13,7 +13,7 @@ Runs `scripts/design_system.py` from the `luismc-docs` plugin (DOCSPEC section 1
 
 This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
 
-1. **Plan first.** Run `status` and `styles`, then show one plan: the folders and files `init` will create under `docs/design-system/` and `scripts/design/` (with paths), the starter tokens it may replace with the project's own values, the test runner file it will edit to include the guard tests, that nothing is written outside the repository, for a project with a numbered version (`v1` or later) the enforcement kit (below), included by default, with the owner's choice to decline it; the app and shared UI folders you will write to `.delivery/config.json` (`design_system.app_paths`, `design_system.shared_paths`), asked in the same plan; the marked checklist block `brief` will write into `AGENTS.md` and `.github/pull_request_template.md`; what needs the owner (a yes, the choice to use the found style values, the approval of a version) and about how long it takes (a few minutes). Ask for one yes.
+1. **Plan first.** Run `status` and `styles`, then show one plan: the folders and files `init` will create under `docs/design-system/` and `scripts/design/` (with paths), the starter tokens it may replace with the project's own values, the test runner file it will edit to include the guard tests, that nothing is written outside the repository, for a project with a numbered version (`v1` or later) the enforcement kit (below), included by default, with the owner's choice to decline it; the app and shared UI folders you will write to `.delivery/config.json` (`design_system.app_paths`, `design_system.shared_paths`), asked in the same plan; the marked checklist block `brief` will write into `AGENTS.md` and `.github/pull_request_template.md`; for a React and TypeScript project whose screens enter dates, times or numbers, the optional shared component templates (below) as one line with the choice of components and folder; what needs the owner (a yes, the choice to use the found style values, the approval of a version) and about how long it takes (a few minutes). Ask for one yes.
 2. **Do the heavy lifting.** After the yes, run these yourself: `init --apply`, `guards --apply`, the `CONFIG` edit at the top of `design-system-follow.test.ts` (source roots, extensions, token files, taken from the `styles` output), the edit that makes the test runner include `scripts/design/*.test.ts`, `visuals`, `check`, `brief --apply` (idempotent: it writes the checklist as a marked block and refreshes it on a rerun) and, when the kit is in the plan, the kit steps below. Leave to the owner only what you cannot do: approving a version (`promote`, `approve-implementation`), which needs their date and evidence, and the commit and push. Give each an exact step and check it afterwards.
 3. **One line per step.** While it runs, print one line per step: what you are doing, then done, or failed with the reason and the fix.
 4. **Finish with three parts.** **Done** (what changed, with paths). **Left for you** (numbered, exact steps: how to open `next-version/review-visuals/index.html`, what to look at, the `promote` command with the approval words). **What you can do now**: `design_system.py status` (see versions and approvals), `design_system.py visuals` (rebuild the gallery after a token change), `design_system.py check` (run the DS1-DS5 findings), the guard tests (run them with the project's test runner), and `promote` once the owner approves. Give each one line with an example.
@@ -26,6 +26,7 @@ python3 "$S" styles                        # read-only: style files and CSS cust
 python3 "$S" guards --apply                # guard tests into scripts/design/ (--stack typescript-vitest, --dest DIR)
 python3 "$S" visuals                       # rebuild next-version/review-visuals/index.html: offline gallery with drawn swatches, contrast and every component (the session-start and stop hooks now do this when it is stale; running it by hand still works)
 python3 "$S" check                         # DS1-DS5 findings (DS4 also flags a gallery from an older script); docs_check.py runs the same
+python3 "$S" components --apply            # opt-in: DatePicker, TimePicker, NumberKeypad (React + TypeScript) into src/ui/pickers, with their components.md sections (--only, --dest)
 python3 "$S" brief --apply                 # UI brief checklist as a marked block in AGENTS.md and .github/pull_request_template.md; rerun refreshes it
 python3 "$S" status                        # versions, the enforced one, approvals
 python3 "$S" promote --approved-by owner --approved-on 2026-11-02 --evidence "chat, 2026-11-02"   # dry run; add --apply
@@ -72,6 +73,18 @@ Then:
 - The known lists get entries only in this install change. After it, a diff that adds or raises one fails `change_notes.py check`.
 
 Never import another project's known lists.
+
+## Shared component templates (opt-in)
+
+**Stack: React and TypeScript, web only.** For another stack, say there are no templates and leave them out.
+
+Three shared components a project can take instead of building its own (DOCSPEC R15.10): `DatePicker` (a month grid with month and year selects and a typed entry; no keypad for dates), `TimePicker` (`units` `h`, `hm` or `hms`; 24-hour by default, 12-hour by locale) and `NumberKeypad` (counts, measures and codes only). Each is built from the `--ds-*` tokens only, is keyboard and screen-reader ready, keeps touch targets at 44 px or more, and ships with unit tests for keyboard, value and limits.
+
+- **When to offer.** Put them in the plan as one optional line when the owner asks for pickers or a keypad, or when the project's screens enter dates, times or numbers. Ask which of the three, and the folder of the shared UI (default `src/ui/pickers`). The owner may decline; then nothing is copied.
+- **Install.** `components --only <names> --dest <folder> --apply`. It never overwrites a file. It adds one numbered section per component to `next-version/components.md` (before "How to add a component") with one `CHANGES.md` entry, and rebuilds the gallery. A rerun adds nothing.
+- **Then, yourself:** add `picker-base.css` and each component's CSS to the shared UI stylesheet; export the components; add `vitest`, `jsdom`, `react` and `react-dom` to the shared UI package's dev dependencies when missing; run the copied tests. If the project's token names differ from `--ds-*`, rename the `var(--ds-...)` uses in the copied CSS once.
+- **Words.** Each section lists its words for `content.md`. Add them there; the components take them through their `labels` prop.
+- The template folder's `README.md` (`templates/design-system/components/react-typescript/`) has the file list and the props.
 
 ## Existing design system elsewhere
 
