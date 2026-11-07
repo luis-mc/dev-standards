@@ -356,7 +356,8 @@ def build_stale_reason(script, stale):
     py = 'python "%s"' % script
     return ('Full Progress must be published again: %s. Finish this in the same turn: run %s pending --json --refresh, '
             'publish the file it names with the Artifact tool, unedited, then run %s mark-published full-progress '
-            '--url <the artifact URL>.' % ('; '.join(stale), py, py))
+            '--url <the artifact URL>. Make every status change first, then run pending, then publish, so the copy is never older '
+            'than the record.' % ('; '.join(stale), py, py))
 
 
 def build_overdue_reason(script, overdue):

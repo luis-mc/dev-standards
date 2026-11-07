@@ -92,6 +92,7 @@ def shown_item(task) -> str:
 def _release_span(task) -> str:
     return '<span class="release-name">%s</span>' % release_name(task)
 
+NOT_SCHEDULED = 'Not scheduled'
 EXPECTED_RE = re.compile(
     r'^(0[1-9]|[12]\d|3[01]) (' + '|'.join(MONTHS) + r')(?: ~([01]\d|2[0-3]):([0-5]\d))?(?:; \S.*)?$')
 STAMP_TEXT_RE = re.compile(r'^(\d{2}) (' + '|'.join(MONTHS) + r') (\d{2}):(\d{2})$')
@@ -825,7 +826,7 @@ def _id_key(task):
 
 
 def _soonest(task, ref):
-    moment = _expected_datetime(task['expected'], ref)
+    moment = _expected_datetime(task.get('expected', ''), ref)
     return (1, datetime.max) if moment is None else (0, moment)
 
 
@@ -882,7 +883,7 @@ def status_groups(tasks: list, ref: datetime, kind: str) -> list:
         mine = [t for t in tasks if t['status'] in statuses]
         if gkey == 'now':
             def when(task):
-                moment = _expected_datetime(task['expected'], ref)
+                moment = _expected_datetime(task.get('expected', ''), ref)
                 return (1, datetime.max) if moment is None else (0, moment)
             mine = sorted(mine, key=when)
         elif gkey == 'you':
@@ -959,7 +960,7 @@ def glance_groups(tasks: list, decisions, ref: datetime) -> list:
         return sorted(items, key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)
 
     def soonest(task):
-        moment = _expected_datetime(task['expected'], ref)
+        moment = _expected_datetime(task.get('expected', ''), ref)
         return (1, datetime.max) if moment is None else (0, moment)
 
     out = []
@@ -1154,7 +1155,7 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
     if task['status'] == 'Dropped':      # R5.49: why a dropped row was closed, in a muted line under the Item
         item += '<span class="dropped-line">%s</span>' % esc(dropped_line(task, by_id))
     app = '<td data-label="App / service">%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
-    expected = esc(task['expected'])
+    expected = esc(task.get('expected') or NOT_SCHEDULED)     # R6.6: an empty Expected on To do / On hold
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
         expected += '<span class="expected-basis">%s</span>' % esc(task['expected_basis'])
     return '<tr data-task="%s"><td data-label="Status">%s</td><td data-label="Item">%s</td>%s<td data-label="Detail">%s</td><td data-label="Expected">%s</td></tr>' % (
@@ -2577,6 +2578,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
     # R6.6 Expected on open rows
     for row in rows:
         if row['status'] in OPEN_STATUSES:
+            if row['status'] in ('To do', 'On hold') and row['expected'] == NOT_SCHEDULED:
+                continue
             if not EXPECTED_RE.match(row['expected']) or _expected_datetime(row['expected'], ref) is None:
                 add('R6.6', 'task %s is %s and its Expected %r is not "DD Mon" or "DD Mon ~HH:MM" (optionally "; note")'
                     % (row['id'], row['status'], row['expected']))
@@ -2595,7 +2598,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             continue
         row = seen[tid][0]
         pairs = [('status', task.get('status'), row['status']), ('item', _norm(shown_item(task)), row['item']),
-                 ('detail', _norm(task.get('detail', '')), row['detail']), ('expected', _norm(task.get('expected', '')), row['expected'])]
+                 ('detail', _norm(task.get('detail', '')), row['detail']), ('expected', _norm(task.get('expected') or NOT_SCHEDULED), row['expected'])]
         if kind == 'full-progress':
             pairs.append(('app', _norm(task.get('app', '')), row['app']))
         for field, want, have in pairs:

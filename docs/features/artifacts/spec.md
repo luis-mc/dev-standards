@@ -124,6 +124,10 @@ flowchart LR
 
 **R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
 
+**R5.11b** — `--expected` takes `DD Mon HH:MM` as well as `DD Mon ~HH:MM`, and stores the second form. Expected is optional on a To do or On hold row and shows as `Not scheduled`; Running and Waiting need one.
+
+**R5.11c** — When `mark-published` refuses a stale copy, it names the steps in order: `pending --json --refresh`, publish the copy unedited, `mark-published` again. The end-of-turn hook says to make every status change before running `pending`.
+
 **R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
 
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
