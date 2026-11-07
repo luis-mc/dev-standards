@@ -162,7 +162,7 @@ class Probe:
         """{'pool': GiB used by this pool's containers, 'other': GiB used by other containers, 'others': [names]}.
         Reads `docker ps` and `docker stats` (inside WSL on Windows). Zeros when Docker cannot be read."""
         pre = ['wsl'] if self.platform.startswith('win') else []
-        names = self.sh(pre + ['docker', 'ps', '--format', '{{.Names}}\t{{.Label "' + LABEL + '"}}'])
+        names = self.sh(pre + ['docker', 'ps', '--format', '{{.Names}}\t{{.Label "' + LABEL + '"}}\t{{.Label "com.docker.compose.project"}}'])
         stats = self.sh(pre + ['docker', 'stats', '--no-stream', '--format', '{{.Name}}\t{{.MemUsage}}'])
         out = {'pool': 0.0, 'other': 0.0, 'others': []}
         if not names or names[0] != 0:
@@ -171,7 +171,8 @@ class Probe:
         for line in names[1].replace('\x00', '').splitlines():
             cols = line.rstrip('\r').split('\t')
             if cols and cols[0]:
-                mine[cols[0]] = len(cols) > 1 and cols[1].strip() != ''
+                # DL94: the pool's db container has no label; its compose project (pool-<name>) says it is the pool's.
+                mine[cols[0]] = (len(cols) > 1 and cols[1].strip() != '') or (len(cols) > 2 and cols[2].strip().startswith('pool-'))
         used = {}
         for line in (stats[1].replace('\x00', '') if stats and stats[0] == 0 else '').splitlines():
             cols = line.rstrip('\r').split('\t')
@@ -363,6 +364,7 @@ def docker_ncpu(probe):
 
 MIN_GIB_PER_CPU = 1.5  # DL79: a pool CPU gets at least this much memory (hosted runners have about 4 GiB per core)
 WARN_GIB_PER_CPU = 1.0  # the doctor warns below this
+MIN_POOL_GIB, MIN_POOL_CPUS = 4.0, 2.0  # DL94: the setup refuses a cap below this
 WARN_GIB_PER_AGENT = 4.0  # DL83: the doctor warns when POOL_MEM over the agent count is below this
 
 
@@ -392,6 +394,10 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
     room = total_gib * MEM_PCT / 100.0 - used_gib
     ceiling = room if docker_gib is None else min(room, docker_gib - (other_gib if others_run else 0.0))
     mem = math.floor((ceiling - sidecar_gib - vm_gib) * 2) / 2.0
+    # DL94: a low WSL ceiling (an earlier run wrote it, or the file is old) must not shrink the pool: the setup raises the ceiling
+    # in .wslconfig. Size up to the floor when the machine has the room.
+    if mem < MIN_POOL_GIB <= math.floor((room - sidecar_gib - vm_gib) * 2) / 2.0:
+        mem = MIN_POOL_GIB
     cpu = max(1.0, math.floor(cpus * CPU_PCT / 100.0 * 2) / 2.0)
     host_cpus = int(cpus)
     procs = int(math.floor(cpu)) + 1  # headroom: Docker refuses a CPU limit equal to the VM's CPUs
@@ -416,6 +422,12 @@ def sizing(total_gib, used_gib, cpus, docker_gib=None, largest_shard_gib=None, s
         out.update(ok=False, message='The pool cap (%.1f GiB) is below the largest Linux shard (%.1f GiB). Lower that '
                                      'shard\'s memory_gib in ci-shards.json, or free memory on this machine.'
                                      % (mem, largest_shard_gib))
+    elif 0 < mem and (mem < MIN_POOL_GIB or cpu < MIN_POOL_CPUS):
+        out.update(ok=False, message='The pool cap would be %g GiB and %g CPUs, below the floor of %g GiB and %g CPUs: a frozen '
+                                     'install is killed for memory under it. This machine needs about %g GiB of free memory '
+                                     '(the pool also leaves 2 GiB for the sidecar and the VM) and at least %d CPUs for Docker. '
+                                     'Close other programs and run the setup again.'
+                                     % (mem, cpu, MIN_POOL_GIB, MIN_POOL_CPUS, MIN_POOL_GIB + 2, MIN_POOL_CPUS + 1))
     return out
 
 
@@ -914,7 +926,7 @@ def copy_lf(src, dst):
 
 
 def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none',
-                     playwright_version=None):
+                     playwright_version=None, runner_sha256=None):
     """Write the pool folder. `.env` holds the cap and the machine dir only (D42); the database password is a 0600 file."""
     dest = dest or pool_dir(pool)
     os.makedirs(dest, exist_ok=True)
@@ -941,6 +953,10 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, 
             pool, (cap or {}).get('cpus', 1), (cap or {}).get('mem_gib', 4), os.path.dirname(os.path.dirname(dest)),
             runner_version or RUNNER_VERSION, browsers if browsers in BROWSERS else 'none',
             playwright_version if valid_playwright_version(playwright_version) else PLAYWRIGHT_VERSION))
+        # DL92: compose.yaml requires RUNNER_SHA256, so `docker compose up --no-build` needs it in .env too.
+        sha = runner_sha256 or (RUNNER_SHA256 if (runner_version or RUNNER_VERSION) == RUNNER_VERSION else None)
+        if sha:
+            f.write('RUNNER_SHA256=%s\n' % sha)
     agents = os.path.join(dest, 'agents.json')
     if not os.path.exists(agents):
         with open(agents, 'w', encoding='utf-8') as f:
@@ -951,6 +967,24 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, 
         with os.fdopen(fd, 'w', encoding='utf-8') as f:
             f.write(secrets.token_urlsafe(24))
     return dest
+
+
+def recreate_command(pool):
+    return 'docker compose up -d --no-build --force-recreate pool'
+
+
+def live_cap(probe, pool):
+    """DL93: (memory bytes, nano CPUs) of the running pool container from `docker inspect`, or None when it cannot be read."""
+    r = probe.sh(['docker', 'inspect', '--format', '{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}}', 'pool-%s-pool-1' % pool])
+    parts = r[1].split() if r and r[0] == 0 else []
+    if len(parts) == 2 and all(x.isdigit() for x in parts):
+        return int(parts[0]), int(parts[1])
+    return None
+
+
+def compose_required_vars(compose):
+    """DL92: the names in every ${VAR:?message} of a compose file."""
+    return sorted(set(re.findall(r'\$\{([A-Za-z_][A-Za-z0-9_]*):\?', compose or '')))
 
 
 class Executor:
@@ -1037,23 +1071,47 @@ class Executor:
         return True, 'wrote the hook scripts to %s (python %s)' % (dest, py)
 
     def do_pool_files(self, step):
-        version, _sha, source = resolve_runner(self.probe)
+        version, sha, source = resolve_runner(self.probe)
         cap = dict(step.get('cap') or {})
         if cap.get('cpus') is not None:
             cap['cpus'] = cap_cpus(cap['cpus'], docker_ncpu(self.probe))
             cap['cpus'] = cap_mem_cpus(cap['cpus'], cap.get('mem_gib'))
+        old = read_pool_env(self.probe, step['pool'])
         dest = write_pool_files(step['pool'], cap, runner_version=version, browsers=step.get('browsers') or 'none',
-                                playwright_version=step.get('playwright_version'))
+                                playwright_version=step.get('playwright_version'), runner_sha256=sha)
         text = 'wrote %s (runner %s, %s)' % (dest, version, source)
+        text += self.apply_cap(step['pool'], old, read_pool_env(self.probe, step['pool']))
         if step.get('browsers') == 'chromium':
             text += '; Playwright %s' % (step.get('playwright_version') or PLAYWRIGHT_VERSION)
         return True, text
+
+    def runners_busy(self):
+        """DL93: True when a runner has a job, or when that cannot be told (treated as busy)."""
+        found = detect_github(self.probe)
+        if found.get('error') or not found.get('repos'):
+            return True
+        return any(x['busy'] for r in found['repos'] for x in r['runners']) or any(r.get('error') for r in found['repos'])
+
+    def apply_cap(self, pool, old, new):
+        """DL93: a changed cap in .env reaches the container only when it is recreated. Do it when no job runs; else say how."""
+        if not old.get('POOL_MEM') or all(old.get(k) == new.get(k) for k in ('POOL_MEM', 'POOL_CPUS')):
+            return ''
+        cmd = recreate_command(pool)
+        if self.runners_busy():
+            return ('. The cap changed but a job may run (or the runners cannot be read), so the pool was not recreated. '
+                    'By hand: cd %s && %s' % (pool_dir(pool), cmd))
+        p = subprocess.run(cmd.split(), cwd=pool_dir(pool), capture_output=True, text=True)
+        if p.returncode == 0:
+            return '. The cap changed (%s/%s -> %s/%s); the pool was recreated' % (
+                old.get('POOL_MEM'), old.get('POOL_CPUS'), new.get('POOL_MEM'), new.get('POOL_CPUS'))
+        return '. The cap changed but the recreate failed (%s). By hand: cd %s && %s' % (
+            p.stderr.strip()[-200:] or 'docker compose failed', pool_dir(pool), cmd)
 
     def do_pool_up(self, step):
         version = read_pool_env(self.probe, step['pool']).get('RUNNER_VERSION') or RUNNER_VERSION
         if below_floor(version):
             return False, below_floor(version)
-        sha = runner_sha(self.probe, version)
+        sha = read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256') or runner_sha(self.probe, version)
         if not sha:
             return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
         browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
@@ -1228,6 +1286,12 @@ def doctor_checks(root=None, probe=None):
             out.append({'id': 'pool.%s.%s' % (n, name), 'status': status, 'detail': detail})
         add('socket', 'fail' if 'docker.sock' in compose else 'ok',
             'the Docker socket is mounted in the pool' if 'docker.sock' in compose else 'no Docker socket in the pool')
+        env_has = {l.split('=', 1)[0].strip() for l in env.splitlines()
+                   if '=' in l and not l.lstrip().startswith('#') and l.split('=', 1)[1].strip()}
+        missing = [v for v in compose_required_vars(compose) if v not in env_has]
+        add('required-vars', 'fail' if missing else 'ok',
+            ('compose.yaml requires %s but .env has no value for it, so `docker compose up` fails. Run the setup again.'
+             % ', '.join(missing)) if missing else 'every required variable of compose.yaml is in .env')
         has_cap = 'POOL_CPUS=' in env and 'POOL_MEM=' in env
         add('cap', 'ok' if has_cap else 'fail', 'cap set in .env' if has_cap else '.env has no POOL_CPUS and POOL_MEM')
         env_vals = dict(l.split('=', 1) for l in env.splitlines() if '=' in l and not l.startswith('#'))
@@ -1261,6 +1325,19 @@ def doctor_checks(root=None, probe=None):
             pub = [a.get('repo') for a in agents if a.get('private') is not True]
             add('private', 'fail' if pub else 'ok', 'agent for a repository not recorded private: %s' % ', '.join(map(str, pub))
                 if pub else 'every agent\'s repository is private')
+        live = live_cap(probe, n) if has_cap else None
+        if live is not None:
+            try:
+                want_mem = float(str(env_vals.get('POOL_MEM', '')).strip().rstrip('gG')) * 2 ** 30
+                want_cpu = float(str(env_vals.get('POOL_CPUS', '')).strip())
+            except ValueError:
+                want_mem = want_cpu = None
+            if want_mem is not None:
+                bad = abs(live[0] - want_mem) > 1024 * 1024 or abs(live[1] - want_cpu * 1e9) > 1e6
+                add('live-cap', 'fail' if bad else 'ok',
+                    ('the running container has %.2f GiB and %.2f CPUs but .env says POOL_MEM %s and POOL_CPUS %s. Recreate it: cd %s && %s'
+                     % (live[0] / 2 ** 30, live[1] / 1e9, env_vals['POOL_MEM'].strip(), env_vals['POOL_CPUS'].strip(), d,
+                        recreate_command(n))) if bad else 'the running container matches the cap in .env')
         r = probe.sh(['docker', 'ps', '--filter', 'label=' + LABEL, '--format', '{{.Names}}'])
         if r is None or r[0] != 0:
             add('running', 'warn', 'docker cannot be read here')

@@ -193,6 +193,7 @@ def load(root) -> dict:
     base = empty_ledger()
     for key, value in base.items():
         data.setdefault(key, value)
+    merge_agent_rows(data)        # DL96: a ledger that holds both ids as two agents reads as one
     return data
 
 
@@ -363,32 +364,83 @@ def update(root, fn, **lock_kw) -> dict:
         return led
 
 
+def plugin_version() -> str:
+    """The installed plugin's version (from its plugin.json next to these scripts); '' when unreadable."""
+    try:
+        meta = json.loads((Path(__file__).resolve().parent.parent / ".claude-plugin" / "plugin.json").read_text(encoding="utf-8"))
+        return str(meta.get("version") or "")
+    except (OSError, ValueError, AttributeError):
+        return ""
+
+
+def version_key(text) -> tuple:
+    """'1.11.0' -> (1, 11, 0); anything unreadable -> () which sorts before every real version."""
+    try:
+        return tuple(int(x) for x in str(text).strip().split("."))
+    except ValueError:
+        return ()
+
+
+def agent_ids(row: dict) -> list:
+    """Every id one agent entry answers to: its id, `trigger_id`, `run_ids` and the older `alt_ids`."""
+    out = []
+    for value in [row.get("id"), row.get("trigger_id")] + list(row.get("run_ids") or []) + list(row.get("alt_ids") or []):
+        if isinstance(value, str) and value and value not in out:
+            out.append(value)
+    return out
+
+
+def link_run_id(row: dict, run_id) -> bool:
+    """DL96: store another id (a cse_ run of a trig_ launch) on the same entry. True when it was new."""
+    if not isinstance(run_id, str) or not run_id or run_id in agent_ids(row):
+        return False
+    row["run_ids"] = list(row.get("run_ids") or []) + [run_id]
+    return True
+
+
+def find_agent(led: dict, key, open_only: bool = False):
+    """The one agent entry that answers to `key` (any of its ids, or its task)."""
+    for a in led.get("agents") or []:
+        if isinstance(a, dict) and (not open_only or a.get("state") not in _AGENT_DONE) and _agent_matches(a, key):
+            return a
+    return None
+
+
 def merge_agent_rows(led: dict) -> int:
-    """DL52: one launch can leave two rows, the routine id (trig_...) and the run session id (cse_...), for the
-    same task and branch. Merge them into the first row; the other id is kept in `alt_ids`. Returns rows merged."""
+    """DL52/DL96: one launch can leave two rows, the routine id (trig_...) and the run session id (cse_...).
+    They are one agent when they share a task and branch, or when one names the other's id (`trigger_id`,
+    `run_ids`). Merge into the first row; the other ids go to `run_ids`. Returns rows merged."""
     rows = led.get("agents")
     if not isinstance(rows, list):
         return 0
     kept, merged = [], 0
     for row in rows:
         twin = None
-        if isinstance(row, dict) and row.get("task") and row.get("branch"):
+        if isinstance(row, dict):
+            mine = set(agent_ids(row))
             for other in kept:
-                if (isinstance(other, dict) and other.get("task") == row["task"] and other.get("branch") == row["branch"]
-                        and {_id_kind(other.get("id")), _id_kind(row.get("id"))} == {"trig", "cse"}):
+                if not isinstance(other, dict):
+                    continue
+                linked = bool(mine & set(agent_ids(other)))
+                same = bool(row.get("task") and row.get("branch") and other.get("task") == row["task"]
+                            and other.get("branch") == row["branch"]
+                            and {_id_kind(other.get("id")), _id_kind(row.get("id"))} == {"trig", "cse"})
+                if linked or same:
                     twin = other
                     break
         if twin is None:
             kept.append(row)
             continue
         for key, value in row.items():
-            if twin.get(key) in (None, "", [], {}) and value not in (None, "", [], {}):
+            if key not in ("run_ids", "alt_ids") and twin.get(key) in (None, "", [], {}) and value not in (None, "", [], {}):
                 twin[key] = value
-        alt = list(twin.get("alt_ids") or [])
-        if row.get("id") and row["id"] != twin.get("id") and row["id"] not in alt:
-            alt.append(row["id"])
-        twin["alt_ids"] = alt
+        for value in agent_ids(row):
+            link_run_id(twin, value)
         merged += 1
+    for row in kept:
+        if isinstance(row, dict) and row.get("alt_ids"):       # migrate the older field
+            for value in row.pop("alt_ids"):
+                link_run_id(row, value)
     if merged:
         led["agents"] = kept
     return merged
@@ -400,7 +452,7 @@ def _id_kind(value) -> str:
 
 
 def _agent_matches(a: dict, key: str) -> bool:
-    return str(a.get("id")) == key or key in (a.get("alt_ids") or []) or a.get("task") == key
+    return key in agent_ids(a) or a.get("task") == key
 
 
 def add_event(led: dict, kind: str, ref: str = "", by: str = "ledger", at: str | None = None) -> None:

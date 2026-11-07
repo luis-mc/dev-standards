@@ -266,10 +266,12 @@ def main(argv: list[str] | None = None) -> int:
         raise dc.DeliveryError("a merge is already in progress; finish or abort it first")
 
     remote, into = args.remote, args.into
+    started = int(time.time())  # branches born after this are left alone by the cleanup (DL99)
     # Worktrees of trains already merged go first. Best effort: it never stops a join.
     try:
         cleaned = subprocess.run(
-            [sys.executable, str(Path(__file__).resolve().parent / "cleanup.py"), "--local", "--remote", remote],
+            [sys.executable, str(Path(__file__).resolve().parent / "cleanup.py"), "--local", "--remote", remote,
+             "--keep-fresh-since", str(started)],
             cwd=root,
         ).returncode
         if cleaned != 0:

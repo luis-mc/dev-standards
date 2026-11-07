@@ -45,9 +45,13 @@ MEASURED_RE = re.compile(r'\b(?:took|taken|spent|saved?|saves|saving|savings|cos
 # a past event ("CI failed about 2 minutes in", "started about 1 minute ago") is not a forecast either, unless the
 # same sentence also looks ahead (will / should / expected / ready / due / ETA / left / until)
 PAST_RE = re.compile(r'\b(?:ago|failed|started|finished|completed|passed|crashed|stopped|ended|began|begun|ran|'
-                     r'went|came|got|did|reached|timed out|cancell?ed|merged|pushed|landed|arrived|opened|closed)\b', re.I)
+                     r'went|came|got|did|reached|timed out|cancell?ed|merged|pushed|landed|arrived|opened|closed|used|held|'
+                     r'needed|peaked|stayed|remained|processed|worked)\b', re.I)
 FUTURE_RE = re.compile(r"\b(?:will|should|shall|expected|expect|ready|due|ETA|left|remaining|until|to go|"
                        r"estimate[ds]?|likely|soon|next)\b|'ll\b", re.I)
+# DL-31 (D112): an assumed start that is a person's action is valid when it is named as such:
+# "~16:40 if you approve by 15:00"
+ASSUMED_START_RE = re.compile(r'(?:[01]?\d|2[0-3])[:h][0-5]\d\s+if\s+\S.*?\bby\s+(?:[01]?\d|2[0-3])[:h][0-5]\d\b', re.I)
 TOMORROW_RE = re.compile(r"\btomorrow\b|\bnext round\b|\bin the morning\b|\bnext day\b|\bnext morning\b", re.I)
 PAST_MIDNIGHT_RE = re.compile(r'\b(?:past|after) midnight\b|\b0[0-5][:h][0-5]\d\b', re.I)
 FENCE_RE = re.compile(r'```.*?```', re.S)
@@ -127,19 +131,22 @@ def check_eta_text(text):
                     '"next round" or "in the morning".' % m.group(0)))
     for line in body.splitlines():
         # a clock time or a dependency anywhere in the same bullet or line covers all its sentences
-        line_clock, line_dep = bool(CLOCK_RE.search(line)), bool(DEPENDENCY_RE.search(line))
+        line_clock = bool(CLOCK_RE.search(line))
+        line_dep = bool(DEPENDENCY_RE.search(line) or ASSUMED_START_RE.search(line))
         for s in sentences(line):
             if not ETA_RE.search(s) or is_measured(s):
                 continue
             missing = []
             if not (CLOCK_RE.search(s) or line_clock):
                 missing.append('a clock time')
-            if not (DEPENDENCY_RE.search(s) or line_dep):
+            if not (DEPENDENCY_RE.search(s) or ASSUMED_START_RE.search(s) or line_dep):
                 missing.append('the dependency it counts from')
             if missing:
                 out.append(('DL-31:eta:' + s.strip()[:60], 'DL-31 an ETA lacks %s: "%s". Rewrite it as a clock time '
-                            '(real start + typical duration, in the owner\'s zone) and name what it depends on, e.g. '
-                            '"ready 16:40, 25 min after the CI run started 16:15".' % (' and '.join(missing), s.strip()[:120])))
+                            '(real start + typical duration, in the owner\'s zone) and name what it depends on. Accepted forms: '
+                            '"ready 16:40, 25 min after the CI run started 16:15"; or, when a person starts it, '
+                            '"~16:40 if you approve the plan by 15:00". A past duration ("took 3 hours") is a fact, '
+                            'not an ETA.' % (' and '.join(missing), s.strip()[:120])))
     return out
 
 

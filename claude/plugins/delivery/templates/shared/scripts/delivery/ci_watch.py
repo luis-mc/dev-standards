@@ -56,6 +56,12 @@ runs; hooks never change the exit code and a hook's output is passed through. A 
 its machine-only extras (disk trims, extra reports) in its own hook script instead of a fork of
 this file. --no-post-run skips them; --config names another config file.
 
+Memory kills (DL95): a failed step whose log tail has "exit code 137" or "Killed" is reported as
+"killed for memory: the runner's cap is N", N read from the pool container on this machine with
+`docker inspect` ("unknown" when it cannot be read). A job that failed in "Set up runner" / "Set up job"
+after about 30 minutes is reported as a runner start-up failure pointing at the pool cap. Neither is a
+lockfile problem, so neither report says so.
+
 Python 3.11+, standard library only; `gh` is the one external tool.
 """
 from __future__ import annotations
@@ -113,6 +119,59 @@ def gh_json(args: list[str]) -> object:
         return json.loads(proc.stdout or "null")
     except json.JSONDecodeError as exc:
         raise GhError(f"gh {' '.join(args[:2])} returned invalid JSON: {exc}") from exc
+
+
+def gh_text(args: list[str]) -> str:
+    """Run `gh` and return its text output ('' when it cannot be read)."""
+    gh = shutil.which("gh") or "gh"
+    try:
+        proc = subprocess.run([gh, *args], capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=120)
+    except (OSError, subprocess.SubprocessError):
+        return ""
+    return proc.stdout if proc.returncode == 0 else ""
+
+
+KILLED = re.compile(r"exit code 137|\bKilled\b")
+SETUP_STEPS = ("set up runner", "set up job")
+SETUP_STALL_SECONDS = 25 * 60  # "about 30 minutes"
+
+
+def pool_cap_text() -> str:
+    """The live pool container's memory and CPU cap (`docker inspect`), or 'unknown'."""
+    try:
+        names = subprocess.run(["docker", "ps", "--filter", "label=dev.luismc.runner-pool", "--format", "{{.Names}}"],
+                               capture_output=True, text=True, timeout=30)
+        name = next((n for n in names.stdout.split() if n), "") if names.returncode == 0 else ""
+        if not name:
+            return "unknown"
+        out = subprocess.run(["docker", "inspect", "--format", "{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}}", name],
+                             capture_output=True, text=True, timeout=30)
+        mem, cpu = out.stdout.split()
+        if out.returncode != 0 or not (mem.isdigit() and cpu.isdigit()):
+            return "unknown"
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return "unknown"
+    mem_text = "no memory limit" if int(mem) == 0 else "%.1f GiB memory" % (int(mem) / 2 ** 30)
+    return "%s, %.1f CPUs" % (mem_text, int(cpu) / 1e9)
+
+
+def diagnose(job: dict, log_tail: str, cap: str | None = None) -> str | None:
+    """DL95: a plain line for a job killed for memory or stalled at runner start-up, else None.
+    `cap` is the pool cap text; it is read from docker only when a line is needed."""
+    steps = job.get("steps", []) or []
+    failed = [s for s in steps if s.get("conclusion") not in OK_CONCLUSIONS | {None, ""}]
+    name = (failed[0].get("name") or "") if failed else ""
+    if name.lower() in SETUP_STEPS:
+        start, end = parse_time(job.get("startedAt")), parse_time(job.get("completedAt"))
+        if start is not None and end is not None and end - start >= SETUP_STALL_SECONDS:
+            return ("runner start-up failure: the job failed in \"%s\" after %s. Check the pool cap (%s) "
+                    "and that the pool container is running; this is not a lockfile problem."
+                    % (name, fmt_duration(end - start), cap if cap is not None else pool_cap_text()))
+        return None
+    if KILLED.search(log_tail or ""):
+        return ("killed for memory: the runner's cap is %s. The step was stopped by the kernel, so the lockfile is not the "
+                "cause. Raise the pool cap (run the setup again) or lower the shard's memory." % (cap if cap is not None else pool_cap_text()))
+    return None
 
 
 def repo_args(repo: str | None) -> list[str]:
@@ -271,6 +330,13 @@ def print_failed_jobs(run: dict, repo: str | None) -> None:
         for step in job.get("steps", []) or []:
             if step.get("conclusion") not in OK_CONCLUSIONS | {None, ""}:
                 print(f"      step: {step.get('name')} ({step.get('conclusion')})")
+        try:
+            tail = "\n".join(gh_text(["run", "view", str(rid), "--log-failed", *repo_args(repo)]).splitlines()[-60:])
+            note = diagnose(job, tail)
+        except Exception:  # noqa: BLE001 - a diagnosis must never break the failure report
+            note = None
+        if note:
+            print(f"      {note}")
 
 
 def parse_time(raw: object) -> float | None:

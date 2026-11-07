@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.11.0
+version: 0.12.0
 owner: agents
 type: reference
 code:
@@ -101,6 +101,14 @@ The TS template's e2e step downloads Chromium unless `E2E_CHROMIUM_PATH` points 
 ```ts
 use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefined } },
 ```
+
+**R5.15** — One cloud launch has two ids: the routine id (`trig_...`) and the run session id (`cse_...`). The ledger keeps one agent entry and stores the run id in `run_ids`. Every agent command (`agent-eta`, `agent-done`) accepts either id, and DL-30 asks once per agent. A ledger that holds both as two agents is merged on read. (DL96)
+
+**R5.16** — DL-31 accepts an assumed start that a person's action sets, when it is named: "~16:40 if you approve the plan by 15:00". A past duration ("took 3 hours") is a fact, not an ETA. The refusal message lists the accepted forms. (DL97)
+
+**R5.17** — Each watcher row records the plugin `version` it started with. SessionStart stops a watcher with an older version (or none) by its recorded pid, never by name, and starts the newest. A watcher of the same version is left running. (DL98)
+
+**R5.18** — A cloud `RemoteTrigger` create sets `"mcp_connections": []` and `"clear_mcp_connections": true`, or lists the connectors the brief needs. DL-93 refuses a create body with neither. (DL100)
 
 ## 6. Non-functional requirements
 
@@ -375,6 +383,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.12.0 | 2026-11-07 | RELEASE-60 | A cloud create must clear the account's connectors, DL-93 (R5.18).<br>Pool fixes: RUNNER_SHA256 in the pool .env, recreate on a changed cap, doctor checks for required variables and the live cap, a 4 GiB / 2 CPU sizing floor, and memory-kill reporting in ci_watch.<br>Cloud agents: the trig_ and cse_ ids share one ledger entry (R5.15).<br>DL-31 accepts an assumed start named as such and ignores past durations (R5.16).<br>SessionStart stops a watcher from an older plugin version and starts the newest (R5.17).<br>A join no longer deletes the fresh local branches and worktrees of agents being launched: branches born after the join started, or with a running agent in the ledger, are kept and reported. | DL100, DL92, DL96, DL97, DL98, DL99 |
 | 0.11.0 | 2026-11-06 | RELEASE-58 | The e2e step skips the Chromium download when E2E_CHROMIUM_PATH points at an existing browser; agent setup sets it when a sandbox has one preinstalled under /opt/pw-browsers.<br>The ledger lives in the main checkout and is found from a git worktree; delivery_ledger.py link --pr N links a PR to its train by hand. | DL89, DL90 |
 | 0.10.0 | 2026-11-06 | RELEASE-57 | The runner pool image installs gh from a pinned, SHA-256-checked tarball; pool-check verifies it.<br>Pool agents get their own temp folder; the job hooks clean it and the job user's /tmp entries at job start and end (Temp files paragraph). | DL86, DL87 |
 | 0.9.0 | 2026-11-06 | RELEASE-56 | CI_MAX_PARALLEL is the pool's CPU cap divided by its agents; the doctor warns when POOL_MEM per agent is under 4 GiB.<br>Shared runner pool: jobs get their database through the pool-db-env step (db.env now has PG* values), an opt-in --db-createdb flag, per-database CONNECT isolation, and a rerun of pool-add-agent refreshes db.env for existing agents without changing the password. | DL83, DL84 |
