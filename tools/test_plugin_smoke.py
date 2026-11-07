@@ -70,6 +70,10 @@ class SmokeTest(unittest.TestCase):
         fails = self.run_one(**{"skills/s1/SKILL.md": "---\nname: s1\n---\n"})
         self.assertEqual(fails, ["skills/s1/SKILL.md: front matter has no description"])
 
+    def test_skill_without_name_passes(self):
+        # D128: Claude Code uses the folder name when name is absent.
+        self.assertEqual(self.run_one(**{"skills/s1/SKILL.md": "---\ndescription: does a thing\n---\n"}), [])
+
     def test_main_exit_codes_and_lines(self):
         with tempfile.TemporaryDirectory() as d:
             make(Path(d), "good")

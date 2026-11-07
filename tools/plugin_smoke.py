@@ -5,7 +5,7 @@ For every plugin under claude/plugins/*/ it checks:
   - .claude-plugin/plugin.json parses and has name and version;
   - every script a hooks/hooks.json command names under the plugin exists;
   - every scripts/*.py compiles, and a script with an argparse CLI answers --help with exit 0;
-  - every skills/*/SKILL.md has front matter with name and description.
+  - every skills/*/SKILL.md has front matter with a description (name is optional, D128).
 One line per plugin; exit 1 on any failure. Standard library only.
 
 Usage: python tools/plugin_smoke.py [PLUGINS_DIR]
@@ -131,7 +131,8 @@ def check_skills(plugin: Path) -> list[str]:
         if not fm:
             out.append("%s: no front matter" % rel)
             continue
-        out += ["%s: front matter has no %s" % (rel, k) for k in ("name", "description") if not fm.get(k)]
+        # D128: name is optional; Claude Code uses the folder name when it is absent.
+        out += ["%s: front matter has no %s" % (rel, k) for k in ("description",) if not fm.get(k)]
     return out
 
 
