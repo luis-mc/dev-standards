@@ -29,4 +29,6 @@ B. CI gate (a project with `scripts/delivery/agent_ci.py`): CI is the gate. Run 
 Report: what changed, what you ran, the branch head, last line READY or NOT READY: <why>.
 ````
 
+Cloud create body (DL-93): set `"mcp_connections": []` and `"clear_mcp_connections": true`. Without them the routine attaches all of the account's connectors. List a connector in `mcp_connections` only when the brief needs it. The launch check refuses a create body with neither.
+
 Notes for the orchestrator on path B: Size the ETA from coding time plus the branch CI run, and state both parts in `eta:`. Join urgent work at code push with `join.py --ci-gate`. The ready PR's CI is the full suite by inputs.
