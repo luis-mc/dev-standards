@@ -884,7 +884,8 @@ class Watcher:
 
         def fn(led):
             led["watchers"] = [w for w in led["watchers"] if w.get("pid") != pid]
-            led["watchers"].append({"pid": pid, "kind": "delivery_watch", "started": started, "heartbeat_at": at})
+            led["watchers"].append({"pid": pid, "kind": "delivery_watch", "started": started, "heartbeat_at": at,
+                                    "version": WATCHER_VERSION})
         self.mut(fn)
 
     def run_once(self, started: str | None = None) -> list[list[str]]:
@@ -897,6 +898,10 @@ class Watcher:
                 self.out("delivery_watch: %s failed: %s" % (step.__name__, exc))
         self.heartbeat(started or L.iso(self.now()))
         return self.actions
+
+
+# DL98: the plugin version this process started with, read once (the file on disk changes on an upgrade)
+WATCHER_VERSION = L.plugin_version()
 
 
 def _stamp(led, train_id, state, now):

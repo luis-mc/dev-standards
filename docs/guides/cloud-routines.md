@@ -30,6 +30,20 @@ If there is no run session, the launch was lost. Start the routine again with th
 - A create body needs `job_config.ccr.session_context.sources` with the repository. Without it the session has no push access, and its pushes fail with 403.
 - An update **replaces the whole `ccr` object**. Send the full `ccr` (including `session_context.sources`) with every update. A partial `ccr` drops what you left out.
 
+## Do not attach every connector
+
+A create body without connectors attaches all of the account's connectors to the session. Set both fields in the create body:
+
+```json
+{ "mcp_connections": [], "clear_mcp_connections": true }
+```
+
+List a connector in `mcp_connections` only when the brief needs it. The launch check (DL-93) refuses a cloud create whose body has neither. An update that sends `ccr` again keeps the same two fields.
+
+## One launch, two ids
+
+A launch has the routine id (`trig_...`) and a run session id (`cse_...`). The ledger keeps them on one agent entry. `agent-eta`, `agent-done` and the other agent commands accept either id.
+
 ## Node version in the sandbox
 
 The sandbox may ship an older Node than the project asks for. `scripts/delivery/agent_setup.sh` reads `engines.node` from `package.json`. When the active Node major does not satisfy it, the script activates the lowest major that does and prints one line saying so. It prefers volta, fnm or nvm when present. Otherwise it downloads the official tarball and checks its SHA-256 against the official `SHASUMS256.txt`. With no `package.json` or no `engines.node`, it does nothing.

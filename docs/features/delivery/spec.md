@@ -102,6 +102,14 @@ The TS template's e2e step downloads Chromium unless `E2E_CHROMIUM_PATH` points 
 use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefined } },
 ```
 
+**R5.15** — One cloud launch has two ids: the routine id (`trig_...`) and the run session id (`cse_...`). The ledger keeps one agent entry and stores the run id in `run_ids`. Every agent command (`agent-eta`, `agent-done`) accepts either id, and DL-30 asks once per agent. A ledger that holds both as two agents is merged on read. (DL96)
+
+**R5.16** — DL-31 accepts an assumed start that a person's action sets, when it is named: "~16:40 if you approve the plan by 15:00". A past duration ("took 3 hours") is a fact, not an ETA. The refusal message lists the accepted forms. (DL97)
+
+**R5.17** — Each watcher row records the plugin `version` it started with. SessionStart stops a watcher with an older version (or none) by its recorded pid, never by name, and starts the newest. A watcher of the same version is left running. (DL98)
+
+**R5.18** — A cloud `RemoteTrigger` create sets `"mcp_connections": []` and `"clear_mcp_connections": true`, or lists the connectors the brief needs. DL-93 refuses a create body with neither. (DL100)
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).

@@ -763,7 +763,7 @@ def d4_local_agent_needs_pc_bound_unless_cloud_full():
 
 def trigger(body_extra=None, **session):
     ctx = dict({'model': 'sonnet', 'effort_level': 'medium'}, **session)
-    body = {'prompt': BRIEF, 'session_context': ctx}
+    body = {'prompt': BRIEF, 'session_context': ctx, 'mcp_connections': [], 'clear_mcp_connections': True}
     body.update(body_extra or {})
     return {'action': 'create', 'body': body}
 
@@ -777,10 +777,12 @@ def dl36_37_model_effort_and_brief_markers():
     assert denied(r) and 'DL-36' in why(r), r
     p.close()
     p = Project(ledger())
-    r = p.pre('RemoteTrigger', {'action': 'create', 'body': {'prompt': BRIEF, 'session_context': {'effort_level': 'medium'}}})
+    r = p.pre('RemoteTrigger', {'action': 'create', 'body': {'prompt': BRIEF, 'clear_mcp_connections': True, 'session_context': {'effort_level': 'medium'}}})
     assert 'DL-37' in why(r) and 'model' in why(r), r
-    r = p.pre('RemoteTrigger', {'action': 'create', 'body': {'prompt': BRIEF, 'session_context': {'model': 'sonnet'}}})
+    r = p.pre('RemoteTrigger', {'action': 'create', 'body': {'prompt': BRIEF, 'clear_mcp_connections': True, 'session_context': {'model': 'sonnet'}}})
     assert 'DL-37' in why(r) and 'effort_level' in why(r), r
+    r = p.pre('RemoteTrigger', {'action': 'create', 'body': {'prompt': BRIEF, 'session_context': {'model': 'sonnet', 'effort_level': 'medium'}}})
+    assert 'DL-93' in why(r) and 'clear_mcp_connections' in why(r), r      # DL100
     expect_pass(p.pre('RemoteTrigger', {'action': 'list'}))
     r = p.pre('Agent', {'prompt': BRIEF + 'PC-bound: x\n'})
     assert 'DL-37' in why(r), r

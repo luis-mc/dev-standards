@@ -82,6 +82,67 @@ def summary(root, cfg, ledger, at):
     return lines
 
 
+def _cmdline_ok(pid):
+    """False only when the process's command line is readable and is not a delivery_watch (pid reuse)."""
+    try:
+        with open('/proc/%d/cmdline' % pid, 'rb') as f:
+            return b'delivery_watch' in f.read()
+    except OSError:
+        return True
+
+
+def stop_pid(pid):
+    """Stop one process by its recorded pid. Never by name."""
+    import signal
+    if not isinstance(pid, int) or pid <= 1 or pid == os.getpid() or not _cmdline_ok(pid):
+        return False
+    try:
+        os.kill(pid, signal.SIGTERM)
+    except (OSError, ValueError):
+        return False
+    return True
+
+
+def spawn_watcher(root):
+    """Start the installed plugin's watcher, detached."""
+    import subprocess
+    script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'delivery_watch.py')
+    kw = {'stdin': subprocess.DEVNULL, 'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL}
+    if os.name == 'nt':
+        kw['creationflags'] = 0x00000008 | 0x00000200      # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+    else:
+        kw['start_new_session'] = True
+    try:
+        subprocess.Popen([sys.executable, script, '--root', str(root)], **kw)
+        return True
+    except OSError:
+        return False
+
+
+def rearm_old_watchers(root, ledger, installed):
+    """DL98: a watcher started from an older plugin version is stopped (by its recorded pid) and the newest is
+    started. A watcher with no version stamp is older. Same version: left alone. Returns (messages, stopped pids)."""
+    import delivery_ledger as L
+    msgs, stopped = [], []
+    want = L.version_key(installed)
+    if not want:
+        return msgs, stopped
+    for w in ledger['watchers']:
+        if w.get('kind') != 'delivery_watch':
+            continue
+        have = L.version_key(w.get('version'))
+        if have >= want:
+            continue
+        if stop_pid(w.get('pid')):
+            stopped.append(w.get('pid'))
+            msgs.append('stopped delivery_watch pid %s (plugin %s, installed %s)'
+                        % (w.get('pid'), w.get('version') or 'unstamped', installed))
+    if stopped:
+        msgs.append('started the installed delivery_watch' if spawn_watcher(root)
+                    else 'could not start delivery_watch: start it in the background')
+    return msgs, stopped
+
+
 def main():
     if H.hooks_off():
         return 0
@@ -104,7 +165,16 @@ def main():
         H.C.load_tz(cfg.get('tz') or 'UTC')
     except ValueError as exc:
         parts.append('WARNING: ' + str(exc) + ' Run delivery_doctor.py.')
-    fresh = any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < cfg['watcher_min'] for w in ledger['watchers'])
+    try:
+        import delivery_ledger as _L
+        rearm, gone = rearm_old_watchers(root, ledger, _L.plugin_version())
+    except Exception as exc:     # fail open
+        H.warn('watcher re-arm skipped (%s: %s)' % (type(exc).__name__, exc))
+        rearm, gone = [], []
+    if rearm:
+        parts.append('Watcher re-armed (DL98): ' + '; '.join(rearm) + '.')
+    fresh = any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < cfg['watcher_min'] for w in ledger['watchers']
+                if w.get('pid') not in gone) or bool(gone and rearm and rearm[-1].startswith('started'))
     if not fresh:
         parts.append('No watcher heartbeat in the last %d min: start delivery_watch.py in the background '
                      '(run_in_background) before launching work.' % cfg['watcher_min'])
