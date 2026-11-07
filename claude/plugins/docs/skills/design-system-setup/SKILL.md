@@ -26,7 +26,7 @@ python3 "$S" styles                        # read-only: style files and CSS cust
 python3 "$S" guards --apply                # guard tests into scripts/design/ (--stack typescript-vitest, --dest DIR)
 python3 "$S" visuals                       # rebuild next-version/review-visuals/index.html: offline gallery with drawn swatches, contrast and every component (the session-start and stop hooks now do this when it is stale; running it by hand still works)
 python3 "$S" check                         # DS1-DS5 findings (DS4 also flags a gallery from an older script); docs_check.py runs the same
-python3 "$S" components --apply            # opt-in: DatePicker, TimePicker, NumberKeypad (React + TypeScript) into src/ui/pickers, with their components.md sections (--only, --dest)
+python3 "$S" components --apply            # opt-in: DatePicker, TimePicker, NumberKeypad (React + TypeScript) into src/ui/pickers, with their components.md sections and content.md words (--only, --dest)
 python3 "$S" brief --apply                 # UI brief checklist as a marked block in AGENTS.md and .github/pull_request_template.md; rerun refreshes it
 python3 "$S" status                        # versions, the enforced one, approvals
 python3 "$S" promote --approved-by owner --approved-on 2026-11-02 --evidence "chat, 2026-11-02"   # dry run; add --apply
@@ -83,7 +83,9 @@ Three shared components a project can take instead of building its own (DOCSPEC 
 - **When to offer.** Put them in the plan as one optional line when the owner asks for pickers or a keypad, or when the project's screens enter dates, times or numbers. Ask which of the three, and the folder of the shared UI (default `src/ui/pickers`). The owner may decline; then nothing is copied.
 - **Install.** `components --only <names> --dest <folder> --apply`. It never overwrites a file. It adds one numbered section per component to `next-version/components.md` (before "How to add a component") with one `CHANGES.md` entry, and rebuilds the gallery. A rerun adds nothing.
 - **Then, yourself:** add `picker-base.css` and each component's CSS to the shared UI stylesheet; export the components; add `vitest`, `jsdom`, `react` and `react-dom` to the shared UI package's dev dependencies when missing; run the copied tests. If the project's token names differ from `--ds-*`, rename the `var(--ds-...)` uses in the copied CSS once.
-- **Words.** Each section lists its words for `content.md`. Add them there; the components take them through their `labels` prop.
+- **Words.** The command adds each component's words to the "Component words" table of `content.md`, skipping words that are already in a table there. Change them there; the components take them through their `labels` prop.
+- **Rule and guard.** The starter rule UX-56 says dates use the date picker, times the time picker, and the keypad only counts, measures and codes. With the enforcement kit, `scripts/design/raw-inputs.test.ts` fails on a native `type="date"`, `"time"`, `"datetime-local"` or `"number"` input; set `CONFIG` in `raw-inputs-scan.ts` to the app and shared UI folders. Today's breaches go in `raw-inputs.known.json` once, at install; the list only shrinks.
+- **Known limits.** The time picker has no `maxHours` (no duration of 24 hours or more), and the keypad has no minus sign (`allowNegative`). The date picker header shows the locale's long date by default; pass `formatValue` for the project's own format.
 - The template folder's `README.md` (`templates/design-system/components/react-typescript/`) has the file list and the props.
 
 ## Existing design system elsewhere

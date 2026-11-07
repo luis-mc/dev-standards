@@ -26,7 +26,14 @@ Then:
 1. Add `picker-base.css` and the CSS of each chosen component to the shared UI stylesheet. They read the `--ds-*` tokens of `tokens.md`; a project with other token names renames the `var(--ds-...)` uses once, in these files.
 2. Export the components from the shared UI package.
 3. Add the test dependencies if the project lacks them: `vitest`, `jsdom`, `react`, `react-dom`. The tests start with `// @vitest-environment jsdom`.
-4. Check the new sections in `next-version/components.md` and their words for `content.md`, then rebuild the gallery (`design_system.py visuals`). The command already added a `CHANGES.md` entry.
+4. Check the new sections in `next-version/components.md` and the new rows of the "Component words" table in `content.md`. The command added both, with a `CHANGES.md` entry, and rebuilt the gallery, which draws each component.
+5. With the enforcement kit, set `CONFIG` in `scripts/design/raw-inputs-scan.ts`. That guard proves starter rule UX-56: no native date, time or number input.
+
+## Known limits
+
+- `TimePicker` hours run from 0 to 23. There is no `maxHours`, so a duration of 24 hours or more cannot be entered.
+- `NumberKeypad` has no minus key and no `allowNegative`.
+- `DatePicker` shows the locale's long date in its header by default ("14 March 2009"). Pass `formatValue` to show the project's own format.
 
 ## What every template promises
 
