@@ -14,3 +14,8 @@
 - CI: see the last section.
 
 ## CI
+`gh workflow run spec-lint.yml --ref DL99-join-keeps-fresh-branches -f areas=delivery` ran as run 42319983726 on cedc30d. The job "delivery - branch gate and trust rule" passed (2m03s). The run failed only in "docs check": G1 (stale generated decisions.md) and W1 (docs/work on branch), both expected on a branch. M1 did not fire in CI. T2 warnings are not mine.
+
+Branch head: the commit after cedc30d that adds this section (see `git log`).
+
+READY
