@@ -2656,6 +2656,29 @@
       ],
       "chosen": "Detect Playwright + doctor check",
       "decided": "2026-11-07"
+    },
+    {
+      "id": "D118",
+      "question": "B14: a pool setup rerun planned a lower cap than the owner's .env. When may it change the cap? (Picked overnight; for morning review.)",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Keep the .env cap; --resize to change",
+          "summary": "A rerun keeps POOL_MEM/POOL_CPUS from the pool .env and shows the measured cap beside it. The measured cap applies only with --resize or when the kept cap is under the 4 GiB / 2 CPU floor. .wslconfig is never lowered. pool-refresh rewrites only SHA and browsers.",
+          "recommended": true
+        },
+        {
+          "label": "Keep the higher of the two",
+          "summary": "Use the .env cap or the measured cap, whichever is larger; never lower without asking."
+        },
+        {
+          "label": "Ask on every rerun",
+          "summary": "The plan shows both caps and the owner picks one each time."
+        }
+      ],
+      "chosen": "Keep the .env cap; --resize to change",
+      "decided": "2026-11-07"
     }
   ]
 }

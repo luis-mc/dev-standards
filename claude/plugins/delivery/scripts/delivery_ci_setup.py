@@ -5,7 +5,7 @@
     delivery_ci_setup.py apply     --answers FILE|-  [--root DIR] [--no-install] [--set-variables] [--json]
     delivery_ci_setup.py checklist [--root DIR] [--json]
     delivery_ci_setup.py confirm   ITEM...  [--root DIR]
-    delivery_ci_setup.py pool-detect | pool-plan | pool-run  --repos o/a,o/b [--windows-repos o/c] [--pool NAME] [--yes] [--yes-delete NAMES]
+    delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh  --repos o/a,o/b [--windows-repos o/c] [--pool NAME] [--yes] [--yes-delete NAMES]
 
 `pool-*` is the guided path for Option 1 (DL30): detect what exists, show one plan, remove old runners and build clean,
 run each step after a yes. Deleting needs `--yes-delete` naming exactly what goes. It follows contract section 13:
@@ -564,8 +564,15 @@ def render_plan(pl, found) -> list:
     cap = pl.get("cap")
     if cap and cap.get("ok"):
         m = cap.get("measured") or {}
-        lines.append("Pool cap: %s GiB memory, %s CPUs (%s)." % (cap["mem_gib"], cap["cpus"],
-                     "measured on this machine unless you gave a number" if m else "from the numbers you gave"))
+        if cap.get("source") == "kept":
+            mc = cap.get("measured_cap") or {}
+            how = ("kept from the pool's .env; measured now: %s GiB, %s CPUs; --resize uses the measured cap"
+                   % (mc.get("mem_gib"), mc.get("cpus")))
+        else:
+            how = "measured on this machine unless you gave a number" if m else "from the numbers you gave"
+        lines.append("Pool cap: %s GiB memory, %s CPUs (%s)." % (cap["mem_gib"], cap["cpus"], how))
+        if cap.get("reason"):
+            lines.append("  Cap changed: %s." % cap["reason"])
     if pl.get("derived") and not pl.get("blocked"):
         import delivery_runner_pool as P
         lin, win = P.derive_repos(found)
@@ -612,7 +619,11 @@ def cmd_pool(args, root) -> int:
     if args.action == "pool-detect":
         print(json.dumps(found, indent=2))
         return 0
+    if args.action == "pool-refresh":
+        return cmd_pool_refresh(args, root, P, probe)
+    found["pool_env"] = P.read_pool_env(probe, args.pool)
     cap = P.measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
+    cap = P.keep_owner_cap(cap, found["pool_env"], getattr(args, "resize", False), (found.get("host") or {}).get("cpus"))
     if cap is None:
         print("delivery_ci_setup: this machine's memory or CPUs could not be measured. Give --total-gib and --cpus.",
               file=sys.stderr)
@@ -645,9 +656,31 @@ def cmd_pool(args, root) -> int:
     return 1 if result["failed"] or result["left"] else 0
 
 
+def cmd_pool_refresh(args, root, P, probe) -> int:
+    """B14: rewrite RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env and rebuild. The cap stays."""
+    rp = P.refresh_plan(probe, args.pool, [root], getattr(args, "browsers", None))
+    if rp.get("error"):
+        print("delivery_ci_setup: %s" % rp["error"], file=sys.stderr)
+        return 1
+    lines = ["Refresh plan for pool \"%s\" (the cap and every other line stay):" % args.pool]
+    lines += ["  - %s: %s -> %s" % (k, old or "unset", new) for k, (old, new) in sorted(rp["changes"].items())]
+    if not rp["changes"]:
+        lines.append("  - nothing to change in %s" % rp["path"])
+    elif rp.get("why"):
+        lines.append("  %s" % rp["why"])
+    lines.append("  - then rebuild the pool image (only when no job runs)")
+    print("\n".join(lines))
+    if not getattr(args, "yes", False):
+        return 0
+    ok, detail = P.Executor(probe).refresh(rp)
+    print(detail)
+    return 0 if ok else 1
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci_setup.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm", "pool-detect", "pool-plan", "pool-run"])
+    ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm", "pool-detect", "pool-plan", "pool-run",
+                                           "pool-refresh"])
     ap.add_argument("items", nargs="*", help="confirm: the item ids")
     ap.add_argument("--answers", help="apply: a JSON file of answers, or - for stdin")
     ap.add_argument("--root", default=".")
@@ -662,7 +695,9 @@ def main(argv=None) -> int:
     ap.add_argument("--cpus", type=float)
     ap.add_argument("--docker-gib", type=float)
     ap.add_argument("--largest-shard-gib", type=float)
-    ap.add_argument("--yes", action="store_true", help="pool-run: the owner said yes to the plan shown (not to deletions)")
+    ap.add_argument("--resize", action="store_true", help="pool-plan/run: use the measured cap, not the one in the pool .env")
+    ap.add_argument("--browsers", choices=["none", "chromium"], help="pool-refresh: set POOL_BROWSERS (default: keep or detect)")
+    ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)
     root = os.path.abspath(args.root)
