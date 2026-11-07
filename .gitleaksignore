@@ -51,3 +51,16 @@ cf3f5f73e3dadad1ca824505bdf896f1fb2115f1:claude/plugins/docs/vendor/mermaid.min.
 e302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:project-named-secret:50
 e302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:project-named-secret:116
 e302ede1a1a054d0ed25570c4d4b0c9bcb869ba4:tools/test_project_setup_fixes.py:stripe-access-token:50
+
+# RELEASE-64: number-keypad.css selector .ds-keypad__key:active; the rule read the class name as an assignment. Reviewed: not a secret.
+d1ac4e03b555e6665897639c21cd2c3f50290f78:claude/plugins/docs/templates/design-system/components/react-typescript/number-keypad.css:project-named-secret:41
+# RELEASE-64: the same reviewed findings as the cf3f5f7 and e302ede entries above (mermaid.min.js lexer names, DS185 test fixtures). main was rewritten, so the commit is now 9cb9ec8. Not secrets.
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:12
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:2110
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:329
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:604
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:7
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:claude/plugins/docs/vendor/mermaid.min.js:project-named-secret:769
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:tools/test_project_setup_fixes.py:project-named-secret:116
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:tools/test_project_setup_fixes.py:project-named-secret:50
+9cb9ec8418d51ea4688dd76d0948842e9df5fa45:tools/test_project_setup_fixes.py:stripe-access-token:50
