@@ -888,14 +888,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-07T08:13+00:00">07 Nov 08:13</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-07T15:40+00:00">07 Nov 15:40</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">07 Nov 15:28</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">17 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">14 tasks</span></summary>
 <ul>
 <li data-glance-task="DL103"><span class="task-id">DL103</span>pool-plan keeps the owner&#x27;s pool cap (B14)</li>
 <li data-glance-task="DL104"><span class="task-id">DL104</span><span class="release-name">RELEASE-62</span>luismc-delivery 1.12.2 (B14)</li>
@@ -905,12 +905,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL92"><span class="task-id">DL92</span>B1 pool .env gets RUNNER_SHA256</li>
 <li data-glance-task="DL93"><span class="task-id">DL93</span>B2 pool cap change applied</li>
 <li data-glance-task="DL94"><span class="task-id">DL94</span>B3 pool sizing floor</li>
-<li class="glance-more">and 9 more</li>
+<li class="glance-more">and 6 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">104</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">104</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL107"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL107</span><span class="release-name">RELEASE-63</span>luismc-delivery and luismc-artifacts patch release</td><td data-label="Detail">Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup</td><td data-label="Expected">07 Nov ~16:00</td></tr>
+<tr data-task="DL105"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL105</span>Gate text names exit 137; pool tests portable</td><td data-label="Detail">branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL106"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL106</span>Plugin smoke workflow for DL-18</td><td data-label="Detail">A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here</td><td data-label="Expected">Not scheduled</td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">104 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL103"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL103</span>pool-plan keeps the owner&#x27;s pool cap (B14)<span class="release-line"><span class="release-name">RELEASE-62</span></span></td><td data-label="Detail">pool-plan read no .env, so it planned 4 GiB/2 CPUs over the owner&#x27;s 8.5 GiB/4 and could lower .wslconfig; adds pool-refresh for SHA and browsers only</td><td data-label="Expected">07 Nov</td></tr>
@@ -1052,8 +1059,162 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D127">
+<h3 class="decision-head"><span class="decision-id">D127</span> <span class="decision-question">Until the restart, the old artifacts hook asks for an hourly publish with nothing open. What to do?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Comply each time</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Publish once per prompt; under the daily limit.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Defer while nothing is open</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">mark-deferred instead.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D126">
+<h3 class="decision-head"><span class="decision-id">D126</span> <span class="decision-question">How are today&#x27;s items grouped into releases?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">By plugin</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One delivery release, one artifacts release.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One release for all</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Single PR.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One release per item</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Smallest trains.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D125">
+<h3 class="decision-head"><span class="decision-id">D125</span> <span class="decision-question">Who codes today&#x27;s items (gate text and pool tests, Windows tests, the R5.46 bug, the smoke step)?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Cloud agents, I join</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">One cloud agent per file-disjoint piece; Sonnet, medium effort.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">I do them directly</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Serial, fewer handoffs.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Mix: cloud, Windows tests local</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Local agent for the Windows tests.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D124">
+<h3 class="decision-head"><span class="decision-id">D124</span> <span class="decision-question">While the owner is away, how are today&#x27;s items and new peer bug reports run?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Overnight rules again</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Merge on green, clean up, install, message the reporter; design picks recorded for review.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build, don&#x27;t merge</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">PRs wait for the owner.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only record new reports</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">New bugs become To do.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D123">
+<h3 class="decision-head"><span class="decision-id">D123</span> <span class="decision-question">DL-18 expects a Production smoke run; dev-standards deploys nothing. What should this repo do?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add a plugin smoke step</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">A post-merge workflow checks the plugins from main; it counts as the DL-18 smoke.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Exempt this repo in config</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">DL-18 skips dev-standards.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep manual smoke</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No change.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D122">
+<h3 class="decision-head"><span class="decision-id">D122</span> <span class="decision-question">Three old local branches (DLV1-fold-integration, DS33-fold-integration, pr140). Delete them?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Delete all three</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">After checking for unmerged work.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave as they are.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D121">
+<h3 class="decision-head"><span class="decision-id">D121</span> <span class="decision-question">10 delivery pool tests fail on Windows only; CI on Linux is green. Investigate them?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Investigate and fix</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Fix fixtures that assume POSIX; fix any real bug found.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Record as To do</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No work now.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ignore</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">CI is the gate.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D120">
+<h3 class="decision-head"><span class="decision-id">D120</span> <span class="decision-question">Two pool tests pass only because of the 4 GiB floor. Fix their fixtures?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, with the DL-23 fix</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Same release; tests only.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add as To do only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record it; build later.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No task.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D119">
+<h3 class="decision-head"><span class="decision-id">D119</span> <span class="decision-question">DL-23 and branch_gate.py still blame a failed setup on a stale lockfile only. Name memory (exit 137) too?</span></h3>
+<p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, ship it now</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 07 Nov</span></div>
+<p class="decision-summary">Both texts name exit 137 and memory; ships while the owner is away.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add as To do only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record it; build later.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No task.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D118">
-<h3 class="decision-head"><span class="decision-id">D118</span> <span class="decision-question">B14: a pool setup rerun planned a lower cap than the owner&#x27;s .env. When may it change the cap? (Picked overnight; for morning review.)</span></h3>
+<h3 class="decision-head"><span class="decision-id">D118</span> <span class="decision-question">B14: a pool setup rerun planned a lower cap than the owner&#x27;s .env. When may it change the cap? (Picked overnight; the owner confirmed it on 7 Nov.)</span></h3>
 <p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
 <div class="decision-options">
 <div class="decision-option decision-chosen">
@@ -1071,7 +1232,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </div>
 </article>
 <article class="decision decision-decided" data-decision="D117">
-<h3 class="decision-head"><span class="decision-id">D117</span> <span class="decision-question">B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; for morning review.)</span></h3>
+<h3 class="decision-head"><span class="decision-id">D117</span> <span class="decision-question">B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; the owner confirmed it on 7 Nov.)</span></h3>
 <p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
 <div class="decision-options">
 <div class="decision-option decision-chosen">

@@ -2636,7 +2636,7 @@
     },
     {
       "id": "D117",
-      "question": "B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; for morning review.)",
+      "question": "B13: the pool got no browsers for a project whose CI runs Playwright. How should setup pick browsers? (Picked overnight; the owner confirmed it on 7 Nov.)",
       "asked": "2026-11-07",
       "status": "decided",
       "options": [
@@ -2659,7 +2659,7 @@
     },
     {
       "id": "D118",
-      "question": "B14: a pool setup rerun planned a lower cap than the owner's .env. When may it change the cap? (Picked overnight; for morning review.)",
+      "question": "B14: a pool setup rerun planned a lower cap than the owner's .env. When may it change the cap? (Picked overnight; the owner confirmed it on 7 Nov.)",
       "asked": "2026-11-07",
       "status": "decided",
       "options": [
@@ -2678,6 +2678,205 @@
         }
       ],
       "chosen": "Keep the .env cap; --resize to change",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D119",
+      "question": "DL-23 and branch_gate.py still blame a failed setup on a stale lockfile only. Name memory (exit 137) too?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, ship it now",
+          "summary": "Both texts name exit 137 and memory; ships while the owner is away.",
+          "recommended": true
+        },
+        {
+          "label": "Add as To do only",
+          "summary": "Record it; build later."
+        },
+        {
+          "label": "Leave it",
+          "summary": "No task."
+        }
+      ],
+      "chosen": "Yes, ship it now",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D120",
+      "question": "Two pool tests pass only because of the 4 GiB floor. Fix their fixtures?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, with the DL-23 fix",
+          "summary": "Same release; tests only.",
+          "recommended": true
+        },
+        {
+          "label": "Add as To do only",
+          "summary": "Record it; build later."
+        },
+        {
+          "label": "Leave it",
+          "summary": "No task."
+        }
+      ],
+      "chosen": "Yes, with the DL-23 fix",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D121",
+      "question": "10 delivery pool tests fail on Windows only; CI on Linux is green. Investigate them?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Investigate and fix",
+          "summary": "Fix fixtures that assume POSIX; fix any real bug found.",
+          "recommended": true
+        },
+        {
+          "label": "Record as To do",
+          "summary": "No work now."
+        },
+        {
+          "label": "Ignore",
+          "summary": "CI is the gate."
+        }
+      ],
+      "chosen": "Investigate and fix",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D122",
+      "question": "Three old local branches (DLV1-fold-integration, DS33-fold-integration, pr140). Delete them?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Delete all three",
+          "summary": "After checking for unmerged work.",
+          "recommended": true
+        },
+        {
+          "label": "Keep them",
+          "summary": "Leave as they are."
+        }
+      ],
+      "chosen": "Delete all three",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D123",
+      "question": "DL-18 expects a Production smoke run; dev-standards deploys nothing. What should this repo do?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Add a plugin smoke step",
+          "summary": "A post-merge workflow checks the plugins from main; it counts as the DL-18 smoke.",
+          "recommended": true
+        },
+        {
+          "label": "Exempt this repo in config",
+          "summary": "DL-18 skips dev-standards."
+        },
+        {
+          "label": "Keep manual smoke",
+          "summary": "No change."
+        }
+      ],
+      "chosen": "Add a plugin smoke step",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D124",
+      "question": "While the owner is away, how are today's items and new peer bug reports run?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Overnight rules again",
+          "summary": "Merge on green, clean up, install, message the reporter; design picks recorded for review.",
+          "recommended": true
+        },
+        {
+          "label": "Build, don't merge",
+          "summary": "PRs wait for the owner."
+        },
+        {
+          "label": "Only record new reports",
+          "summary": "New bugs become To do."
+        }
+      ],
+      "chosen": "Overnight rules again",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D125",
+      "question": "Who codes today's items (gate text and pool tests, Windows tests, the R5.46 bug, the smoke step)?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Cloud agents, I join",
+          "summary": "One cloud agent per file-disjoint piece; Sonnet, medium effort.",
+          "recommended": true
+        },
+        {
+          "label": "I do them directly",
+          "summary": "Serial, fewer handoffs."
+        },
+        {
+          "label": "Mix: cloud, Windows tests local",
+          "summary": "Local agent for the Windows tests."
+        }
+      ],
+      "chosen": "Cloud agents, I join",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D126",
+      "question": "How are today's items grouped into releases?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "By plugin",
+          "summary": "One delivery release, one artifacts release.",
+          "recommended": true
+        },
+        {
+          "label": "One release for all",
+          "summary": "Single PR."
+        },
+        {
+          "label": "One release per item",
+          "summary": "Smallest trains."
+        }
+      ],
+      "chosen": "One release for all",
+      "decided": "2026-11-07"
+    },
+    {
+      "id": "D127",
+      "question": "Until the restart, the old artifacts hook asks for an hourly publish with nothing open. What to do?",
+      "asked": "2026-11-07",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Comply each time",
+          "summary": "Publish once per prompt; under the daily limit.",
+          "recommended": true
+        },
+        {
+          "label": "Defer while nothing is open",
+          "summary": "mark-deferred instead."
+        }
+      ],
+      "chosen": "Comply each time",
       "decided": "2026-11-07"
     }
   ]

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T08:13+00:00",
+  "updated": "2026-11-07T15:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -688,6 +688,16 @@
       "changed": "2026-11-07T00:56+00:00",
       "rides": "AR62",
       "started": "2026-11-07T00:38+00:00"
+    },
+    {
+      "id": "AR66",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "task-add --release with a RELEASE: item (R5.46)",
+      "detail": "An item starting 'RELEASE:' gave a release group label with a trailing space, so R5.46 refused the change",
+      "expected": "",
+      "changed": "2026-11-07T15:39+00:00"
     },
     {
       "id": "DL1",
@@ -2228,6 +2238,37 @@
         }
       ],
       "started": "2026-11-07T08:08+00:00"
+    },
+    {
+      "id": "DL105",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Gate text names exit 137; pool tests portable",
+      "detail": "branch_gate.py and the DL-23 hook text name memory (exit 137) beside a stale lockfile; floor-bound pool test fixtures fixed; pool tests pass on Windows",
+      "expected": "",
+      "changed": "2026-11-07T15:39+00:00"
+    },
+    {
+      "id": "DL106",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Plugin smoke workflow for DL-18",
+      "detail": "A post-merge workflow checks the plugins from main (imports, --help, key commands) and is the smoke run DL-18 records here",
+      "expected": "",
+      "changed": "2026-11-07T15:39+00:00"
+    },
+    {
+      "id": "DL107",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "luismc-delivery and luismc-artifacts patch release",
+      "detail": "Join DL105 DL106 AR66, fold notes, CI, merge, install, smoke and cleanup",
+      "expected": "07 Nov ~16:00",
+      "changed": "2026-11-07T15:40+00:00",
+      "release": 63
     },
     {
       "id": "DS1",
