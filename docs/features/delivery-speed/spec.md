@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.5.1
+version: 0.5.2
 owner: agents
 type: explanation
 code:
@@ -164,6 +164,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.2 | 2026-11-07 | RELEASE-60 | ci_watch reports exit code 137 or Killed as killed for memory with the pool cap, and a slow Set up runner failure as a runner start-up failure, never as a stale lockfile. | DL92 |
 | 0.5.1 | 2026-11-05 | RELEASE-47 | The join rebuilds the next-version design-system gallery and commits it when a joined branch changed that folder. | DU4 |
 | 0.5.0 | 2026-11-05 | RELEASE-45 | change_notes.py check fails a diff that adds an entry to, or raises a count in, a design-system known-breach list that already exists at the base (known_lists, default scripts/design/*.known.json). | DSY99 |
 | 0.4.1 | 2026-11-04 | RELEASE-37 | The CI workflow templates set DELIVERY_SHARD on every job, and a job held for a machine slot counts as waiting for the Option 4 fallback (delivery spec R13.64). | DL32 |
