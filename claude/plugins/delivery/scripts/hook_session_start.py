@@ -109,7 +109,9 @@ def spawn_watcher(root):
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'delivery_watch.py')
     kw = {'stdin': subprocess.DEVNULL, 'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL}
     if os.name == 'nt':
-        kw['creationflags'] = 0x00000008 | 0x00000200      # DETACHED_PROCESS | CREATE_NEW_PROCESS_GROUP
+        # DL109: CREATE_NO_WINDOW | CREATE_NEW_PROCESS_GROUP. A hidden console, not DETACHED_PROCESS: the watcher's
+        # gh and git children share it, so none of them opens a window.
+        kw['creationflags'] = 0x08000000 | 0x00000200
     else:
         kw['start_new_session'] = True
     try:

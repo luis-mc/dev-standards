@@ -110,6 +110,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.18** — A cloud `RemoteTrigger` create sets `"mcp_connections": []` and `"clear_mcp_connections": true`, or lists the connectors the brief needs. DL-93 refuses a create body with neither. (DL100)
 
+**R5.19** — On Windows the watcher opens no console windows. SessionStart starts it on a hidden console (`CREATE_NO_WINDOW`, never `DETACHED_PROCESS`), and each `gh` and `git` call it makes passes `CREATE_NO_WINDOW`. A watcher that finds another live watcher for the same root, with a heartbeat newer than three intervals and a version not older than its own, exits. (DL109)
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
