@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.13.0
+version: 0.14.0
 owner: agents
 type: reference
 code:
@@ -395,6 +395,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.0 | 2026-11-08 | RELEASE-67 | Pinned CI tools are cached on the runner disk with ci_tool.py: checksum-verified, with retries (R5.23).<br>DL-94 flags workflow downloads that skip the cache or the checksum (R5.24). | DL115, DL116 |
 | 0.13.0 | 2026-11-08 | RELEASE-66 | join.py keeps and reports clean merges when a later branch conflicts (R5.20).<br>Missing delivery modules are named, listed by the installer, and checked by a test (R5.21).<br>New cancel_joined_runs.py cancels CI runs of branches already joined (R5.22). | DL111, DL112, DL113 |
 | 0.12.4 | 2026-11-07 | RELEASE-65 | On Windows the watcher opens no console windows, and a second watcher for the same root exits (R5.19). | DL109 |
 | 0.12.3 | 2026-11-07 | RELEASE-63 | A failed gate setup step names two causes: a stale lockfile, or an install killed for memory (exit 137, first when the code is 137). | DL105 |
