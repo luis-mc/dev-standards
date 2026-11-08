@@ -23,6 +23,8 @@ with --yes `cancelled <id>` or `failed <id>: <reason>`. A last line gives the co
 
 Exit: 0 done (also when nothing matches, or a dry run), 1 a cancel failed,
 2 usage error, no repository, or gh missing.
+
+DELIVERY_GH, when set, is the gh program to run (a full path); the default is `gh` on PATH.
 """
 from __future__ import annotations
 
@@ -55,7 +57,8 @@ def git(*args: str) -> tuple[int, str, str]:
 
 
 def gh(*args: str, repo: str | None = None) -> tuple[int, str, str]:
-    return run(["gh", *args] + (["--repo", repo] if repo else []))
+    # DELIVERY_GH: the gh program to run (a full path), for a gh outside PATH and for tests; default `gh`.
+    return run([os.environ.get("DELIVERY_GH") or "gh", *args] + (["--repo", repo] if repo else []))
 
 
 def default_branch(remote: str) -> str:

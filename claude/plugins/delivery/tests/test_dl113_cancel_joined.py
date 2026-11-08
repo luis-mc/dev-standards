@@ -3,6 +3,7 @@ import json
 import os
 import stat
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -68,6 +69,11 @@ class CancelJoinedTests(unittest.TestCase):
         fake = self.ghdir / "gh"
         fake.write_text(FAKE_GH)
         fake.chmod(fake.stat().st_mode | stat.S_IEXEC)
+        self.gh_env = {}
+        if os.name == "nt":  # Windows runs no shebang script: a .cmd wrapper calls the fake with this Python
+            wrapper = self.ghdir / "gh.cmd"
+            wrapper.write_text('@"%s" "%s" %%*\r\n' % (sys.executable, fake))
+            self.gh_env = {"DELIVERY_GH": str(wrapper)}
 
     def runs(self, rows):
         (self.ghdir / "runs.json").write_text(json.dumps([
@@ -76,8 +82,8 @@ class CancelJoinedTests(unittest.TestCase):
 
     def go(self, *args, fail=""):
         env = dict(os.environ, PATH=str(self.ghdir) + os.pathsep + os.environ["PATH"],
-                   FAKE_GH_DIR=str(self.ghdir), FAKE_GH_FAIL=fail)
-        return subprocess.run(["python3", str(SCRIPT), "--into", "X-integration", *args],
+                   FAKE_GH_DIR=str(self.ghdir), FAKE_GH_FAIL=fail, **self.gh_env)
+        return subprocess.run([sys.executable, str(SCRIPT), "--into", "X-integration", *args],
                               cwd=self.work, env=env, capture_output=True, text=True)
 
     def cancelled(self):
@@ -121,15 +127,16 @@ class CancelJoinedTests(unittest.TestCase):
 
     def test_unknown_integration_branch_exits_2(self):
         self.runs([])
-        env = dict(os.environ, PATH=str(self.ghdir) + os.pathsep + os.environ["PATH"], FAKE_GH_DIR=str(self.ghdir))
-        p = subprocess.run(["python3", str(SCRIPT), "--into", "nope"], cwd=self.work, env=env,
+        env = dict(os.environ, PATH=str(self.ghdir) + os.pathsep + os.environ["PATH"], FAKE_GH_DIR=str(self.ghdir),
+                   **self.gh_env)
+        p = subprocess.run([sys.executable, str(SCRIPT), "--into", "nope"], cwd=self.work, env=env,
                            capture_output=True, text=True)
         self.assertEqual(p.returncode, 2)
 
     def test_missing_gh_exits_2(self):
         self.runs([])
         env = dict(os.environ, PATH="/nonexistent-gh:/usr/bin:/bin")
-        p = subprocess.run(["python3", str(SCRIPT), "--into", "X-integration"], cwd=self.work, env=env,
+        p = subprocess.run([sys.executable, str(SCRIPT), "--into", "X-integration"], cwd=self.work, env=env,
                            capture_output=True, text=True)
         self.assertEqual(p.returncode, 2)
 
