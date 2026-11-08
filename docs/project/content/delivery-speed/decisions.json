@@ -3031,6 +3031,29 @@
       ],
       "chosen": "Tracked ci-install.json keep/skip lists",
       "decided": "2026-11-08"
+    },
+    {
+      "id": "D135",
+      "question": "Fold a project's five delivery-script fixes into the public plugin? Source: that project's branch, read on this PC; only generic code is pushed.",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Yes, port tonight",
+          "summary": "A local agent reads the diffs and writes generic versions with tests.",
+          "recommended": true
+        },
+        {
+          "label": "Yes, from descriptions only",
+          "summary": "The project describes each fix; a cloud agent builds it."
+        },
+        {
+          "label": "No",
+          "summary": "Keep them in the project under keep."
+        }
+      ],
+      "chosen": "Yes, port tonight",
+      "decided": "2026-11-08"
     }
   ]
 }
