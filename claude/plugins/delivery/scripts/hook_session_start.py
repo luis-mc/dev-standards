@@ -91,16 +91,34 @@ def _cmdline_ok(pid):
         return True
 
 
+STOP_FAILED = {}     # DL118: pid -> reason, for a live watcher pid that stop_pid could not stop
+
+
 def stop_pid(pid):
-    """Stop one process by its recorded pid. Never by name."""
+    """Stop one process by its recorded pid. Never by name. True when it was signalled. False when the pid is
+    refused or already dead (nothing to report). A live pid that cannot be stopped (access denied) is False and its
+    reason is kept in STOP_FAILED[pid] (DL118)."""
     import signal
+    STOP_FAILED.pop(pid, None)
     if not isinstance(pid, int) or pid <= 1 or pid == os.getpid() or not _cmdline_ok(pid):
+        return False
+    import machine_slots as M
+    if not M.pid_alive(pid):          # DL118: OpenProcess + GetExitCodeProcess on Windows
         return False
     try:
         os.kill(pid, signal.SIGTERM)
-    except (OSError, ValueError):
+    except ProcessLookupError:
+        return False
+    except (OSError, ValueError) as exc:
+        STOP_FAILED[pid] = str(exc) or type(exc).__name__
         return False
     return True
+
+
+def stop_hint(pid):
+    if os.name == 'nt':
+        return 'from an Administrator shell on Windows: Stop-Process -Id %s' % pid
+    return 'kill %s (with sudo if needed)' % pid
 
 
 def spawn_watcher(root):
@@ -121,11 +139,23 @@ def spawn_watcher(root):
         return False
 
 
-def rearm_old_watchers(root, ledger, installed):
+class Rearmed(list):
+    """The stopped pids. `.failed` holds the pids that are alive but could not be stopped, `.warnings` the
+    texts for the session (DL118)."""
+    def __init__(self, *a):
+        super().__init__(*a)
+        self.failed = []
+        self.warnings = []
+
+
+def rearm_old_watchers(root, ledger, installed, at=None, watcher_min=None):
     """DL98: a watcher started from an older plugin version is stopped (by its recorded pid) and the newest is
-    started. A watcher with no version stamp is older. Same version: left alone. Returns (messages, stopped pids)."""
+    started. A watcher with no version stamp is older. Same version: left alone. Returns (messages, stopped pids).
+    DL118: a live old watcher that cannot be stopped is listed in stopped.failed with a warning in
+    stopped.warnings; the installed watcher is still started. The warning repeats while its heartbeat is fresh
+    (newer than watcher_min minutes; every such row when watcher_min is None)."""
     import delivery_ledger as L
-    msgs, stopped = [], []
+    msgs, stopped = [], Rearmed()
     want = L.version_key(installed)
     if not want:
         return msgs, stopped
@@ -135,14 +165,29 @@ def rearm_old_watchers(root, ledger, installed):
         have = L.version_key(w.get('version'))
         if have >= want:
             continue
-        if stop_pid(w.get('pid')):
-            stopped.append(w.get('pid'))
+        pid = w.get('pid')
+        if stop_pid(pid):
+            stopped.append(pid)
             msgs.append('stopped delivery_watch pid %s (plugin %s, installed %s)'
-                        % (w.get('pid'), w.get('version') or 'unstamped', installed))
-    if stopped:
+                        % (pid, w.get('version') or 'unstamped', installed))
+        elif pid in STOP_FAILED:
+            age = H.minutes_since(w.get('heartbeat_at'), at) if watcher_min is not None else 0
+            if age is not None and age < (watcher_min if watcher_min is not None else 1):
+                stopped.failed.append(pid)
+                stopped.warnings.append(
+                    'delivery_watch pid %s (plugin %s) could not be stopped: %s. Stop it yourself, %s.'
+                    % (pid, w.get('version') or 'unstamped', STOP_FAILED[pid], stop_hint(pid)))
+    if stopped or stopped.failed:
         msgs.append('started the installed delivery_watch' if spawn_watcher(root)
                     else 'could not start delivery_watch: start it in the background')
     return msgs, stopped
+
+
+def prune_dead_watchers(root, at):
+    """DL118: drop watcher rows whose pid is dead and whose heartbeat is over 24 h old."""
+    import delivery_ledger as L
+    import machine_slots as M
+    L.update(root, lambda led: L.prune_watchers(led, at, M.pid_alive))
 
 
 def main():
@@ -169,12 +214,17 @@ def main():
         parts.append('WARNING: ' + str(exc) + ' Run delivery_doctor.py.')
     try:
         import delivery_ledger as _L
-        rearm, gone = rearm_old_watchers(root, ledger, _L.plugin_version())
+        rearm, gone = rearm_old_watchers(root, ledger, _L.plugin_version(), at, cfg['watcher_min'])
     except Exception as exc:     # fail open
         H.warn('watcher re-arm skipped (%s: %s)' % (type(exc).__name__, exc))
         rearm, gone = [], []
     if rearm:
         parts.append('Watcher re-armed (DL98): ' + '; '.join(rearm) + '.')
+    parts += list(getattr(gone, 'warnings', []))
+    try:
+        prune_dead_watchers(root, at)
+    except Exception as exc:     # fail open
+        H.warn('watcher prune skipped (%s: %s)' % (type(exc).__name__, exc))
     fresh = any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < cfg['watcher_min'] for w in ledger['watchers']
                 if w.get('pid') not in gone) or bool(gone and rearm and rearm[-1].startswith('started'))
     if not fresh:
