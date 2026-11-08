@@ -1392,13 +1392,15 @@ def check_workflow(track: str, text: str) -> list[str]:
         problems.append("verify must install gitleaks from scripts/delivery/tools.json")
     if not re.search(r"^          fetch-depth: 0\s*$", v, re.M):
         problems.append("verify checkout must use fetch-depth: 0 (gitleaks scans full history)")
-    if "sha256sum -c" not in v:
-        problems.append("gitleaks download is not checksum verified")
+    # DL115: gitleaks comes through ci_tool.py (per-runner cache, checked against the tools.json pin, retried),
+    # never a bare download into RUNNER_TEMP.
+    if "python3 scripts/delivery/ci_tool.py gitleaks" not in v:
+        problems.append("gitleaks is not installed through scripts/delivery/ci_tool.py")
+    if re.search(r"(curl|wget)[^\n]*(gitleaks|\$\{base\})", v) or "RUNNER_TEMP" in v:
+        problems.append("gitleaks must not be downloaded into RUNNER_TEMP (use ci_tool.py)")
     if "'linux_x64'" not in v:
         problems.append("gitleaks is not checked against the SHA-256 pinned in tools.json")
-    elif 'echo "${sha}  ${archive}" | sha256sum -c -' not in v:
-        problems.append("the pinned SHA-256 is not what the archive is checked against")
-    if "::error::" not in v or "tools_pin.py" not in v or '[ -z "${sha:-}" ]' not in v:
+    if "::error::" not in v or "tools_pin.py" not in v or "exit 1" not in v:
         problems.append("a missing pin must fail the secret scan and name tools_pin.py")
     if "checksums.txt" in v:
         problems.append("the release's checksums file must not be a fallback")
@@ -1675,13 +1677,16 @@ def workflow_checker_detects_each_defect():
          lambda t: mutate(t, RUNS_ON, "runs-on: ubuntu-24.04", 1)),
         ("ts", ts, "not checked against the SHA-256 pinned",
          lambda t: mutate(t, "'linux_x64'", "'none'")),
-        ("go", go, "pinned SHA-256 is not what the archive",
-         lambda t: mutate(t, 'echo "${sha}  ${archive}" | sha256sum -c -', 'echo "${sha}  ${archive}"')),
+        ("go", go, "not installed through scripts/delivery/ci_tool.py",
+         lambda t: mutate(t, "python3 scripts/delivery/ci_tool.py gitleaks", "python3 scripts/delivery/fetch.py gitleaks")),
+        ("ts", ts, "must not be downloaded into RUNNER_TEMP",
+         lambda t: mutate(t, '          gitleaks="$(python3',
+                          '          cd "$RUNNER_TEMP" && curl -sSfL -O "${base}/gitleaks.tar.gz"\n          gitleaks="$(python3')),
         ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "missing pin must fail",
-         lambda t: mutate(t, '[ -z "${sha:-}" ]', '[ -n "${sha:-}" ]')),
+         lambda t: mutate(t, "tools_pin.py gitleaks", "the pin script for gitleaks")),
         ("dotnet", read(TEMPLATES / "dotnet/.github/workflows/ci.yml"), "must not be a fallback",
-         lambda t: mutate(t, "          tar -xzf",
-                          "          curl -sSfL -O \"${base}/gitleaks_${version}_checksums.txt\"\n          tar -xzf")),
+         lambda t: mutate(t, '          gitleaks="$(python3',
+                          '          echo gitleaks_checksums.txt\n          gitleaks="$(python3')),
         ("ts", ts, "job name",
          lambda t: mutate(t, "name: integration tests (ephemeral Postgres)", "name: integration")),
         ("ts", ts, "named 'web E2E",

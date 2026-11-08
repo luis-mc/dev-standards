@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.13.0
+version: 0.14.0
 owner: agents
 type: reference
 code:
@@ -117,6 +117,10 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.21** — Every sibling module a shipped delivery script imports ships with it, and a test checks this. When one is missing, `ci_watch.py` and `fallback_launch.py` print one line that names the missing file, its folder and the fix (`delivery_ci_install.py update --track <track>`, then commit `scripts/delivery/`), and exit 2. After an install or update, and on a dry run, `delivery_ci_install.py` lists `missing imports:`. In a git repository it also lists the managed files git does not track, under `not in git yet (commit them):`. A missing import makes it exit 3. Untracked files never change the exit code. (DL112)
 
 **R5.22** — `cancel_joined_runs.py --into <INTEGRATION> [--remote origin] [--repo OWNER/NAME] [--yes]` finds the active CI runs (queued, waiting, requested, pending, in progress) of branches already merged into the integration branch whose head commit the integration branch contains. A branch pushed again after the join is left alone. Runs of the integration branch, the default branch and unmerged branches are never touched. It is a dry run by default and prints one `cancel <id> <branch> <workflow> <url>` line per run. With `--yes` it runs `gh run cancel` for each run. It exits 0 when done, 1 when a cancel fails, and 2 on a usage error, a missing integration branch, or gh missing or failing. `DELIVERY_GH` names another gh program. Run it after a join so the ready PR's CI gets the runner. (DL113)
+
+**R5.23** — CI jobs keep pinned tools on the runner's own disk. `scripts/delivery/ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>` prints the path of a verified file in the per-runner cache. The cache is `CI_TOOLS_DIR`, else `C:/ci-tools` on Windows and `~/.cache/ci-tools` elsewhere, laid out as `<tool>/<version>/<file>`. It is never `$RUNNER_TEMP` or the workspace. A cached file is used only when its SHA-256 matches the pin; a mismatch is deleted and fetched again. A fetch makes 5 attempts (waits of 10, 20, 30 and 40 s; `CI_TOOL_RETRY_DELAY` sets the base) with a 20 s timeout. It downloads to a `.partial` file, verifies it, then renames it. `ci_tool.py gitleaks [--platform P]` does the same for the gitleaks pin in `tools.json` and prints the binary's path. Exit 0 prints the path, 1 is a failure (one stderr line with the URL, the attempts and the last error), 2 is a usage error. The shipped `ci.yml` gitleaks steps use it, and the runner pool keeps the cache on a `ci-tools` volume at `/ci-tools`. (DL115)
+
+**R5.24** — DL-94: a workflow step that downloads a release asset or binary (curl, wget, Invoke-WebRequest, iwr or urllib, on a `/releases/download/` URL or a `.zip`, `.tar.gz`, `.tgz`, `.exe`, `.msi` or `.xz` file) is flagged when it does not go through `ci_tool.py`, writes into `RUNNER_TEMP`, or has no SHA-256 check. `workflow_fetch_check.py [FILES...]` reports each finding as `<file>:<line>: DL-94 <what> (<fix>)` and exits 0 when clean, 1 on findings and 2 on a usage error. The PreToolUse hook runs the same check on a Write, Edit or MultiEdit of `.github/workflows/*.yml` and blocks a finding. It fails open on its own errors. A reviewed exception ends the line with `# ci-tool: ok <reason>`. (DL116)
 
 ## 6. Non-functional requirements
 
@@ -391,6 +395,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.0 | 2026-11-08 | RELEASE-67 | Pinned CI tools are cached on the runner disk with ci_tool.py: checksum-verified, with retries (R5.23).<br>DL-94 flags workflow downloads that skip the cache or the checksum (R5.24). | DL115, DL116 |
 | 0.13.0 | 2026-11-08 | RELEASE-66 | join.py keeps and reports clean merges when a later branch conflicts (R5.20).<br>Missing delivery modules are named, listed by the installer, and checked by a test (R5.21).<br>New cancel_joined_runs.py cancels CI runs of branches already joined (R5.22). | DL111, DL112, DL113 |
 | 0.12.4 | 2026-11-07 | RELEASE-65 | On Windows the watcher opens no console windows, and a second watcher for the same root exits (R5.19). | DL109 |
 | 0.12.3 | 2026-11-07 | RELEASE-63 | A failed gate setup step names two causes: a stale lockfile, or an install killed for memory (exit 137, first when the code is 137). | DL105 |
