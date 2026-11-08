@@ -3012,6 +3012,25 @@
       ],
       "chosen": "Review and fix",
       "decided": "2026-11-08"
+    },
+    {
+      "id": "D134",
+      "question": "A project's update lost its own fixes and re-added workflows it leaves out. How should install/update respect project choices? (Picked overnight by me; for owner review.)",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Tracked ci-install.json keep/skip lists",
+          "summary": "scripts/delivery/ci-install.json names files update keeps and templates it never writes.",
+          "recommended": true
+        },
+        {
+          "label": "ci.skip_templates in .delivery/config.json",
+          "summary": "As the project asked; but .delivery/ is per machine and untracked."
+        }
+      ],
+      "chosen": "Tracked ci-install.json keep/skip lists",
+      "decided": "2026-11-08"
     }
   ]
 }

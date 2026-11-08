@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T22:57+00:00",
+  "updated": "2026-11-08T23:01+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2515,6 +2515,65 @@
       "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
       "rides": "DL117",
       "started": "2026-11-08T23:05+00:00"
+    },
+    {
+      "id": "DL119",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release install keep list",
+      "detail": "Join DL121, fold notes, CI, merge, install, smoke, cleanup",
+      "expected": "09 Nov ~00:50",
+      "changed": "2026-11-08T23:01+00:00",
+      "expected_basis": "1 cloud agent ~50 min, after RELEASE-68 CI; join ~15, spec-lint ~8",
+      "release": 69,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-08T23:15+00:00",
+          "end": "2026-11-09T00:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T00:20+00:00",
+          "end": "2026-11-09T00:35+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T00:35+00:00",
+          "end": "2026-11-09T00:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T00:45+00:00",
+          "end": "2026-11-09T00:50+00:00"
+        }
+      ],
+      "started": "2026-11-08T23:15+00:00"
+    },
+    {
+      "id": "DL120",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Install keep and skip list",
+      "detail": "A tracked project file names managed files update must keep and templates it must not add",
+      "expected": "09 Nov ~00:05",
+      "changed": "2026-11-08T23:01+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 30 + checks 15 min",
+      "rides": "DL119",
+      "started": "2026-11-08T23:15+00:00"
+    },
+    {
+      "id": "DL121",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Needs you",
+      "item": "Fold a project's script fixes into the templates",
+      "detail": "artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner's call",
+      "expected": "09 Nov ~06:30",
+      "changed": "2026-11-08T23:01+00:00",
+      "expected_basis": "the owner answers at the 6:30 wake-up"
     },
     {
       "id": "DS1",
