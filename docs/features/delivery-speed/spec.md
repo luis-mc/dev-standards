@@ -11,7 +11,7 @@ code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
   - tools/test_delivery_*.py
-last_verified: 2026-11-01
+last_verified: 2026-11-08
 artifact: feature-delivery-speed.html
 ---
 # Delivery speed
