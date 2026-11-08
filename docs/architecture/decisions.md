@@ -89,7 +89,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D125 | Who codes today's items (gate text and pool tests, Windows tests, the R5.46 bug, the smoke step)? | Cloud agents, I join | decided | 2026-11-07 |
 | delivery-speed | D126 | How are today's items grouped into releases? | One release for all | decided | 2026-11-07 |
 | delivery-speed | D127 | Until the restart, the old artifacts hook asks for an hourly publish with nothing open. What to do? | Comply each time | decided | 2026-11-07 |
-| delivery-speed | D128 | Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.) | Require description only | decided | 2026-11-07 |
+| delivery-speed | D128 | Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.) (The owner confirmed it on 8 Nov.) | Require description only | decided | 2026-11-07 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
 | delivery-speed | D14 | How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account? | Runner account only | decided | 2026-10-26 |
 | delivery-speed | D15 | Stop train-cleanup creating a GitHub release on every merge to main? | Stop release per merge | decided | 2026-10-26 |
