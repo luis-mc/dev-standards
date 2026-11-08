@@ -23,6 +23,6 @@
 - `ci_areas.py --branch-advice`: unreadable diff; advises `gh workflow run spec-lint.yml --ref DL118-rearm-unstoppable-watchers -f areas=specs,delivery,artifacts,profiles,transcript-folds,docs`. Not run.
 - docs_check.py: not run (luismc-docs path not available here).
 
-Branch head SHA: see last commit on DL118-rearm-unstoppable-watchers.
+Branch head SHA: see the last commit on the branch (the report is committed with it).
 
-NOT READY
+READY
