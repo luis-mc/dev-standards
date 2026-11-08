@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T23:06+00:00",
+  "updated": "2026-11-08T23:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2571,9 +2571,9 @@
       "status": "Waiting",
       "item": "Fold a project's script fixes into the templates",
       "detail": "artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner's call",
-      "expected": "09 Nov ~01:00",
-      "changed": "2026-11-08T23:06+00:00",
-      "expected_basis": "local agent held at 23:06 by memory 87% > 85%; retry 23:22, then ~90 min",
+      "expected": "09 Nov ~02:00",
+      "changed": "2026-11-08T23:22+00:00",
+      "expected_basis": "launch held again 23:22, memory 91.7% > 85%; retry hourly, then ~90 min",
       "rides": "DL123",
       "started": "2026-11-08T23:06+00:00",
       "waits_on": "work"
