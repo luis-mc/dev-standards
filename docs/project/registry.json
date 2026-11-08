@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T23:01+00:00",
+  "updated": "2026-11-08T23:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2574,6 +2574,16 @@
       "expected": "09 Nov ~06:30",
       "changed": "2026-11-08T23:01+00:00",
       "expected_basis": "the owner answers at the 6:30 wake-up"
+    },
+    {
+      "id": "DL122",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Project-owned workflow list for artifact prune",
+      "detail": "artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow",
+      "expected": "",
+      "changed": "2026-11-08T23:03+00:00"
     },
     {
       "id": "DS1",

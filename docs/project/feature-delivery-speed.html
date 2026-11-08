@@ -888,8 +888,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-08T23:01+00:00">08 Nov 23:01</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">08 Nov 22:27</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-08T23:03+00:00">08 Nov 23:03</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">08 Nov 23:03</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">1 task</span></summary>
@@ -917,14 +917,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">116</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">116</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL118"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL118</span>Re-arm reports unstoppable watchers; dead rows pruned<span class="release-line"><span class="release-name">RELEASE-68</span></span></td><td data-label="Detail">SessionStart names a watcher it cannot stop (access denied) and how to stop it as admin; dead watcher rows older than a day are pruned</td><td data-label="Expected">08 Nov ~23:50<span class="expected-basis">cloud agent: setup 5 + work 25 + checks 15 min</span></td></tr>
 <tr data-task="DL120"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL120</span>Install keep and skip list<span class="release-line"><span class="release-name">RELEASE-69</span></span></td><td data-label="Detail">A tracked project file names managed files update must keep and templates it must not add</td><td data-label="Expected">09 Nov ~00:05<span class="expected-basis">cloud agent: setup 5 + work 30 + checks 15 min</span></td></tr>
 <tr data-task="DL117"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL117</span><span class="release-name">RELEASE-68</span>Release watcher rows and spec review</td><td data-label="Detail">Join DL118 DL119, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov ~00:20<span class="expected-basis">2 cloud agents ~45 min, join ~15, spec-lint ~8</span></td></tr>
 <tr data-task="DL119"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL119</span><span class="release-name">RELEASE-69</span>Release install keep list</td><td data-label="Detail">Join DL121, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov ~00:50<span class="expected-basis">1 cloud agent ~50 min, after RELEASE-68 CI; join ~15, spec-lint ~8</span></td></tr>
+<tr data-task="DL122"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune</td><td data-label="Detail">artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow</td><td data-label="Expected">Not scheduled</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
@@ -1085,6 +1086,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D134">
+<h3 class="decision-head"><span class="decision-id">D134</span> <span class="decision-question">A project&#x27;s update lost its own fixes and re-added workflows it leaves out. How should install/update respect project choices? (Picked overnight by me; for owner review.)</span></h3>
+<p class="decision-meta">Asked 08 Nov · Decided 08 Nov</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Tracked ci-install.json keep/skip lists</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 08 Nov</span></div>
+<p class="decision-summary">scripts/delivery/ci-install.json names files update keeps and templates it never writes.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">ci.skip_templates in .delivery/config.json</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">As the project asked; but .delivery/ is per machine and untracked.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D133">
 <h3 class="decision-head"><span class="decision-id">D133</span> <span class="decision-question">docs_check T2: the project-setup and test-cost feature specs are older than their code. Review them overnight?</span></h3>
 <p class="decision-meta">Asked 08 Nov · Decided 08 Nov</p>
