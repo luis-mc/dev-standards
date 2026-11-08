@@ -24,8 +24,10 @@ services:
       CI_MAX_PARALLEL: ${POOL_CPUS_INT:-1}
       DELIVERY_MACHINE_DIR: /machine
       DELIVERY_DB_HOST: db
+      CI_TOOLS_DIR: /ci-tools
     volumes:
       - agents:/agents
+      - ci-tools:/ci-tools
       - ${MACHINE_DIR}:/machine
       - ./agents.json:/agents.json
     secrets:
@@ -44,6 +46,7 @@ services:
     networks: [pool-net]
 volumes:
   agents:
+  ci-tools:
   dbdata:
 networks:
   pool-net:
