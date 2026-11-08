@@ -16,5 +16,5 @@
 ## Notes
 - `delivery_common.py` imports the plugin-only `delivery_ledger` optionally at run time; the closure test allows modules found in the plugin's `scripts/`.
 
-Branch head SHA: see below.
+Branch head SHA: cdfa93b (the report commit follows).
 READY
