@@ -7,7 +7,7 @@ rule, with a one-line reason that names the DL id and the fix, as
 Reads the ledger and .delivery/config.json read-only. A project without .delivery/ is
 untouched; an error in the hook allows the call (fail open).
 
-Checks: DL-77 (load guard, exit 2), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
+Checks: DL-77 (load guard, exit 2), DL-94 (workflow tool downloads), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
 """
 import fnmatch
 import json
@@ -296,6 +296,47 @@ def check_bash(root, cfg, ledger, data, at):
 
 # --- Write ---------------------------------------------------------------------------------
 
+def _fetch_checker():
+    """DL-94: load workflow_fetch_check.py from the plugin's own templates (one copy, no second one to drift)."""
+    import importlib.util
+    here = os.path.dirname(os.path.abspath(__file__))
+    path = os.path.join(here, '..', 'templates', 'shared', 'scripts', 'delivery', 'workflow_fetch_check.py')
+    spec = importlib.util.spec_from_file_location('workflow_fetch_check', path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def check_workflow_fetch(root, cfg, data):
+    """DL-94: a write to .github/workflows/ must not add an uncached, unchecked tool download. Fails open."""
+    try:
+        if not H.check_on(cfg, 'DL-94'):
+            return
+        ti = data.get('tool_input') or {}
+        path = ti.get('file_path') or ''
+        full = os.path.abspath(path if os.path.isabs(path) else os.path.join(root, path))
+        rel = os.path.relpath(full, root).replace('\\', '/')
+        if not rel.startswith('.github/workflows/') or not rel.lower().endswith(('.yml', '.yaml')):
+            return
+        if data.get('tool_name') == 'Write':
+            texts = [ti.get('content')]
+        elif data.get('tool_name') == 'MultiEdit':
+            texts = [e.get('new_string') for e in (ti.get('edits') or []) if isinstance(e, dict)]
+        else:
+            texts = [ti.get('new_string')]
+        found = []
+        mod = _fetch_checker()
+        for t in texts:
+            if isinstance(t, str):
+                found += mod.check_text(t, rel)
+    except Exception:       # fail open
+        return
+    if found:
+        deny('DL-94 %s Fetch pinned tools through the per-runner cache: '
+             'python3 scripts/delivery/ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>. '
+             'A reviewed exception ends the line with "# ci-tool: ok <reason>".' % ' | '.join(found[:5]))
+
+
 def check_write(root, cfg, data):
     path = (data.get('tool_input') or {}).get('file_path') or ''
     if not path.lower().endswith('.md') or not H.check_on(cfg, 'DL-75'):
@@ -565,7 +606,10 @@ def main():
         if tool in ('Bash', 'PowerShell'):
             check_bash(root, cfg, ledger, data, at)
         elif tool == 'Write':
+            check_workflow_fetch(root, cfg, data)
             check_write(root, cfg, data)
+        elif tool in ('Edit', 'MultiEdit'):
+            check_workflow_fetch(root, cfg, data)
         elif tool == 'Agent':
             check_launch(cfg, ledger, data, 'local')
         elif tool == 'RemoteTrigger':

@@ -34,6 +34,7 @@
 - A gate that fails at `setup` means a stale lockfile (regenerate and commit it) or an install killed for memory (exit 137: larger pool cap or fewer parallel jobs). Never install unfrozen. <!-- check: DL-23 -->
 - After the ready PR merges, run `scripts/delivery/cleanup.py --pr <N>`: it removes the train's branches, gate-result refs and worktrees. Leave nothing behind. <!-- check: DL-14 -->
 - Build artifacts on GitHub (installers such as MSI, bundles, reports): keep only the newest of each name. Give each kind a stable name; `artifact-prune.yml` deletes the older ones after every run. <!-- check: DL-22 -->
+- CI jobs fetch pinned tools through `scripts/delivery/ci_tool.py`: a per-runner cache, sha256-checked, with retries; never a bare download into RUNNER_TEMP. <!-- check: DL-94 -->
 
 ## Docs
 - Create every doc under `docs/`. <!-- check: DL-75 -->
