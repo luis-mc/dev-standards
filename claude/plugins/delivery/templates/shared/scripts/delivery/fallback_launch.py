@@ -46,7 +46,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
 
-import ci_fallback  # noqa: E402  (the Option 4 core: settings, decision, caps, claim; DL23)
+try:
+    import ci_fallback  # noqa: E402
+except ModuleNotFoundError as _exc:
+    _name = _exc.name or "a module"
+    print("%s: %s.py is missing from %s. Run `delivery_ci_install.py update --track <track>` from the plugin, "
+          "then commit scripts/delivery/." % (Path(__file__).name, _name.split(".")[0], Path(__file__).resolve().parent),
+          file=sys.stderr)
+    sys.exit(2)
 
 LAUNCH_PREFIX = "ci-fallback"
 CLAIM_PREFIX = "ci-claim"

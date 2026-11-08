@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.12.4
+version: 0.13.0
 owner: agents
 type: reference
 code:
@@ -111,6 +111,12 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.18** — A cloud `RemoteTrigger` create sets `"mcp_connections": []` and `"clear_mcp_connections": true`, or lists the connectors the brief needs. DL-93 refuses a create body with neither. (DL100)
 
 **R5.19** — On Windows the watcher opens no console windows. SessionStart starts it on a hidden console (`CREATE_NO_WINDOW`, never `DETACHED_PROCESS`), and each `gh` and `git` call it makes passes `CREATE_NO_WINDOW`. A watcher that finds another live watcher for the same root, with a heartbeat newer than three intervals and a version not older than its own, exits. (DL109)
+
+**R5.20** — `join.py` never discards a clean merge. A branch that conflicts (other than in lockfiles only) is aborted and skipped, and the join goes on with the next branch. At the end it names each conflicting branch and its files and says which clean merges it kept. With `--push` it pushes the clean merges; without it they stay committed on the local integration branch. Either way it exits 3. The join result adds `partial`, `conflicting` (branch to files), `pushed`, `skipped_steps` and `refused`. On a partial join the steps that judge the whole head (docs strip, gallery rebuild, light checks, ready PR text) wait for the call that joins the rest. A gate refusal still stops the join, and it keeps the clean merges made before it. (DL111)
+
+**R5.21** — Every sibling module a shipped delivery script imports ships with it, and a test checks this. When one is missing, `ci_watch.py` and `fallback_launch.py` print one line that names the missing file, its folder and the fix (`delivery_ci_install.py update --track <track>`, then commit `scripts/delivery/`), and exit 2. After an install or update, and on a dry run, `delivery_ci_install.py` lists `missing imports:`. In a git repository it also lists the managed files git does not track, under `not in git yet (commit them):`. A missing import makes it exit 3. Untracked files never change the exit code. (DL112)
+
+**R5.22** — `cancel_joined_runs.py --into <INTEGRATION> [--remote origin] [--repo OWNER/NAME] [--yes]` finds the active CI runs (queued, waiting, requested, pending, in progress) of branches already merged into the integration branch whose head commit the integration branch contains. A branch pushed again after the join is left alone. Runs of the integration branch, the default branch and unmerged branches are never touched. It is a dry run by default and prints one `cancel <id> <branch> <workflow> <url>` line per run. With `--yes` it runs `gh run cancel` for each run. It exits 0 when done, 1 when a cancel fails, and 2 on a usage error, a missing integration branch, or gh missing or failing. `DELIVERY_GH` names another gh program. Run it after a join so the ready PR's CI gets the runner. (DL113)
 
 ## 6. Non-functional requirements
 
@@ -385,6 +391,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.0 | 2026-11-08 | RELEASE-66 | join.py keeps and reports clean merges when a later branch conflicts (R5.20).<br>Missing delivery modules are named, listed by the installer, and checked by a test (R5.21).<br>New cancel_joined_runs.py cancels CI runs of branches already joined (R5.22). | DL111, DL112, DL113 |
 | 0.12.4 | 2026-11-07 | RELEASE-65 | On Windows the watcher opens no console windows, and a second watcher for the same root exits (R5.19). | DL109 |
 | 0.12.3 | 2026-11-07 | RELEASE-63 | A failed gate setup step names two causes: a stale lockfile, or an install killed for memory (exit 137, first when the code is 137). | DL105 |
 | 0.12.2 | 2026-11-07 | RELEASE-62 | A pool setup rerun keeps the cap in the pool .env (--resize to change it) and never lowers .wslconfig; pool-refresh rewrites only the runner SHA and the browser settings, then rebuilds (D118). | DL103 |
