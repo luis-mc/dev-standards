@@ -24,7 +24,23 @@ After the run (also with --dry-run) it checks the imports (DL112). For every .py
 files that exist but are not tracked are listed under "not in git yet (commit them):". With --dry-run the
 check looks at the project as it is now plus what the run would write.
 
-Exit 0 done, 1 a bad track, 2 a missing template folder, 3 a managed script imports a sibling module that is
+Keep and skip lists (DL120). A project may own `scripts/delivery/ci-install.json`. Install and update never
+write or overwrite it. It has two lists of paths relative to the project root:
+
+    {"keep": ["scripts/delivery/ci_watch.py"], "skip": [".github/workflows/package-windows.yml"]}
+
+keep  `update` never overwrites these. When the template differs, the file is listed as
+      "kept (ci-install.json)", and at the end one line per file says:
+      "kept <path>: the plugin's version differs; diff it with <template path> and fold your change into the
+      plugin or drop it". A kept file that is missing is still written.
+skip  `install` and `update` never write these, even when missing. They are listed as "skipped (ci-install.json)".
+A path in either list that the plugin does not manage prints a "warning:" line; it is not an error. A file that
+is not valid JSON (or whose lists are not lists of strings) prints one line naming the file and exits 2. With
+no ci-install.json the run is as before. The import check treats a skipped or kept file like any file on disk.
+The plugin ships `ci-install.example.json` (empty lists and a `_comment`); it is copied like any template and
+is never read as the real file.
+
+Exit 0 done, 1 a bad track, 2 a missing template folder or a bad ci-install.json, 3 a managed script imports a sibling module that is
 not in the project (the files were still written). Untracked files do not change the exit code.
 Standard library only.
 """
@@ -32,6 +48,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import json
 import os
 import shutil
 import subprocess
@@ -44,7 +61,8 @@ TRACKS = ("ts", "go", "rust", "dotnet")
 
 # Project-edited: `update` never overwrites these (the project owns them after the first install).
 PROJECT_OWNED_NAMES = {"gate.json", "smoke.json", "ci-areas.json", "ci-timings.json", "ci-scope.json",
-                       "quarantine.json", "ci-shards.json", "ci-shards.example.json", "ci.yml", "package.yml", "nightly-full.yml"}
+                       "quarantine.json", "ci-shards.json", "ci-shards.example.json", "ci.yml", "package.yml", "nightly-full.yml",
+                       "ci-install.json"}
 SKIP_DIRS = {"__pycache__"}
 SKIP_FILES = {"CONTRACT.md"}
 
@@ -64,8 +82,34 @@ def same(a: str, b: str) -> bool:
         return fa.read().replace(b"\r\n", b"\n") == fb.read().replace(b"\r\n", b"\n")
 
 
-def plan(track: str, root: str, mode: str) -> list:
-    """[(relative path, source, action)] with action written | overwritten | kept | differs | same."""
+CONFIG = "scripts/delivery/ci-install.json"
+SKIPPED = "skipped (ci-install.json)"
+KEPT = "kept (ci-install.json)"
+
+
+def load_config(root: str):
+    """(keep, skip) as sets of paths from the project's ci-install.json. ({}, {}) when absent. ValueError when bad."""
+    path = os.path.join(root, CONFIG.replace("/", os.sep))
+    if not os.path.exists(path):
+        return set(), set()
+    try:
+        with open(path, "rb") as f:
+            data = json.loads(f.read().decode("utf-8-sig"))
+    except (OSError, ValueError) as e:
+        raise ValueError("%s is not valid JSON (%s)" % (CONFIG, e))
+    if not isinstance(data, dict):
+        raise ValueError("%s must be a JSON object with keep and skip lists" % CONFIG)
+    lists = []
+    for key in ("keep", "skip"):
+        val = data.get(key, [])
+        if not isinstance(val, list) or not all(isinstance(v, str) for v in val):
+            raise ValueError("%s: %r must be a list of paths" % (CONFIG, key))
+        lists.append({(v.replace("\\", "/")[2:] if v.replace("\\", "/").startswith("./") else v.replace("\\", "/")) for v in val})
+    return lists[0], lists[1]
+
+
+def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
+    """[(relative path, source, action)] with action written | overwritten | kept | differs | same | skipped | kept (ci-install.json)."""
     out, sources = [], {}
     for part in ("shared", track):
         base = os.path.join(TEMPLATES, part)
@@ -81,6 +125,10 @@ def plan(track: str, root: str, mode: str) -> list:
             action = "overwritten"
         else:
             action = "differs" if mode == "update" else "kept"
+        if rel in skip and action in ("written", "overwritten"):
+            action = SKIPPED
+        elif rel in keep and action == "overwritten":
+            action = KEPT
         out.append((rel, src, action))
     return out
 
@@ -162,7 +210,15 @@ def main(argv=None) -> int:
         print("delivery_ci_install: no templates for %r under %s" % (args.track, TEMPLATES), file=sys.stderr)
         return 2
     root = os.path.abspath(args.root)
-    items = plan(args.track, root, args.action)
+    try:
+        keep, skip = load_config(root)
+    except ValueError as e:
+        print("delivery_ci_install: %s" % e, file=sys.stderr)
+        return 2
+    items = plan(args.track, root, args.action, keep, skip)
+    managed = {rel for rel, _s, _a in items}
+    for rel in sorted((keep | skip) - managed):
+        print("warning: %s lists %s, which the plugin does not manage" % (CONFIG, rel))
     if not args.dry_run:
         apply(items, root)
     for rel, _src, action in items:
@@ -172,6 +228,10 @@ def main(argv=None) -> int:
     for _r, _s, a in items:
         counts[a] = counts.get(a, 0) + 1
     print("delivery_ci_install: %s" % ", ".join("%d %s" % (n, a) for a, n in sorted(counts.items())))
+    for rel, src, action in items:
+        if action == KEPT:
+            print("kept %s: the plugin's version differs; diff it with %s and fold your change into the plugin or drop it"
+                  % (rel, os.path.relpath(src, PLUGIN).replace(os.sep, "/")))
     loose = untracked(items, root)
     if loose:
         print("not in git yet (commit them):")
