@@ -8,8 +8,13 @@ remote head, and for each BRANCH in order:
 requires a trusted, passing gate result (a base older than INTEGRATION's head is
 fine), then merges it with `git merge --no-ff -m "Join BRANCH"`. A conflict that
 touches only a lockfile is resolved by taking INTEGRATION's version and re-running
-gate.json's `setup`; any other conflict aborts that merge, writes
-.delivery/join-result.json and exits 3. After the last merge a light check runs on the
+gate.json's `setup`; any other conflict aborts that merge only (DL111),
+and the join goes on with the next branch: every clean merge is kept, each conflicting branch is
+skipped and reported with its files ("conflicting" in .delivery/join-result.json). With --push the clean
+merges are pushed; without it they stay committed on the local branch. Exit 3. A partial join skips
+docs stripping, the gallery rebuild, the light check and the ready pull request text; they run when the
+rest is joined. A gate-result refusal stops at once, keeps the earlier clean merges the same way, and
+exits with the refusal's code. After the last merge a light check runs on the
 joined head (unless --no-gate; or unless the joined tree equals the tree of a joined
 branch head whose gate result is trusted for that head and for the base the gate would use,
 in which case it is skipped and the output says so): setup (install from the lockfile), then
@@ -239,6 +244,52 @@ def quick_check(root: Path, cfg: dict, base_ref: str) -> tuple[int, dict]:
     return code, report
 
 
+def finish_partial(root: Path, args, into: str, joined: list[str], conflicting: dict[str, list[str]],
+                   stop_code: int | None, stop_branch: str | None, stop_reason: str | None) -> int:
+    """DL111: some branch conflicted or was refused. The clean merges stay on the branch and are pushed with --push.
+
+    The steps after the merges (docs stripping, gallery rebuild, light check, ready pull request text) do not run:
+    they judge the whole join, and the join is not whole. They run in the call that joins the rest, which sees the
+    full head. Exit is EXIT_CONFLICT for conflicts, or the refusal's own code when a refusal stopped the join."""
+    first = stop_branch or next(iter(conflicting))
+    flat = [f for files in conflicting.values() for f in files]
+    extra: dict = {"partial": True, "conflicting": conflicting, "pushed": False,
+                   "skipped_steps": "docs stripping, gallery rebuild, light check and ready pull request text "
+                                    "wait for the join of the remaining branches"}
+    if stop_branch is not None:
+        extra["refused"] = {"branch": stop_branch, "reason": stop_reason}
+    for b, files in conflicting.items():
+        dc.eprint("join: %s conflicts with %s in:" % (b, into))
+        for f in files:
+            dc.eprint("    " + f)
+    if stop_branch is not None:
+        dc.eprint("join: stopped at %s: %s" % (stop_branch, stop_reason))
+    remote = args.remote
+    head = dc.rev("HEAD", root)
+    if joined:
+        if args.push:
+            pushed = dc.run_git(["push", "--quiet", "--no-verify", remote, into], cwd=root, check=False)
+            if pushed.returncode != 0:
+                dc.eprint("join: push of %s failed: %s; the clean merges stay committed on local %s"
+                          % (into, pushed.stderr.strip(), into))
+                write_join_result(root, joined, first, flat, stop_reason, extra=extra)
+                return dc.EXIT_FAIL
+            extra["pushed"] = True
+            dc.ledger_record(root, "train_state", branch=into, state="pushed", by="join.py")
+            dc.eprint("join: kept the clean merges (%s) and pushed %s; the other branches are left to do"
+                      % (", ".join(joined), into))
+        else:
+            dc.eprint("join: kept the clean merges (%s), committed on local %s; not pushed (no --push)"
+                      % (", ".join(joined), into))
+        for b in joined:
+            dc.ledger_record(root, "cargo", branch=into, task=b, by="join.py",
+                             fields={"branch": b, "gate": "ci" if args.ci_gate else "pass", "joined_sha": head})
+    else:
+        dc.eprint("join: no branch merged cleanly; nothing kept")
+    write_join_result(root, joined, first, flat, stop_reason, extra=extra)
+    return stop_code if stop_code is not None else dc.EXIT_CONFLICT
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="join.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--into", required=True, metavar="INTEGRATION", help="integration branch")
@@ -288,6 +339,10 @@ def main(argv: list[str] | None = None) -> int:
     ci_gate = args.ci_gate or bool(cfg.get("ci_gate"))
     join_start = dc.rev("HEAD", root)
     joined: list[str] = []
+    conflicting: dict[str, list[str]] = {}  # DL111: branch -> its conflict files; skipped, the loop goes on
+    stop_code: int | None = None  # DL111: set by a refusal or a failed merge; the loop ends, clean merges are kept
+    stop_branch: str | None = None
+    stop_reason: str | None = None
     for branch in args.branches:
         verdict = gate_verify.verify(branch, integ_ref, remote, allow_older_base=True, root=root) if gated else None
         if verdict is not None and not verdict["trusted"] and ci_gate:
@@ -297,8 +352,8 @@ def main(argv: list[str] | None = None) -> int:
             dc.eprint("join: %s has no trusted passing gate result:" % branch)
             for reason in verdict["reasons"]:
                 dc.eprint("  - " + reason)
-            write_join_result(root, joined, branch, [], "; ".join(verdict["reasons"]))
-            return verdict["exit"]
+            stop_code, stop_branch, stop_reason = verdict["exit"], branch, "; ".join(verdict["reasons"])
+            break
 
         print("join: merging %s" % branch, flush=True)
         merge = dc.run_git(
@@ -316,8 +371,8 @@ def main(argv: list[str] | None = None) -> int:
         if not conflicts:
             abort_merge(root)
             dc.eprint("join: git merge failed for %s: %s" % (branch, (merge.stderr or merge.stdout).strip()))
-            write_join_result(root, joined, branch, [], "merge failed")
-            return dc.EXIT_USAGE
+            stop_code, stop_branch, stop_reason = dc.EXIT_USAGE, branch, "merge failed"
+            break
 
         lock = [c for c in conflicts if dc.is_lockfile(c, cfg)]
         if len(lock) == len(conflicts):
@@ -326,14 +381,14 @@ def main(argv: list[str] | None = None) -> int:
             if problem is not None:
                 abort_merge(root)
                 dc.eprint("join: could not resolve the lockfile conflict: %s" % problem)
-                write_join_result(root, joined, branch, conflicts, problem)
-                return dc.EXIT_CONFLICT
+                conflicting[branch] = conflicts
+                continue
             commit = dc.run_git(["commit", "--no-edit"], cwd=root, check=False, env=dc.git_env())
             if commit.returncode != 0:
                 abort_merge(root)
                 dc.eprint("join: could not commit the resolved merge: %s" % (commit.stderr or commit.stdout).strip())
-                write_join_result(root, joined, branch, conflicts, "commit failed")
-                return dc.EXIT_CONFLICT
+                conflicting[branch] = conflicts
+                continue
             joined.append(branch)
             continue
 
@@ -341,8 +396,10 @@ def main(argv: list[str] | None = None) -> int:
         dc.eprint("join: %s conflicts with %s in:" % (branch, into))
         for c in conflicts:
             dc.eprint("    " + c)
-        write_join_result(root, joined, branch, conflicts)
-        return dc.EXIT_CONFLICT
+        conflicting[branch] = conflicts
+
+    if conflicting or stop_code is not None:
+        return finish_partial(root, args, into, joined, conflicting, stop_code, stop_branch, stop_reason)
 
     write_join_result(root, joined, None, [])
 
