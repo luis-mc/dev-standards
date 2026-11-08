@@ -2897,6 +2897,121 @@
       ],
       "chosen": "Require description only",
       "decided": "2026-11-07"
+    },
+    {
+      "id": "D129",
+      "question": "The delivery watcher merges a green release PR itself, about a minute after its CI passes. Keep it?",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Keep it",
+          "summary": "The watcher merges a ready PR once its head's CI is green; not GitHub auto-merge.",
+          "recommended": true
+        },
+        {
+          "label": "Only a session or the owner merges",
+          "summary": "The watcher only reports green."
+        },
+        {
+          "label": "Per-project switch",
+          "summary": "watch.merge_green in config."
+        }
+      ],
+      "chosen": "Keep it",
+      "decided": "2026-11-08"
+    },
+    {
+      "id": "D130",
+      "question": "The ledger keeps dead watcher rows, and an old watcher writes heartbeats with no version. What to do?",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Investigate, then fix",
+          "summary": "Find the writer, then a patch release that prunes dead rows."
+        },
+        {
+          "label": "Only investigate",
+          "summary": "Report it, change nothing."
+        },
+        {
+          "label": "Fix tonight",
+          "summary": "Prune and fix in one release.",
+          "recommended": true
+        },
+        {
+          "label": "Leave it",
+          "summary": "Rows are harmless."
+        }
+      ],
+      "chosen": "Investigate, then fix",
+      "decided": "2026-11-08"
+    },
+    {
+      "id": "D131",
+      "question": "An old elevated watcher (PID 12816) cannot be stopped without admin. Who stops it?",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Owner stops it as admin",
+          "summary": "Stop-Process -Id 12816,73580 in an Administrator PowerShell.",
+          "recommended": true
+        },
+        {
+          "label": "Session tries first",
+          "summary": "Try without admin; leave it if access is denied."
+        },
+        {
+          "label": "Leave it",
+          "summary": "Only report it."
+        }
+      ],
+      "chosen": "Session tries first",
+      "decided": "2026-11-08"
+    },
+    {
+      "id": "D132",
+      "question": "When session start cannot stop an old watcher, should it still start the new one?",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Warn, still start",
+          "summary": "Start the new watcher and name the PID that could not be stopped and how to stop it.",
+          "recommended": true
+        },
+        {
+          "label": "Refuse to start",
+          "summary": "No new watcher while the old one lives."
+        }
+      ],
+      "chosen": "Warn, still start",
+      "decided": "2026-11-08"
+    },
+    {
+      "id": "D133",
+      "question": "docs_check T2: the project-setup and test-cost feature specs are older than their code. Review them overnight?",
+      "asked": "2026-11-08",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Review and fix",
+          "summary": "Fix a wrong spec in a small release, or record it as verified.",
+          "recommended": true
+        },
+        {
+          "label": "Report only",
+          "summary": "List the gaps at 6:30."
+        },
+        {
+          "label": "Skip",
+          "summary": "Leave the warnings."
+        }
+      ],
+      "chosen": "Review and fix",
+      "decided": "2026-11-08"
     }
   ]
 }

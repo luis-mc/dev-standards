@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T11:10+00:00",
+  "updated": "2026-11-08T22:57+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2467,6 +2467,54 @@
       "changed": "2026-11-08T11:09+00:00",
       "rides": "DL114",
       "started": "2026-11-08T10:50+00:00"
+    },
+    {
+      "id": "DL117",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release watcher rows and spec review",
+      "detail": "Join DL118 DL119, fold notes, CI, merge, install, smoke, cleanup",
+      "expected": "09 Nov ~00:20",
+      "changed": "2026-11-08T22:57+00:00",
+      "expected_basis": "2 cloud agents ~45 min, join ~15, spec-lint ~8",
+      "release": 68,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-08T23:05+00:00",
+          "end": "2026-11-08T23:50+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-08T23:50+00:00",
+          "end": "2026-11-09T00:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T00:05+00:00",
+          "end": "2026-11-09T00:15+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T00:15+00:00",
+          "end": "2026-11-09T00:20+00:00"
+        }
+      ],
+      "started": "2026-11-08T23:05+00:00"
+    },
+    {
+      "id": "DL118",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Re-arm reports unstoppable watchers; dead rows pruned",
+      "detail": "SessionStart names a watcher it cannot stop (access denied) and how to stop it as admin; dead watcher rows older than a day are pruned",
+      "expected": "08 Nov ~23:50",
+      "changed": "2026-11-08T22:57+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL117",
+      "started": "2026-11-08T23:05+00:00"
     },
     {
       "id": "DS1",
@@ -5219,6 +5267,19 @@
       "changed": "2026-11-05T16:33+00:00",
       "started": "2026-11-05T12:43+00:00",
       "rides": "DL61"
+    },
+    {
+      "id": "DS190",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Review project-setup and test-cost specs against code",
+      "detail": "docs_check T2: both specs older than their 7 Nov code; fix what is wrong, record the rest as verified",
+      "expected": "08 Nov ~23:50",
+      "changed": "2026-11-08T22:57+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL117",
+      "started": "2026-11-08T23:05+00:00"
     },
     {
       "id": "DU1",
