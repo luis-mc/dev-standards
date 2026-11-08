@@ -78,8 +78,15 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
-import runner_health  # noqa: E402
-import fallback_launch  # noqa: E402
+try:
+    import runner_health  # noqa: E402
+    import fallback_launch  # noqa: E402
+except ModuleNotFoundError as _exc:
+    _name = _exc.name or "a module"
+    print("%s: %s.py is missing from %s. Run `delivery_ci_install.py update --track <track>` from the plugin, "
+          "then commit scripts/delivery/." % (Path(__file__).name, _name.split(".")[0], Path(__file__).resolve().parent),
+          file=sys.stderr)
+    sys.exit(2)
 
 OK_CONCLUSIONS = {"success", "skipped"}
 LIST_FIELDS = "databaseId,workflowName,status,conclusion,event,headSha"
