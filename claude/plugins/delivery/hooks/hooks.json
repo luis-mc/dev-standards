@@ -3,7 +3,7 @@
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Bash|PowerShell|Agent|Workflow|RemoteTrigger|AskUserQuestion|Write",
+        "matcher": "Bash|PowerShell|Agent|Workflow|RemoteTrigger|AskUserQuestion|Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
