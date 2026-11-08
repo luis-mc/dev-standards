@@ -17,4 +17,6 @@
 - `delivery_common.py` imports the plugin-only `delivery_ledger` optionally at run time; the closure test allows modules found in the plugin's `scripts/`.
 
 Branch head SHA: cdfa93b (the report commit follows).
+- `docs_check.py` reports 3 errors: G1 (decisions.md stale, not mine) and M1 for `features/delivery-speed` and `features/delivery`. M1 is expected: the brief says the orchestrator writes the spec text at the join from this report. Behaviour for the spec is above.
+
 READY
