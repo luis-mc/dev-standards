@@ -15,3 +15,13 @@
 - Standard library; one subprocess seam `run()`; Windows children get creationflags 0x08000000.
 
 ## Tests
+- `python3 -m unittest claude/plugins/delivery/tests/test_dl113_cancel_joined.py` -> 5 tests, OK.
+- `python3 tools/ci_areas.py --branch-advice` -> `heavy: delivery -> gh workflow run spec-lint.yml --ref DL113-cancel-joined-runs -f areas=delivery`. Not run here (no gh); the owner or orchestrator runs it.
+- `change_notes.py check --config tools/change-notes.json` -> ok.
+- `docs_check.py` -> errors M1 (feature spec not updated: the brief says the orchestrator writes it from this report) and W1 (docs/work report on the branch, expected; strip before the join). Other errors are not from this change.
+
+Branch head: see `git rev-parse DL113-cancel-joined-runs` (the commit after this report).
+
+The spec text and the delivery-lane advice run are left to the orchestrator.
+
+READY
