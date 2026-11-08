@@ -2881,7 +2881,7 @@
     },
     {
       "id": "D128",
-      "question": "Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.)",
+      "question": "Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.) (The owner confirmed it on 8 Nov.)",
       "asked": "2026-11-07",
       "status": "decided",
       "options": [
