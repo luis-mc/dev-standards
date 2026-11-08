@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T23:22+00:00",
+  "updated": "2026-11-08T23:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2507,12 +2507,11 @@
       "id": "DL118",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Re-arm reports unstoppable watchers; dead rows pruned",
       "detail": "SessionStart names a watcher it cannot stop (access denied) and how to stop it as admin; dead watcher rows older than a day are pruned",
-      "expected": "08 Nov ~23:50",
-      "changed": "2026-11-08T22:57+00:00",
-      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "expected": "08 Nov",
+      "changed": "2026-11-08T23:30+00:00",
       "rides": "DL117",
       "started": "2026-11-08T23:05+00:00"
     },
@@ -2555,13 +2554,12 @@
       "id": "DL120",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Install keep and skip list",
       "detail": "A tracked project file names managed files update must keep and templates it must not add",
-      "expected": "09 Nov ~00:05",
-      "changed": "2026-11-08T23:01+00:00",
-      "expected_basis": "cloud agent: setup 5 + work 30 + checks 15 min",
-      "rides": "DL119",
+      "expected": "08 Nov",
+      "changed": "2026-11-08T23:30+00:00",
+      "rides": "DL117",
       "started": "2026-11-08T23:15+00:00"
     },
     {
@@ -5379,14 +5377,23 @@
       "id": "DS190",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Review project-setup and test-cost specs against code",
       "detail": "docs_check T2: both specs older than their 7 Nov code; fix what is wrong, record the rest as verified",
-      "expected": "08 Nov ~23:50",
-      "changed": "2026-11-08T22:57+00:00",
-      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "expected": "08 Nov",
+      "changed": "2026-11-08T23:30+00:00",
       "rides": "DL117",
       "started": "2026-11-08T23:05+00:00"
+    },
+    {
+      "id": "DS191",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Review audits and test-cost specs against code",
+      "detail": "docs_check T2 still warns for both after DS190 (the cloud checkout missed them)",
+      "expected": "",
+      "changed": "2026-11-08T23:30+00:00"
     },
     {
       "id": "DU1",
