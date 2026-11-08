@@ -14,7 +14,7 @@ code:
   - claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md
   - claude/plugins/agents/agents/*.md
   - tools/test_model_profiles.py
-last_verified: 2026-11-01
+last_verified: 2026-11-08
 artifact: feature-model-and-effort-profiles.html
 ---
 # Model and effort profiles
