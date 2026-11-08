@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T09:44+00:00",
+  "updated": "2026-11-08T10:36+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2413,6 +2413,67 @@
       "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
       "rides": "DL110",
       "started": "2026-11-08T09:47+00:00"
+    },
+    {
+      "id": "DL114",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release the CI tool cache standard",
+      "detail": "Join DL115 DL116, fold notes, CI, merge, install, smoke, cleanup",
+      "expected": "08 Nov ~12:05",
+      "changed": "2026-11-08T10:36+00:00",
+      "expected_basis": "2 cloud agents ~45 min, join ~15, spec-lint ~8",
+      "release": 67,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-08T10:50+00:00",
+          "end": "2026-11-08T11:35+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-08T11:35+00:00",
+          "end": "2026-11-08T11:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-08T11:50+00:00",
+          "end": "2026-11-08T12:00+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-08T12:00+00:00",
+          "end": "2026-11-08T12:05+00:00"
+        }
+      ],
+      "started": "2026-11-08T10:50+00:00"
+    },
+    {
+      "id": "DL115",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "CI tools cached on the runner disk",
+      "detail": "ci_tool.py fetches pinned tools into a per-runner cache (CI_TOOLS_DIR), sha256-checked, with retries; shipped workflows use it",
+      "expected": "08 Nov ~11:35",
+      "changed": "2026-11-08T10:36+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL114",
+      "started": "2026-11-08T10:50+00:00"
+    },
+    {
+      "id": "DL116",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL-94 flags uncached tool downloads",
+      "detail": "A check flags a workflow step that downloads a release asset into RUNNER_TEMP without the cache and a checksum",
+      "expected": "08 Nov ~11:35",
+      "changed": "2026-11-08T10:36+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL114",
+      "started": "2026-11-08T10:50+00:00"
     },
     {
       "id": "DS1",
