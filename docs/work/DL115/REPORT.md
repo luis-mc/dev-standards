@@ -31,3 +31,5 @@
 - `tools/test_delivery_ci.py`, `tools/test_ci_speedups.py`: no unittest tests found (need pytest, not installed).
 - `python3 claude/plugins/docs/scripts/docs_check.py`: 3 errors, 1 warning, explained above.
 
+Branch head: f23ea6a472767199c6fe497a5663ad537299f9ad
+READY
