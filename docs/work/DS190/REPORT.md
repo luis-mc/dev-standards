@@ -13,3 +13,9 @@ Commits since 2026-11-04: c41af57, de9a8a7, ba8c1f8 and 0d867f6 (release folds).
 
 ## Result
 Set `last_verified: 2026-11-08` in the three specs. No change notes (date-only edits). The audits and test-cost specs are untouched.
+
+## docs_check
+0 T2 warnings. 2 errors, both expected kinds: W1 (docs/work on branch) and G1 on `docs/features/index.md` (generated file stale after the date edit; I did not commit generated files, the release fold rebuilds it). Brief expected G1 on decisions.md; this one is features/index.md.
+`ci_areas.py --branch-advice`: light: test locally only.
+
+READY
