@@ -18,3 +18,8 @@
 ## Tests
 - `cd claude/plugins/delivery/tests && python3 -m unittest test_dl120_install_keep_skip test_dl112_install_imports test_ci_options`: Ran 41, OK.
 - `python3 tools/ci_areas.py --branch-advice`: "unreadable diff, treat as every area" (branch not yet diffable locally); only the delivery tests above were run. No mutation, no Docker.
+
+`docs_check.py` (luismc-docs) is not available in this cloud session; not run.
+Code head: e02b86e9a0651bd7783d0420df8ac71d797a3110 (the report commit follows it).
+
+READY
