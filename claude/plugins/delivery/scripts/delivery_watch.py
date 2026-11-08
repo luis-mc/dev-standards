@@ -891,6 +891,8 @@ class Watcher:
             led["watchers"] = [w for w in led["watchers"] if w.get("pid") != pid]
             led["watchers"].append({"pid": pid, "kind": "delivery_watch", "started": started, "heartbeat_at": at,
                                     "version": WATCHER_VERSION})
+            import machine_slots as M
+            L.prune_watchers(led, self.now(), M.pid_alive)      # DL118
         self.mut(fn)
 
     def run_once(self, started: str | None = None) -> list[list[str]]:
