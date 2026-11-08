@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-07T21:40+00:00",
+  "updated": "2026-11-08T09:44+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2339,6 +2339,80 @@
       "changed": "2026-11-07T21:40+00:00",
       "rides": "DL108",
       "started": "2026-11-07T21:30+00:00"
+    },
+    {
+      "id": "DL110",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release join, install and runner fixes",
+      "detail": "Join DL110 DL111 DL112, fold notes, CI, merge, install, smoke, cleanup",
+      "expected": "08 Nov ~11:05",
+      "changed": "2026-11-08T09:44+00:00",
+      "expected_basis": "3 cloud agents ~45 min, join ~15, spec-lint ~8",
+      "release": 66,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-08T09:47+00:00",
+          "end": "2026-11-08T10:35+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-08T10:35+00:00",
+          "end": "2026-11-08T10:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-08T10:50+00:00",
+          "end": "2026-11-08T11:00+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-08T11:00+00:00",
+          "end": "2026-11-08T11:05+00:00"
+        }
+      ],
+      "started": "2026-11-08T09:47+00:00"
+    },
+    {
+      "id": "DL111",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Join keeps clean merges on a conflict",
+      "detail": "join.py aborts only the conflicting merge, keeps and pushes the clean ones, reports the branch and files",
+      "expected": "08 Nov ~10:35",
+      "changed": "2026-11-08T09:44+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL110",
+      "started": "2026-11-08T09:47+00:00"
+    },
+    {
+      "id": "DL112",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Every imported delivery module is installed",
+      "detail": "A missing local module is named clearly; install/update and a test check imports against the shipped list and git tracking",
+      "expected": "08 Nov ~10:35",
+      "changed": "2026-11-08T09:44+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL110",
+      "started": "2026-11-08T09:47+00:00"
+    },
+    {
+      "id": "DL113",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Cancel CI runs of joined branches",
+      "detail": "A script cancels queued or running runs for branches already merged into the integration branch, so the release PR gets the runner",
+      "expected": "08 Nov ~10:35",
+      "changed": "2026-11-08T09:44+00:00",
+      "expected_basis": "cloud agent: setup 5 + work 25 + checks 15 min",
+      "rides": "DL110",
+      "started": "2026-11-08T09:47+00:00"
     },
     {
       "id": "DS1",
