@@ -274,6 +274,15 @@ jobs:
             exit 1
           fi
 
+      # DS208: a TypeScript test that spawns a crate's binary needs cargo. Only a project with the
+      # Rust track (scripts/delivery/rust_ci.py installed) gets the pinned toolchain; the
+      # test/rust-binaries.global-setup.ts globalSetup builds the crates in RUST_TEST_CRATES.
+      - name: Install the pinned Rust toolchain (Rust track only)
+        if: ${{ hashFiles('scripts/delivery/rust_ci.py') != '' }}
+        run: |
+          python3 scripts/delivery/rust_ci.py toolchain
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+
       # §11.1: server unit tests over core and service-package logic. Pure, fast,
       # no I/O — integration lives in the job below.
       - name: Unit tests

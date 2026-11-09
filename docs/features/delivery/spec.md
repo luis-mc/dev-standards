@@ -455,6 +455,8 @@ Failure modes:
 | A job is held for a slot while the fallback runs its shard | The held job gets its slot, finds the claim taken, ends with exit 3 and frees the slot (R13.64). |
 | Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R13.66). |
 
+**R13.82** — **TS tests that run a Rust binary** (DS208, D157). The `rust` track ships `test/rust-binaries.global-setup.ts`, a vitest globalSetup. For each crate in `RUST_TEST_CRATES` it runs `cargo build --locked -p <crate>` once and sets `<CRATE>_BIN` to the exe path. It fails with a clear message when cargo is missing. The JS `ci.yml` unit job installs the pinned Rust toolchain only when `scripts/delivery/rust_ci.py` exists.
+
 ## Versions
 
 Written by the release fold. Do not edit by hand.

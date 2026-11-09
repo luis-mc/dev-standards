@@ -64,6 +64,15 @@ The track lives in `luismc-delivery`. `scripts/delivery/rust_ci.py` holds the st
 - **Steps.** The gate adds `deny` (when `Cargo.lock` or `deny.toml` changed) and `xwin` (only with a cross target). `smoke.json` lists `binaries`; each is built in debug and run with `--version`.
 - **Workflows.** `ci.yml` and `package.yml` use these steps. `Swatinem/rust-cache` runs on GitHub-hosted runners only. `package.yml` builds a Windows exe with cargo-xwin as `packaged-program-windows`.
 
+## TS tests that run a Rust binary
+
+A vitest suite that spawns a crate's binary fails in CI with `<crate> is not built`, because the unit job builds no Rust. The `rust` track installs `test/rust-binaries.global-setup.ts`. It runs `cargo build --locked -p <crate>` once per crate before the tests.
+
+- **Config.** In `vitest.config.ts` add `globalSetup: ['test/rust-binaries.global-setup.ts']`.
+- **Crates.** Set `RUST_TEST_CRATES=my-tool,other-tool` (comma separated) in the unit job or in your shell.
+- **Path.** The setup sets `MY_TOOL_BIN` (crate name in upper case, `-` becomes `_`) to the built exe. It adds `.exe` on Windows and honours `CARGO_TARGET_DIR`. A test spawns `process.env.MY_TOOL_BIN`.
+- **CI.** The JS `ci.yml` installs the pinned Rust toolchain in the unit job only when `scripts/delivery/rust_ci.py` exists. Without cargo the setup fails with a message that says so.
+
 ## The doctor checks
 
 `delivery_doctor.py` runs the `rust` check only when `track` is `rust` or `rust_ci.py` exists. It changes nothing and prints the fix command.
