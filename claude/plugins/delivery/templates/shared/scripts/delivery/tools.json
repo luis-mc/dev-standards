@@ -118,5 +118,31 @@
         "bin": "cargo-xwin"
       }
     }
+  },
+  "llvm": {
+    "version": "20.1.8",
+    "platforms": {
+      "linux_x64": {
+        "kind": "archive",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-X64.tar.xz",
+        "sha256": "1ead36b3dfcb774b57be530df42bec70ab2d239fbce9889447c7a29a4ddc1ae6",
+        "bin_dir": "LLVM-20.1.8-Linux-X64/bin",
+        "bin": "clang"
+      },
+      "linux_arm64": {
+        "kind": "archive",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/LLVM-20.1.8-Linux-ARM64.tar.xz",
+        "sha256": "b855cc17d935fdd83da82206b7a7cfc680095efd1e9e8182c4a05e761958bef8",
+        "bin_dir": "LLVM-20.1.8-Linux-ARM64/bin",
+        "bin": "clang"
+      },
+      "windows_x64": {
+        "kind": "archive",
+        "url": "https://github.com/llvm/llvm-project/releases/download/llvmorg-20.1.8/clang+llvm-20.1.8-x86_64-pc-windows-msvc.tar.xz",
+        "sha256": "f229769f11d6a6edc8ada599c0cda964b7dee6ab1a08c6cf9dd7f513e85b107f",
+        "bin_dir": "clang+llvm-20.1.8-x86_64-pc-windows-msvc/bin",
+        "bin": "clang-cl"
+      }
+    }
   }
 }

@@ -202,7 +202,7 @@ class ShippedPins(unittest.TestCase):
 
     def test_required_tools_are_pinned_when_present(self):
         data = json.loads((DELIVERY / "tools.json").read_text())
-        for name in ("rustup-init", "cargo-deny", "cargo-xwin"):
+        for name in ("rustup-init", "llvm", "cargo-deny", "cargo-xwin"):
             self.assertIn(name, data)
 
 
