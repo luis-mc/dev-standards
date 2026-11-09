@@ -19,3 +19,9 @@
 - `python3 -m unittest claude/plugins/delivery/tests/test_dl133_hook_paths.py`: 6 tests OK (worktree forms, postpone warning).
 - `python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors, 4 warnings (M1 unmapped rules file, T2 x3). G1/W1 not shown.
 - spec-lint workflow: see below.
+
+## CI
+`gh workflow run spec-lint.yml --ref DL124-hook-fixes -f areas=delivery` (run 42655451156, head 21cf06a): all delivery jobs passed. Only the docs check failed, on W1 (this report under docs/work/), which is expected on a branch. Remaining docs_check output: 6 warnings (M1 unmapped rules file, T2 x5), no other errors.
+`tools/test_questions_stop.py` was not run in CI on its own here; it is part of the areas run only if mapped. Not confirmed.
+
+READY
