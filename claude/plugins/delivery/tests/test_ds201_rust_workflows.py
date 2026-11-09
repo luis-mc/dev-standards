@@ -43,10 +43,14 @@ class Workflows(unittest.TestCase):
 
     def test_path_filter(self):
         head = CI.split("concurrency:")[0]
-        self.assertNotIn("paths-ignore", head)
-        for p in ("crates/**", "Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "rustfmt.toml",
-                  "deny.toml", "scripts/delivery/**", "scripts/delivery/tools.json"):
-            self.assertIn("'%s'" % p, head)
+        lines = [ln for ln in head.splitlines() if ln.strip().startswith("paths-ignore:")]
+        self.assertEqual(len(lines), 2)
+        for ln in lines:
+            self.assertIn("'docs/**'", ln)
+            self.assertIn("'**/*.md'", ln)
+            self.assertIn("'apps/**'", ln)
+            for p in ("crates", "Cargo", "rust-toolchain", "rustfmt", "deny.toml", "scripts/delivery", "tools.json"):
+                self.assertNotIn(p, ln)
 
     def test_artifact_names_stable(self):
         names = re.findall(r"^\s+name: (\S+)\n\s+path:", PKG, re.M)

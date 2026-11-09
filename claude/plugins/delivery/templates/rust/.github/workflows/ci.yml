@@ -5,37 +5,24 @@ name: CI
 # The gates are the requirement; clippy, cargo-deny and cargo-nextest are this
 # generator's choices (§13.1 names no tool). Record them in the Stack Profile. The secret scan
 # (§12) is a step in `verify`, not a separate job.
-# Path filter (DS201): a Rust-only change runs this workflow and not the JS suite;
-# a JS-only change does not run this one. Each track lists its own paths.
+# Path filter (DS201): JS-only paths are ignored, so a JS-only change does not run this
+# workflow. The Rust paths (crates/**, Cargo.*, rust-toolchain.toml, rustfmt.toml, deny.toml,
+# scripts/delivery/**, tools.json) are never ignored. The JS workflow ignores them in turn.
 on:
   pull_request:
     # CI runs when the PR is marked ready: drafts are skipped (see the job-level
     # `if`) and `ready_for_review` is what triggers the run on that transition.
     types: [opened, synchronize, reopened, ready_for_review]
-    paths:
-      - 'crates/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - 'rustfmt.toml'
-      - 'deny.toml'
-      - '.cargo/**'
-      - 'scripts/delivery/**'
-      - 'scripts/delivery/tools.json'
-      - '.github/workflows/ci.yml'
+    # Not a `paths:` list: the shared CI checks and ci_skip_check.py read push
+    # `paths-ignore` and need docs/** and **/*.md in it. The other tracks' own
+    # paths are ignored here instead, so a JS-only change does not run this workflow.
+    paths-ignore: ['apps/ios/**', 'apps/android/**', 'apps/**', 'packages/**', 'pnpm-lock.yaml', '**/*.md', 'docs/**']
   push:
     branches: [main]
-    paths:
-      - 'crates/**'
-      - 'Cargo.toml'
-      - 'Cargo.lock'
-      - 'rust-toolchain.toml'
-      - 'rustfmt.toml'
-      - 'deny.toml'
-      - '.cargo/**'
-      - 'scripts/delivery/**'
-      - 'scripts/delivery/tools.json'
-      - '.github/workflows/ci.yml'
+    # Not a `paths:` list: the shared CI checks and ci_skip_check.py read push
+    # `paths-ignore` and need docs/** and **/*.md in it. The other tracks' own
+    # paths are ignored here instead, so a JS-only change does not run this workflow.
+    paths-ignore: ['apps/ios/**', 'apps/android/**', 'apps/**', 'packages/**', 'pnpm-lock.yaml', '**/*.md', 'docs/**']
 
 concurrency:
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main
@@ -135,8 +122,7 @@ jobs:
       # D140: pinned linker environment for every later step.
       - name: Apply the linker environment
         run: |
-          python3 scripts/delivery/rust_ci.py env --format json > "$RUNNER_TEMP/rust-env.json"
-          python3 -c "import json,os,sys; e=json.load(open(sys.argv[1])); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())" "$RUNNER_TEMP/rust-env.json"
+          python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
 
       # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
       # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
@@ -232,8 +218,7 @@ jobs:
       # D140: pinned linker environment for every later step.
       - name: Apply the linker environment
         run: |
-          python3 scripts/delivery/rust_ci.py env --format json > "$RUNNER_TEMP/rust-env.json"
-          python3 -c "import json,os,sys; e=json.load(open(sys.argv[1])); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())" "$RUNNER_TEMP/rust-env.json"
+          python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
 
       # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
       # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.

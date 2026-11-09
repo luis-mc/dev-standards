@@ -67,8 +67,7 @@ jobs:
           python3 scripts/delivery/rust_ci.py toolchain
           echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
           python3 scripts/delivery/ci_tool.py tool cargo-xwin --dir >> "$GITHUB_PATH"
-          python3 scripts/delivery/rust_ci.py env --format json > "$RUNNER_TEMP/rust-env.json"
-          python3 -c "import json,os,sys; e=json.load(open(sys.argv[1])); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())" "$RUNNER_TEMP/rust-env.json"
+          python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
 
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
         if: ${{ runner.environment == 'github-hosted' }}
