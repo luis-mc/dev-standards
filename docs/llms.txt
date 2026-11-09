@@ -31,6 +31,7 @@
 - [Upgrade notes are how-to guides, the originals are archived](docs/architecture/decisions/0050-upgrade-notes-are-guides.md)
 - [claude-setup turns on and configures all plugins in the project](docs/architecture/decisions/0070-claude-setup-all-plugins.md)
 - [Hook list mismatch: ARTIFACTSPEC section 8 vs hooks.json](docs/architecture/hook-list-mismatch.md)
+- [Rust beside a JS stack: plan](docs/architecture/rust-beside-js-plan.md)
 
 ## archive
 

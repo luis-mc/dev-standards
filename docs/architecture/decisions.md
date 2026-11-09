@@ -90,15 +90,25 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D126 | How are today's items grouped into releases? | One release for all | decided | 2026-11-07 |
 | delivery-speed | D127 | Until the restart, the old artifacts hook asks for an hourly publish with nothing open. What to do? | Comply each time | decided | 2026-11-07 |
 | delivery-speed | D128 | Plugin smoke: 6 skills have no name: in front matter (Claude Code uses the folder name). Require it or not? (Picked by me; for owner review.) (The owner confirmed it on 8 Nov.) | Require description only | decided | 2026-11-07 |
-| delivery-speed | D129 | The delivery watcher merges a green release PR itself, about a minute after its CI passes. Keep it? | Keep it | decided | 2026-11-08 |
+| delivery-speed | D129 | The delivery watcher merges a green release PR itself, about a minute after its CI passes. Keep it? (The owner confirmed it on 9 Nov.) | Keep it | decided | 2026-11-08 |
 | delivery-speed | D13 | Turn hooks on here (core.hooksPath .githooks), which also activates the pre-commit secret check? | Yes, both hooks | decided | 2026-10-11 |
 | delivery-speed | D130 | The ledger keeps dead watcher rows, and an old watcher writes heartbeats with no version. What to do? | Investigate, then fix | decided | 2026-11-08 |
 | delivery-speed | D131 | An old elevated watcher (PID 12816) cannot be stopped without admin. Who stops it? | Session tries first | decided | 2026-11-08 |
 | delivery-speed | D132 | When session start cannot stop an old watcher, should it still start the new one? | Warn, still start | decided | 2026-11-08 |
 | delivery-speed | D133 | docs_check T2: the project-setup and test-cost feature specs are older than their code. Review them overnight? | Review and fix | decided | 2026-11-08 |
-| delivery-speed | D134 | A project's update lost its own fixes and re-added workflows it leaves out. How should install/update respect project choices? (Picked overnight by me; for owner review.) | Tracked ci-install.json keep/skip lists | decided | 2026-11-08 |
+| delivery-speed | D134 | A project's update lost its own fixes and re-added workflows it leaves out. How should install/update respect project choices? (The owner confirmed it on 9 Nov.) | Tracked ci-install.json keep/skip lists | decided | 2026-11-08 |
 | delivery-speed | D135 | Fold a project's five delivery-script fixes into the public plugin? Source: that project's branch, read on this PC; only generic code is pushed. | Yes, port tonight | decided | 2026-11-08 |
+| delivery-speed | D136 | DS191: review the audits and test-cost specs against their code. When? | Now, in the cloud | decided | 2026-11-09 |
+| delivery-speed | D137 | DL122: artifact-prune.yml reads the artifact-holding workflows from a project file. When? | Now, in the cloud | decided | 2026-11-09 |
+| delivery-speed | D138 | Rust Q1: what does the first Rust release cover? | Both, wizard then CI | decided | 2026-11-09 |
+| delivery-speed | D139 | Rust Q2: which Rust parts does the wizard offer first beside a JS stack? | CLI, host service, libraries | decided | 2026-11-09 |
 | delivery-speed | D14 | How should the runner load gate be reinstalled, now that PowerShell refuses unsigned scripts for the runner's account? | Runner account only | decided | 2026-10-26 |
+| delivery-speed | D140 | Rust Q3: where does the linker come from on runners with no C compiler? | LLVM for Windows, Zig for Linux | decided | 2026-11-09 |
+| delivery-speed | D141 | Rust Q4: how do CI and agents install the Rust toolchain? | Pinned rustup-init via ci_tool.py | decided | 2026-11-09 |
+| delivery-speed | D142 | Rust Q5: the advisory database refresh fails. What then? | Warn for 7 days, then fail | decided | 2026-11-09 |
+| delivery-speed | D143 | Rust Q6: does the agent gate hide system compilers? | Always | decided | 2026-11-09 |
+| delivery-speed | D144 | Rust Q7: how are Windows programs built? | cargo-xwin, else a Windows runner | decided | 2026-11-09 |
+| delivery-speed | D145 | Rust Q8: what must a project state before adding a Rust part? | Written reason only | decided | 2026-11-09 |
 | delivery-speed | D15 | Stop train-cleanup creating a GitHub release on every merge to main? | Stop release per merge | decided | 2026-10-26 |
 | delivery-speed | D16 | Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green? | Fix ci_watch.py | decided | 2026-10-26 |
 | delivery-speed | D17 | DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep? | Make them generic | decided | 2026-10-26 |
