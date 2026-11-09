@@ -17,6 +17,7 @@ on:
       - 'crates/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
+      - 'scripts/delivery/tools.json'
       - 'rust-toolchain.toml'
       - 'Dockerfile'
       - '.github/workflows/package.yml'
@@ -29,6 +30,7 @@ on:
       - 'crates/**'
       - 'Cargo.toml'
       - 'Cargo.lock'
+      - 'scripts/delivery/tools.json'
       - 'rust-toolchain.toml'
       - 'Dockerfile'
       - '.github/workflows/package.yml'
@@ -59,10 +61,17 @@ jobs:
         with:
           python-version: '3.13'
 
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-        with:
-          toolchain: stable
+      # D141 and D140: the exact channel and the pinned linker, as in ci.yml.
+      - name: Install the pinned Rust toolchain
+        run: |
+          python3 scripts/delivery/rust_ci.py toolchain
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          python3 scripts/delivery/ci_tool.py tool cargo-xwin --dir >> "$GITHUB_PATH"
+          python3 scripts/delivery/rust_ci.py env --format json > "$RUNNER_TEMP/rust-env.json"
+          python3 -c "import json,os,sys; e=json.load(open(sys.argv[1])); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())" "$RUNNER_TEMP/rust-env.json"
+
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: ${{ runner.environment == 'github-hosted' }}
 
       # PRODUCT: the packaged form of the product: the release executable.
       - name: Build the packaged program
@@ -85,4 +94,27 @@ jobs:
         with:
           name: packaged-program
           path: dist/
+          retention-days: 7
+
+      # D144: the Windows executable, cross built on this Linux runner with
+      # cargo-xwin. It needs the Microsoft CRT/SDK licence accepted once and
+      # recorded. A project that does not accept it deletes this step and the
+      # next one and adds a second job with `runs-on: windows-latest` that builds
+      # with `cargo build --locked --release` and uploads the same name.
+      # The build comes from this run; nothing is downloaded from another workflow's run.
+      - name: Build the Windows executable (cargo-xwin)
+        env:
+          XWIN_ACCEPT_LICENSE: ${{ vars.XWIN_ACCEPT_LICENSE }}
+        run: |
+          rustup target add x86_64-pc-windows-msvc
+          cargo xwin build --locked --release --target x86_64-pc-windows-msvc
+          mkdir -p dist-windows
+          cp target/x86_64-pc-windows-msvc/release/app.exe dist-windows/app.exe
+
+      # DL-22: one stable name per kind. The Windows build is its own kind.
+      - name: Keep the Windows executable
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: packaged-program-windows
+          path: dist-windows/
           retention-days: 7

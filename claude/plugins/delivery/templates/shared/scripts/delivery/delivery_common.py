@@ -930,8 +930,29 @@ def e2e_info(step: dict, ctx: Context) -> dict:
     return {"selection": selection, "specs": specs}
 
 
+def scope_skip(step: dict, ctx: Context) -> str | None:
+    """DS201: gate.json "scope_map" ({key: [paths]}) with a step "paths": key. A step is skipped
+    when files changed, every one lies under some scope_map key, and none under the step's key.
+    A file under no key, an unknown key, or no scope_map leaves the step to its own scope."""
+    smap, key = ctx.cfg.get("scope_map"), step.get("paths")
+    if not isinstance(smap, dict) or not isinstance(key, str) or not ctx.files:
+        return None
+    lists = {k: v for k, v in smap.items() if isinstance(v, list) and all(isinstance(e, str) for e in v)}
+    if key not in lists:
+        return None
+    under = lambda f, k: any(widen_match(f, e) for e in lists[k])  # noqa: E731
+    if any(under(f, key) for f in ctx.files):
+        return None
+    if all(any(under(f, k) for k in lists) for f in ctx.files):
+        return "no change under scope '%s'" % key
+    return None
+
+
 def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     """Decide one step: (run?, command with placeholders filled, reason)."""
+    skip = scope_skip(step, ctx)
+    if skip:
+        return False, None, skip
     scope = step["scope"]
     wide = ctx.widened
     e2e_specs = ""
