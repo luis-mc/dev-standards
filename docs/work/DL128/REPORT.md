@@ -17,4 +17,24 @@
 
 Code head: fc61e3d799aa94dbe47288fd1c7736293bfe9580 (this report commit follows it).
 
+## Fix round
+CI run 42654360882 failed 6 checks in `delivery - branch gate and trust rule`.
+
+Cause:
+- 3 join_same_tree checks: the DL140 step printed "luismc-docs X not found; ... skipped". The tests look for the word "skipped" in the output to tell a skipped gate, so they matched the docs line.
+- join_docs_strip "removal is its own commit": with the docs plugin present, DL140 commits "Rebuild generated docs" after the strip, so the last commit is no longer the strip.
+- 2 join_conflicts checks: the first join in the box stays local and ahead of origin. DL145 builds the next join on it, so the second join found nothing to conflict.
+
+Change:
+- join.py: the absent-script line now says "not run" instead of "skipped". The gate and the exit code are untouched (the docs step runs after the gate and only prints).
+- test_delivery_gate.py, two expectations changed because DL140 and DL145 require the new behaviour: (1) the strip commit is checked among the last commits, as DL140 may add a rebuild commit after it; (2) the lockfile-with-failing-setup case resets local integ to origin/integ before the second join, as DL145 keeps unpushed local joins.
+- test_dl128_join_fixes.py: new test_pre_pr_docs_never_changes_exit. Failing docs scripts and absent docs scripts both give exit 0, the join result lists the failure, and the output has no "skipped".
+
+Tests:
+- python3 tools/test_delivery_gate.py --no-mutants -k join_: 99 checks, 0 failed (was 6 failed).
+- python3 claude/plugins/delivery/tests/test_dl128_join_fixes.py: 8 tests OK.
+- spec-lint run 42656524799 (areas=delivery): "delivery - branch gate and trust rule" success; all other delivery jobs success; "docs check" failed (expected: M1 and W1, spec text is written at the join).
+
+Branch head (code): 55dec4d08ce032e00ae76987da730e008a644e12 (this report commit follows it).
+
 READY
