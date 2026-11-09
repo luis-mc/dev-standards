@@ -45,6 +45,11 @@ prints one warning. It never changes the exit code. This watcher is the session 
 routine (`fallback_launch.py sweep`) is only the safety net, so an unattended fallback can start up to an hour
 late. --no-fallback turns it off.
 
+Docker trim: when `.delivery/config.json` has `ci.docker_trim: true` (default off) and this PC is Windows with
+Docker, the watcher trims Docker Desktop's data disk once after the runs finish, from a throwaway container of
+the first image present in `ci.docker_trim_images` (default ["postgres:16"]). A failure only logs a line.
+--no-trim skips it.
+
 Post-run hooks (DS30): `.delivery/config.json` may list project commands under
 `ci_watch.post_run`, e.g. `{"ci_watch": {"post_run": ["python scripts/delivery/ci_watch_local.py
 {run_id} {head}"], "post_run_timeout_seconds": 900}}`. Once every watched run is complete and the
@@ -68,6 +73,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import shlex
 import shutil
@@ -91,6 +97,9 @@ except ModuleNotFoundError as _exc:
 OK_CONCLUSIONS = {"success", "skipped"}
 LIST_FIELDS = "databaseId,workflowName,status,conclusion,event,headSha"
 MAX_CONSECUTIVE_GH_ERRORS = 5
+TRIM_IMAGES = ("postgres:16",)  # default for `ci.docker_trim_images`
+TRIM_TIMEOUT_SECONDS = 600
+NO_WINDOW = 0x08000000  # CREATE_NO_WINDOW: a child process on Windows opens no console window
 POST_RUN_TIMEOUT_SECONDS = 900
 QUEUE_WARN_SECONDS = 600
 
@@ -502,8 +511,79 @@ def run_post_run_hooks(hooks: list[str], runs: list[dict], sha: str, root: Path,
     return failed
 
 
+def trim_command(image: str) -> list[str]:
+    """fstrim of every mounted filesystem of the Docker VM, from a privileged container in its
+    namespaces (no Docker restart needed)."""
+    return ["docker", "run", "--rm", "--pull=never", "--privileged", "--pid=host", image,
+            "nsenter", "-t", "1", "-m", "--", "fstrim", "-av"]
+
+
+def trimmed_gib(output: str) -> float:
+    """Sum of the sizes fstrim reports ("/mnt/x: 990 GiB (1063 bytes) trimmed on ...")."""
+    units = {"B": 1 / 2**30, "KiB": 1 / 2**20, "MiB": 1 / 2**10, "GiB": 1.0, "TiB": 1024.0}
+    total = 0.0
+    for m in re.finditer(r":\s*([\d.]+)\s*(B|KiB|MiB|GiB|TiB)\b[^\n]*trimmed", output):
+        total += float(m.group(1)) * units[m.group(2)]
+    return total
+
+
+def load_docker_trim(config: str | None, root: Path) -> tuple[bool, tuple[str, ...]]:
+    """`ci.docker_trim` (default false) and `ci.docker_trim_images` from the project config.
+
+    A missing or unreadable file means off."""
+    path = Path(config) if config else root / ".delivery" / "config.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False, TRIM_IMAGES
+    ci = data.get("ci") if isinstance(data, dict) else None
+    if not isinstance(ci, dict) or ci.get("docker_trim") is not True:
+        return False, TRIM_IMAGES
+    images = ci.get("docker_trim_images")
+    if not isinstance(images, list) or not images or not all(isinstance(i, str) and i for i in images):
+        images = list(TRIM_IMAGES)
+    return True, tuple(images)
+
+
+def trim_docker_disk(is_windows: bool | None = None, run=subprocess.run, which=shutil.which,
+                     images: tuple[str, ...] = TRIM_IMAGES) -> str:
+    """Trim Docker Desktop's data disk once; returns the logged line, or "" when skipped. Never raises."""
+    try:
+        windows = os.name == "nt" if is_windows is None else is_windows
+        if not windows:
+            return ""
+        if which("docker") is None:
+            return ""
+        flags = {"creationflags": NO_WINDOW}
+        image = None
+        for candidate in images:
+            probe = run(["docker", "image", "inspect", candidate], capture_output=True, text=True,
+                        timeout=60, **flags)
+            if probe.returncode == 0:
+                image = candidate
+                break
+        if image is None:
+            return "ci_watch: docker disk not trimmed: no image present (" + ", ".join(images) + ")"
+        proc = run(trim_command(image), capture_output=True, text=True, encoding="utf-8",
+                   errors="replace", timeout=TRIM_TIMEOUT_SECONDS, **flags)
+        if proc.returncode != 0:
+            return f"ci_watch: docker disk not trimmed: fstrim failed ({proc.returncode})"
+        return f"ci_watch: docker disk trimmed: {trimmed_gib(proc.stdout or ''):.0f} GiB"
+    except Exception as exc:  # noqa: BLE001 - the trim must never break the watch
+        return f"ci_watch: docker disk not trimmed: {type(exc).__name__}"
+
+
 def finish(code: int, runs: list[dict], sha: str, args: argparse.Namespace) -> int:
-    """The exit path once the runs are complete: run the post-run hooks, keep the exit code."""
+    """The exit path once the runs are complete: trim Docker's disk (only when `ci.docker_trim` is true),
+    run the post-run hooks, keep the exit code."""
+    if not getattr(args, "no_trim", False):
+        try:
+            enabled, images = load_docker_trim(getattr(args, "config", None), config_root())
+            line = trim_docker_disk(images=images) if enabled else ""
+            if line:
+                print(line, flush=True)
+        except Exception as exc:  # noqa: BLE001
+            print(f"ci_watch: docker trim skipped ({type(exc).__name__}: {exc})", file=sys.stderr)
     if not args.no_post_run:
         try:
             root = config_root()
@@ -587,6 +667,9 @@ def main(argv: list[str] | None = None) -> int:
                                      "(default: .delivery/config.json in the repository root)")
     ap.add_argument("--no-fallback", action="store_true",
                     help="do not start the Option 4 fallback for shards that wait too long (ci.fallback)")
+    ap.add_argument("--no-trim", action="store_true",
+                    help="do not trim Docker Desktop's data disk after the runs complete "
+                         "(runs only on Windows, and only when .delivery/config.json has ci.docker_trim: true)")
     ap.add_argument("--no-post-run", action="store_true",
                     help="do not run the ci_watch.post_run hooks of the project config")
     args = ap.parse_args(argv)
