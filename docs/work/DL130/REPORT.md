@@ -12,6 +12,16 @@
 - `python3 -m unittest claude/plugins/delivery/tests/test_dl130_gate_fixes.py`: 9 tests OK (includes two-worktree hook test).
 - `python3 -m unittest discover -s claude/plugins/delivery/tests -p "test_dl1*.py"`: 128 OK.
 - `sh -n` on the hook: OK.
-- `python3 tools/ci_areas.py --branch-advice`: see below.
+- `python3 tools/ci_areas.py --branch-advice`: heavy: delivery only (project-setup not named).
+- Named delivery-gate cases locally (`tools/test_delivery_gate.py --no-mutants -k <case>`): freeze, scopes, logs, dirty, hook, publish, e2e_agent, only_skip, fast_guards, push_check and the rest: 0 failed. Two earlier CI failures were mine and are fixed: the node_modules check fired in test repos (now only when gate.json has a `pnpm ` command), and a new `warnings` key broke the exact result-key test (now written only when non-empty).
+- `gh workflow run spec-lint.yml --ref DL130-gate-fixes -f areas=delivery`, run 42658976304 on 948b521: every delivery job passed (branch gate and trust rule included). Only `docs check` failed: M1 for the three feature specs, which wait for the orchestrator's spec text.
 - `docs_check.py`: M1 x3 (delivery, delivery-speed, project-setup specs need the spec text above; orchestrator writes it), T2 x2 warnings. No G1/W1 shown.
 
+
+## Spec text for the orchestrator
+- project-setup spec: pre-push stops with the node_modules message when package.json, pnpm-lock.yaml and a gate.json `pnpm ` command exist and node_modules is absent; pre-push hands over to the pushing worktree's own `.githooks/pre-push` when core.hooksPath names another worktree's copy.
+- delivery spec: gate restores docs/work after the run; UTF-8 logs and env; C# warning text `C# changed, not compiled on <os> (release CI compiles it)`, `warnings` in gate-result.json only when present, `csharp-build` failure step.
+
+Branch head: see `git rev-parse origin/DL130-gate-fixes` (code head 948b521, plus this report commit).
+
+READY
