@@ -3,11 +3,28 @@
 
     ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>
     ci_tool.py gitleaks [--platform linux_x64|linux_arm64|darwin_x64|darwin_arm64|windows_x64]
+    ci_tool.py tool <name> [--platform P] [--exe NAME] [--dir]
 
 `fetch` prints the absolute path of the verified file on stdout, and nothing
 else. `gitleaks` reads tools.json next to this script, fetches that platform's
 archive the same way, extracts the gitleaks binary into the cache folder once,
 and prints the binary's path. The default platform is the current one.
+
+`tool` fetches any tool pinned in tools.json (DS199) and prints one path:
+the tool's bin file, or with --exe NAME that file in the tool's bin folder, or
+with --dir the bin folder. `gitleaks` is the same as `tool gitleaks` with the
+gitleaks pin shape. A pin has "version" and "platforms": {<plat>: entry}.
+Entry kinds:
+  file     one raw download (rustup-init). Cached, made executable.
+  archive  a .tar.gz/.tar.xz/.zip (LLVM, Zig). Unpacked once into
+           <tool>/<version>/unpacked-<plat>/. "bin_dir" is the folder with the
+           executables, "bin" the default executable, both relative to it.
+  crate    a crates.io source archive (cargo-deny, cargo-xwin). The .crate is
+           verified, unpacked, and built once with `cargo install --locked
+           --path <src> --root <tool>/<version>/root-<plat>`. Binaries land in
+           root-<plat>/bin. Env CI_TOOL_CARGO names the cargo command.
+Env CI_TOOLS_JSON names another pin file (tests).
+Entry fields: "url", "sha256", optional "file" (cache name), "bin", "bin_dir".
 
 Rules:
   - Cache folder: env CI_TOOLS_DIR if set, else C:/ci-tools on Windows and
@@ -36,8 +53,11 @@ import hashlib
 import json
 import os
 import platform
+import shutil
+import subprocess
 import sys
 import tarfile
+import tempfile
 import time
 import urllib.request
 import zipfile
@@ -176,6 +196,145 @@ def gitleaks(plat: str) -> Path:
     return binary
 
 
+def _pin(name: str, plat: str) -> tuple[dict, dict]:
+    """Return (tool pin, platform entry) from tools.json, or raise ToolError."""
+    pin_file = Path(os.environ.get("CI_TOOLS_JSON") or Path(__file__).resolve().parent / "tools.json")
+    try:
+        data = json.loads(pin_file.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        raise ToolError(f"cannot read {pin_file}: {exc}")
+    tool_pin = data.get(name) if isinstance(data, dict) else None
+    if not isinstance(tool_pin, dict) or "version" not in tool_pin:
+        raise ToolError(f"{pin_file} has no pin for {name}. Run: python3 scripts/delivery/tools_pin.py")
+    entry = (tool_pin.get("platforms") or {}).get(plat)
+    if not isinstance(entry, dict) or not entry.get("url") or not entry.get("sha256"):
+        raise ToolError(f"{pin_file} has no pinned URL and SHA-256 for {name} on {plat}")
+    return tool_pin, entry
+
+
+def _safe_unpack(archive: Path, dest: Path) -> None:
+    name = archive.name.lower()
+    root = dest.resolve()
+
+    def inside(member: str) -> None:
+        if not (root / member).resolve().is_relative_to(root):
+            raise ToolError(f"{archive} has an unsafe path: {member}")
+
+    if name.endswith(".zip"):
+        with zipfile.ZipFile(archive) as z:
+            for m in z.namelist():
+                inside(m)
+            z.extractall(dest)
+        return
+    with tarfile.open(archive) as t:
+        for m in t.getmembers():
+            inside(m.name)
+            if m.issym() or m.islnk():
+                target = m.linkname if m.islnk() else os.path.join(os.path.dirname(m.name), m.linkname)
+                inside(target)
+            if m.isdev():
+                raise ToolError(f"{archive} has a device file: {m.name}")
+        t.extractall(dest)
+
+
+def _fresh_dir(final: Path) -> Path:
+    return Path(tempfile.mkdtemp(prefix=f"{final.name}.", suffix=".partial", dir=final.parent))
+
+
+def _install_dir(final: Path, build) -> Path:
+    """Run build(tmp_dir) into a unique temp folder, then rename it to final."""
+    if final.is_dir():
+        return final
+    tmp = _fresh_dir(final)
+    try:
+        build(tmp)
+        try:
+            os.replace(tmp, final)
+        except OSError:
+            if not final.is_dir():  # lost a race on Windows is fine; anything else is not
+                raise
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    return final
+
+
+def _exe(base: str, plat: str) -> str:
+    return base + ".exe" if plat.startswith("windows") and not base.endswith(".exe") else base
+
+
+def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
+    """Fetch and prepare a pinned tool. Return (bin folder, default bin file, entry)."""
+    tool_pin, entry = _pin(name, plat)
+    version = str(tool_pin["version"])
+    kind = entry.get("kind") or tool_pin.get("kind") or "archive"
+    fname = entry.get("file") or entry["url"].rsplit("/", 1)[-1]
+    archive = fetch(entry["url"], entry["sha256"], f"{name}/{version}/{fname}")
+    base = archive.parent
+    if kind == "file":
+        out = base / f"{plat}-{_exe(entry.get('bin') or name, plat)}"
+        if not out.is_file():
+            tmp = out.with_name(f"{out.name}.{os.getpid()}.partial")
+            try:
+                shutil.copyfile(archive, tmp)
+                os.chmod(tmp, 0o755)
+                os.replace(tmp, out)
+            except OSError as exc:
+                raise ToolError(f"cannot prepare {name}: {exc}")
+            finally:
+                try:
+                    tmp.unlink()
+                except OSError:
+                    pass
+        return out.parent, out, entry
+    if kind == "archive":
+        def build(tmp: Path) -> None:
+            _safe_unpack(archive, tmp)
+        try:
+            root = _install_dir(base / f"unpacked-{plat}", build)
+        except (OSError, tarfile.TarError, zipfile.BadZipFile) as exc:
+            raise ToolError(f"cannot unpack {archive}: {exc}")
+        bin_dir = root / entry.get("bin_dir", ".")
+        default = bin_dir / _exe(Path(entry.get("bin") or name).name, plat)
+        return bin_dir, default, entry
+    if kind == "crate":
+        cargo = os.environ.get("CI_TOOL_CARGO", "cargo")
+
+        def build(tmp: Path) -> None:
+            src = tmp / "src"
+            src.mkdir()
+            _safe_unpack(archive, src)
+            crate_dirs = [d for d in src.iterdir() if d.is_dir()]
+            if len(crate_dirs) != 1:
+                raise ToolError(f"{archive} does not hold one crate folder")
+            try:
+                done = subprocess.run(
+                    [cargo, "install", "--locked", "--path", str(crate_dirs[0]), "--root", str(tmp / "root")],
+                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+            except OSError as exc:
+                raise ToolError(f"cannot run {cargo}: {exc}")
+            if done.returncode != 0:
+                raise ToolError(f"cargo install {name} {version} failed: {done.stdout[-400:]}")
+            shutil.rmtree(src, ignore_errors=True)
+        try:
+            root = _install_dir(base / f"root-{plat}", build)
+        except (OSError, tarfile.TarError, zipfile.BadZipFile) as exc:
+            raise ToolError(f"cannot build {name}: {exc}")
+        bin_dir = root / "root" / "bin" if (root / "root").is_dir() else root / "bin"
+        return bin_dir, bin_dir / _exe(entry.get("bin") or name, plat), entry
+    raise ToolError(f"{name} has unknown kind {kind!r}")
+
+
+def tool(name: str, plat: str, exe: str | None = None) -> Path:
+    """Path of a pinned tool's bin file (or of `exe` in its bin folder)."""
+    if name == "gitleaks":
+        return gitleaks(plat)
+    bin_dir, default, _ = tool_dir(name, plat)
+    path = bin_dir / _exe(exe, plat) if exe else default
+    if not path.exists():
+        raise ToolError(f"{name} has no {path.name} in {bin_dir}")
+    return path
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="ci_tool.py", description=__doc__.split("\n")[0])
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -185,6 +344,11 @@ def main(argv: list[str] | None = None) -> int:
     f.add_argument("--name", required=True)
     g = sub.add_parser("gitleaks")
     g.add_argument("--platform", choices=PLATFORMS, default=None)
+    t = sub.add_parser("tool")
+    t.add_argument("name")
+    t.add_argument("--platform", choices=PLATFORMS, default=None)
+    t.add_argument("--exe", default=None)
+    t.add_argument("--dir", action="store_true")
     try:
         args = ap.parse_args(argv)
     except SystemExit as exc:
@@ -192,6 +356,12 @@ def main(argv: list[str] | None = None) -> int:
     try:
         if args.cmd == "fetch":
             path = fetch(args.url, args.sha256, args.name)
+        elif args.cmd == "tool":
+            plat = args.platform or current_platform()
+            if args.dir:
+                path = tool_dir(args.name, plat)[0] if args.name != "gitleaks" else gitleaks(plat).parent
+            else:
+                path = tool(args.name, plat, args.exe)
         else:
             path = gitleaks(args.platform or current_platform())
     except ValueError as exc:

@@ -8,5 +8,115 @@
       "darwin_arm64": "b40ab0ae55c505963e365f271a8d3846efbc170aa17f2607f13df610a9aeb6a5",
       "windows_x64": "d29144deff3a68aa93ced33dddf84b7fdc26070add4aa0f4513094c8332afc4e"
     }
+  },
+  "rustup-init": {
+    "version": "1.29.3",
+    "platforms": {
+      "linux_x64": {
+        "kind": "file",
+        "url": "https://static.rust-lang.org/rustup/archive/1.29.3/x86_64-unknown-linux-gnu/rustup-init",
+        "sha256": "b1c8cb14e30889e7e2999e6b69e62d9e9b9ffc0f4df8180564d306d9680e6c55",
+        "file": "rustup-init-x86_64-unknown-linux-gnu",
+        "bin": "rustup-init"
+      },
+      "linux_arm64": {
+        "kind": "file",
+        "url": "https://static.rust-lang.org/rustup/archive/1.29.3/aarch64-unknown-linux-gnu/rustup-init",
+        "sha256": "9f608c142e0e38a78957d0661ba1dfaf0b6fb37184cfaa4b9a0aa57af6184282",
+        "file": "rustup-init-aarch64-unknown-linux-gnu",
+        "bin": "rustup-init"
+      },
+      "darwin_x64": {
+        "kind": "file",
+        "url": "https://static.rust-lang.org/rustup/archive/1.29.3/x86_64-apple-darwin/rustup-init",
+        "sha256": "bc107f1fb0228de7fa32413c89c1b305cea9cd256e94b01150cd054128145429",
+        "file": "rustup-init-x86_64-apple-darwin",
+        "bin": "rustup-init"
+      },
+      "darwin_arm64": {
+        "kind": "file",
+        "url": "https://static.rust-lang.org/rustup/archive/1.29.3/aarch64-apple-darwin/rustup-init",
+        "sha256": "63752a1919a3a4793173ec70f8f212621a7ce38ba6a246095984482f4de20f9f",
+        "file": "rustup-init-aarch64-apple-darwin",
+        "bin": "rustup-init"
+      },
+      "windows_x64": {
+        "kind": "file",
+        "url": "https://static.rust-lang.org/rustup/archive/1.29.3/x86_64-pc-windows-msvc/rustup-init.exe",
+        "sha256": "38027d51d69a5d05493627a0634dbea52d6cd793c8f072d2373d3f4163eec7db",
+        "file": "rustup-init-x86_64-pc-windows-msvc.exe",
+        "bin": "rustup-init"
+      }
+    }
+  },
+  "cargo-deny": {
+    "version": "0.20.2",
+    "platforms": {
+      "linux_x64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-deny/cargo-deny-0.20.2.crate",
+        "sha256": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+        "bin": "cargo-deny"
+      },
+      "linux_arm64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-deny/cargo-deny-0.20.2.crate",
+        "sha256": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+        "bin": "cargo-deny"
+      },
+      "darwin_x64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-deny/cargo-deny-0.20.2.crate",
+        "sha256": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+        "bin": "cargo-deny"
+      },
+      "darwin_arm64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-deny/cargo-deny-0.20.2.crate",
+        "sha256": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+        "bin": "cargo-deny"
+      },
+      "windows_x64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-deny/cargo-deny-0.20.2.crate",
+        "sha256": "e528dfcbe739af7ce37a77d3d6df1b29dd6887b1c701d888820c0f16b864f737",
+        "bin": "cargo-deny"
+      }
+    }
+  },
+  "cargo-xwin": {
+    "version": "0.23.1",
+    "platforms": {
+      "linux_x64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-xwin/cargo-xwin-0.23.1.crate",
+        "sha256": "08fe6fef95319ecc03c40127b2af811522b7918b05502ebb35b2972208993a57",
+        "bin": "cargo-xwin"
+      },
+      "linux_arm64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-xwin/cargo-xwin-0.23.1.crate",
+        "sha256": "08fe6fef95319ecc03c40127b2af811522b7918b05502ebb35b2972208993a57",
+        "bin": "cargo-xwin"
+      },
+      "darwin_x64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-xwin/cargo-xwin-0.23.1.crate",
+        "sha256": "08fe6fef95319ecc03c40127b2af811522b7918b05502ebb35b2972208993a57",
+        "bin": "cargo-xwin"
+      },
+      "darwin_arm64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-xwin/cargo-xwin-0.23.1.crate",
+        "sha256": "08fe6fef95319ecc03c40127b2af811522b7918b05502ebb35b2972208993a57",
+        "bin": "cargo-xwin"
+      },
+      "windows_x64": {
+        "kind": "crate",
+        "url": "https://static.crates.io/crates/cargo-xwin/cargo-xwin-0.23.1.crate",
+        "sha256": "08fe6fef95319ecc03c40127b2af811522b7918b05502ebb35b2972208993a57",
+        "bin": "cargo-xwin"
+      }
+    }
   }
 }
