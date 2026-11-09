@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.15.0
+version: 0.16.0
 owner: agents
 type: reference
 code:
@@ -411,6 +411,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.16.0 | 2026-11-09 | RELEASE-70 | Project script fixes folded into the templates: artifact_prune groups, holds and retries; session_guard allows -R other repos; ci_scope package.json valve and no_test_reads; ci_watch optional Docker trim; cleanup delivery log off by default (R5.28-R5.32). | DL121 |
 | 0.15.0 | 2026-11-08 | RELEASE-68 | Session start names a watcher it cannot stop and how to stop it; dead watcher rows are pruned (R5.25).<br>scripts/delivery/ci-install.json keep and skip lists survive updates; Windows service runners need a machine-wide Python for ci_tool.py (R5.26, R5.27). | DL118, DL120 |
 | 0.14.0 | 2026-11-08 | RELEASE-67 | Pinned CI tools are cached on the runner disk with ci_tool.py: checksum-verified, with retries (R5.23).<br>DL-94 flags workflow downloads that skip the cache or the checksum (R5.24). | DL115, DL116 |
 | 0.13.0 | 2026-11-08 | RELEASE-66 | join.py keeps and reports clean merges when a later branch conflicts (R5.20).<br>Missing delivery modules are named, listed by the installer, and checked by a test (R5.21).<br>New cancel_joined_runs.py cancels CI runs of branches already joined (R5.22). | DL111, DL112, DL113 |
