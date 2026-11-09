@@ -456,6 +456,8 @@ flowchart LR
 
 **R13.82** — **TS tests that run a Rust binary** (DS208, D157). The `rust` track ships `test/rust-binaries.global-setup.ts`, a vitest globalSetup. For each crate in `RUST_TEST_CRATES` it runs `cargo build --locked -p <crate>` once and sets `<CRATE>_BIN` to the exe path. It fails with a clear message when cargo is missing. The JS `ci.yml` unit job installs the pinned Rust toolchain only when `scripts/delivery/rust_ci.py` exists.
 
+**R13.83** — **Owns overlap** (DL158). The DL-41 launch check compares `owns` entries path by path, not by the text before the first wildcard. A trailing `(note)` is cut off before the compare and shown in the message. Commas inside the note do not split the entry. An entry with no `/` and no `.` is prose and is ignored. Two entries overlap when one path can match both: `*` and `?` match a segment by `fnmatch` in either direction, `**` matches any number of segments, and a plain directory entry owns everything under it. The same file named twice is an overlap and is denied, and the message shows both notes. One exception: when both entries name the same file and both notes say `only` and name disjoint requirement IDs (such as `R13.72` and `R5.48`), the launch is allowed.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:
@@ -476,8 +478,6 @@ Failure modes:
 | The machine folder cannot be written by the runner account | The hook says so and falls back to the load check only; the doctor fails `machine.config`. |
 | A job is held for a slot while the fallback runs its shard | The held job gets its slot, finds the claim taken, ends with exit 3 and frees the slot (R13.64). |
 | Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R13.66). |
-
-**R13.83** — **Owns overlap** (DL158). The DL-41 launch check compares `owns` entries path by path, not by the text before the first wildcard. A trailing `(note)` is cut off before the compare and shown in the message. Commas inside the note do not split the entry. An entry with no `/` and no `.` is prose and is ignored. Two entries overlap when one path can match both: `*` and `?` match a segment by `fnmatch` in either direction, `**` matches any number of segments, and a plain directory entry owns everything under it. The same file named twice is an overlap and is denied, and the message shows both notes. One exception: when both entries name the same file and both notes say `only` and name disjoint requirement IDs (such as `R13.72` and `R5.48`), the launch is allowed.
 
 ## Versions
 
