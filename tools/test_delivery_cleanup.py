@@ -1361,8 +1361,8 @@ def sc_delivery_log_offline(t: T, shared: Path) -> None:
     w.cleanup("--remote-only", "--pr", str(n), "--no-delivery-log")
     t.eq("--no-delivery-log: no release", releases(w), {})
     w, n, mc = log_world(shared)
-    w.cleanup("--remote-only", "--pr", str(n), "--dry-run")
-    t.eq("--dry-run: no release", releases(w), {})
+    w.cleanup("--remote-only", "--pr", str(n), "--dry-run", "--delivery-log")
+    t.eq("--dry-run: no release, even with --delivery-log", releases(w), {})
     t.eq("--dry-run: nothing deleted", "integ" in w.remote_heads(), True)
 
     # delivery_log.py alone without gh
