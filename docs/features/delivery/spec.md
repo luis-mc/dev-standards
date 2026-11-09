@@ -434,6 +434,8 @@ flowchart LR
 
 **R13.71** — **Setup asks about Windows installers** (DL149). `/delivery-ci-setup` asks whether the project builds Windows installers on Linux and suggests yes when the repository has `*.wxs` files. Yes adds `windows-packaging` to `pool.layers`. It also names `.delivery/pool.apt`.
 
+**R13.78** — **Secret scan reads the pushed commit's ignore files** (DL154, D156). The pre-push `gitleaks` step gets `.gitleaksignore` from the pushed commit (`git show <sha>:.gitleaksignore` into a temp file, passed with `--gitleaks-ignore-path`; an empty file when the commit has none) and `.gitleaks.toml` with `--config` when the commit has one. The working tree's copies do not apply, whether the pushed commit is `HEAD` or not, and whether the tree is dirty or not. The `run` string in `gate.json` stays unchanged.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:

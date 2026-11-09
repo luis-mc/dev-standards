@@ -33,6 +33,7 @@ import signal
 import stat
 import subprocess
 import sys
+import tempfile
 import time
 from pathlib import Path
 
@@ -170,6 +171,37 @@ def run_in_push_worktree(root: Path, commit: str, args: argparse.Namespace) -> i
                 os.environ[k] = v
 
 
+def pushed_file(work: Path, commit: str, name: str) -> str | None:
+    """Text of `name` in `commit`, or None when the commit has no such file."""
+    r = subprocess.run(["git", "show", "%s:%s" % (commit, name)], cwd=str(work), capture_output=True)
+    return r.stdout.decode("utf-8", "replace") if r.returncode == 0 else None
+
+
+def gitleaks_flags(work: Path, commit: str, tmp: Path) -> str:
+    """Flags that make gitleaks read .gitleaksignore and .gitleaks.toml from the
+    pushed commit, not from the working tree (DL154, R13.78). A commit with no
+    .gitleaksignore gets an empty one, so the working tree's does not apply."""
+    ignore = pushed_file(work, commit, ".gitleaksignore")
+    f = tmp / "gitleaksignore"
+    f.write_text(ignore or "", encoding="utf-8", newline="")
+    flags = ' --gitleaks-ignore-path "%s"' % f
+    config = pushed_file(work, commit, ".gitleaks.toml")
+    if config is not None:
+        c = tmp / "gitleaks.toml"
+        c.write_text(config, encoding="utf-8", newline="")
+        flags += ' --config "%s"' % c
+    return flags
+
+
+def with_pushed_gitleaks(steps: list[dict], work: Path, commit: str, tmp: Path) -> list[dict]:
+    out = []
+    for s in steps:
+        if s["run"].lstrip().startswith("gitleaks "):
+            s = dict(s, run=s["run"] + gitleaks_flags(work, commit, tmp))
+        out.append(s)
+    return out
+
+
 def run_guards(root: Path, work: Path, args: argparse.Namespace) -> int:
     """Run the pre_push steps with `work` as the checkout (the pushed commit's
     worktree, or `root` itself). Logs are kept under `root`."""
@@ -180,6 +212,15 @@ def run_guards(root: Path, work: Path, args: argparse.Namespace) -> int:
         raise dc.DeliveryError("gate.json has no step with \"pre_push\": true")
 
     ctx = dc.build_context(work, cfg, args.base_ref)
+    tmp = Path(tempfile.mkdtemp(prefix="fast-guards-"))
+    try:
+        steps = with_pushed_gitleaks(steps, work, ctx.head, tmp)
+        return _run_steps(root, steps, ctx, args)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+def _run_steps(root: Path, steps: list[dict], ctx, args: argparse.Namespace) -> int:
     print("fast_guards: head %s, base %s, limit %g min per step" % (ctx.head[:10], ctx.base[:10], args.timeout_minutes))
     entries, _ = dc.execute_steps(
         steps,
