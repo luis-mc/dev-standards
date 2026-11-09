@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T16:02+00:00",
+  "updated": "2026-11-09T16:16+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2614,30 +2614,30 @@
       "status": "Running",
       "item": "Release the ported project fixes",
       "detail": "Join DL121, fold notes, CI, merge, install, smoke, cleanup",
-      "expected": "09 Nov ~17:35",
-      "changed": "2026-11-09T15:27+00:00",
-      "expected_basis": "DL121 local agent ~90 min, then join and CI",
+      "expected": "09 Nov ~16:35",
+      "changed": "2026-11-09T16:16+00:00",
+      "expected_basis": "CI run started 16:16, ~15 min",
       "release": 70,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-09T15:35+00:00",
-          "end": "2026-11-09T17:05+00:00"
+          "end": "2026-11-09T15:45+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-09T17:05+00:00",
-          "end": "2026-11-09T17:15+00:00"
+          "start": "2026-11-09T15:45+00:00",
+          "end": "2026-11-09T16:16+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-09T17:15+00:00",
-          "end": "2026-11-09T17:30+00:00"
+          "start": "2026-11-09T16:16+00:00",
+          "end": "2026-11-09T16:31+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-09T17:30+00:00",
-          "end": "2026-11-09T17:35+00:00"
+          "start": "2026-11-09T16:31+00:00",
+          "end": "2026-11-09T16:35+00:00"
         }
       ],
       "started": "2026-11-08T23:10+00:00"
@@ -2877,6 +2877,17 @@
       "changed": "2026-11-09T16:01+00:00",
       "expected_basis": "cloud agents from ~16:10, ~75 min, then join and CI",
       "release": 75
+    },
+    {
+      "id": "DL145",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "join.py keeps unpushed local joins; docs/work conflicts auto-resolve",
+      "detail": "A second join.py --into run rebuilt the integration branch from origin and silently dropped earlier unpushed local merge commits. Build on the local branch when it is ahead of origin, or refuse when commits would be lost. Auto-resolve docs/work conflicts, since the strip removes them.",
+      "expected": "09 Nov ~18:45",
+      "changed": "2026-11-09T16:15+00:00",
+      "rides": "DL143"
     },
     {
       "id": "DS1",
