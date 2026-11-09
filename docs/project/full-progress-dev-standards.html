@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T17:33+00:00",
+ "updated": "2026-11-09T18:28+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3564,13 +3564,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL127",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Ledger: close agents whose task shipped; agent-check command",
    "detail": "Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check <id> to record last_checked.",
-   "expected": "09 Nov ~18:08",
-   "changed": "2026-11-09T17:28+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T18:28+00:00",
    "rides": "DS194",
-   "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
    "started": "2026-11-09T16:29+00:00"
   },
   {
@@ -3625,13 +3624,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL132",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "ci_watch.py writes the main repo's ledger from a worktree",
    "detail": "Run inside a join worktree, it wrote that worktree's ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.",
-   "expected": "09 Nov ~18:08",
-   "changed": "2026-11-09T17:28+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T18:28+00:00",
    "rides": "DS194",
-   "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
    "started": "2026-11-09T16:29+00:00"
   },
   {
@@ -3698,26 +3696,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL138",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "ci_watch matches or creates the train for a ready PR",
    "detail": "ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.",
-   "expected": "09 Nov ~18:08",
-   "changed": "2026-11-09T17:28+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T18:28+00:00",
    "rides": "DS194",
-   "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
    "started": "2026-11-09T16:29+00:00"
   },
   {
    "id": "DL139",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "ci_watch covers every required workflow of the head",
    "detail": "ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.",
-   "expected": "09 Nov ~18:08",
-   "changed": "2026-11-09T17:29+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T18:28+00:00",
    "rides": "DS194",
-   "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
    "started": "2026-11-09T16:29+00:00"
   },
   {
@@ -3833,14 +3829,26 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL147",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Workflow guard: jobs after a skippable need use !cancelled() and check results",
    "detail": "From a project's RELEASE-197 CI: a job with needs on a job that can be skipped and an if: without a status function got the implicit success(), so it was skipped and a later job failed on a missing artifact. Rule: such a job's if starts with !cancelled() and checks each required need's result == 'success'. A lint test over every template workflow enforces it.",
-   "expected": "09 Nov ~18:29",
-   "changed": "2026-11-09T17:33+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T18:28+00:00",
    "rides": "DS194",
-   "expected_basis": "cloud agent started 17:33, ~55 min",
    "started": "2026-11-09T17:33+00:00"
+  },
+  {
+   "id": "DL148",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Fix Rust workflow ifs and old CI tests for the DL147 guard",
+   "detail": "DL147's guard flags two Rust ci.yml jobs that need decide; tools/test_delivery_ci.py hard-codes the old if conditions; one test_ci_speedups case to check. Branch on DS201 with DL147 merged.",
+   "expected": "09 Nov ~19:18",
+   "changed": "2026-11-09T18:28+00:00",
+   "expected_basis": "cloud agent started 18:28, ~50 min",
+   "rides": "DS194",
+   "started": "2026-11-09T18:28+00:00"
   },
   {
    "id": "DS1",
@@ -6781,13 +6789,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS201",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Rust workflows",
    "detail": "rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).",
-   "expected": "09 Nov ~18:48",
-   "changed": "2026-11-09T17:29+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T18:28+00:00",
    "rides": "DS194",
-   "expected_basis": "cloud agent started 17:28, ~80 min",
    "started": "2026-11-09T17:29+00:00"
   },
   {
@@ -6806,12 +6813,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS203",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Rust docs: specs and guide",
    "detail": "Feature spec rules and a guide: Rust beside a JS stack.",
-   "expected": "10 Nov",
-   "changed": "2026-11-09T16:29+00:00",
-   "rides": "DS194"
+   "expected": "09 Nov ~19:38",
+   "changed": "2026-11-09T18:28+00:00",
+   "rides": "DS194",
+   "expected_basis": "cloud agent started 18:28, ~70 min",
+   "started": "2026-11-09T18:28+00:00"
   },
   {
    "id": "DU1",
@@ -7407,24 +7416,26 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T17:33+00:00">09 Nov 17:33</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T18:28+00:00">09 Nov 18:28</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">7 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
-<li data-glance-task="DL127"><span class="task-id">DL127</span>Ledger: close agents whose task shipped; agent-check command <span class="glance-expected">09 Nov ~18:08</span><span class="glance-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></li>
-<li data-glance-task="DL132"><span class="task-id">DL132</span>ci_watch.py writes the main repo&#x27;s ledger from a worktree <span class="glance-expected">09 Nov ~18:08</span><span class="glance-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></li>
-<li data-glance-task="DL138"><span class="task-id">DL138</span>ci_watch matches or creates the train for a ready PR <span class="glance-expected">09 Nov ~18:08</span><span class="glance-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></li>
-<li data-glance-task="DL139"><span class="task-id">DL139</span>ci_watch covers every required workflow of the head <span class="glance-expected">09 Nov ~18:08</span><span class="glance-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></li>
-<li data-glance-task="DL147"><span class="task-id">DL147</span>Workflow guard: jobs after a skippable need use !cancelled() and check results <span class="glance-expected">09 Nov ~18:29</span><span class="glance-basis">cloud agent started 17:33, ~55 min</span></li>
-<li data-glance-task="DS201"><span class="task-id">DS201</span>Rust workflows <span class="glance-expected">09 Nov ~18:48</span><span class="glance-basis">cloud agent started 17:28, ~80 min</span></li>
+<li data-glance-task="DL148"><span class="task-id">DL148</span>Fix Rust workflow ifs and old CI tests for the DL147 guard <span class="glance-expected">09 Nov ~19:18</span><span class="glance-basis">cloud agent started 18:28, ~50 min</span></li>
+<li data-glance-task="DS203"><span class="task-id">DS203</span>Rust docs: specs and guide <span class="glance-expected">09 Nov ~19:38</span><span class="glance-basis">cloud agent started 18:28, ~70 min</span></li>
 <li data-glance-task="DS194"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track <span class="glance-expected">09 Nov ~20:25</span><span class="glance-basis">Rust docs agent after DS201 ~19:40, join 15 + CI 25 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">24 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">30 tasks</span></summary>
 <ul>
+<li data-glance-task="DL127"><span class="task-id">DL127</span>Ledger: close agents whose task shipped; agent-check command</li>
+<li data-glance-task="DL132"><span class="task-id">DL132</span>ci_watch.py writes the main repo&#x27;s ledger from a worktree</li>
+<li data-glance-task="DL138"><span class="task-id">DL138</span>ci_watch matches or creates the train for a ready PR</li>
+<li data-glance-task="DL139"><span class="task-id">DL139</span>ci_watch covers every required workflow of the head</li>
+<li data-glance-task="DL147"><span class="task-id">DL147</span>Workflow guard: jobs after a skippable need use !cancelled() and check results</li>
+<li data-glance-task="DS201"><span class="task-id">DS201</span>Rust workflows</li>
 <li data-glance-task="DL122"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune</li>
 <li data-glance-task="DL124"><span class="task-id">DL124</span>Questions stop hook counts running cloud agents</li>
 <li data-glance-task="DL128"><span class="task-id">DL128</span>join.py handles stacked branches</li>
@@ -7463,13 +7474,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">24</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">7</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">9</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">30</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">9</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS194 (RELEASE: plugin fixes, audits specs and Rust track) expected live about 20:25, worst case 20:50." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">16:00</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="140"/><text x="304" y="28">17:00</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="140"/><text x="408" y="28">18:00</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="140"/><text x="512" y="28">19:00</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="140"/><text x="616" y="28">20:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">21:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-71 · RELEASE: plugin fixes, audits specs and Rust track</title>RELEASE-71 · RELEASE: plu…</text>
-<text class="rt-sub" x="0" y="77"><title>AR67, AR68, DL122, DL124, DL127, DL128, DL129, DL130, DL131, DL132, DL133, DL134, DL135, DL136, DL137, DL138, DL139, DL140, DL141, DL145, DL146, DL147, DS191, DS193, DS196, DS197, DS198, DS199, DS200, DS201, DS202, DS203</title>AR67, AR68, DL122, DL124, DL127,…</text>
+<text class="rt-sub" x="0" y="77"><title>AR67, AR68, DL122, DL124, DL127, DL128, DL129, DL130, DL131, DL132, DL133, DL134, DL135, DL136, DL137, DL138, DL139, DL140, DL141, DL145, DL146, DL147, DL148, DS191, DS193, DS196, DS197, DS198, DS199, DS200, DS201, DS202, DS203</title>AR67, AR68, DL122, DL124, DL127,…</text>
 <rect class="rt-bar agents" x="200" y="52" width="381.3" height="22"><title>agents 16:00-19:40</title></rect>
 <rect class="rt-bar join" x="581.3" y="52" width="26" height="22"><title>join 19:40-19:55</title></rect>
 <rect class="rt-bar ci" x="607.3" y="52" width="43.3" height="22"><title>PR CI 19:55-20:20</title></rect>
@@ -7479,37 +7490,37 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <text class="rt-risk-label" x="713.7" y="67">+1 fix round → worst ~20:50</text>
 <polygon class="rt-expected" points="659.3,50 667.3,63 659.3,76 651.3,63"/>
 <text class="rt-live-label" x="659.3" y="92">live ~20:25</text>
-<line class="rt-now" x1="361.2" y1="36" x2="361.2" y2="148"/><text class="rt-now-label" x="361.2" y="161">now 17:33</text>
+<line class="rt-now" x1="456.5" y1="36" x2="456.5" y2="148"/><text class="rt-now-label" x="456.5" y="161">now 18:28</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-71" open><summary><strong>RELEASE-71 · live ~20:25 · worst ~20:50</strong><span class="fold-count">33 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-71" open><summary><strong>RELEASE-71 · live ~20:25 · worst ~20:50</strong><span class="fold-count">34 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS194"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track</td><td data-label="App / service"></td><td data-label="Detail">One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~20:25<span class="expected-basis">Rust docs agent after DS201 ~19:40, join 15 + CI 25 min</span></td></tr>
-<tr data-task="DL127"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL127</span>Ledger: close agents whose task shipped; agent-check command</a></td><td data-label="App / service"></td><td data-label="Detail">Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check &lt;id&gt; to record last_checked.</td><td data-label="Expected">09 Nov ~18:08<span class="expected-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></td></tr>
-<tr data-task="DL132"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL132</span>ci_watch.py writes the main repo&#x27;s ledger from a worktree</a></td><td data-label="App / service"></td><td data-label="Detail">Run inside a join worktree, it wrote that worktree&#x27;s ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.</td><td data-label="Expected">09 Nov ~18:08<span class="expected-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></td></tr>
-<tr data-task="DL138"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL138</span>ci_watch matches or creates the train for a ready PR</a></td><td data-label="App / service"></td><td data-label="Detail">ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.</td><td data-label="Expected">09 Nov ~18:08<span class="expected-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></td></tr>
-<tr data-task="DL139"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL139</span>ci_watch covers every required workflow of the head</a></td><td data-label="App / service"></td><td data-label="Detail">ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.</td><td data-label="Expected">09 Nov ~18:08<span class="expected-basis">fix round for 3 watch tests, started 17:28, ~40 min</span></td></tr>
-<tr data-task="DL147"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL147</span>Workflow guard: jobs after a skippable need use !cancelled() and check results</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-197 CI: a job with needs on a job that can be skipped and an if: without a status function got the implicit success(), so it was skipped and a later job failed on a missing artifact. Rule: such a job&#x27;s if starts with !cancelled() and checks each required need&#x27;s result == &#x27;success&#x27;. A lint test over every template workflow enforces it.</td><td data-label="Expected">09 Nov ~18:29<span class="expected-basis">cloud agent started 17:33, ~55 min</span></td></tr>
-<tr data-task="DS201"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS201</span>Rust workflows</td><td data-label="App / service"></td><td data-label="Detail">rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).</td><td data-label="Expected">09 Nov ~18:48<span class="expected-basis">cloud agent started 17:28, ~80 min</span></td></tr>
+<tr data-task="DL148"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL148</span>Fix Rust workflow ifs and old CI tests for the DL147 guard</a></td><td data-label="App / service"></td><td data-label="Detail">DL147&#x27;s guard flags two Rust ci.yml jobs that need decide; tools/test_delivery_ci.py hard-codes the old if conditions; one test_ci_speedups case to check. Branch on DS201 with DL147 merged.</td><td data-label="Expected">09 Nov ~19:18<span class="expected-basis">cloud agent started 18:28, ~50 min</span></td></tr>
+<tr data-task="DS203"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS203</span>Rust docs: specs and guide</td><td data-label="App / service"></td><td data-label="Detail">Feature spec rules and a guide: Rust beside a JS stack.</td><td data-label="Expected">09 Nov ~19:38<span class="expected-basis">cloud agent started 18:28, ~70 min</span></td></tr>
 <tr data-task="DL146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">Not scheduled</td></tr>
-<tr data-task="DS203"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS203</span>Rust docs: specs and guide</td><td data-label="App / service"></td><td data-label="Detail">Feature spec rules and a guide: Rust beside a JS stack.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="AR67"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR67</span>mark-published after pending --refresh needs no extra render</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">mark-published can refuse with &#x27;differs from a fresh render; run render first&#x27; right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="AR68"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR68</span>task-status-update skill lists the four --phase names</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">--phase accepts only agents, join, ci, merge; the skill text does not list them.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL122"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune</a></td><td data-label="App / service"></td><td data-label="Detail">artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL124"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL124</span>Questions stop hook counts running cloud agents</a></td><td data-label="App / service"></td><td data-label="Detail">The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL127"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL127</span>Ledger: close agents whose task shipped; agent-check command</a></td><td data-label="App / service"></td><td data-label="Detail">Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check &lt;id&gt; to record last_checked.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL128"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL128</span>join.py handles stacked branches</a></td><td data-label="App / service"></td><td data-label="Detail">When branch B contains an older head of branch A, merge B alone or report stacked and prefer B&#x27;s side for files B rewrote.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL129"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL129</span>join.py --into creates a missing integration branch</a></td><td data-label="App / service"></td><td data-label="Detail">join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL130"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL130</span>Pre-push hook names missing node_modules</a></td><td data-label="App / service"></td><td data-label="Detail">In a fresh worktree with no node_modules the pre-push guard fails with a cryptic pnpm message. Detect it and say: run pnpm install --frozen-lockfile in this worktree.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL131"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL131</span>branch_gate --e2e-only leaves docs/work clean</a></td><td data-label="App / service"></td><td data-label="Detail">The gate regenerates committed screenshots under docs/work, so the next push refuses. Write shots to an ignored dir or restore docs/work afterwards.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL132"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL132</span>ci_watch.py writes the main repo&#x27;s ledger from a worktree</a></td><td data-label="App / service"></td><td data-label="Detail">Run inside a join worktree, it wrote that worktree&#x27;s ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL133"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL133</span>DL-53 hook accepts /c/... paths under the work root</a></td><td data-label="App / service"></td><td data-label="Detail">git worktree add /c/Work/... was refused as outside C:\Work. Normalise Git Bash paths before comparing.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL134"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL134</span>branch_gate logs are UTF-8 on Windows</a></td><td data-label="App / service"></td><td data-label="Detail">Gate logs mix cp1252 box-drawing characters; cat and Python print fail. Force UTF-8 for the log and the Playwright reporter.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL135"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL135</span>Join flags e2e unhandled-API-call failures as join interactions</a></td><td data-label="App / service"></td><td data-label="Detail">Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL136"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL136</span>Held routines are paused, not postponed, while a question is open</a></td><td data-label="App / service"></td><td data-label="Detail">A routine postponed a few minutes for an owner answer started on its old brief when the dialog stayed open 3 h. Rule: pause it (no run_once_at), or a hook warns when a held routine&#x27;s start passes during an open question.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL137"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL137</span>Pre-push guard resolves paths from the current worktree</a></td><td data-label="App / service"></td><td data-label="Detail">A push from one release worktree printed an ok line for a file in an older, removed worktree (the generated OpenAPI schema check?). A guard resolves its path from a stale or cached location.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL138"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL138</span>ci_watch matches or creates the train for a ready PR</a></td><td data-label="App / service"></td><td data-label="Detail">ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL139"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL139</span>ci_watch covers every required workflow of the head</a></td><td data-label="App / service"></td><td data-label="Detail">ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL140"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL140</span>Join runs the strict docs check before the ready PR</a></td><td data-label="App / service"></td><td data-label="Detail">Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR&#x27;s CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL141"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL141</span>Agent gate compiles native C# on Linux, or flags it</a></td><td data-label="App / service"></td><td data-label="Detail">A Linux agent gate never compiles Windows C#, so an ambiguous type (CS0104 under /warnaserror+) surfaced only in release CI. Compile with mono mcs or the dotnet SDK csc against the same framework assemblies, or flag &#x27;C# changed, not compiled&#x27; in the gate result.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL145"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL145</span>join.py keeps unpushed local joins; docs/work conflicts auto-resolve</a></td><td data-label="App / service"></td><td data-label="Detail">A second join.py --into run rebuilt the integration branch from origin and silently dropped earlier unpushed local merge commits. Build on the local branch when it is ahead of origin, or refuse when commits would be lost. Auto-resolve docs/work conflicts, since the strip removes them.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL147"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL147</span>Workflow guard: jobs after a skippable need use !cancelled() and check results</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-197 CI: a job with needs on a job that can be skipped and an if: without a status function got the implicit success(), so it was skipped and a later job failed on a missing artifact. Rule: such a job&#x27;s if starts with !cancelled() and checks each required need&#x27;s result == &#x27;success&#x27;. A lint test over every template workflow enforces it.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS191"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS191</span>Review audits and test-cost specs against code</td><td data-label="App / service"></td><td data-label="Detail">docs_check T2 still warns for both after DS190 (the cloud checkout missed them)</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS193"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS193</span>docs_work.py strip --apply always commits or fails loudly</td><td data-label="App / service"></td><td data-label="Detail">On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS196"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings</td><td data-label="App / service"></td><td data-label="Detail">languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).</td><td data-label="Expected">09 Nov</td></tr>
@@ -7517,6 +7528,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS198"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton</td><td data-label="App / service"></td><td data-label="Detail">Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS199"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS199</span>Generic tool fetcher and pins</td><td data-label="App / service"></td><td data-label="Detail">ci_tool.py tool command (file, archive, crate kinds) and pins for rustup-init, llvm, cargo-deny, cargo-xwin. Unit tests pass (37). Branch CI cancelled by the docs check (spec text is DS203). Zig not pinned: its download hosts refused the cloud sandbox.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS200"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS200</span>Rust CI helper</td><td data-label="App / service"></td><td data-label="Detail">rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS201"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS201</span>Rust workflows</td><td data-label="App / service"></td><td data-label="Detail">rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS202"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS202</span>Doctor checks for the rust track</td><td data-label="App / service"></td><td data-label="Detail">Doctor rust check: toolchain, linker, windows linkers, pins, advisory db age, disk. Unit tests pass (33). Branch CI cancelled by the docs check (spec text is DS203). Fix commands name ci_tool.py ensure; DS199 shipped ci_tool.py tool, so DS200 aligns them.</td><td data-label="Expected">09 Nov</td></tr>
 </tbody></table></div>
 </details>
@@ -7963,7 +7975,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904093"><time datetime="2026-11-09T17:33+00:00">09 Nov 17:33</time></td><td data-label="Tasks">DL1 to DL147</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">5 Running</span><span class="status-chip status-built">14 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904148"><time datetime="2026-11-09T18:28+00:00">09 Nov 18:28</time></td><td data-label="Tasks">DL1 to DL148</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">19 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904034"><time datetime="2026-11-09T16:34+00:00">09 Nov 16:34</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </details>
