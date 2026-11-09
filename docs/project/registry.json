@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T23:03+00:00",
+  "updated": "2026-11-09T23:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3099,6 +3099,18 @@
       "expected_basis": "cloud agent from 23:04: setup 5 + work 25 + checks 15",
       "rides": "DS207",
       "started": "2026-11-09T23:03+00:00"
+    },
+    {
+      "id": "DL159",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pool default Playwright pin 1.62.1 -> 1.65.0",
+      "detail": "npm latest is 1.65.0. Raise the pinned fallback in delivery_runner_pool.py PLAYWRIGHT_VERSION, runner-pool Dockerfile ARG and compose.yaml default together, plus the pinned expectations in test_runner_pool.py. Only used when no lockfile or pool .env sets a version; with DL155 a refresh never lowers it. Done by the orchestrator at the RELEASE-77 join.",
+      "expected": "10 Nov ~00:20",
+      "changed": "2026-11-09T23:14+00:00",
+      "expected_basis": "join of RELEASE-77 at ~00:05, edit ~10 min",
+      "rides": "DS207"
     },
     {
       "id": "DS1",
