@@ -59,7 +59,8 @@ jobs:
   integration:
     name: integration tests, every file (ephemeral Postgres)
     needs: changed
-    if: ${{ needs.changed.outputs.run == 'true' }}
+    # DL147: needs a skipped job to count as a skip; success() is explicit here.
+    if: ${{ !cancelled() && needs.changed.result == 'success' && needs.changed.outputs.run == 'true' }}
     runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 60
     services:
@@ -106,7 +107,8 @@ jobs:
   e2e:
     name: web E2E, every spec
     needs: changed
-    if: ${{ needs.changed.outputs.run == 'true' }}
+    # DL147: needs a skipped job to count as a skip; success() is explicit here.
+    if: ${{ !cancelled() && needs.changed.result == 'success' && needs.changed.outputs.run == 'true' }}
     runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: e2e
