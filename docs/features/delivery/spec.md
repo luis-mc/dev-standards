@@ -434,6 +434,8 @@ flowchart LR
 
 **R13.71** — **Setup asks about Windows installers** (DL149). `/delivery-ci-setup` asks whether the project builds Windows installers on Linux and suggests yes when the repository has `*.wxs` files. Yes adds `windows-packaging` to `pool.layers`. It also names `.delivery/pool.apt`.
 
+**R13.81** — **Mock handler guard** (DL146, D152). `mock_handler_guard.py` is a fast guard in the ts template. It reads only what the branch adds since its base (`git diff BASE...HEAD`). For each new exported function in an API client file that calls a route written as a string literal, it checks that the shared e2e mock has a default handler for that route (MSW `http.get('/api/x', ...)` or `rest.post(...)`). A miss fails with the route, the client function and the mock file to add the handler to. Both file sets are set in `.delivery/config.json` as `e2e_mock`: `{"client": [globs], "mock": [globs]}`; the defaults are `**/api/client.ts`, `**/api-client.ts`, `**/lib/api.ts` and `**/mocks/handlers.ts`, `**/mocks/handlers/*.ts`. With no client file or no mock file found, it passes with a one-line note. Limits: only string-literal paths are seen (a path built in code is not); parameters (`:id`, `${id}`) match any value; the method is compared only when both sides show one; a handler made in a loop is not seen; a unit-test mock does not count, only the shared mock.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:
