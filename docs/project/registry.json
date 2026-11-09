@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T21:23+00:00",
+  "updated": "2026-11-09T21:57+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3023,6 +3023,18 @@
       "detail": "A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.",
       "expected": "10 Nov",
       "changed": "2026-11-09T21:23+00:00",
+      "expected_basis": "rides RELEASE-72, launched after restart",
+      "rides": "DS207"
+    },
+    {
+      "id": "DL154",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pre-push secret scan: read .gitleaksignore from the pushed commit",
+      "detail": "Pushing another ref (git push origin <sha>:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show <sha>:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T21:57+00:00",
       "expected_basis": "rides RELEASE-72, launched after restart",
       "rides": "DS207"
     },
@@ -6066,6 +6078,18 @@
       "changed": "2026-11-09T19:29+00:00",
       "expected_basis": "after RELEASE-71 ~21:08; agents 60 + join 15 + CI 25 min",
       "release": 77
+    },
+    {
+      "id": "DS208",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Rust track: TS tests that spawn a crate binary build it in globalSetup",
+      "detail": "CI's unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p <crate> once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T21:57+00:00",
+      "expected_basis": "rides RELEASE-72, launched after restart",
+      "rides": "DS207"
     },
     {
       "id": "DU1",
