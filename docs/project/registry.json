@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T19:07+00:00",
+  "updated": "2026-11-09T19:29+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2983,6 +2983,28 @@
       "started": "2026-11-09T19:05+00:00"
     },
     {
+      "id": "DL150",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Installer runs the prune workflow sync after install or update",
+      "detail": "delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project's artifact_prune.workflows list never reverts (DL122 follow-up, D149).",
+      "expected": "",
+      "changed": "2026-11-09T19:29+00:00",
+      "rides": "DS207"
+    },
+    {
+      "id": "DL151",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Session-start check-in names agents whose task already shipped",
+      "detail": "hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).",
+      "expected": "",
+      "changed": "2026-11-09T19:29+00:00",
+      "rides": "DS207"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -5789,30 +5811,30 @@
       "status": "Running",
       "item": "RELEASE: plugin fixes, audits specs and Rust track",
       "detail": "One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "09 Nov ~20:55",
-      "changed": "2026-11-09T19:06+00:00",
-      "expected_basis": "pool layer agent ~20:11, join 15 + CI 25 min",
+      "expected": "09 Nov ~21:08",
+      "changed": "2026-11-09T19:29+00:00",
+      "expected_basis": "path filter agent ~20:24, join 15 + CI 25 min",
       "release": 71,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-09T16:00+00:00",
-          "end": "2026-11-09T20:11+00:00"
+          "end": "2026-11-09T20:24+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-09T20:11+00:00",
-          "end": "2026-11-09T20:26+00:00"
+          "start": "2026-11-09T20:24+00:00",
+          "end": "2026-11-09T20:39+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-09T20:26+00:00",
-          "end": "2026-11-09T20:51+00:00"
+          "start": "2026-11-09T20:39+00:00",
+          "end": "2026-11-09T21:04+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-09T20:51+00:00",
-          "end": "2026-11-09T20:55+00:00"
+          "start": "2026-11-09T21:04+00:00",
+          "end": "2026-11-09T21:08+00:00"
         }
       ],
       "started": "2026-11-09T15:57+00:00",
@@ -6000,6 +6022,31 @@
       "expected_basis": "cloud agent started 19:06, ~45 min",
       "rides": "DS194",
       "started": "2026-11-09T19:05+00:00"
+    },
+    {
+      "id": "DS206",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Rust and JS path filters; gcc default for the Rust linker",
+      "detail": "D148: a JS-only change no longer runs the Rust workflow and Rust under apps/ runs it. D146: gate isolation off by default; rust_ci uses system cc, then Zig, else fails with the fix.",
+      "expected": "09 Nov ~20:24",
+      "changed": "2026-11-09T19:29+00:00",
+      "expected_basis": "cloud agent started 19:29, ~55 min",
+      "rides": "DS194",
+      "started": "2026-11-09T19:29+00:00"
+    },
+    {
+      "id": "DS207",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: installer prune sync and stale-agent check-in",
+      "detail": "DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.",
+      "expected": "09 Nov ~22:30",
+      "changed": "2026-11-09T19:29+00:00",
+      "expected_basis": "after RELEASE-71 ~21:08; agents 60 + join 15 + CI 25 min",
+      "release": 77
     },
     {
       "id": "DU1",

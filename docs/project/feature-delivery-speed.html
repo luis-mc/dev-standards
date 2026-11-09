@@ -888,7 +888,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T19:07+00:00">09 Nov 19:07</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T19:29+00:00">09 Nov 19:29</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 19:07</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -934,12 +934,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">121</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">20</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">121</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">20</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL149"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL149</span>Pool image: opt-in windows-packaging layer and project apt fragment<span class="release-line"><span class="release-name">RELEASE-71</span></span></td><td data-label="Detail">Pool Dockerfile template gains an opt-in layer (dotnet-sdk-8.0 wine wine64 xvfb xauth msitools) and a project fragment .delivery/pool.apt merged at build. delivery-ci-setup asks if the project builds Windows installers on Linux (or has *.wxs). Doctor checks wine, xvfb-run, dotnet when on; flags a repo infra/runners/*/Dockerfile the pool ignores; checks the tool cache is writable and persistent. Rebuild refuses while a runner is busy.</td><td data-label="Expected">09 Nov ~20:11<span class="expected-basis">cloud agent started 19:06, ~65 min</span></td></tr>
 <tr data-task="DL146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler<span class="release-line"><span class="release-name">RELEASE-71</span></span></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL151"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">Not scheduled</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">20 built, 127 live</span></summary>
@@ -1126,6 +1128,86 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D149">
+<h3 class="decision-head"><span class="decision-id">D149</span> <span class="decision-question">Which agent-report follow-ups to schedule?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL122</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Schedule the installer prune sync and the stale-agent check-in (the owner ticked both).</p>
+<blockquote class="decision-words">&ldquo;Installer runs prune sync, Check-in names stale agents&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Installer runs prune sync</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">delivery_ci_install update runs artifact_prune.py --sync-workflow.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Check-in names stale agents</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Session start lists running agents whose task shipped.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Neither for now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave both as notes.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D148">
+<h3 class="decision-head"><span class="decision-id">D148</span> <span class="decision-question">When to fix the two Rust workflow path-filter gaps (a JS-only change runs Rust CI; Rust under apps/ is ignored)?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS201</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Next release</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record a task; fix after RELEASE-71.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add to RELEASE-71</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Launch an agent now; may push the merge.</p>
+<blockquote class="decision-words">&ldquo;Add to RELEASE-71&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave as known gap</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Document it in the guide only.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D147">
+<h3 class="decision-head"><span class="decision-id">D147</span> <span class="decision-question">May the session reply directly to other Claude sessions on this PC?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL149</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Reply to sessions directly</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Short factual replies to local Claude sessions, owner told each time; never to people or external services.</p>
+<blockquote class="decision-words">&ldquo;Reply to sessions directly&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Draft only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Write replies as files; the owner sends them.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Reply only when asked</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Reply only to a direct question; otherwise draft.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D146">
+<h3 class="decision-head"><span class="decision-id">D146</span> <span class="decision-question">Should the default Linux runner image include gcc? (revises D140: Zig as the Linux linker)</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL149</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">gcc in image, Zig opt-in</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">build-essential and pkg-config in the default image; system gcc links Rust on Linux; Zig pinned but optional; gate isolation default off.</p>
+<blockquote class="decision-words">&ldquo;gcc in image, Zig opt-in&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep Zig as the linker</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No compiler in the image; Zig links Rust on Linux.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both, Zig default</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">gcc in the image, Zig stays the configured linker, isolation on.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D145">
 <h3 class="decision-head"><span class="decision-id">D145</span> <span class="decision-question">Rust Q8: what must a project state before adding a Rust part?</span></h3>
 <p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>

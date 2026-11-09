@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T19:07+00:00",
+ "updated": "2026-11-09T19:29+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3863,6 +3863,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-09T19:05+00:00"
   },
   {
+   "id": "DL150",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Installer runs the prune workflow sync after install or update",
+   "detail": "delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project's artifact_prune.workflows list never reverts (DL122 follow-up, D149).",
+   "expected": "",
+   "changed": "2026-11-09T19:29+00:00",
+   "rides": "DS207"
+  },
+  {
+   "id": "DL151",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Session-start check-in names agents whose task already shipped",
+   "detail": "hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).",
+   "expected": "",
+   "changed": "2026-11-09T19:29+00:00",
+   "rides": "DS207"
+  },
+  {
    "id": "DS1",
    "owner": "project",
    "app": "luismc-project-setup",
@@ -6669,30 +6691,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "RELEASE: plugin fixes, audits specs and Rust track",
    "detail": "One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.",
-   "expected": "09 Nov ~20:55",
-   "changed": "2026-11-09T19:06+00:00",
-   "expected_basis": "pool layer agent ~20:11, join 15 + CI 25 min",
+   "expected": "09 Nov ~21:08",
+   "changed": "2026-11-09T19:29+00:00",
+   "expected_basis": "path filter agent ~20:24, join 15 + CI 25 min",
    "release": 71,
    "phases": [
     {
      "name": "agents",
      "start": "2026-11-09T16:00+00:00",
-     "end": "2026-11-09T20:11+00:00"
+     "end": "2026-11-09T20:24+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-09T20:11+00:00",
-     "end": "2026-11-09T20:26+00:00"
+     "start": "2026-11-09T20:24+00:00",
+     "end": "2026-11-09T20:39+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-09T20:26+00:00",
-     "end": "2026-11-09T20:51+00:00"
+     "start": "2026-11-09T20:39+00:00",
+     "end": "2026-11-09T21:04+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-09T20:51+00:00",
-     "end": "2026-11-09T20:55+00:00"
+     "start": "2026-11-09T21:04+00:00",
+     "end": "2026-11-09T21:08+00:00"
     }
    ],
    "started": "2026-11-09T15:57+00:00",
@@ -6880,6 +6902,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "expected_basis": "cloud agent started 19:06, ~45 min",
    "rides": "DS194",
    "started": "2026-11-09T19:05+00:00"
+  },
+  {
+   "id": "DS206",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Rust and JS path filters; gcc default for the Rust linker",
+   "detail": "D148: a JS-only change no longer runs the Rust workflow and Rust under apps/ runs it. D146: gate isolation off by default; rust_ci uses system cc, then Zig, else fails with the fix.",
+   "expected": "09 Nov ~20:24",
+   "changed": "2026-11-09T19:29+00:00",
+   "expected_basis": "cloud agent started 19:29, ~55 min",
+   "rides": "DS194",
+   "started": "2026-11-09T19:29+00:00"
+  },
+  {
+   "id": "DS207",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "RELEASE: installer prune sync and stale-agent check-in",
+   "detail": "DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.",
+   "expected": "09 Nov ~22:30",
+   "changed": "2026-11-09T19:29+00:00",
+   "expected_basis": "after RELEASE-71 ~21:08; agents 60 + join 15 + CI 25 min",
+   "release": 77
   },
   {
    "id": "DU1",
@@ -7475,16 +7522,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T19:07+00:00">09 Nov 19:07</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T19:29+00:00">09 Nov 19:29</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
 <ul>
 <li data-glance-task="DS205"><span class="task-id">DS205</span>Pin Zig from the PyPI ziglang wheel <span class="glance-expected">09 Nov ~19:51</span><span class="glance-basis">cloud agent started 19:06, ~45 min</span></li>
 <li data-glance-task="DL149"><span class="task-id">DL149</span>Pool image: opt-in windows-packaging layer and project apt fragment <span class="glance-expected">09 Nov ~20:11</span><span class="glance-basis">cloud agent started 19:06, ~65 min</span></li>
-<li data-glance-task="DS194"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track <span class="glance-expected">09 Nov ~20:55</span><span class="glance-basis">pool layer agent ~20:11, join 15 + CI 25 min</span></li>
+<li data-glance-task="DS206"><span class="task-id">DS206</span>Rust and JS path filters; gcc default for the Rust linker <span class="glance-expected">09 Nov ~20:24</span><span class="glance-basis">cloud agent started 19:29, ~55 min</span></li>
+<li data-glance-task="DS194"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track <span class="glance-expected">09 Nov ~21:08</span><span class="glance-basis">path filter agent ~20:24, join 15 + CI 25 min</span></li>
 </ul>
 </details>
 <details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">32 tasks</span></summary>
@@ -7535,31 +7583,36 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">32</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">32</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS194 (RELEASE: plugin fixes, audits specs and Rust track) expected live about 20:55, worst case 21:20." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">16:00</text><line class="rt-grid" x1="294.5" y1="36" x2="294.5" y2="140"/><text x="294.5" y="28">17:00</text><line class="rt-grid" x1="389.1" y1="36" x2="389.1" y2="140"/><text x="389.1" y="28">18:00</text><line class="rt-grid" x1="483.6" y1="36" x2="483.6" y2="140"/><text x="483.6" y="28">19:00</text><line class="rt-grid" x1="578.2" y1="36" x2="578.2" y2="140"/><text x="578.2" y="28">20:00</text><line class="rt-grid" x1="672.7" y1="36" x2="672.7" y2="140"/><text x="672.7" y="28">21:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DS194 (RELEASE: plugin fixes, audits specs and Rust track) expected live about 21:08, worst case 21:33; DS207 (RELEASE: installer prune sync and stale-agent check-in) expected live about 22:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">16:00</text><line class="rt-grid" x1="280" y1="36" x2="280" y2="202"/><text x="280" y="28">17:00</text><line class="rt-grid" x1="360" y1="36" x2="360" y2="202"/><text x="360" y="28">18:00</text><line class="rt-grid" x1="440" y1="36" x2="440" y2="202"/><text x="440" y="28">19:00</text><line class="rt-grid" x1="520" y1="36" x2="520" y2="202"/><text x="520" y="28">20:00</text><line class="rt-grid" x1="600" y1="36" x2="600" y2="202"/><text x="600" y="28">21:00</text><line class="rt-grid" x1="680" y1="36" x2="680" y2="202"/><text x="680" y="28">22:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-71 · RELEASE: plugin fixes, audits specs and Rust track</title>RELEASE-71 · RELEASE: plu…</text>
-<text class="rt-sub" x="0" y="77"><title>AR67, AR68, DL122, DL124, DL127, DL128, DL129, DL130, DL131, DL132, DL133, DL134, DL135, DL136, DL137, DL138, DL139, DL140, DL141, DL145, DL146, DL147, DL148, DL149, DS191, DS193, DS196, DS197, DS198, DS199, DS200, DS201, DS202, DS203, DS205</title>AR67, AR68, DL122, DL124, DL127,…</text>
-<rect class="rt-bar agents" x="200" y="52" width="395.5" height="22"><title>agents 16:00-20:11</title></rect>
-<rect class="rt-bar join" x="595.5" y="52" width="23.6" height="22"><title>join 20:11-20:26</title></rect>
-<rect class="rt-bar ci" x="619.2" y="52" width="39.4" height="22"><title>PR CI 20:26-20:51</title></rect>
-<rect class="rt-bar merge" x="658.5" y="52" width="6.3" height="22"><title>merge + cleanup 20:51-20:55</title></rect>
-<rect class="rt-risk" x="664.8" y="58" width="39.4" height="10"><title>+1 fix round</title></rect>
-<polygon class="rt-worst" points="704.2,51 711.2,63 704.2,75 697.2,63"/>
-<text class="rt-risk-label" x="715.2" y="67">+1 fix round → worst ~21:20</text>
-<polygon class="rt-expected" points="664.8,50 672.8,63 664.8,76 656.8,63"/>
-<text class="rt-live-label" x="664.8" y="92">live ~20:55</text>
-<line class="rt-now" x1="494.7" y1="36" x2="494.7" y2="148"/><text class="rt-now-label" x="494.7" y="161">now 19:07</text>
+<text class="rt-sub" x="0" y="77"><title>AR67, AR68, DL122, DL124, DL127, DL128, DL129, DL130, DL131, DL132, DL133, DL134, DL135, DL136, DL137, DL138, DL139, DL140, DL141, DL145, DL146, DL147, DL148, DL149, DS191, DS193, DS196, DS197, DS198, DS199, DS200, DS201, DS202, DS203, DS205, DS206</title>AR67, AR68, DL122, DL124, DL127,…</text>
+<rect class="rt-bar agents" x="200" y="52" width="352" height="22"><title>agents 16:00-20:24</title></rect>
+<rect class="rt-bar join" x="552" y="52" width="20" height="22"><title>join 20:24-20:39</title></rect>
+<rect class="rt-bar ci" x="572" y="52" width="33.3" height="22"><title>PR CI 20:39-21:04</title></rect>
+<rect class="rt-bar merge" x="605.3" y="52" width="5.3" height="22"><title>merge + cleanup 21:04-21:08</title></rect>
+<rect class="rt-risk" x="610.7" y="58" width="33.3" height="10"><title>+1 fix round</title></rect>
+<polygon class="rt-worst" points="644,51 651,63 644,75 637,63"/>
+<text class="rt-risk-label" x="655" y="67">+1 fix round → worst ~21:33</text>
+<polygon class="rt-expected" points="610.7,50 618.7,63 610.7,76 602.7,63"/>
+<text class="rt-live-label" x="610.7" y="92">live ~21:08</text>
+<text class="rt-name" x="0" y="122"><title>RELEASE-77 · RELEASE: installer prune sync and stale-agent check-in</title>RELEASE-77 · RELEASE: ins…</text>
+<text class="rt-sub" x="0" y="139"><title>DL150, DL151</title>DL150, DL151</text>
+<polygon class="rt-expected" points="720,112 728,125 720,138 712,125"/>
+<text class="rt-live-label" x="720" y="154">live ~22:30</text>
+<line class="rt-now" x1="478.7" y1="36" x2="478.7" y2="210"/><text class="rt-now-label" x="478.7" y="223">now 19:29</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-71" open><summary><strong>RELEASE-71 · live ~20:55 · worst ~21:20</strong><span class="fold-count">36 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-71" open><summary><strong>RELEASE-71 · live ~21:08 · worst ~21:33</strong><span class="fold-count">37 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS194"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track</td><td data-label="App / service"></td><td data-label="Detail">One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~20:55<span class="expected-basis">pool layer agent ~20:11, join 15 + CI 25 min</span></td></tr>
+<tr data-task="DS194"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track</td><td data-label="App / service"></td><td data-label="Detail">One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~21:08<span class="expected-basis">path filter agent ~20:24, join 15 + CI 25 min</span></td></tr>
 <tr data-task="DL149"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL149</span>Pool image: opt-in windows-packaging layer and project apt fragment</a></td><td data-label="App / service"></td><td data-label="Detail">Pool Dockerfile template gains an opt-in layer (dotnet-sdk-8.0 wine wine64 xvfb xauth msitools) and a project fragment .delivery/pool.apt merged at build. delivery-ci-setup asks if the project builds Windows installers on Linux (or has *.wxs). Doctor checks wine, xvfb-run, dotnet when on; flags a repo infra/runners/*/Dockerfile the pool ignores; checks the tool cache is writable and persistent. Rebuild refuses while a runner is busy.</td><td data-label="Expected">09 Nov ~20:11<span class="expected-basis">cloud agent started 19:06, ~65 min</span></td></tr>
 <tr data-task="DS205"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS205</span>Pin Zig from the PyPI ziglang wheel</td><td data-label="App / service"></td><td data-label="Detail">Zig&#x27;s own hosts refused the sandbox; the ziglang wheel on PyPI (about 101 MB) carries the zig binary. Pin it per platform with sha256 in tools.json and make ci_tool.py tool zig unpack it; then the doctor and rust_ci messages say Zig is pinned.</td><td data-label="Expected">09 Nov ~19:51<span class="expected-basis">cloud agent started 19:06, ~45 min</span></td></tr>
+<tr data-task="DS206"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS206</span>Rust and JS path filters; gcc default for the Rust linker</td><td data-label="App / service"></td><td data-label="Detail">D148: a JS-only change no longer runs the Rust workflow and Rust under apps/ runs it. D146: gate isolation off by default; rust_ci uses system cc, then Zig, else fails with the fix.</td><td data-label="Expected">09 Nov ~20:24<span class="expected-basis">cloud agent started 19:29, ~55 min</span></td></tr>
 <tr data-task="DL146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">Not scheduled</td></tr>
 <tr data-task="AR67"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR67</span>mark-published after pending --refresh needs no extra render</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">mark-published can refuse with &#x27;differs from a fresh render; run render first&#x27; right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="AR68"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR68</span>task-status-update skill lists the four --phase names</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">--phase accepts only agents, join, ci, merge; the skill text does not list them.</td><td data-label="Expected">09 Nov</td></tr>
@@ -7593,6 +7646,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS201"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS201</span>Rust workflows</td><td data-label="App / service"></td><td data-label="Detail">rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS202"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS202</span>Doctor checks for the rust track</td><td data-label="App / service"></td><td data-label="Detail">Doctor rust check: toolchain, linker, windows linkers, pins, advisory db age, disk. Unit tests pass (33). Branch CI cancelled by the docs check (spec text is DS203). Fix commands name ci_tool.py ensure; DS199 shipped ci_tool.py tool, so DS200 aligns them.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DS203"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS203</span>Rust docs: specs and guide</td><td data-label="App / service"></td><td data-label="Detail">Feature spec rules and a guide: Rust beside a JS stack.</td><td data-label="Expected">09 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~22:30</strong><span class="fold-count">3 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS207"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: installer prune sync and stale-agent check-in</td><td data-label="App / service"></td><td data-label="Detail">DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.</td><td data-label="Expected">09 Nov ~22:30<span class="expected-basis">after RELEASE-71 ~21:08; agents 60 + join 15 + CI 25 min</span></td></tr>
+<tr data-task="DL150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update</a></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL151"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped</a></td><td data-label="App / service"></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">Not scheduled</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">432 tasks</span></summary>
@@ -8039,7 +8099,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904187"><time datetime="2026-11-09T19:07+00:00">09 Nov 19:07</time></td><td data-label="Tasks">DL1 to DL149</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">20 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904209"><time datetime="2026-11-09T19:29+00:00">09 Nov 19:29</time></td><td data-label="Tasks">DL1 to DL151</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">20 Built</span><span class="status-chip status-to-do">3 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904034"><time datetime="2026-11-09T16:34+00:00">09 Nov 16:34</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </details>

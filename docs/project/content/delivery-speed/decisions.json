@@ -3302,6 +3302,109 @@
    "chosen": "Written reason only",
    "decided": "2026-11-09",
    "owner_words": "Written reason only"
+  },
+  {
+   "id": "D146",
+   "question": "Should the default Linux runner image include gcc? (revises D140: Zig as the Linux linker)",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL149",
+   "options": [
+    {
+     "label": "gcc in image, Zig opt-in",
+     "summary": "build-essential and pkg-config in the default image; system gcc links Rust on Linux; Zig pinned but optional; gate isolation default off.",
+     "recommended": true
+    },
+    {
+     "label": "Keep Zig as the linker",
+     "summary": "No compiler in the image; Zig links Rust on Linux."
+    },
+    {
+     "label": "Both, Zig default",
+     "summary": "gcc in the image, Zig stays the configured linker, isolation on."
+    }
+   ],
+   "chosen": "gcc in image, Zig opt-in",
+   "decided": "2026-11-09",
+   "owner_words": "gcc in image, Zig opt-in"
+  },
+  {
+   "id": "D147",
+   "question": "May the session reply directly to other Claude sessions on this PC?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL149",
+   "options": [
+    {
+     "label": "Reply to sessions directly",
+     "summary": "Short factual replies to local Claude sessions, owner told each time; never to people or external services.",
+     "recommended": true
+    },
+    {
+     "label": "Draft only",
+     "summary": "Write replies as files; the owner sends them."
+    },
+    {
+     "label": "Reply only when asked",
+     "summary": "Reply only to a direct question; otherwise draft."
+    }
+   ],
+   "chosen": "Reply to sessions directly",
+   "decided": "2026-11-09",
+   "owner_words": "Reply to sessions directly"
+  },
+  {
+   "id": "D148",
+   "question": "When to fix the two Rust workflow path-filter gaps (a JS-only change runs Rust CI; Rust under apps/ is ignored)?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS201",
+   "options": [
+    {
+     "label": "Next release",
+     "summary": "Record a task; fix after RELEASE-71.",
+     "recommended": true
+    },
+    {
+     "label": "Add to RELEASE-71",
+     "summary": "Launch an agent now; may push the merge."
+    },
+    {
+     "label": "Leave as known gap",
+     "summary": "Document it in the guide only."
+    }
+   ],
+   "chosen": "Add to RELEASE-71",
+   "decided": "2026-11-09",
+   "owner_words": "Add to RELEASE-71"
+  },
+  {
+   "id": "D149",
+   "question": "Which agent-report follow-ups to schedule?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL122",
+   "options": [
+    {
+     "label": "Both",
+     "summary": "Schedule the installer prune sync and the stale-agent check-in (the owner ticked both)."
+    },
+    {
+     "label": "Installer runs prune sync",
+     "summary": "delivery_ci_install update runs artifact_prune.py --sync-workflow."
+    },
+    {
+     "label": "Check-in names stale agents",
+     "summary": "Session start lists running agents whose task shipped."
+    },
+    {
+     "label": "Neither for now",
+     "summary": "Leave both as notes."
+    }
+   ],
+   "chosen": "Both",
+   "decided": "2026-11-09",
+   "owner_words": "Installer runs prune sync, Check-in names stale agents"
   }
  ]
 }
