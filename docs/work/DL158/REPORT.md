@@ -13,5 +13,12 @@
 - No .claude/suites.json line added: the new file is under the plugin tests folder, not tools/.
 
 ## CI
-(spec-lint result below)
+Run 42717573648 (spec-lint.yml, areas=delivery): overall failure, from one job.
+- docs check: failure. G1 `docs/architecture/decisions.md` generated file stale (also fails on main). W1 `docs/work/DL158/REPORT.md` added on the branch (expected; stripped before the join).
+- success: which areas, CI scripts and workflow templates, packaged-program smoke test, train cleanup, setup preflight, runner plan, artifact pruning, branch gate and trust rule, change notes enforced and folded, plugin ledger/recorder/watcher/hooks, area mapping, delivery scripts/CI templates/cleanup/prune/change notes.
+- skipped: change notes, change notes folded, artifact renderer, model profiles, branch gate shard, docs plugin, transcript folds plugin, specs/templates/AUTHSPEC.
+
+Branch head SHA: see `git rev-parse` on the pushed branch (code commit 297733e; report commit follows).
+
+READY
 
