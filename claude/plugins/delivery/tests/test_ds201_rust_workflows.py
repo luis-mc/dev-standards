@@ -42,15 +42,58 @@ class Workflows(unittest.TestCase):
         self.assertEqual(re.search(r"cancel-in-progress: (.*)", CI).group(1), want)
 
     def test_path_filter(self):
+        """DS206: pull requests use a positive Rust list; push keeps paths-ignore with docs and md."""
         head = CI.split("concurrency:")[0]
-        lines = [ln for ln in head.splitlines() if ln.strip().startswith("paths-ignore:")]
-        self.assertEqual(len(lines), 2)
-        for ln in lines:
-            self.assertIn("'docs/**'", ln)
-            self.assertIn("'**/*.md'", ln)
-            self.assertIn("'apps/**'", ln)
-            for p in ("crates", "Cargo", "rust-toolchain", "rustfmt", "deny.toml", "scripts/delivery", "tools.json"):
-                self.assertNotIn(p, ln)
+        pr, push = head.split("  push:")
+        paths = re.findall(r"^\s+- '([^']+)'", pr, re.M)
+        for p in ("crates/**", "**/Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "rustfmt.toml", "deny.toml",
+                  "**/*.rs", "scripts/delivery/rust_ci.py", "tools.json"):
+            self.assertIn(p, paths)
+        self.assertNotIn("paths-ignore", code(pr))
+        line = [ln for ln in push.splitlines() if ln.strip().startswith("paths-ignore:")]
+        self.assertEqual(len(line), 1)
+        self.assertIn("'docs/**'", line[0])
+        self.assertIn("'**/*.md'", line[0])
+        self.assertNotIn("'apps/**'", line[0])  # Rust under apps/ must still run on push
+        for p in ("crates", "Cargo", "rust-toolchain", "rustfmt", "deny.toml", "scripts/delivery", "tools.json"):
+            self.assertNotIn(p, line[0])
+
+    def test_js_workflow_ignores_rust_only_paths(self):
+        head = TS_CI.split("concurrency:")[0]
+        blocks = re.findall(r"paths-ignore:\n((?:\s+- '[^']+'\n)+)", head)
+        self.assertEqual(len(blocks), 2)
+        for b in blocks:
+            got = re.findall(r"'([^']+)'", b)
+            for p in ("crates/**", "**/Cargo.toml", "Cargo.lock", "rust-toolchain.toml", "rustfmt.toml",
+                      "deny.toml", "**/*.rs", "scripts/delivery/rust_ci.py", "docs/**", "**/*.md"):
+                self.assertIn(p, got)
+            self.assertNotIn("tools.json", got)  # shared with the JS side
+            self.assertNotIn("apps/**", got)
+
+    def test_filter_rules_by_changed_files(self):
+        """DS206: a JS-only change skips Rust, a Rust-only change skips JS, apps/ Rust runs Rust."""
+        def rx(g):
+            return re.compile("^" + re.escape(g).replace(r"\*\*/", "(?:.*/)?").replace(r"\*\*", ".*")
+                              .replace(r"\*", "[^/]*") + "$")
+        pr = CI.split("concurrency:")[0].split("  push:")[0]
+        rust_on = [rx(p) for p in re.findall(r"^\s+- '([^']+)'", pr, re.M)]
+        ts_head = TS_CI.split("concurrency:")[0]
+        block = re.search(r"paths-ignore:\n((?:\s+- '[^']+'\n)+)", ts_head).group(1)
+        ts_off = [rx(p) for p in re.findall(r"'([^']+)'", block)]
+        rust_runs = lambda fs: any(r.match(f) for f in fs for r in rust_on)  # noqa: E731
+        ts_runs = lambda fs: not all(any(r.match(f) for r in ts_off) for f in fs)  # noqa: E731
+        js = ["apps/web/src/a.ts", "packages/ui/index.ts", "pnpm-lock.yaml"]
+        self.assertFalse(rust_runs(js))
+        self.assertTrue(ts_runs(js))
+        rs = ["crates/core/src/lib.rs", "Cargo.lock", "crates/core/Cargo.toml"]
+        self.assertTrue(rust_runs(rs))
+        self.assertFalse(ts_runs(rs))
+        self.assertTrue(rust_runs(["apps/desktop/src-tauri/src/main.rs"]))
+        self.assertFalse(ts_runs(["apps/desktop/src-tauri/src/main.rs"]))
+        self.assertTrue(rust_runs(["apps/desktop/src-tauri/Cargo.toml"]))
+        self.assertTrue(rust_runs(["tools.json"]) and ts_runs(["tools.json"]))
+        self.assertTrue(rust_runs(rs + js) and ts_runs(rs + js))
+        self.assertFalse(ts_runs(["docs/a.md"]))
 
     def test_artifact_names_stable(self):
         names = re.findall(r"^\s+name: (\S+)\n\s+path:", PKG, re.M)

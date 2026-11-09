@@ -5,24 +5,33 @@ name: CI
 # The gates are the requirement; clippy, cargo-deny and cargo-nextest are this
 # generator's choices (§13.1 names no tool). Record them in the Stack Profile. The secret scan
 # (§12) is a step in `verify`, not a separate job.
-# Path filter (DS201): JS-only paths are ignored, so a JS-only change does not run this
-# workflow. The Rust paths (crates/**, Cargo.*, rust-toolchain.toml, rustfmt.toml, deny.toml,
-# scripts/delivery/**, tools.json) are never ignored. The JS workflow ignores them in turn.
+# Path filter (DS206). A pull request runs this workflow only when it touches a Rust path:
+# crates/**, **/Cargo.toml, Cargo.lock, rust-toolchain.toml, rustfmt.toml, deny.toml, **/*.rs,
+# scripts/delivery/rust_ci.py, tools.json (and this file). Rust code under apps/ counts, so a
+# JS-only change does not run the Rust suite. The JS workflow ignores the same Rust paths in turn.
 on:
   pull_request:
     # CI runs when the PR is marked ready: drafts are skipped (see the job-level
     # `if`) and `ready_for_review` is what triggers the run on that transition.
     types: [opened, synchronize, reopened, ready_for_review]
-    # Not a `paths:` list: the shared CI checks and ci_skip_check.py read push
-    # `paths-ignore` and need docs/** and **/*.md in it. The other tracks' own
-    # paths are ignored here instead, so a JS-only change does not run this workflow.
-    paths-ignore: ['apps/ios/**', 'apps/android/**', 'apps/**', 'packages/**', 'pnpm-lock.yaml', '**/*.md', 'docs/**']
+    paths:
+      - 'crates/**'
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'rustfmt.toml'
+      - 'deny.toml'
+      - '**/*.rs'
+      - 'scripts/delivery/rust_ci.py'
+      - 'tools.json'
+      - '.github/workflows/ci.yml'
   push:
     branches: [main]
-    # Not a `paths:` list: the shared CI checks and ci_skip_check.py read push
-    # `paths-ignore` and need docs/** and **/*.md in it. The other tracks' own
-    # paths are ignored here instead, so a JS-only change does not run this workflow.
-    paths-ignore: ['apps/ios/**', 'apps/android/**', 'apps/**', 'packages/**', 'pnpm-lock.yaml', '**/*.md', 'docs/**']
+    # `paths-ignore`, not `paths`: the shared CI checks and ci_skip_check.py read push
+    # `paths-ignore` and need docs/** and **/*.md in it. The folders that are only JS or
+    # mobile are ignored too. apps/** is not: Rust code can live there, so a push to main
+    # that changes apps/ runs this workflow.
+    paths-ignore: ['apps/ios/**', 'apps/android/**', 'packages/**', 'pnpm-lock.yaml', '**/*.md', 'docs/**']
 
 concurrency:
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main

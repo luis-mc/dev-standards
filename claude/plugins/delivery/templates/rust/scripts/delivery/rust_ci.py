@@ -6,7 +6,7 @@ Subcommands:
   env [--format F]     print the linker environment (F: sh, cmd, json; default json)
   deny                 cargo-deny with a cached RustSec clone (warn up to 7 days old, fail after)
   run [--] CMD...      run CMD with the linker env and, when gate.json says
-                       "toolchain-isolated" (default true), without system compilers on PATH
+                       "toolchain-isolated" is true (default false, DS206), without system compilers on PATH
   smoke                build each binary in smoke.json "binaries" in debug and run --version
 
 Exit codes: 0 ok, 1 failure, 2 usage. Standard library only. Tools come from
@@ -111,7 +111,7 @@ def gate_cfg(root: Path) -> dict:
 
 
 def isolated(root: Path) -> bool:
-    return gate_cfg(root).get("toolchain-isolated", True) is not False
+    return gate_cfg(root).get("toolchain-isolated", False) is True
 
 
 # --------------------------------------------------------------------------
@@ -146,16 +146,16 @@ def _write_zig_wrapper(zig: Path) -> Path:
 
 
 def host_linker() -> tuple[str, str | None]:
-    """(linker path, warning). Pinned Zig, else system cc, else RustCiError."""
+    """(linker path, warning). System cc first (DS206), then pinned Zig, else RustCiError."""
+    cc = shutil.which("cc") or shutil.which("gcc") or shutil.which("clang")
+    if cc:
+        return cc, None
     if tool_pinned("zig"):
         try:
             return str(_write_zig_wrapper(tool_path("zig"))), None
         except RustCiError as exc:
             raise RustCiError("pinned zig could not be used: %s" % exc) from None
-    cc = shutil.which("cc") or shutil.which("gcc") or shutil.which("clang")
-    if cc:
-        return cc, "zig is not pinned in tools.json (optional); using system %s" % cc
-    raise RustCiError("%s. Fix: install a C compiler (sudo apt-get install -y build-essential), "
+    raise RustCiError("%s. Fix: install a C compiler (sudo apt-get install -y build-essential pkg-config), "
                       "or pin Zig: python3 scripts/delivery/tools_pin.py entry zig ..." % CC_NOT_FOUND)
 
 

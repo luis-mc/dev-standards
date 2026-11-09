@@ -89,7 +89,7 @@
       "_note": "D144: needs the one-time recorded Microsoft CRT/SDK licence acceptance; drop this step and use a Windows runner otherwise."
     }
   ],
-  "toolchain-isolated": true,
+  "toolchain-isolated": false,
   "scope_map": {
     "rust": [
       "Cargo.toml",

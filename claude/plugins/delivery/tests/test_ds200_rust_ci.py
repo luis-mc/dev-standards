@@ -96,8 +96,40 @@ class RustCi(unittest.TestCase):
         os.environ["PATH"] = str(self.fake_cc())
         code, out, err = self.run_main("env")
         self.assertEqual(code, 0)
-        self.assertIn("zig is not pinned", err)
+        self.assertEqual(err, "")
         self.assertIn(str(self.tmp / "bin" / "cc"), json.loads(out)["CARGO_TARGET_%s_LINKER" % rust_ci.host_triple().upper().replace("-", "_")])
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "linux host triple")
+    def test_env_system_cc_wins_over_pinned_zig(self):
+        """DS206: system cc first, even when Zig is pinned."""
+        self.toolchain('[toolchain]\nchannel = "1.90.0"\n')
+        os.environ["PATH"] = str(self.fake_cc())
+        orig = rust_ci.tool_pinned
+        rust_ci.tool_pinned = lambda name: True
+        try:
+            code, out, _ = self.run_main("env")
+        finally:
+            rust_ci.tool_pinned = orig
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(out)["CARGO_TARGET_%s_LINKER" % rust_ci.host_triple().upper().replace("-", "_")],
+                         str(self.tmp / "bin" / "cc"))
+
+    @unittest.skipUnless(sys.platform.startswith("linux"), "linux host triple")
+    def test_env_pinned_zig_used_when_no_cc(self):
+        """DS206: Zig is the fallback when no system compiler exists."""
+        self.toolchain('[toolchain]\nchannel = "1.90.0"\n')
+        os.environ["PATH"] = str(self.tmp / "empty")
+        zig = self.tmp / "zig"
+        script(zig, "exit 0\n")
+        o_pin, o_path = rust_ci.tool_pinned, rust_ci.tool_path
+        rust_ci.tool_pinned = lambda name: True
+        rust_ci.tool_path = lambda name, exe=None: zig
+        try:
+            code, out, _ = self.run_main("env")
+        finally:
+            rust_ci.tool_pinned, rust_ci.tool_path = o_pin, o_path
+        self.assertEqual(code, 0)
+        self.assertIn("zig-cc", out)
 
     # strip PATH
     def test_strip_path_removes_compiler_dirs_keeps_cargo_dir(self):
@@ -113,14 +145,15 @@ class RustCi(unittest.TestCase):
         self.assertIn(str(rs), got)
         self.assertIn(str(other), got)
 
-    def test_isolated_default_true_and_off(self):
-        self.assertTrue(rust_ci.isolated(self.root))
-        (self.root / "scripts" / "delivery" / "gate.json").write_text('{"toolchain-isolated": false}')
+    def test_isolated_default_false_and_on(self):
         self.assertFalse(rust_ci.isolated(self.root))
+        (self.root / "scripts" / "delivery" / "gate.json").write_text('{"toolchain-isolated": true}')
+        self.assertTrue(rust_ci.isolated(self.root))
 
     @unittest.skipUnless(sys.platform.startswith("linux"), "linux host triple")
     def test_run_removes_cc_from_path(self):
         self.toolchain('[toolchain]\nchannel = "1.90.0"\n')
+        (self.root / "scripts" / "delivery" / "gate.json").write_text('{"toolchain-isolated": true}')
         cc = self.fake_cc()
         os.environ["PATH"] = "%s%s/usr/bin%s/bin" % (cc, os.pathsep, os.pathsep)
         probe = self.tmp / "probe.sh"
@@ -204,7 +237,7 @@ class RustCi(unittest.TestCase):
         names = [s["name"] for s in g["steps"]]
         self.assertIn("deny", names)
         self.assertIn("xwin", names)
-        self.assertIs(g["toolchain-isolated"], True)
+        self.assertIs(g["toolchain-isolated"], False)
         self.assertIn("Cargo.lock", g["widen_on"])
         sys.path.insert(0, str(BASE / "shared" / "scripts" / "delivery"))
         import delivery_common as dc

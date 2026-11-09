@@ -10,6 +10,10 @@ name: CI
 # macOS runners (§13.3), and §13.3 states mobile CI MUST be path-filtered and
 # MUST NOT run on documentation-only changes; excluding those paths here is the
 # other half — a mobile-only change does not rebuild the web apps.
+#
+# DS206: the Rust paths are ignored too (crates/**, Cargo.lock, **/*.rs and the other Rust
+# files, never tools.json). A workflow is skipped only when every changed file is ignored, so a
+# Rust-only change does not run the JS suite and a mixed change runs it.
 on:
   pull_request:
     # CI runs when the PR is marked ready: drafts are skipped (see the job-level
@@ -20,6 +24,14 @@ on:
       - 'apps/android/**'
       - '**/*.md'
       - 'docs/**'
+      - 'crates/**'
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'rustfmt.toml'
+      - 'deny.toml'
+      - '**/*.rs'
+      - 'scripts/delivery/rust_ci.py'
   push:
     branches: [main]
     paths-ignore:
@@ -27,6 +39,14 @@ on:
       - 'apps/android/**'
       - '**/*.md'
       - 'docs/**'
+      - 'crates/**'
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'rustfmt.toml'
+      - 'deny.toml'
+      - '**/*.rs'
+      - 'scripts/delivery/rust_ci.py'
   # A run started by hand on an agent branch (scripts/delivery/agent_ci.py does it at CODE DONE, DL-81). Draft
   # pull requests run no CI, so this run is the agent's gate. It plans what the branch brings since the default
   # branch (the `plan` job below).
