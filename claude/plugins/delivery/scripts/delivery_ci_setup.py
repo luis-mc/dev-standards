@@ -47,6 +47,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -656,14 +657,35 @@ def cmd_pool(args, root) -> int:
     return 1 if result["failed"] or result["left"] else 0
 
 
+def pool_refresh_source(args, root):
+    """DL155: the repo that asks: the first --repos entry, else OWNER/NAME of the origin remote, else the folder name."""
+    first = [x.strip() for x in (getattr(args, "repos", None) or "").split(",") if x.strip()]
+    if first:
+        return first[0]
+    try:
+        out = subprocess.run(["git", "-C", root, "remote", "get-url", "origin"], capture_output=True, text=True, timeout=10).stdout.strip()
+        m = re.search(r"([\w.-]+/[\w.-]+?)(?:\.git)?/?$", out)
+        if m:
+            return m.group(1)
+    except (OSError, subprocess.SubprocessError):
+        pass
+    return os.path.basename(root)
+
+
 def cmd_pool_refresh(args, root, P, probe) -> int:
     """B14: rewrite RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env and rebuild. The cap stays."""
-    rp = P.refresh_plan(probe, args.pool, [root], getattr(args, "browsers", None))
+    if getattr(args, "playwright", None) and not P.valid_playwright_version(args.playwright):
+        print("delivery_ci_setup: --playwright needs a version like 1.62.1", file=sys.stderr)
+        return 2
+    rp = P.refresh_plan(probe, args.pool, [root], getattr(args, "browsers", None), getattr(args, "playwright", None),
+                        pool_refresh_source(args, root), getattr(args, "drop_layer", None) or (), getattr(args, "drop_apt", None) or ())
     if rp.get("error"):
         print("delivery_ci_setup: %s" % rp["error"], file=sys.stderr)
         return 1
     lines = ["Refresh plan for pool \"%s\" (the cap and every other line stay):" % args.pool]
     lines += ["  - %s: %s -> %s" % (k, old or "unset", new) for k, (old, new) in sorted(rp["changes"].items())]
+    lines += ["  - layer %s%s" % (n, " (asked by %s)" % who if who else "") for n, who in rp.get("layers", [])]
+    lines += ["  - %s" % n for n in rp.get("notes", [])]
     if not rp["changes"]:
         lines.append("  - nothing to change in %s" % rp["path"])
     elif rp.get("why"):
@@ -697,6 +719,9 @@ def main(argv=None) -> int:
     ap.add_argument("--largest-shard-gib", type=float)
     ap.add_argument("--resize", action="store_true", help="pool-plan/run: use the measured cap, not the one in the pool .env")
     ap.add_argument("--browsers", choices=["none", "chromium"], help="pool-refresh: set POOL_BROWSERS (default: keep or detect)")
+    ap.add_argument("--drop-layer", action="append", metavar="NAME", help="pool-refresh: remove this layer from the pool (repeatable)")
+    ap.add_argument("--drop-apt", action="append", metavar="NAME", help="pool-refresh: remove this apt package from the pool (repeatable)")
+    ap.add_argument("--playwright", metavar="X", help="pool-refresh: set PLAYWRIGHT_VERSION exactly (may lower it)")
     ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
