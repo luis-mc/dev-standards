@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "dfa9ba4881b59389b55c284f7fe7414a4914828094d8b37e3078ed238fc32f14",
-    "published_at": "2026-11-09T20:38+00:00",
-    "published_fingerprint": "af025810138e508f7b103aab338f89e2d72533c732a0cb5b0baefbc3d3c5995f"
+    "published_sha256": "466162564eea06ae9129ee9bdb6bece16f05e1a72975f2ac3f03f69f52b21c7e",
+    "published_at": "2026-11-09T20:44+00:00",
+    "published_fingerprint": "2dfaffb50b1fd7b41c95c2080ac4473a070abfe3ad9659cb89d6f24f882e3b68"
   },
   "feature_artifacts": [
     {
@@ -25,7 +25,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "updated": "2026-11-09T16:34+00:00"
+      "updated": "2026-11-09T20:52+00:00"
     },
     {
       "key": "models",
@@ -59,7 +59,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-09T19:30+00:00"
+      "updated": "2026-11-09T20:53+00:00"
     },
     {
       "key": "transcript-folds",
@@ -109,7 +109,7 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-09T20:44+00:00",
+  "updated": "2026-11-09T20:53+00:00",
   "retired": [],
   "deleted": [
     {
