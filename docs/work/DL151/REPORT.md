@@ -11,5 +11,11 @@
 - `python3 -m unittest discover -p "test_*.py"` (same folder): 1005 tests, OK.
 - `python3 tools/test_ci_areas.py`, `tools/test_delivery_runner.py`, `tools/test_project_artifacts.py`: pass.
 - `docs_check.py`: one error, G1 `docs/architecture/decisions.md` stale. It also fails on clean main; generated file, not touched.
-- spec-lint workflow: NOT RUN. No `gh` CLI in this session and the GitHub MCP tools did not offer a run trigger I could watch to the end; see below.
+- `gh workflow run spec-lint.yml --ref DL151-ledger-stale-guards -f areas=delivery` (run 42717945068, watched to the end): overall failure from one job only.
+  - success: which areas does this change touch; all 10 `delivery - ...` jobs (area mapping, packaged-program smoke test, runner plan, CI scripts and workflow templates, change notes enforced and folded, setup preflight, artifact pruning, train cleanup, plugin ledger/recorder/watcher/hooks, branch gate and trust rule); delivery scripts, CI templates, cleanup, prune, change notes.
+  - failure: docs check, with two errors. G1 `docs/architecture/decisions.md` generated file is stale: it fails the same way on clean main, and generated files are not mine to edit. W1: this report under docs/work/ (branch-only by rule D9; the join strips it).
+  - skipped: change notes, change notes folded, and the non-delivery areas.
 
+Branch head: see `git rev-parse HEAD` of origin/DL151-ledger-stale-guards (the commit after this report update).
+
+READY
