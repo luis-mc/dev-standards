@@ -41,4 +41,6 @@ Scripts are in claude/plugins/delivery/templates/shared/scripts/delivery/. All n
 - Mutation passes and Docker: not run.
 
 Not done: spec text (orchestrator), mutation anchors for the new code.
-Branch DL121-port-project-fixes.
+Branch DL121-port-project-fixes, head c99fa222 (plus the commit that adds this line).
+
+READY
