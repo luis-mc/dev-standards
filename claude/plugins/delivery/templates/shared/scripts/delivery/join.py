@@ -220,7 +220,7 @@ def pre_pr_docs(root: Path) -> dict:
     def run(label: str, name: str, args: list[str]):
         script = find_docs_script(name)
         if script is None:
-            print("join: luismc-docs %s not found; %s skipped" % (name, label), flush=True)
+            print("join: luismc-docs %s not found; %s not run" % (name, label), flush=True)
             out["steps"][label] = "skipped: script absent"
             return None
         done = subprocess.run([sys.executable, str(script), "--root", str(root)] + args, capture_output=True, text=True, cwd=root)

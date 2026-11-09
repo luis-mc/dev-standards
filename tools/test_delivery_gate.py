@@ -2306,7 +2306,9 @@ def sc_join_docs_strip(t: T, shared: Path) -> None:
     t.eq("docs plugin present: exit 0", r.code, 0)
     t.eq("... docs/work/ is gone from the joined head", (box.work / "docs/work").exists(), False)
     t.check("... the work itself stays", (box.work / "apps/web/a.txt").exists())
-    t.eq("... removal is its own commit", box.g("log", "-1", "--format=%s"), "Strip temporary agent docs")
+    # DL140: the docs plugin is present, so the pre-PR step may add a "Rebuild generated docs" commit after the strip
+    subjects = box.g("log", "-3", "--format=%s").splitlines()
+    t.eq("... removal is its own commit", subjects[0] if subjects[0] == "Strip temporary agent docs" else subjects[1], "Strip temporary agent docs")
     jr = join_result(box)
     t.eq("... summaries recorded", jr["docs_summaries"], ["- DOC9: the thing works."])
     t.eq("... stripped flag", jr["docs"]["stripped"], True)
@@ -2360,7 +2362,10 @@ def sc_join_conflicts(t: T, shared: Path) -> None:
     jr = join_result(box)
     t.eq("... join-result.json lists both", (jr["joined"], jr["stopped_at"]), (["feat/l1", "feat/l2"], None))
 
-    # ... unless setup then fails
+    # ... unless setup then fails. DL145: the first join stays local and ahead of origin, so a new join
+    # would build on it; start the second from origin/integ, as an untouched checkout would.
+    box.g("checkout", "-q", "integ")
+    box.g("reset", "-q", "--hard", "origin/integ")
     r = join(box, "--into", "integ", "feat/l1", "feat/l2", "--no-gate", env={"GATE_TEST_FAIL": "setup"})
     t.eq("lockfile conflict but setup fails: exit 3", r.code, 3)
     jr = join_result(box)

@@ -110,6 +110,29 @@ class JoinFixes(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
         self.assertIn("under docs/work/", p.stdout)
 
+    def test_pre_pr_docs_never_changes_exit(self):
+        """DL140: failing or missing docs scripts do not change the exit code, and the join result is still written."""
+        import json
+        w = repo()
+        git(w, "checkout", "-q", "-b", "f1", "origin/main")
+        commit(w, "f.txt", "f\n", "f")
+        git(w, "push", "-q", "origin", "f1")
+        git(w, "checkout", "-q", "main")
+        scripts = Path(tempfile.mkdtemp(prefix="dl128-docs-"))
+        for n in ("docs_index.py", "docs_check.py"):
+            (scripts / n).write_text("import sys\nsys.exit(1)\n")
+        env = dict(ENV, LUISMC_DOCS_WORK=str(scripts / "docs_work.py"))
+        p = subprocess.run(["python3", str(JOIN), "--into", "integ", "f1", "--no-gate"], cwd=w, env=env,
+                           capture_output=True, text=True)
+        self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+        res = json.loads((w / ".delivery" / "join-result.json").read_text())
+        self.assertEqual(res["joined"], ["f1"])
+        self.assertIn("failed", res["pre_pr_docs"]["steps"]["docs index build"])
+        # absent scripts: same exit code, and the output does not say "skipped" (the gate-skip text)
+        p = join(w, "--into", "integ", "f1")
+        self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+        self.assertNotIn("skipped", p.stdout)
+
     def test_mock_note(self):
         import sys
         sys.path.insert(0, str(JOIN.parent))
