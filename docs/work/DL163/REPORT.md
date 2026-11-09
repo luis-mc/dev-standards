@@ -14,5 +14,9 @@
 - `python -m unittest test_dl163_ledger_join_ids test_ledger_root_worktree` (in claude/plugins/delivery/tests): OK, 17 tests.
 - Full delivery tests dir (`unittest discover`): 1059 ran; the 2 failures were the moved expectations, now fixed.
 - `docs_check.py`: M1 on delivery-speed (join.py mapped); handled by a `Docs: none` line in the commit message.
-- spec-lint workflow: see below.
-READY
+
+- spec-lint run 42722796110 (areas=delivery): which areas: success; setup preflight: success; area mapping: success; docs check: FAILURE (only W1, the report under docs/work/ on this branch, which the brief requires; no G1); delivery branch gate, change notes, CI scripts, runner plan, plugin ledger/recorder/watcher/hooks, smoke test, artifact pruning, train cleanup: cancelled after the docs check failed; the delivery aggregate job: failure (because of those cancels). The delivery suites did not run in CI, so CI did not check this change. Locally the whole delivery tests dir passed.
+
+Branch head SHA: see `git rev-parse origin/DL163-ledger-join-ids`.
+
+NOT READY
