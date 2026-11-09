@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-08T23:30+00:00",
+  "updated": "2026-11-09T15:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -700,6 +700,26 @@
       "changed": "2026-11-07T16:40+00:00",
       "rides": "DL107",
       "started": "2026-11-07T15:43+00:00"
+    },
+    {
+      "id": "AR67",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "mark-published after pending --refresh needs no extra render",
+      "detail": "mark-published can refuse with 'differs from a fresh render; run render first' right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "AR68",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "task-status-update skill lists the four --phase names",
+      "detail": "--phase accepts only agents, join, ci, merge; the skill text does not list them.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
     },
     {
       "id": "DL1",
@@ -2620,6 +2640,136 @@
         }
       ],
       "started": "2026-11-08T23:10+00:00"
+    },
+    {
+      "id": "DL124",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Questions stop hook counts running cloud agents",
+      "detail": "The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:21+00:00"
+    },
+    {
+      "id": "DL125",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Rust CI track: pinned LLVM linker in the tool cache",
+      "detail": "Pool image has no C linker, so cargo builds pass in the agent gate and fail in release CI. Fetch pinned sha256-checked clang+lld, set CARGO_TARGET_*_LINKER, CC, AR; run the agent gate's Rust step without system compilers; doctor checks a linker for the rust track.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:21+00:00"
+    },
+    {
+      "id": "DL126",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Rust CI track: cached RustSec advisory DB",
+      "detail": "Keep the cargo-deny advisory DB in the CI tool cache and git fetch it each run; if GitHub is unreachable, use the cached copy with a warning.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:21+00:00"
+    },
+    {
+      "id": "DL127",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Ledger: close agents whose task shipped; agent-check command",
+      "detail": "Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check <id> to record last_checked.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:21+00:00"
+    },
+    {
+      "id": "DL128",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "join.py handles stacked branches",
+      "detail": "When branch B contains an older head of branch A, merge B alone or report stacked and prefer B's side for files B rewrote.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:21+00:00"
+    },
+    {
+      "id": "DL129",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "join.py --into creates a missing integration branch",
+      "detail": "join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL130",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pre-push hook names missing node_modules",
+      "detail": "In a fresh worktree with no node_modules the pre-push guard fails with a cryptic pnpm message. Detect it and say: run pnpm install --frozen-lockfile in this worktree.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL131",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "branch_gate --e2e-only leaves docs/work clean",
+      "detail": "The gate regenerates committed screenshots under docs/work, so the next push refuses. Write shots to an ignored dir or restore docs/work afterwards.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL132",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "ci_watch.py writes the main repo's ledger from a worktree",
+      "detail": "Run inside a join worktree, it wrote that worktree's ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL133",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "DL-53 hook accepts /c/... paths under the work root",
+      "detail": "git worktree add /c/Work/... was refused as outside C:\\Work. Normalise Git Bash paths before comparing.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL134",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "branch_gate logs are UTF-8 on Windows",
+      "detail": "Gate logs mix cp1252 box-drawing characters; cat and Python print fail. Force UTF-8 for the log and the Playwright reporter.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL135",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Join flags e2e unhandled-API-call failures as join interactions",
+      "detail": "Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
+    },
+    {
+      "id": "DL136",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Held routines are paused, not postponed, while a question is open",
+      "detail": "A routine postponed a few minutes for an owner answer started on its old brief when the dialog stayed open 3 h. Rule: pause it (no run_once_at), or a hook warns when a held routine's start passes during an open question.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:22+00:00"
     },
     {
       "id": "DS1",
@@ -5394,6 +5544,29 @@
       "detail": "docs_check T2 still warns for both after DS190 (the cloud checkout missed them)",
       "expected": "",
       "changed": "2026-11-08T23:30+00:00"
+    },
+    {
+      "id": "DS192",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Rust in tech-stack-setup: study and proposal",
+      "detail": "Study a real project's move to Rust and propose where Rust fits generically in STACKSPEC stacks, the tech-stack-setup questions and layout, and a rust CI track for luismc-delivery.",
+      "expected": "09 Nov ~16:30",
+      "changed": "2026-11-09T15:21+00:00",
+      "expected_basis": "local study agent from 15:25, ~60 min",
+      "no_release": "study; proposal for the owner",
+      "started": "2026-11-09T15:21+00:00"
+    },
+    {
+      "id": "DS193",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "docs_work.py strip --apply always commits or fails loudly",
+      "detail": "On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:21+00:00"
     },
     {
       "id": "DU1",
