@@ -11,4 +11,13 @@
 - pool tests incl. `test_runner_pool.py` (243 tests): OK
 - doctor tests (33): OK
 - `docs_check.py`: 0 errors, 0 warnings
+
+## CI: spec-lint.yml areas=delivery (run 42722631315)
+- which areas: success; delivery setup preflight: success; area mapping: success
+- docs check: failure, only W1 (docs/work/DL162/REPORT.md is on the branch, as the brief requires; stripped before the join)
+- the other delivery jobs (branch gate, smoke test, CI scripts, runner plan, train cleanup, change notes, prune, ledger/hooks): cancelled when the docs check failed, so not proven by CI
+- Local: all pool and doctor unit tests pass (see above)
+
+Head SHA: see `git rev-parse HEAD` of the branch (the commit after this report).
+
 NOT READY
