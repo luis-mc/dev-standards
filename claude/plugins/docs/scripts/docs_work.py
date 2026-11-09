@@ -95,7 +95,36 @@ def main(argv=None) -> int:
         D.git(root, "rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs/work")
     if work.is_dir():
         shutil.rmtree(work)
+    if D.is_git(root):
+        return commit_strip(root)
     return 0
+
+
+def staged_work(root: Path) -> list[str]:
+    r = D.git(root, "-c", "core.quotePath=false", "diff", "--cached", "--name-only", "--", "docs/work")
+    return [x for x in r.stdout.split("\n") if x.strip()]
+
+
+def commit_strip(root: Path) -> int:
+    """Commit the staged deletions under docs/work/. Exit 0 only when none are left staged (DS193).
+
+    The commit is limited to docs/work/, so other staged changes stay as they were. If git refuses
+    (a hook, no author name, a lock), say what is left staged and how to finish.
+    """
+    staged = staged_work(root)
+    if not staged:
+        print("nothing under docs/work/ to commit")
+        return 0
+    msg = f"Strip docs/work/ before the join ({len(staged)} file(s))"
+    r = D.git(root, "commit", "-q", "-m", msg, "--only", "--", "docs/work")
+    left = staged_work(root)
+    if r.returncode == 0 and not left:
+        print(f"committed: {msg}")
+        return 0
+    print(f"strip failed: git commit exited {r.returncode}. {(r.stderr or r.stdout).strip()}", file=sys.stderr)
+    print(f"{len(left)} deletion(s) under docs/work/ are still staged. Finish with: "
+          f'git commit -m "{msg}" -- docs/work', file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":
