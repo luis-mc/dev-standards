@@ -271,7 +271,8 @@ class AgentTests(unittest.TestCase):
         H.handle({"hook_event_name": "PostToolUse", "tool_name": "Agent", "tool_input": {"prompt": "just do it"},
                   "tool_response": "ok"}, root)
         led = L.load(root)
-        self.assertIsNone(led["agents"][0]["eta"])
+        self.assertEqual(led["agents"], [])   # DL156: no task, no row
+        self.assertIn("agent.no_task", [e["kind"] for e in led["events"]])
         self.assertIn("agent.no_eta", [e["kind"] for e in led["events"]])
 
     def test_remote_trigger_create_and_run_only(self):

@@ -297,11 +297,11 @@ class ExpiryTests(unittest.TestCase):
                 {"id": "T-old-held", "state": "abandoned", "created_at": old, "hold": {"reason": "x", "until": None}},
             ]
             led["agents"] += [
-                {"id": "a-old-done", "state": "done", "started": old},
-                {"id": "a-old-run", "state": "running", "started": old},
-                {"id": "a-old-off", "state": "disabled", "started": old},
-                {"id": "a-new-done", "state": "done", "started": new},
-                {"id": "a-nostamp", "state": "done"},
+                {"id": "a-old-done", "task": "T", "state": "done", "started": old},
+                {"id": "a-old-run", "task": "T", "state": "running", "started": old},
+                {"id": "a-old-off", "task": "T", "state": "disabled", "started": old},
+                {"id": "a-new-done", "task": "T", "state": "done", "started": new},
+                {"id": "a-nostamp", "task": "T", "state": "done"},
             ]
             led["installs"] += [
                 {"product": "p1", "state": "done", "started": old, "ended": old},

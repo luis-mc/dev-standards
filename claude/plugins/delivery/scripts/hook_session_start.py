@@ -75,6 +75,15 @@ def summary(root, cfg, ledger, at):
                  % (len(running), len(H.running_agents(ledger, 'cloud')), len(H.running_agents(ledger, 'local')),
                     ', '.join(overdue) or 'none'))
     installing = [i.get('product') for i in ledger['installs'] if i.get('state') == 'installing']
+    try:
+        import delivery_ledger as L  # noqa: E402
+        stale = L.stale_agents(root, led=ledger)
+    except Exception:  # noqa: BLE001
+        stale = []
+    for r in stale:
+        lines.append('Needing a check (finished in the project record): agent task %s, id %s is still open; the record shows %s as %s. '
+                     'Fix: delivery_ledger.py agent-done %s --by session --result ready'
+                     % (r['task'], r['id'], r['task'], r['status'].capitalize(), r['id']))
     lines.append('Installs: ' + (', '.join('%s installing' % p for p in installing) or 'none running'))
     fp = [p for p in ledger['publishes'] if p.get('artifact') == 'full-progress']
     age = H.minutes_since(fp[0].get('last_at'), at) if fp else None

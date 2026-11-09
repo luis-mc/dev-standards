@@ -434,6 +434,10 @@ flowchart LR
 
 **R13.71** — **Setup asks about Windows installers** (DL149). `/delivery-ci-setup` asks whether the project builds Windows installers on Linux and suggests yes when the repository has `*.wxs` files. Yes adds `windows-packaging` to `pool.layers`. It also names `.delivery/pool.apt`.
 
+**R13.74** — **Stale agent check** (DL151, D149). `delivery_ledger.stale_agents(root, record)` returns the open ledger agents (state not done or failed) whose task the project record (`registry.json` in the artifacts `record_dir`, default `docs/project`) shows as Live, Built or Dropped. The session start summary lists each one under "needing a check" with the task, the agent id and the fix: `delivery_ledger.py agent-done <id> --by session --result ...`. With no record file it says nothing.
+
+**R13.75** — **Ledger guards** (DL156, D158). `plan` takes the next free train id, and the ledger write path refuses a duplicate id with an error that names the fix. The agent write path refuses a row without a task and names the fix. A CI record finds its train by PR number and head SHA, never by id alone. `show` prints each agent's task, id and branch, with `-` for a missing value. Existing ledgers with old rows still load and write.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:
