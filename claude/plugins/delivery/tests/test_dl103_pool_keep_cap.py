@@ -169,25 +169,27 @@ class RefreshTests(unittest.TestCase):
         calls = []
         with mock.patch.object(ex, 'runners_busy', lambda: False), \
                 mock.patch.object(P.subprocess, 'run', lambda argv, **k: calls.append(argv) or
-                                  type('R', (), {'returncode': 0, 'stderr': ''})()):
+                                  type('R', (), {'returncode': 0, 'stderr': '', 'stdout': ''})()):
             ok, text = ex.refresh(P.refresh_plan(OfflineProbe(), 'main', [self.repo]))
         self.assertTrue(ok, text)
-        self.assertEqual(calls, [['docker', 'compose', 'up', '-d', '--build']])
-        self.assertIn('rebuilt', text)
+        self.assertEqual([c for c in calls if c[:2] == ['docker', 'compose']], [['docker', 'compose', 'up', '-d', '--build']])
+        self.assertIn('could not compare the image ids', text)
 
     def test_refresh_with_no_change_still_rebuilds(self):
         self.env('POOL_MEM=8g\nPOOL_CPUS=4\nPOOL_BROWSERS=chromium\nRUNNER_SHA256=%s\nPLAYWRIGHT_VERSION=%s\n'
                  % ('c' * 64, P.PLAYWRIGHT_VERSION))
         rp = P.refresh_plan(OfflineProbe(), 'main', [], 'chromium', P.PLAYWRIGHT_VERSION)
         self.assertEqual(rp['changes'], {})
+        P.copy_pool_templates(self.pool)  # DL162: the pool files match, so only the .env is judged
+        rp = P.refresh_plan(OfflineProbe(), 'main', [], 'chromium', P.PLAYWRIGHT_VERSION)
         ex = P.Executor(OfflineProbe())
         calls = []
         with mock.patch.object(ex, 'runners_busy', lambda: False), \
                 mock.patch.object(P.subprocess, 'run', lambda argv, **k: calls.append(argv) or
-                                  type('R', (), {'returncode': 0, 'stderr': ''})()):
+                                  type('R', (), {'returncode': 0, 'stderr': '', 'stdout': ''})()):
             ok, text = ex.refresh(rp)
         self.assertTrue(ok, text)
-        self.assertEqual(len(calls), 1)
+        self.assertEqual(len([c for c in calls if c[:2] == ['docker', 'compose']]), 1)
         self.assertIn('nothing to change', text)
 
     def test_pool_up_writes_a_missing_sha_to_the_env(self):

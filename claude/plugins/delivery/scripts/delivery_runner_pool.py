@@ -15,6 +15,7 @@ Public repositories are refused (contract section 5). Standard library only.
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import math
 import os
@@ -1016,27 +1017,59 @@ def copy_lf(src, dst):
     shutil.copymode(src, dst)
 
 
+def template_sources(copy_from=None):
+    """DL162: (relative path, source path) of every file the plugin ships into a pool folder: the templates, hooks/
+    and the machine scripts under delivery/."""
+    out = []
+    for name in sorted(os.listdir(TEMPLATES)):
+        if os.path.isfile(os.path.join(TEMPLATES, name)) and name != 'pool-check.yml':
+            out.append((name, os.path.join(TEMPLATES, name)))
+    hooks = os.path.join(TEMPLATES, 'hooks')
+    if os.path.isdir(hooks):
+        for name in sorted(os.listdir(hooks)):
+            if os.path.isfile(os.path.join(hooks, name)):
+                out.append(('hooks/' + name, os.path.join(hooks, name)))
+    for name in ('runner_load_gate.py', 'runner_job_done.py', 'load.py', 'machine_slots.py'):
+        src = os.path.join(copy_from or HERE, name)
+        if os.path.isfile(src):
+            out.append(('delivery/' + name, src))
+    return out
+
+
+def _lf_bytes(path):
+    try:
+        with open(path, 'rb') as f:
+            return f.read().replace(b'\r\n', b'\n')
+    except OSError:
+        return None
+
+
+def pool_template_diffs(dest, copy_from=None):
+    """DL162: relative paths whose content in `dest` differs from the plugin's file (line endings ignored), or is missing."""
+    return [rel for rel, src in template_sources(copy_from) if _lf_bytes(src) != _lf_bytes(os.path.join(dest, *rel.split('/')))]
+
+
+def copy_pool_templates(dest, copy_from=None, only=None):
+    """DL162: copy the plugin's pool files (templates, hooks/, delivery/ machine scripts) into `dest` with LF endings.
+    `only` limits it to those relative paths. It never touches .env, agents.json or db-admin.pw. Returns the paths written."""
+    os.makedirs(dest, exist_ok=True)
+    done = []
+    for rel, src in template_sources(copy_from):
+        if only is not None and rel not in only:
+            continue
+        target = os.path.join(dest, *rel.split('/'))
+        os.makedirs(os.path.dirname(target), exist_ok=True)
+        copy_lf(src, target)
+        done.append(rel)
+    return done
+
+
 def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none',
                      playwright_version=None, runner_sha256=None):
     """Write the pool folder. `.env` holds the cap and the machine dir only (D42); the database password is a 0600 file."""
     dest = dest or pool_dir(pool)
     os.makedirs(dest, exist_ok=True)
-    for name in os.listdir(TEMPLATES):
-        src = os.path.join(TEMPLATES, name)
-        if os.path.isfile(src) and name != 'pool-check.yml':
-            copy_lf(src, os.path.join(dest, name))
-    hooks_dest = os.path.join(dest, 'hooks')
-    os.makedirs(hooks_dest, exist_ok=True)
-    for name in os.listdir(os.path.join(TEMPLATES, 'hooks')):
-        src = os.path.join(TEMPLATES, 'hooks', name)
-        if os.path.isfile(src):
-            copy_lf(src, os.path.join(hooks_dest, name))
-    deliv = os.path.join(dest, 'delivery')
-    os.makedirs(deliv, exist_ok=True)
-    for name in ('runner_load_gate.py', 'runner_job_done.py', 'load.py', 'machine_slots.py'):
-        src = os.path.join(copy_from or HERE, name)
-        if os.path.isfile(src):
-            copy_lf(src, os.path.join(deliv, name))
+    copy_pool_templates(dest, copy_from)
     n_cpus = max(1, int(math.floor((cap or {}).get('cpus', 1))))
     with open(os.path.join(dest, '.env'), 'w', encoding='utf-8') as f:
         f.write('POOL_CPUSET=0-%d\nPOOL_CPUS_INT=%d\n' % (n_cpus - 1, n_cpus))
@@ -1143,7 +1176,8 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
     if pw:
         want['PLAYWRIGHT_VERSION'] = pw
     changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT', 'POOL_LAYER_SOURCES') else None)) != v}
-    out = {'pool': pool, 'path': path, 'changes': changes, 'why': why, 'playwright_source': pw_source if pw else None,
+    files = pool_template_diffs(pool_dir(pool))
+    out = {'pool': pool, 'path': path, 'changes': changes, 'files': files, 'why': why, 'playwright_source': pw_source if pw else None,
            'layers': [(x, sources.get(x)) for x in layers], 'notes': notes}
     if not sha:
         out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
@@ -1320,10 +1354,21 @@ class Executor:
         rebuilds with no change too, so an image built before POOL_BROWSERS was set gets the libraries."""
         if rp.get('error'):
             return False, rp['error']
+        text = ''
+        files = rp.get('files') or []
+        if files:
+            bak = os.path.join(pool_dir(rp['pool']), 'bak-' + datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%SZ'))
+            for rel in files:
+                cur = os.path.join(pool_dir(rp['pool']), *rel.split('/'))
+                if os.path.isfile(cur):
+                    os.makedirs(os.path.dirname(os.path.join(bak, *rel.split('/'))), exist_ok=True)
+                    shutil.copy2(cur, os.path.join(bak, *rel.split('/')))
+            copy_pool_templates(pool_dir(rp['pool']), only=set(files))
+            text = 'copied %d pool file(s) (%s; old copies in %s)' % (len(files), ', '.join(files), bak)
         if rp['changes']:
             set_env_values(rp['path'], {k: v[1] for k, v in rp['changes'].items()})
-            text = 'wrote %s in %s' % (', '.join(sorted(rp['changes'])), rp['path'])
-        else:
+            text += ('; ' if text else '') + 'wrote %s in %s' % (', '.join(sorted(rp['changes'])), rp['path'])
+        elif not text:
             text = 'nothing to change in %s' % rp['path']
         # DL149: name the busy runner; --force overrides with a warning.
         gate_ok, gate_msg = rebuild_gate(self.probe, rp.get('repos') or [], rp['pool'], force)
@@ -1335,7 +1380,31 @@ class Executor:
             return True, text + ('. A job may run (or the runners cannot be read), so the pool was not rebuilt. '
                                  'By hand: cd %s && docker compose up -d --build' % pool_dir(rp['pool']))
         ok, detail = self.do_pool_up({'pool': rp['pool']})
-        return ok, text + '; ' + ('the pool was rebuilt' if ok else 'the rebuild failed: ' + detail)
+        if not ok:
+            return ok, text + '; the rebuild failed: ' + detail
+        return True, text + '; ' + self.image_state(rp, force)
+
+    def image_state(self, rp, force=False):
+        """DL162: say what the build really did. The container is recreated only when its image is not the tagged one
+        and no job runs."""
+        pool = rp['pool']
+        run_id = self.probe.sh(['docker', 'inspect', '--format', '{{.Image}}', 'pool-%s-pool-1' % pool])
+        tag_id = self.probe.sh(['docker', 'image', 'inspect', '--format', '{{.Id}}', 'luismc-runner-pool:%s' % pool])
+        run_id = run_id[1].strip() if run_id and run_id[0] == 0 else ''
+        tag_id = tag_id[1].strip() if tag_id and tag_id[0] == 0 else ''
+        if not run_id or not tag_id:
+            return 'build finished; could not compare the image ids, so the container was not touched'
+        if run_id == tag_id:
+            return 'image unchanged (cache hit); the container already runs it'
+        cmd = recreate_command(pool)
+        if not force and self.runners_busy():
+            return ('image rebuilt, but a job may run (or the runners cannot be read), so the container was not recreated. '
+                    'By hand: cd %s && %s' % (pool_dir(pool), cmd))
+        p = subprocess.run(cmd.split(), cwd=pool_dir(pool), capture_output=True, text=True)
+        if p.returncode == 0:
+            return 'image rebuilt, container recreated'
+        return 'image rebuilt, but the recreate failed (%s). By hand: cd %s && %s' % (
+            p.stderr.strip()[-200:] or 'docker compose failed', pool_dir(pool), cmd)
 
     def do_add_agent(self, step):
         tok = self.probe.gh(['api', '-X', 'POST', 'repos/%s/actions/runners/registration-token' % step['repo'], '--jq', '.token'])
