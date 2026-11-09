@@ -3,6 +3,9 @@ FROM ubuntu:24.04
 ARG RUNNER_VERSION=2.338.2
 ARG RUNNER_SHA256
 ARG POOL_BROWSERS=none
+# DL149: POOL_LAYERS is a comma list (only `windows-packaging` exists); POOL_APT is a space list from .delivery/pool.apt. Both are checked by the setup.
+ARG POOL_LAYERS=
+ARG POOL_APT=
 # The one place the Playwright version for the system libraries is pinned (DL67).
 ARG PLAYWRIGHT_VERSION=1.62.1
 LABEL dev.luismc.runner-pool="1"
@@ -39,6 +42,14 @@ RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
       && apt-get update \
       && PATH="/opt/node-build/bin:$PATH" npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
       && rm -rf /opt/node-build /var/lib/apt/lists/* /root/.npm; \
+    fi
+# DL149: opt-in apt layers and the project fragment. Off by default (windows-packaging adds about 1 GB).
+# Ubuntu 24.04 ships dotnet-sdk-8.0 and wine64 itself, so no Microsoft feed and no i386 architecture are added (64-bit Wine only).
+RUN pk=""; \
+    case ",$POOL_LAYERS," in *,windows-packaging,*) pk="dotnet-sdk-8.0 wine wine64 xvfb xauth msitools";; esac; \
+    pk="$pk $POOL_APT"; \
+    if [ -n "$(echo $pk)" ]; then \
+      apt-get update && apt-get install -y --no-install-recommends $pk && rm -rf /var/lib/apt/lists/*; \
     fi
 COPY pool_supervisor.py pool_agents.py /opt/pool/
 COPY pool-add-agent pool-remove-agent /usr/local/bin/
