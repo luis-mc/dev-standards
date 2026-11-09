@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.16.0
+version: 0.17.0
 owner: agents
 type: reference
 code:
@@ -461,6 +461,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.17.0 | 2026-11-09 | RELEASE-71 | DL-53 worktree check normalises Git Bash and WSL paths; DL-136 pre-tool hook warns when a routine runs within 2 hours while an owner question is open.<br>Workflow templates: a job that needs a skippable job starts its if: with !cancelled() and checks needs.<name>.result; a test enforces it.<br>Pool image: opt-in windows-packaging layer (pool.layers in .delivery/config.json), .delivery/pool.apt fragment, pool-refresh refuses while a pool runner is busy (--force overrides), doctor checks the layer tools, stray runner Dockerfiles and the /ci-tools volume.<br>The Rust track runs through rust_ci.py: pinned toolchain install, linker environment, cached advisory check, isolated gate commands and a debug-binary smoke. The gate adds deny and xwin steps.<br>DS201: the Rust CI and package workflows use the pinned toolchain, linker environment and cargo-deny helper (rust_ci.py). Gate step selection reads the gate.json scope_map and step paths: a change under Rust paths selects only the Rust steps, and the reverse.<br>Adds requirements R5.33 to R5.51 for the release: prune workflow list, hook and ledger fixes, ci_watch, join, gate, workflow needs guard, the rust CI helper and the rust doctor.<br>DS206: the Rust workflow runs on a pull request only when a Rust path changed (including Rust under apps/); the JS workflow ignores Rust-only changes. The Rust gate.json sets toolchain-isolated to false; rust_ci.py links with system cc first, then pinned Zig, else fails with linker cc not found. | DL133, DL147, DL149, DS200, DS201, DS203, DS206 |
 | 0.16.0 | 2026-11-09 | RELEASE-70 | Project script fixes folded into the templates: artifact_prune groups, holds and retries; session_guard allows -R other repos; ci_scope package.json valve and no_test_reads; ci_watch optional Docker trim; cleanup delivery log off by default (R5.28-R5.32). | DL121 |
 | 0.15.0 | 2026-11-08 | RELEASE-68 | Session start names a watcher it cannot stop and how to stop it; dead watcher rows are pruned (R5.25).<br>scripts/delivery/ci-install.json keep and skip lists survive updates; Windows service runners need a machine-wide Python for ci_tool.py (R5.26, R5.27). | DL118, DL120 |
 | 0.14.0 | 2026-11-08 | RELEASE-67 | Pinned CI tools are cached on the runner disk with ci_tool.py: checksum-verified, with retries (R5.23).<br>DL-94 flags workflow downloads that skip the cache or the checksum (R5.24). | DL115, DL116 |

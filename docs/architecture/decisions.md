@@ -109,6 +109,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D143 | Rust Q6: does the agent gate hide system compilers? | Always | decided | 2026-11-09 |
 | delivery-speed | D144 | Rust Q7: how are Windows programs built? | cargo-xwin, else a Windows runner | decided | 2026-11-09 |
 | delivery-speed | D145 | Rust Q8: what must a project state before adding a Rust part? | Written reason only | decided | 2026-11-09 |
+| delivery-speed | D146 | Should the default Linux runner image include gcc? (revises D140: Zig as the Linux linker) | gcc in image, Zig opt-in | decided | 2026-11-09 |
+| delivery-speed | D147 | May the session reply directly to other Claude sessions on this PC? | Reply to sessions directly | decided | 2026-11-09 |
+| delivery-speed | D148 | When to fix the two Rust workflow path-filter gaps (a JS-only change runs Rust CI; Rust under apps/ is ignored)? | Add to RELEASE-71 | decided | 2026-11-09 |
+| delivery-speed | D149 | Which agent-report follow-ups to schedule? | Both | decided | 2026-11-09 |
 | delivery-speed | D15 | Stop train-cleanup creating a GitHub release on every merge to main? | Stop release per merge | decided | 2026-10-26 |
 | delivery-speed | D16 | Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green? | Fix ci_watch.py | decided | 2026-10-26 |
 | delivery-speed | D17 | DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep? | Make them generic | decided | 2026-10-26 |
