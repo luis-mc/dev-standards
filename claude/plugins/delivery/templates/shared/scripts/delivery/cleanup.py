@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Remove what a merged train leaves behind (STACKSPEC 13.6, last bullet).
 
-    cleanup.py [--pr N] [--remote origin] [--local] [--remote-only] [--dry-run] [--json] [--no-delivery-log] [--repo OWNER/NAME]
+    cleanup.py [--pr N] [--remote origin] [--local] [--remote-only] [--dry-run] [--json] [--delivery-log] [--repo OWNER/NAME]
 
 A branch is FINISHED when it is not the default branch, has no open pull
 request, and either (a) a pull request with it as head is merged, or (b) it is
@@ -34,10 +34,12 @@ left by a pre-push check that was killed is removed when process <pid> is not
 running: the dependency links first (never their targets), then the worktree.
 Rows: `push-check <name>  deleted` / `kept: <reason>` / `would delete`.
 
-DELIVERY LOG (--pr N, not --dry-run): before it deletes anything the script collects,
-per change of the train, when the branch finished, was joined, ran CI and merged; after
-the deletions it appends the table to the train's GitHub release notes
-(delivery_log.py; --no-delivery-log skips it). Offline, no permission or any error:
+DELIVERY LOG (OFF by default; --pr N, not --dry-run): when asked for, the script collects before
+it deletes anything, per change of the train, when the branch finished, was joined, ran CI and
+merged; after the deletions it appends the table to the train's GitHub release notes
+(delivery_log.py creates a train tag and Release). It runs with --delivery-log, or when
+`.delivery/config.json` has `cleanup.delivery_log: true`; --no-delivery-log turns it off even
+then. A plain cleanup never touches releases or tags. Offline, no permission or any error:
 a warning, and the cleanup is unaffected.
 
 --keep-fresh-since EPOCH (local mode; join.py passes its start time): a local branch whose
@@ -542,6 +544,18 @@ def ls_remote(ctx: Ctx) -> None:
             ctx.protected.add(line.split()[1].removeprefix("refs/heads/"))
 
 
+def pre_merge_base(ctx: Ctx, head: str, default_ref: str) -> str | None:
+    """The default branch just before `head` was merged into it with a merge commit: the
+    first parent of the first-parent merge whose second parent is `head`; None if none."""
+    out = dc.git(["rev-list", "--first-parent", "--merges", "--parents", "-n", "500", default_ref],
+                 cwd=ctx.root, check=False) or ""
+    for line in out.splitlines():
+        shas = line.split()
+        if len(shas) >= 3 and shas[2] == head:
+            return shas[1]
+    return None
+
+
 def joined_of(ctx: Ctx, head: str, train: list[str], local_branches: list[str],
               do_remote: bool, do_local: bool) -> list[str]:
     """Branches (other than the train's and the default branch) whose every tip is an
@@ -550,6 +564,12 @@ def joined_of(ctx: Ctx, head: str, train: list[str], local_branches: list[str],
     if not head or dc.rev(head, ctx.root) is None:
         return []
     default_ref = "refs/remotes/%s/%s" % (ctx.remote, ctx.default)
+    # A train merged with a merge commit puts every joined branch on the default branch, so
+    # "no work of its own" is judged against the default branch as it was just before that
+    # merge (the merge commit's first parent); a squash merge leaves the tip as it is.
+    before = pre_merge_base(ctx, head, default_ref)
+    if before:
+        default_ref = before
     has_default = dc.rev(default_ref, ctx.root) is not None
     found = []
     names = set(local_branches if do_local else []) | set((ctx.remote_heads or {}) if do_remote else [])
@@ -596,7 +616,7 @@ def train_of(ctx: Ctx, number: int) -> tuple[list[str], str]:
     return [b for b in train if b not in ctx.protected], head
 
 
-def main(argv: list[str] | None = None) -> int:
+def build_parser() -> argparse.ArgumentParser:
     ap = argparse.ArgumentParser(prog="cleanup.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--pr", type=int, metavar="N", help="only the train of this merged pull request")
     ap.add_argument("--remote", default="origin")
@@ -604,11 +624,36 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--remote-only", action="store_true", help="the remote only (what CI runs)")
     ap.add_argument("--dry-run", action="store_true", help="say what would be removed; remove nothing")
     ap.add_argument("--json", action="store_true", help="print the rows as JSON")
-    ap.add_argument("--no-delivery-log", action="store_true", help="with --pr: do not append the delivery log to the release notes")
+    ap.add_argument("--delivery-log", action="store_true",
+                    help="with --pr: append the delivery log to the release notes (creates a train tag and Release; "
+                         "off by default, or set cleanup.delivery_log in .delivery/config.json)")
+    ap.add_argument("--no-delivery-log", action="store_true",
+                    help="with --pr: never append the delivery log, even when the config turns it on")
     ap.add_argument("--keep-fresh-since", type=int, metavar="EPOCH",
                     help="keep a local branch born after EPOCH or with a running agent in the ledger (join passes its start)")
     ap.add_argument("--repo", metavar="OWNER/NAME", help="repository for gh (default: the current one)")
-    args = ap.parse_args(argv)
+    return ap
+
+
+def config_delivery_log(root: Path) -> bool:
+    """`cleanup.delivery_log` of .delivery/config.json; false when missing or unreadable."""
+    try:
+        data = json.loads((root / ".delivery" / "config.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return False
+    section = data.get("cleanup") if isinstance(data, dict) else None
+    return isinstance(section, dict) and section.get("delivery_log") is True
+
+
+def delivery_log_wanted(args: argparse.Namespace, root: Path | None = None) -> bool:
+    """The delivery log (a train tag and Release) is written only on request: --delivery-log, or the config."""
+    if args.pr is None or args.dry_run or args.no_delivery_log:
+        return False
+    return bool(args.delivery_log or (root is not None and config_delivery_log(root)))
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = build_parser().parse_args(argv)
     if args.local and args.remote_only:
         raise dc.DeliveryError("--local and --remote-only exclude each other")
 
@@ -653,7 +698,7 @@ def main(argv: list[str] | None = None) -> int:
     # The delivery log is collected now, while the branches (and their commit times) still
     # exist, and written to the release notes after the deletions. Best effort, never fatal.
     log_tips: dict[str, str] = {}
-    want_log = args.pr is not None and not args.dry_run and not args.no_delivery_log
+    want_log = delivery_log_wanted(args, root)
     if want_log:
         for name in candidates:
             tip = heads.get(name) or dc.rev("refs/heads/" + name, root)

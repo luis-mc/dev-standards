@@ -93,7 +93,8 @@ jobs:
   plan:
     name: 'runner plan: which jobs this change needs'
     needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: plan
@@ -152,7 +153,8 @@ jobs:
   verify:
     name: lint, types, boundaries, unit + contract tests
     needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: verify
@@ -277,7 +279,8 @@ jobs:
   integration:
     name: integration tests (ephemeral Postgres)
     needs: [decide, plan]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
@@ -364,7 +367,8 @@ jobs:
   e2e-shard:
     name: web E2E shard ${{ matrix.shard }}
     needs: [decide, plan]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       # The hook sees the job key, not this value: the shard is the key. The legs share it.
@@ -440,7 +444,8 @@ jobs:
   e2e:
     name: web E2E (§11.2)
     needs: [decide, plan, verify, integration, e2e-shard]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: this job judges the results itself, so any result but cancelled lets it run.
+    if: ${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: e2e

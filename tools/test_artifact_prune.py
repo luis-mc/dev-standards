@@ -214,14 +214,14 @@ MUTANTS: dict[str, str] = {
         mutate(SOURCE, "    for value in values:\n        if isinstance(value, dict):",
                "    for value in values[:1]:\n        if isinstance(value, dict):"),
     "does not pass --paginate":
-        mutate(SOURCE, '["api", "--paginate", f"repos/', '["api", f"repos/'),
+        mutate(SOURCE, '["api", "--paginate", f"repos/{repo}/actions/artifacts', '["api", f"repos/{repo}/actions/artifacts'),
     "a 404 on delete is a failure":
         mutate(SOURCE, '    if NOT_FOUND_RE.search(text):\n        return "gone"\n', ""),
     "dry run still deletes":
         mutate(SOURCE, "        if not args.dry_run:\n            for art in g",
                "        if True:\n            for art in g"),
     "groups by id instead of name":
-        mutate(SOURCE, "groups.setdefault(name, [])", "groups.setdefault(str(ident), [])"),
+        mutate(SOURCE, "buckets.setdefault(key, [])", "buckets.setdefault(str(ident), [])"),
     "ignores --keep":
         mutate(SOURCE, "ordered[:keep]", "ordered[:1]").replace("ordered[keep:]", "ordered[1:]"),
 }
@@ -400,7 +400,7 @@ def sc_failed_deletion(script: Path) -> list[str]:
     def go(sb: Sandbox) -> list[str]:
         sb.write_fixture({
             "pages": [[art(i, "bundle", day(i)) for i in range(1, 5)]],
-            "delete": {"2": {"message": "gh: Server Error (HTTP 500)"}},
+            "delete": {"2": {"message": "gh: Forbidden (HTTP 403)"}},
         })
         rc, out, err = sb.run(script, ["--repo", REPO])
         p = []
@@ -454,7 +454,7 @@ def sc_json(script: Path) -> list[str]:
                        art(3, "a", day(3), size=900), art(4, "b", day(1)),
                        art(5, "c", day(1)), art(6, "c", day(2))]],
             "delete": {"1": {"message": "gh: Not Found (HTTP 404)"},
-                       "5": {"message": "gh: Server Error (HTTP 500)"}},
+                       "5": {"message": "gh: Forbidden (HTTP 403)"}},
         })
         rc, out, err = sb.run(script, ["--repo", REPO, "--json"])
         p = []

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T15:53+00:00",
+  "updated": "2026-11-09T17:29+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -705,21 +705,25 @@
       "id": "AR67",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Built",
       "item": "mark-published after pending --refresh needs no extra render",
       "detail": "mark-published can refuse with 'differs from a fresh render; run render first' right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:34+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "AR68",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Built",
       "item": "task-status-update skill lists the four --phase names",
       "detail": "--phase accepts only agents, join, ci, merge; the skill text does not list them.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:34+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL1",
@@ -2586,11 +2590,11 @@
       "id": "DL121",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Fold a project's script fixes into the templates",
       "detail": "artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner's call",
       "expected": "09 Nov",
-      "changed": "2026-11-09T15:52+00:00",
+      "changed": "2026-11-09T16:25+00:00",
       "rides": "DL123",
       "started": "2026-11-08T23:06+00:00"
     },
@@ -2598,43 +2602,44 @@
       "id": "DL122",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Project-owned workflow list for artifact prune",
       "detail": "artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow",
-      "expected": "",
-      "changed": "2026-11-08T23:03+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL123",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release the ported project fixes",
       "detail": "Join DL121, fold notes, CI, merge, install, smoke, cleanup",
-      "expected": "09 Nov ~17:35",
-      "changed": "2026-11-09T15:27+00:00",
-      "expected_basis": "DL121 local agent ~90 min, then join and CI",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:25+00:00",
       "release": 70,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-09T15:35+00:00",
-          "end": "2026-11-09T17:05+00:00"
+          "end": "2026-11-09T15:45+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-09T17:05+00:00",
-          "end": "2026-11-09T17:15+00:00"
+          "start": "2026-11-09T15:45+00:00",
+          "end": "2026-11-09T16:16+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-09T17:15+00:00",
-          "end": "2026-11-09T17:30+00:00"
+          "start": "2026-11-09T16:16+00:00",
+          "end": "2026-11-09T16:31+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-09T17:30+00:00",
-          "end": "2026-11-09T17:35+00:00"
+          "start": "2026-11-09T16:31+00:00",
+          "end": "2026-11-09T16:35+00:00"
         }
       ],
       "started": "2026-11-08T23:10+00:00"
@@ -2643,171 +2648,306 @@
       "id": "DL124",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Questions stop hook counts running cloud agents",
       "detail": "The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:21+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL125",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "Rust CI track: pinned LLVM linker in the tool cache",
       "detail": "Pool image has no C linker, so cargo builds pass in the agent gate and fail in release CI. Fetch pinned sha256-checked clang+lld, set CARGO_TARGET_*_LINKER, CC, AR; run the agent gate's Rust step without system compilers; doctor checks a linker for the rust track.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:21+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:01+00:00",
+      "dropped_into": "DS200",
+      "dropped_reason": "covered by the Rust CI helper and tool fetcher (D140)"
     },
     {
       "id": "DL126",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "Rust CI track: cached RustSec advisory DB",
       "detail": "Keep the cargo-deny advisory DB in the CI tool cache and git fetch it each run; if GitHub is unreachable, use the cached copy with a warning.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:21+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:01+00:00",
+      "dropped_into": "DS200",
+      "dropped_reason": "covered by the Rust CI helper (D142)"
     },
     {
       "id": "DL127",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Ledger: close agents whose task shipped; agent-check command",
       "detail": "Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check <id> to record last_checked.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:21+00:00"
+      "expected": "09 Nov ~18:08",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL128",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "join.py handles stacked branches",
       "detail": "When branch B contains an older head of branch A, merge B alone or report stacked and prefer B's side for files B rewrote.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:21+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL129",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "join.py --into creates a missing integration branch",
       "detail": "join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL130",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Pre-push hook names missing node_modules",
       "detail": "In a fresh worktree with no node_modules the pre-push guard fails with a cryptic pnpm message. Detect it and say: run pnpm install --frozen-lockfile in this worktree.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL131",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "branch_gate --e2e-only leaves docs/work clean",
       "detail": "The gate regenerates committed screenshots under docs/work, so the next push refuses. Write shots to an ignored dir or restore docs/work afterwards.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:30+00:00"
     },
     {
       "id": "DL132",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "ci_watch.py writes the main repo's ledger from a worktree",
       "detail": "Run inside a join worktree, it wrote that worktree's ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov ~18:08",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL133",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "DL-53 hook accepts /c/... paths under the work root",
       "detail": "git worktree add /c/Work/... was refused as outside C:\\Work. Normalise Git Bash paths before comparing.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL134",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "branch_gate logs are UTF-8 on Windows",
       "detail": "Gate logs mix cp1252 box-drawing characters; cat and Python print fail. Force UTF-8 for the log and the Playwright reporter.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:30+00:00"
     },
     {
       "id": "DL135",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Join flags e2e unhandled-API-call failures as join interactions",
       "detail": "Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL136",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Held routines are paused, not postponed, while a question is open",
       "detail": "A routine postponed a few minutes for an owner answer started on its old brief when the dialog stayed open 3 h. Rule: pause it (no run_once_at), or a hook warns when a held routine's start passes during an open question.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:22+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL137",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Pre-push guard resolves paths from the current worktree",
       "detail": "A push from one release worktree printed an ok line for a file in an older, removed worktree (the generated OpenAPI schema check?). A guard resolves its path from a stale or cached location.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:28+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:30+00:00"
     },
     {
       "id": "DL138",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "ci_watch matches or creates the train for a ready PR",
       "detail": "ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:50+00:00"
+      "expected": "09 Nov ~18:08",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL139",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "ci_watch covers every required workflow of the head",
       "detail": "ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:50+00:00"
+      "expected": "09 Nov ~18:08",
+      "changed": "2026-11-09T17:29+00:00",
+      "rides": "DS194",
+      "expected_basis": "fix round for 3 watch tests, started 17:28, ~40 min",
+      "started": "2026-11-09T16:29+00:00"
     },
     {
       "id": "DL140",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Join runs the strict docs check before the ready PR",
       "detail": "Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR's CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:50+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
+    },
+    {
+      "id": "DL141",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Agent gate compiles native C# on Linux, or flags it",
+      "detail": "A Linux agent gate never compiles Windows C#, so an ambiguous type (CS0104 under /warnaserror+) surfaced only in release CI. Compile with mono mcs or the dotnet SDK csc against the same framework assemblies, or flag 'C# changed, not compiled' in the gate result.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:30+00:00"
+    },
+    {
+      "id": "DL142",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Dropped",
+      "item": "RELEASE: ci_watch and ledger fixes",
+      "detail": "DL127, DL132, DL138, DL139: join, fold notes, CI, merge, install, smoke, cleanup.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:29+00:00",
+      "release": 73,
+      "dropped_into": "DS194",
+      "dropped_reason": "Owner merged RELEASE-71 to 75 into one release"
+    },
+    {
+      "id": "DL143",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Dropped",
+      "item": "RELEASE: join.py fixes",
+      "detail": "DL128, DL129, DL135, DL140: join, fold notes, CI, merge, install, smoke, cleanup.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:29+00:00",
+      "release": 74,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T16:22+00:00",
+          "end": "2026-11-09T17:42+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T17:42+00:00",
+          "end": "2026-11-09T17:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T17:55+00:00",
+          "end": "2026-11-09T18:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T18:10+00:00",
+          "end": "2026-11-09T18:15+00:00"
+        }
+      ],
+      "started": "2026-11-09T16:23+00:00",
+      "dropped_into": "DS194",
+      "dropped_reason": "Owner merged RELEASE-71 to 75 into one release"
+    },
+    {
+      "id": "DL144",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Dropped",
+      "item": "RELEASE: hook and gate fixes",
+      "detail": "DL124, DL130, DL131, DL133, DL134, DL136, DL137, DL141: join, fold notes, CI, merge, install, smoke, cleanup.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:29+00:00",
+      "release": 75,
+      "dropped_into": "DS194",
+      "dropped_reason": "Owner merged RELEASE-71 to 75 into one release"
+    },
+    {
+      "id": "DL145",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "join.py keeps unpushed local joins; docs/work conflicts auto-resolve",
+      "detail": "A second join.py --into run rebuilt the integration branch from origin and silently dropped earlier unpushed local merge commits. Build on the local branch when it is ahead of origin, or refuse when commits would be lost. Auto-resolve docs/work conflicts, since the strip removes them.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
+    },
+    {
+      "id": "DL146",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Guard: a new client API call needs a default e2e mock handler",
+      "detail": "From a project's RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.",
+      "expected": "",
+      "changed": "2026-11-09T16:30+00:00",
+      "rides": "DS194"
     },
     {
       "id": "DS1",
@@ -5577,22 +5717,23 @@
       "id": "DS191",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Review audits and test-cost specs against code",
       "detail": "docs_check T2 still warns for both after DS190 (the cloud checkout missed them)",
-      "expected": "",
-      "changed": "2026-11-08T23:30+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:31+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS192",
       "owner": "project",
       "app": "",
-      "status": "Needs you",
+      "status": "Live",
       "item": "Rust in tech-stack-setup: study and proposal",
-      "detail": "Proposal written: Rust as an optional component beside a JS stack (CLI, host service, napi/WASM library, worker, media processing), wizard questions, Cargo workspace layout, rust CI track with pinned linker and cached RustSec DB; 8 tasks; 8 owner questions.",
-      "expected": "09 Nov ~16:30",
-      "changed": "2026-11-09T15:25+00:00",
-      "expected_basis": "local study agent from 15:25, ~60 min",
+      "detail": "Proposal done; owner decided D138-D145 on 9 Nov; plan in docs/architecture/rust-beside-js-plan.md; work in DS196-DS203.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:57+00:00",
       "no_release": "study; proposal for the owner",
       "started": "2026-11-09T15:21+00:00"
     },
@@ -5600,104 +5741,173 @@
       "id": "DS193",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "docs_work.py strip --apply always commits or fails loudly",
       "detail": "On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:21+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:34+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DS194",
       "owner": "project",
       "app": "",
-      "status": "To do",
-      "item": "RELEASE: audits and test-cost specs, prune workflow list",
-      "detail": "Join DS191 and DL122, fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "09 Nov ~18:00",
-      "changed": "2026-11-09T15:53+00:00",
-      "expected_basis": "cloud agents from ~16:00, ~60 min, then join and CI",
-      "release": 71
+      "status": "Running",
+      "item": "RELEASE: plugin fixes, audits specs and Rust track",
+      "detail": "One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.",
+      "expected": "09 Nov ~20:25",
+      "changed": "2026-11-09T17:29+00:00",
+      "expected_basis": "Rust docs agent after DS201 ~19:40, join 15 + CI 25 min",
+      "release": 71,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T16:00+00:00",
+          "end": "2026-11-09T19:40+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T19:40+00:00",
+          "end": "2026-11-09T19:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T19:55+00:00",
+          "end": "2026-11-09T20:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T20:20+00:00",
+          "end": "2026-11-09T20:25+00:00"
+        }
+      ],
+      "started": "2026-11-09T15:57+00:00",
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 25
+      }
     },
     {
       "id": "DS195",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)",
       "detail": "Join the Rust tasks (catalog, wizard, tooling, tool fetcher, rust_ci helper, workflows, doctor, docs), fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00",
-      "release": 72
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:29+00:00",
+      "release": 72,
+      "started": "2026-11-09T15:57+00:00",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T15:56+00:00",
+          "end": "2026-11-09T19:25+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T19:25+00:00",
+          "end": "2026-11-09T19:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T19:40+00:00",
+          "end": "2026-11-09T19:55+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T19:55+00:00",
+          "end": "2026-11-09T20:00+00:00"
+        }
+      ],
+      "dropped_into": "DS194",
+      "dropped_reason": "Owner merged RELEASE-71 to 75 into one release"
     },
     {
       "id": "DS196",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Rust catalog: component role, pairings, warnings",
       "detail": "languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:31+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS197",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Rust wizard text: questions, layout, reason",
       "detail": "tech-stack-setup SKILL.md: machine-side parts question, native_components role (CLI, host service, napi or WASM library), written reason, Cargo workspace layout.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:32+00:00"
     },
     {
       "id": "DS198",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Rust tooling assets: workspace skeleton",
       "detail": "Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:31+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS199",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Generic tool fetcher and pins",
-      "detail": "ci_tool.py fetches any pinned, sha256-checked tool from tools.json into the tool cache (rustup-init, LLVM, Zig, cargo-deny, cargo-xwin).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "detail": "ci_tool.py tool command (file, archive, crate kinds) and pins for rustup-init, llvm, cargo-deny, cargo-xwin. Unit tests pass (37). Branch CI cancelled by the docs check (spec text is DS203). Zig not pinned: its download hosts refused the cloud sandbox.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:31+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS200",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Rust CI helper",
       "detail": "rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T17:28+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T16:32+00:00"
     },
     {
       "id": "DS201",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Rust workflows",
-      "detail": "rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "detail": "rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).",
+      "expected": "09 Nov ~18:48",
+      "changed": "2026-11-09T17:29+00:00",
+      "rides": "DS194",
+      "expected_basis": "cloud agent started 17:28, ~80 min",
+      "started": "2026-11-09T17:29+00:00"
     },
     {
       "id": "DS202",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Doctor checks for the rust track",
-      "detail": "delivery_doctor.py: linker available, clang-cl and lld-link for Windows targets, exact toolchain, pinned tools, advisory DB age.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "detail": "Doctor rust check: toolchain, linker, windows linkers, pins, advisory db age, disk. Unit tests pass (33). Branch CI cancelled by the docs check (spec text is DS203). Fix commands name ci_tool.py ensure; DS199 shipped ci_tool.py tool, so DS200 aligns them.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:31+00:00",
+      "rides": "DS194",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS203",
@@ -5707,7 +5917,8 @@
       "item": "Rust docs: specs and guide",
       "detail": "Feature spec rules and a guide: Rust beside a JS stack.",
       "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "changed": "2026-11-09T16:29+00:00",
+      "rides": "DS194"
     },
     {
       "id": "DU1",

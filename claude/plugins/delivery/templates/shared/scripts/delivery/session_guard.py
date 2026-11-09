@@ -226,6 +226,24 @@ def option(args: list[str], *names: str) -> str | None:
     return None
 
 
+def repo_slug(value: str) -> str:
+    """owner/name from `owner/name`, `host/owner/name`, or a git or https URL (lower case)."""
+    v = value.strip().rstrip("/")
+    v = v[:-4] if v.endswith(".git") else v
+    v = v.replace(":", "/")
+    return "/".join(v.split("/")[-2:]).lower()
+
+
+def targets_this_repo(root: Path, repo: str | None) -> bool:
+    """True when gh would act on this repository: no -R/--repo, or -R naming this repo's origin."""
+    if not repo:
+        return True
+    code, url = rs.git(["remote", "get-url", "origin"], root)
+    if code != 0 or not url.strip():
+        return True  # cannot tell: keep the guard on
+    return repo_slug(repo) == repo_slug(url)
+
+
 def check_pr(root: Path, toks: list[str]) -> str | None:
     if len(toks) < 3 or toks[0] != "gh" or toks[1] != "pr" or toks[2] not in ("create", "ready"):
         return None
@@ -235,6 +253,8 @@ def check_pr(root: Path, toks: list[str]) -> str | None:
     if "--undo" in args:
         return None  # gh pr ready --undo returns a PR to draft
     repo = option(args, "--repo", "-R")
+    if not targets_this_repo(root, repo):
+        return None  # another repository's pull request: its own rules apply
     head = option(args, "--head", "-H")
     if head is None and verb == "ready":
         target = next((a for a in args if not a.startswith("-") and a != repo), None)

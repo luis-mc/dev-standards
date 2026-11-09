@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.15.0
+version: 0.16.0
 owner: agents
 type: reference
 code:
@@ -127,6 +127,16 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.26** — A project keeps its own choices across `delivery_ci_install.py update` with a tracked `scripts/delivery/ci-install.json`: `{"keep": [paths], "skip": [paths]}`, paths relative to the project root. The installer never writes that file. Update never overwrites a `keep` file: it lists it as `kept (ci-install.json) <path>`, and ends with `kept <path>: the plugin's version differs; diff it with <template path> and fold your change into the plugin or drop it`. A missing `keep` file is still written. Install and update never write a `skip` file, even when it is missing, and list it as `skipped (ci-install.json) <path>`. A path the plugin does not manage gets a warning line. Bad JSON exits 2, names the file and writes nothing. The plugin ships `ci-install.example.json`. (DL120)
 
 **R5.27** — `ci_tool.py` needs Python 3.11+ visible to the runner's own account. A Windows runner that runs as a service (for example NETWORK SERVICE) cannot see a per-user Python, so it needs a machine-wide install. Otherwise the gitleaks step fails at once. (DL120)
+
+**R5.28** — `artifact_prune.py` reads an optional `artifact_prune` section from `.delivery/config.json` (or `--config FILE`). `groups` lists objects with `pattern` (a full-match regex with one capture group that names the group), `keep` (default `--keep`), `protect_pr_heads` (`{head_prefix, base}`: keep artifacts built from the head of an open PR from `head_prefix*` into `base`) and `hold_workflow` (keep the whole group while that workflow's newest run per head failed, was cancelled or timed out in the last 24 hours). Artifacts of runs still queued or running, and artifacts younger than `min_age_seconds` (default 3600), stay. GitHub API calls retry 5xx, 429, rate limits, timeouts and dropped connections up to 5 times with backoff; 404 and 410 count as gone. With no section the old rule applies. (DL121)
+
+**R5.29** — `session_guard.py` does not block `gh pr create` or `gh pr ready` aimed at another repository with `-R` or `--repo`. When origin cannot be read, the guard stays on. (DL121)
+
+**R5.30** — `ci_scope.py` reads `no_test_reads` (globs that never trip a `full_files` valve and are not counted as code) and `package_json` (`{file, keys, scripts}`) from `ci-scope.json`. A change to that file runs the full set only when a listed key changed (default: name, type, main, module, exports, bin, engines, packageManager, workspaces, dependencies, devDependencies, peerDependencies, overrides, resolutions, pnpm) or a script matching a `scripts` glob was added, removed or changed (default `*`). Unreadable JSON runs the full set. Without `package_json` the file follows `full_files`. (DL121)
+
+**R5.31** — `ci_watch.py` trims the local Docker disk after the watched runs finish when `ci.docker_trim` is true in `.delivery/config.json` (default off; Windows with Docker only). `ci.docker_trim_images` (default `["postgres:16"]`) names the image used for the trim. `--no-trim` skips it. A failed trim only logs a line. (DL121)
+
+**R5.32** — `cleanup.py` writes the delivery log only when asked: `--delivery-log`, or `cleanup.delivery_log: true` in `.delivery/config.json`; `--no-delivery-log` wins. The default changed from on to off; a project that relies on the log sets the config key. For merge-commit trains, "no work of its own" is judged against the default branch as it was before the train's merge. (DL121)
 
 ## 6. Non-functional requirements
 
@@ -401,6 +411,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.16.0 | 2026-11-09 | RELEASE-70 | Project script fixes folded into the templates: artifact_prune groups, holds and retries; session_guard allows -R other repos; ci_scope package.json valve and no_test_reads; ci_watch optional Docker trim; cleanup delivery log off by default (R5.28-R5.32). | DL121 |
 | 0.15.0 | 2026-11-08 | RELEASE-68 | Session start names a watcher it cannot stop and how to stop it; dead watcher rows are pruned (R5.25).<br>scripts/delivery/ci-install.json keep and skip lists survive updates; Windows service runners need a machine-wide Python for ci_tool.py (R5.26, R5.27). | DL118, DL120 |
 | 0.14.0 | 2026-11-08 | RELEASE-67 | Pinned CI tools are cached on the runner disk with ci_tool.py: checksum-verified, with retries (R5.23).<br>DL-94 flags workflow downloads that skip the cache or the checksum (R5.24). | DL115, DL116 |
 | 0.13.0 | 2026-11-08 | RELEASE-66 | join.py keeps and reports clean merges when a later branch conflicts (R5.20).<br>Missing delivery modules are named, listed by the installer, and checked by a test (R5.21).<br>New cancel_joined_runs.py cancels CI runs of branches already joined (R5.22). | DL111, DL112, DL113 |

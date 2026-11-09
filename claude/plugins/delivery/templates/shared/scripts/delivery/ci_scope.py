@@ -8,7 +8,10 @@ Three scopes, from the changed paths and the event:
 
   full       a release pull request (ready, from a head branch matching `release_pr.head_re` into
              `release_pr.base`), or a change to a `full_files` path (what every workspace reads: the lockfile,
-             root manifests and configs): every job runs.
+             root manifests and configs): every job runs. Two valves are narrower, both off unless configured:
+             `no_test_reads` (globs of files no test reads, e.g. .github/dependabot.yml) never trip it, and
+             `package_json` ({"file", "keys", "scripts"}) trips it only when a listed key or a script named by a
+             `scripts` glob changed in that file.
   ci-smoke   a change only to `ci_files` (the CI's own scripts and workflows; `docs` may ride along): the CI
              tests, the guard tests and a fixed, named `smoke` set, even on a release pull request.
   affected   everything else (agent branches, fix pushes, the default branch after a merge): only what the
@@ -62,10 +65,40 @@ def norm(path: str) -> str:
     return re.sub(r"^\./", "", path.strip().replace("\\", "/"))
 
 
-def is_full_file(path: str, patterns: list[str]) -> bool:
+def is_full_file(path: str, patterns: list[str], no_reads: list[str] | None = None) -> bool:
     keep = [p for p in patterns if not p.startswith("!")]
-    skip = [p[1:] for p in patterns if p.startswith("!")]
+    skip = [p[1:] for p in patterns if p.startswith("!")] + list(no_reads or [])
     return any_match(path, keep) and not any_match(path, skip)
+
+
+# Root package.json fields a build or test can read. Used when `package_json.keys` is not set.
+DEFAULT_PACKAGE_KEYS = ["name", "type", "main", "module", "exports", "bin", "engines", "packageManager",
+                        "workspaces", "dependencies", "devDependencies", "peerDependencies", "overrides",
+                        "resolutions", "pnpm"]
+
+
+def _scripts(manifest: dict) -> dict:
+    s = manifest.get("scripts")
+    return s if isinstance(s, dict) else {}
+
+
+def package_json_counts(old: str | None, new: str | None, rule: dict) -> bool:
+    """Does a change of the root package.json make a run full? Only a changed key in `rule["keys"]` (default
+    DEFAULT_PACKAGE_KEYS) or an added, removed or changed script whose name matches `rule["scripts"]` (globs;
+    default: every script). A side that is missing or not JSON counts: any doubt is full."""
+    try:
+        a, b = json.loads(old or ""), json.loads(new or "")
+    except ValueError:
+        return True
+    if not isinstance(a, dict) or not isinstance(b, dict):
+        return True
+    keys = rule["keys"] if "keys" in rule else DEFAULT_PACKAGE_KEYS
+    if any(a.get(k) != b.get(k) for k in keys or []):
+        return True
+    sa, sb = _scripts(a), _scripts(b)
+    names = [n for n in set(sa) | set(sb) if sa.get(n) != sb.get(n)]
+    patterns = rule["scripts"] if "scripts" in rule else ["*"]
+    return any(any_match(n, patterns or []) for n in names)
 
 
 def is_release_pr(cfg: dict, event: str | None, head_ref: str, base_ref: str) -> bool:
@@ -77,7 +110,9 @@ def is_release_pr(cfg: dict, event: str | None, head_ref: str, base_ref: str) ->
 
 
 def decide(cfg: dict, changed: list[str] | None, event: str | None = None,
-           head_ref: str = "", base_ref: str = "") -> dict:
+           head_ref: str = "", base_ref: str = "", read_pair=None) -> dict:
+    """`read_pair(path)` -> (old text, new text) of a changed file, for the package.json rule. Without it, or with
+    a missing side, a changed package.json counts."""
     smoke = cfg.get("smoke") or {}
 
     def out(scope: str, why: str, ci_changed: bool = False) -> dict:
@@ -89,10 +124,22 @@ def decide(cfg: dict, changed: list[str] | None, event: str | None = None,
     files = [norm(f) for f in changed if f.strip()]
     ci = cfg.get("ci_files") or []
     ci_changed = any(any_match(f, ci) for f in files)
-    root = next((f for f in files if is_full_file(f, cfg.get("full_files") or [])), None)
+    no_reads = cfg.get("no_test_reads") or []
+    pkg = cfg.get("package_json") or {}
+
+    def counts(f: str) -> bool:
+        # With a `package_json` rule, that file is a valve only for the keys and scripts tests use.
+        if pkg.get("file") and f == pkg["file"]:
+            old, new = read_pair(f) if read_pair else (None, None)
+            return package_json_counts(old, new, pkg)
+        return is_full_file(f, cfg.get("full_files") or [], no_reads)
+
+    root = next((f for f in files if counts(f)), None)
     if root:
         return out("full", f"root configuration changed ({root})", ci_changed)
-    code = [f for f in files if not any_match(f, cfg.get("docs") or [])]
+    # Docs, files no test reads, and a package.json change the rule does not count are not code.
+    code = [f for f in files if not any_match(f, cfg.get("docs") or []) and not any_match(f, no_reads)
+            and f != pkg.get("file")]
     # A change of CI files alone touches no product code: the CI tests and the smoke set prove it, even on a release PR.
     if code and all(any_match(f, ci) for f in code):
         return out("ci-smoke", "only CI scripts and workflows changed", True)
@@ -110,6 +157,18 @@ def changed_from_git(base: str) -> list[str]:
     if r.returncode != 0:
         raise OSError(f"git diff {base} failed: {r.stderr.decode('utf-8', 'replace').strip()}")
     return [p for p in r.stdout.decode("utf-8", "replace").split("\0") if p.strip()]
+
+
+def git_pair(base: str):
+    """read_pair for a diff against `base`: the file at the merge base and at HEAD (None when git cannot say)."""
+    mb = subprocess.run(["git", "merge-base", base, "HEAD"], capture_output=True, text=True)
+    old_ref = mb.stdout.strip() if mb.returncode == 0 and mb.stdout.strip() else base
+
+    def show(ref: str, path: str):
+        r = subprocess.run(["git", "show", f"{ref}:{path}"], capture_output=True, text=True)
+        return r.stdout if r.returncode == 0 else None
+
+    return lambda path: (show(old_ref, path), show("HEAD", path))
 
 
 def lines(res: dict) -> list[str]:
@@ -145,7 +204,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as e:
         print(f"ci_scope: {e}", file=sys.stderr)
         return EXIT_USAGE
-    res = decide(cfg, changed, a.event, a.head_ref, a.base_ref)
+    res = decide(cfg, changed, a.event, a.head_ref, a.base_ref, git_pair(base) if base else None)
     print(json.dumps(res, indent=1) if a.json else "\n".join(lines(res)))
     target = os.environ.get("GITHUB_OUTPUT")
     if a.github_output and target:

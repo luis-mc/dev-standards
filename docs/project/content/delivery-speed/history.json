@@ -1,5 +1,25 @@
 [
   {
+    "date": "09 Nov 16:29",
+    "change": "dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release"
+  },
+  {
+    "date": "09 Nov 16:29",
+    "change": "dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release"
+  },
+  {
+    "date": "09 Nov 16:29",
+    "change": "dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release"
+  },
+  {
+    "date": "09 Nov 16:01",
+    "change": "dropped: folded into DS200: covered by the Rust CI helper (D142)"
+  },
+  {
+    "date": "09 Nov 16:01",
+    "change": "dropped: folded into DS200: covered by the Rust CI helper and tool fetcher (D140)"
+  },
+  {
     "date": "09 Nov 15:27",
     "change": "dropped: folded into RELEASE-68: DL120 shipped in RELEASE-68"
   },
