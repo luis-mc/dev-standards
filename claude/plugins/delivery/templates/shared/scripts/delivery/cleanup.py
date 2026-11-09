@@ -807,6 +807,8 @@ def main(argv: list[str] | None = None) -> int:
     failed = any(r.status == "failed" for r in rows)
     if args.pr is not None and not args.dry_run and not failed:
         dc.ledger_record(root, "train_state", pr=args.pr, state="cleaned", by="cleanup.py")
+        # DL127: the agents of the shipped train's cargo are finished; close them (agent-done) so none stays "running"
+        dc.ledger_record(root, "agents_done", pr=args.pr, branches=sorted(candidates), by="cleanup.py")
     return dc.EXIT_FAIL if failed else dc.EXIT_OK
 
 
