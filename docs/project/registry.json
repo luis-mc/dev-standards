@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T23:20+00:00",
+  "updated": "2026-11-09T23:23+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3104,25 +3104,25 @@
       "id": "DL159",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Pool default Playwright pin 1.62.1 -> 1.65.0",
       "detail": "npm latest is 1.65.0. Raise the pinned fallback in delivery_runner_pool.py PLAYWRIGHT_VERSION, runner-pool Dockerfile ARG and compose.yaml default together, plus the pinned expectations in test_runner_pool.py. Only used when no lockfile or pool .env sets a version; with DL155 a refresh never lowers it. Done by the orchestrator at the RELEASE-77 join.",
-      "expected": "10 Nov ~00:20",
-      "changed": "2026-11-09T23:14+00:00",
-      "expected_basis": "join of RELEASE-77 at ~00:05, edit ~10 min",
-      "rides": "DS207"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T23:23+00:00",
+      "rides": "DS207",
+      "started": "2026-11-09T23:22+00:00"
     },
     {
       "id": "DL160",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Built",
       "item": "Repo template: LF line endings for all text files",
       "detail": "Peer finding: with core.autocrlf=true a Windows join worktree checks out CRLF, so prettier --check . flags every file. The tech-stack .gitattributes forces LF only for *.sh, hooks and delivery scripts. Add '* text=auto eol=lf' (keeping binary rules) so worktrees match CI. Done by the orchestrator at the RELEASE-77 join; needs a project-setup change note.",
-      "expected": "10 Nov ~00:20",
-      "changed": "2026-11-09T23:15+00:00",
-      "expected_basis": "join of RELEASE-77 at ~00:05, edit ~10 min",
-      "rides": "DS207"
+      "expected": "09 Nov",
+      "changed": "2026-11-09T23:23+00:00",
+      "rides": "DS207",
+      "started": "2026-11-09T23:22+00:00"
     },
     {
       "id": "DL161",
@@ -3131,8 +3131,9 @@
       "status": "To do",
       "item": "dev-standards repo: LF line endings for all text files",
       "detail": "Dogfood DL160 (D170): add '* text=auto eol=lf' to dev-standards' own .gitattributes and renormalize in one commit, so Windows worktrees match CI. Next release after RELEASE-77.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T23:20+00:00"
+      "expected": "10 Nov ~01:30",
+      "changed": "2026-11-09T23:23+00:00",
+      "expected_basis": "after RELEASE-77 merges ~00:55; renormalize + CI ~35 min"
     },
     {
       "id": "DS1",
