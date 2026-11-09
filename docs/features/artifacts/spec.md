@@ -14,6 +14,7 @@ code:
   - tools/test_project_artifacts_hooks.py
   - tools/test_render_artifacts.py
   - tools/test_artifact_prune.py
+  - tools/test_artifacts_ar*.py
 last_verified: 2026-11-01
 artifact: feature-project-artifacts-standard.html
 ---
@@ -135,6 +136,10 @@ flowchart LR
 **R5.13** — `promote-to-spec` writes a feature artifact's content to a feature spec in the luismc-docs template.
 
 **R5.14** — Full Progress shows a foldable `CI runs` section when `.delivery/ci-runs.json` exists, and nothing when it does not (ARTIFACTSPEC R5.51, owner decision D48).
+
+**R5.15** — `pending --refresh` renders first, so the publish copy matches a fresh render and `mark-published` accepts it. The refusal text names `render` or `pending --json --refresh`. (AR67)
+
+**R5.16** — The `task-status-update` skill lists `--phase NAME=HH:MM-HH:MM` with the names `agents`, `join`, `ci` and `merge`. (AR68)
 
 ## 6. Non-functional requirements
 
