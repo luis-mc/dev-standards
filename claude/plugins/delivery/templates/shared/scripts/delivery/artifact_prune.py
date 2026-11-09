@@ -20,7 +20,31 @@ failed, was cancelled, is still running, or its state could not be read. A faile
 then still finds its installers when "re-run failed jobs" is used. Once the newest run
 succeeds, the hold ends and the normal keep-the-newest rule applies again.
 
-A deletion that answers 404 means the artifact is already gone (a concurrent
+Groups (opt-in): `.delivery/config.json` (or `--config FILE`) may hold an `artifact_prune` section.
+Without it, nothing below applies and the behaviour is the one above.
+
+    {"artifact_prune": {"groups": [{
+        "pattern": "(installer-[a-z]+)-[0-9a-f]{12}",   one regex, one capture group: the group name
+        "keep": 0,                                      newest to keep per group (default: --keep)
+        "protect_pr_heads": {"head_prefix": "release/", "base": "main"},
+        "hold_workflow": "installers.yml"}],
+      "min_age_seconds": 3600}}
+
+An artifact whose name matches `pattern` (a full match) is grouped by the captured text instead of its
+own name, so builds named by a hash are pruned by kind. Of such an artifact beyond `keep`, these stay:
+one of a run still queued or running; one younger than `min_age_seconds` (default 3600); one built from
+the head commit of an open pull request whose head branch starts with `head_prefix` and whose base is
+`base` (`protect_pr_heads`); and every artifact of the group while the newest run of `hold_workflow`
+for any head commit failed, was cancelled or timed out in the last 24 hours (a re-run reuses them).
+The extra API calls are made only for the options a group sets. Any failure to read them stops the
+prune with exit 2, so it never decides without knowing.
+
+Retries: transient failures (HTTP 5xx, 429, rate limits, timeouts, dropped connections) are retried
+with exponential backoff and jitter, for every listing and deletion; deletions are paced apart.
+`ARTIFACT_PRUNE_BACKOFF` (seconds, default 2) scales the backoff and `ARTIFACT_PRUNE_PAUSE` (seconds,
+default 0.3) the pause between deletions; tests set both to 0.
+
+A deletion that answers 404 (or 410) means the artifact is already gone (a concurrent
 prune, or it expired meanwhile): not a failure. Any other failed deletion is
 reported and makes the exit code 1; the remaining deletions are still tried.
 
@@ -40,14 +64,35 @@ import json
 import os
 import re
 import shutil
+import random
 import subprocess
+import time
 import urllib.request
 import urllib.error
 import urllib.parse
 from datetime import datetime, timezone
 
 REPO_RE = re.compile(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+")
-NOT_FOUND_RE = re.compile(r"\b404\b|not found", re.IGNORECASE)
+NOT_FOUND_RE = re.compile(r"\b404\b|\b410\b|not found|\bgone\b", re.IGNORECASE)
+TRANSIENT_RE = re.compile(
+    r"\b(429|500|502|503|504)\b|rate limit|abuse detection|secondary rate|try again|"
+    r"timed out|timeout|connection (reset|refused)|\bEOF\b|temporar|unavailable|"
+    r"bad gateway|internal server error|TLS handshake|no such host",
+    re.IGNORECASE)
+MIN_AGE_SECONDS = 3600
+BUSY_STATUSES = ("queued", "in_progress", "waiting", "requested", "pending")
+HOLD_CONCLUSIONS = ("failure", "cancelled", "timed_out")
+HOLD_WINDOW_SECONDS = 24 * 3600
+ATTEMPTS = 5
+BACKOFF_CAP = 60.0
+DEFAULT_CONFIG = ".delivery/config.json"
+
+
+def _env_float(name: str, default: float) -> float:
+    try:
+        return max(0.0, float(os.environ.get(name, default)))
+    except ValueError:
+        return default
 
 
 class GhError(Exception):
@@ -125,6 +170,32 @@ def run_gh(args: list[str], timeout: int = 300) -> GhResult:
     return GhResult(proc.returncode, proc.stdout or "", proc.stderr or "")
 
 
+def run_gh_retry(args: list[str], timeout: int = 300, attempts: int = ATTEMPTS) -> GhResult:
+    """`run_gh`, retried with backoff while the failure looks transient.
+
+    A non-transient failure (404, 403 without a rate limit, bad arguments) is returned at once;
+    the last result is returned when the attempts run out."""
+    base = _env_float("ARTIFACT_PRUNE_BACKOFF", 2.0)
+    res = GhResult(1, "", "")
+    for attempt in range(1, attempts + 1):
+        try:
+            res = run_gh(args, timeout=timeout)
+        except GhError as exc:
+            if attempt == attempts:
+                raise
+            res = GhResult(1, "", f"timed out or could not run: {exc}")
+        if res.returncode == 0:
+            return res
+        text = f"{res.stderr}\n{res.stdout}"
+        if attempt == attempts or not TRANSIENT_RE.search(text) or NOT_FOUND_RE.search(text):
+            return res
+        delay = min(BACKOFF_CAP, base * (2 ** (attempt - 1))) * (0.5 + random.random())
+        print(f"artifact_prune: transient gh failure (attempt {attempt}/{attempts}), "
+              f"retrying in {delay:.1f}s: {text.strip()[:120]}", file=sys.stderr)
+        time.sleep(delay)
+    return res
+
+
 def parse_json_stream(text: str) -> list[object]:
     """Every JSON value in `text`, however the pages are joined (none, spaces, newlines)."""
     decoder = json.JSONDecoder()
@@ -159,7 +230,7 @@ def extract_artifacts(values: list[object]) -> list[dict]:
 
 
 def list_artifacts(repo: str) -> list[dict]:
-    res = run_gh(["api", "--paginate", f"repos/{repo}/actions/artifacts?per_page=100"])
+    res = run_gh_retry(["api", "--paginate", f"repos/{repo}/actions/artifacts?per_page=100"])
     if res.returncode != 0:
         raise GhError(f"gh api (list artifacts) failed ({res.returncode}): "
                       f"{(res.stderr or res.stdout).strip()[:300]}")
@@ -195,8 +266,8 @@ def newest_run_succeeded(repo: str, workflow: str) -> bool:
 
     No run, a run in progress, any other conclusion, or any error reading it: False (hold)."""
     try:
-        res = run_gh(["api", f"repos/{repo}/actions/workflows/{urllib.parse.quote(workflow)}"
-                      "/runs?per_page=1"], timeout=60)
+        res = run_gh_retry(["api", f"repos/{repo}/actions/workflows/{urllib.parse.quote(workflow)}"
+                            "/runs?per_page=1"], timeout=60)
         if res.returncode != 0:
             return False
         values = parse_json_stream(res.stdout)
@@ -208,15 +279,155 @@ def newest_run_succeeded(repo: str, workflow: str) -> bool:
     return runs[0].get("status") == "completed" and runs[0].get("conclusion") == "success"
 
 
+def load_groups(path: str) -> tuple[list[dict], float]:
+    """The `artifact_prune` groups of the project config and their min age; ([], default) when unset.
+
+    A missing file or section means no groups. A malformed section raises GhError."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.loads(fh.read())
+    except FileNotFoundError:
+        return [], MIN_AGE_SECONDS
+    except (OSError, ValueError) as exc:
+        raise GhError(f"{path} is unreadable: {exc}") from exc
+    section = data.get("artifact_prune") if isinstance(data, dict) else None
+    if section is None:
+        return [], MIN_AGE_SECONDS
+    if not isinstance(section, dict):
+        raise GhError(f"{path}: artifact_prune must be an object")
+    groups: list[dict] = []
+    for i, raw in enumerate(section.get("groups") or []):
+        where = f"{path}: artifact_prune.groups[{i}]"
+        if not isinstance(raw, dict) or not isinstance(raw.get("pattern"), str):
+            raise GhError(f"{where} needs a `pattern` string")
+        try:
+            rx = re.compile(raw["pattern"])
+        except re.error as exc:
+            raise GhError(f"{where}.pattern is not a regex: {exc}") from exc
+        if rx.groups != 1:
+            raise GhError(f"{where}.pattern needs exactly one capture group")
+        keep = raw.get("keep")
+        if keep is not None and (isinstance(keep, bool) or not isinstance(keep, int) or keep < 0):
+            raise GhError(f"{where}.keep must be an integer, 0 or more")
+        pr = raw.get("protect_pr_heads")
+        if pr is not None and not (isinstance(pr, dict) and isinstance(pr.get("head_prefix"), str)
+                                   and isinstance(pr.get("base"), str)):
+            raise GhError(f"{where}.protect_pr_heads needs head_prefix and base")
+        hold = raw.get("hold_workflow")
+        if hold is not None and not isinstance(hold, str):
+            raise GhError(f"{where}.hold_workflow must be a string")
+        groups.append({"regex": rx, "keep": keep, "protect_pr_heads": pr, "hold_workflow": hold})
+    age = section.get("min_age_seconds", MIN_AGE_SECONDS)
+    if isinstance(age, bool) or not isinstance(age, (int, float)) or age < 0:
+        raise GhError(f"{path}: artifact_prune.min_age_seconds must be a number, 0 or more")
+    return groups, float(age)
+
+
+def group_match(name: str, groups: list[dict]) -> tuple[str, dict | None]:
+    """(prune group, its config) for an artifact name; (name, None) when no configured pattern matches."""
+    for g in groups:
+        m = g["regex"].fullmatch(name)
+        if m:
+            return m.group(1), g
+    return name, None
+
+
+def busy_run_ids(repo: str) -> set:
+    """Ids of the runs still waiting or running: their artifacts are never deleted."""
+    ids: set = set()
+    for status in BUSY_STATUSES:
+        res = run_gh_retry(["api", "--paginate", f"repos/{repo}/actions/runs?status={status}&per_page=100"])
+        if res.returncode != 0:
+            raise GhError(f"gh api (list {status} runs) failed ({res.returncode}): "
+                          f"{(res.stderr or res.stdout).strip()[:300]}")
+        for value in parse_json_stream(res.stdout):
+            runs = value.get("workflow_runs") if isinstance(value, dict) else None
+            ids.update(r.get("id") for r in runs or [] if isinstance(r, dict))
+    return ids
+
+
+def open_pr_heads(repo: str, head_prefix: str, base: str) -> set:
+    """Head commits of the open pull requests from a `head_prefix*` branch into `base`. Any failure raises."""
+    res = run_gh_retry(["api", "--paginate", f"repos/{repo}/pulls?state=open&per_page=100"])
+    if res.returncode != 0:
+        raise GhError(f"gh api (list open pull requests) failed ({res.returncode}): "
+                      f"{(res.stderr or res.stdout).strip()[:300]}")
+    shas: set = set()
+    for value in parse_json_stream(res.stdout):
+        for pr in value if isinstance(value, list) else []:
+            head, tgt = pr.get("head") or {}, pr.get("base") or {}
+            if (str(head.get("ref", "")).startswith(head_prefix) and tgt.get("ref") == base
+                    and isinstance(head.get("sha"), str)):
+                shas.add(head["sha"])
+    return shas
+
+
+def held_workflow_runs(runs: list[dict], now: datetime | None = None,
+                       window: float = HOLD_WINDOW_SECONDS) -> set:
+    """Ids of the runs whose artifacts must stay for a re-run: the newest run of each head commit,
+    finished within `window`, that failed, was cancelled or timed out. A later success of the same
+    commit releases them."""
+    now = now or datetime.now(timezone.utc)
+    newest: dict = {}
+    for run in runs:
+        sha, created = run.get("head_sha"), parse_time(run.get("created_at"))
+        if not isinstance(sha, str) or created is None:
+            continue
+        if sha not in newest or created > newest[sha][0]:
+            newest[sha] = (created, run)
+    held: set = set()
+    for created, run in newest.values():
+        updated = parse_time(run.get("updated_at")) or created
+        if run.get("conclusion") in HOLD_CONCLUSIONS and (now - updated).total_seconds() < window:
+            held.add(run.get("id"))
+    return held
+
+
+def held_runs_of(repo: str, workflow: str) -> set:
+    """Ids held by `held_workflow_runs` for one workflow file. Any failure raises."""
+    res = run_gh_retry(["api", "--paginate",
+                        f"repos/{repo}/actions/workflows/{urllib.parse.quote(workflow)}/runs?per_page=100"])
+    if res.returncode != 0:
+        raise GhError(f"gh api (list {workflow} runs) failed ({res.returncode}): "
+                      f"{(res.stderr or res.stdout).strip()[:300]}")
+    runs: list[dict] = []
+    for value in parse_json_stream(res.stdout):
+        items = value.get("workflow_runs") if isinstance(value, dict) else None
+        runs.extend(r for r in items or [] if isinstance(r, dict))
+    return held_workflow_runs(runs)
+
+
+def run_id_of(art: dict) -> object:
+    run = art.get("workflow_run")
+    return run.get("id") if isinstance(run, dict) else None
+
+
+def head_sha_of(art: dict) -> object:
+    run = art.get("workflow_run")
+    return run.get("head_sha") if isinstance(run, dict) else None
+
+
 def plan(artifacts: list[dict], keep: int,
-         hold: frozenset[str] | set[str] = frozenset()) -> tuple[dict[str, dict], list[str]]:
+         hold: frozenset[str] | set[str] = frozenset(), groups: list[dict] | None = None,
+         now: datetime | None = None, busy_runs: frozenset | set = frozenset(),
+         min_age: float = MIN_AGE_SECONDS, pr_heads: dict | None = None,
+         held_runs: dict | None = None) -> tuple[dict[str, dict], list[str]]:
     """Group live artifacts by name and split each group into keep and delete.
 
     Returns ({name: {"keep": [artifact], "delete": [artifact]}}, warnings).
     An artifact with no usable id, name or created_at is left alone: with any
     doubt about its age it is never a deletion candidate.
+
+    `groups` (see load_groups) regroups the artifacts whose name matches a pattern and gives them their
+    own keep count. Of those, one of a run in `busy_runs`, one younger than `min_age` seconds, one built
+    from a commit in `pr_heads[pattern]`, and every one of a group whose `held_runs[pattern]` is not
+    empty is kept. Without `groups` the result is the plain keep-the-newest rule.
     """
-    groups: dict[str, list[tuple[datetime, int, dict]]] = {}
+    cfg = groups or []
+    now = now or datetime.now(timezone.utc)
+    pr_heads, held_runs = pr_heads or {}, held_runs or {}
+    buckets: dict[str, list[tuple[datetime, int, dict]]] = {}
+    gcfg: dict[str, dict] = {}
     warnings: list[str] = []
     for art in artifacts:
         if art.get("expired") is True:
@@ -227,23 +438,38 @@ def plan(artifacts: list[dict], keep: int,
             warnings.append(f"skipped an artifact without a usable name, id or created_at: "
                             f"{json.dumps(art, sort_keys=True)[:120]}")
             continue
-        groups.setdefault(name, []).append((created, ident, art))
+        key, g = group_match(name, cfg)
+        buckets.setdefault(key, []).append((created, ident, art))
+        if g is not None:
+            gcfg[key] = g
     result: dict[str, dict] = {}
-    for name in sorted(groups):
-        ordered = sorted(groups[name], key=lambda t: (t[0], t[1]), reverse=True)
+    for name in sorted(buckets):
+        ordered = sorted(buckets[name], key=lambda t: (t[0], t[1]), reverse=True)
         if name in hold:
             result[name] = {"keep": [t[2] for t in ordered], "delete": [], "held": True}
             continue
-        result[name] = {"keep": [t[2] for t in ordered[:keep]],
-                        "delete": [t[2] for t in ordered[keep:]]}
+        g = gcfg.get(name)
+        if g is None:
+            result[name] = {"keep": [t[2] for t in ordered[:keep]],
+                            "delete": [t[2] for t in ordered[keep:]]}
+            continue
+        n = keep if g["keep"] is None else g["keep"]
+        pattern = g["regex"].pattern
+        heads, hold_all = pr_heads.get(pattern, set()), bool(held_runs.get(pattern))
+        kept, doomed = [t[2] for t in ordered[:n]], []
+        for created, _, art in ordered[n:]:
+            protected = (run_id_of(art) in busy_runs or head_sha_of(art) in heads or hold_all
+                         or (now - created).total_seconds() < min_age)
+            (kept if protected else doomed).append(art)
+        result[name] = {"keep": kept, "delete": doomed}
     return result, warnings
 
 
 def delete_artifact(repo: str, ident: int) -> str:
     """'deleted', 'gone' (404) or 'failed: <why>'."""
     try:
-        res = run_gh(["api", "--method", "DELETE", f"repos/{repo}/actions/artifacts/{ident}"],
-                     timeout=120)
+        res = run_gh_retry(["api", "--method", "DELETE", f"repos/{repo}/actions/artifacts/{ident}"],
+                           timeout=120)
     except GhError as exc:
         return f"failed: {exc}"
     if res.returncode == 0:
@@ -280,6 +506,9 @@ def main(argv: list[str] | None = None) -> int:
                          "has not succeeded (repeatable)")
     ap.add_argument("--hold-workflow", metavar="FILE",
                     help="the workflow whose newest run decides the hold, e.g. package.yml")
+    ap.add_argument("--config", default=DEFAULT_CONFIG,
+                    help="project config with an optional artifact_prune section (default "
+                         ".delivery/config.json; a missing file means none)")
     ap.add_argument("--dry-run", action="store_true", help="delete nothing, print the plan")
     ap.add_argument("--json", action="store_true", dest="as_json",
                     help="print one JSON document instead of rows")
@@ -300,6 +529,17 @@ def main(argv: list[str] | None = None) -> int:
     try:
         repo = resolve_repo(args.repo)
         artifacts = list_artifacts(repo)
+        cfg_groups, min_age = load_groups(args.config)
+        busy = busy_run_ids(repo) if cfg_groups else set()
+        pr_heads: dict = {}
+        held_runs: dict = {}
+        for g in cfg_groups:
+            pat = g["regex"].pattern
+            if g["protect_pr_heads"]:
+                pr_heads[pat] = open_pr_heads(repo, g["protect_pr_heads"]["head_prefix"],
+                                              g["protect_pr_heads"]["base"])
+            if g["hold_workflow"]:
+                held_runs[pat] = held_runs_of(repo, g["hold_workflow"])
     except GhError as exc:
         print(f"artifact_prune: {exc}", file=sys.stderr)
         return 2
@@ -309,7 +549,8 @@ def main(argv: list[str] | None = None) -> int:
         hold = set(args.hold)
         print(f"artifact_prune: holding {', '.join(sorted(hold))}: the newest run of "
               f"{args.hold_workflow} has not succeeded", file=sys.stderr)
-    groups, warnings = plan(artifacts, args.keep, hold)
+    groups, warnings = plan(artifacts, args.keep, hold, cfg_groups, busy_runs=busy, min_age=min_age,
+                            pr_heads=pr_heads, held_runs=held_runs)
     for warning in warnings:
         print(f"artifact_prune: warning: {warning}", file=sys.stderr)
 
@@ -322,6 +563,7 @@ def main(argv: list[str] | None = None) -> int:
                "bytes_freed": 0, "held": bool(g.get("held"))}
         if not args.dry_run:
             for art in g["delete"]:
+                time.sleep(_env_float("ARTIFACT_PRUNE_PAUSE", 0.3))
                 outcome = delete_artifact(repo, art["id"])
                 if outcome == "deleted":
                     row["deleted"].append(art["id"])

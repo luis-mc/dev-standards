@@ -302,6 +302,9 @@ class World:
 
     # -- running -----------------------------------------------------------
     def cleanup(self, *args: str, gh: bool = True, cwd: Path | None = None):
+        # The delivery log is off unless asked for: these scenarios exercise it, so a --pr run asks.
+        if "--pr" in args and "--no-delivery-log" not in args and "--dry-run" not in args:
+            args = (*args, "--delivery-log")
         return run([PY, str(self.work / "scripts/delivery/cleanup.py"), *args], cwd=cwd or self.work,
                    extra_env=self.stub.env(gh))
 
@@ -1358,8 +1361,8 @@ def sc_delivery_log_offline(t: T, shared: Path) -> None:
     w.cleanup("--remote-only", "--pr", str(n), "--no-delivery-log")
     t.eq("--no-delivery-log: no release", releases(w), {})
     w, n, mc = log_world(shared)
-    w.cleanup("--remote-only", "--pr", str(n), "--dry-run")
-    t.eq("--dry-run: no release", releases(w), {})
+    w.cleanup("--remote-only", "--pr", str(n), "--dry-run", "--delivery-log")
+    t.eq("--dry-run: no release, even with --delivery-log", releases(w), {})
     t.eq("--dry-run: nothing deleted", "integ" in w.remote_heads(), True)
 
     # delivery_log.py alone without gh
@@ -1514,8 +1517,8 @@ MUTANTS = [
     ("cleanup never writes the delivery log", D,
      'dlog.write_release(root, args.repo, log_info, log_info["rows"], False)', "pass", "delivery_log"),
     ("a dry run writes the delivery log", D,
-     "want_log = args.pr is not None and not args.dry_run and not args.no_delivery_log",
-     "want_log = args.pr is not None and not args.no_delivery_log", "delivery_log_offline"),
+     "    if args.pr is None or args.dry_run or args.no_delivery_log:",
+     "    if args.pr is None or args.no_delivery_log:", "delivery_log_offline"),
     ("waiting ignores the queueing", L, "waiting = ttl - testing - queued", "waiting = ttl - testing", "delivery_log_figures"),
     ("an unknown span is shown as zero", L, "    if s is None or s < 0:\n        return UNKNOWN",
      "    if s is None or s < 0:\n        return \"0s\"", "delivery_log_figures"),
