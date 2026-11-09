@@ -1273,11 +1273,13 @@ def reach_rejects_non_http_urls():
 # Structural checks of the four ci.yml files
 # ---------------------------------------------------------------------------
 
-IF_COND = ("${{ !cancelled() && needs.decide.outputs.skip != 'true' && "
+IF_COND = ("${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && "
            "(github.event_name != 'pull_request' || !github.event.pull_request.draft) }}")
 
 # The ts runner plan (DS9) adds one clause to the jobs it can skip: a planned skip is an explicit 'false'.
-PLAN_CLAUSE = re.compile(r" && needs\.plan\.outputs\.(integration|e2e) != 'false'")
+# DL147: a plan-result check may come first, so a failed plan does not skip the job silently.
+PLAN_CLAUSE = re.compile(
+    r"(?: && needs\.plan\.result != 'failure')? && needs\.plan\.outputs\.(integration|e2e) != 'false'")
 # The opt-in run-times job (DS26, DL-82) adds the repository-variable clause.
 RUN_TIMES_CLAUSE = re.compile(r" && vars\.CI_RUN_TIMES == 'true'")
 
@@ -1634,6 +1636,8 @@ def workflow_checker_detects_each_defect():
         ("go", go, "missing 'needs: decide'",
          lambda t: mutate(t, "    needs: decide\n", "", 1)),
         ("ts", ts, "exact decide-aware", lambda t: mutate(t, "!cancelled() && ", "")),
+        ("ts", ts, "exact decide-aware",
+         lambda t: mutate(t, "needs.decide.result != 'failure' && ", "")),
         ("ts", ts, "exact decide-aware",
          lambda t: mutate(t, "needs.decide.outputs.skip != 'true' && ", "")),
         ("go", go, "exact decide-aware",
