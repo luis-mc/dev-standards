@@ -39,6 +39,18 @@ zero=0000000000000000000000000000000000000000
 
 hooks_dir=$(cd "$(dirname "$0")" 2>/dev/null && pwd) || hooks_dir=""
 
+# Every path resolves from the worktree that is pushing (DL137). core.hooksPath is
+# shared by all worktrees of a repository, so it can name the .githooks/ of an older
+# worktree; that copy must never supply the guards or pre-push.local.
+current_root=$(git rev-parse --show-toplevel 2>/dev/null) || current_root=""
+current_hooks=""
+[ -n "$current_root" ] && current_hooks=$(cd "$current_root/.githooks" 2>/dev/null && pwd)
+if [ -n "$current_hooks" ] && [ -f "$current_hooks/pre-push" ] &&
+   [ "$current_hooks" != "$hooks_dir" ] &&
+   [ -z "$PRE_PUSH_REEXEC" ]; then
+  PRE_PUSH_REEXEC=1 exec sh "$current_hooks/pre-push" "$@"
+fi
+
 # stdin is read once; the guards loop and pre-push.local both get the same lines.
 stdin_file=$(mktemp 2>/dev/null) || stdin_file=""
 if [ -n "$stdin_file" ]; then
@@ -69,6 +81,13 @@ if [ ! -d scripts/delivery ]; then
   echo "  Add the delivery scripts (see STACKSPEC 13.5), or this warning stays." >&2
   run_local "$@"
   exit 0
+fi
+
+# A fresh worktree of a pnpm project (gate.json runs pnpm) has no node_modules (DL130): say so instead of a cryptic pnpm error.
+if [ -f package.json ] && [ -f pnpm-lock.yaml ] && [ ! -d node_modules ] &&
+   [ -f scripts/delivery/gate.json ] && grep -q 'pnpm ' scripts/delivery/gate.json; then
+  echo "pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here." >&2
+  exit 1
 fi
 
 # Python 3.11 or newer, as `python3` or `python`.

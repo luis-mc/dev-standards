@@ -16,11 +16,131 @@ Exit: 0 pass, 1 a step failed (or nothing ran), 2 usage/configuration error,
 from __future__ import annotations
 
 import argparse
+import os
+import platform
+import re
+import shutil
+import subprocess
 import sys
 
 sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a clean tree is required)
 
 import delivery_common as dc
+
+
+# Gate output is UTF-8 on every OS (DL134).
+CHILD_ENV = {"PYTHONIOENCODING": "utf-8", "PYTHONUTF8": "1", "FORCE_COLOR": "0", "NO_COLOR": "1"}
+ANSI_RE = re.compile(r"\x1b\[[0-9;?]*[ -/]*[@-~]")
+# Where e2e runs write screenshots; restored after the run (DL131).
+GATE_OUTPUT_DIRS = ("docs/work",)
+WINDOWS_ONLY_RE = re.compile(r"-windows|UseWPF|UseWindowsForms|net4\d\d?\b|<TargetFrameworkVersion>", re.I)
+
+
+def prepare_environment() -> None:
+    """Children inherit this: UTF-8 I/O and no colour codes in their output."""
+    for key, value in CHILD_ENV.items():
+        os.environ[key] = value
+    for stream in (sys.stdout, sys.stderr):
+        try:
+            stream.reconfigure(encoding="utf-8", errors="replace")
+        except (AttributeError, ValueError, OSError):
+            pass
+
+
+def decode_log_bytes(data: bytes) -> str:
+    """Child output as text: UTF-8 when it is, else the Windows code page; never raises.
+    ANSI colour sequences are removed."""
+    try:
+        text = data.decode("utf-8")
+    except UnicodeDecodeError:
+        text = data.decode("cp1252", errors="replace")
+    return ANSI_RE.sub("", text)
+
+
+def normalize_logs(root, entries) -> None:
+    """Rewrite each step log as clean UTF-8, so cat and Python can read it anywhere."""
+    for e in entries:
+        rel = e.get("log")
+        if not rel:
+            continue
+        path = root / rel
+        try:
+            text = decode_log_bytes(path.read_bytes())
+            path.write_bytes(text.replace("\r\n", "\n").encode("utf-8"))
+        except OSError:
+            continue
+
+
+def restore_gate_outputs(root, dirs=GATE_OUTPUT_DIRS) -> list[str]:
+    """The tree was clean when the gate began, so whatever is modified or untracked
+    under these directories now was written by the gate's own steps (e2e screenshots).
+    Restore tracked files and remove new ones there only. Returns the paths touched."""
+    touched = []
+    for d in dirs:
+        if not (root / d).exists():
+            continue
+        out = dc.run_git(["status", "--porcelain", "--untracked-files=all", "--", d], cwd=root, check=False).stdout
+        touched += [line[3:] for line in out.splitlines() if len(line) > 3]
+        dc.run_git(["restore", "--staged", "--worktree", "--", d], cwd=root, check=False)
+        dc.run_git(["clean", "-fdq", "--", d], cwd=root, check=False)
+    return touched
+
+
+def os_name() -> str:
+    return platform.system() or sys.platform
+
+
+def csharp_projects(root, files) -> list[str]:
+    """The .csproj files that the changed .cs and .csproj files belong to."""
+    projects: set[str] = set()
+    for f in files:
+        low = f.lower()
+        if low.endswith(".csproj"):
+            projects.add(f)
+        elif low.endswith(".cs"):
+            d = (root / f).parent
+            while True:
+                found = sorted(d.glob("*.csproj")) if d.is_dir() else []
+                if found:
+                    projects.add(found[0].relative_to(root).as_posix())
+                    break
+                if d == root or root not in d.parents:
+                    break
+                d = d.parent
+    return sorted(projects)
+
+
+def csharp_check(root, files, run=subprocess.run, which=shutil.which, system=None):
+    """Compile changed C# where this OS can (DL141). Returns (warnings, failures).
+    A Linux gate cannot build Windows-only projects: it says so, and release CI compiles."""
+    changed = [f for f in files if f.lower().endswith((".cs", ".csproj"))]
+    if not changed:
+        return [], []
+    system = system or os_name()
+    warn = "C# changed, not compiled on %s (release CI compiles it)" % system
+    if not which("dotnet"):
+        return [warn + ": dotnet is not installed"], []
+    projects = csharp_projects(root, changed)
+    if not projects:
+        return [warn + ": no .csproj found for the changed files"], []
+    warnings, failures = [], []
+    for proj in projects:
+        try:
+            text = (root / proj).read_text(encoding="utf-8-sig", errors="replace")
+        except OSError:
+            text = ""
+        if system != "Windows" and WINDOWS_ONLY_RE.search(text):
+            warnings.append(warn + ": %s is Windows-only" % proj)
+            continue
+        try:
+            p = run(["dotnet", "build", proj, "--nologo", "-v", "q"], cwd=root, capture_output=True, timeout=900)
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            warnings.append(warn + ": %s: %s" % (proj, exc))
+            continue
+        if p.returncode != 0:
+            tail = decode_log_bytes(p.stdout or b"").strip().splitlines()[-5:]
+            failures.append("%s: dotnet build failed: %s" % (proj, " | ".join(tail)))
+    return warnings, failures
 
 
 def publish_result(root, remote: str, branch: str, result_file) -> str:
@@ -94,6 +214,7 @@ def main(argv: list[str] | None = None) -> int:
     if args.timeout_minutes is not None and not args.timeout_minutes > 0:
         ap.error("--timeout-minutes must be greater than 0")
 
+    prepare_environment()
     root = dc.repo_root()
     cfg = dc.load_gate(root)
     steps = cfg["steps"]
@@ -148,6 +269,17 @@ def main(argv: list[str] | None = None) -> int:
         required_steps=cfg["required_steps"],
     )
     finished = dc.utc_now()
+    normalize_logs(root, entries)
+    restored = restore_gate_outputs(root)
+    if restored:
+        print("restored: %d file(s) the gate wrote under %s" % (len(restored), ", ".join(GATE_OUTPUT_DIRS)))
+
+    cs_warnings, cs_failures = ([], [])
+    if only is None and not skip:
+        cs_warnings, cs_failures = csharp_check(root, ctx.files)
+    for msg in cs_failures:
+        entries.append({"name": "csharp-build", "outcome": "fail", "seconds": 0.0, "command": "dotnet build",
+                        "reason": msg, "exit_code": 1})
 
     ok = dc.overall_pass(entries, timed_out)
     result = {
@@ -172,10 +304,14 @@ def main(argv: list[str] | None = None) -> int:
         "finished_at": finished,
         "tool": "branch_gate.py %d" % dc.TOOL_VERSION,
     }
+    if cs_warnings:
+        result["warnings"] = cs_warnings  # only present when a C# change was not compiled (DL141)
     result_file = root / dc.GATE_RESULT_PATH
     dc.write_json(result_file, result)
 
     print("\n" + dc.summary_table(entries))
+    for w in cs_warnings:
+        print("warning : %s" % w)
     dc.print_failures(entries, root)
     if any(e["name"] == dc.SETUP_STEP and e["outcome"] == "fail" and not timed_out for e in entries):
         setup_entry = next(e for e in entries if e["name"] == dc.SETUP_STEP)
