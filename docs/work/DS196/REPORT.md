@@ -14,3 +14,8 @@
 - `python3 tools/ci_areas.py --branch-advice`: "unreadable diff, treat as every area" -> spec-lint run below
 - `python3 tools/test_project_setup_fixes.py`: not run; the session hook refuses a heavy full run locally.
 - `docs_check.py`: 0 errors, 1 warning (M1: tools/test_check_stack_rust.py code unmapped to a spec).
+- Added `check-stack-rust` to `.claude/suites.json` (not in my owned list): the session-guard test requires every test file to be a declared suite.
+- `gh workflow run spec-lint.yml --ref DS196-rust-catalog -f areas=specs,delivery,artifacts,profiles,transcript-folds,docs`: run 42650535577. Passed: specs/templates/AUTHSPEC (guard now holds), transcript folds, profiles, change notes. Failed: docs check, only on W1 (docs/work/DS196/REPORT.md, expected on a branch). The delivery aggregate job failed because sibling jobs were cancelled after that failure; not a test failure. The first run (42649813162) failed the guard on the undeclared suite; fixed.
+- M1 warning on tools/test_check_stack_rust.py (no spec maps it): left for the DS203 docs task.
+
+READY
