@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T16:32+00:00",
+  "updated": "2026-11-09T16:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -705,26 +705,24 @@
       "id": "AR67",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "mark-published after pending --refresh needs no extra render",
       "detail": "mark-published can refuse with 'differs from a fresh render; run render first' right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.",
-      "expected": "09 Nov ~17:07",
-      "changed": "2026-11-09T16:22+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "AR68",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "task-status-update skill lists the four --phase names",
       "detail": "--phase accepts only agents, join, ci, merge; the skill text does not list them.",
-      "expected": "09 Nov ~17:07",
-      "changed": "2026-11-09T16:22+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
@@ -2704,10 +2702,10 @@
       "status": "Running",
       "item": "join.py handles stacked branches",
       "detail": "When branch B contains an older head of branch A, merge B alone or report stacked and prefer B's side for files B rewrote.",
-      "expected": "09 Nov ~17:42",
-      "changed": "2026-11-09T16:28+00:00",
+      "expected": "09 Nov ~17:20",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "expected_basis": "fix round for 6 broken join tests, started 16:34, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
@@ -2717,10 +2715,10 @@
       "status": "Running",
       "item": "join.py --into creates a missing integration branch",
       "detail": "join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.",
-      "expected": "09 Nov ~17:42",
-      "changed": "2026-11-09T16:28+00:00",
+      "expected": "09 Nov ~17:20",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "expected_basis": "fix round for 6 broken join tests, started 16:34, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
@@ -2795,10 +2793,10 @@
       "status": "Running",
       "item": "Join flags e2e unhandled-API-call failures as join interactions",
       "detail": "Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.",
-      "expected": "09 Nov ~17:42",
-      "changed": "2026-11-09T16:28+00:00",
+      "expected": "09 Nov ~17:20",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "expected_basis": "fix round for 6 broken join tests, started 16:34, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
@@ -2860,10 +2858,10 @@
       "status": "Running",
       "item": "Join runs the strict docs check before the ready PR",
       "detail": "Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR's CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.",
-      "expected": "09 Nov ~17:42",
-      "changed": "2026-11-09T16:29+00:00",
+      "expected": "09 Nov ~17:20",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "expected_basis": "fix round for 6 broken join tests, started 16:34, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
@@ -2948,10 +2946,10 @@
       "status": "Running",
       "item": "join.py keeps unpushed local joins; docs/work conflicts auto-resolve",
       "detail": "A second join.py --into run rebuilt the integration branch from origin and silently dropped earlier unpushed local merge commits. Build on the local branch when it is ahead of origin, or refuse when commits would be lost. Auto-resolve docs/work conflicts, since the strip removes them.",
-      "expected": "09 Nov ~17:42",
-      "changed": "2026-11-09T16:29+00:00",
+      "expected": "09 Nov ~17:20",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "expected_basis": "fix round for 6 broken join tests, started 16:34, ~45 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
@@ -5757,13 +5755,12 @@
       "id": "DS193",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "docs_work.py strip --apply always commits or fails loudly",
       "detail": "On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.",
-      "expected": "09 Nov ~17:02",
-      "changed": "2026-11-09T16:22+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T16:34+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent from 16:22, ~40 min",
       "started": "2026-11-09T16:22+00:00"
     },
     {
