@@ -1,5 +1,9 @@
 [
   {
+    "date": "09 Nov 15:27",
+    "change": "dropped: folded into RELEASE-68: DL120 shipped in RELEASE-68"
+  },
+  {
     "date": "05 Nov 15:38",
     "change": "DL60 item changed from \"Runner pool: SHA from the release notes' markers; CPU headroom below WSL\" to \"Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)\""
   },

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T15:22+00:00",
+  "updated": "2026-11-09T15:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2492,12 +2492,11 @@
       "id": "DL117",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release watcher rows and spec review",
       "detail": "Join DL118 DL119, fold notes, CI, merge, install, smoke, cleanup",
-      "expected": "09 Nov ~00:20",
-      "changed": "2026-11-08T22:57+00:00",
-      "expected_basis": "2 cloud agents ~45 min, join ~15, spec-lint ~8",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:25+00:00",
       "release": 68,
       "phases": [
         {
@@ -2527,11 +2526,11 @@
       "id": "DL118",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Re-arm reports unstoppable watchers; dead rows pruned",
       "detail": "SessionStart names a watcher it cannot stop (access denied) and how to stop it as admin; dead watcher rows older than a day are pruned",
-      "expected": "08 Nov",
-      "changed": "2026-11-08T23:30+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:25+00:00",
       "rides": "DL117",
       "started": "2026-11-08T23:05+00:00"
     },
@@ -2539,12 +2538,11 @@
       "id": "DL119",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Dropped",
       "item": "Release install keep list",
       "detail": "Join DL121, fold notes, CI, merge, install, smoke, cleanup",
-      "expected": "09 Nov ~00:50",
-      "changed": "2026-11-08T23:01+00:00",
-      "expected_basis": "1 cloud agent ~50 min, after RELEASE-68 CI; join ~15, spec-lint ~8",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:27+00:00",
       "release": 69,
       "phases": [
         {
@@ -2568,17 +2566,19 @@
           "end": "2026-11-09T00:50+00:00"
         }
       ],
-      "started": "2026-11-08T23:15+00:00"
+      "started": "2026-11-08T23:15+00:00",
+      "dropped_into": "DL117",
+      "dropped_reason": "DL120 shipped in RELEASE-68"
     },
     {
       "id": "DL120",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Install keep and skip list",
       "detail": "A tracked project file names managed files update must keep and templates it must not add",
-      "expected": "08 Nov",
-      "changed": "2026-11-08T23:30+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:25+00:00",
       "rides": "DL117",
       "started": "2026-11-08T23:15+00:00"
     },
@@ -2586,15 +2586,14 @@
       "id": "DL121",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Fold a project's script fixes into the templates",
       "detail": "artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner's call",
-      "expected": "09 Nov ~02:00",
-      "changed": "2026-11-08T23:22+00:00",
-      "expected_basis": "launch held again 23:22, memory 91.7% > 85%; retry hourly, then ~90 min",
+      "expected": "09 Nov ~17:05",
+      "changed": "2026-11-09T15:27+00:00",
+      "expected_basis": "local agent from 15:35, ~90 min",
       "rides": "DL123",
-      "started": "2026-11-08T23:06+00:00",
-      "waits_on": "work"
+      "started": "2026-11-08T23:06+00:00"
     },
     {
       "id": "DL122",
@@ -2613,30 +2612,30 @@
       "status": "Running",
       "item": "Release the ported project fixes",
       "detail": "Join DL121, fold notes, CI, merge, install, smoke, cleanup",
-      "expected": "09 Nov ~01:25",
-      "changed": "2026-11-08T23:06+00:00",
-      "expected_basis": "1 local agent ~90 min (5 scripts), after RELEASE-69; join ~15, spec-lint ~8",
+      "expected": "09 Nov ~17:35",
+      "changed": "2026-11-09T15:27+00:00",
+      "expected_basis": "DL121 local agent ~90 min, then join and CI",
       "release": 70,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-08T23:10+00:00",
-          "end": "2026-11-09T00:40+00:00"
+          "start": "2026-11-09T15:35+00:00",
+          "end": "2026-11-09T17:05+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-09T00:55+00:00",
-          "end": "2026-11-09T01:10+00:00"
+          "start": "2026-11-09T17:05+00:00",
+          "end": "2026-11-09T17:15+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-09T01:10+00:00",
-          "end": "2026-11-09T01:20+00:00"
+          "start": "2026-11-09T17:15+00:00",
+          "end": "2026-11-09T17:30+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-09T01:20+00:00",
-          "end": "2026-11-09T01:25+00:00"
+          "start": "2026-11-09T17:30+00:00",
+          "end": "2026-11-09T17:35+00:00"
         }
       ],
       "started": "2026-11-08T23:10+00:00"
@@ -5527,11 +5526,11 @@
       "id": "DS190",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Review project-setup and test-cost specs against code",
       "detail": "docs_check T2: both specs older than their 7 Nov code; fix what is wrong, record the rest as verified",
-      "expected": "08 Nov",
-      "changed": "2026-11-08T23:30+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:25+00:00",
       "rides": "DL117",
       "started": "2026-11-08T23:05+00:00"
     },
@@ -5549,11 +5548,11 @@
       "id": "DS192",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Needs you",
       "item": "Rust in tech-stack-setup: study and proposal",
-      "detail": "Study a real project's move to Rust and propose where Rust fits generically in STACKSPEC stacks, the tech-stack-setup questions and layout, and a rust CI track for luismc-delivery.",
+      "detail": "Proposal written: Rust as an optional component beside a JS stack (CLI, host service, napi/WASM library, worker, media processing), wizard questions, Cargo workspace layout, rust CI track with pinned linker and cached RustSec DB; 8 tasks; 8 owner questions.",
       "expected": "09 Nov ~16:30",
-      "changed": "2026-11-09T15:21+00:00",
+      "changed": "2026-11-09T15:25+00:00",
       "expected_basis": "local study agent from 15:25, ~60 min",
       "no_release": "study; proposal for the owner",
       "started": "2026-11-09T15:21+00:00"
