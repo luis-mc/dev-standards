@@ -1,5 +1,6 @@
-# Scripts and hooks must keep LF: a CRLF checkout on Windows breaks them.
-* text=auto
+# Text files check out with LF on every OS, so a Windows worktree matches CI
+# (prettier --check, hashes, diffs). Scripts and hooks break with CRLF.
+* text=auto eol=lf
 *.sh text eol=lf
 .githooks/* text eol=lf
 scripts/delivery/*.py text eol=lf
