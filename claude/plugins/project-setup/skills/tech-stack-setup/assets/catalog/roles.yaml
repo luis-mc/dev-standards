@@ -171,6 +171,23 @@ roles:
     constrained_by: [db_engine, hosting, compliance, cost_posture]
     binds: ["§5.1", "§5.5"]
 
+  - id: native_components
+    name: Native components
+    kind: asked
+    required: false
+    multi: true
+    default: none
+    catalog: tech/languages.yaml
+    constrained_by: [hosting, language]
+    options: [none, cli, host-service, library-napi, library-wasm]
+    later_options: [worker, media]
+    note: >
+      A selection may be {api: X, components: [rust]}. Rust as a component sits
+      beside any API language; the host elimination applies to the API only.
+      Each component records a reason, target OSes, where it is built, and
+      (napi) a build matrix. A cross-compile target records a licence note
+      for any SDK the cross tool downloads.
+
   - id: data_access
     name: Data access and migrations
     kind: derived
