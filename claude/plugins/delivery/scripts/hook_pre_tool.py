@@ -165,7 +165,12 @@ def check_kill(seg, command):
 
 
 def norm_path(p):
-    return os.path.normpath(p.replace('\\', '/')).replace('\\', '/').rstrip('/').lower()
+    """DL133: one form for Windows, Git Bash (/c/x) and WSL (/mnt/c/x) paths: C:/x, lower case, no trailing slash."""
+    p = p.replace('\\', '/')
+    m = re.match(r'^/(?:mnt/)?([A-Za-z])(?=/|$)', p)
+    if m:
+        p = m.group(1) + ':' + p[m.end():]
+    return os.path.normpath(p).replace('\\', '/').rstrip('/').lower()
 
 
 def check_worktree(seg, cfg, cwd):
@@ -546,6 +551,26 @@ def check_question(cfg, ledger, data, at):
                  % '; '.join(todo[:3]))
 
 
+def check_postpone(ledger, data, at):
+    """DL136: a warning (never a block) when a routine is set to run within 2 hours while a question is open."""
+    ti = data.get('tool_input') or {}
+    if str(ti.get('action') or '').lower() not in ('create', 'update'):
+        return None
+    raw = find_key(ti, 'run_once_at')
+    when = H.parse_ts(raw) if isinstance(raw, str) else None
+    if when is None:
+        return None
+    mins = H.minutes_since(raw, at)
+    if mins is None or mins >= 0 or -mins >= 120:     # in the past (a run now) or 2 hours or more away: fine
+        return None
+    open_q = [q for q in ledger.get('owner_questions') or [] if isinstance(q, dict) and not q.get('answered_at')]
+    if not open_q:
+        return None
+    return ('DL136 a question to the owner is open and this routine runs in %d min. A routine held for an owner '
+            'answer is paused (no run_once_at in the near future), never postponed by minutes: it would start on '
+            'its old brief if the dialog stays open.' % round(-mins))
+
+
 def check_trickle(cfg, ledger, data, at):
     """Q-5: no second question batch while this session's agents still run (park it until the wave reports)."""
     sid = data.get('session_id')
@@ -614,6 +639,9 @@ def main():
             check_launch(cfg, ledger, data, 'local')
         elif tool == 'RemoteTrigger':
             check_launch(cfg, ledger, data, 'cloud')
+            note = check_postpone(ledger, data, at)
+            if note:
+                print(json.dumps({'systemMessage': 'luismc-delivery (warning, call allowed): ' + note}))
         elif tool == 'AskUserQuestion':
             check_question(cfg, ledger, data, at)
             if H.check_on(cfg, 'Q-5'):
