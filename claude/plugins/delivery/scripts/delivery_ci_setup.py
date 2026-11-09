@@ -672,6 +672,14 @@ def pool_refresh_source(args, root):
     return os.path.basename(root)
 
 
+def _plugin_version() -> str:
+    try:
+        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
+            return str(json.load(f).get("version") or "?")
+    except (OSError, ValueError):
+        return "?"
+
+
 def cmd_pool_refresh(args, root, P, probe) -> int:
     """B14: rewrite RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env and rebuild. The cap stays."""
     if getattr(args, "playwright", None) and not P.valid_playwright_version(args.playwright):
@@ -684,9 +692,11 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
         return 1
     lines = ["Refresh plan for pool \"%s\" (the cap and every other line stay):" % args.pool]
     lines += ["  - %s: %s -> %s" % (k, old or "unset", new) for k, (old, new) in sorted(rp["changes"].items())]
+    ver = _plugin_version()
+    lines += ["  - %s: differs from luismc-delivery %s" % (f, ver) for f in rp.get("files", [])]
     lines += ["  - layer %s%s" % (n, " (asked by %s)" % who if who else "") for n, who in rp.get("layers", [])]
     lines += ["  - %s" % n for n in rp.get("notes", [])]
-    if not rp["changes"]:
+    if not rp["changes"] and not rp.get("files"):
         lines.append("  - nothing to change in %s" % rp["path"])
     elif rp.get("why"):
         lines.append("  %s" % rp["why"])
