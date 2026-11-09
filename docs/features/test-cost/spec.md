@@ -13,7 +13,7 @@ code:
   - .github/workflows/nightly.yml
   - tools/test_ci_areas.py
   - tools/test_delivery_gate.py
-last_verified: 2026-11-04
+last_verified: 2026-11-09
 artifact: feature-test-and-validation-cost.html
 ---
 # Test and validation cost
