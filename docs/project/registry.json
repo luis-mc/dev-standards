@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T23:00+00:00",
+  "updated": "2026-11-09T23:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3091,11 +3091,14 @@
       "id": "DL158",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Ownership hook: a glob owns only its own matches",
-      "detail": "The DL-41 PreToolUse hook treated 'templates/*/scripts/delivery/gate.json' as owning every file under templates/, so it refused new files in templates/ts/scripts/delivery/ and templates/rust/test/. Fix: compare owns entries as globs (fnmatch on each concrete path, strip parenthetical notes) and test both sides.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T23:00+00:00"
+      "detail": "The DL-41 hook's overlaps() compares only the text before the first wildcard, so 'templates/*/scripts/delivery/gate.json' owned all of templates/; and a parenthetical note is part of the compared text, so two 'spec.md (Rx only)' entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.",
+      "expected": "09 Nov ~23:50",
+      "changed": "2026-11-09T23:03+00:00",
+      "expected_basis": "cloud agent from 23:04: setup 5 + work 25 + checks 15",
+      "rides": "DS207",
+      "started": "2026-11-09T23:03+00:00"
     },
     {
       "id": "DS1",

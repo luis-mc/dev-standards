@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T23:00+00:00",
+ "updated": "2026-11-09T23:03+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3971,11 +3971,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL158",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Ownership hook: a glob owns only its own matches",
-   "detail": "The DL-41 PreToolUse hook treated 'templates/*/scripts/delivery/gate.json' as owning every file under templates/, so it refused new files in templates/ts/scripts/delivery/ and templates/rust/test/. Fix: compare owns entries as globs (fnmatch on each concrete path, strip parenthetical notes) and test both sides.",
-   "expected": "10 Nov",
-   "changed": "2026-11-09T23:00+00:00"
+   "detail": "The DL-41 hook's overlaps() compares only the text before the first wildcard, so 'templates/*/scripts/delivery/gate.json' owned all of templates/; and a parenthetical note is part of the compared text, so two 'spec.md (Rx only)' entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.",
+   "expected": "09 Nov ~23:50",
+   "changed": "2026-11-09T23:03+00:00",
+   "expected_basis": "cloud agent from 23:04: setup 5 + work 25 + checks 15",
+   "rides": "DS207",
+   "started": "2026-11-09T23:03+00:00"
   },
   {
    "id": "DS1",
@@ -7652,13 +7655,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T23:00+00:00">09 Nov 23:00</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T23:03+00:00">09 Nov 23:03</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">11 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">12 tasks</span></summary>
 <ul>
+<li data-glance-task="DL158"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches <span class="glance-expected">09 Nov ~23:50</span><span class="glance-basis">cloud agent from 23:04: setup 5 + work 25 + checks 15</span></li>
 <li data-glance-task="DL146"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
 <li data-glance-task="DL150"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
 <li data-glance-task="DL151"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
@@ -7686,13 +7690,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">458</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">11</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">458</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">12</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS207 (RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup) expected live about 00:55, worst case 01:25." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:00</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="140"/><text x="304" y="28">23:30</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="140"/><text x="408" y="28">10 Nov 00:00</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="140"/><text x="512" y="28">10 Nov 00:30</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="140"/><text x="616" y="28">01:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:30</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-77 · RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</title>RELEASE-77 · RELEASE: pru…</text>
-<text class="rt-sub" x="0" y="77"><title>DL146, DL150, DL151, DL152, DL153, DL154, DL155, DL156, DL157, DS208</title>DL146, DL150, DL151, DL152, DL153…</text>
+<text class="rt-sub" x="0" y="77"><title>DL146, DL150, DL151, DL152, DL153, DL154, DL155, DL156, DL157, DL158, DS208</title>DL146, DL150, DL151, DL152, DL153…</text>
 <rect class="rt-bar agents" x="217.3" y="52" width="208" height="22"><title>agents 23:05-00:05</title></rect>
 <rect class="rt-bar join" x="425.3" y="52" width="52" height="22"><title>join 00:05-00:20</title></rect>
 <rect class="rt-bar ci" x="477.3" y="52" width="86.7" height="22"><title>PR CI 00:20-00:45</title></rect>
@@ -7702,11 +7706,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <text class="rt-risk-label" x="713.7" y="67">fix round → worst ~01:25</text>
 <polygon class="rt-expected" points="598.7,50 606.7,63 598.7,76 590.7,63"/>
 <text class="rt-live-label" x="598.7" y="92">live ~00:55</text>
-<line class="rt-now" x1="200" y1="36" x2="200" y2="148"/><text class="rt-now-label" x="200" y="161">now 23:00</text>
+<line class="rt-now" x1="210.4" y1="36" x2="210.4" y2="148"/><text class="rt-now-label" x="210.4" y="161">now 23:03</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~00:55 · worst ~01:25</strong><span class="fold-count">11 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~00:55 · worst ~01:25</strong><span class="fold-count">12 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS207"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</td><td data-label="App / service"></td><td data-label="Detail">DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.</td><td data-label="Expected">10 Nov ~00:55<span class="expected-basis">8 cloud agents ~60 min, join 15, CI 25, merge 10</span></td></tr>
 <tr data-task="DL146"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
@@ -7718,12 +7722,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL155"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright</a></td><td data-label="App / service"></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
 <tr data-task="DL156"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids</a></td><td data-label="App / service"></td><td data-label="Detail">Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
 <tr data-task="DL157"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing</a></td><td data-label="App / service"></td><td data-label="Detail">Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
+<tr data-task="DL158"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches</a></td><td data-label="App / service"></td><td data-label="Detail">The DL-41 hook&#x27;s overlaps() compares only the text before the first wildcard, so &#x27;templates/*/scripts/delivery/gate.json&#x27; owned all of templates/; and a parenthetical note is part of the compared text, so two &#x27;spec.md (Rx only)&#x27; entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.</td><td data-label="Expected">09 Nov ~23:50<span class="expected-basis">cloud agent from 23:04: setup 5 + work 25 + checks 15</span></td></tr>
 <tr data-task="DS208"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS208</span>Rust track: TS tests that spawn a crate binary build it in globalSetup</td><td data-label="App / service"></td><td data-label="Detail">CI&#x27;s unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p &lt;crate&gt; once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL158"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches</a></td><td data-label="App / service"></td><td data-label="Detail">The DL-41 PreToolUse hook treated &#x27;templates/*/scripts/delivery/gate.json&#x27; as owning every file under templates/, so it refused new files in templates/ts/scripts/delivery/ and templates/rust/test/. Fix: compare owns entries as globs (fnmatch on each concrete path, strip parenthetical notes) and test both sides.</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">468 tasks</span></summary>
@@ -8206,7 +8206,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904420"><time datetime="2026-11-09T23:00+00:00">09 Nov 23:00</time></td><td data-label="Tasks">DL1 to DL158</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">9 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904423"><time datetime="2026-11-09T23:03+00:00">09 Nov 23:03</time></td><td data-label="Tasks">DL1 to DL158</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">10 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
