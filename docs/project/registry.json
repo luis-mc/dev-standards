@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T15:53+00:00",
+  "updated": "2026-11-09T15:57+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5577,22 +5577,24 @@
       "id": "DS191",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Review audits and test-cost specs against code",
       "detail": "docs_check T2 still warns for both after DS190 (the cloud checkout missed them)",
-      "expected": "",
-      "changed": "2026-11-08T23:30+00:00"
+      "expected": "09 Nov ~16:40",
+      "changed": "2026-11-09T15:57+00:00",
+      "expected_basis": "cloud agent from 15:56",
+      "rides": "DS194",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS192",
       "owner": "project",
       "app": "",
-      "status": "Needs you",
+      "status": "Live",
       "item": "Rust in tech-stack-setup: study and proposal",
-      "detail": "Proposal written: Rust as an optional component beside a JS stack (CLI, host service, napi/WASM library, worker, media processing), wizard questions, Cargo workspace layout, rust CI track with pinned linker and cached RustSec DB; 8 tasks; 8 owner questions.",
-      "expected": "09 Nov ~16:30",
-      "changed": "2026-11-09T15:25+00:00",
-      "expected_basis": "local study agent from 15:25, ~60 min",
+      "detail": "Proposal done; owner decided D138-D145 on 9 Nov; plan in docs/architecture/rust-beside-js-plan.md; work in DS196-DS203.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T15:57+00:00",
       "no_release": "study; proposal for the owner",
       "started": "2026-11-09T15:21+00:00"
     },
@@ -5610,34 +5612,62 @@
       "id": "DS194",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: audits and test-cost specs, prune workflow list",
       "detail": "Join DS191 and DL122, fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "09 Nov ~18:00",
-      "changed": "2026-11-09T15:53+00:00",
-      "expected_basis": "cloud agents from ~16:00, ~60 min, then join and CI",
-      "release": 71
+      "expected": "09 Nov ~17:15",
+      "changed": "2026-11-09T15:57+00:00",
+      "expected_basis": "DS191 agent ~45 min, DL122 after RELEASE-70",
+      "release": 71,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T15:56+00:00",
+          "end": "2026-11-09T16:40+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T16:40+00:00",
+          "end": "2026-11-09T16:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T16:55+00:00",
+          "end": "2026-11-09T17:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T17:10+00:00",
+          "end": "2026-11-09T17:15+00:00"
+        }
+      ],
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS195",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)",
       "detail": "Join the Rust tasks (catalog, wizard, tooling, tool fetcher, rust_ci helper, workflows, doctor, docs), fold notes, CI, merge, install, smoke, cleanup.",
       "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00",
-      "release": 72
+      "changed": "2026-11-09T15:57+00:00",
+      "release": 72,
+      "expected_basis": "wave 1 ~16:57; DS197, DS200, DS201, DS203 follow",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS196",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Rust catalog: component role, pairings, warnings",
       "detail": "languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov ~16:51",
+      "changed": "2026-11-09T15:57+00:00",
+      "expected_basis": "cloud agent from 15:56",
+      "rides": "DS195",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS197",
@@ -5653,21 +5683,27 @@
       "id": "DS198",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Rust tooling assets: workspace skeleton",
       "detail": "Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov ~16:46",
+      "changed": "2026-11-09T15:57+00:00",
+      "expected_basis": "cloud agent from 15:56",
+      "rides": "DS195",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS199",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Generic tool fetcher and pins",
       "detail": "ci_tool.py fetches any pinned, sha256-checked tool from tools.json into the tool cache (rustup-init, LLVM, Zig, cargo-deny, cargo-xwin).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov ~16:57",
+      "changed": "2026-11-09T15:57+00:00",
+      "expected_basis": "cloud agent from 15:56",
+      "rides": "DS195",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS200",
@@ -5693,11 +5729,14 @@
       "id": "DS202",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Doctor checks for the rust track",
       "detail": "delivery_doctor.py: linker available, clang-cl and lld-link for Windows targets, exact toolchain, pinned tools, advisory DB age.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "expected": "09 Nov ~16:47",
+      "changed": "2026-11-09T15:57+00:00",
+      "expected_basis": "cloud agent from 15:56",
+      "rides": "DS195",
+      "started": "2026-11-09T15:57+00:00"
     },
     {
       "id": "DS203",
