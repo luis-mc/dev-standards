@@ -416,24 +416,80 @@ def delivery_block(text):
         elif kv:
             key = kv.group(1).lower()
             if key == 'owns':
-                out['owns'] += [x.strip().strip('\'"') for x in kv.group(2).strip('[]').split(',') if x.strip()]
+                out['owns'] += split_owns(kv.group(2).strip('[]'))
             else:
                 out[key] = kv.group(2)
     return out
 
 
-def prefix(glob):
-    g = glob.replace('\\', '/').lstrip('./')
-    m = re.search(r'[*?\[]', g)
-    return (g[:m.start()] if m else g).rstrip('/')
+def split_owns(text):
+    """Split an owns list on commas outside parentheses (DL158)."""
+    out, depth, cur = [], 0, ''
+    for ch in text:
+        if ch == '(':
+            depth += 1
+        elif ch == ')' and depth:
+            depth -= 1
+        if ch == ',' and depth == 0:
+            out.append(cur)
+            cur = ''
+        else:
+            cur += ch
+    out.append(cur)
+    return [x.strip().strip('\'"') for x in out if x.strip()]
+
+
+NOTE_RE = re.compile(r'^(.*?)\s*\(([^()]*)\)\s*$')
+REQ_RE = re.compile(r'\bR\d+\.\d+\b')
+
+
+def owns_entry(raw):
+    """(path, note) of one owns entry. path is None for prose (no '/' and no '.')."""
+    m = NOTE_RE.match(raw.strip())
+    path, note = (m.group(1), m.group(2)) if m else (raw.strip(), '')
+    path = path.strip().replace('\\', '/')
+    while path.startswith('./'):
+        path = path[2:]
+    if ' ' in path or not ('/' in path or '.' in path):
+        return None, note
+    return path, note
+
+
+def own_segments(path):
+    """Segments of a path; a plain directory entry (no wildcard, no extension, or ending in '/') owns all under it."""
+    segs = [x for x in path.split('/') if x]
+    last = segs[-1] if segs else ''
+    if path.endswith('/') or not (re.search(r'[*?\[]', last) or '.' in last):
+        segs.append('**')
+    return segs
+
+
+def match_segs(a, b):
+    if not a or not b:
+        return all(x == '**' for x in (a or b))
+    if a[0] == '**':
+        return match_segs(a[1:], b) or match_segs(a, b[1:])
+    if b[0] == '**':
+        return match_segs(a, b[1:]) or match_segs(a[1:], b)
+    if a[0] == b[0] or fnmatch.fnmatchcase(a[0], b[0]) or fnmatch.fnmatchcase(b[0], a[0]):
+        return match_segs(a[1:], b[1:])
+    return False
+
+
+def overlap_info(a, b):
+    """None when the entries cannot match one path; else a message part naming both notes (DL158)."""
+    pa, na = owns_entry(a)
+    pb, nb = owns_entry(b)
+    if pa is None or pb is None or not match_segs(own_segments(pa), own_segments(pb)):
+        return None
+    ra, rb = set(REQ_RE.findall(na)), set(REQ_RE.findall(nb))
+    if pa == pb and ra and rb and not (ra & rb) and 'only' in na.lower() and 'only' in nb.lower():
+        return None
+    return 'notes: "%s" / "%s"' % (na or 'none', nb or 'none')
 
 
 def overlaps(a, b):
-    pa, pb = prefix(a), prefix(b)
-    if not pa or not pb:
-        return True
-    sa, sb = pa + '/', pb + '/'
-    return pa == pb or sa.startswith(sb) or sb.startswith(sa) or fnmatch.fnmatch(pa, b) or fnmatch.fnmatch(pb, a)
+    return overlap_info(a, b) is not None
 
 
 def free_gb():
@@ -525,9 +581,10 @@ def check_launch(cfg, ledger, data, where):
         for a in H.running_agents(ledger):
             for mine in block['owns']:
                 for theirs in a.get('owns') or []:
-                    if isinstance(theirs, str) and overlaps(mine, theirs):
-                        deny('DL-41 files "%s" overlap "%s" owned by running agent %s. Split by file ownership or wait '
-                             'for that agent to finish.' % (mine, theirs, a.get('task') or a.get('id')))
+                    info = overlap_info(mine, theirs) if isinstance(theirs, str) else None
+                    if info:
+                        deny('DL-41 files "%s" overlap "%s" owned by running agent %s (%s). Split by file ownership or '
+                             'wait for that agent to finish.' % (mine, theirs, a.get('task') or a.get('id'), info))
 
 
 # --- AskUserQuestion -------------------------------------------------------------------------

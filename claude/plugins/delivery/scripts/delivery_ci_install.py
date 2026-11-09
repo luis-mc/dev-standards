@@ -40,6 +40,14 @@ no ci-install.json the run is as before. The import check treats a skipped or ke
 The plugin ships `ci-install.example.json` (empty lists and a `_comment`); it is copied like any template and
 is never read as the real file.
 
+Prune list sync (DL150). After `update` rewrites `.github/workflows/artifact-prune.yml` from the template, it runs
+`scripts/delivery/artifact_prune.py --sync-workflow` in the project, so the project's `artifact_prune.workflows`
+list is applied and does not revert. A failed sync prints the error and the fix; the update stays.
+
+Time zone data (DL157). Windows Python has no time zone data. After the run the installer loads the `tz` of
+`.delivery/config.json` through `zoneinfo`. When that fails it runs `python -m pip install --user tzdata` (it asks
+first when the terminal is interactive), says what it did, and checks again. The doctor keeps its own check.
+
 Exit 0 done, 1 a bad track, 2 a missing template folder or a bad ci-install.json, 3 a managed script imports a sibling module that is
 not in the project (the files were still written). Untracked files do not change the exit code.
 Standard library only.
@@ -196,6 +204,86 @@ def untracked(items: list, root: str) -> list:
             and rel not in tracked]
 
 
+PRUNE_WORKFLOW = ".github/workflows/artifact-prune.yml"
+PRUNE_SCRIPT = "scripts/delivery/artifact_prune.py"
+
+
+def sync_prune_workflow(items: list, root: str) -> None:
+    """DL150: apply artifact_prune.workflows after `update` rewrote the template's workflow. Never raises."""
+    if not any(rel == PRUNE_WORKFLOW and action == "overwritten" for rel, _s, action in items):
+        return
+    script = os.path.join(root, PRUNE_SCRIPT.replace("/", os.sep))
+    if not os.path.exists(script):
+        print("could not sync %s: %s is not in the project. Fix: run `python %s --sync-workflow` once it is."
+              % (PRUNE_WORKFLOW, PRUNE_SCRIPT, PRUNE_SCRIPT))
+        return
+    try:
+        proc = subprocess.run([sys.executable, script, "--sync-workflow"], cwd=root, capture_output=True, text=True)
+    except OSError as e:
+        proc = None
+        detail = str(e)
+    else:
+        detail = (proc.stderr or proc.stdout).strip()
+    if proc is not None and proc.returncode == 0:
+        print("artifact_prune: %s" % (proc.stdout.strip() or "synced"))
+        return
+    print("could not sync %s: %s" % (PRUNE_WORKFLOW, detail))
+    print("The update is kept. Fix the error, then run `python %s --sync-workflow` in the project." % PRUNE_SCRIPT)
+
+
+def tz_name(root: str):
+    """The `tz` key of .delivery/config.json, or None."""
+    try:
+        with open(os.path.join(root, ".delivery", "config.json"), "rb") as f:
+            val = json.loads(f.read().decode("utf-8-sig")).get("tz")
+    except (OSError, ValueError, AttributeError):
+        return None
+    return val if isinstance(val, str) and val else None
+
+
+def tz_loads(name: str) -> bool:
+    try:
+        from zoneinfo import ZoneInfo
+        ZoneInfo(name)
+        return True
+    except Exception:  # noqa: BLE001 - ZoneInfoNotFoundError, ValueError, ImportError
+        return name in ("UTC", "Etc/UTC")
+
+
+def ensure_tzdata(root: str, interactive=None, ask=input) -> None:
+    """DL157: when the configured tz does not load, install tzdata with pip (--user) and check again."""
+    name = tz_name(root)
+    if not name or tz_loads(name):
+        return
+    cmd = [sys.executable, "-m", "pip", "install", "--user", "tzdata"]
+    if interactive is None:
+        interactive = sys.stdin is not None and sys.stdin.isatty()
+    print("time zone %r does not load (no time zone data)." % name)
+    if interactive:
+        try:
+            answer = ask("Install tzdata with `python -m pip install --user tzdata`? [Y/n] ")
+        except EOFError:
+            answer = "n"
+        if answer.strip().lower() not in ("", "y", "yes"):
+            print("tzdata not installed. Run `python -m pip install --user tzdata`; until then times fall back to UTC.")
+            return
+    try:
+        proc = subprocess.run(cmd, capture_output=True, text=True)
+        ok = proc.returncode == 0
+        detail = (proc.stderr or proc.stdout).strip()
+    except OSError as e:
+        ok, detail = False, str(e)
+    if not ok:
+        print("tzdata install failed: %s\nRun `python -m pip install --user tzdata` by hand; until then times fall back to UTC."
+              % detail)
+        return
+    print("ran `python -m pip install --user tzdata`")
+    if tz_loads(name):
+        print("time zone %r loads now." % name)
+    else:
+        print("time zone %r still does not load; check the `tz` key or restart the shell." % name)
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci_install.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("action", choices=["install", "update"])
@@ -221,6 +309,10 @@ def main(argv=None) -> int:
         print("warning: %s lists %s, which the plugin does not manage" % (CONFIG, rel))
     if not args.dry_run:
         apply(items, root)
+    if not args.dry_run and args.action == "update":
+        sync_prune_workflow(items, root)
+    if not args.dry_run:
+        ensure_tzdata(root)
     for rel, _src, action in items:
         if action != "same":
             print("%-11s %s" % (action, rel))

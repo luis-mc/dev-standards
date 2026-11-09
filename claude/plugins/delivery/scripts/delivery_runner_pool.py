@@ -47,7 +47,7 @@ MIN_RUNNER_VERSION = '2.329.0'  # GitHub refuses to register a runner below this
 RUNNER_VERSION = '2.338.2'  # the pinned fallback, used when the release API cannot be reached
 ROOT_NEEDS = re.compile(r'\bsudo\b|\bapt-get\b|\bapt\s+install\b|--with-deps|install-deps')  # a step that needs root
 BROWSERS = ('none', 'chromium')  # the image option POOL_BROWSERS (DL67); none is the default
-PLAYWRIGHT_VERSION = '1.62.1'  # the pinned fallback for the Chromium system libraries (DL69); keep the Dockerfile and compose defaults equal
+PLAYWRIGHT_VERSION = '1.65.0'  # the pinned fallback for the Chromium system libraries (DL69); keep the Dockerfile and compose defaults equal
 LOCKFILES = ('pnpm-lock.yaml', 'package-lock.json', 'yarn.lock')
 RUNNER_SHA256 = 'baebf204307bac6193480852732f0aba2ae97b6c5597c244f4d5558390147c40'  # its linux-x64 tarball
 HOST_LOAD_FRESH_S = 60
@@ -1078,9 +1078,44 @@ def set_env_values(path, values):
         f.write('\n'.join(lines) + '\n')
 
 
-def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version=None):
+def merge_pool_layers(env, layers, apt, source, drop_layers=(), drop_apt=()):
+    """DL155: (layers, apt names, sources dict, notes). The pool .env lists stay; the caller's are added; drops remove."""
+    cur = [x for x in (env.get('POOL_LAYERS') or '').split(',') if x]
+    cur_apt = [x for x in (env.get('POOL_APT') or '').split() if x]
+    sources = {}
+    for item in (env.get('POOL_LAYER_SOURCES') or '').split(','):
+        name, sep, who = item.partition(':')
+        if sep and name:
+            sources[name] = who
+    notes = []
+    for x in layers:
+        if x not in cur:
+            cur.append(x)
+        if source and x not in sources:
+            sources[x] = source
+    for x in apt:
+        if x not in cur_apt:
+            cur_apt.append(x)
+    for x in drop_layers or ():
+        if x in cur:
+            cur.remove(x)
+        sources.pop(x, None)
+    for x in drop_apt or ():
+        if x in cur_apt:
+            cur_apt.remove(x)
+    for x in cur:
+        if x not in layers and x not in (drop_layers or ()):
+            notes.append('kept layer %s%s: the repo config does not ask for it; turning it off there does not remove it. '
+                         'Pass --drop-layer %s to remove it.' % (x, ' (asked by %s)' % sources[x] if x in sources else '', x))
+    sources = {k: v for k, v in sources.items() if k in cur}
+    return cur, cur_apt, sources, notes
+
+
+def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version=None, source=None, drop_layers=(), drop_apt=()):
     """B14: the narrow pool step. It (re)writes RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env
-    and rebuilds; the cap and every other line stay. Returns a dict with `changes` (key -> (old, new)), or `error`."""
+    and rebuilds; the cap and every other line stay. DL155: layers and apt names already in the .env stay, the caller's
+    are added (`source` is the asking repo), --drop-* removes one; PLAYWRIGHT_VERSION is never lowered unless the flag
+    sets it. Returns a dict with `changes` (key -> (old, new)), or `error`."""
     env = read_pool_env(probe, pool)
     path = os.path.join(pool_dir(pool), '.env')
     if not env:
@@ -1091,16 +1126,25 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
     if browsers not in BROWSERS and env.get('POOL_BROWSERS') == 'chromium':
         picked, why = 'chromium', None  # kept: only an explicit --browsers none removes it
     pw, pw_source = resolve_playwright(probe, picked, playwright_version, repo_paths)
+    notes = []
+    cur_pw = env.get('PLAYWRIGHT_VERSION')
+    if pw and not playwright_version and valid_playwright_version(cur_pw) and _pw_tuple(cur_pw) > _pw_tuple(pw):
+        notes.append('kept Playwright %s: it is higher than %s (%s). Pass --playwright %s to lower it.' % (cur_pw, pw, pw_source, pw))
+        pw, pw_source = cur_pw, 'kept from the pool .env'
     want = {'POOL_BROWSERS': picked}
-    layers, apt, lerrs = read_pool_layers(repo_paths)  # DL149: written even when empty, so turning a layer off sticks
+    layers, apt, lerrs = read_pool_layers(repo_paths)
+    layers, apt, sources, lnotes = merge_pool_layers(env, layers, apt, source, drop_layers, drop_apt)
+    notes += lnotes
     want['POOL_LAYERS'] = ','.join(layers)
     want['POOL_APT'] = ' '.join(apt)
+    want['POOL_LAYER_SOURCES'] = ','.join('%s:%s' % kv for kv in sources.items())
     if sha:
         want['RUNNER_SHA256'] = sha
     if pw:
         want['PLAYWRIGHT_VERSION'] = pw
-    changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT') else None)) != v}
-    out = {'pool': pool, 'path': path, 'changes': changes, 'why': why, 'playwright_source': pw_source if pw else None}
+    changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT', 'POOL_LAYER_SOURCES') else None)) != v}
+    out = {'pool': pool, 'path': path, 'changes': changes, 'why': why, 'playwright_source': pw_source if pw else None,
+           'layers': [(x, sources.get(x)) for x in layers], 'notes': notes}
     if not sha:
         out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
     if lerrs:
@@ -1566,7 +1610,7 @@ def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
     """DL149: pool doctor checks for the layers, stray runner Dockerfiles and the tool cache."""
     layers = [x for x in (env_vals.get('POOL_LAYERS') or '').strip().split(',') if x]
     want, _apt, _errs = read_pool_layers(repo_paths)
-    if sorted(want) != sorted(layers):
+    if set(want) - set(layers):  # DL155: the pool may hold more (other repos' layers)
         add('layers-config', 'warn', 'the repo config asks for layers [%s] but the pool .env has [%s]. Run `delivery_ci_setup.py pool-refresh --yes`.'
             % (', '.join(want), ', '.join(layers)))
     if layers:

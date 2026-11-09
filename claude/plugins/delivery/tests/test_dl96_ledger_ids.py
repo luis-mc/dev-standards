@@ -11,7 +11,9 @@ BLOCK = "```delivery\ntask: DV152\nbranch: DV152-x\n```\nDo it"
 
 
 def seed(root, rows):
-    L.update(root, lambda led: led["agents"].extend(rows))
+    led = L.load_for_write(root)   # DL156: old rows go straight to the file; the write guard refuses new taskless ones
+    led["agents"].extend(rows)
+    L.write_atomic(root, led)
 
 
 def row(ident, **kw):

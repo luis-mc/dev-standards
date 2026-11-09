@@ -54,7 +54,7 @@ class AgentCheck(unittest.TestCase):
                                   '<tr data-task="T2"><td><span class="status-chip status-running">x</span></td></tr>')
         (d / "bad.html").write_bytes(b"\xff\xfe<tr")
         led = {"agents": [{"task": "T1", "state": "running"}, {"task": "T2", "state": "running"}]}
-        self.assertEqual(L.stale_agents(root, led), [("T1", "live")])
+        self.assertEqual(L.stale_agents(root, led), [{"task": "T1", "id": "-", "status": "live"}])
         self.assertEqual(L.stale_agents(Path(root) / "missing", led), [])
 
 

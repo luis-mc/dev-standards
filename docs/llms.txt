@@ -106,6 +106,7 @@
 - [Set up CI for a project](docs/guides/set-up-ci.md)
 - [What the setup skills do and what you can do after](docs/guides/setup-skills.md)
 - [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)
+- [Windows packaging on the Linux pool](docs/guides/windows-packaging.md)
 
 ## overview
 
