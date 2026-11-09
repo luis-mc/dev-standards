@@ -77,7 +77,7 @@ class UnstoppableTests(unittest.TestCase):
             ctx = json.loads(buf.getvalue())["hookSpecificOutput"]["additionalContext"]
             self.assertIn("pid 4242 (plugin unstamped) could not be stopped", ctx)
 
-    def test_main_prunes_dead_old_row(self):
+    def test_main_never_writes_the_ledger(self):
         root = make_root()
         L.update(root, lambda led: led["watchers"].extend([row(11, None, age_h=48), row(12, "9.0.0")]))
         buf = io.StringIO()
@@ -86,7 +86,8 @@ class UnstoppableTests(unittest.TestCase):
                 mock.patch.object(SS.H, "find_root", return_value=str(root)), \
                 mock.patch.object(L, "plugin_version", return_value="9.0.0"), redirect_stdout(buf):
             SS.main()
-        self.assertEqual([w["pid"] for w in H.load_ledger(str(root))["watchers"]], [12])
+        # Hooks never write the ledger: the watcher's heartbeat prunes dead rows, not session start.
+        self.assertEqual([w["pid"] for w in H.load_ledger(str(root))["watchers"]], [11, 12])
         self.assertNotIn("could not be stopped", buf.getvalue())
 
 

@@ -183,13 +183,6 @@ def rearm_old_watchers(root, ledger, installed, at=None, watcher_min=None):
     return msgs, stopped
 
 
-def prune_dead_watchers(root, at):
-    """DL118: drop watcher rows whose pid is dead and whose heartbeat is over 24 h old."""
-    import delivery_ledger as L
-    import machine_slots as M
-    L.update(root, lambda led: L.prune_watchers(led, at, M.pid_alive))
-
-
 def main():
     if H.hooks_off():
         return 0
@@ -221,10 +214,6 @@ def main():
     if rearm:
         parts.append('Watcher re-armed (DL98): ' + '; '.join(rearm) + '.')
     parts += list(getattr(gone, 'warnings', []))
-    try:
-        prune_dead_watchers(root, at)
-    except Exception as exc:     # fail open
-        H.warn('watcher prune skipped (%s: %s)' % (type(exc).__name__, exc))
     fresh = any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < cfg['watcher_min'] for w in ledger['watchers']
                 if w.get('pid') not in gone) or bool(gone and rearm and rearm[-1].startswith('started'))
     if not fresh:
