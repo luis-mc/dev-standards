@@ -10,7 +10,7 @@ type: reference
 code:
   - claude/plugins/audits/**
   - tools/test_model_profiles.py
-last_verified: 2026-11-01
+last_verified: 2026-11-09
 ---
 # Audit skills (luismc-audits)
 
