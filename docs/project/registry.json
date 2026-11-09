@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T22:49+00:00",
+  "updated": "2026-11-09T23:00+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2938,13 +2938,14 @@
       "id": "DL146",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Guard: a new client API call needs a default e2e mock handler",
       "detail": "From a project's RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:48+00:00",
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
       "rides": "DS207",
-      "expected_basis": "rides RELEASE-77; launch after restart"
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL147",
@@ -2986,97 +2987,115 @@
       "id": "DL150",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Installer runs the prune workflow sync after install or update",
       "detail": "delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project's artifact_prune.workflows list never reverts (DL122 follow-up, D149).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:48+00:00",
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
       "rides": "DS207",
-      "expected_basis": "rides RELEASE-77; launch after restart"
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL151",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Session-start check-in names agents whose task already shipped",
       "detail": "hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:48+00:00",
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
       "rides": "DS207",
-      "expected_basis": "rides RELEASE-77; launch after restart"
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL152",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Windows packaging docs: service DACL uses core PermissionEx",
       "detail": "WiX 5: inside ServiceInstall a service DACL must use the core <PermissionEx Sddl=.../> (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:48+00:00",
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
       "rides": "DS207",
-      "expected_basis": "rides RELEASE-77; launch after restart"
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL153",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "agent_ci.py: start CI only for this wave's agents; fix task id parse",
       "detail": "A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:49+00:00",
-      "expected_basis": "rides RELEASE-77; launch after restart",
-      "rides": "DS207"
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "rides": "DS207",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL154",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Pre-push secret scan: read .gitleaksignore from the pushed commit",
       "detail": "Pushing another ref (git push origin <sha>:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show <sha>:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:49+00:00",
-      "expected_basis": "rides RELEASE-77; launch after restart",
-      "rides": "DS207"
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "rides": "DS207",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL155",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "pool-refresh keeps other repos' layers and highest Playwright",
       "detail": "pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo's layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:49+00:00",
-      "expected_basis": "rides RELEASE-77; launch after restart",
-      "rides": "DS207"
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "rides": "DS207",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL156",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Ledger refuses agent rows without a task and duplicate release ids",
       "detail": "Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:49+00:00",
-      "expected_basis": "rides RELEASE-77; launch after restart",
-      "rides": "DS207"
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "rides": "DS207",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DL157",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Installer adds tzdata on Windows when zone data is missing",
       "detail": "Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).",
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "rides": "DS207",
+      "started": "2026-11-09T22:55+00:00"
+    },
+    {
+      "id": "DL158",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Ownership hook: a glob owns only its own matches",
+      "detail": "The DL-41 PreToolUse hook treated 'templates/*/scripts/delivery/gate.json' as owning every file under templates/, so it refused new files in templates/ts/scripts/delivery/ and templates/rust/test/. Fix: compare owns entries as globs (fnmatch on each concrete path, strip parenthetical notes) and test both sides.",
       "expected": "10 Nov",
-      "changed": "2026-11-09T22:48+00:00",
-      "expected_basis": "rides RELEASE-77; launch after restart",
-      "rides": "DS207"
+      "changed": "2026-11-09T23:00+00:00"
     },
     {
       "id": "DS1",
@@ -6111,26 +6130,53 @@
       "id": "DS207",
       "owner": "project",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup",
       "detail": "DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.",
-      "expected": "10 Nov ~01:30",
-      "changed": "2026-11-09T22:49+00:00",
-      "expected_basis": "session restart, then 10 cloud agents ~1 h, join + CI ~40 min",
+      "expected": "10 Nov ~00:55",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "8 cloud agents ~60 min, join 15, CI 25, merge 10",
       "release": 77,
-      "waits_on": "work"
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T23:05+00:00",
+          "end": "2026-11-10T00:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T00:05+00:00",
+          "end": "2026-11-10T00:20+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T00:20+00:00",
+          "end": "2026-11-10T00:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T00:45+00:00",
+          "end": "2026-11-10T00:55+00:00"
+        }
+      ],
+      "risk": {
+        "label": "fix round",
+        "minutes": 30
+      },
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DS208",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Rust track: TS tests that spawn a crate binary build it in globalSetup",
       "detail": "CI's unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p <crate> once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T22:49+00:00",
-      "expected_basis": "rides RELEASE-77; launch after restart",
-      "rides": "DS207"
+      "expected": "10 Nov ~00:05",
+      "changed": "2026-11-09T22:55+00:00",
+      "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+      "rides": "DS207",
+      "started": "2026-11-09T22:55+00:00"
     },
     {
       "id": "DU1",
