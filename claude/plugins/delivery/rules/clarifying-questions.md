@@ -5,4 +5,4 @@
 - Put the context each question needs inside its own text; text written before a dialog is not seen. <!-- check: Q-3 -->
 - Before asking, do every action that does not need the answer (merge a green train, push a joined train, launch queued work). <!-- check: Q-4 -->
 - Do not make assumptions, do not guess missing parameters, and do not trickle questions sequentially across multiple turns: while agents you launched are still running, park a question until the agents of this wave report, then ask everything at once (unless every running agent is blocked on the answer, or the owner asked you to ask questions). <!-- check: Q-5 -->
-- A routine held for an owner answer is paused (no `run_once_at` in the near future), never postponed by minutes: a postponed routine starts on its old brief when the question dialog stays open. <!-- check: DL-136 -->
+- A routine held for an owner answer is paused (no `run_once_at` in the near future), never postponed by minutes: a postponed routine starts on its old brief when the question dialog stays open. <!-- advice -->

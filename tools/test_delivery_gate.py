@@ -2308,7 +2308,8 @@ def sc_join_docs_strip(t: T, shared: Path) -> None:
     t.check("... the work itself stays", (box.work / "apps/web/a.txt").exists())
     # DL140: the docs plugin is present, so the pre-PR step may add a "Rebuild generated docs" commit after the strip
     subjects = box.g("log", "-3", "--format=%s").splitlines()
-    t.eq("... removal is its own commit", subjects[0] if subjects[0] == "Strip temporary agent docs" else subjects[1], "Strip temporary agent docs")
+    # DS193: docs_work.py strip --apply now commits the removal itself ("Strip docs/work/ ..."); older plugins leave it to join.py
+    t.check("... removal is its own commit", any(s.startswith(("Strip temporary agent docs", "Strip docs/work/")) for s in subjects))
     jr = join_result(box)
     t.eq("... summaries recorded", jr["docs_summaries"], ["- DOC9: the thing works."])
     t.eq("... stripped flag", jr["docs"]["stripped"], True)
@@ -3664,7 +3665,7 @@ MUTANTS = [
     ("a failed quick check still passes", "scripts/delivery/join.py",
      'ok = not timed_out and not any(e["outcome"] == "fail" for e in entries)', "ok = True", "join_quick"),
     ("a failed quick check does not stop the join", "scripts/delivery/join.py",
-     '        if code != 0:\n            dc.eprint("join: the light check', '        if False:\n            dc.eprint("join: the light check', "join_quick"),
+     '        if code != 0:\n            note = mock_interaction_note(root)', '        if False:\n            note = mock_interaction_note(root)', "join_quick"),
     ("the quick check records no step times", "scripts/delivery/join.py",
      '"seconds": total, "steps": steps_report,', '"seconds": total, "steps": [],', "join_quick"),
     ("--no-gate still runs the quick check", "scripts/delivery/join.py",

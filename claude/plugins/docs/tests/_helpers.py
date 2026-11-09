@@ -17,6 +17,8 @@ def git(root, *a):
 def make_repo(files=None, commit=True):
     d = Path(tempfile.mkdtemp(prefix="docs-"))
     git(d, "init", "-q", "-b", "main")
+    git(d, "config", "user.email", "t@t")
+    git(d, "config", "user.name", "t")  # code under test may commit; CI has no global identity
     for rel, text in (files or {}).items():
         w(d, rel, text)
     if commit:
