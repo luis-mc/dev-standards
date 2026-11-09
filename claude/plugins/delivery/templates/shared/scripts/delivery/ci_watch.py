@@ -18,6 +18,13 @@ succeeded and at least one did. A commit with no open pull request keeps the old
 (skipped counts as success). The open pull request is read with
 `gh api repos/{owner}/{repo}/commits/SHA/pulls`, never from a PR check list.
 
+Every workflow (DL139): the watch covers every workflow run for the commit, not only --workflow (that one
+must still exist); any failed run exits 1. --only-workflow restores the single-workflow watch.
+
+Ledger (DL132, DL138): the result is written to the main checkout's .delivery/ledger.json even from a git
+worktree. The train is matched by branch or PR head; when none exists it is created as `delivery_ledger.py
+plan --branch` would, and when no branch can be found the exact plan command is printed.
+
 Exit codes (shared by the delivery scripts): 0 every run succeeded or was
 skipped (see above), 1 any other conclusion (the failed jobs are printed), 2 usage
 error or `gh` missing or unusable, 4 timed out ("no real run yet" when only skipped
@@ -196,7 +203,8 @@ def repo_args(repo: str | None) -> list[str]:
 
 def list_runs(sha: str, workflow: str, repo: str | None) -> list[dict]:
     try:
-        data = gh_json(["run", "list", "--commit", sha, "--workflow", workflow,
+        wf = ["--workflow", workflow] if workflow else []  # DL139: no name = every workflow
+        data = gh_json(["run", "list", "--commit", sha, *wf,
                         "--limit", "100", "--json", LIST_FIELDS, *repo_args(repo)])
     except GhError as exc:
         if is_missing_workflow(str(exc)):
@@ -208,6 +216,26 @@ def list_runs(sha: str, workflow: str, repo: str | None) -> list[dict]:
     return [r for r in data
             if isinstance(r, dict)
             and str(r.get("headSha", sha)).startswith(sha[:7])]
+
+
+def add_other_workflows(runs: list[dict], sha: str, repo: str | None, warned: set | None = None) -> list[dict]:
+    """DL139: the named workflow's runs plus every other workflow's run for the commit (one unfiltered
+    `gh run list --commit`), so a required check in another workflow cannot fail unseen. Read once the named runs
+    are complete. When the list cannot be read, a warning is printed once and the named runs decide."""
+    try:
+        extra = list_runs(sha, None, repo)
+    except GhError as exc:
+        if warned is not None and "other-runs" not in warned:
+            warned.add("other-runs")
+            print("ci_watch: warning: the other workflows' runs could not be read (%s)" % exc, file=sys.stderr)
+        return runs
+    seen = {r.get("databaseId") for r in runs if r.get("databaseId") is not None}
+    out = list(runs)
+    for r in extra:
+        if r.get("databaseId") is None or r.get("databaseId") not in seen:
+            out.append(r)
+            seen.add(r.get("databaseId"))
+    return out
 
 
 def missing_workflow_message(workflow: str, repo: str | None, cause: str) -> str:
@@ -421,11 +449,51 @@ def print_slowest_job_summary(runs: list[dict], repo: str | None) -> None:
         return
 
 
-def ledger_ci(sha: str, state: str) -> None:
-    """Best effort: record the decision in the delivery ledger (no-op without the plugin)."""
+def ledger_root() -> Path:
+    """DL132: the folder that holds .delivery/: the main checkout, found from git's common dir, so a run inside a
+    git worktree writes the one ledger the merge hook reads. Falls back to the work tree's top folder."""
+    import delivery_common as dc
+    try:
+        p = dc.run_git(["rev-parse", "--path-format=absolute", "--git-common-dir"], check=False)
+        common = Path(p.stdout.strip()) if p.returncode == 0 and p.stdout.strip() else None
+        if common is not None and common.name == ".git" and (common.parent / ".delivery").is_dir():
+            return common.parent
+    except Exception:  # noqa: BLE001
+        pass
+    return dc.repo_root()
+
+
+def head_of(sha: str, repo: str | None) -> tuple[str | None, int | None]:
+    """DL138: (branch, PR number) whose head is `sha`, from the local and remote branches at the commit (git only:
+    no PR lookup, so the PR number stays None and the ledger matches the train by branch or by its recorded head).
+    (None, None) when no branch is found; never raises."""
     try:
         import delivery_common as dc
-        dc.ledger_record(dc.repo_root(), "ci", sha=sha, state=state, by="ci_watch.py")
+        for ref in ("refs/heads", "refs/remotes"):
+            out = dc.run_git(["for-each-ref", "--points-at", sha, "--format=%(refname:short)", ref], check=False)
+            names = [n.split("/", 1)[1] if ref.endswith("remotes") and "/" in n else n
+                     for n in out.stdout.split() if not n.endswith("/HEAD")]
+            names = [n for n in names if n not in ("main", "master", "HEAD")]
+            if names:
+                return names[0], None
+    except Exception:  # noqa: BLE001
+        pass
+    return None, None
+
+
+def ledger_ci(sha: str, state: str, repo: str | None = None) -> None:
+    """Best effort: record the decision in the delivery ledger (no-op without the plugin). DL132 the main
+    checkout's ledger; DL138 the train is matched by branch or PR head and made when none exists."""
+    try:
+        import delivery_common as dc
+        root = ledger_root()
+        branch, pr = head_of(sha, repo)
+        kw = {"branch": branch, "pr": pr, "create": bool(branch)}
+        if not dc.ledger_record(root, "ci", sha=sha, state=state, by="ci_watch.py", **kw):
+            return
+        if not branch:
+            print("ci_watch: no train matched %s; record it with: python <plugin>/scripts/delivery_ledger.py "
+                  "plan --branch <branch>" % sha[:10], file=sys.stderr)
     except Exception:  # noqa: BLE001
         return
 
@@ -627,11 +695,11 @@ def watch_statuses(sha: str, args: argparse.Namespace) -> int:
             if bad:
                 print(f"ci_watch: {len(bad)} of {len(args.context)} status(es) for {sha[:10]} did not "
                       f"succeed: {', '.join(bad)}")
-                ledger_ci(sha, "failure")
+                ledger_ci(sha, "failure", args.repo)
                 return 1
             if not waiting:
                 print(f"ci_watch: {len(args.context)} status(es) for {sha[:10]} succeeded")
-                ledger_ci(sha, "success")
+                ledger_ci(sha, "success", args.repo)
                 return 0
             state = f"{len(waiting)} of {len(args.context)} status(es) not posted yet: {', '.join(waiting)}"
         if state != last_state:
@@ -651,6 +719,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--workflow", default="ci.yml",
                     help="workflow file name or name (default ci.yml); a workflow that "
                          "does not exist exits 2 at once and lists the repository's workflows")
+    ap.add_argument("--only-workflow", action="store_true",
+                    help="watch only the --workflow runs; by default every workflow run for the commit is "
+                         "watched and any failure fails the watch")
     ap.add_argument("--timeout", type=float, default=3600,
                     help="seconds to wait before giving up with exit 4 (default 3600)")
     ap.add_argument("--interval", type=float, default=30,
@@ -727,8 +798,14 @@ def main(argv: list[str] | None = None) -> int:
                     fallback_launch.check_and_launch(
                         sha, pending, fallback_deps(args.repo, fallback_state))
             else:
+                if not args.only_workflow:
+                    runs = add_other_workflows(runs, sha, args.repo, warned)
+                pending = [r for r in runs if r.get("status") != "completed"]
                 bad = [r for r in runs if r.get("conclusion") not in OK_CONCLUSIONS]
-                decided = True
+                decided = not pending or bool(bad)
+                if pending and not bad:
+                    state = f"{len(pending)} of {len(runs)} run(s) not completed (other workflows)"
+            if decided and not pending:
                 try:
                     idle = [r for r in runs if r not in bad and not executed_jobs(r, args.repo)]
                     # Skipped runs only matter when the head belongs to an open PR.
@@ -749,14 +826,14 @@ def main(argv: list[str] | None = None) -> int:
                     print(f"ci_watch: {len(runs)} {args.workflow} run(s) for {sha[:10]} "
                           "succeeded")
                     print_slowest_job_summary(runs, args.repo)
-                    ledger_ci(sha, "success")
+                    ledger_ci(sha, "success", args.repo)
                     return finish(0, runs, sha, args)
                 print(f"ci_watch: {len(bad)} of {len(runs)} {args.workflow} run(s) for "
                       f"{sha[:10]} did not succeed")
                 for run in bad:
                     print_failed_jobs(run, args.repo)
                 print_slowest_job_summary(runs, args.repo)
-                ledger_ci(sha, "failure")
+                ledger_ci(sha, "failure", args.repo)
                 return finish(1, runs, sha, args)
         if state != last_state:
             print(f"ci_watch: waiting, {state}", flush=True)

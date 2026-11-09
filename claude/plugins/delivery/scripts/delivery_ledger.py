@@ -542,6 +542,11 @@ def new_train(led: dict, branch: str, release_no=None, cargo=None, cfg=None, pla
 
 
 def find_train(led: dict, key=None, *, pr=None, branch=None) -> dict | None:
+    """The train with this id, else with this PR, else on this branch (DL138: a PR number or a branch each match)."""
+    if pr is not None and not key:
+        for t in led.get("trains", []):
+            if t.get("pr") == pr:
+                return t
     for t in led.get("trains", []):
         if key and t.get("id") == key:
             return t
@@ -601,6 +606,20 @@ def record(root, op: str, **kw) -> bool:
                 led["runners"] = list(kw.get("rows", []))
                 add_event(led, "runners.checked", "%d" % len(led["runners"]), by)
                 return
+            if op == "agents_done":
+                # DL127: close the open agents of a shipped train's cargo (task) or of its branches
+                t = find_train(led, kw.get("train"), pr=kw.get("pr"))
+                tasks = {str(c.get("task")) for c in ((t or {}).get("cargo") or []) if isinstance(c, dict) and c.get("task")}
+                tasks |= {str(x) for x in kw.get("tasks") or []}
+                branches = {str(x) for x in kw.get("branches") or []}
+                for a in led.get("agents") or []:
+                    if not isinstance(a, dict) or a.get("state") in _AGENT_DONE:
+                        continue
+                    if str(a.get("task")) in tasks or (a.get("branch") and str(a["branch"]) in branches):
+                        a["state"], a["done_by"], a["result"] = "done", by, "ready"
+                        a["needs_check"], a["done_at"] = False, iso()
+                        add_event(led, "agent.done", "%s by %s (shipped)" % (a.get("task") or a.get("id"), by), by)
+                return
             train = find_train(led, kw.get("train"), pr=kw.get("pr"), branch=kw.get("branch"))
             if train is None and op == "ci" and kw.get("sha"):
                 sha = str(kw["sha"])[:7]
@@ -611,6 +630,15 @@ def record(root, op: str, **kw) -> bool:
                     cands = [t for t in led["trains"] if t.get("state") in ("pushed", "ci") and not hold_active(t)
                              and not (t.get("ci") or {}).get("head_sha")]
                     train = cands[0] if len(cands) == 1 else None
+            if train is None and op == "ci" and kw.get("create") and kw.get("branch"):
+                # DL138: no train for the branch or the PR head: make it, as `plan --branch` would
+                train = new_train(led, str(kw["branch"]), cfg=load_config(root))
+                if kw.get("pr") is not None:
+                    train["pr"] = kw["pr"]
+                set_train_state(train, "ci")
+            if train is not None and op == "ci":
+                if kw.get("pr") is not None and not train.get("pr"):
+                    train["pr"] = kw["pr"]
             if train is None:
                 add_event(led, "%s.unmatched" % op, str(kw.get("train") or kw.get("pr") or kw.get("branch")), by)
                 return
@@ -682,7 +710,12 @@ def _cmd_plan(root, args, run=None) -> int:
     out = {}
 
     def fn(led):
-        out["train"] = new_train(led, args.branch, args.release_no, cargo, cfg, planned)
+        # DL138: one open train per branch; a second plan for it returns the first
+        t = next((x for x in led["trains"] if x.get("branch") == args.branch
+                  and x.get("state") not in ("merged", "live", "cleaned", "abandoned")), None)
+        if t is None:
+            t = new_train(led, args.branch, args.release_no, cargo, cfg, planned)
+        out["train"] = t
     update(root, fn)
     # CO688: the branch may already have an open pull request (opened before the train was planned): adopt it at
     # once, or the watcher never learns the number. One open PR only; none, several or no gh: leave it.
@@ -763,6 +796,61 @@ def _cmd_agent_done(root, args) -> int:
     return 0
 
 
+_PROJECT_ROW_RE = re.compile(r'<tr\b[^>]*\bdata-task="([^"]+)"[^>]*>(.*?)</tr>', re.S | re.I)
+_PROJECT_CHIP_RE = re.compile(r'status-chip\s+status-([a-z-]+)', re.I)
+CLOSED_STATUSES = ("live", "dropped", "built")
+
+
+def project_statuses(root) -> dict:
+    """DL127: {task id: status} from the data-task rows of docs/project/*.html. Read defensively: a missing
+    folder, an unreadable file or a row without a status chip is skipped; never raises."""
+    out = {}
+    try:
+        d = Path(root) / "docs" / "project"
+        files = sorted(d.glob("*.html"))
+    except (OSError, TypeError, ValueError):
+        return out
+    for f in files:
+        try:
+            text = f.read_text(encoding="utf-8", errors="replace")
+            for m in _PROJECT_ROW_RE.finditer(text):
+                chip = _PROJECT_CHIP_RE.search(m.group(2))
+                if chip:
+                    out[m.group(1).strip()] = chip.group(1).lower()
+        except Exception:  # noqa: BLE001
+            continue
+    return out
+
+
+def stale_agents(root, led: dict) -> list:
+    """DL127: [(task, status)] of open agents whose task the project record shows as Live, Dropped or Built."""
+    try:
+        status = project_statuses(root)
+        return [(str(a["task"]), status[str(a["task"])]) for a in led.get("agents") or []
+                if isinstance(a, dict) and a.get("task") and a.get("state") not in _AGENT_DONE
+                and status.get(str(a["task"])) in CLOSED_STATUSES]
+    except Exception:  # noqa: BLE001
+        return []
+
+
+def _cmd_agent_check(root, args) -> int:
+    """DL127: record that the session looked at an open agent (sets last_checked), so nobody edits the JSON."""
+    box = {}
+
+    def fn(led):
+        key = str(args.agent)
+        rows = [a for a in led["agents"] if a.get("state") not in _AGENT_DONE and _agent_matches(a, key)]
+        if not rows:
+            raise LedgerError("no open agent %s" % key)
+        a = rows[0]
+        a["last_checked"] = iso()
+        box["at"] = a["last_checked"]
+        add_event(led, "agent.checked", str(a.get("task") or a.get("id") or ""), "delivery_ledger")
+    update(root, fn)
+    print(box["at"])
+    return 0
+
+
 def _cmd_show(root, args) -> int:
     led = load(root)
     if args.json:
@@ -778,6 +866,10 @@ def _cmd_show(root, args) -> int:
             print("  %-7s %s -> %s" % (ph["name"], local_iso(ph["start"], cfg=cfg), local_iso(ph["end"], cfg=cfg)))
     for a in led["agents"]:
         print("agent %s %s state=%s" % (a.get("task"), a.get("branch"), a.get("state")))
+    stale = stale_agents(root, led)
+    if stale:
+        print("open agents whose task the project record shows as finished: %s; close each with agent-done "
+              "or record a look with agent-check" % ", ".join("%s (%s)" % (t, st.capitalize()) for t, st in stale))
     open_q = [q for q in led["owner_questions"] if not q.get("answered_at")]
     print("owner questions open: %d; events: %d" % (len(open_q), len(led["events"])))
     return 0
@@ -986,6 +1078,8 @@ def main(argv=None) -> int:
     p.add_argument("agent", help="the agent id or task of an open agent")
     p.add_argument("--by", default="session", choices=("session",))
     p.add_argument("--result", required=True, choices=("ready", "not-ready", "failed"))
+    p = sub.add_parser("agent-check")
+    p.add_argument("agent", help="the agent id or task of an open agent")
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
     for sp in sub.choices.values():  # --root also works after the subcommand
@@ -997,7 +1091,7 @@ def main(argv=None) -> int:
         return 2
     try:
         return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show,
-                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned, "link": _cmd_link}[args.cmd](root, args)
+                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "agent-check": _cmd_agent_check, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned, "link": _cmd_link}[args.cmd](root, args)
     except LedgerError as exc:
         print("delivery_ledger: %s" % exc, file=sys.stderr)
         return 1
