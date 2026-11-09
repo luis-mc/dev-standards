@@ -378,14 +378,14 @@ def finish_partial(root: Path, args, into: str, joined: list[str], conflicting: 
                 write_join_result(root, joined, first, flat, stop_reason, extra=extra)
                 return dc.EXIT_FAIL
             extra["pushed"] = True
-            dc.ledger_record(root, "train_state", branch=into, state="pushed", by="join.py")
+            dc.ledger_record(root, "train_state", branch=into, state="pushed", by="join.py", create=True)
             dc.eprint("join: kept the clean merges (%s) and pushed %s; the other branches are left to do"
                       % (", ".join(joined), into))
         else:
             dc.eprint("join: kept the clean merges (%s), committed on local %s; not pushed (no --push)"
                       % (", ".join(joined), into))
         for b in joined:
-            dc.ledger_record(root, "cargo", branch=into, task=b, by="join.py",
+            dc.ledger_record(root, "cargo", branch=into, task=b, by="join.py", create=True,
                              fields={"branch": b, "gate": "ci" if args.ci_gate else "pass", "joined_sha": head})
     else:
         dc.eprint("join: no branch merged cleanly; nothing kept")
@@ -604,13 +604,13 @@ def main(argv: list[str] | None = None) -> int:
             dc.eprint("join: push of %s failed: %s" % (into, pushed.stderr.strip()))
             return dc.EXIT_FAIL
         print("join: pushed %s" % into)
-        dc.ledger_record(root, "train_state", branch=into, state="pushed", by="join.py")
+        dc.ledger_record(root, "train_state", branch=into, state="pushed", by="join.py", create=True)
 
     head = dc.rev("HEAD", root)
     for b in joined:
-        dc.ledger_record(root, "cargo", branch=into, task=b, by="join.py",
+        dc.ledger_record(root, "cargo", branch=into, task=b, by="join.py", create=True,
                          fields={"branch": b, "gate": "pass" if gated else "none", "joined_sha": head})
-    dc.ledger_record(root, "train_state", branch=into, state="joined", by="join.py")
+    dc.ledger_record(root, "train_state", branch=into, state="joined", by="join.py", create=True)
     print("join: joined %s" % ", ".join(joined))
     return dc.EXIT_OK
 
