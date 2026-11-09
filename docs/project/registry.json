@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T20:53+00:00",
+  "updated": "2026-11-09T21:23+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3012,6 +3012,18 @@
       "detail": "WiX 5: inside ServiceInstall a service DACL must use the core <PermissionEx Sddl=.../> (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.",
       "expected": "",
       "changed": "2026-11-09T19:30+00:00",
+      "rides": "DS207"
+    },
+    {
+      "id": "DL153",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "agent_ci.py: start CI only for this wave's agents; fix task id parse",
+      "detail": "A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T21:23+00:00",
+      "expected_basis": "rides RELEASE-72, launched after restart",
       "rides": "DS207"
     },
     {
