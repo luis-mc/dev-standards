@@ -3801,6 +3801,90 @@
    "chosen": "Hold until morning",
    "decided": "2026-11-09",
    "owner_words": "Hold until morning"
+  },
+  {
+   "id": "D168",
+   "question": "What if CI on the joined RELEASE-77 head stays red after one rerun?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "One fix agent, then CI",
+     "summary": "One cloud fix agent on the joined branch, then CI; if still red, stop."
+    },
+    {
+     "label": "Stop after the rerun",
+     "summary": "Leave the ready PR open for the owner."
+    }
+   ],
+   "chosen": "One fix agent, then CI",
+   "decided": "2026-11-09",
+   "owner_words": "One fix agent, then CI (Recommended)"
+  },
+  {
+   "id": "D169",
+   "question": "Which default Playwright pin does RELEASE-77 ship?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL159",
+   "options": [
+    {
+     "label": "1.65.0",
+     "summary": "npm latest; only a fallback, DL155 never lowers a pool."
+    },
+    {
+     "label": "1.63.0",
+     "summary": "Match the projects' lockfiles today."
+    }
+   ],
+   "chosen": "1.65.0",
+   "decided": "2026-11-09",
+   "owner_words": "1.65.0 (Recommended)"
+  },
+  {
+   "id": "D170",
+   "question": "Apply LF line endings to dev-standards itself?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL160",
+   "options": [
+    {
+     "label": "Template now, repo next release",
+     "summary": "Template line in RELEASE-77; dev-standards as its own task next release."
+    },
+    {
+     "label": "Both in RELEASE-77",
+     "summary": "Also renormalize dev-standards tonight."
+    },
+    {
+     "label": "Template only",
+     "summary": "Leave dev-standards as it is."
+    }
+   ],
+   "chosen": "Template now, repo next release",
+   "decided": "2026-11-09",
+   "owner_words": "Template now, repo next release (Recommended)"
+  },
+  {
+   "id": "D171",
+   "question": "May a peer session rebuild the shared runner pool unattended once DL155 ships?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL155",
+   "options": [
+    {
+     "label": "OK unattended",
+     "summary": "Refresh only when no runner is busy and the PC is under its load limits."
+    },
+    {
+     "label": "Wait for me",
+     "summary": "Hold the refresh until the owner confirms."
+    }
+   ],
+   "chosen": "OK unattended",
+   "decided": "2026-11-09",
+   "owner_words": "OK unattended (Recommended)"
   }
  ]
 }

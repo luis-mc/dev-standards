@@ -888,8 +888,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T23:15+00:00">09 Nov 23:15</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 23:10</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T23:20+00:00">09 Nov 23:20</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 23:15</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -923,9 +923,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">142</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">10</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">142</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">10</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">12 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">13 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL158"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">The DL-41 hook&#x27;s overlaps() compares only the text before the first wildcard, so &#x27;templates/*/scripts/delivery/gate.json&#x27; owned all of templates/; and a parenthetical note is part of the compared text, so two &#x27;spec.md (Rx only)&#x27; entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.</td><td data-label="Expected">09 Nov ~23:50<span class="expected-basis">cloud agent from 23:04: setup 5 + work 25 + checks 15</span></td></tr>
 <tr data-task="DL146"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
@@ -939,6 +939,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL157"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
 <tr data-task="DL159"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL159</span>Pool default Playwright pin 1.62.1 -&gt; 1.65.0<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">npm latest is 1.65.0. Raise the pinned fallback in delivery_runner_pool.py PLAYWRIGHT_VERSION, runner-pool Dockerfile ARG and compose.yaml default together, plus the pinned expectations in test_runner_pool.py. Only used when no lockfile or pool .env sets a version; with DL155 a refresh never lowers it. Done by the orchestrator at the RELEASE-77 join.</td><td data-label="Expected">10 Nov ~00:20<span class="expected-basis">join of RELEASE-77 at ~00:05, edit ~10 min</span></td></tr>
 <tr data-task="DL160"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL160</span>Repo template: LF line endings for all text files<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Peer finding: with core.autocrlf=true a Windows join worktree checks out CRLF, so prettier --check . flags every file. The tech-stack .gitattributes forces LF only for *.sh, hooks and delivery scripts. Add &#x27;* text=auto eol=lf&#x27; (keeping binary rules) so worktrees match CI. Done by the orchestrator at the RELEASE-77 join; needs a project-setup change note.</td><td data-label="Expected">10 Nov ~00:20<span class="expected-basis">join of RELEASE-77 at ~00:05, edit ~10 min</span></td></tr>
+<tr data-task="DL161"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL161</span>dev-standards repo: LF line endings for all text files</td><td data-label="Detail">Dogfood DL160 (D170): add &#x27;* text=auto eol=lf&#x27; to dev-standards&#x27; own .gitattributes and renormalize in one commit, so Windows worktrees match CI. Next release after RELEASE-77.</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">148 tasks</span></summary>
@@ -1126,6 +1127,70 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D171">
+<h3 class="decision-head"><span class="decision-id">D171</span> <span class="decision-question">May a peer session rebuild the shared runner pool unattended once DL155 ships?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL155</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">OK unattended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Refresh only when no runner is busy and the PC is under its load limits.</p>
+<blockquote class="decision-words">&ldquo;OK unattended (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for me</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hold the refresh until the owner confirms.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D170">
+<h3 class="decision-head"><span class="decision-id">D170</span> <span class="decision-question">Apply LF line endings to dev-standards itself?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL160</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Template now, repo next release</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Template line in RELEASE-77; dev-standards as its own task next release.</p>
+<blockquote class="decision-words">&ldquo;Template now, repo next release (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both in RELEASE-77</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Also renormalize dev-standards tonight.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Template only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave dev-standards as it is.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D169">
+<h3 class="decision-head"><span class="decision-id">D169</span> <span class="decision-question">Which default Playwright pin does RELEASE-77 ship?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL159</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">1.65.0</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">npm latest; only a fallback, DL155 never lowers a pool.</p>
+<blockquote class="decision-words">&ldquo;1.65.0 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">1.63.0</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Match the projects&#x27; lockfiles today.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D168">
+<h3 class="decision-head"><span class="decision-id">D168</span> <span class="decision-question">What if CI on the joined RELEASE-77 head stays red after one rerun?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One fix agent, then CI</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">One cloud fix agent on the joined branch, then CI; if still red, stop.</p>
+<blockquote class="decision-words">&ldquo;One fix agent, then CI (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Stop after the rerun</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave the ready PR open for the owner.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D167">
 <h3 class="decision-head"><span class="decision-id">D167</span> <span class="decision-question">How long may RELEASE-77 be held for a slow task?</span></h3>
 <p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
