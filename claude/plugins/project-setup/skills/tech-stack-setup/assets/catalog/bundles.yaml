@@ -235,3 +235,31 @@ anti_combinations:
       why: Eventually consistent; §4.6 requires fail-closed on credential endpoints.
     - pair: [want-a-clean-exit, vercel|cloudflare]
       why: Single-vendor bundles are the highest-lock-in options in the catalog.
+
+# ---------------------------------------------------------------------------
+# Component pairings (DS196): Rust as a component beside an API language.
+# ---------------------------------------------------------------------------
+
+component_pairings:
+  - component: rust
+    api: any
+    parts: [cli, host-service, library-napi, library-wasm]
+    hosts: any
+    note: >
+      Allowed on every host, including Vercel and Cloudflare: the Rust part is
+      built in CI and shipped as an npm package, a WASM file or a separate
+      artifact, not run on the host.
+  - component: rust
+    part: host-service
+    needs: windows_build_option
+    warn: >
+      Windows target: cross-compile on Linux or use a Windows runner. Record a
+      licence note for any SDK the cross tool downloads.
+  - component: rust
+    part: library-wasm
+    hosts: [cloudflare]
+    note: Supported; no threads, no filesystem.
+  - component: rust
+    part: library-napi
+    hosts: [vercel]
+    warn: Needs a prebuilt binary for the Vercel Linux arch.

@@ -154,6 +154,36 @@ technologies:
       Rust costs development velocity. What is the specific reason — latency
       target, memory ceiling, cost at volume, correctness requirement? Recorded
       in the Stack Profile.
+    # Rust can also be a component beside ANY API language (DS196, D138/D139).
+    # The host elimination below applies to Rust as the API only; a component
+    # is built in CI and shipped as a binary, an npm package or a WASM file.
+    roles: [api, component]
+    component:
+      requires_reason: true
+      reason_prompt: >
+        A Rust component costs development velocity. Write the reason it is
+        not built in the main language. A written reason is enough; no
+        measured number is required. Recorded in the Stack Profile.
+      parts:
+        - id: cli
+          name: Command-line or developer tool
+          connects: separate static binary, called by the task shim
+          host_effect: none
+        - id: host-service
+          name: Host service or installer helper
+          connects: separate binary talking to the app over a local pipe, socket or localhost HTTP
+          host_effect: none
+          note: Ships to user or operator machines. Record code-signing as a provisioning row.
+        - id: library-napi
+          name: Native library for Node (napi)
+          connects: prebuilt .node addon shipped as an npm package
+          host_effect: needs a prebuilt binary per OS and arch
+          needs: [build_matrix]
+        - id: library-wasm
+          name: WASM library
+          connects: one .wasm file, loaded in browser, Node or an edge worker
+          host_effect: none; no threads or filesystem by default
+      later_parts: [worker, media]   # offered when a project asks (D139)
     hosting:
       serverless_js: none
       containers: native
