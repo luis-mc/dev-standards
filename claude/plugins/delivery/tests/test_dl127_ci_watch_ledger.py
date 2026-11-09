@@ -102,22 +102,29 @@ class LedgerRoot(unittest.TestCase):
 
 
 class AllWorkflows(unittest.TestCase):
-    def test_collect_merges_other_workflows(self):
-        calls = []
-        runs = {"ci.yml": [{"databaseId": 1, "headSha": "s"}],
-                None: [{"databaseId": 1, "headSha": "s"}, {"databaseId": 2, "headSha": "s", "conclusion": "failure"}]}
-
-        def fake(sha, wf, repo):
-            calls.append(wf)
-            return [dict(r) for r in runs[wf]]
+    def test_add_other_workflows_merges_and_dedupes(self):
         orig = cw.list_runs
-        cw.list_runs = fake
+        cw.list_runs = lambda sha, wf, repo: [{"databaseId": 1}, {"databaseId": 2, "conclusion": "failure"}]
         try:
-            got = cw.collect_runs("s", "ci.yml", None)
+            got = cw.add_other_workflows([{"databaseId": 1, "conclusion": "success"}], "s", None)
             self.assertEqual([r["databaseId"] for r in got], [1, 2])
-            self.assertEqual(len(cw.collect_runs("s", "ci.yml", None, only_workflow=True)), 1)
+
+            def boom(sha, wf, repo):
+                raise cw.GhError("x")
+            cw.list_runs = boom
+            self.assertEqual(len(cw.add_other_workflows([{"databaseId": 1}], "s", None, set())), 1)
         finally:
             cw.list_runs = orig
+
+    def test_unfiltered_list_has_no_workflow_flag(self):
+        seen = []
+        orig = cw.gh_json
+        cw.gh_json = lambda args: seen.append(args) or []
+        try:
+            cw.list_runs("a" * 40, None, None)
+        finally:
+            cw.gh_json = orig
+        self.assertNotIn("--workflow", seen[0])
 
 
 if __name__ == "__main__":

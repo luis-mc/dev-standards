@@ -218,18 +218,24 @@ def list_runs(sha: str, workflow: str, repo: str | None) -> list[dict]:
             and str(r.get("headSha", sha)).startswith(sha[:7])]
 
 
-def collect_runs(sha: str, workflow: str, repo: str | None, only_workflow: bool = False) -> list[dict]:
-    """DL139: the named workflow's runs (a missing workflow still exits 2), plus every other workflow's run for
-    the commit, so a required check in another workflow cannot fail unseen. `only_workflow` watches the named one only."""
-    runs = list_runs(sha, workflow, repo)
-    if only_workflow:
+def add_other_workflows(runs: list[dict], sha: str, repo: str | None, warned: set | None = None) -> list[dict]:
+    """DL139: the named workflow's runs plus every other workflow's run for the commit (one unfiltered
+    `gh run list --commit`), so a required check in another workflow cannot fail unseen. Read once the named runs
+    are complete. When the list cannot be read, a warning is printed once and the named runs decide."""
+    try:
+        extra = list_runs(sha, None, repo)
+    except GhError as exc:
+        if warned is not None and "other-runs" not in warned:
+            warned.add("other-runs")
+            print("ci_watch: warning: the other workflows' runs could not be read (%s)" % exc, file=sys.stderr)
         return runs
     seen = {r.get("databaseId") for r in runs if r.get("databaseId") is not None}
-    for r in list_runs(sha, None, repo):
+    out = list(runs)
+    for r in extra:
         if r.get("databaseId") is None or r.get("databaseId") not in seen:
-            runs.append(r)
+            out.append(r)
             seen.add(r.get("databaseId"))
-    return runs
+    return out
 
 
 def missing_workflow_message(workflow: str, repo: str | None, cause: str) -> str:
@@ -458,16 +464,9 @@ def ledger_root() -> Path:
 
 
 def head_of(sha: str, repo: str | None) -> tuple[str | None, int | None]:
-    """DL138: (branch, PR number) whose head is `sha`: an open PR first, else a local or remote branch at the commit.
-    (None, None) when neither can be found; never raises."""
-    try:
-        prs = gh_json(["pr", "list", "--state", "open", "--limit", "100",
-                       "--json", "number,headRefName,headRefOid", *repo_args(repo)])
-        for pr in prs if isinstance(prs, list) else []:
-            if isinstance(pr, dict) and str(pr.get("headRefOid") or "").startswith(sha[:7]) and pr.get("headRefName"):
-                return str(pr["headRefName"]), pr.get("number")
-    except Exception:  # noqa: BLE001
-        pass
+    """DL138: (branch, PR number) whose head is `sha`, from the local and remote branches at the commit (git only:
+    no PR lookup, so the PR number stays None and the ledger matches the train by branch or by its recorded head).
+    (None, None) when no branch is found; never raises."""
     try:
         import delivery_common as dc
         for ref in ("refs/heads", "refs/remotes"):
@@ -775,7 +774,7 @@ def main(argv: list[str] | None = None) -> int:
         state = ""
         decided = False
         try:
-            runs = collect_runs(sha, args.workflow, args.repo, args.only_workflow)
+            runs = list_runs(sha, args.workflow, args.repo)
             errors = 0
         except WorkflowNotFound as exc:
             print(missing_workflow_message(args.workflow, args.repo, str(exc)), file=sys.stderr)
@@ -799,8 +798,14 @@ def main(argv: list[str] | None = None) -> int:
                     fallback_launch.check_and_launch(
                         sha, pending, fallback_deps(args.repo, fallback_state))
             else:
+                if not args.only_workflow:
+                    runs = add_other_workflows(runs, sha, args.repo, warned)
+                pending = [r for r in runs if r.get("status") != "completed"]
                 bad = [r for r in runs if r.get("conclusion") not in OK_CONCLUSIONS]
-                decided = True
+                decided = not pending or bool(bad)
+                if pending and not bad:
+                    state = f"{len(pending)} of {len(runs)} run(s) not completed (other workflows)"
+            if decided and not pending:
                 try:
                     idle = [r for r in runs if r not in bad and not executed_jobs(r, args.repo)]
                     # Skipped runs only matter when the head belongs to an open PR.
