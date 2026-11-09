@@ -12,7 +12,19 @@ the workflow had `workflow_dispatch` still gets one. A branch that conflicts wit
 not run. CI plans what the branch brings since the default branch (see ci_scope.py); that run is the agent's gate.
 `cleanup.py --pr N` removes the `ci/<task>` refs of a merged train.
 
-    agent_ci.py                              # one pass
+Which branches (DL153, R13.77): a plain pass takes only the branches of agents that are open in
+.delivery/ledger.json (state not done, empty, failed, stopped or disabled), matched by branch name, or by task id when
+the row has no branch. `--task ID` and `--branch NAME` pick explicitly. `--all` scans every branch under the prefix.
+With no ledger and no flag, the script prints what to pass and starts nothing. The task id is the leading letters and
+digits (RS6, DL153) of the branch name after the prefix's last '/'; a prefix like `claude/RS` works.
+
+A stuck run: `gh run cancel` can stall on a queued run. The force-cancel API works:
+`gh api -X POST repos/{owner}/{repo}/actions/runs/{id}/force-cancel`.
+
+    agent_ci.py                              # one pass over the agents open in .delivery/ledger.json (DL153)
+    agent_ci.py --task RS6 --task DL153      # only these tasks (repeatable)
+    agent_ci.py --branch claude/RS6-x        # only these branches (repeatable)
+    agent_ci.py --all                        # every branch under the prefix (the old scan, can queue stray runs)
     agent_ci.py --watch 60                   # a pass every 60 s
     agent_ci.py --base origin/release/12     # merge onto a release branch
     agent_ci.py --dry-run                    # list what would start (pushes nothing)
@@ -76,8 +88,51 @@ def branches(prefix: str) -> list[str]:
     return [b.removeprefix("origin/") for b in out.split() if b]
 
 
+TASK_ID = re.compile(r"[A-Za-z]+\d+")
+AGENT_DONE = ("done", "empty", "failed", "stopped", "disabled")
+LEDGER = ".delivery/ledger.json"
+
+
 def task_of(branch: str, prefix: str) -> str:
-    return branch.removeprefix(prefix).split("-", 1)[0]
+    """Strip the prefix up to its last '/', then take the leading task id (letters, digits) of what is left."""
+    rest = branch.removeprefix(prefix[:prefix.rfind("/") + 1])
+    found = TASK_ID.match(rest)
+    return found.group(0) if found else rest.split("-", 1)[0]
+
+
+def open_agents(ledger: str = LEDGER) -> tuple[set[str], set[str]] | None:
+    """(branch names, task ids of rows without a branch) of the open agents; None when there is no readable ledger."""
+    try:
+        agents = json.loads(Path(ledger).read_text(encoding="utf-8")).get("agents") or []
+    except (OSError, ValueError, AttributeError):
+        return None
+    names: set[str] = set()
+    tasks: set[str] = set()
+    for row in agents:
+        if not isinstance(row, dict) or row.get("state") in AGENT_DONE:
+            continue
+        if row.get("branch"):
+            names.add(str(row["branch"]).removeprefix("origin/"))
+        elif row.get("task"):
+            tasks.add(str(row["task"]))
+    return names, tasks
+
+
+def pick(found: list[str], cfg: dict, tasks: list[str] = (), names: list[str] = (), all_: bool = False,
+         ledger: str = LEDGER) -> list[str] | None:
+    """The branches to look at. None (with a hint printed) when nothing says which."""
+    prefix = cfg["branch_prefix"]
+    if all_:
+        return found
+    if tasks or names:
+        want = [n.removeprefix("origin/") for n in names]
+        return [b for b in dict.fromkeys(want + [b for b in found if task_of(b, prefix) in tasks])]
+    opened = open_agents(ledger)
+    if opened is None:
+        print(f"{time.strftime('%H:%M')} no {ledger}: nothing started. Pass --task ID, --branch NAME or --all.", flush=True)
+        return None
+    names_open, tasks_open = opened
+    return [b for b in found if b in names_open or task_of(b, prefix) in tasks_open]
 
 
 def ci_branch(branch: str, cfg: dict) -> str:
@@ -193,7 +248,8 @@ def e2e_missing(branch: str, base: str) -> list[str]:
         return []
 
 
-def one_pass(cfg: dict, dry_run: bool = False, said: dict | None = None) -> list[str]:
+def one_pass(cfg: dict, dry_run: bool = False, said: dict | None = None, tasks: list[str] = (),
+             names: list[str] = (), all_: bool = False, ledger: str = LEDGER) -> list[str]:
     """One pass over the agent branches. `said` (kept across passes by --watch) holds the last skip line printed per
     branch, so a watch loop does not repeat it."""
     said = {} if said is None else said
@@ -207,7 +263,8 @@ def one_pass(cfg: dict, dry_run: bool = False, said: dict | None = None) -> list
     git("fetch", "-q", "--prune", "origin")
     base = cfg["base"]
     started = []
-    for branch in branches(cfg["branch_prefix"]):
+    chosen = pick(branches(cfg["branch_prefix"]), cfg, tasks, names, all_, ledger)
+    for branch in chosen or []:
         sha = git("rev-parse", f"origin/{branch}").strip()
         if not sha:
             continue
@@ -247,6 +304,11 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--watch", type=int, default=0, help="seconds between passes; 0 = one pass")
     p.add_argument("--dry-run", action="store_true")
     p.add_argument("--config", default=CONFIG)
+    p.add_argument("--task", action="append", default=[], help="task id to run (repeatable)")
+    p.add_argument("--branch", dest="names", action="append", default=[],
+                   help="branch to run (repeatable)")
+    p.add_argument("--all", action="store_true", help="every branch under the prefix")
+    p.add_argument("--ledger", default=LEDGER)
     for k in DEFAULTS:
         if k != "require_e2e":
             p.add_argument(f"--{k.replace('_', '-')}")
@@ -255,7 +317,7 @@ def main(argv: list[str] | None = None) -> int:
     cfg.update({k: getattr(a, k) for k in DEFAULTS if k != "require_e2e" and getattr(a, k)})
     said: dict = {}
     while True:
-        one_pass(cfg, a.dry_run, said)
+        one_pass(cfg, a.dry_run, said, a.task, a.names, a.all, a.ledger)
         if a.watch <= 0:
             return 0
         time.sleep(a.watch)
