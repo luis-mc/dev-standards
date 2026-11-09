@@ -888,8 +888,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T22:36+00:00">09 Nov 22:36</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 22:34</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T22:49+00:00">09 Nov 22:49</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 22:36</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -909,17 +909,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">142</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">7</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">142</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">9</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">7 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">9 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
-<tr data-task="DL151"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
-<tr data-task="DL152"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">WiX 5: inside ServiceInstall a service DACL must use the core &lt;PermissionEx Sddl=.../&gt; (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
-<tr data-task="DL153"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
-<tr data-task="DL154"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Pushing another ref (git push origin &lt;sha&gt;:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show &lt;sha&gt;:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
-<tr data-task="DL155"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
-<tr data-task="DL146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler<span class="release-line"><span class="release-name">RELEASE-71</span></span></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL151"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL152"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">WiX 5: inside ServiceInstall a service DACL must use the core &lt;PermissionEx Sddl=.../&gt; (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL153"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL154"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Pushing another ref (git push origin &lt;sha&gt;:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show &lt;sha&gt;:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL155"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL156"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
+<tr data-task="DL157"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; launch after restart</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">148 tasks</span></summary>
@@ -1107,6 +1109,184 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D159">
+<h3 class="decision-head"><span class="decision-id">D159</span> <span class="decision-question">How to handle missing time zone data on Windows?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL157</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Installer adds tzdata</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">The installer installs the tzdata package when zoneinfo fails.</p>
+<blockquote class="decision-words">&ldquo;Installer adds tzdata (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Doctor message only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep today&#x27;s warning.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D158">
+<h3 class="decision-head"><span class="decision-id">D158</span> <span class="decision-question">Clean the ledger&#x27;s junk rows?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL156</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Clean + prevent</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Remove them now; the ledger refuses agent rows without an id and duplicate release ids.</p>
+<blockquote class="decision-words">&ldquo;Clean + prevent (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Clean only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Remove them now; no code change.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the history.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D157">
+<h3 class="decision-head"><span class="decision-id">D157</span> <span class="decision-question">How much of the Rust globalSetup pattern ships?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS208</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Template + guide</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">vitest globalSetup template, cargo in the TS unit job when the Rust track is on, guide note.</p>
+<blockquote class="decision-words">&ldquo;Template + guide (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Guide only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Document the pattern only.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D156">
+<h3 class="decision-head"><span class="decision-id">D156</span> <span class="decision-question">What if the pre-push ignore-file bug does not reproduce?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL154</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix anyway + test</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Pass the ignore file from the pushed commit and test the reported case.</p>
+<blockquote class="decision-words">&ldquo;Fix anyway + test (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask the peer for a repro</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Park the task until a repro arrives.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop if no repro</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record it Dropped with the evidence.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D155">
+<h3 class="decision-head"><span class="decision-id">D155</span> <span class="decision-question">Which branches does a plain agent_ci.py pass pick?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL153</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Open ledger agents</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Only branches of agents open in the ledger; --task/--branch explicit; --all keeps the old scan.</p>
+<blockquote class="decision-words">&ldquo;Open ledger agents (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Explicit only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A pass must name --task or --branch.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Recent branches</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Branches pushed in the last N hours.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D154">
+<h3 class="decision-head"><span class="decision-id">D154</span> <span class="decision-question">Which Playwright version does a shared-pool refresh keep?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL155</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep highest + flag</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Never lower unless --playwright is passed; raise when a repo needs newer.</p>
+<blockquote class="decision-words">&ldquo;Keep highest + flag (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Flag only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Change only with --playwright.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Lockfile wins</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Today&#x27;s behaviour plus a warning.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D153">
+<h3 class="decision-head"><span class="decision-id">D153</span> <span class="decision-question">How does pool-refresh treat layers other repos asked for?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL155</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep unless dropped</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Existing layers and apt stay; --drop-layer removes one; the plan names the asking repo.</p>
+<blockquote class="decision-words">&ldquo;Keep unless dropped (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Union of pool repos</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Read every registered repo checkout and union their configs.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep existing and add the union.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D152">
+<h3 class="decision-head"><span class="decision-id">D152</span> <span class="decision-question">Add DL146 (default e2e mock handler guard) to RELEASE-77?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL146</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add to RELEASE-77</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">One more agent in the same release.</p>
+<blockquote class="decision-words">&ldquo;Add to RELEASE-77 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep for later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Not in a release yet.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record it Dropped.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D151">
+<h3 class="decision-head"><span class="decision-id">D151</span> <span class="decision-question">May RELEASE-77 merge on green overnight without the owner?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Merge on green</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Follow the overnight rules: merge on green, one rerun, no bypass.</p>
+<blockquote class="decision-words">&ldquo;Merge on green (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for me</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the ready PR open until the owner approves.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D150">
+<h3 class="decision-head"><span class="decision-id">D150</span> <span class="decision-question">When to launch RELEASE-77&#x27;s agents?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Launch now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Cloud agents tonight; merge after midnight if green.</p>
+<blockquote class="decision-words">&ldquo;Launch now (Recommended); restart the session first&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Launch in the morning</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Start about 08:00.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Launch a subset now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only the bug fixes other sessions hit.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D149">
 <h3 class="decision-head"><span class="decision-id">D149</span> <span class="decision-question">Which agent-report follow-ups to schedule?</span></h3>
 <p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL122</p>
@@ -3704,6 +3884,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>09 Nov 22:49</td><td>DL156 item changed from &quot;Ledger refuses agent rows without an id and duplicate release ids&quot; to &quot;Ledger refuses agent rows without a task and duplicate release ids&quot;</td></tr>
 <tr><td>09 Nov 16:29</td><td>dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release</td></tr>
 <tr><td>09 Nov 16:29</td><td>dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release</td></tr>
 <tr><td>09 Nov 16:29</td><td>dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release</td></tr>

@@ -1,5 +1,9 @@
 [
   {
+    "date": "09 Nov 22:49",
+    "change": "DL156 item changed from \"Ledger refuses agent rows without an id and duplicate release ids\" to \"Ledger refuses agent rows without a task and duplicate release ids\""
+  },
+  {
     "date": "09 Nov 16:29",
     "change": "dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release"
   },

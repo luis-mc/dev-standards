@@ -3405,6 +3405,234 @@
    "chosen": "Both",
    "decided": "2026-11-09",
    "owner_words": "Installer runs prune sync, Check-in names stale agents"
+  },
+  {
+   "id": "D150",
+   "question": "When to launch RELEASE-77's agents?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "Launch now",
+     "summary": "Cloud agents tonight; merge after midnight if green."
+    },
+    {
+     "label": "Launch in the morning",
+     "summary": "Start about 08:00."
+    },
+    {
+     "label": "Launch a subset now",
+     "summary": "Only the bug fixes other sessions hit."
+    }
+   ],
+   "chosen": "Launch now",
+   "decided": "2026-11-09",
+   "owner_words": "Launch now (Recommended); restart the session first"
+  },
+  {
+   "id": "D151",
+   "question": "May RELEASE-77 merge on green overnight without the owner?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "Merge on green",
+     "summary": "Follow the overnight rules: merge on green, one rerun, no bypass."
+    },
+    {
+     "label": "Wait for me",
+     "summary": "Keep the ready PR open until the owner approves."
+    }
+   ],
+   "chosen": "Merge on green",
+   "decided": "2026-11-09",
+   "owner_words": "Merge on green (Recommended)"
+  },
+  {
+   "id": "D152",
+   "question": "Add DL146 (default e2e mock handler guard) to RELEASE-77?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL146",
+   "options": [
+    {
+     "label": "Add to RELEASE-77",
+     "summary": "One more agent in the same release."
+    },
+    {
+     "label": "Keep for later",
+     "summary": "Not in a release yet."
+    },
+    {
+     "label": "Drop it",
+     "summary": "Record it Dropped."
+    }
+   ],
+   "chosen": "Add to RELEASE-77",
+   "decided": "2026-11-09",
+   "owner_words": "Add to RELEASE-77 (Recommended)"
+  },
+  {
+   "id": "D153",
+   "question": "How does pool-refresh treat layers other repos asked for?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL155",
+   "options": [
+    {
+     "label": "Keep unless dropped",
+     "summary": "Existing layers and apt stay; --drop-layer removes one; the plan names the asking repo."
+    },
+    {
+     "label": "Union of pool repos",
+     "summary": "Read every registered repo checkout and union their configs."
+    },
+    {
+     "label": "Both",
+     "summary": "Keep existing and add the union."
+    }
+   ],
+   "chosen": "Keep unless dropped",
+   "decided": "2026-11-09",
+   "owner_words": "Keep unless dropped (Recommended)"
+  },
+  {
+   "id": "D154",
+   "question": "Which Playwright version does a shared-pool refresh keep?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL155",
+   "options": [
+    {
+     "label": "Keep highest + flag",
+     "summary": "Never lower unless --playwright is passed; raise when a repo needs newer."
+    },
+    {
+     "label": "Flag only",
+     "summary": "Change only with --playwright."
+    },
+    {
+     "label": "Lockfile wins",
+     "summary": "Today's behaviour plus a warning."
+    }
+   ],
+   "chosen": "Keep highest + flag",
+   "decided": "2026-11-09",
+   "owner_words": "Keep highest + flag (Recommended)"
+  },
+  {
+   "id": "D155",
+   "question": "Which branches does a plain agent_ci.py pass pick?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL153",
+   "options": [
+    {
+     "label": "Open ledger agents",
+     "summary": "Only branches of agents open in the ledger; --task/--branch explicit; --all keeps the old scan."
+    },
+    {
+     "label": "Explicit only",
+     "summary": "A pass must name --task or --branch."
+    },
+    {
+     "label": "Recent branches",
+     "summary": "Branches pushed in the last N hours."
+    }
+   ],
+   "chosen": "Open ledger agents",
+   "decided": "2026-11-09",
+   "owner_words": "Open ledger agents (Recommended)"
+  },
+  {
+   "id": "D156",
+   "question": "What if the pre-push ignore-file bug does not reproduce?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL154",
+   "options": [
+    {
+     "label": "Fix anyway + test",
+     "summary": "Pass the ignore file from the pushed commit and test the reported case."
+    },
+    {
+     "label": "Ask the peer for a repro",
+     "summary": "Park the task until a repro arrives."
+    },
+    {
+     "label": "Drop if no repro",
+     "summary": "Record it Dropped with the evidence."
+    }
+   ],
+   "chosen": "Fix anyway + test",
+   "decided": "2026-11-09",
+   "owner_words": "Fix anyway + test (Recommended)"
+  },
+  {
+   "id": "D157",
+   "question": "How much of the Rust globalSetup pattern ships?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS208",
+   "options": [
+    {
+     "label": "Template + guide",
+     "summary": "vitest globalSetup template, cargo in the TS unit job when the Rust track is on, guide note."
+    },
+    {
+     "label": "Guide only",
+     "summary": "Document the pattern only."
+    }
+   ],
+   "chosen": "Template + guide",
+   "decided": "2026-11-09",
+   "owner_words": "Template + guide (Recommended)"
+  },
+  {
+   "id": "D158",
+   "question": "Clean the ledger's junk rows?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL156",
+   "options": [
+    {
+     "label": "Clean + prevent",
+     "summary": "Remove them now; the ledger refuses agent rows without an id and duplicate release ids."
+    },
+    {
+     "label": "Clean only",
+     "summary": "Remove them now; no code change."
+    },
+    {
+     "label": "Leave them",
+     "summary": "Keep the history."
+    }
+   ],
+   "chosen": "Clean + prevent",
+   "decided": "2026-11-09",
+   "owner_words": "Clean + prevent (Recommended)"
+  },
+  {
+   "id": "D159",
+   "question": "How to handle missing time zone data on Windows?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL157",
+   "options": [
+    {
+     "label": "Installer adds tzdata",
+     "summary": "The installer installs the tzdata package when zoneinfo fails."
+    },
+    {
+     "label": "Doctor message only",
+     "summary": "Keep today's warning."
+    }
+   ],
+   "chosen": "Installer adds tzdata",
+   "decided": "2026-11-09",
+   "owner_words": "Installer adds tzdata (Recommended)"
   }
  ]
 }
