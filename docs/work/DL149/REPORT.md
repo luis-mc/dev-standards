@@ -20,3 +20,9 @@
 - `ci_areas.py --branch-advice`: "unreadable diff" -> all areas.
 - `docs_check.py`: only W1 (docs/work), as expected.
 - No Docker build was run.
+- Fix after the first CI run: an absent POOL_LAYERS/POOL_APT key and an empty value count as no change (test_dl103_pool_keep_cap failed before).
+- `gh workflow run spec-lint.yml --ref DL149-pool-packaging-layer -f areas=delivery` (run 42681106044): all 10 delivery jobs success (branch gate, train cleanup, CI scripts and templates, setup preflight, artifact pruning, change notes, packaged-program smoke, runner plan, area mapping, ledger/recorder/watcher/hooks) and the aggregate "delivery scripts..." job success. Only `docs check` failed: W1 (docs/work files), expected. The first run (42680533139) failed the ledger job on the bug above.
+
+Branch head: see `git rev-parse origin/DL149-pool-packaging-layer`.
+
+READY
