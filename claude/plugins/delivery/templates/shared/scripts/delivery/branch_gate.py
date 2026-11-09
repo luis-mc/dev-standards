@@ -300,11 +300,12 @@ def main(argv: list[str] | None = None) -> int:
         "e2e_only": bool(args.e2e_only),
         "ui_changed": bool(dc.ui_files(ctx)),
         "e2e": dc.e2e_record(entries, ctx),
-        "warnings": cs_warnings,
         "started_at": started,
         "finished_at": finished,
         "tool": "branch_gate.py %d" % dc.TOOL_VERSION,
     }
+    if cs_warnings:
+        result["warnings"] = cs_warnings  # only present when a C# change was not compiled (DL141)
     result_file = root / dc.GATE_RESULT_PATH
     dc.write_json(result_file, result)
 
