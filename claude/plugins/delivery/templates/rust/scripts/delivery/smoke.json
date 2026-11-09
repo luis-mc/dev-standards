@@ -7,6 +7,8 @@
     "health": [],
     "timeout_s": 60,
     "cwd": ".",
-    "example_start": "./target/release/app"
+    "example_start": "./target/release/app",
+    "binaries": [],
+    "_binaries_note": "DS200: names of [[bin]] targets. `python3 scripts/delivery/rust_ci.py smoke` builds each in debug and runs it with --version."
   }
 }

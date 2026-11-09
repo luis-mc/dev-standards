@@ -2,9 +2,13 @@
   "schema": 1,
   "track": "rust",
   "default_branch": "main",
-  "setup": ["cargo fetch --locked"],
+  "setup": [
+    "cargo fetch --locked"
+  ],
   "timeout_minutes": 30,
-  "packages": {"kind": "cargo-workspace"},
+  "packages": {
+    "kind": "cargo-workspace"
+  },
   "widen_on": [
     "Cargo.toml",
     "Cargo.lock",
@@ -15,9 +19,20 @@
     "scripts/delivery/"
   ],
   "lockfile_scope": "widen",
-  "inert_paths": ["docs/**"],
+  "inert_paths": [
+    "docs/**"
+  ],
   "ui_paths": [],
-  "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "typecheck", "unit"],
+  "fail_fast_order": [
+    "secret-scan",
+    "change-notes",
+    "guards",
+    "lint",
+    "typecheck",
+    "unit",
+    "deny",
+    "xwin"
+  ],
   "steps": [
     {
       "name": "secret-scan",
@@ -35,24 +50,58 @@
       "name": "guards",
       "scope": "always",
       "pre_push": true,
-      "run": "cargo test --locked --workspace guard_"
+      "run": "python3 scripts/delivery/rust_ci.py run -- cargo test --locked --workspace guard_",
+      "paths": "rust"
     },
     {
       "name": "lint",
       "scope": "changed+dependents",
       "pre_push": true,
-      "run": "cargo clippy --locked --workspace --all-targets -- -D warnings"
+      "run": "python3 scripts/delivery/rust_ci.py run -- cargo clippy --locked --workspace --all-targets -- -D warnings",
+      "paths": "rust"
     },
     {
       "name": "typecheck",
       "scope": "changed+dependents",
       "pre_push": true,
-      "run": "cargo check --locked --workspace --all-targets"
+      "run": "python3 scripts/delivery/rust_ci.py run -- cargo check --locked --workspace --all-targets",
+      "paths": "rust"
     },
     {
       "name": "unit",
       "scope": "changed",
-      "run": "cargo test --locked --workspace --lib"
+      "run": "python3 scripts/delivery/rust_ci.py run -- cargo test --locked --workspace --lib",
+      "paths": "rust"
+    },
+    {
+      "name": "deny",
+      "scope": "always",
+      "pre_push": false,
+      "paths": "rust",
+      "run": "python3 scripts/delivery/rust_ci.py deny"
+    },
+    {
+      "name": "xwin",
+      "scope": "changed",
+      "paths": "rust",
+      "run": "python3 scripts/delivery/rust_ci.py run -- cargo xwin check --locked --target x86_64-pc-windows-msvc",
+      "run_full": "python3 scripts/delivery/rust_ci.py run -- cargo xwin check --locked --workspace --target x86_64-pc-windows-msvc",
+      "_note": "D144: needs the one-time recorded Microsoft CRT/SDK licence acceptance; drop this step and use a Windows runner otherwise."
     }
-  ]
+  ],
+  "toolchain-isolated": false,
+  "scope_map": {
+    "rust": [
+      "Cargo.toml",
+      "Cargo.lock",
+      "rust-toolchain.toml",
+      "deny.toml",
+      ".cargo/",
+      "crates/**",
+      "src/**",
+      "tests/**",
+      "benches/**"
+    ],
+    "note": "A change that touches only these paths selects the Rust steps and no JS steps."
+  }
 }

@@ -5,15 +5,33 @@ name: CI
 # The gates are the requirement; clippy, cargo-deny and cargo-nextest are this
 # generator's choices (§13.1 names no tool). Record them in the Stack Profile. The secret scan
 # (§12) is a step in `verify`, not a separate job.
+# Path filter (DS206). A pull request runs this workflow only when it touches a Rust path:
+# crates/**, **/Cargo.toml, Cargo.lock, rust-toolchain.toml, rustfmt.toml, deny.toml, **/*.rs,
+# scripts/delivery/rust_ci.py, tools.json (and this file). Rust code under apps/ counts, so a
+# JS-only change does not run the Rust suite. The JS workflow ignores the same Rust paths in turn.
 on:
   pull_request:
     # CI runs when the PR is marked ready: drafts are skipped (see the job-level
     # `if`) and `ready_for_review` is what triggers the run on that transition.
     types: [opened, synchronize, reopened, ready_for_review]
-    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+    paths:
+      - 'crates/**'
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'rustfmt.toml'
+      - 'deny.toml'
+      - '**/*.rs'
+      - 'scripts/delivery/rust_ci.py'
+      - 'tools.json'
+      - '.github/workflows/ci.yml'
   push:
     branches: [main]
-    paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
+    # `paths-ignore`, not `paths`: the shared CI checks and ci_skip_check.py read push
+    # `paths-ignore` and need docs/** and **/*.md in it. The folders that are only JS or
+    # mobile are ignored too. apps/** is not: Rust code can live there, so a push to main
+    # that changes apps/ runs this workflow.
+    paths-ignore: ['apps/ios/**', 'apps/android/**', 'packages/**', 'pnpm-lock.yaml', '**/*.md', 'docs/**']
 
 concurrency:
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main
@@ -68,7 +86,8 @@ jobs:
   verify:
     name: clippy, fmt, build, unit + contract tests
     needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: verify
@@ -101,14 +120,24 @@ jobs:
           gitleaks="$(python3 scripts/delivery/ci_tool.py gitleaks --platform linux_x64)"
           "$gitleaks" git --config .gitleaks.toml --redact --no-banner
 
-      # §2.2: the toolchain version is pinned in the repository. rust-toolchain.toml
-      # is that pin and the action reads it, so there is no second place to update.
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-        with:
-          toolchain: stable
-          components: clippy, rustfmt
+      # D141: the exact channel from rust-toolchain.toml, installed with the
+      # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
+      - name: Install the pinned Rust toolchain
+        run: |
+          python3 scripts/delivery/rust_ci.py toolchain
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          python3 scripts/delivery/ci_tool.py tool cargo-deny --dir >> "$GITHUB_PATH"
+          rustup component add clippy rustfmt
 
+      # D140: pinned linker environment for every later step.
+      - name: Apply the linker environment
+        run: |
+          python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
+
+      # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
+      # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: ${{ runner.environment == 'github-hosted' }}
 
       # §2.2: install from the committed lockfile in frozen mode. --locked fails
       # rather than silently updating Cargo.lock, which is the whole point — a CI
@@ -134,9 +163,7 @@ jobs:
       # IS the enforcement; deny.toml catches the case where someone adds the
       # dependency to make the import compile.
       - name: Boundary check (§3.2, §3.3)
-        run: |
-          cargo install --locked cargo-deny || true
-          cargo deny check bans
+        run: python3 scripts/delivery/rust_ci.py deny
 
       # §4.1: generated clients regenerated and committed. Asserting a clean tree
       # is the only check a stale committed artifact cannot satisfy.
@@ -158,10 +185,6 @@ jobs:
       - name: Contract tests
         run: cargo test --locked --test contract
 
-      # §12: dependency scanning, failing on known-exploitable advisories.
-      - name: Dependency scan
-        run: cargo deny check advisories
-
   # ---------------------------------------------------------------------------
   # §11.1 + §5.5: integration tests against an ephemeral real instance of the
   # chosen engine, seeded through the migration chain. Not mocks.
@@ -172,7 +195,8 @@ jobs:
   integration:
     name: integration tests (ephemeral database)
     needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
@@ -194,17 +218,30 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-      - uses: dtolnay/rust-toolchain@b725eda525362e7cf34af9a7243cac1e3f01a7ec # stable
-        with:
-          toolchain: stable
+      # D141: the exact channel from rust-toolchain.toml, installed with the
+      # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
+      - name: Install the pinned Rust toolchain
+        run: |
+          python3 scripts/delivery/rust_ci.py toolchain
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          python3 scripts/delivery/ci_tool.py tool cargo-deny --dir >> "$GITHUB_PATH"
+
+      # D140: pinned linker environment for every later step.
+      - name: Apply the linker environment
+        run: |
+          python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
+
+      # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
+      # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: ${{ runner.environment == 'github-hosted' }}
 
       # §5.4: migrations applied in order by a dedicated runner. This must run
       # before any sqlx compile step, because the macros check against the live
       # schema — an unmigrated database fails the build with a confusing error.
       - name: Migrate (seed through the migration chain)
         run: |
-          cargo install --locked sqlx-cli --no-default-features --features postgres || true
+          cargo install --locked sqlx-cli --no-default-features --features postgres
           sqlx migrate run
 
       - name: Integration tests

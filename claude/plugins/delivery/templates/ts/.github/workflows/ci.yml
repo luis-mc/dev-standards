@@ -10,6 +10,10 @@ name: CI
 # macOS runners (§13.3), and §13.3 states mobile CI MUST be path-filtered and
 # MUST NOT run on documentation-only changes; excluding those paths here is the
 # other half — a mobile-only change does not rebuild the web apps.
+#
+# DS206: the Rust paths are ignored too (crates/**, Cargo.lock, **/*.rs and the other Rust
+# files, never tools.json). A workflow is skipped only when every changed file is ignored, so a
+# Rust-only change does not run the JS suite and a mixed change runs it.
 on:
   pull_request:
     # CI runs when the PR is marked ready: drafts are skipped (see the job-level
@@ -20,6 +24,14 @@ on:
       - 'apps/android/**'
       - '**/*.md'
       - 'docs/**'
+      - 'crates/**'
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'rustfmt.toml'
+      - 'deny.toml'
+      - '**/*.rs'
+      - 'scripts/delivery/rust_ci.py'
   push:
     branches: [main]
     paths-ignore:
@@ -27,6 +39,14 @@ on:
       - 'apps/android/**'
       - '**/*.md'
       - 'docs/**'
+      - 'crates/**'
+      - '**/Cargo.toml'
+      - 'Cargo.lock'
+      - 'rust-toolchain.toml'
+      - 'rustfmt.toml'
+      - 'deny.toml'
+      - '**/*.rs'
+      - 'scripts/delivery/rust_ci.py'
   # A run started by hand on an agent branch (scripts/delivery/agent_ci.py does it at CODE DONE, DL-81). Draft
   # pull requests run no CI, so this run is the agent's gate. It plans what the branch brings since the default
   # branch (the `plan` job below).
@@ -93,7 +113,8 @@ jobs:
   plan:
     name: 'runner plan: which jobs this change needs'
     needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: plan
@@ -152,7 +173,8 @@ jobs:
   verify:
     name: lint, types, boundaries, unit + contract tests
     needs: decide
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: verify
@@ -277,7 +299,8 @@ jobs:
   integration:
     name: integration tests (ephemeral Postgres)
     needs: [decide, plan]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
@@ -364,7 +387,8 @@ jobs:
   e2e-shard:
     name: web E2E shard ${{ matrix.shard }}
     needs: [decide, plan]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       # The hook sees the job key, not this value: the shard is the key. The legs share it.
@@ -440,7 +464,8 @@ jobs:
   e2e:
     name: web E2E (§11.2)
     needs: [decide, plan, verify, integration, e2e-shard]
-    if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    # DL147: this job judges the results itself, so any result but cancelled lets it run.
+    if: ${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: e2e
