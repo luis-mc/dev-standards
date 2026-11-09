@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T20:30+00:00",
+  "updated": "2026-11-09T20:38+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5821,9 +5821,9 @@
       "status": "Running",
       "item": "RELEASE: plugin fixes, audits specs and Rust track",
       "detail": "One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "09 Nov ~21:05",
-      "changed": "2026-11-09T20:30+00:00",
-      "expected_basis": "release CI started 20:37, ~25 min",
+      "expected": "09 Nov ~21:12",
+      "changed": "2026-11-09T20:38+00:00",
+      "expected_basis": "fix round pushed 20:45; release CI ~25 min",
       "release": 71,
       "phases": [
         {
@@ -5838,18 +5838,18 @@
         },
         {
           "name": "ci",
-          "start": "2026-11-09T20:37+00:00",
-          "end": "2026-11-09T21:02+00:00"
+          "start": "2026-11-09T20:45+00:00",
+          "end": "2026-11-09T21:10+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-09T21:02+00:00",
-          "end": "2026-11-09T21:05+00:00"
+          "start": "2026-11-09T21:10+00:00",
+          "end": "2026-11-09T21:12+00:00"
         }
       ],
       "started": "2026-11-09T15:57+00:00",
       "risk": {
-        "label": "+1 fix round",
+        "label": "+1 more fix round",
         "minutes": 25
       }
     },
