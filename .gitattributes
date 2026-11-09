@@ -1,3 +1,6 @@
+# Every text file is stored and checked out with LF, Windows included, so a
+# Windows worktree matches CI (prettier, hashes, diffs). DL161.
+* text=auto eol=lf
 # Files that run under a POSIX shell or are copied into generated repositories keep
 # LF in every checkout, Windows included: a CRLF `#!/bin/sh` hook fails with
 # "sh\r: not found", and the delivery scripts are copied byte for byte.
