@@ -18,7 +18,7 @@
   "lockfile_scope": "pnpm-importers",
   "inert_paths": ["docs/**"],
   "ui_paths": ["apps/web/", "apps/admin/", "packages/ui/"],
-  "fail_fast_order": ["secret-scan", "change-notes", "guards", "lint", "typecheck", "unit", "e2e"],
+  "fail_fast_order": ["secret-scan", "change-notes", "guards", "mock-handler-guard", "lint", "typecheck", "unit", "e2e"],
   "steps": [
     {
       "name": "secret-scan",
@@ -38,6 +38,12 @@
       "pre_push": true,
       "run": "pnpm vitest run --project guard",
       "env": {"CI": "true"}
+    },
+    {
+      "name": "mock-handler-guard",
+      "scope": "always",
+      "pre_push": true,
+      "run": "python3 scripts/delivery/mock_handler_guard.py --base-ref {base} || python scripts/delivery/mock_handler_guard.py --base-ref {base}"
     },
     {
       "name": "lint",
