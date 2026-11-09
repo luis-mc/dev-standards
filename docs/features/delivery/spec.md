@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.14.0
+version: 0.15.0
 owner: agents
 type: reference
 code:
@@ -121,6 +121,12 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.23** — CI jobs keep pinned tools on the runner's own disk. `scripts/delivery/ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>` prints the path of a verified file in the per-runner cache. The cache is `CI_TOOLS_DIR`, else `C:/ci-tools` on Windows and `~/.cache/ci-tools` elsewhere, laid out as `<tool>/<version>/<file>`. It is never `$RUNNER_TEMP` or the workspace. A cached file is used only when its SHA-256 matches the pin; a mismatch is deleted and fetched again. A fetch makes 5 attempts (waits of 10, 20, 30 and 40 s; `CI_TOOL_RETRY_DELAY` sets the base) with a 20 s timeout. It downloads to a `.partial` file, verifies it, then renames it. `ci_tool.py gitleaks [--platform P]` does the same for the gitleaks pin in `tools.json` and prints the binary's path. Exit 0 prints the path, 1 is a failure (one stderr line with the URL, the attempts and the last error), 2 is a usage error. The shipped `ci.yml` gitleaks steps use it, and the runner pool keeps the cache on a `ci-tools` volume at `/ci-tools`. (DL115)
 
 **R5.24** — DL-94: a workflow step that downloads a release asset or binary (curl, wget, Invoke-WebRequest, iwr or urllib, on a `/releases/download/` URL or a `.zip`, `.tar.gz`, `.tgz`, `.exe`, `.msi` or `.xz` file) is flagged when it does not go through `ci_tool.py`, writes into `RUNNER_TEMP`, or has no SHA-256 check. `workflow_fetch_check.py [FILES...]` reports each finding as `<file>:<line>: DL-94 <what> (<fix>)` and exits 0 when clean, 1 on findings and 2 on a usage error. The PreToolUse hook runs the same check on a Write, Edit or MultiEdit of `.github/workflows/*.yml` and blocks a finding. It fails open on its own errors. A reviewed exception ends the line with `# ci-tool: ok <reason>`. (DL116)
+
+**R5.25** — Session start never fails silently on an old watcher. When it cannot stop one (access denied, an elevated process), it tells the session: `delivery_watch pid <pid> (plugin <version or unstamped>) could not be stopped: <reason>. Stop it yourself, from an Administrator shell on Windows: Stop-Process -Id <pid>` (on POSIX, `kill <pid>`, with sudo if needed). It still starts the installed watcher, and it repeats the warning while that row's heartbeat stays fresh. A dead pid is never warned about. Only a row's recorded pid is ever signalled, never a process name. The running watcher prunes, at its heartbeat, watcher rows whose pid is dead and whose heartbeat is older than 24 hours; session start never writes the ledger. (DL118)
+
+**R5.26** — A project keeps its own choices across `delivery_ci_install.py update` with a tracked `scripts/delivery/ci-install.json`: `{"keep": [paths], "skip": [paths]}`, paths relative to the project root. The installer never writes that file. Update never overwrites a `keep` file: it lists it as `kept (ci-install.json) <path>`, and ends with `kept <path>: the plugin's version differs; diff it with <template path> and fold your change into the plugin or drop it`. A missing `keep` file is still written. Install and update never write a `skip` file, even when it is missing, and list it as `skipped (ci-install.json) <path>`. A path the plugin does not manage gets a warning line. Bad JSON exits 2, names the file and writes nothing. The plugin ships `ci-install.example.json`. (DL120)
+
+**R5.27** — `ci_tool.py` needs Python 3.11+ visible to the runner's own account. A Windows runner that runs as a service (for example NETWORK SERVICE) cannot see a per-user Python, so it needs a machine-wide install. Otherwise the gitleaks step fails at once. (DL120)
 
 ## 6. Non-functional requirements
 
@@ -395,6 +401,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.15.0 | 2026-11-08 | RELEASE-68 | Session start names a watcher it cannot stop and how to stop it; dead watcher rows are pruned (R5.25).<br>scripts/delivery/ci-install.json keep and skip lists survive updates; Windows service runners need a machine-wide Python for ci_tool.py (R5.26, R5.27). | DL118, DL120 |
 | 0.14.0 | 2026-11-08 | RELEASE-67 | Pinned CI tools are cached on the runner disk with ci_tool.py: checksum-verified, with retries (R5.23).<br>DL-94 flags workflow downloads that skip the cache or the checksum (R5.24). | DL115, DL116 |
 | 0.13.0 | 2026-11-08 | RELEASE-66 | join.py keeps and reports clean merges when a later branch conflicts (R5.20).<br>Missing delivery modules are named, listed by the installer, and checked by a test (R5.21).<br>New cancel_joined_runs.py cancels CI runs of branches already joined (R5.22). | DL111, DL112, DL113 |
 | 0.12.4 | 2026-11-07 | RELEASE-65 | On Windows the watcher opens no console windows, and a second watcher for the same root exits (R5.19). | DL109 |

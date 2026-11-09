@@ -348,6 +348,26 @@ def prune(led: dict, days: int, now: datetime | None = None) -> int:
     return dropped
 
 
+def prune_watchers(led: dict, now: datetime, alive) -> int:
+    """DL118: drop delivery_watch rows whose pid is not alive and whose heartbeat is over 24 hours old.
+    A row with a fresh or unreadable heartbeat is kept. `alive(pid)` is injected. Returns how many went."""
+    from datetime import timedelta
+    rows = led.get("watchers")
+    if not isinstance(rows, list):
+        return 0
+    cutoff = now - timedelta(hours=24)
+
+    def dead(w):
+        if not isinstance(w, dict) or w.get("kind") != "delivery_watch":
+            return False
+        beat = parse_iso(w.get("heartbeat_at"))
+        return beat is not None and beat < cutoff and not alive(w.get("pid"))
+
+    kept = [w for w in rows if not dead(w)]
+    led["watchers"] = kept
+    return len(rows) - len(kept)
+
+
 def update(root, fn, **lock_kw) -> dict:
     """Lock, load, expire old finished rows, apply fn(ledger), derive phases, cap events, write. Returns the ledger."""
     with locked(root, **lock_kw):

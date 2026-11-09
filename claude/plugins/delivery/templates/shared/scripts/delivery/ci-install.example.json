@@ -1,0 +1,5 @@
+{
+  "_comment": "Copy to scripts/delivery/ci-install.json (the project owns that file; install and update never write it). keep: paths update never overwrites, listed as 'kept (ci-install.json)'. skip: paths install and update never write, even when missing, listed as 'skipped (ci-install.json)'. Paths are relative to the project root.",
+  "keep": [],
+  "skip": []
+}

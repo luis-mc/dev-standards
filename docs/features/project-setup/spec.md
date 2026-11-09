@@ -18,7 +18,7 @@ code:
   - tools/test_rule_tags.py
   - tools/test_questions_stop.py
   - tools/test_project_setup_fixes.py
-last_verified: 2026-11-01
+last_verified: 2026-11-08
 ---
 # Project setup (luismc-project-setup)
 
