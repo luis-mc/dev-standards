@@ -455,6 +455,8 @@ Failure modes:
 | A job is held for a slot while the fallback runs its shard | The held job gets its slot, finds the claim taken, ends with exit 3 and frees the slot (R13.64). |
 | Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R13.66). |
 
+**R13.77** — **Which branches `agent_ci.py` runs** (DL153, D155). A plain pass picks only the branches of agents that are open in `.delivery/ledger.json` (state not done, empty, failed, stopped or disabled), matched by branch name, or by task id when the row has no branch. `--task ID` and `--branch NAME` (both repeatable) pick explicitly. `--all` scans every branch under the prefix, as before. With no ledger and no flag, it prints what to pass and starts nothing. The task id is the leading letters and digits (`RS6`, `DL153`) of the branch name after the last `/` of the prefix, so `--branch-prefix claude/RS` finds the report of `claude/RS6-x`. `gh run cancel` can stall on a queued run; the force-cancel API works: `gh api -X POST repos/{owner}/{repo}/actions/runs/{id}/force-cancel`. The script help says the same.
+
 ## Versions
 
 Written by the release fold. Do not edit by hand.

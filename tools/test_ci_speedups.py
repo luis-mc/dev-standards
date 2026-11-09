@@ -643,7 +643,7 @@ class CiRepo:
         self.log.write_text("") if not self.log.exists() else None
         env = {**GIT_ENV, "PATH": f"{self.root / 'bin'}{os.pathsep}{os.environ['PATH']}", "STUB_LOG": str(self.log),
                "STUB_RUNS": runs}
-        rc, out, err = run(script, ["--config", str(self.root / "none.json"), *args], cwd=self.work, env=env)
+        rc, out, err = run(script, ["--config", str(self.root / "none.json"), "--all", *args], cwd=self.work, env=env)
         return rc, out, err, self.log.read_text()
 
     def remote_ref(self, name: str) -> str:
