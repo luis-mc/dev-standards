@@ -106,6 +106,14 @@ Mobile has the largest cascade of the six. It forces generated Swift and Kotlin
 clients, push credentials and store declarations, and it makes hypermedia web
 approaches cost double. Ask it even when the answer seems obvious.
 
+A seventh question is asked only when something other than "web plus API" is
+possible: **does any part of the product run on a user's or operator's machine?**
+Offer: none, a command-line tool (CLI), a host service (installer helper,
+background service, tray), or a native library inside the JS app (napi or WASM).
+Any answer but none opens the `native_components` role in Phase 3. None is the
+default. Do not ask about a hot path or a memory ceiling here; the reason is
+written down in Phase 3.
+
 Two answers are worth reacting to immediately:
 
 - **Compliance is anything but `none`** → the free bundle is eliminated outright.
@@ -149,6 +157,57 @@ Server language largely determines which hosting is viable. From
   as web hosts. Offer split hosting (web on an edge platform, API in
   containers). Do not treat "not all one vendor" as a failure. `§4.1`'s generated
   client is the seam, and it already has to exist.
+
+### Native components (Rust) beside the main language
+
+Ask this role only when the Phase 1 machine-side question was not "none". The
+role is `native_components` (multi-select, default none). Rust is a component
+beside any API language and any host. The host elimination above applies to the
+API language only. For each pick, the wizard binds one component with these
+fields: `id`, `parts`, `reason`, `build_matrix`, `cross_compile`,
+`licence_note`, `targets`, `windows_runner`.
+
+- **Parts offered:** `cli`, `host-service`, `library-napi`, `library-wasm`.
+  `worker` and `media` are `later_parts`: do not offer them. Add them only when
+  the project asks.
+- **Reason (D145).** Ask `reason_prompt` and write the answer as a plain
+  sentence in the Stack Profile. A written reason is enough. Do not ask for a
+  measured number or a profile. No reason means no component; the default is to
+  stay in the main language.
+- **Targets.** Ask which OSes (Windows, Linux, macOS) it must run on and which
+  ship first. Record them in `targets`.
+- **napi build matrix.** A `library-napi` part needs a prebuilt binary for each
+  OS and CPU. Ask which pairs to build and record them in `build_matrix`. On
+  Vercel the Linux pair must be in it; warn if it is not.
+- **Cross-compile and licence.** Ask whether a target is built on another OS
+  (for example Windows built on Linux). If yes, set `cross_compile` and write a
+  `licence_note`: the cross tool downloads the Microsoft CRT and SDK, and the
+  project accepts that licence once. Record who accepted it and when.
+- **Windows build option (D144).** For a Windows target offer two options:
+  `cargo-xwin` on Linux (needs the licence note above), or a Windows runner
+  (set `windows_runner`). If the owner accepts neither, the Windows target is
+  deferred, not dropped silently.
+- **Host service.** It needs a Windows build option. WASM runs on edge workers
+  with no threads and no filesystem. Say both out loud.
+- **Signing.** If it ships to user machines, ask about a code-signing
+  certificate and add a provisioning ledger row (have / provision / defer).
+
+Run `check_stack.py` on the result. It warns on a Rust component with no
+recorded reason, a napi addon with no build matrix, and a cross-compile target
+with no licence note.
+
+**What not to change for Rust:**
+
+- Do not name Rust or any technology in STACKSPEC. Specifics live in the
+  catalog, the tooling and this skill (`§20`).
+- Do not make Rust a default or a bundle recommendation, and do not remove
+  `requires_reason`.
+- Do not change the API host elimination for Rust as the API language.
+- Do not renumber sections or requirement IDs.
+- Do not add auth or mobile logic for Rust components. Those stay in their own
+  skills.
+- Do not generate Rust code beyond the empty skeleton and the guards crate. The
+  product writes its own crates.
 
 ### Vendor roles are open, and that is the point
 
@@ -385,6 +444,32 @@ its start command and every worker's readiness line in
 form and runs `scripts/delivery/smoke_packaged.py` on it. An empty `start` means
 the product ships no packaged program.
 
+### Step 1 addition — the Rust workspace (only when a component was chosen)
+
+Keep the JS packages as they are and add beside them:
+
+```text
+Cargo.toml              workspace, resolver 2, [workspace.package], [workspace.dependencies], release profile
+Cargo.lock              committed
+rust-toolchain.toml     exact version (never "stable"), minimal profile, rustfmt + clippy, needed targets
+rustfmt.toml  deny.toml
+crates/
+  app1-core/            pure logic, no I/O (also built to WASM when chosen)
+  app1-platform/        OS traits + windows/ and unix/ modules (host service only)
+  app1-cli/  app1-worker/  app1-napi/   (only the chosen parts)
+  guards/               the guard_* starter crate
+packages/native-app1/   JS wrapper that loads the napi or WASM build (thin task shim, §2.3)
+```
+
+- One workspace and one lockfile. Do not leave a second `Cargo.lock` in a
+  sub-package.
+- The root `pnpm run lint|test|typecheck|build` calls `cargo` for the Rust part.
+  A developer who touches only Rust uses plain `cargo`.
+- The Rust steps live in `scripts/delivery/rust_ci.py`, so CI, the pre-push hook
+  and the agent gate run the same commands.
+- Add `xtask` only if needed.
+- Generate the skeleton and the guards crate only. No product code.
+
 ### The seam is at steps 4 and 5 — do not paper over it
 
 - **Step 4 is entirely `auth-setup`'s.** Do not create the auth module, not even
@@ -496,6 +581,20 @@ check, performed by reading.
    **conforms**, **violates**, **absent**, **not applicable** (with the reason).
    Cite file and line for every violation. A finding without a location is not
    actionable.
+
+   **When the repo has Rust components,** read each against the same list with
+   this wording. Pinned tool (`§2.2`): `rust-toolchain.toml` names an exact
+   version, never `stable`. Frozen install (`§2.2`): `Cargo.lock` is committed
+   and every cargo command uses `--locked`. Lint and format (`§13.1`):
+   `cargo clippy --locked --workspace --all-targets -- -D warnings` and
+   `cargo fmt --all --check`. Test (`§13.1`): `cargo test --locked --workspace`.
+   Supply chain (`§12`): `cargo deny check`. Boundaries (`§3.2`, `§3.3`): crate
+   boundaries plus `deny.toml` bans. Polyglot (`§2.3`): the crates build with
+   plain `cargo`, and the root task runner is a thin shim. Contract: a wire
+   protocol between Rust and another language has one source file per side and a
+   test in the other language that reads it. Also report a component with no
+   recorded reason, a napi addon with no build matrix, a cross target with no
+   licence note, and a second `Cargo.lock`. Cite file and line as for any finding.
 
 4. **Check the structural gates specifically.** These fail silently when absent:
    - layer-boundary check (`§3.2`) and the adapter rule (`§3.3`) — every vendor
