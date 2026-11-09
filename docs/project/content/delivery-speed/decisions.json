@@ -3885,6 +3885,46 @@
    "chosen": "OK unattended",
    "decided": "2026-11-09",
    "owner_words": "OK unattended (Recommended)"
+  },
+  {
+   "id": "D172",
+   "question": "When does DL161 (dev-standards LF renormalize) run?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL161",
+   "options": [
+    {
+     "label": "Tonight after RELEASE-77",
+     "summary": "Own release after RELEASE-77 merges, merge on green."
+    },
+    {
+     "label": "Wait for me",
+     "summary": "Keep it To do until the owner is back."
+    }
+   ],
+   "chosen": "Tonight after RELEASE-77",
+   "decided": "2026-11-09",
+   "owner_words": "Tonight after RELEASE-77 (Recommended)"
+  },
+  {
+   "id": "D173",
+   "question": "How to handle a peer finding that needs a design choice overnight?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "My pick, recorded",
+     "summary": "Choose the recommended option, record it with the alternatives, launch."
+    },
+    {
+     "label": "Bugs only, park designs",
+     "summary": "Launch bug fixes; park design questions."
+    }
+   ],
+   "chosen": "My pick, recorded",
+   "decided": "2026-11-09",
+   "owner_words": "My pick, recorded (Recommended)"
   }
  ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T23:23+00:00",
+  "updated": "2026-11-09T23:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3131,9 +3131,9 @@
       "status": "To do",
       "item": "dev-standards repo: LF line endings for all text files",
       "detail": "Dogfood DL160 (D170): add '* text=auto eol=lf' to dev-standards' own .gitattributes and renormalize in one commit, so Windows worktrees match CI. Next release after RELEASE-77.",
-      "expected": "10 Nov ~01:30",
-      "changed": "2026-11-09T23:23+00:00",
-      "expected_basis": "after RELEASE-77 merges ~00:55; renormalize + CI ~35 min"
+      "expected": "10 Nov ~01:35",
+      "changed": "2026-11-09T23:26+00:00",
+      "expected_basis": "after RELEASE-77 merge ~00:55: renormalize 5 + CI 25 + merge 5"
     },
     {
       "id": "DS1",

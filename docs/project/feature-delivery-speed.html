@@ -888,8 +888,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T23:23+00:00">09 Nov 23:23</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 23:20</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T23:26+00:00">09 Nov 23:26</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 23:23</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -943,7 +943,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL155"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
 <tr data-task="DL156"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
 <tr data-task="DL157"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing<span class="release-line"><span class="release-name">RELEASE-77</span></span></td><td data-label="Detail">Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL161"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL161</span>dev-standards repo: LF line endings for all text files</td><td data-label="Detail">Dogfood DL160 (D170): add &#x27;* text=auto eol=lf&#x27; to dev-standards&#x27; own .gitattributes and renormalize in one commit, so Windows worktrees match CI. Next release after RELEASE-77.</td><td data-label="Expected">10 Nov ~01:30<span class="expected-basis">after RELEASE-77 merges ~00:55; renormalize + CI ~35 min</span></td></tr>
+<tr data-task="DL161"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL161</span>dev-standards repo: LF line endings for all text files</td><td data-label="Detail">Dogfood DL160 (D170): add &#x27;* text=auto eol=lf&#x27; to dev-standards&#x27; own .gitattributes and renormalize in one commit, so Windows worktrees match CI. Next release after RELEASE-77.</td><td data-label="Expected">10 Nov ~01:35<span class="expected-basis">after RELEASE-77 merge ~00:55: renormalize 5 + CI 25 + merge 5</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">2 built, 148 live</span></summary>
@@ -1133,6 +1133,36 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D173">
+<h3 class="decision-head"><span class="decision-id">D173</span> <span class="decision-question">How to handle a peer finding that needs a design choice overnight?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">My pick, recorded</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Choose the recommended option, record it with the alternatives, launch.</p>
+<blockquote class="decision-words">&ldquo;My pick, recorded (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Bugs only, park designs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Launch bug fixes; park design questions.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D172">
+<h3 class="decision-head"><span class="decision-id">D172</span> <span class="decision-question">When does DL161 (dev-standards LF renormalize) run?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL161</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Tonight after RELEASE-77</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Own release after RELEASE-77 merges, merge on green.</p>
+<blockquote class="decision-words">&ldquo;Tonight after RELEASE-77 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for me</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep it To do until the owner is back.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D171">
 <h3 class="decision-head"><span class="decision-id">D171</span> <span class="decision-question">May a peer session rebuild the shared runner pool unattended once DL155 ships?</span></h3>
 <p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL155</p>
