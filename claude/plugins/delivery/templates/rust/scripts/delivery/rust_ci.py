@@ -154,9 +154,9 @@ def host_linker() -> tuple[str, str | None]:
             raise RustCiError("pinned zig could not be used: %s" % exc) from None
     cc = shutil.which("cc") or shutil.which("gcc") or shutil.which("clang")
     if cc:
-        return cc, "zig is not pinned in tools.json (optional); using system %s" % cc
+        return cc, "zig is not pinned in tools.json (the pin is missing; zig is optional); using system %s" % cc
     raise RustCiError("%s. Fix: install a C compiler (sudo apt-get install -y build-essential), "
-                      "or pin Zig: python3 scripts/delivery/tools_pin.py entry zig ..." % CC_NOT_FOUND)
+                      "or restore the zig pin in tools.json (kind wheel, from the ziglang package on PyPI)" % CC_NOT_FOUND)
 
 
 def build_env(root: Path) -> tuple[dict[str, str], list[str]]:
