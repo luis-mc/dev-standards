@@ -1243,9 +1243,9 @@ class PlaywrightVersionTests(unittest.TestCase):
         self.assertEqual(P.resolve_playwright(probe, "none", "1.70.0", ["C:/Work/a"]), (None, None))
 
     def test_pin_is_the_same_everywhere(self):
-        self.assertEqual(P.PLAYWRIGHT_VERSION, "1.62.1")
-        self.assertIn("ARG PLAYWRIGHT_VERSION=1.62.1", (POOL / "Dockerfile").read_text())
-        self.assertIn("PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.62.1}", (POOL / "compose.yaml").read_text())
+        self.assertEqual(P.PLAYWRIGHT_VERSION, "1.65.0")
+        self.assertIn("ARG PLAYWRIGHT_VERSION=1.65.0", (POOL / "Dockerfile").read_text())
+        self.assertIn("PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.65.0}", (POOL / "compose.yaml").read_text())
 
     def test_plan_step_names_version_and_source(self):
         found = P.detect(FakeProbe(dict(FILES)))
@@ -1257,7 +1257,7 @@ class PlaywrightVersionTests(unittest.TestCase):
         s = step(browsers="chromium", repo_paths=["C:/Work/a"], playwright_version="1.60.0")
         self.assertIn("Playwright 1.60.0 (flag)", s["title"])
         s = step(browsers="chromium")
-        self.assertIn("Playwright 1.62.1 (pinned)", s["title"])
+        self.assertIn("Playwright 1.65.0 (pinned)", s["title"])
         self.assertNotIn("Playwright", step()["title"])
 
     def test_env_and_build_arg_carry_the_version(self):
@@ -1266,7 +1266,7 @@ class PlaywrightVersionTests(unittest.TestCase):
             P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, browsers="chromium", playwright_version="1.55.0")
             self.assertIn("PLAYWRIGHT_VERSION=1.55.0", Path(dest, ".env").read_text())
             P.write_pool_files("main", {"cpus": 2.0, "mem_gib": 6.0}, dest=dest, playwright_version="bad")
-            self.assertIn("PLAYWRIGHT_VERSION=1.62.1", Path(dest, ".env").read_text())
+            self.assertIn("PLAYWRIGHT_VERSION=1.65.0", Path(dest, ".env").read_text())
         probe = FakeProbe()
         probe.read_text = lambda path: "RUNNER_VERSION=2.400.1\nPOOL_BROWSERS=chromium\nPLAYWRIGHT_VERSION=1.55.0\n"
         seen = {}
