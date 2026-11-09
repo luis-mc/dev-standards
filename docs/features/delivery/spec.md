@@ -458,6 +458,8 @@ flowchart LR
 
 **R13.83** — **Owns overlap** (DL158). The DL-41 launch check compares `owns` entries path by path, not by the text before the first wildcard. A trailing `(note)` is cut off before the compare and shown in the message. Commas inside the note do not split the entry. An entry with no `/` and no `.` is prose and is ignored. Two entries overlap when one path can match both: `*` and `?` match a segment by `fnmatch` in either direction, `**` matches any number of segments, and a plain directory entry owns everything under it. The same file named twice is an overlap and is denied, and the message shows both notes. One exception: when both entries name the same file and both notes say `only` and name disjoint requirement IDs (such as `R13.72` and `R5.48`), the launch is allowed.
 
+**R13.85** — **Train ids on every path** (DL163). Every path that makes a train row takes the next free id of the day: `plan`, the CI record with `create`, the join script (which records its `into` branch with `create`), the post-tool hook and `link`. `link` for a PR and branch that no open row has makes a new row; it never attaches the PR to another branch's row. The write guard counts copies, so a ledger that already holds a duplicate id still loads, but a write cannot add another copy. `show` prints a warning for each duplicate id and says how to fix it.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:

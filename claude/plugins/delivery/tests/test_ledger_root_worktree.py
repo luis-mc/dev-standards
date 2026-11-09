@@ -85,14 +85,19 @@ class LinkTests(unittest.TestCase):
 
     def test_only_open_train_is_taken(self):
         root = self._root("release/1")
+        # DL163: a PR whose branch no row has gets its own row, never the other branch's row
         L._cmd_link(root, self._args(), run=self._run(head="other"))
-        self.assertEqual(L.load(root)["trains"][0]["pr"], 7)
+        rows = L.load(root)["trains"]
+        self.assertIsNone(rows[0]["pr"])
+        self.assertEqual((rows[1]["branch"], rows[1]["pr"]), ("other", 7))
+        self.assertNotEqual(rows[0]["id"], rows[1]["id"])
 
-    def test_ambiguous_is_refused(self):
+    def test_unknown_branch_leaves_other_rows_alone(self):
         root = self._root("release/1", "release/2")
-        with self.assertRaises(L.LedgerError):
-            L._cmd_link(root, self._args(), run=self._run(head="other"))
-        self.assertTrue(all(t["pr"] is None for t in L.load(root)["trains"]))
+        L._cmd_link(root, self._args(), run=self._run(head="other"))
+        rows = L.load(root)["trains"]
+        self.assertEqual([t["pr"] for t in rows], [None, None, 7])
+        self.assertEqual(len({t["id"] for t in rows}), 3)
 
 
 

@@ -370,7 +370,7 @@ def prune_watchers(led: dict, now: datetime, alive) -> int:
 
 def _guard_state(led: dict) -> tuple:
     ids = [t.get("id") for t in led.get("trains") or [] if isinstance(t, dict)]
-    dup = {i for i in ids if ids.count(i) > 1}
+    dup = {(i, ids.count(i)) for i in ids if ids.count(i) > 1}   # DL163: the count counts, a third copy is new
     bare = [a for a in led.get("agents") or [] if isinstance(a, dict) and not a.get("task")]
     return dup, [json.dumps(a, sort_keys=True, default=str) for a in bare]
 
@@ -380,7 +380,7 @@ def check_write_guards(led: dict, before: tuple) -> None:
     already wrong when the ledger was read stay loadable and writable."""
     dup_before, bare_before = before
     dup_now, bare_now = _guard_state(led)
-    new_dup = sorted(str(i) for i in dup_now - dup_before)
+    new_dup = sorted({str(i) for i, _ in dup_now - dup_before})
     if new_dup:
         raise LedgerError("train id %s is already in the ledger; nothing was written. Run `delivery_ledger.py plan` "
                           "again: it picks the next free id." % ", ".join(new_dup))
@@ -689,12 +689,13 @@ def record(root, op: str, **kw) -> bool:
                 cands = [t for t in led["trains"] if t.get("state") in ("pushed", "ci") and not hold_active(t)
                          and not (t.get("ci") or {}).get("head_sha")]
                 train = cands[0] if len(cands) == 1 else None
-            if train is None and op == "ci" and kw.get("create") and kw.get("branch"):
+            if train is None and kw.get("create") and kw.get("branch") and op in ("ci", "train_state", "cargo"):
                 # DL138: no train for the branch or the PR head: make it, as `plan --branch` would
                 train = new_train(led, str(kw["branch"]), cfg=load_config(root))
                 if kw.get("pr") is not None:
                     train["pr"] = kw["pr"]
-                set_train_state(train, "ci")
+                if op == "ci":
+                    set_train_state(train, "ci")
             if train is not None and op == "ci":
                 if kw.get("pr") is not None and not train.get("pr"):
                     train["pr"] = kw["pr"]
@@ -948,6 +949,10 @@ def _cmd_show(root, args) -> int:
         return 0
     cfg = load_config(root)
     print("ledger updated %s" % local_iso(led.get("updated_at"), cfg=cfg))
+    seen = [t.get("id") for t in led["trains"]]
+    for tid in sorted({i for i in seen if seen.count(i) > 1}, key=str):
+        print("WARNING: train id %s is used by %d rows. Give the newer rows free ids: run `delivery_ledger.py plan` "
+              "for a new release, and edit the duplicate id in .delivery/ledger.json." % (tid, seen.count(tid)))
     for t in led["trains"]:
         hold = " HOLD(%s)" % t["hold"].get("reason") if t.get("hold") else ""
         print("train %s %s pr=%s state=%s ci=%s%s" % (t["id"], t.get("branch"), t.get("pr"), t.get("state"),
@@ -1115,7 +1120,12 @@ def _cmd_link(root, args, run=_run) -> int:
         open_rows = [t for t in led.get("trains", []) if t.get("state") not in ("merged", "live", "cleaned", "abandoned")]
         want = args.branch or info.get("headRefName")
         rows = [t for t in open_rows if want and t.get("branch") == want]
-        if not rows and not args.branch:
+        if not rows and want:
+            # DL163: no row has this branch yet: a new row with a free id, never another branch's row
+            t = new_train(led, want, cfg=load_config(root))
+            set_train_state(t, "ci")
+            rows = [t]
+        if not rows:
             rows = open_rows
         if len(rows) != 1:
             raise LedgerError("%s; pass --branch" % (
