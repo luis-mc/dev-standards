@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T23:26+00:00",
+ "updated": "2026-11-09T23:31+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3818,13 +3818,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL146",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Guard: a new client API call needs a default e2e mock handler",
    "detail": "From a project's RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
    "started": "2026-11-09T22:55+00:00"
   },
   {
@@ -3867,51 +3866,47 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL150",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Installer runs the prune workflow sync after install or update",
    "detail": "delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project's artifact_prune.workflows list never reverts (DL122 follow-up, D149).",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
    "started": "2026-11-09T22:55+00:00"
   },
   {
    "id": "DL151",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Session-start check-in names agents whose task already shipped",
    "detail": "hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
    "started": "2026-11-09T22:55+00:00"
   },
   {
    "id": "DL152",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Windows packaging docs: service DACL uses core PermissionEx",
    "detail": "WiX 5: inside ServiceInstall a service DACL must use the core <PermissionEx Sddl=.../> (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
    "started": "2026-11-09T22:55+00:00"
   },
   {
    "id": "DL153",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "agent_ci.py: start CI only for this wave's agents; fix task id parse",
    "detail": "A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T22:55+00:00"
   },
@@ -3919,12 +3914,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL154",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Pre-push secret scan: read .gitleaksignore from the pushed commit",
    "detail": "Pushing another ref (git push origin <sha>:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show <sha>:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T22:55+00:00"
   },
@@ -3932,12 +3926,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL155",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "pool-refresh keeps other repos' layers and highest Playwright",
    "detail": "pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo's layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T22:55+00:00"
   },
@@ -3945,12 +3938,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL156",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Ledger refuses agent rows without a task and duplicate release ids",
    "detail": "Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T22:55+00:00"
   },
@@ -3958,12 +3950,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL157",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Installer adds tzdata on Windows when zone data is missing",
    "detail": "Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T22:55+00:00"
   },
@@ -3971,12 +3962,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL158",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Ownership hook: a glob owns only its own matches",
    "detail": "The DL-41 hook's overlaps() compares only the text before the first wildcard, so 'templates/*/scripts/delivery/gate.json' owned all of templates/; and a parenthetical note is part of the compared text, so two 'spec.md (Rx only)' entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.",
-   "expected": "09 Nov ~23:50",
-   "changed": "2026-11-09T23:03+00:00",
-   "expected_basis": "cloud agent from 23:04: setup 5 + work 25 + checks 15",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T23:03+00:00"
   },
@@ -7051,34 +7041,34 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup",
    "detail": "DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.",
-   "expected": "10 Nov ~00:55",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "8 cloud agents ~60 min, join 15, CI 25, merge 10",
+   "expected": "10 Nov ~00:15",
+   "changed": "2026-11-09T23:31+00:00",
+   "expected_basis": "joined 23:38, PR #178 CI ~25 min, merge + install 10",
    "release": 77,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-11-09T23:05+00:00",
-     "end": "2026-11-10T00:05+00:00"
+     "start": "2026-11-09T23:00+00:00",
+     "end": "2026-11-09T23:27+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-10T00:05+00:00",
-     "end": "2026-11-10T00:20+00:00"
+     "start": "2026-11-09T23:27+00:00",
+     "end": "2026-11-09T23:38+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-10T00:20+00:00",
-     "end": "2026-11-10T00:45+00:00"
+     "start": "2026-11-09T23:38+00:00",
+     "end": "2026-11-10T00:05+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-10T00:45+00:00",
-     "end": "2026-11-10T00:55+00:00"
+     "start": "2026-11-10T00:05+00:00",
+     "end": "2026-11-10T00:15+00:00"
     }
    ],
    "risk": {
-    "label": "fix round",
+    "label": "CI fix round",
     "minutes": 30
    },
    "started": "2026-11-09T22:55+00:00"
@@ -7087,12 +7077,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS208",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Rust track: TS tests that spawn a crate binary build it in globalSetup",
    "detail": "CI's unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p <crate> once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.",
-   "expected": "10 Nov ~00:05",
-   "changed": "2026-11-09T22:55+00:00",
-   "expected_basis": "cloud agent from 23:05: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:31+00:00",
    "rides": "DS207",
    "started": "2026-11-09T22:55+00:00"
   },
@@ -7690,29 +7679,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T23:26+00:00">09 Nov 23:26</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T23:31+00:00">09 Nov 23:31</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">12 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL158"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches <span class="glance-expected">09 Nov ~23:50</span><span class="glance-basis">cloud agent from 23:04: setup 5 + work 25 + checks 15</span></li>
-<li data-glance-task="DL146"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL150"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL151"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL152"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL153"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL154"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL155"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL156"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL157"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DS208"><span class="task-id">DS208</span>Rust track: TS tests that spawn a crate binary build it in globalSetup <span class="glance-expected">10 Nov ~00:05</span><span class="glance-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DS207"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup <span class="glance-expected">10 Nov ~00:55</span><span class="glance-basis">8 cloud agents ~60 min, join 15, CI 25, merge 10</span></li>
+<li data-glance-task="DS207"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup <span class="glance-expected">10 Nov ~00:15</span><span class="glance-basis">joined 23:38, PR #178 CI ~25 min, merge + install 10</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">13 tasks</span></summary>
 <ul>
+<li data-glance-task="DL146"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</li>
+<li data-glance-task="DL150"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update</li>
+<li data-glance-task="DL151"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped</li>
+<li data-glance-task="DL152"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx</li>
+<li data-glance-task="DL153"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse</li>
+<li data-glance-task="DL154"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit</li>
+<li data-glance-task="DL155"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright</li>
+<li data-glance-task="DL156"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids</li>
+<li data-glance-task="DL157"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing</li>
+<li data-glance-task="DL158"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches</li>
+<li data-glance-task="DS208"><span class="task-id">DS208</span>Rust track: TS tests that spawn a crate binary build it in globalSetup</li>
 <li data-glance-task="DL159"><span class="task-id">DL159</span>Pool default Playwright pin 1.62.1 -&gt; 1.65.0</li>
 <li data-glance-task="DL160"><span class="task-id">DL160</span>Repo template: LF line endings for all text files</li>
 </ul>
@@ -7731,42 +7720,42 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">458</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">12</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">458</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">13</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS207 (RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup) expected live about 00:55, worst case 01:25." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:00</text><line class="rt-grid" x1="304" y1="36" x2="304" y2="140"/><text x="304" y="28">23:30</text><line class="rt-grid" x1="408" y1="36" x2="408" y2="140"/><text x="408" y="28">10 Nov 00:00</text><line class="rt-grid" x1="512" y1="36" x2="512" y2="140"/><text x="512" y="28">10 Nov 00:30</text><line class="rt-grid" x1="616" y1="36" x2="616" y2="140"/><text x="616" y="28">01:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:30</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS207 (RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup) expected live about 00:15, worst case 00:45." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:00</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="140"/><text x="330" y="28">23:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">10 Nov 00:00</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="140"/><text x="590" y="28">10 Nov 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-77 · RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</title>RELEASE-77 · RELEASE: pru…</text>
 <text class="rt-sub" x="0" y="77"><title>DL146, DL150, DL151, DL152, DL153, DL154, DL155, DL156, DL157, DL158, DL159, DL160, DS208</title>DL146, DL150, DL151, DL152, DL153…</text>
-<rect class="rt-bar agents" x="217.3" y="52" width="208" height="22"><title>agents 23:05-00:05</title></rect>
-<rect class="rt-bar join" x="425.3" y="52" width="52" height="22"><title>join 00:05-00:20</title></rect>
-<rect class="rt-bar ci" x="477.3" y="52" width="86.7" height="22"><title>PR CI 00:20-00:45</title></rect>
-<rect class="rt-bar merge" x="564" y="52" width="34.7" height="22"><title>merge + cleanup 00:45-00:55</title></rect>
-<rect class="rt-risk" x="598.7" y="58" width="104" height="10"><title>fix round</title></rect>
-<polygon class="rt-worst" points="702.7,51 709.7,63 702.7,75 695.7,63"/>
-<text class="rt-risk-label" x="713.7" y="67">fix round → worst ~01:25</text>
-<polygon class="rt-expected" points="598.7,50 606.7,63 598.7,76 590.7,63"/>
-<text class="rt-live-label" x="598.7" y="92">live ~00:55</text>
-<line class="rt-now" x1="290.1" y1="36" x2="290.1" y2="148"/><text class="rt-now-label" x="290.1" y="161">now 23:26</text>
+<rect class="rt-bar agents" x="200" y="52" width="117" height="22"><title>agents 23:00-23:27</title></rect>
+<rect class="rt-bar join" x="317" y="52" width="47.7" height="22"><title>join 23:27-23:38</title></rect>
+<rect class="rt-bar ci" x="364.7" y="52" width="117" height="22"><title>PR CI 23:38-00:05</title></rect>
+<rect class="rt-bar merge" x="481.7" y="52" width="43.3" height="22"><title>merge + cleanup 00:05-00:15</title></rect>
+<rect class="rt-risk" x="525" y="58" width="130" height="10"><title>CI fix round</title></rect>
+<polygon class="rt-worst" points="655,51 662,63 655,75 648,63"/>
+<text class="rt-risk-label" x="666" y="67">CI fix round → worst ~00:45</text>
+<polygon class="rt-expected" points="525,50 533,63 525,76 517,63"/>
+<text class="rt-live-label" x="525" y="92">live ~00:15</text>
+<line class="rt-now" x1="334.3" y1="36" x2="334.3" y2="148"/><text class="rt-now-label" x="334.3" y="161">now 23:31</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~00:55 · worst ~01:25</strong><span class="fold-count">14 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~00:15 · worst ~00:45</strong><span class="fold-count">14 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS207"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</td><td data-label="App / service"></td><td data-label="Detail">DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.</td><td data-label="Expected">10 Nov ~00:55<span class="expected-basis">8 cloud agents ~60 min, join 15, CI 25, merge 10</span></td></tr>
-<tr data-task="DL146"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL150"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update</a></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL151"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped</a></td><td data-label="App / service"></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL152"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx</a></td><td data-label="App / service"></td><td data-label="Detail">WiX 5: inside ServiceInstall a service DACL must use the core &lt;PermissionEx Sddl=.../&gt; (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL153"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse</a></td><td data-label="App / service"></td><td data-label="Detail">A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL154"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit</a></td><td data-label="App / service"></td><td data-label="Detail">Pushing another ref (git push origin &lt;sha&gt;:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show &lt;sha&gt;:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL155"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright</a></td><td data-label="App / service"></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL156"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids</a></td><td data-label="App / service"></td><td data-label="Detail">Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL157"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing</a></td><td data-label="App / service"></td><td data-label="Detail">Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL158"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches</a></td><td data-label="App / service"></td><td data-label="Detail">The DL-41 hook&#x27;s overlaps() compares only the text before the first wildcard, so &#x27;templates/*/scripts/delivery/gate.json&#x27; owned all of templates/; and a parenthetical note is part of the compared text, so two &#x27;spec.md (Rx only)&#x27; entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.</td><td data-label="Expected">09 Nov ~23:50<span class="expected-basis">cloud agent from 23:04: setup 5 + work 25 + checks 15</span></td></tr>
-<tr data-task="DS208"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS208</span>Rust track: TS tests that spawn a crate binary build it in globalSetup</td><td data-label="App / service"></td><td data-label="Detail">CI&#x27;s unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p &lt;crate&gt; once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.</td><td data-label="Expected">10 Nov ~00:05<span class="expected-basis">cloud agent from 23:05: setup 5 + work 35 + checks 20</span></td></tr>
+<tr data-task="DS207"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</td><td data-label="App / service"></td><td data-label="Detail">DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.</td><td data-label="Expected">10 Nov ~00:15<span class="expected-basis">joined 23:38, PR #178 CI ~25 min, merge + install 10</span></td></tr>
+<tr data-task="DL146"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL150"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update</a></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL151"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped</a></td><td data-label="App / service"></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL152"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx</a></td><td data-label="App / service"></td><td data-label="Detail">WiX 5: inside ServiceInstall a service DACL must use the core &lt;PermissionEx Sddl=.../&gt; (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL153"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse</a></td><td data-label="App / service"></td><td data-label="Detail">A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL154"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit</a></td><td data-label="App / service"></td><td data-label="Detail">Pushing another ref (git push origin &lt;sha&gt;:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show &lt;sha&gt;:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL155"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright</a></td><td data-label="App / service"></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL156"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL156</span>Ledger refuses agent rows without a task and duplicate release ids</a></td><td data-label="App / service"></td><td data-label="Detail">Agent rows with no task id (shown as None) and two releases sharing one id (T-2026-11-09-02) blocked the RELEASE-71 merge hook: ci_watch wrote CI success onto the wrong row. The ledger refuses both; plan picks the next free id (D158).</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL157"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL157</span>Installer adds tzdata on Windows when zone data is missing</a></td><td data-label="App / service"></td><td data-label="Detail">Windows Python has no zone data, so delivery scripts fell back to UTC for Europe/Lisbon. delivery_ci_install and claude-setup install the tzdata package when zoneinfo fails; doctor keeps its check (D159).</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL158"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL158</span>Ownership hook: a glob owns only its own matches</a></td><td data-label="App / service"></td><td data-label="Detail">The DL-41 hook&#x27;s overlaps() compares only the text before the first wildcard, so &#x27;templates/*/scripts/delivery/gate.json&#x27; owned all of templates/; and a parenthetical note is part of the compared text, so two &#x27;spec.md (Rx only)&#x27; entries never matched. Fix: strip notes, then match globs path-segment by segment; tests both ways.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL159"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL159</span>Pool default Playwright pin 1.62.1 -&gt; 1.65.0</a></td><td data-label="App / service"></td><td data-label="Detail">npm latest is 1.65.0. Raise the pinned fallback in delivery_runner_pool.py PLAYWRIGHT_VERSION, runner-pool Dockerfile ARG and compose.yaml default together, plus the pinned expectations in test_runner_pool.py. Only used when no lockfile or pool .env sets a version; with DL155 a refresh never lowers it. Done by the orchestrator at the RELEASE-77 join.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL160"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL160</span>Repo template: LF line endings for all text files</a></td><td data-label="App / service"></td><td data-label="Detail">Peer finding: with core.autocrlf=true a Windows join worktree checks out CRLF, so prettier --check . flags every file. The tech-stack .gitattributes forces LF only for *.sh, hooks and delivery scripts. Add &#x27;* text=auto eol=lf&#x27; (keeping binary rules) so worktrees match CI. Done by the orchestrator at the RELEASE-77 join; needs a project-setup change note.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS208"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS208</span>Rust track: TS tests that spawn a crate binary build it in globalSetup</td><td data-label="App / service"></td><td data-label="Detail">CI&#x27;s unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p &lt;crate&gt; once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.</td><td data-label="Expected">09 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
@@ -8254,7 +8243,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904446"><time datetime="2026-11-09T23:26+00:00">09 Nov 23:26</time></td><td data-label="Tasks">DL1 to DL161</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">10 Running</span><span class="status-chip status-built">2 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904451"><time datetime="2026-11-09T23:31+00:00">09 Nov 23:31</time></td><td data-label="Tasks">DL1 to DL161</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">12 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
