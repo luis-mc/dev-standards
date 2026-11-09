@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T15:57+00:00",
+  "updated": "2026-11-09T15:58+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2808,6 +2808,16 @@
       "detail": "Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR's CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.",
       "expected": "10 Nov",
       "changed": "2026-11-09T15:50+00:00"
+    },
+    {
+      "id": "DL141",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Agent gate compiles native C# on Linux, or flags it",
+      "detail": "A Linux agent gate never compiles Windows C#, so an ambiguous type (CS0104 under /warnaserror+) surfaced only in release CI. Compile with mono mcs or the dotnet SDK csc against the same framework assemblies, or flag 'C# changed, not compiled' in the gate result.",
+      "expected": "10 Nov",
+      "changed": "2026-11-09T15:58+00:00"
     },
     {
       "id": "DS1",
@@ -5650,11 +5660,33 @@
       "status": "Running",
       "item": "RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)",
       "detail": "Join the Rust tasks (catalog, wizard, tooling, tool fetcher, rust_ci helper, workflows, doctor, docs), fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T15:57+00:00",
+      "expected": "09 Nov ~20:00",
+      "changed": "2026-11-09T15:58+00:00",
       "release": 72,
-      "expected_basis": "wave 1 ~16:57; DS197, DS200, DS201, DS203 follow",
-      "started": "2026-11-09T15:57+00:00"
+      "expected_basis": "wave 1 ~16:57, DS200 ~17:57, DS201 ~18:47, DS203 ~19:25",
+      "started": "2026-11-09T15:57+00:00",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T15:56+00:00",
+          "end": "2026-11-09T19:25+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T19:25+00:00",
+          "end": "2026-11-09T19:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T19:40+00:00",
+          "end": "2026-11-09T19:55+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T19:55+00:00",
+          "end": "2026-11-09T20:00+00:00"
+        }
+      ]
     },
     {
       "id": "DS196",
@@ -5721,9 +5753,9 @@
       "app": "",
       "status": "To do",
       "item": "Rust workflows",
-      "detail": "rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters.",
+      "detail": "rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).",
       "expected": "10 Nov",
-      "changed": "2026-11-09T15:53+00:00"
+      "changed": "2026-11-09T15:58+00:00"
     },
     {
       "id": "DS202",
