@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T16:16+00:00",
+  "updated": "2026-11-09T16:23+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -705,23 +705,27 @@
       "id": "AR67",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "mark-published after pending --refresh needs no extra render",
       "detail": "mark-published can refuse with 'differs from a fresh render; run render first' right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DS194"
+      "expected": "09 Nov ~17:07",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DS194",
+      "expected_basis": "cloud agent from 16:22, ~45 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "AR68",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Running",
       "item": "task-status-update skill lists the four --phase names",
       "detail": "--phase accepts only agents, join, ci, merge; the skill text does not list them.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DS194"
+      "expected": "09 Nov ~17:07",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DS194",
+      "expected_basis": "cloud agent from 16:22, ~45 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL1",
@@ -2692,23 +2696,27 @@
       "id": "DL128",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "join.py handles stacked branches",
       "detail": "When branch B contains an older head of branch A, merge B alone or report stacked and prefer B's side for files B rewrote.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DL143"
+      "expected": "09 Nov ~17:42",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DL143",
+      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL129",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "join.py --into creates a missing integration branch",
       "detail": "join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DL143"
+      "expected": "09 Nov ~17:42",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DL143",
+      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL130",
@@ -2769,12 +2777,14 @@
       "id": "DL135",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Join flags e2e unhandled-API-call failures as join interactions",
       "detail": "Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DL143"
+      "expected": "09 Nov ~17:42",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DL143",
+      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL136",
@@ -2824,12 +2834,14 @@
       "id": "DL140",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Join runs the strict docs check before the ready PR",
       "detail": "Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR's CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DL143"
+      "expected": "09 Nov ~17:42",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DL143",
+      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DL141",
@@ -2858,13 +2870,36 @@
       "id": "DL143",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: join.py fixes",
       "detail": "DL128, DL129, DL135, DL140: join, fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "09 Nov ~18:45",
-      "changed": "2026-11-09T16:01+00:00",
-      "expected_basis": "cloud agent from ~16:10, ~75 min, then join and CI",
-      "release": 74
+      "expected": "09 Nov ~18:15",
+      "changed": "2026-11-09T16:23+00:00",
+      "expected_basis": "join agent from 16:22, ~80 min",
+      "release": 74,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T16:22+00:00",
+          "end": "2026-11-09T17:42+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T17:42+00:00",
+          "end": "2026-11-09T17:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T17:55+00:00",
+          "end": "2026-11-09T18:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T18:10+00:00",
+          "end": "2026-11-09T18:15+00:00"
+        }
+      ],
+      "started": "2026-11-09T16:23+00:00"
     },
     {
       "id": "DL144",
@@ -2882,12 +2917,14 @@
       "id": "DL145",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "join.py keeps unpushed local joins; docs/work conflicts auto-resolve",
       "detail": "A second join.py --into run rebuilt the integration branch from origin and silently dropped earlier unpushed local merge commits. Build on the local branch when it is ahead of origin, or refuse when commits would be lost. Auto-resolve docs/work conflicts, since the strip removes them.",
-      "expected": "09 Nov ~18:45",
-      "changed": "2026-11-09T16:15+00:00",
-      "rides": "DL143"
+      "expected": "09 Nov ~17:42",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DL143",
+      "expected_basis": "cloud agent from 16:22, ~80 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DS1",
@@ -5682,12 +5719,14 @@
       "id": "DS193",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "docs_work.py strip --apply always commits or fails loudly",
       "detail": "On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T16:02+00:00",
-      "rides": "DS194"
+      "expected": "09 Nov ~17:02",
+      "changed": "2026-11-09T16:22+00:00",
+      "rides": "DS194",
+      "expected_basis": "cloud agent from 16:22, ~40 min",
+      "started": "2026-11-09T16:22+00:00"
     },
     {
       "id": "DS194",
