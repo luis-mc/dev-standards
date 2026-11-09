@@ -672,7 +672,7 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
     print("\n".join(lines))
     if not getattr(args, "yes", False):
         return 0
-    ok, detail = P.Executor(probe).refresh(rp)
+    ok, detail = P.Executor(probe).refresh(rp, force=getattr(args, "force", False))
     print(detail)
     return 0 if ok else 1
 
@@ -697,6 +697,7 @@ def main(argv=None) -> int:
     ap.add_argument("--largest-shard-gib", type=float)
     ap.add_argument("--resize", action="store_true", help="pool-plan/run: use the measured cap, not the one in the pool .env")
     ap.add_argument("--browsers", choices=["none", "chromium"], help="pool-refresh: set POOL_BROWSERS (default: keep or detect)")
+    ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)
