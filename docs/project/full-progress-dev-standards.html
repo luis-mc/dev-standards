@@ -3884,6 +3884,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "rides": "DS207"
   },
   {
+   "id": "DL152",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Windows packaging docs: service DACL uses core PermissionEx",
+   "detail": "WiX 5: inside ServiceInstall a service DACL must use the core <PermissionEx Sddl=.../> (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.",
+   "expected": "",
+   "changed": "2026-11-09T19:30+00:00",
+   "rides": "DS207"
+  },
+  {
    "id": "DS1",
    "owner": "project",
    "app": "luismc-project-setup",
@@ -7581,7 +7592,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">34</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">4</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">34</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -7598,7 +7609,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <polygon class="rt-expected" points="610.7,50 618.7,63 610.7,76 602.7,63"/>
 <text class="rt-live-label" x="610.7" y="92">live ~21:08</text>
 <text class="rt-name" x="0" y="122"><title>RELEASE-77 · RELEASE: installer prune sync and stale-agent check-in</title>RELEASE-77 · RELEASE: ins…</text>
-<text class="rt-sub" x="0" y="139"><title>DL150, DL151</title>DL150, DL151</text>
+<text class="rt-sub" x="0" y="139"><title>DL150, DL151, DL152</title>DL150, DL151, DL152</text>
 <polygon class="rt-expected" points="720,112 728,125 720,138 712,125"/>
 <text class="rt-live-label" x="720" y="154">live ~22:30</text>
 <line class="rt-now" x1="480" y1="36" x2="480" y2="210"/><text class="rt-now-label" x="480" y="223">now 19:30</text>
@@ -7646,11 +7657,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DS205"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS205</span>Pin Zig from the PyPI ziglang wheel</td><td data-label="App / service"></td><td data-label="Detail">Zig&#x27;s own hosts refused the sandbox; the ziglang wheel on PyPI (about 101 MB) carries the zig binary. Pin it per platform with sha256 in tools.json and make ci_tool.py tool zig unpack it; then the doctor and rust_ci messages say Zig is pinned.</td><td data-label="Expected">09 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~22:30</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live ~22:30</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS207"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: installer prune sync and stale-agent check-in</td><td data-label="App / service"></td><td data-label="Detail">DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.</td><td data-label="Expected">09 Nov ~22:30<span class="expected-basis">after RELEASE-71 ~21:08; agents 60 + join 15 + CI 25 min</span></td></tr>
 <tr data-task="DL150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update</a></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">Not scheduled</td></tr>
 <tr data-task="DL151"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL151</span>Session-start check-in names agents whose task already shipped</a></td><td data-label="App / service"></td><td data-label="Detail">hook_session_start calls delivery_ledger.stale_agents() and lists open agents whose task the project record shows Live, Built or Dropped (DL127 follow-up, D149).</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL152"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx</a></td><td data-label="App / service"></td><td data-label="Detail">WiX 5: inside ServiceInstall a service DACL must use the core &lt;PermissionEx Sddl=.../&gt; (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.</td><td data-label="Expected">Not scheduled</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">432 tasks</span></summary>
@@ -8097,7 +8109,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904210"><time datetime="2026-11-09T19:30+00:00">09 Nov 19:30</time></td><td data-label="Tasks">DL1 to DL151</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">21 Built</span><span class="status-chip status-to-do">3 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904210"><time datetime="2026-11-09T19:30+00:00">09 Nov 19:30</time></td><td data-label="Tasks">DL1 to DL152</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">21 Built</span><span class="status-chip status-to-do">4 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904034"><time datetime="2026-11-09T16:34+00:00">09 Nov 16:34</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </details>

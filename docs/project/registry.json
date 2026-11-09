@@ -3004,6 +3004,17 @@
       "rides": "DS207"
     },
     {
+      "id": "DL152",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Windows packaging docs: service DACL uses core PermissionEx",
+      "detail": "WiX 5: inside ServiceInstall a service DACL must use the core <PermissionEx Sddl=.../> (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.",
+      "expected": "",
+      "changed": "2026-11-09T19:30+00:00",
+      "rides": "DS207"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
