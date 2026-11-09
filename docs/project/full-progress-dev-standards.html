@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T22:34+00:00",
+ "updated": "2026-11-09T22:36+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -3918,6 +3918,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "detail": "Pushing another ref (git push origin <sha>:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show <sha>:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.",
    "expected": "10 Nov",
    "changed": "2026-11-09T22:34+00:00",
+   "expected_basis": "rides RELEASE-77; waits on owner go to launch",
+   "rides": "DS207"
+  },
+  {
+   "id": "DL155",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "pool-refresh keeps other repos' layers and highest Playwright",
+   "detail": "pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo's layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T22:36+00:00",
    "expected_basis": "rides RELEASE-77; waits on owner go to launch",
    "rides": "DS207"
   },
@@ -7569,7 +7581,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T22:34+00:00">09 Nov 22:34</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T22:36+00:00">09 Nov 22:36</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">1 task</span></summary>
 <ul>
@@ -7590,19 +7602,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">458</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">7</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">458</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">8</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS207 (RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup) expected 10 Nov." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="220" y1="36" x2="220" y2="140"/><text x="220" y="28">10 Nov</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-77 · RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</title>RELEASE-77 · RELEASE: pru…</text>
-<text class="rt-sub" x="0" y="77"><title>DL150, DL151, DL152, DL153, DL154, DS208</title>DL150, DL151, DL152, DL153, DL154…</text>
+<text class="rt-sub" x="0" y="77"><title>DL150, DL151, DL152, DL153, DL154, DL155, DS208</title>DL150, DL151, DL152, DL153, DL154…</text>
 <polygon class="rt-day" points="220,52 228,65 220,78 212,65"/><text class="rt-day-label" x="236" y="69">10 Nov</text>
 
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live 10 Nov</strong><span class="fold-count">7 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-77" open><summary><strong>RELEASE-77 · live 10 Nov</strong><span class="fold-count">8 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS207"><td data-label="Status"><span class="status-chip status-waiting">Waiting</span></td><td data-label="Item"><span class="task-id">DS207</span><span class="release-name">RELEASE-77</span>RELEASE: prune sync, stale agents, agent_ci, pre-push scan, Rust globalSetup</td><td data-label="App / service"></td><td data-label="Detail">DL150, DL151 (D149): join, fold notes, CI, merge, install, smoke, cleanup. Starts after RELEASE-71 merges.</td><td data-label="Expected">10 Nov<span class="expected-basis">owner go to launch 6 cloud agents; then ~1.5 h to merge</span></td></tr>
 <tr data-task="DL150"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL150</span>Installer runs the prune workflow sync after install or update</a></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_install update rewrites artifact-prune.yml from the template; it then runs artifact_prune.py --sync-workflow so the project&#x27;s artifact_prune.workflows list never reverts (DL122 follow-up, D149).</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
@@ -7610,6 +7622,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL152"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL152</span>Windows packaging docs: service DACL uses core PermissionEx</a></td><td data-label="App / service"></td><td data-label="Detail">WiX 5: inside ServiceInstall a service DACL must use the core &lt;PermissionEx Sddl=.../&gt; (MsiLockPermissionsEx); util:PermissionEx with Sddl fails with WIX0004 and WIX0010. No template uses it today; add the rule to the windows-packaging guidance next to the pool layer.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
 <tr data-task="DL153"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL153</span>agent_ci.py: start CI only for this wave&#x27;s agents; fix task id parse</a></td><td data-label="App / service"></td><td data-label="Detail">A plain pass starts CI on every old agent branch whose report has CODE DONE, not only this wave. With --branch-prefix claude/RS the task id parses as the digits after the prefix. Fix: --task/--branch filter and only branches with an open agent in the ledger; parse the task id from the branch name after the base prefix. Note: gh run cancel can stall on queued runs; use the force-cancel API.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
 <tr data-task="DL154"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL154</span>Pre-push secret scan: read .gitleaksignore from the pushed commit</a></td><td data-label="App / service"></td><td data-label="Detail">Pushing another ref (git push origin &lt;sha&gt;:refs/heads/ci/X from a release worktree) scans the pushed range but takes .gitleaksignore from the working tree, so a branch carrying its own ignore entries is blocked. Fix: fast_guards.py / gate secret-scan pass --gitleaks-ignore-path from git show &lt;sha&gt;:.gitleaksignore in a temp file. Repro first: hook checks out non-HEAD commits in a temp worktree.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
+<tr data-task="DL155"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL155</span>pool-refresh keeps other repos&#x27; layers and highest Playwright</a></td><td data-label="App / service"></td><td data-label="Detail">pool-refresh reads pool.layers, pool.apt and the Playwright lockfile from the calling repo only (refresh_plan gets [root]), so a refresh from one repo drops another repo&#x27;s layer and can downgrade PLAYWRIGHT_VERSION. Fix: keep existing layers and apt unless --drop-layer names one; keep the highest Playwright (or --playwright); the plan names which repo asked for each layer.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
 <tr data-task="DS208"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS208</span>Rust track: TS tests that spawn a crate binary build it in globalSetup</td><td data-label="App / service"></td><td data-label="Detail">CI&#x27;s unit job never builds a Rust binary that a TS test spawns. Template line for the Rust track: a vitest globalSetup runs cargo build --locked -p &lt;crate&gt; once and exports the exe path; the unit job needs cargo on the runner. Guide rust-beside-js and the TS ci.yml unit job.</td><td data-label="Expected">10 Nov<span class="expected-basis">rides RELEASE-77; waits on owner go to launch</span></td></tr>
 </tbody></table></div>
 </details>
@@ -8098,7 +8111,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904394"><time datetime="2026-11-09T22:34+00:00">09 Nov 22:34</time></td><td data-label="Tasks">DL1 to DL154</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">6 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904396"><time datetime="2026-11-09T22:36+00:00">09 Nov 22:36</time></td><td data-label="Tasks">DL1 to DL155</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">7 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
