@@ -888,17 +888,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T15:27+00:00">09 Nov 15:27</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T15:52+00:00">09 Nov 15:52</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 15:27</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL121"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates <span class="glance-expected">09 Nov ~17:05</span><span class="glance-basis">local agent from 15:35, ~90 min</span></li>
 <li data-glance-task="DL123"><span class="task-id">DL123</span><span class="release-name">RELEASE-70</span>Release the ported project fixes <span class="glance-expected">09 Nov ~17:35</span><span class="glance-basis">DL121 local agent ~90 min, then join and CI</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL121"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">3 tasks</span></summary>
@@ -909,11 +913,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">14</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">119</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">18</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">16 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">19 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL121"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates<span class="release-line"><span class="release-name">RELEASE-70</span></span></td><td data-label="Detail">artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner&#x27;s call</td><td data-label="Expected">09 Nov ~17:05<span class="expected-basis">local agent from 15:35, ~90 min</span></td></tr>
 <tr data-task="DL123"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL123</span><span class="release-name">RELEASE-70</span>Release the ported project fixes</td><td data-label="Detail">Join DL121, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov ~17:35<span class="expected-basis">DL121 local agent ~90 min, then join and CI</span></td></tr>
 <tr data-task="DL124"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL124</span>Questions stop hook counts running cloud agents</td><td data-label="Detail">The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL125"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL125</span>Rust CI track: pinned LLVM linker in the tool cache</td><td data-label="Detail">Pool image has no C linker, so cargo builds pass in the agent gate and fail in release CI. Fetch pinned sha256-checked clang+lld, set CARGO_TARGET_*_LINKER, CC, AR; run the agent gate&#x27;s Rust step without system compilers; doctor checks a linker for the rust track.</td><td data-label="Expected">10 Nov</td></tr>
@@ -928,11 +931,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL134"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL134</span>branch_gate logs are UTF-8 on Windows</td><td data-label="Detail">Gate logs mix cp1252 box-drawing characters; cat and Python print fail. Force UTF-8 for the log and the Playwright reporter.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL135"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL135</span>Join flags e2e unhandled-API-call failures as join interactions</td><td data-label="Detail">Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL136"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL136</span>Held routines are paused, not postponed, while a question is open</td><td data-label="Detail">A routine postponed a few minutes for an owner answer started on its old brief when the dialog stayed open 3 h. Rule: pause it (no run_once_at), or a hook warns when a held routine&#x27;s start passes during an open question.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL137"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL137</span>Pre-push guard resolves paths from the current worktree</td><td data-label="Detail">A push from one release worktree printed an ok line for a file in an older, removed worktree (the generated OpenAPI schema check?). A guard resolves its path from a stale or cached location.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL138"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL138</span>ci_watch matches or creates the train for a ready PR</td><td data-label="Detail">ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL139"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL139</span>ci_watch covers every required workflow of the head</td><td data-label="Detail">ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL140"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL140</span>Join runs the strict docs check before the ready PR</td><td data-label="Detail">Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR&#x27;s CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL122"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune</td><td data-label="Detail">artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow</td><td data-label="Expected">Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">120 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 120 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL121"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates<span class="release-line"><span class="release-name">RELEASE-70</span></span></td><td data-label="Detail">artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner&#x27;s call</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL119"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><span class="task-id">DL119</span><span class="release-name">RELEASE-69</span>Release install keep list<span class="dropped-line">dropped: folded into RELEASE-68: DL120 shipped in RELEASE-68</span></td><td data-label="Detail">Join DL121, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL117"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL117</span><span class="release-name">RELEASE-68</span>Release watcher rows and spec review</td><td data-label="Detail">Join DL118 DL119, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL118"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL118</span>Re-arm reports unstoppable watchers; dead rows pruned<span class="release-line"><span class="release-name">RELEASE-68</span></span></td><td data-label="Detail">SessionStart names a watcher it cannot stop (access denied) and how to stop it as admin; dead watcher rows older than a day are pruned</td><td data-label="Expected">09 Nov</td></tr>
@@ -1088,6 +1096,192 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D145">
+<h3 class="decision-head"><span class="decision-id">D145</span> <span class="decision-question">Rust Q8: what must a project state before adding a Rust part?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Reason; number for libraries</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Written reason for services and CLIs; a measured number for performance libraries.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always a measured number</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A number or named profile for every Rust part.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Written reason only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Never require a measurement.</p>
+<blockquote class="decision-words">&ldquo;Written reason only&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D144">
+<h3 class="decision-head"><span class="decision-id">D144</span> <span class="decision-question">Rust Q7: how are Windows programs built?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">cargo-xwin, else a Windows runner</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Licence accepted once and recorded.</p>
+<blockquote class="decision-words">&ldquo;cargo-xwin, else a Windows runner (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always a Windows runner</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No Microsoft download on Linux; needs Windows runner time.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">GNU target</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Different ABI.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D143">
+<h3 class="decision-head"><span class="decision-id">D143</span> <span class="decision-question">Rust Q6: does the agent gate hide system compilers?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Always</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Rust step runs with system compilers removed from PATH.</p>
+<blockquote class="decision-words">&ldquo;Always (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only on the CI-gate path</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Projects whose gate is a CI run already match the pool.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Never</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Rely on the doctor.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D142">
+<h3 class="decision-head"><span class="decision-id">D142</span> <span class="decision-question">Rust Q5: the advisory database refresh fails. What then?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Warn for 7 days, then fail</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Cached copy with a warning until it is 7 days old.</p>
+<blockquote class="decision-words">&ldquo;Warn for 7 days, then fail (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Cached copy with a warning</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Always continue.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always fail</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No refresh, no pass.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D141">
+<h3 class="decision-head"><span class="decision-id">D141</span> <span class="decision-question">Rust Q4: how do CI and agents install the Rust toolchain?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Pinned rustup-init via ci_tool.py</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Version from rust-toolchain.toml.</p>
+<blockquote class="decision-words">&ldquo;Pinned rustup-init via ci_tool.py (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pinned GitHub action</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Does not cover agent sandboxes.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">System rustup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Not reproducible.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D140">
+<h3 class="decision-head"><span class="decision-id">D140</span> <span class="decision-question">Rust Q3: where does the linker come from on runners with no C compiler?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">LLVM for Windows, Zig for Linux</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Pinned sha256-checked downloads in the tool cache.</p>
+<blockquote class="decision-words">&ldquo;LLVM for Windows, Zig for Linux (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pinned LLVM only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Needs libc dev files or a sysroot.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Zig only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One pinned download for the host linker; Windows cross-links still need lld-link.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build tools in the pool image</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Changes the shared image.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D139">
+<h3 class="decision-head"><span class="decision-id">D139</span> <span class="decision-question">Rust Q2: which Rust parts does the wizard offer first beside a JS stack?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">CLI, host service, libraries</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">CLI tools, host service or installer helper, napi or WASM libraries.</p>
+<blockquote class="decision-words">&ldquo;CLI, host service, libraries (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">CLI and host service only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The two shapes a real project uses today.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Everything</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Also workers and media processing.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D138">
+<h3 class="decision-head"><span class="decision-id">D138</span> <span class="decision-question">Rust Q1: what does the first Rust release cover?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS192</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Both, wizard then CI</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Rust component role in tech-stack-setup, then a Rust CI track in luismc-delivery.</p>
+<blockquote class="decision-words">&ldquo;Both, wizard then CI (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wizard only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">CI track later.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">CI track only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No wizard change.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D137">
+<h3 class="decision-head"><span class="decision-id">D137</span> <span class="decision-question">DL122: artifact-prune.yml reads the artifact-holding workflows from a project file. When?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL122</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Now, in the cloud</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">One cloud agent; rides RELEASE-70 if green in time.</p>
+<blockquote class="decision-words">&ldquo;Now, in the cloud (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave it To do.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D136">
+<h3 class="decision-head"><span class="decision-id">D136</span> <span class="decision-question">DS191: review the audits and test-cost specs against their code. When?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS191</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Now, in the cloud</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">One cloud agent; rides the next release.</p>
+<blockquote class="decision-words">&ldquo;Now, in the cloud (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave it To do.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D135">
 <h3 class="decision-head"><span class="decision-id">D135</span> <span class="decision-question">Fold a project&#x27;s five delivery-script fixes into the public plugin? Source: that project&#x27;s branch, read on this PC; only generic code is pushed.</span></h3>
 <p class="decision-meta">Asked 08 Nov · Decided 08 Nov</p>
@@ -1107,12 +1301,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </div>
 </article>
 <article class="decision decision-decided" data-decision="D134">
-<h3 class="decision-head"><span class="decision-id">D134</span> <span class="decision-question">A project&#x27;s update lost its own fixes and re-added workflows it leaves out. How should install/update respect project choices? (Picked overnight by me; for owner review.)</span></h3>
+<h3 class="decision-head"><span class="decision-id">D134</span> <span class="decision-question">A project&#x27;s update lost its own fixes and re-added workflows it leaves out. How should install/update respect project choices? (The owner confirmed it on 9 Nov.)</span></h3>
 <p class="decision-meta">Asked 08 Nov · Decided 08 Nov</p>
 <div class="decision-options">
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Tracked ci-install.json keep/skip lists</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 08 Nov</span></div>
 <p class="decision-summary">scripts/delivery/ci-install.json names files update keeps and templates it never writes.</p>
+<blockquote class="decision-words">&ldquo;Keep it (Recommended)&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">ci.skip_templates in .delivery/config.json</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1193,12 +1388,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </div>
 </article>
 <article class="decision decision-decided" data-decision="D129">
-<h3 class="decision-head"><span class="decision-id">D129</span> <span class="decision-question">The delivery watcher merges a green release PR itself, about a minute after its CI passes. Keep it?</span></h3>
+<h3 class="decision-head"><span class="decision-id">D129</span> <span class="decision-question">The delivery watcher merges a green release PR itself, about a minute after its CI passes. Keep it? (The owner confirmed it on 9 Nov.)</span></h3>
 <p class="decision-meta">Asked 08 Nov · Decided 08 Nov</p>
 <div class="decision-options">
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Keep it</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 08 Nov</span></div>
 <p class="decision-summary">The watcher merges a ready PR once its head&#x27;s CI is green; not GitHub auto-merge.</p>
+<blockquote class="decision-words">&ldquo;Keep it (Recommended)&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Only a session or the owner merges</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
