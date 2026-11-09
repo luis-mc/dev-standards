@@ -7,7 +7,7 @@ ARG POOL_BROWSERS=none
 ARG POOL_LAYERS=
 ARG POOL_APT=
 # The one place the Playwright version for the system libraries is pinned (DL67).
-ARG PLAYWRIGHT_VERSION=1.62.1
+ARG PLAYWRIGHT_VERSION=1.65.0
 LABEL dev.luismc.runner-pool="1"
 ENV DEBIAN_FRONTEND=noninteractive
 # libatomic1: pnpm's standalone binary (@pnpm/exe) needs it. xz-utils, unzip, zip, jq: common actions assume them, as on hosted runners (DL71).
