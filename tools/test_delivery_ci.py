@@ -1280,13 +1280,19 @@ IF_COND = ("${{ !cancelled() && needs.decide.result != 'failure' && needs.decide
 # DL147: a plan-result check may come first, so a failed plan does not skip the job silently.
 PLAN_CLAUSE = re.compile(
     r"(?: && needs\.plan\.result != 'failure')? && needs\.plan\.outputs\.(integration|e2e) != 'false'")
+# DL147: the ts aggregate `e2e` job judges the results itself, so it guards on 'cancelled' and not 'failure'.
+E2E_AGGREGATE_COND = (
+    "${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && "
+    "needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && "
+    "needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && "
+    "(github.event_name != 'pull_request' || !github.event.pull_request.draft) }}")
 # The opt-in run-times job (DS26, DL-82) adds the repository-variable clause.
 RUN_TIMES_CLAUSE = re.compile(r" && vars\.CI_RUN_TIMES == 'true'")
 
 
 def if_cond_ok(block: str) -> bool:
     for m in re.finditer(r"^    if: (.*)$", block, re.M):
-        if m.group(1) == IF_COND or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", m.group(1))) == IF_COND:
+        if m.group(1) in (IF_COND, E2E_AGGREGATE_COND) or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", m.group(1))) == IF_COND:
             return True
     return False
 
