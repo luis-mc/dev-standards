@@ -82,6 +82,23 @@ def main():
     ledger.write_text(json.dumps({"agents": [{"state": "running"}]}))
     expect("plain question, agents running", 2, {"last_assistant_message": "Should I go on?", "cwd": str(proj)})
 
+    # DL124: an agent with an ETA and no agent-done counts as running.
+    from datetime import datetime, timedelta, timezone
+    due = (datetime.now(timezone.utc) + timedelta(minutes=30)).isoformat()
+    ledger.write_text(json.dumps({"agents": [{"task": "T1", "state": "pushed", "eta": {"due": due}}]}))
+    expect("parked, agent with eta", 0, msg)
+    p = subprocess.run([sys.executable, str(HOOK)], input=json.dumps(msg), capture_output=True, text=True)
+    if "wait for the report of agent T1" not in p.stdout:
+        errors.append("soon-due agent: no 'questions wait' note")
+    ledger.write_text(json.dumps({"agents": [{"task": "T1", "state": "done", "eta": {"due": due}}]}))
+    expect("parked, eta agent done", 2, msg)
+    ledger.write_text(json.dumps({"agents": [{"task": "T1", "state": "pushed", "eta": {"due": due}, "done_at": "x"}]}))
+    expect("parked, eta agent with done_at", 2, msg)
+    ledger.write_text("{bad json")
+    expect("parked, bad ledger", 2, msg)
+    ledger.unlink()
+    expect("parked, no ledger", 2, msg)
+
     # switches
     q = {"last_assistant_message": "Should I rename it?"}
     expect("env off", 0, q, env={"CLAUDE_QUESTIONS_STOP": "off"})

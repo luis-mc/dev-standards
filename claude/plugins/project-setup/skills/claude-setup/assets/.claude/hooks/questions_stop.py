@@ -12,7 +12,9 @@ Allowed without a block:
   - stop_hook_active is true (never loops);
   - the turn has an AskUserQuestion call;
   - point 2 only: agents of the wave still run, so Q-5 lets the question park
-    (the project's .delivery/ledger.json has an agent in state queued/running);
+    (the project's .delivery/ledger.json has an agent in state queued/running,
+    or an agent with an ETA (agent-eta) that is not finished (agent-done));
+    an agent due within 60 minutes makes the hook say questions wait for its report;
   - questions inside code blocks, inline code or quoted ("> ") lines;
   - any error: the hook fails open.
 
@@ -29,6 +31,7 @@ import json
 import os
 import re
 import sys
+from datetime import datetime, timezone
 from pathlib import Path
 
 OFF = {"0", "off", "false", "no"}
@@ -137,8 +140,28 @@ def read_turn(path):
     return "\n\n".join(texts), asked
 
 
-def agents_running(dirs):
-    seen = set()
+SOON_MIN = 60
+NOTE = []   # a message for the owner when the stop is allowed
+FINISHED = ("done", "empty", "failed", "stopped")
+
+
+def _due(agent):
+    """The ETA of an agent as an aware datetime, or None."""
+    eta = agent.get("eta")
+    raw = eta.get("due") if isinstance(eta, dict) else None
+    if not isinstance(raw, str):
+        return None
+    try:
+        d = datetime.fromisoformat(raw.strip().replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    return d if d.tzinfo else d.replace(tzinfo=timezone.utc)
+
+
+def agents_running(dirs, now=None):
+    """(running, soon): any agent of the wave still runs; the task of one due within SOON_MIN minutes."""
+    now = now or datetime.now(timezone.utc)
+    seen, running, soon = set(), False, None
     for d in dirs:
         if not d:
             continue
@@ -153,10 +176,20 @@ def agents_running(dirs):
             except Exception:
                 continue
             agents = ledger.get("agents") if isinstance(ledger, dict) else None
-            if isinstance(agents, list) and any(
-                    isinstance(a, dict) and a.get("state") in ("queued", "running") for a in agents):
-                return True
-    return False
+            for a in agents if isinstance(agents, list) else []:
+                if not isinstance(a, dict):
+                    continue
+                state = a.get("state")
+                live = state in ("queued", "running") or (
+                    isinstance(a.get("eta"), dict) and not a.get("done_at")
+                    and state not in FINISHED)
+                if not live:
+                    continue
+                running = True
+                due = _due(a)
+                if due is not None and (due - now).total_seconds() <= SOON_MIN * 60 and soon is None:
+                    soon = str(a.get("task") or a.get("id") or "an agent")
+    return running, soon
 
 
 def decide(data, home):
@@ -175,7 +208,13 @@ def decide(data, home):
         return ("Q-2: you asked the owner a question in plain text. Gather every open question "
                 "and ask them in one AskUserQuestion batch (several calls when more than 4). "
                 "Each question carries its own context.")
-    if PARKED.search(final) and not agents_running([data.get("cwd"), os.environ.get("CLAUDE_PROJECT_DIR")]):
+    if PARKED.search(final):
+        running, soon = agents_running([data.get("cwd"), os.environ.get("CLAUDE_PROJECT_DIR")])
+        if running:
+            if soon:
+                NOTE.append("Questions wait for the report of agent %s (due within %d minutes); "
+                            "do not ask now." % (soon, SOON_MIN))
+            return None
         return ("Q-1: you said questions are parked or will be asked later, but no agent of this "
                 "wave still runs (Q-5). Gather every open question and ask them now in one "
                 "AskUserQuestion batch (several calls when more than 4). Each question carries "
@@ -192,6 +231,8 @@ def main():
     if reason:
         print(reason, file=sys.stderr)
         return 2
+    if NOTE:
+        print(json.dumps({"systemMessage": NOTE[0]}))
     return 0
 
 
