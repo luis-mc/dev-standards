@@ -1,0 +1,22 @@
+# Workspace root. One workspace, one committed Cargo.lock. Add product crates
+# under crates/ (they are picked up by the glob). Run every cargo command with --locked.
+[workspace]
+resolver = "2"
+members = ["crates/*"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2021"
+publish = false
+
+[workspace.dependencies]
+# Shared dependency versions go here; crates use `dep = { workspace = true }`.
+
+# The release profile is fixed here so builds are the same everywhere.
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+strip = "symbols"
+debug = false
