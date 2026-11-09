@@ -302,6 +302,9 @@ class World:
 
     # -- running -----------------------------------------------------------
     def cleanup(self, *args: str, gh: bool = True, cwd: Path | None = None):
+        # The delivery log is off unless asked for: these scenarios exercise it, so a --pr run asks.
+        if "--pr" in args and "--no-delivery-log" not in args and "--dry-run" not in args:
+            args = (*args, "--delivery-log")
         return run([PY, str(self.work / "scripts/delivery/cleanup.py"), *args], cwd=cwd or self.work,
                    extra_env=self.stub.env(gh))
 
