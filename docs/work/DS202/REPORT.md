@@ -10,3 +10,13 @@
 
 ## Tests
 - `PYTHONPATH=../scripts python3 -m unittest test_ds202_rust_doctor test_doctor` (in tests/): 33 tests OK.
+- `python3 tools/ci_areas.py --branch-advice`: heavy, area `delivery`.
+- `gh workflow run spec-lint.yml --ref DS202-rust-doctor -f areas=delivery`, runs 42649991914 and 42650142370: both ended `cancelled`. The `docs check` job failed first and cancelled the delivery suites. Setup preflight, area mapping, runner plan and change-notes jobs passed; the suites did not finish, so there is no green delivery result.
+- `python3 claude/plugins/docs/scripts/docs_check.py`: 2 errors, 2 warnings. W1 (docs/work, expected). M1: the delivery feature spec is not updated; the brief leaves the spec text to the later docs task (DS203), the change note is added. T2 warnings are for other specs.
+
+## Verdict
+Code and unit tests are done. CI is not green: the docs check M1 needs the spec update from the docs task, and the delivery suites were cancelled by that failure. Re-run the area after the spec is written.
+
+Branch head: see `git log -1` on origin/DS202-rust-doctor.
+
+NOT READY
