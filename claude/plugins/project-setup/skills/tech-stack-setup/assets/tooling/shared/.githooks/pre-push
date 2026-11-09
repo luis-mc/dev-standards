@@ -83,8 +83,9 @@ if [ ! -d scripts/delivery ]; then
   exit 0
 fi
 
-# A fresh worktree has no node_modules (DL130): say so instead of a cryptic pnpm error.
-if [ -f package.json ] && [ ! -d node_modules ]; then
+# A fresh worktree of a pnpm project (gate.json runs pnpm) has no node_modules (DL130): say so instead of a cryptic pnpm error.
+if [ -f package.json ] && [ -f pnpm-lock.yaml ] && [ ! -d node_modules ] &&
+   [ -f scripts/delivery/gate.json ] && grep -q 'pnpm ' scripts/delivery/gate.json; then
   echo "pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here." >&2
   exit 1
 fi
