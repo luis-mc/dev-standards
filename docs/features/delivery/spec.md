@@ -434,6 +434,8 @@ flowchart LR
 
 **R13.71** — **Setup asks about Windows installers** (DL149). `/delivery-ci-setup` asks whether the project builds Windows installers on Linux and suggests yes when the repository has `*.wxs` files. Yes adds `windows-packaging` to `pool.layers`. It also names `.delivery/pool.apt`.
 
+**R13.76** — **Service permissions in WiX 5** (DL152). Guidance for Windows packaging names the core element `<PermissionEx Sddl="..." />` inside `<ServiceInstall>` for a service DACL. It does not name `<util:PermissionEx>` with an `Sddl` attribute, which fails the WiX 5 build with WIX0004 and WIX0010. The [windows-packaging guide](../../guides/windows-packaging.md) shows both forms.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:
