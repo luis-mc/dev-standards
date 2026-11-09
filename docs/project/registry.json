@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T17:29+00:00",
+  "updated": "2026-11-09T17:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2948,6 +2948,19 @@
       "expected": "",
       "changed": "2026-11-09T16:30+00:00",
       "rides": "DS194"
+    },
+    {
+      "id": "DL147",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Workflow guard: jobs after a skippable need use !cancelled() and check results",
+      "detail": "From a project's RELEASE-197 CI: a job with needs on a job that can be skipped and an if: without a status function got the implicit success(), so it was skipped and a later job failed on a missing artifact. Rule: such a job's if starts with !cancelled() and checks each required need's result == 'success'. A lint test over every template workflow enforces it.",
+      "expected": "09 Nov ~18:29",
+      "changed": "2026-11-09T17:33+00:00",
+      "rides": "DS194",
+      "expected_basis": "cloud agent started 17:33, ~55 min",
+      "started": "2026-11-09T17:33+00:00"
     },
     {
       "id": "DS1",
