@@ -108,7 +108,7 @@ def main_more(argv: list[str]) -> int:
                     default=str(Path(__file__).resolve().parent / "tools.json"))
     ap.add_argument("--index-file", metavar="FILE")
     ap.add_argument("--platform", choices=list(PLATFORMS))
-    ap.add_argument("--kind", choices=["file", "archive", "crate"], default="archive")
+    ap.add_argument("--kind", choices=["file", "archive", "wheel", "crate"], default="archive")
     ap.add_argument("--url")
     ap.add_argument("--sha256")
     ap.add_argument("--bin-dir")

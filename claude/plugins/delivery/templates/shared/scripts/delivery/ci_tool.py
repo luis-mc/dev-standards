@@ -15,6 +15,8 @@ the tool's bin file, or with --exe NAME that file in the tool's bin folder, or
 with --dir the bin folder. `gitleaks` is the same as `tool gitleaks` with the
 gitleaks pin shape. A pin has "version" and "platforms": {<plat>: entry}.
 Entry kinds:
+  wheel    a PyPI .whl (a zip) that carries a binary (Zig). Like archive, but
+           keeps the exec bit stored in the zip.
   file     one raw download (rustup-init). Cached, made executable.
   archive  a .tar.gz/.tar.xz/.zip (LLVM, Zig). Unpacked once into
            <tool>/<version>/unpacked-<plat>/. "bin_dir" is the folder with the
@@ -212,7 +214,7 @@ def _pin(name: str, plat: str) -> tuple[dict, dict]:
     return tool_pin, entry
 
 
-def _safe_unpack(archive: Path, dest: Path) -> None:
+def _safe_unpack(archive: Path, dest: Path, keep_modes: bool = False) -> None:
     name = archive.name.lower()
     root = dest.resolve()
 
@@ -220,11 +222,16 @@ def _safe_unpack(archive: Path, dest: Path) -> None:
         if not (root / member).resolve().is_relative_to(root):
             raise ToolError(f"{archive} has an unsafe path: {member}")
 
-    if name.endswith(".zip"):
+    if name.endswith((".zip", ".whl")):
         with zipfile.ZipFile(archive) as z:
             for m in z.namelist():
                 inside(m)
             z.extractall(dest)
+            if keep_modes:  # a wheel keeps the exec bit only in the zip entry
+                for i in z.infolist():
+                    mode = (i.external_attr >> 16) & 0o777
+                    if mode and not i.is_dir():
+                        os.chmod(dest / i.filename, mode | 0o600)
         return
     with tarfile.open(archive) as t:
         for m in t.getmembers():
@@ -286,9 +293,9 @@ def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
                 except OSError:
                     pass
         return out.parent, out, entry
-    if kind == "archive":
+    if kind in ("archive", "wheel"):
         def build(tmp: Path) -> None:
-            _safe_unpack(archive, tmp)
+            _safe_unpack(archive, tmp, keep_modes=(kind == "wheel"))
         try:
             root = _install_dir(base / f"unpacked-{plat}", build)
         except (OSError, tarfile.TarError, zipfile.BadZipFile) as exc:

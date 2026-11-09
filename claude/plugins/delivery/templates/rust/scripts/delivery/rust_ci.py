@@ -156,7 +156,7 @@ def host_linker() -> tuple[str, str | None]:
         except RustCiError as exc:
             raise RustCiError("pinned zig could not be used: %s" % exc) from None
     raise RustCiError("%s. Fix: install a C compiler (sudo apt-get install -y build-essential pkg-config), "
-                      "or pin Zig: python3 scripts/delivery/tools_pin.py entry zig ..." % CC_NOT_FOUND)
+                      "or pin Zig from the ziglang wheel on PyPI: python3 scripts/delivery/tools_pin.py entry zig ..." % CC_NOT_FOUND)
 
 
 def build_env(root: Path) -> tuple[dict[str, str], list[str]]:
