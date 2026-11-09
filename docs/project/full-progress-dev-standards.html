@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T15:27+00:00",
+ "updated": "2026-11-09T16:02+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1589,7 +1589,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "mark-published after pending --refresh needs no extra render",
    "detail": "mark-published can refuse with 'differs from a fresh render; run render first' right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS194"
   },
   {
    "id": "AR68",
@@ -1599,7 +1600,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "task-status-update skill lists the four --phase names",
    "detail": "--phase accepts only agents, join, ci, merge; the skill text does not list them.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS194"
   },
   {
    "id": "DL1",
@@ -3466,12 +3468,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL121",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Fold a project's script fixes into the templates",
    "detail": "artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner's call",
-   "expected": "09 Nov ~17:05",
-   "changed": "2026-11-09T15:27+00:00",
-   "expected_basis": "local agent from 15:35, ~90 min",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T15:52+00:00",
    "rides": "DL123",
    "started": "2026-11-08T23:06+00:00"
   },
@@ -3483,7 +3484,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "Project-owned workflow list for artifact prune",
    "detail": "artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow",
    "expected": "",
-   "changed": "2026-11-08T23:03+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS194"
   },
   {
    "id": "DL123",
@@ -3528,27 +3530,32 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "Questions stop hook counts running cloud agents",
    "detail": "The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:21+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
   },
   {
    "id": "DL125",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Dropped",
    "item": "Rust CI track: pinned LLVM linker in the tool cache",
    "detail": "Pool image has no C linker, so cargo builds pass in the agent gate and fail in release CI. Fetch pinned sha256-checked clang+lld, set CARGO_TARGET_*_LINKER, CC, AR; run the agent gate's Rust step without system compilers; doctor checks a linker for the rust track.",
-   "expected": "10 Nov",
-   "changed": "2026-11-09T15:21+00:00"
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:01+00:00",
+   "dropped_into": "DS200",
+   "dropped_reason": "covered by the Rust CI helper and tool fetcher (D140)"
   },
   {
    "id": "DL126",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Dropped",
    "item": "Rust CI track: cached RustSec advisory DB",
    "detail": "Keep the cargo-deny advisory DB in the CI tool cache and git fetch it each run; if GitHub is unreachable, use the cached copy with a warning.",
-   "expected": "10 Nov",
-   "changed": "2026-11-09T15:21+00:00"
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:01+00:00",
+   "dropped_into": "DS200",
+   "dropped_reason": "covered by the Rust CI helper (D142)"
   },
   {
    "id": "DL127",
@@ -3558,7 +3565,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "Ledger: close agents whose task shipped; agent-check command",
    "detail": "Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check <id> to record last_checked.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:21+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL142"
   },
   {
    "id": "DL128",
@@ -3568,7 +3576,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "join.py handles stacked branches",
    "detail": "When branch B contains an older head of branch A, merge B alone or report stacked and prefer B's side for files B rewrote.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:21+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DL143"
   },
   {
    "id": "DL129",
@@ -3578,7 +3587,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "join.py --into creates a missing integration branch",
    "detail": "join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DL143"
   },
   {
    "id": "DL130",
@@ -3588,7 +3598,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "Pre-push hook names missing node_modules",
    "detail": "In a fresh worktree with no node_modules the pre-push guard fails with a cryptic pnpm message. Detect it and say: run pnpm install --frozen-lockfile in this worktree.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
   },
   {
    "id": "DL131",
@@ -3598,7 +3609,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "branch_gate --e2e-only leaves docs/work clean",
    "detail": "The gate regenerates committed screenshots under docs/work, so the next push refuses. Write shots to an ignored dir or restore docs/work afterwards.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
   },
   {
    "id": "DL132",
@@ -3608,7 +3620,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "ci_watch.py writes the main repo's ledger from a worktree",
    "detail": "Run inside a join worktree, it wrote that worktree's ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL142"
   },
   {
    "id": "DL133",
@@ -3618,7 +3631,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "DL-53 hook accepts /c/... paths under the work root",
    "detail": "git worktree add /c/Work/... was refused as outside C:\\Work. Normalise Git Bash paths before comparing.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
   },
   {
    "id": "DL134",
@@ -3628,7 +3642,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "branch_gate logs are UTF-8 on Windows",
    "detail": "Gate logs mix cp1252 box-drawing characters; cat and Python print fail. Force UTF-8 for the log and the Playwright reporter.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
   },
   {
    "id": "DL135",
@@ -3638,7 +3653,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "Join flags e2e unhandled-API-call failures as join interactions",
    "detail": "Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DL143"
   },
   {
    "id": "DL136",
@@ -3648,7 +3664,99 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "Held routines are paused, not postponed, while a question is open",
    "detail": "A routine postponed a few minutes for an owner answer started on its old brief when the dialog stayed open 3 h. Rule: pause it (no run_once_at), or a hook warns when a held routine's start passes during an open question.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:22+00:00"
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
+  },
+  {
+   "id": "DL137",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Pre-push guard resolves paths from the current worktree",
+   "detail": "A push from one release worktree printed an ok line for a file in an older, removed worktree (the generated OpenAPI schema check?). A guard resolves its path from a stale or cached location.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
+  },
+  {
+   "id": "DL138",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "ci_watch matches or creates the train for a ready PR",
+   "detail": "ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL142"
+  },
+  {
+   "id": "DL139",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "ci_watch covers every required workflow of the head",
+   "detail": "ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL142"
+  },
+  {
+   "id": "DL140",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Join runs the strict docs check before the ready PR",
+   "detail": "Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR's CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DL143"
+  },
+  {
+   "id": "DL141",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Agent gate compiles native C# on Linux, or flags it",
+   "detail": "A Linux agent gate never compiles Windows C#, so an ambiguous type (CS0104 under /warnaserror+) surfaced only in release CI. Compile with mono mcs or the dotnet SDK csc against the same framework assemblies, or flag 'C# changed, not compiled' in the gate result.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:01+00:00",
+   "rides": "DL144"
+  },
+  {
+   "id": "DL142",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "RELEASE: ci_watch and ledger fixes",
+   "detail": "DL127, DL132, DL138, DL139: join, fold notes, CI, merge, install, smoke, cleanup.",
+   "expected": "09 Nov ~18:15",
+   "changed": "2026-11-09T16:01+00:00",
+   "expected_basis": "cloud agents from ~16:10, ~60 min, then join and CI after DS194",
+   "release": 73
+  },
+  {
+   "id": "DL143",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "RELEASE: join.py fixes",
+   "detail": "DL128, DL129, DL135, DL140: join, fold notes, CI, merge, install, smoke, cleanup.",
+   "expected": "09 Nov ~18:45",
+   "changed": "2026-11-09T16:01+00:00",
+   "expected_basis": "cloud agent from ~16:10, ~75 min, then join and CI",
+   "release": 74
+  },
+  {
+   "id": "DL144",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "RELEASE: hook and gate fixes",
+   "detail": "DL124, DL130, DL131, DL133, DL134, DL136, DL137, DL141: join, fold notes, CI, merge, install, smoke, cleanup.",
+   "expected": "09 Nov ~19:20",
+   "changed": "2026-11-09T16:01+00:00",
+   "expected_basis": "cloud agents from ~16:10, ~75 min, then join and CI",
+   "release": 75
   },
   {
    "id": "DS1",
@@ -6418,22 +6526,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS191",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Review audits and test-cost specs against code",
    "detail": "docs_check T2 still warns for both after DS190 (the cloud checkout missed them)",
-   "expected": "",
-   "changed": "2026-11-08T23:30+00:00"
+   "expected": "09 Nov ~16:40",
+   "changed": "2026-11-09T15:57+00:00",
+   "expected_basis": "cloud agent from 15:56",
+   "rides": "DS194",
+   "started": "2026-11-09T15:57+00:00"
   },
   {
    "id": "DS192",
    "owner": "project",
    "app": "",
-   "status": "Needs you",
+   "status": "Live",
    "item": "Rust in tech-stack-setup: study and proposal",
-   "detail": "Proposal written: Rust as an optional component beside a JS stack (CLI, host service, napi/WASM library, worker, media processing), wizard questions, Cargo workspace layout, rust CI track with pinned linker and cached RustSec DB; 8 tasks; 8 owner questions.",
-   "expected": "09 Nov ~16:30",
-   "changed": "2026-11-09T15:25+00:00",
-   "expected_basis": "local study agent from 15:25, ~60 min",
+   "detail": "Proposal done; owner decided D138-D145 on 9 Nov; plan in docs/architecture/rust-beside-js-plan.md; work in DS196-DS203.",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T15:57+00:00",
    "no_release": "study; proposal for the owner",
    "started": "2026-11-09T15:21+00:00"
   },
@@ -6445,7 +6555,174 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "item": "docs_work.py strip --apply always commits or fails loudly",
    "detail": "On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.",
    "expected": "10 Nov",
-   "changed": "2026-11-09T15:21+00:00"
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS194"
+  },
+  {
+   "id": "DS194",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "RELEASE: audits and test-cost specs, prune workflow list",
+   "detail": "Join DS191, DL122, DS193, AR67, AR68; fold notes, CI, merge, install, smoke, cleanup.",
+   "expected": "09 Nov ~17:40",
+   "changed": "2026-11-09T16:02+00:00",
+   "expected_basis": "DL122/DS193/AR67/AR68 agents from ~16:10, ~55 min",
+   "release": 71,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-09T15:56+00:00",
+     "end": "2026-11-09T17:05+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-09T17:05+00:00",
+     "end": "2026-11-09T17:20+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-09T17:20+00:00",
+     "end": "2026-11-09T17:35+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-09T17:35+00:00",
+     "end": "2026-11-09T17:40+00:00"
+    }
+   ],
+   "started": "2026-11-09T15:57+00:00"
+  },
+  {
+   "id": "DS195",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)",
+   "detail": "Join the Rust tasks (catalog, wizard, tooling, tool fetcher, rust_ci helper, workflows, doctor, docs), fold notes, CI, merge, install, smoke, cleanup.",
+   "expected": "09 Nov ~20:00",
+   "changed": "2026-11-09T15:58+00:00",
+   "release": 72,
+   "expected_basis": "wave 1 ~16:57, DS200 ~17:57, DS201 ~18:47, DS203 ~19:25",
+   "started": "2026-11-09T15:57+00:00",
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-09T15:56+00:00",
+     "end": "2026-11-09T19:25+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-09T19:25+00:00",
+     "end": "2026-11-09T19:40+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-09T19:40+00:00",
+     "end": "2026-11-09T19:55+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-09T19:55+00:00",
+     "end": "2026-11-09T20:00+00:00"
+    }
+   ]
+  },
+  {
+   "id": "DS196",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Rust catalog: component role, pairings, warnings",
+   "detail": "languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).",
+   "expected": "09 Nov ~16:51",
+   "changed": "2026-11-09T15:57+00:00",
+   "expected_basis": "cloud agent from 15:56",
+   "rides": "DS195",
+   "started": "2026-11-09T15:57+00:00"
+  },
+  {
+   "id": "DS197",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Rust wizard text: questions, layout, reason",
+   "detail": "tech-stack-setup SKILL.md: machine-side parts question, native_components role (CLI, host service, napi or WASM library), written reason, Cargo workspace layout.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS195"
+  },
+  {
+   "id": "DS198",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Rust tooling assets: workspace skeleton",
+   "detail": "Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.",
+   "expected": "09 Nov ~16:46",
+   "changed": "2026-11-09T15:57+00:00",
+   "expected_basis": "cloud agent from 15:56",
+   "rides": "DS195",
+   "started": "2026-11-09T15:57+00:00"
+  },
+  {
+   "id": "DS199",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Generic tool fetcher and pins",
+   "detail": "ci_tool.py fetches any pinned, sha256-checked tool from tools.json into the tool cache (rustup-init, LLVM, Zig, cargo-deny, cargo-xwin).",
+   "expected": "09 Nov ~16:57",
+   "changed": "2026-11-09T15:57+00:00",
+   "expected_basis": "cloud agent from 15:56",
+   "rides": "DS195",
+   "started": "2026-11-09T15:57+00:00"
+  },
+  {
+   "id": "DS200",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Rust CI helper",
+   "detail": "rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS195"
+  },
+  {
+   "id": "DS201",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Rust workflows",
+   "detail": "rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS195"
+  },
+  {
+   "id": "DS202",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "Doctor checks for the rust track",
+   "detail": "delivery_doctor.py: linker available, clang-cl and lld-link for Windows targets, exact toolchain, pinned tools, advisory DB age.",
+   "expected": "09 Nov ~16:47",
+   "changed": "2026-11-09T15:57+00:00",
+   "expected_basis": "cloud agent from 15:56",
+   "rides": "DS195",
+   "started": "2026-11-09T15:57+00:00"
+  },
+  {
+   "id": "DS203",
+   "owner": "project",
+   "app": "",
+   "status": "To do",
+   "item": "Rust docs: specs and guide",
+   "detail": "Feature spec rules and a guide: Rust beside a JS stack.",
+   "expected": "10 Nov",
+   "changed": "2026-11-09T16:02+00:00",
+   "rides": "DS195"
   },
   {
    "id": "DU1",
@@ -7041,21 +7318,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T15:27+00:00">09 Nov 15:27</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T16:02+00:00">09 Nov 16:02</time> (Lisbon)</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DS192"><span class="task-id">DS192</span><span class="glance-dep">local study agent from 15:25, ~60 min</span> Rust in tech-stack-setup: study and proposal <span class="glance-expected">09 Nov ~16:30</span></li>
-</ul>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
+<p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">8 tasks</span></summary>
 <ul>
-<li data-glance-task="DL121"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates <span class="glance-expected">09 Nov ~17:05</span><span class="glance-basis">local agent from 15:35, ~90 min</span></li>
+<li data-glance-task="DS191"><span class="task-id">DS191</span>Review audits and test-cost specs against code <span class="glance-expected">09 Nov ~16:40</span><span class="glance-basis">cloud agent from 15:56</span></li>
+<li data-glance-task="DS198"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton <span class="glance-expected">09 Nov ~16:46</span><span class="glance-basis">cloud agent from 15:56</span></li>
+<li data-glance-task="DS202"><span class="task-id">DS202</span>Doctor checks for the rust track <span class="glance-expected">09 Nov ~16:47</span><span class="glance-basis">cloud agent from 15:56</span></li>
+<li data-glance-task="DS196"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings <span class="glance-expected">09 Nov ~16:51</span><span class="glance-basis">cloud agent from 15:56</span></li>
+<li data-glance-task="DS199"><span class="task-id">DS199</span>Generic tool fetcher and pins <span class="glance-expected">09 Nov ~16:57</span><span class="glance-basis">cloud agent from 15:56</span></li>
 <li data-glance-task="DL123"><span class="task-id">DL123</span><span class="release-name">RELEASE-70</span>Release the ported project fixes <span class="glance-expected">09 Nov ~17:35</span><span class="glance-basis">DL121 local agent ~90 min, then join and CI</span></li>
+<li data-glance-task="DS194"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: audits and test-cost specs, prune workflow list <span class="glance-expected">09 Nov ~17:40</span><span class="glance-basis">DL122/DS193/AR67/AR68 agents from ~16:10, ~55 min</span></li>
+<li data-glance-task="DS195"><span class="task-id">DS195</span><span class="release-name">RELEASE-72</span>RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track) <span class="glance-expected">09 Nov ~20:00</span><span class="glance-basis">wave 1 ~16:57, DS200 ~17:57, DS201 ~18:47, DS203 ~19:25</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">4 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
 <ul>
+<li data-glance-task="DL121"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">5 tasks</span></summary>
+<ul>
+<li data-glance-task="DS192"><span class="task-id">DS192</span>Rust in tech-stack-setup: study and proposal</li>
 <li data-glance-task="DL117"><span class="task-id">DL117</span><span class="release-name">RELEASE-68</span>Release watcher rows and spec review</li>
 <li data-glance-task="DL118"><span class="task-id">DL118</span>Re-arm reports unstoppable watchers; dead rows pruned</li>
 <li data-glance-task="DL120"><span class="task-id">DL120</span>Install keep and skip list</li>
@@ -7063,62 +7350,116 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">419</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div><div class="status-count-tile status-to-do"><div class="count">18</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">3</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">420</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">8</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">27</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">5</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
-<figcaption>Next releases (~16:30 · local study agent from 15:25, ~60 min)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DL123 (Release the ported project fixes) expected live about 17:35. Other work (no release): DS192 (Rust in tech-stack-setup: study and proposal) Needs you, expected about 16:30." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">15:00</text><line class="rt-grid" x1="286.7" y1="36" x2="286.7" y2="236"/><text x="286.7" y="28">15:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="236"/><text x="373.3" y="28">16:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="236"/><text x="460" y="28">16:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="236"/><text x="546.7" y="28">17:00</text><line class="rt-grid" x1="633.3" y1="36" x2="633.3" y2="236"/><text x="633.3" y="28">17:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">18:00</text></g>
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 474" role="img" aria-label="Next releases: DL123 (Release the ported project fixes) expected live about 17:35; DS194 (RELEASE: audits and test-cost specs, prune workflow list) expected live about 17:40; DL142 (RELEASE: ci_watch and ledger fixes) expected live about 18:15; DL143 (RELEASE: join.py fixes) expected live about 18:45; DL144 (RELEASE: hook and gate fixes) expected live about 19:20; DS195 (RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)) expected live about 20:00." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="257.8" y1="36" x2="257.8" y2="450"/><text x="257.8" y="28">16:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="450"/><text x="373.3" y="28">17:00</text><line class="rt-grid" x1="488.9" y1="36" x2="488.9" y2="450"/><text x="488.9" y="28">18:00</text><line class="rt-grid" x1="604.4" y1="36" x2="604.4" y2="450"/><text x="604.4" y="28">19:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="450"/><text x="720" y="28">20:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-70 · Release the ported project fixes</title>RELEASE-70 · Release the…</text>
 <text class="rt-sub" x="0" y="77"><title>DL121</title>DL121</text>
-<rect class="rt-bar agents" x="301.1" y="52" width="260" height="22"><title>agents 15:35-17:05</title></rect>
-<rect class="rt-bar join" x="561.1" y="52" width="28.9" height="22"><title>join 17:05-17:15</title></rect>
-<rect class="rt-bar ci" x="590" y="52" width="43.3" height="22"><title>PR CI 17:15-17:30</title></rect>
-<rect class="rt-bar merge" x="633.3" y="52" width="14.4" height="22"><title>merge + cleanup 17:30-17:35</title></rect>
-<polygon class="rt-expected" points="647.8,50 655.8,63 647.8,76 639.8,63"/>
-<text class="rt-live-label" x="647.8" y="92">live ~17:35</text>
-<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
-<text class="rt-name" x="0" y="156"><title>DS192 · Rust in tech-stack-setup: study and proposal</title>DS192 · Rust in tech-stac…</text>
-<rect class="rt-other status-needs-you" x="260.7" y="151" width="199.3" height="16"><title>Needs you 15:21-16:30</title></rect>
-<text class="rt-other-label" x="260.7" y="184">~16:30 · local study agent from 15:25, ~60 min</text>
-<line class="rt-now" x1="278" y1="36" x2="278" y2="244"/><text class="rt-now-label" x="278" y="257">now 15:27</text>
+<rect class="rt-bar agents" x="209.6" y="52" width="173.3" height="22"><title>agents 15:35-17:05</title></rect>
+<rect class="rt-bar join" x="383" y="52" width="19.3" height="22"><title>join 17:05-17:15</title></rect>
+<rect class="rt-bar ci" x="402.2" y="52" width="28.9" height="22"><title>PR CI 17:15-17:30</title></rect>
+<rect class="rt-bar merge" x="431.1" y="52" width="9.6" height="22"><title>merge + cleanup 17:30-17:35</title></rect>
+<polygon class="rt-expected" points="440.7,50 448.7,63 440.7,76 432.7,63"/>
+<text class="rt-live-label" x="440.7" y="92">live ~17:35</text>
+<text class="rt-name" x="0" y="122"><title>RELEASE-71 · RELEASE: audits and test-cost specs, prune workflow list</title>RELEASE-71 · RELEASE: aud…</text>
+<text class="rt-sub" x="0" y="139"><title>AR67, AR68, DL122, DS191, DS193</title>AR67, AR68, DL122, DS191, DS193</text>
+<rect class="rt-bar agents" x="250.1" y="114" width="132.9" height="22"><title>agents 15:56-17:05</title></rect>
+<rect class="rt-bar join" x="383" y="114" width="28.9" height="22"><title>join 17:05-17:20</title></rect>
+<rect class="rt-bar ci" x="411.9" y="114" width="28.9" height="22"><title>PR CI 17:20-17:35</title></rect>
+<rect class="rt-bar merge" x="440.7" y="114" width="9.6" height="22"><title>merge + cleanup 17:35-17:40</title></rect>
+<polygon class="rt-expected" points="450.4,112 458.4,125 450.4,138 442.4,125"/>
+<text class="rt-live-label" x="450.4" y="154">live ~17:40</text>
+<text class="rt-name" x="0" y="184"><title>RELEASE-73 · RELEASE: ci_watch and ledger fixes</title>RELEASE-73 · RELEASE: ci_…</text>
+<text class="rt-sub" x="0" y="201"><title>DL127, DL132, DL138, DL139</title>DL127, DL132, DL138, DL139</text>
+<polygon class="rt-expected" points="517.8,174 525.8,187 517.8,200 509.8,187"/>
+<text class="rt-live-label" x="517.8" y="216">live ~18:15</text>
+<text class="rt-name" x="0" y="246"><title>RELEASE-74 · RELEASE: join.py fixes</title>RELEASE-74 · RELEASE: joi…</text>
+<text class="rt-sub" x="0" y="263"><title>DL128, DL129, DL135, DL140</title>DL128, DL129, DL135, DL140</text>
+<polygon class="rt-expected" points="575.6,236 583.6,249 575.6,262 567.6,249"/>
+<text class="rt-live-label" x="575.6" y="278">live ~18:45</text>
+<text class="rt-name" x="0" y="308"><title>RELEASE-75 · RELEASE: hook and gate fixes</title>RELEASE-75 · RELEASE: hoo…</text>
+<text class="rt-sub" x="0" y="325"><title>DL124, DL130, DL131, DL133, DL134, DL136, DL137, DL141</title>DL124, DL130, DL131, DL133, DL134…</text>
+<polygon class="rt-expected" points="643,298 651,311 643,324 635,311"/>
+<text class="rt-live-label" x="643" y="340">live ~19:20</text>
+<text class="rt-name" x="0" y="370"><title>RELEASE-72 · RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)</title>RELEASE-72 · RELEASE: Rus…</text>
+<text class="rt-sub" x="0" y="387"><title>DS196, DS197, DS198, DS199, DS200, DS201, DS202, DS203</title>DS196, DS197, DS198, DS199, DS200…</text>
+<rect class="rt-bar agents" x="250.1" y="362" width="402.5" height="22"><title>agents 15:56-19:25</title></rect>
+<rect class="rt-bar join" x="652.6" y="362" width="28.9" height="22"><title>join 19:25-19:40</title></rect>
+<rect class="rt-bar ci" x="681.5" y="362" width="28.9" height="22"><title>PR CI 19:40-19:55</title></rect>
+<rect class="rt-bar merge" x="710.4" y="362" width="9.6" height="22"><title>merge + cleanup 19:55-20:00</title></rect>
+<polygon class="rt-expected" points="720,360 728,373 720,386 712,373"/>
+<text class="rt-live-label" x="720" y="402">live ~20:00</text>
+<line class="rt-now" x1="261.6" y1="36" x2="261.6" y2="458"/><text class="rt-now-label" x="261.6" y="471">now 16:02</text>
 </svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <details class="status-fold release-group" data-group="release-70" open><summary><strong>RELEASE-70 · live ~17:35</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL123"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL123</span><span class="release-name">RELEASE-70</span>Release the ported project fixes</a></td><td data-label="App / service"></td><td data-label="Detail">Join DL121, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov ~17:35<span class="expected-basis">DL121 local agent ~90 min, then join and CI</span></td></tr>
-<tr data-task="DL121"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates</a></td><td data-label="App / service"></td><td data-label="Detail">artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner&#x27;s call</td><td data-label="Expected">09 Nov ~17:05<span class="expected-basis">local agent from 15:35, ~90 min</span></td></tr>
+<tr data-task="DL121"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL121</span>Fold a project&#x27;s script fixes into the templates</a></td><td data-label="App / service"></td><td data-label="Detail">artifact_prune holds and 5xx retry, session_guard -R other repo, ci_scope package.json valve, ci_watch docker trim, cleanup log off by default; how to read the project code is the owner&#x27;s call</td><td data-label="Expected">09 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">18 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-71" open><summary><strong>RELEASE-71 · live ~17:40</strong><span class="fold-count">6 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS194"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: audits and test-cost specs, prune workflow list</td><td data-label="App / service"></td><td data-label="Detail">Join DS191, DL122, DS193, AR67, AR68; fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~17:40<span class="expected-basis">DL122/DS193/AR67/AR68 agents from ~16:10, ~55 min</span></td></tr>
+<tr data-task="DS191"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS191</span>Review audits and test-cost specs against code</td><td data-label="App / service"></td><td data-label="Detail">docs_check T2 still warns for both after DS190 (the cloud checkout missed them)</td><td data-label="Expected">09 Nov ~16:40<span class="expected-basis">cloud agent from 15:56</span></td></tr>
 <tr data-task="AR67"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR67</span>mark-published after pending --refresh needs no extra render</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">mark-published can refuse with &#x27;differs from a fresh render; run render first&#x27; right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="AR68"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR68</span>task-status-update skill lists the four --phase names</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">--phase accepts only agents, join, ci, merge; the skill text does not list them.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL124"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL124</span>Questions stop hook counts running cloud agents</a></td><td data-label="App / service"></td><td data-label="Detail">The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL125"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL125</span>Rust CI track: pinned LLVM linker in the tool cache</a></td><td data-label="App / service"></td><td data-label="Detail">Pool image has no C linker, so cargo builds pass in the agent gate and fail in release CI. Fetch pinned sha256-checked clang+lld, set CARGO_TARGET_*_LINKER, CC, AR; run the agent gate&#x27;s Rust step without system compilers; doctor checks a linker for the rust track.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL126"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL126</span>Rust CI track: cached RustSec advisory DB</a></td><td data-label="App / service"></td><td data-label="Detail">Keep the cargo-deny advisory DB in the CI tool cache and git fetch it each run; if GitHub is unreachable, use the cached copy with a warning.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL122"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune</a></td><td data-label="App / service"></td><td data-label="Detail">artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DS193"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS193</span>docs_work.py strip --apply always commits or fails loudly</td><td data-label="App / service"></td><td data-label="Detail">On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.</td><td data-label="Expected">10 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold release-group" data-group="release-73" open><summary><strong>RELEASE-73 · live ~18:15</strong><span class="fold-count">5 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL142"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL142</span><span class="release-name">RELEASE-73</span>RELEASE: ci_watch and ledger fixes</a></td><td data-label="App / service"></td><td data-label="Detail">DL127, DL132, DL138, DL139: join, fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~18:15<span class="expected-basis">cloud agents from ~16:10, ~60 min, then join and CI after DS194</span></td></tr>
 <tr data-task="DL127"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL127</span>Ledger: close agents whose task shipped; agent-check command</a></td><td data-label="App / service"></td><td data-label="Detail">Agents stay running in the ledger after their task is Live, Dropped or Built. Check-in hook flags them; cleanup.py closes them at merge. Add delivery_ledger.py agent-check &lt;id&gt; to record last_checked.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL132"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL132</span>ci_watch.py writes the main repo&#x27;s ledger from a worktree</a></td><td data-label="App / service"></td><td data-label="Detail">Run inside a join worktree, it wrote that worktree&#x27;s ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL138"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL138</span>ci_watch matches or creates the train for a ready PR</a></td><td data-label="App / service"></td><td data-label="Detail">ci_watch reported success but wrote ci.unmatched because no train existed for the release branch, so the DL-06 merge hook blocked the merge. join.py or the ready PR creates the train, or ci_watch matches by branch and PR, or names the plan command.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL139"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL139</span>ci_watch covers every required workflow of the head</a></td><td data-label="App / service"></td><td data-label="Detail">ci_watch watched one workflow (green) while the required docs check failed; DL-06 would have allowed the merge. Watch every required workflow for the head commit.</td><td data-label="Expected">10 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold release-group" data-group="release-74" open><summary><strong>RELEASE-74 · live ~18:45</strong><span class="fold-count">5 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL143"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL143</span><span class="release-name">RELEASE-74</span>RELEASE: join.py fixes</a></td><td data-label="App / service"></td><td data-label="Detail">DL128, DL129, DL135, DL140: join, fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~18:45<span class="expected-basis">cloud agent from ~16:10, ~75 min, then join and CI</span></td></tr>
 <tr data-task="DL128"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL128</span>join.py handles stacked branches</a></td><td data-label="App / service"></td><td data-label="Detail">When branch B contains an older head of branch A, merge B alone or report stacked and prefer B&#x27;s side for files B rewrote.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL129"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL129</span>join.py --into creates a missing integration branch</a></td><td data-label="App / service"></td><td data-label="Detail">join.py --ci-gate fails when the integration branch is not on origin and gives no hint. Offer --create or print the exact command.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL135"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL135</span>Join flags e2e unhandled-API-call failures as join interactions</a></td><td data-label="App / service"></td><td data-label="Detail">Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL140"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL140</span>Join runs the strict docs check before the ready PR</a></td><td data-label="App / service"></td><td data-label="Detail">Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR&#x27;s CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.</td><td data-label="Expected">10 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold release-group" data-group="release-75" open><summary><strong>RELEASE-75 · live ~19:20</strong><span class="fold-count">9 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL144"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL144</span><span class="release-name">RELEASE-75</span>RELEASE: hook and gate fixes</a></td><td data-label="App / service"></td><td data-label="Detail">DL124, DL130, DL131, DL133, DL134, DL136, DL137, DL141: join, fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~19:20<span class="expected-basis">cloud agents from ~16:10, ~75 min, then join and CI</span></td></tr>
+<tr data-task="DL124"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL124</span>Questions stop hook counts running cloud agents</a></td><td data-label="App / service"></td><td data-label="Detail">The clarifying-questions stop hook said no agent still ran while two cloud agents with ETAs did; read running agents from the ledger (agent-eta without agent-done) and RemoteTrigger runs. Consider: no question when an agent is due within ~60 min; ask right after a push.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL130"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL130</span>Pre-push hook names missing node_modules</a></td><td data-label="App / service"></td><td data-label="Detail">In a fresh worktree with no node_modules the pre-push guard fails with a cryptic pnpm message. Detect it and say: run pnpm install --frozen-lockfile in this worktree.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL131"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL131</span>branch_gate --e2e-only leaves docs/work clean</a></td><td data-label="App / service"></td><td data-label="Detail">The gate regenerates committed screenshots under docs/work, so the next push refuses. Write shots to an ignored dir or restore docs/work afterwards.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL132"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL132</span>ci_watch.py writes the main repo&#x27;s ledger from a worktree</a></td><td data-label="App / service"></td><td data-label="Detail">Run inside a join worktree, it wrote that worktree&#x27;s ledger, so the DL-06 merge hook blocked the merge. Resolve the ledger from the git common dir.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL133"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL133</span>DL-53 hook accepts /c/... paths under the work root</a></td><td data-label="App / service"></td><td data-label="Detail">git worktree add /c/Work/... was refused as outside C:\Work. Normalise Git Bash paths before comparing.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL134"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL134</span>branch_gate logs are UTF-8 on Windows</a></td><td data-label="App / service"></td><td data-label="Detail">Gate logs mix cp1252 box-drawing characters; cat and Python print fail. Force UTF-8 for the log and the Playwright reporter.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL135"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL135</span>Join flags e2e unhandled-API-call failures as join interactions</a></td><td data-label="App / service"></td><td data-label="Detail">Each branch passed alone; the joined head failed an e2e api-mock teardown for a call another branch added. Suggest shared default handlers in e2e support, or the join report names such failures.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL136"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL136</span>Held routines are paused, not postponed, while a question is open</a></td><td data-label="App / service"></td><td data-label="Detail">A routine postponed a few minutes for an owner answer started on its old brief when the dialog stayed open 3 h. Rule: pause it (no run_once_at), or a hook warns when a held routine&#x27;s start passes during an open question.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DS193"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS193</span>docs_work.py strip --apply always commits or fails loudly</td><td data-label="App / service"></td><td data-label="Detail">On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL122"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune</a></td><td data-label="App / service"></td><td data-label="Detail">artifact-prune.yml reads the artifact-holding workflows from a project file instead of the template, so projects need not keep the workflow</td><td data-label="Expected">Not scheduled</td></tr>
-<tr data-task="DS191"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS191</span>Review audits and test-cost specs against code</td><td data-label="App / service"></td><td data-label="Detail">docs_check T2 still warns for both after DS190 (the cloud checkout missed them)</td><td data-label="Expected">Not scheduled</td></tr>
+<tr data-task="DL137"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL137</span>Pre-push guard resolves paths from the current worktree</a></td><td data-label="App / service"></td><td data-label="Detail">A push from one release worktree printed an ok line for a file in an older, removed worktree (the generated OpenAPI schema check?). A guard resolves its path from a stale or cached location.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL141"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL141</span>Agent gate compiles native C# on Linux, or flags it</a></td><td data-label="App / service"></td><td data-label="Detail">A Linux agent gate never compiles Windows C#, so an ambiguous type (CS0104 under /warnaserror+) surfaced only in release CI. Compile with mono mcs or the dotnet SDK csc against the same framework assemblies, or flag &#x27;C# changed, not compiled&#x27; in the gate result.</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold release-group" data-group="release-72" open><summary><strong>RELEASE-72 · live ~20:00</strong><span class="fold-count">9 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS192"><td data-label="Status"><span class="status-chip status-needs-you">Needs you</span></td><td data-label="Item"><span class="task-id">DS192</span>Rust in tech-stack-setup: study and proposal<span class="no-release-line">ships nothing: study; proposal for the owner</span></td><td data-label="App / service"></td><td data-label="Detail">Proposal written: Rust as an optional component beside a JS stack (CLI, host service, napi/WASM library, worker, media processing), wizard questions, Cargo workspace layout, rust CI track with pinned linker and cached RustSec DB; 8 tasks; 8 owner questions.</td><td data-label="Expected">09 Nov ~16:30<span class="expected-basis">local study agent from 15:25, ~60 min</span></td></tr>
+<tr data-task="DS195"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS195</span><span class="release-name">RELEASE-72</span>RELEASE: Rust beside a JS stack (tech-stack-setup and rust CI track)</td><td data-label="App / service"></td><td data-label="Detail">Join the Rust tasks (catalog, wizard, tooling, tool fetcher, rust_ci helper, workflows, doctor, docs), fold notes, CI, merge, install, smoke, cleanup.</td><td data-label="Expected">09 Nov ~20:00<span class="expected-basis">wave 1 ~16:57, DS200 ~17:57, DS201 ~18:47, DS203 ~19:25</span></td></tr>
+<tr data-task="DS196"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings</td><td data-label="App / service"></td><td data-label="Detail">languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).</td><td data-label="Expected">09 Nov ~16:51<span class="expected-basis">cloud agent from 15:56</span></td></tr>
+<tr data-task="DS198"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton</td><td data-label="App / service"></td><td data-label="Detail">Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.</td><td data-label="Expected">09 Nov ~16:46<span class="expected-basis">cloud agent from 15:56</span></td></tr>
+<tr data-task="DS199"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS199</span>Generic tool fetcher and pins</td><td data-label="App / service"></td><td data-label="Detail">ci_tool.py fetches any pinned, sha256-checked tool from tools.json into the tool cache (rustup-init, LLVM, Zig, cargo-deny, cargo-xwin).</td><td data-label="Expected">09 Nov ~16:57<span class="expected-basis">cloud agent from 15:56</span></td></tr>
+<tr data-task="DS202"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS202</span>Doctor checks for the rust track</td><td data-label="App / service"></td><td data-label="Detail">delivery_doctor.py: linker available, clang-cl and lld-link for Windows targets, exact toolchain, pinned tools, advisory DB age.</td><td data-label="Expected">09 Nov ~16:47<span class="expected-basis">cloud agent from 15:56</span></td></tr>
+<tr data-task="DS197"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS197</span>Rust wizard text: questions, layout, reason</td><td data-label="App / service"></td><td data-label="Detail">tech-stack-setup SKILL.md: machine-side parts question, native_components role (CLI, host service, napi or WASM library), written reason, Cargo workspace layout.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DS200"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS200</span>Rust CI helper</td><td data-label="App / service"></td><td data-label="Detail">rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DS201"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS201</span>Rust workflows</td><td data-label="App / service"></td><td data-label="Detail">rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DS203"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS203</span>Rust docs: specs and guide</td><td data-label="App / service"></td><td data-label="Detail">Feature spec rules and a guide: Rust beside a JS stack.</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">422 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">425 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL125"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL125</span>Rust CI track: pinned LLVM linker in the tool cache</a><span class="dropped-line">dropped: folded into DS200: covered by the Rust CI helper and tool fetcher (D140)</span></td><td data-label="App / service"></td><td data-label="Detail">Pool image has no C linker, so cargo builds pass in the agent gate and fail in release CI. Fetch pinned sha256-checked clang+lld, set CARGO_TARGET_*_LINKER, CC, AR; run the agent gate&#x27;s Rust step without system compilers; doctor checks a linker for the rust track.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL126"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL126</span>Rust CI track: cached RustSec advisory DB</a><span class="dropped-line">dropped: folded into DS200: covered by the Rust CI helper (D142)</span></td><td data-label="App / service"></td><td data-label="Detail">Keep the cargo-deny advisory DB in the CI tool cache and git fetch it each run; if GitHub is unreachable, use the cached copy with a warning.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS192"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS192</span>Rust in tech-stack-setup: study and proposal<span class="no-release-line">ships nothing: study; proposal for the owner</span></td><td data-label="App / service"></td><td data-label="Detail">Proposal done; owner decided D138-D145 on 9 Nov; plan in docs/architecture/rust-beside-js-plan.md; work in DS196-DS203.</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL119"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL119</span><span class="release-name">RELEASE-69</span>Release install keep list</a><span class="dropped-line">dropped: folded into RELEASE-68: DL120 shipped in RELEASE-68</span></td><td data-label="App / service"></td><td data-label="Detail">Join DL121, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL117"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL117</span><span class="release-name">RELEASE-68</span>Release watcher rows and spec review</a></td><td data-label="App / service"></td><td data-label="Detail">Join DL118 DL119, fold notes, CI, merge, install, smoke, cleanup</td><td data-label="Expected">09 Nov</td></tr>
 <tr data-task="DL118"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL118</span>Re-arm reports unstoppable watchers; dead rows pruned</a><span class="release-line"><span class="release-name">RELEASE-68</span></span></td><td data-label="App / service"></td><td data-label="Detail">SessionStart names a watcher it cannot stop (access denied) and how to stop it as admin; dead watcher rows older than a day are pruned</td><td data-label="Expected">09 Nov</td></tr>
@@ -7551,8 +7892,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (2)</strong><span class="fold-count">2 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29903967"><time datetime="2026-11-09T15:27+00:00">09 Nov 15:27</time></td><td data-label="Tasks">DL1 to DL136</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-to-do">14 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29903962"><time datetime="2026-11-09T15:22+00:00">09 Nov 15:22</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">2 To do</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904002"><time datetime="2026-11-09T16:02+00:00">09 Nov 16:02</time></td><td data-label="Tasks">DL1 to DL144</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">1 Built</span><span class="status-chip status-to-do">20 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904002"><time datetime="2026-11-09T16:02+00:00">09 Nov 16:02</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">2 To do</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (6)</strong><span class="fold-count">6 feature artifacts</span></summary>
