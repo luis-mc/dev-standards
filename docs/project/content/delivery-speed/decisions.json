@@ -3633,6 +3633,174 @@
    "chosen": "Installer adds tzdata",
    "decided": "2026-11-09",
    "owner_words": "Installer adds tzdata (Recommended)"
+  },
+  {
+   "id": "D160",
+   "question": "What if some RELEASE-77 tasks report NOT READY overnight?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "Ship the ready ones",
+     "summary": "Merge READY branches; one fix round for the rest, then next release."
+    },
+    {
+     "label": "Hold the whole release",
+     "summary": "Wait for every task, one fix round each, merge together."
+    },
+    {
+     "label": "Ship ready ones, no fix round",
+     "summary": "Leave NOT READY tasks for the morning."
+    }
+   ],
+   "chosen": "Hold the whole release",
+   "decided": "2026-11-09",
+   "owner_words": "Hold the whole release"
+  },
+  {
+   "id": "D161",
+   "question": "Does the DL146 mock-handler guard block or warn?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL146",
+   "options": [
+    {
+     "label": "Block",
+     "summary": "Fails the branch gate and pre-push with the route and mock file."
+    },
+    {
+     "label": "Warn only",
+     "summary": "Prints and passes; projects turn blocking on."
+    }
+   ],
+   "chosen": "Block",
+   "decided": "2026-11-09",
+   "owner_words": "Block (Recommended)"
+  },
+  {
+   "id": "D162",
+   "question": "What does the installer do about tzdata when no one can answer a prompt?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL157",
+   "options": [
+    {
+     "label": "Install and say so",
+     "summary": "pip install --user tzdata without asking, one line saying so."
+    },
+    {
+     "label": "Print the fix only",
+     "summary": "Never installs without a yes."
+    }
+   ],
+   "chosen": "Install and say so",
+   "decided": "2026-11-09",
+   "owner_words": "Install and say so (Recommended)"
+  },
+  {
+   "id": "D163",
+   "question": "If DS208's template needs an installer change, when?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS208",
+   "options": [
+    {
+     "label": "Add it at the join",
+     "summary": "Small installer change at the join so it ships tonight."
+    },
+    {
+     "label": "Next release",
+     "summary": "Template and guide now, installer copy later."
+    }
+   ],
+   "chosen": "Add it at the join",
+   "decided": "2026-11-09",
+   "owner_words": "Add it at the join (Recommended)"
+  },
+  {
+   "id": "D164",
+   "question": "May two agents own one file when their notes name disjoint requirement IDs?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DL158",
+   "options": [
+    {
+     "label": "Allow disjoint IDs",
+     "summary": "Same file with different requirement IDs passes; otherwise refused."
+    },
+    {
+     "label": "Always refuse",
+     "summary": "One owner per file."
+    }
+   ],
+   "chosen": "Allow disjoint IDs",
+   "decided": "2026-11-09",
+   "owner_words": "Allow disjoint IDs (Recommended)"
+  },
+  {
+   "id": "D165",
+   "question": "How to tell the owner of an overnight merge or block?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "Full Progress only",
+     "summary": "Page shows it; summary waits in the session."
+    },
+    {
+     "label": "Push notification too",
+     "summary": "Also a device push."
+    }
+   ],
+   "chosen": "Full Progress only",
+   "decided": "2026-11-09",
+   "owner_words": "Full Progress only (Recommended)"
+  },
+  {
+   "id": "D166",
+   "question": "Start other work overnight after RELEASE-77?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "Nothing more",
+     "summary": "Only hourly check-ins; new findings recorded as To do."
+    },
+    {
+     "label": "Start new peer findings",
+     "summary": "Record a reported bug and launch it as the next release under the overnight rules."
+    }
+   ],
+   "chosen": "Start new peer findings",
+   "decided": "2026-11-09",
+   "owner_words": "Start new peer findings"
+  },
+  {
+   "id": "D167",
+   "question": "How long may RELEASE-77 be held for a slow task?",
+   "asked": "2026-11-09",
+   "status": "decided",
+   "task": "DS207",
+   "options": [
+    {
+     "label": "Hold until 03:00",
+     "summary": "Then ship the ready part."
+    },
+    {
+     "label": "Hold until morning",
+     "summary": "Merge only when all are ready."
+    },
+    {
+     "label": "Hold until 01:30",
+     "summary": "Shorter wait."
+    }
+   ],
+   "chosen": "Hold until morning",
+   "decided": "2026-11-09",
+   "owner_words": "Hold until morning"
   }
  ]
 }
