@@ -3,7 +3,7 @@
 
     delivery_doctor.py [self-check] [--root DIR] [--json]
 
-Eight checks, each `ok` or `FAIL` with the fix:
+Eight checks (a ninth, `rust`, appears only on the rust track: see below), each `ok` or `FAIL` with the fix:
   config   .delivery/config.json passes delivery_config.py validate (no errors; a missing file is fine)
   gh       `gh auth status` succeeds (the watcher and the hooks need a signed-in gh; DELIVERY_GH replaces gh in tests)
   tz       the configured `tz` loads through zoneinfo; if tzdata is missing this FAILS instead of quietly using UTC
@@ -36,6 +36,12 @@ Eight checks, each `ok` or `FAIL` with the fix:
            (it would run on hosted runners and may bill minutes); the size of every runner's _work folder (a large total
            is a warning; `delivery_doctor.py clean-work` lists, `--yes` cleans runners with no job running).
            The JSON output carries the single items (id, status ok|warn|fail|skip, detail) as `items`.
+  rust     (DS202) only when gate.json says track rust or scripts/delivery/rust_ci.py exists; other tracks see no row.
+           FAILS on: no host linker ("linker cc not found" and the fix command); clang-cl or lld-link missing when
+           rust-toolchain.toml targets include Windows; rust-toolchain.toml missing or not an exact version (not
+           stable); tools.json without a sha256 for rustup-init, llvm, zig or cargo-deny (missing keys are findings).
+           WARNS (never fails) on: advisory DB cache older than 7 days or absent; under 10 GB free for target/.
+           It changes nothing; each finding prints the command.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -615,8 +621,150 @@ def clean_work(yes=False, out=print):
     return done
 
 
+# ---- rust (DS202): only for the rust track ----------------------------------------------------------------------
+
+RUST_TOOLS = ("rustup-init", "llvm", "zig", "cargo-deny")
+ADVISORY_MAX_DAYS = 7
+DISK_WARN_GB = 10
+
+
+def _read_json(path):
+    try:
+        with open(path, encoding="utf-8") as f:
+            data = json.load(f)
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _rust_track(root):
+    """True when the project is on the rust track: gate.json says so, or rust_ci.py exists."""
+    d = os.path.join(root, "scripts", "delivery")
+    return _read_json(os.path.join(d, "gate.json")).get("track") == "rust" or os.path.exists(os.path.join(d, "rust_ci.py"))
+
+
+def _toolchain(root):
+    """(channel, targets) from rust-toolchain.toml, or None when the file is missing. No tomllib: Python 3.10."""
+    try:
+        with open(os.path.join(root, "rust-toolchain.toml"), encoding="utf-8") as f:
+            text = f.read()
+    except OSError:
+        return None
+    m = re.search(r'^\s*channel\s*=\s*["\']([^"\']*)["\']', text, re.M)
+    t = re.search(r"^\s*targets\s*=\s*\[(.*?)\]", text, re.M | re.S)
+    return (m.group(1) if m else ""), re.findall(r'["\']([^"\']+)["\']', t.group(1) if t else "")
+
+
+def _tools_dir():
+    env = os.environ.get("CI_TOOLS_DIR")
+    return env or (os.path.join("C:/ci-tools") if os.name == "nt" else os.path.join(os.path.expanduser("~"), ".cache", "ci-tools"))
+
+
+def _have(name):
+    """A tool on PATH or in the pinned tool cache (one or two levels down)."""
+    import shutil
+    if shutil.which(name):
+        return True
+    base = _tools_dir()
+    exts = (name, name + ".exe")
+    for depth in ("*", os.path.join("*", "*"), os.path.join("*", "*", "bin"), os.path.join("*", "bin")):
+        import glob
+        for e in exts:
+            if glob.glob(os.path.join(glob.escape(base), depth, e)):
+                return True
+    return False
+
+
+def _cc_fix():
+    if os.name == "nt":
+        return "python scripts/delivery/ci_tool.py ensure zig"
+    return "sudo apt-get install -y build-essential   (or: python3 scripts/delivery/ci_tool.py ensure zig)"
+
+
+def _advisory_age_days():
+    """Age in days of the newest advisory DB cache folder in the tool cache, or None when there is none."""
+    import glob
+    paths = glob.glob(os.path.join(glob.escape(_tools_dir()), "advisory-db*")) + \
+        glob.glob(os.path.join(glob.escape(_tools_dir()), "*", "advisory-db*"))
+    if not paths:
+        return None
+    import time
+    return (time.time() - max(os.path.getmtime(p) for p in paths)) / 86400
+
+
+def rust_items(root):
+    items = []
+    tc = _toolchain(root)
+    if tc is None:
+        items.append(_item("rust.toolchain", "fail", "rust-toolchain.toml is missing. Add it with an exact version, "
+                                                     "for example: [toolchain] channel = \"1.90.0\""))
+        targets = []
+    else:
+        channel, targets = tc
+        if re.fullmatch(r"\d+\.\d+\.\d+", channel):
+            items.append(_item("rust.toolchain", "ok", "rust-toolchain.toml pins %s" % channel))
+        else:
+            items.append(_item("rust.toolchain", "fail", "rust-toolchain.toml channel is %s, not an exact version. "
+                                                         "Set channel = \"1.90.0\" (the version you build with)"
+                               % (repr(channel) if channel else "missing")))
+    if _have("cc") or _have("zig"):
+        items.append(_item("rust.linker", "ok", "host linker found"))
+    else:
+        items.append(_item("rust.linker", "fail", "linker cc not found. Fix: " + _cc_fix()))
+    if any("windows" in t for t in targets):
+        missing = [n for n in ("clang-cl", "lld-link") if not _have(n)]
+        if missing:
+            items.append(_item("rust.windows", "fail", "%s not found for the Windows target. Fix: "
+                               "python scripts/delivery/ci_tool.py ensure llvm" % " and ".join(missing)))
+        else:
+            items.append(_item("rust.windows", "ok", "clang-cl and lld-link found"))
+    pins = _read_json(os.path.join(root, "scripts", "delivery", "tools.json"))
+    bad = []
+    for name in RUST_TOOLS:
+        entry = pins.get(name)
+        sha = entry.get("sha256") if isinstance(entry, dict) else None
+        hashes = list(sha.values()) if isinstance(sha, dict) else ([sha] if isinstance(sha, str) else [])
+        if not hashes or not all(isinstance(h, str) and re.fullmatch(r"[0-9a-fA-F]{64}", h) for h in hashes):
+            bad.append(name)
+    if bad:
+        items.append(_item("rust.pins", "fail", "tools.json has no sha256 pin for: %s. Fix: add each tool with "
+                           "`python scripts/delivery/tools_pin.py` and commit scripts/delivery/tools.json" % ", ".join(bad)))
+    else:
+        items.append(_item("rust.pins", "ok", "tools.json pins %s" % ", ".join(RUST_TOOLS)))
+    age = _advisory_age_days()
+    if age is None:
+        items.append(_item("rust.advisory", "warn", "no advisory database cache yet. It is fetched on the first "
+                                                    "CI run: python scripts/delivery/rust_ci.py deny"))
+    elif age > ADVISORY_MAX_DAYS:
+        items.append(_item("rust.advisory", "warn", "advisory database cache is %d days old (limit %d). Refresh: "
+                           "python scripts/delivery/rust_ci.py deny" % (age, ADVISORY_MAX_DAYS)))
+    else:
+        items.append(_item("rust.advisory", "ok", "advisory database cache is %d days old" % age))
+    try:
+        import shutil
+        free = shutil.disk_usage(root).free / 1e9
+        if free < DISK_WARN_GB:
+            items.append(_item("rust.disk", "warn", "%.1f GB free; target/ and the cache need about %d GB. Fix: "
+                               "cargo clean, or empty the runner _work folder" % (free, DISK_WARN_GB)))
+        else:
+            items.append(_item("rust.disk", "ok", "%.0f GB free" % free))
+    except OSError:
+        pass
+    return items
+
+
+def check_rust(root, cfg):
+    """None (no row) unless the project is on the rust track. Warnings never fail the check."""
+    if not _rust_track(root):
+        return None
+    items = rust_items(root)
+    ok = not any(i["status"] == "fail" for i in items)
+    bad = ["%s %s: %s" % (i["status"], i["id"], i["detail"]) for i in items if i["status"] != "ok"]
+    return ok, "; ".join(bad) or "; ".join(i["detail"] for i in items), items
+
+
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
-          ("runner", check_runner), ("ci", check_ci), ("machine", check_machine))
+          ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust))
 
 
 def run_checks(root):
@@ -626,6 +774,8 @@ def run_checks(root):
         items = None
         try:
             res = fn(root, cfg)
+            if res is None:
+                continue
             ok, detail = res[0], res[1]
             items = res[2] if len(res) > 2 else None
         except Exception as exc:  # noqa: BLE001 - a crashing check is a failing check

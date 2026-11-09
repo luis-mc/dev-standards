@@ -43,6 +43,9 @@
     "claude/plugins/delivery/templates/**": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/templates/rust/scripts/delivery/*.py": [
+      "docs/features/delivery-speed/spec.md"
+    ],
     "claude/plugins/delivery/templates/shared/scripts/delivery/*.py": [
       "docs/features/delivery-speed/spec.md",
       "docs/features/delivery/spec.md"
@@ -95,7 +98,13 @@
     "tools/test_artifact_prune.py": [
       "docs/features/artifacts/spec.md"
     ],
+    "tools/test_artifacts_ar*.py": [
+      "docs/features/artifacts/spec.md"
+    ],
     "tools/test_authspec_check.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "tools/test_check_stack_rust.py": [
       "docs/features/project-setup/spec.md"
     ],
     "tools/test_ci_areas.py": [

@@ -1092,14 +1092,23 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
         picked, why = 'chromium', None  # kept: only an explicit --browsers none removes it
     pw, pw_source = resolve_playwright(probe, picked, playwright_version, repo_paths)
     want = {'POOL_BROWSERS': picked}
+    layers, apt, lerrs = read_pool_layers(repo_paths)  # DL149: written even when empty, so turning a layer off sticks
+    want['POOL_LAYERS'] = ','.join(layers)
+    want['POOL_APT'] = ' '.join(apt)
     if sha:
         want['RUNNER_SHA256'] = sha
     if pw:
         want['PLAYWRIGHT_VERSION'] = pw
-    changes = {k: (env.get(k), v) for k, v in want.items() if env.get(k) != v}
+    changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT') else None)) != v}
     out = {'pool': pool, 'path': path, 'changes': changes, 'why': why, 'playwright_source': pw_source if pw else None}
     if not sha:
         out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
+    if lerrs:
+        out['error'] = ' '.join(lerrs) + ' Nothing was changed.'
+    try:
+        out['repos'] = [a['repo'] for a in json.loads(probe.read_text(os.path.join(pool_dir(pool), 'agents.json')) or '{}').get('agents', []) if a.get('repo')]
+    except (ValueError, AttributeError, TypeError, KeyError):
+        out['repos'] = []
     return out
 
 
@@ -1255,12 +1264,14 @@ class Executor:
         browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
         pw = read_pool_env(self.probe, step['pool']).get('PLAYWRIGHT_VERSION')
         pw = pw if valid_playwright_version(pw) else PLAYWRIGHT_VERSION
-        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=browsers, PLAYWRIGHT_VERSION=pw)
+        pe = read_pool_env(self.probe, step['pool'])
+        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=browsers, PLAYWRIGHT_VERSION=pw,
+                   POOL_LAYERS=pe.get('POOL_LAYERS') or '', POOL_APT=pe.get('POOL_APT') or '')
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
         return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
 
-    def refresh(self, rp):
+    def refresh(self, rp, force=False):
         """B14: apply a refresh_plan: write the changed keys, then rebuild the image when no job runs (else say how). It
         rebuilds with no change too, so an image built before POOL_BROWSERS was set gets the libraries."""
         if rp.get('error'):
@@ -1270,7 +1281,13 @@ class Executor:
             text = 'wrote %s in %s' % (', '.join(sorted(rp['changes'])), rp['path'])
         else:
             text = 'nothing to change in %s' % rp['path']
-        if self.runners_busy():
+        # DL149: name the busy runner; --force overrides with a warning.
+        gate_ok, gate_msg = rebuild_gate(self.probe, rp.get('repos') or [], rp['pool'], force)
+        if not gate_ok:
+            return False, text + '. ' + gate_msg
+        if gate_msg:
+            text += '. ' + gate_msg
+        if not force and not (rp.get('repos')) and self.runners_busy():
             return True, text + ('. A job may run (or the runners cannot be read), so the pool was not rebuilt. '
                                  'By hand: cd %s && docker compose up -d --build' % pool_dir(rp['pool']))
         ok, detail = self.do_pool_up({'pool': rp['pool']})
@@ -1460,6 +1477,134 @@ def _browser_checks(add, probe, pool, env_vals, agents, repo_paths):
         add('browser-libs', 'ok', 'the image has the browser libraries')
 
 
+# --- DL149: opt-in image layers and the project apt fragment --------------------------------------------------------
+
+LAYERS = {'windows-packaging': 'dotnet-sdk-8.0 wine wine64 xvfb xauth msitools'}  # the Dockerfile holds the same list
+APT_NAME = re.compile(r'^[A-Za-z0-9+.\-]+$')
+LAYER_TOOLS = {'windows-packaging': ('wine', 'xvfb-run', 'dotnet')}
+
+
+def parse_pool_apt(text):
+    """(names, errors) of a .delivery/pool.apt text: one package per line, # starts a comment. Names are letters, digits, + - ."""
+    names, errors = [], []
+    for n, line in enumerate((text or '').splitlines(), 1):
+        name = line.split('#', 1)[0].strip()
+        if not name:
+            continue
+        if not APT_NAME.match(name) or name.startswith('-'):
+            errors.append('refused: .delivery/pool.apt line %d has "%s". A package name may hold only letters, digits, + - . and must not start with -.' % (n, name))
+        elif name not in names:
+            names.append(name)
+    return names, errors
+
+
+def read_pool_layers(repo_paths):
+    """DL149: (layers, apt names, errors) from the repo checkouts. Layers: `pool.layers` in .delivery/config.json. Apt: .delivery/pool.apt."""
+    layers, apt, errors = [], [], []
+    for path in repo_paths or []:
+        try:
+            with open(os.path.join(str(path), '.delivery', 'config.json'), encoding='utf-8-sig') as f:
+                cfg = json.load(f)
+        except (OSError, ValueError):
+            cfg = {}
+        want = ((cfg.get('pool') or {}).get('layers') or []) if isinstance(cfg, dict) and isinstance(cfg.get('pool') or {}, dict) else []
+        for x in want if isinstance(want, list) else []:
+            if x not in LAYERS:
+                errors.append('refused: pool.layers has "%s". The known layers are: %s.' % (x, ', '.join(sorted(LAYERS))))
+            elif x not in layers:
+                layers.append(x)
+        try:
+            with open(os.path.join(str(path), '.delivery', 'pool.apt'), encoding='utf-8-sig') as f:
+                names, errs = parse_pool_apt(f.read())
+        except OSError:
+            names, errs = [], []
+        errors += errs
+        apt += [n for n in names if n not in apt]
+    return layers, apt, errors
+
+
+def busy_pool_runners(probe, repos, pool):
+    """DL149: (names of busy pool runners, error). Reads `gh api repos/<repo>/actions/runners` for each repo; unreadable -> error."""
+    busy = []
+    for repo in repos:
+        data, why = probe.gh_json(['api', 'repos/%s/actions/runners' % repo])
+        if not isinstance(data, dict):
+            return busy, 'could not read the runners of %s (%s)' % (repo, why or 'no answer')
+        for r in data.get('runners') or []:
+            labels = {l.get('name') for l in r.get('labels') or []}
+            if r.get('busy') and ('pool-%s' % pool in labels or str(r.get('name', '')).startswith(pool + '-')):
+                busy.append('%s (%s)' % (r.get('name'), repo))
+    return busy, None
+
+
+def rebuild_gate(probe, repos, pool, force=False):
+    """DL149: (ok, message). The image is not rebuilt while a pool runner is busy; --force rebuilds with a warning."""
+    busy, err = busy_pool_runners(probe, repos, pool)
+    if busy:
+        if force:
+            return True, 'warning: --force rebuilds while %s is busy; its job may fail' % ', '.join(busy)
+        return False, 'refused: pool runner busy: %s. Wait for the job or use --force.' % ', '.join(busy)
+    if err:
+        if force:
+            return True, 'warning: --force rebuilds although %s' % err
+        return False, 'refused: %s. Use --force to rebuild anyway.' % err
+    return True, ''
+
+
+def runners_folder_dockerfiles(repo_path):
+    """DL149: Dockerfiles under a runners folder of a repo (the pool never reads them)."""
+    found = []
+    for base, dirs, files in os.walk(str(repo_path)):
+        dirs[:] = [d for d in dirs if d not in ('.git', 'node_modules')]
+        parts = os.path.relpath(base, str(repo_path)).replace('\\', '/').split('/')
+        if any(p.lower() in ('runners', 'runner') for p in parts) and any(f.lower().startswith('dockerfile') for f in files):
+            found += [os.path.join(os.path.relpath(base, str(repo_path)), f).replace('\\', '/') for f in files if f.lower().startswith('dockerfile')]
+    return sorted(found)
+
+
+def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
+    """DL149: pool doctor checks for the layers, stray runner Dockerfiles and the tool cache."""
+    layers = [x for x in (env_vals.get('POOL_LAYERS') or '').strip().split(',') if x]
+    want, _apt, _errs = read_pool_layers(repo_paths)
+    if sorted(want) != sorted(layers):
+        add('layers-config', 'warn', 'the repo config asks for layers [%s] but the pool .env has [%s]. Run `delivery_ci_setup.py pool-refresh --yes`.'
+            % (', '.join(want), ', '.join(layers)))
+    if layers:
+        r = probe.sh(['docker', 'ps', '--filter', 'label=' + LABEL, '--format', '{{.Names}} {{.Image}}'])
+        image = None
+        for line in ((r[1] if r and r[0] == 0 else '') or '').splitlines():
+            name, _, img = line.partition(' ')
+            if name in (pool, 'pool-%s' % pool, 'pool-%s-pool-1' % pool) and img.strip():
+                image = img.strip()
+        for layer in layers:
+            tools = LAYER_TOOLS.get(layer, ())
+            if image is None:
+                add('layer-' + layer, 'warn', 'docker cannot be read here, so the %s layer is not checked (needs %s in the image)' % (layer, ', '.join(tools)))
+                continue
+            missing = []
+            for tool in tools:
+                rr = probe.sh(['docker', 'run', '--rm', '--entrypoint', 'sh', image, '-c', 'command -v %s' % tool], timeout=120)
+                if rr is None or rr[0] != 0:
+                    missing.append(tool)
+            add('layer-' + layer, 'fail' if missing else 'ok',
+                ('the %s layer is on but the image %s lacks %s. Rebuild: delivery_ci_setup.py pool-refresh --yes' % (layer, image, ', '.join(missing)))
+                if missing else 'the image has %s' % ', '.join(tools))
+    for path in repo_paths or []:
+        for df in runners_folder_dockerfiles(path):
+            add('stray-dockerfile', 'fail', '%s is not used by the pool; the pool image is built from the plugin. Move its apt packages to .delivery/pool.apt '
+                '(one name per line) or turn on a layer (pool.layers in .delivery/config.json), then run `delivery_ci_setup.py pool-refresh --yes`.' % df)
+    tools_mount = re.search(r'^\s*-\s*([A-Za-z0-9_.\-]+):/ci-tools\s*$', compose or '', re.M)
+    if not tools_mount:
+        add('tool-cache', 'fail', 'compose.yaml has no named volume mounted at /ci-tools, so the tool cache is lost on every recreate')
+    else:
+        rr = probe.sh(['docker', 'exec', 'pool-%s-pool-1' % pool, 'sh', '-c', 'test -w /ci-tools'])
+        if rr is None or rr[0] is None:
+            add('tool-cache', 'warn', '/ci-tools is a volume (%s); docker cannot be read here, so writability is not checked' % tools_mount.group(1))
+        else:
+            add('tool-cache', 'ok' if rr[0] == 0 else 'fail',
+                '/ci-tools is a writable volume (%s)' % tools_mount.group(1) if rr[0] == 0 else '/ci-tools is not writable in the running pool')
+
+
 def doctor_checks(root=None, probe=None, repo_paths=None):
     """Checks of the pool for the doctor's `machine` check (contract 12.3). `root` may be a machine folder with `pools/`.
     Each: {"id": "pool.<name>", "status": "ok"|"warn"|"fail"|"skip", "detail": str}. No pool: one `skip`."""
@@ -1523,6 +1668,7 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
             add('private', 'fail' if pub else 'ok', 'agent for a repository not recorded private: %s' % ', '.join(map(str, pub))
                 if pub else 'every agent\'s repository is private')
         _browser_checks(add, probe, n, env_vals, agents, repo_paths)
+        _layer_checks(add, probe, n, env_vals, compose, repo_paths)
         live = live_cap(probe, n) if has_cap else None
         if live is not None:
             try:

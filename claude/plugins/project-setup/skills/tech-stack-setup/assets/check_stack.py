@@ -86,6 +86,20 @@ def listed(value) -> list:
     return list(value) if isinstance(value, list) else [value]
 
 
+def component_languages(languages: dict) -> dict[str, dict]:
+    """Languages that may be a component beside an API language, by id."""
+    return {t["id"]: t for t in languages.get("technologies", [])
+            if "component" in (t.get("roles") or []) and t.get("component")}
+
+
+def normalize_components(value) -> list[dict]:
+    """`components` as a list of mappings. A bare id is a component with no detail."""
+    out = []
+    for c in listed(value):
+        out.append(dict(c) if isinstance(c, dict) else {"id": str(c)})
+    return out
+
+
 def check_catalog() -> list[str]:
     errors: list[str] = []
 
@@ -161,6 +175,28 @@ def check_catalog() -> list[str]:
                     errors.append(
                         f"host '{host['id']}' conflicts with unknown id '{w}'")
 
+    # Component parts and pairings must name real things (DS196).
+    part_ids: set[str] = set()
+    for lang in languages.get("technologies", []):
+        comp = lang.get("component")
+        if "component" in (lang.get("roles") or []) and not comp:
+            errors.append(f"language '{lang['id']}' has role component but no component block")
+        for part in (comp or {}).get("parts", []):
+            if "id" not in part:
+                errors.append(f"language '{lang['id']}' has a component part without id")
+            part_ids.add(part.get("id"))
+    comp_langs = component_languages(languages)
+    for pair in bundles.get("component_pairings") or []:
+        if pair.get("component") not in comp_langs:
+            errors.append(f"component pairing names unknown component '{pair.get('component')}'")
+        for part in listed(pair.get("parts")) + listed(pair.get("part")):
+            if part not in part_ids:
+                errors.append(f"component pairing names unknown part '{part}'")
+        hosts = pair.get("hosts")
+        for h in ([] if hosts in (None, "any") else listed(hosts)):
+            if h not in host_ids:
+                errors.append(f"component pairing names unknown host '{h}'")
+
     # Roles referenced by the entry paths must exist.
     role_ids = {r["id"] for r in roles.get("roles", [])}
     for path_id, path in (roles.get("entry_paths") or {}).items():
@@ -190,7 +226,8 @@ def check_selection(path: Path) -> tuple[list[str], list[str]]:
     hosting = load("tech/hosting.yaml")
     data = load("tech/data.yaml")
 
-    lang_id = sel.get("language")
+    # The API language. `api` is the component-aware spelling; `language` still works.
+    lang_id = sel.get("api") or sel.get("language")
     engine_id = sel.get("db_engine")
 
     lang = next((t for t in languages.get("technologies", [])
@@ -206,6 +243,8 @@ def check_selection(path: Path) -> tuple[list[str], list[str]]:
 
     # Every role that names a catalog technology: each listed id must exist.
     known = known_ids()
+    if sel.get("api") and str(sel["api"]) not in known["language"]:
+        errors.append(f"unknown api language '{sel['api']}'")
     for role, valid in known.items():
         for v in listed(sel.get(role)):
             if str(v) not in valid:
@@ -251,8 +290,49 @@ def check_selection(path: Path) -> tuple[list[str], list[str]]:
                     f"engine '{engine['id']}' lacks {cap} ({clause}): a "
                     f"compensating control must be recorded in the Stack Profile")
 
+    # Native components (DS196). Not subject to the API host elimination: a
+    # component is built in CI and shipped, not run on the host.
+    comp_langs = component_languages(languages)
+    host_ids_chosen = {h["id"] for h in hosts}
+    pairings = load("bundles.yaml").get("component_pairings") or []
+    for comp in normalize_components(sel.get("components")):
+        cid = comp.get("id")
+        spec = comp_langs.get(cid)
+        if not spec:
+            errors.append(f"component '{cid}' is not a language that can be a component")
+            continue
+        valid_parts = {p["id"]: p for p in spec["component"].get("parts", [])}
+        parts = listed(comp.get("parts"))
+        for part in parts:
+            if part not in valid_parts:
+                errors.append(f"component '{cid}' has unknown part '{part}'")
+        if spec["component"].get("requires_reason") and not str(comp.get("reason") or "").strip():
+            warnings.append(
+                f"{spec['name']} component without a recorded reason: write why it is "
+                f"not built in the main language (a written reason is enough)")
+        if "library-napi" in parts and not comp.get("build_matrix"):
+            warnings.append(
+                f"napi addon without a build matrix: list the OS and arch "
+                f"each prebuilt binary is built for")
+        if comp.get("cross_compile") and not str(comp.get("licence_note") or "").strip():
+            warnings.append(
+                f"cross-compile target without a licence note: record the licence "
+                f"of any SDK the cross tool downloads")
+        for pair in pairings:
+            if pair.get("component") != cid or not pair.get("warn"):
+                continue
+            if pair.get("part") not in parts:
+                continue
+            if pair.get("needs") == "windows_build_option":
+                if "windows" in {str(o).lower() for o in listed(comp.get("targets"))} \
+                        and not comp.get("cross_compile") and not comp.get("windows_runner"):
+                    warnings.append(f"{cid} {pair['part']}: {pair['warn']}")
+            elif host_ids_chosen & set(listed(pair.get("hosts"))):
+                warnings.append(f"{cid} {pair['part']}: {pair['warn']}")
+
     # Hard vendor conflicts declared on the host.
-    chosen = {str(x) for v in sel.values() for x in listed(v)}
+    chosen = {str(x) for k, v in sel.items() if k != "components" for x in listed(v)}
+    chosen |= {c["id"] for c in normalize_components(sel.get("components"))}
     for host in hosts:
         for conflict in host.get("conflicts") or []:
             hit = set(conflict.get("with", [])) & chosen

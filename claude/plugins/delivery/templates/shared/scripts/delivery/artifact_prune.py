@@ -39,6 +39,18 @@ for any head commit failed, was cancelled or timed out in the last 24 hours (a r
 The extra API calls are made only for the options a group sets. Any failure to read them stops the
 prune with exit 2, so it never decides without knowing.
 
+Workflow list (DL122): GitHub Actions reads `on.workflow_run.workflows` before any step runs, so it cannot
+be dynamic. The list is project-owned instead, in the same section:
+
+    {"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}}
+
+Default when unset: `["CI", "Package"]`, the template's own list. `--print-workflows` prints the list, one name
+per line. `--sync-workflow [FILE]` (default `.github/workflows/artifact-prune.yml`) rewrites the `workflows:`
+line of that file to the list and prints `synced` or `unchanged`; `--check-workflow [FILE]` changes nothing and
+exits 1 when the line differs. Run `--sync-workflow` after `delivery_ci_install update`, which restores the
+template's line. The daily sweep prunes any workflow's artifacts meanwhile. The config file is in
+`.delivery/`, which a project tracks like its other delivery config; it is the file this script already reads.
+
 Retries: transient failures (HTTP 5xx, 429, rate limits, timeouts, dropped connections) are retried
 with exponential backoff and jitter, for every listing and deletion; deletions are paced apart.
 `ARTIFACT_PRUNE_BACKOFF` (seconds, default 2) scales the backoff and `ARTIFACT_PRUNE_PAUSE` (seconds,
@@ -86,6 +98,9 @@ HOLD_WINDOW_SECONDS = 24 * 3600
 ATTEMPTS = 5
 BACKOFF_CAP = 60.0
 DEFAULT_CONFIG = ".delivery/config.json"
+DEFAULT_WORKFLOWS = ["CI", "Package"]
+DEFAULT_WORKFLOW_FILE = ".github/workflows/artifact-prune.yml"
+WORKFLOWS_LINE_RE = re.compile(r"^(?P<indent>[ \t]+)workflows:[ \t]*\[[^\]\n]*\][ \t]*$", re.MULTILINE)
 
 
 def _env_float(name: str, default: float) -> float:
@@ -323,6 +338,53 @@ def load_groups(path: str) -> tuple[list[dict], float]:
     return groups, float(age)
 
 
+def load_workflows(path: str) -> list[str]:
+    """The workflow names of `artifact_prune.workflows`; DEFAULT_WORKFLOWS when the file, section or key is unset."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.loads(fh.read())
+    except FileNotFoundError:
+        return list(DEFAULT_WORKFLOWS)
+    except (OSError, ValueError) as exc:
+        raise GhError(f"{path} is unreadable: {exc}") from exc
+    section = data.get("artifact_prune") if isinstance(data, dict) else None
+    if not isinstance(section, dict) or section.get("workflows") is None:
+        return list(DEFAULT_WORKFLOWS)
+    names = section["workflows"]
+    if (not isinstance(names, list) or not names
+            or not all(isinstance(n, str) and n.strip() and not re.search(r'["\n\r\\]', n) for n in names)):
+        raise GhError(f"{path}: artifact_prune.workflows must be a non-empty list of workflow names")
+    return [n.strip() for n in names]
+
+
+def render_workflows_text(text: str, names: list[str]) -> str:
+    """`text` with the `workflows: [...]` line set to `names`. GhError when the file has no such line."""
+    line = "[" + ", ".join(json.dumps(n) for n in names) + "]"
+    new, count = WORKFLOWS_LINE_RE.subn(lambda m: f"{m.group('indent')}workflows: {line}", text, count=1)
+    if not count:
+        raise GhError("the workflow file has no one-line `workflows: [...]` list")
+    return new
+
+
+def sync_workflow(path: str, names: list[str], write: bool) -> bool:
+    """True when the file's list already equals `names`; with `write`, the file is rewritten otherwise."""
+    try:
+        with open(path, encoding="utf-8", newline="") as fh:
+            text = fh.read()
+    except OSError as exc:
+        raise GhError(f"{path} is unreadable: {exc}") from exc
+    new = render_workflows_text(text, names)
+    if new == text:
+        return True
+    if write:
+        try:
+            with open(path, "w", encoding="utf-8", newline="") as fh:
+                fh.write(new)
+        except OSError as exc:
+            raise GhError(f"could not write {path}: {exc}") from exc
+    return False
+
+
 def group_match(name: str, groups: list[dict]) -> tuple[str, dict | None]:
     """(prune group, its config) for an artifact name; (name, None) when no configured pattern matches."""
     for g in groups:
@@ -509,11 +571,34 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--config", default=DEFAULT_CONFIG,
                     help="project config with an optional artifact_prune section (default "
                          ".delivery/config.json; a missing file means none)")
+    ap.add_argument("--print-workflows", action="store_true",
+                    help="print the artifact_prune.workflows list of the config and exit")
+    ap.add_argument("--sync-workflow", nargs="?", const=DEFAULT_WORKFLOW_FILE, metavar="FILE",
+                    help="set the `workflows:` line of FILE to that list and exit")
+    ap.add_argument("--check-workflow", nargs="?", const=DEFAULT_WORKFLOW_FILE, metavar="FILE",
+                    help="exit 1 when the `workflows:` line of FILE differs from that list")
     ap.add_argument("--dry-run", action="store_true", help="delete nothing, print the plan")
     ap.add_argument("--json", action="store_true", dest="as_json",
                     help="print one JSON document instead of rows")
     args = ap.parse_args(argv)
 
+    if args.print_workflows or args.sync_workflow or args.check_workflow:
+        try:
+            names = load_workflows(args.config)
+            if args.print_workflows:
+                print("\n".join(names))
+            if args.sync_workflow:
+                same = sync_workflow(args.sync_workflow, names, write=True)
+                print("unchanged" if same else "synced")
+            if args.check_workflow:
+                if not sync_workflow(args.check_workflow, names, write=False):
+                    print(f"artifact_prune: {args.check_workflow} lists other workflows than "
+                          f"artifact_prune.workflows; run --sync-workflow", file=sys.stderr)
+                    return 1
+        except GhError as exc:
+            print(f"artifact_prune: {exc}", file=sys.stderr)
+            return 2
+        return 0
     if args.keep < 1:
         print("artifact_prune: --keep must be at least 1 (keeping 0 would delete every "
               "artifact)", file=sys.stderr)

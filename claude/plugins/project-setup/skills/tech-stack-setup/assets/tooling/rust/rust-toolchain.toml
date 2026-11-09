@@ -1,0 +1,7 @@
+# Exact version, never "stable" (STACKSPEC 2.2). Bump it in its own change.
+# Add the targets the product ships, for example x86_64-pc-windows-msvc.
+[toolchain]
+channel = "1.91.0"
+profile = "minimal"
+components = ["rustfmt", "clippy"]
+targets = []

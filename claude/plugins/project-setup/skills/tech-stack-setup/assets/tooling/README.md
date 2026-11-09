@@ -23,7 +23,7 @@ tooling/
 │   └── .gitattributes
 ├── ts/         TypeScript / Node
 ├── go/         Go
-├── rust/       Rust
+├── rust/       Rust (Cargo workspace skeleton + crates/guards)
 └── dotnet/     .NET
 ```
 
@@ -47,6 +47,26 @@ allowlist entry and three of them going stale.
 | 10. Dependency scan | `pnpm audit --prod` | govulncheck | `cargo deny check advisories` | `dotnet list package --vulnerable` |
 | 11. Secret scan | gitleaks step in `verify`, `fetch-depth: 0` | same | same | same |
 | 12. Boundaries | dependency-cruiser | depguard in golangci-lint | `cargo deny check bans` | NetArchTest |
+
+### Rust wording for the invariants
+
+The spec names no technology (`§20`), so the Rust wording lives here and in the
+catalog. The skeleton files are `rust/Cargo.toml`, `rust/rust-toolchain.toml`,
+`rust/rustfmt.toml` and `rust/deny.toml`, beside `rust/crates/guards`. Copy them
+to the repository root. They hold no product crate.
+
+| Invariant | Rust wording |
+|---|---|
+| `§2.2` pinned tool | `rust-toolchain.toml` with an exact version. CI installs that version, never `stable`. |
+| `§2.2` frozen install | `--locked` on every cargo command. `Cargo.lock` is committed. One workspace, one lockfile. |
+| `§13.1` lint | `cargo clippy --locked --workspace --all-targets -- -D warnings` |
+| `§13.1` format | `cargo fmt --all --check` |
+| `§13.1` test | `cargo test --locked --workspace`. nextest is allowed in CI. |
+| `§12` supply chain | `cargo deny check` (advisories, bans, licenses, sources). |
+| `§3.2`/`§3.3` boundaries | Crate boundaries plus `deny.toml` `bans`. |
+| Reproducible builds | Pinned toolchain, `--locked`, cross tools pinned by sha256, release profile fixed in `Cargo.toml`. Add `SOURCE_DATE_EPOCH` and `--remap-path-prefix` where the product needs identical bytes. |
+| `§2.3` polyglot | Rust crates stay buildable with plain `cargo`. The root task runner has a thin shim. |
+| Contract tests | A wire protocol between Rust and another language has one source file per side, and a test in the other language reads it. |
 
 **The tool names are this generator's choice, not the spec's.** `§13.1` requires
 the gates to run and fail the build; it names nothing. `§20` makes naming a

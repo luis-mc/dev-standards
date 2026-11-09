@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.4.2
+version: 0.5.0
 owner: agents
 type: reference
 code:
@@ -14,6 +14,7 @@ code:
   - tools/test_project_artifacts_hooks.py
   - tools/test_render_artifacts.py
   - tools/test_artifact_prune.py
+  - tools/test_artifacts_ar*.py
 last_verified: 2026-11-01
 artifact: feature-project-artifacts-standard.html
 ---
@@ -136,6 +137,10 @@ flowchart LR
 
 **R5.14** — Full Progress shows a foldable `CI runs` section when `.delivery/ci-runs.json` exists, and nothing when it does not (ARTIFACTSPEC R5.51, owner decision D48).
 
+**R5.15** — `pending --refresh` renders first, so the publish copy matches a fresh render and `mark-published` accepts it. The refusal text names `render` or `pending --json --refresh`. (AR67)
+
+**R5.16** — The `task-status-update` skill lists `--phase NAME=HH:MM-HH:MM` with the names `agents`, `join`, `ci` and `merge`. (AR68)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -249,6 +254,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.0 | 2026-11-09 | RELEASE-71 | pending --refresh renders first, so mark-published accepts the publish copy; the task-status-update skill lists the phase names agents, join, ci, merge (AR67, AR68).<br>Adds R5.15 and R5.16: pending --refresh renders first, and the phase flag in the status skill. | AR67, DS203 |
 | 0.4.2 | 2026-11-07 | RELEASE-63 | A release with no Expected and no timed phases is headed RELEASE-<n> · not scheduled (R5.46). | AR66 |
 | 0.4.1 | 2026-11-07 | RELEASE-59 | The stop hook no longer leaves state temp files behind.<br>The hourly Full Progress publish applies only while work is open (Running, Waiting or Needs you).<br>the mark-published refusal names the steps in order and the hook says to change statuses before pending<br>--expected accepts DD Mon HH:MM and stores DD Mon ~HH:MM<br>Expected is optional on To do and On hold and shows Not scheduled; Running and Waiting need one | AR60, AR61, AR63, AR64, AR65 |
 | 0.4.0 | 2026-11-05 | RELEASE-45 | A UserPromptSubmit hook (hook_turn_start.py) stamps the turn start per session; the Stop hook plan-rows check looks only at reports under docs/work/ changed after that stamp, and falls back to the 2-hour window when there is none.<br>plan_rows_check.py lists plan rows and audit findings that have no task; the task key is `<tag>#<id>` in the task detail; the Stop hook runs the check for a report written in the turn and blocks the end of the turn while rows are untasked.<br>The plan-rows check counts a numbered row only under a heading that starts with Plan, Proposed, Proposals or Findings. | DSY146, DSY99, DU11 |

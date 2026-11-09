@@ -4,12 +4,13 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.5.2
+version: 0.6.0
 owner: agents
 type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+  - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - tools/test_delivery_*.py
 last_verified: 2026-11-08
 artifact: feature-delivery-speed.html
@@ -93,6 +94,12 @@ flowchart LR
 
 **R5.13** — `db_per_worker.py` prints (or runs with `psql`) the SQL for one Postgres database per test worker, copied from a migrated template. Names are checked so they cannot carry SQL. Postgres projects only.
 
+**R5.14** — `ci_tool.py tool <name> [--platform P] [--exe NAME] [--dir]` reads `scripts/delivery/tools.json` (env `CI_TOOLS_JSON` overrides the file). A pin is `{"version", "platforms": {<plat>: {"kind", "url", "sha256", "file"?, "bin"?, "bin_dir"?}}}`. Kind `file` downloads once, caches and makes the file executable. Kind `archive` (tar.gz, tar.xz, zip) is verified and unpacked once into `<tool>/<version>/unpacked-<plat>/`; a member that escapes the folder, a link that escapes, or a device is refused. Kind `crate` verifies and unpacks the `.crate`, then builds it once with `cargo install --locked --path <src> --root <tool>/<version>/root-<plat>` (env `CI_TOOL_CARGO` names cargo). Unpack and build go to a unique `.partial` folder that is renamed, so a failure leaves nothing. It prints the absolute path of `bin_dir/<bin>`, of `bin_dir/<exe>` with `--exe`, or of the bin folder with `--dir`. Exit 0 prints the path; 1 is a fetch, checksum, unpack or build failure, or a missing exe or pin; 2 is bad usage. `fetch` and `gitleaks` are unchanged. (DS199)
+
+**R5.15** — `tools_pin.py` has the commands `rustup-init`, `crate` and `entry`; each merges a pin into `tools.json`. The shipped pins are `rustup-init` 1.29.3 (five platforms), `llvm` 20.1.8 (`linux_x64`, `linux_arm64`, `windows_x64`), and `cargo-deny` 0.20.2 and `cargo-xwin` 0.23.1 (crate sha256, five platforms). Zig 0.17.1 is pinned from the `ziglang` wheels on PyPI (`linux_x64`, `linux_arm64`, `windows_x64`, `darwin_x64`, `darwin_arm64`; sha256 from the PyPI API). Kind `wheel` unpacks the wheel as a zip, refuses a path that escapes, and restores the execute bit stored in the zip entry; `ci_tool.py tool zig` prints `.../unpacked-<plat>/ziglang/zig`. `tools_pin.py entry` accepts `--kind wheel`. Zig is optional for the Linux linker: a system C compiler comes first (D146). (DS199, DS205)
+
+**R5.16** — A gate step in `gate.json` may carry `paths: KEY`. When `scope_map` maps path prefixes to keys, `plan_step` in `delivery_common.py` skips that step if files changed, every changed file lies under some `scope_map` key, and none lies under KEY. An unmapped file, an unknown key or a missing `scope_map` changes nothing. The rust `gate.json` ships the key `rust` only, so a Rust-only change skips JS steps only in a project that adds a `js` key and marks its JS steps `paths: "js"`. (DS201)
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -164,6 +171,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.0 | 2026-11-09 | RELEASE-71 | DS199's ci_tool.py tool command and tools.json pins (rustup-init, llvm, cargo-deny, cargo-xwin) are used by the Rust workflows in DS201. The tool cache is kept on pool runners; hosted runners use Swatinem/rust-cache.<br>Adds R5.14 to R5.16: the generic tool fetcher, the Rust tool pins and the gate scope map.<br>Zig is pinned from the ziglang wheel on PyPI; ci_tool.py gets a wheel kind, and tool zig prints the zig path. | DS201, DS203, DS205 |
 | 0.5.2 | 2026-11-07 | RELEASE-60 | ci_watch reports exit code 137 or Killed as killed for memory with the pool cap, and a slow Set up runner failure as a runner start-up failure, never as a stale lockfile. | DL92 |
 | 0.5.1 | 2026-11-05 | RELEASE-47 | The join rebuilds the next-version design-system gallery and commits it when a joined branch changed that folder. | DU4 |
 | 0.5.0 | 2026-11-05 | RELEASE-45 | change_notes.py check fails a diff that adds an entry to, or raises a count in, a design-system known-breach list that already exists at the base (known_lists, default scripts/design/*.known.json). | DSY99 |

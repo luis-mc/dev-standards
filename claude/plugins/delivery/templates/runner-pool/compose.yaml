@@ -10,6 +10,8 @@ services:
         RUNNER_VERSION: ${RUNNER_VERSION:-2.338.2}
         RUNNER_SHA256: ${RUNNER_SHA256:?set by the setup}
         POOL_BROWSERS: ${POOL_BROWSERS:-none}
+        POOL_LAYERS: ${POOL_LAYERS:-}
+        POOL_APT: ${POOL_APT:-}
         PLAYWRIGHT_VERSION: ${PLAYWRIGHT_VERSION:-1.62.1}
     image: luismc-runner-pool:${POOL_NAME:-main}
     restart: unless-stopped

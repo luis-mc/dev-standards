@@ -428,7 +428,7 @@ def nightly_problems(text: str) -> list[str]:
         if name != "changed":
             if not re.search(r"^    needs: changed\s*$", block, re.M):
                 p.append(f"job {name}: must need changed")
-            if "if: ${{ needs.changed.outputs.run == 'true' }}" not in block:
+            if "if: ${{ !cancelled() && needs.changed.result == 'success' && needs.changed.outputs.run == 'true' }}" not in block:
                 p.append(f"job {name}: must run only when changed said run=true")
             if "ref: ${{ needs.changed.outputs.sha }}" not in block:
                 p.append(f"job {name}: must test the commit that was compared")
@@ -446,7 +446,7 @@ def nightly_template_structure():
         ("compare the heads", '[ "$head" = "$last" ]', '[ "$head" != "$last" ]'),
         ("variables", "vars.NIGHTLY_RUNS_ON || ", ""),
         ("must need changed", "    needs: changed\n", ""),
-        ("run=true", "if: ${{ needs.changed.outputs.run == 'true' }}", "if: ${{ true }}"),
+        ("run=true", "if: ${{ !cancelled() && needs.changed.result == 'success' && needs.changed.outputs.run == 'true' }}", "if: ${{ true }}"),
         ("commit that was compared", "ref: ${{ needs.changed.outputs.sha }}", "ref: main"),
     ]
     for want, old, new in cases:

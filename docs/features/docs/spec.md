@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 0.10.0
+version: 0.10.1
 owner: agents
 type: reference
 code:
@@ -168,6 +168,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.10.1 | 2026-11-09 | RELEASE-71 | docs_work.py strip --apply commits the docs/work/ removal, or exits 1 and says what is left staged. | DS193 |
 | 0.10.0 | 2026-11-07 | RELEASE-64 | design_system.py components installs the opt-in DatePicker, TimePicker and NumberKeypad templates (React and TypeScript) with their spec sections (R5.14).<br>The design-system starter has rule UX-56 and the enforcement kit a raw-inputs guard (no native date, time or number input); design_system.py components adds the component words to content.md; the gallery draws the date picker, the time picker and the number keypad (R5.14, R5.15). | UXC24, UXC27 |
 | 0.9.0 | 2026-11-05 | RELEASE-47 | The design-system starter has rules UX-49 to UX-55, extended rules, and a wizard state word table.<br>The design-system starter adds a Looks line per component, a change review component, a filter bar, text-on-fill token pairs, more motion tokens, tokens per width, closed border widths and a weight ceiling per type role.<br>The docs scripts accept a lone --; DS4 is information only on a task branch; design_system.py relink accepts link-only edits of an approved version; new drafts show where CHANGES.md entries go; the version README has a section for what the apps do not follow yet.<br>The design-system enforcement kit adds a raw-controls guard (no raw button, input, select or textarea in app code) and a contrast guard (WCAG 2.2 AA for text-on-fill token pairs in every theme), each with a known list that only shrinks.<br>The offline design-system gallery draws the change review component and the list-toolbar filter bar, and shows text-on-fill pairs with contrast, motion, per-width tokens, border widths and type weights. | DU2, DU3, DU4, DU5, DU6 |
 | 0.8.0 | 2026-11-05 | RELEASE-46 | The design-system template has a full Dialog and sheet component and rules UX-43 to UX-48. | DS189 |

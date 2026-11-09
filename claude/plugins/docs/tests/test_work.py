@@ -49,7 +49,7 @@ class WorkTests(unittest.TestCase):
         self.assertFalse((d / "docs/work").exists())
         self.assertEqual(git(d, "ls-files", "docs/work").stdout.strip(), "")
         self.assertTrue((d / "docs/features/a/spec.md").is_file(), "lasting docs untouched")
-        self.assertEqual(K.main(["guard", "--root", str(d), "--base", "main"]), 1, "index still holds the removal until committed? added files are measured on HEAD")
+        self.assertEqual(K.main(["guard", "--root", str(d), "--base", "main"]), 0, "the strip is committed (DS193), so the guard passes")
 
 
 if __name__ == "__main__":

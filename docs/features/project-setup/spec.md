@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.7.1
+version: 0.8.0
 owner: agents
 type: reference
 code:
@@ -18,6 +18,7 @@ code:
   - tools/test_rule_tags.py
   - tools/test_questions_stop.py
   - tools/test_project_setup_fixes.py
+  - tools/test_check_stack_rust.py
 last_verified: 2026-11-08
 ---
 # Project setup (luismc-project-setup)
@@ -86,6 +87,24 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 **R5.12** — The shipped STACKSPEC and AUTHSPEC have valid heading numbers, requirement IDs and references, and AUTHSPEC passes its own content checks.
 
 **R5.13** — At user level, `claude-setup` installs `~/.claude/hooks/questions_stop.py` and adds it to `hooks.Stop` in `~/.claude/settings.json`, without removing another hook. The hook blocks a stop when the final reply asks the owner a question in plain text, lists options to pick, or says questions are parked, and the turn made no AskUserQuestion call. It enforces Q-1 and Q-2.
+
+**R5.14** — The `questions_stop.py` hook counts an agent as running when its state is queued or running, or when it has an `eta`, no `done_at` and a state that is not done, empty, failed or stopped. When the parked-question check finds a running agent due within 60 minutes, the hook allows the stop and prints `Questions wait for the report of agent <task> (due within 60 minutes); do not ask now.` Plain-text questions (Q-2) still block. A missing or bad ledger adds no agents and the check carries on. (DL124)
+
+**R5.15** — Both copies of `clarifying-questions.md` carry one rule line, in the same words: the hook can see an open question, and a `RemoteTrigger` `create` or `update` due in under 2 hours then draws a warning, never a block. (DL136)
+
+**R5.16** — The pre-push hook exits 1 with `pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here.` when `package.json` and `pnpm-lock.yaml` exist, `scripts/delivery/gate.json` has a command that starts with `pnpm `, and `node_modules` does not exist. The check runs after the `scripts/delivery` check and before the Python and guard steps. (DL130)
+
+**R5.17** — `core.hooksPath` is shared by all worktrees. The pre-push hook compares its own folder with `<git rev-parse --show-toplevel>/.githooks`. If they differ and the current worktree has a `pre-push`, the hook runs that one with `exec`. The variable `PRE_PUSH_REEXEC` stops a loop. (DL137)
+
+**R5.18** — `check_stack.py` accepts `{api: X, components: [rust]}` as well as `language`. A component is an id or a mapping with `id`, `parts`, `reason`, `build_matrix`, `cross_compile`, `licence_note`, `targets` and `windows_runner`. Host elimination applies to the API language only. An unknown component or part is an error. (DS196, D138)
+
+**R5.19** — `check_stack.py` warns on: a Rust component with no recorded reason; a napi addon with no build matrix; a cross-compile target with no licence note; a Windows host-service with neither `cross_compile` nor `windows_runner`; a napi component on Vercel. `check_stack.py --catalog` checks the parts and pairings of the catalog. (DS196)
+
+**R5.20** — The catalog gives `rust` the roles `api` and `component`. The `component` block has `requires_reason` and a `reason_prompt` that asks for a written reason only (D145), the parts `cli`, `host-service`, `library-napi` (needs a build matrix) and `library-wasm`, and the later parts `worker` and `media` (D139). `roles.yaml` has the asked role `native_components` (multi-select, default none). `bundles.yaml` has `component_pairings`: any API language and any host; a host-service needs a Windows build option; wasm on Cloudflare is supported; napi on Vercel warns. Rust stays out of every default and every bundle recommendation. (DS196)
+
+**R5.21** — `tech-stack-setup` Phase 1 asks whether any part of the product runs on a user's or operator's machine. Phase 3 binds `native_components`: the parts, the written reason (D145), the target OSes and which ships first, the napi build matrix, the cross-compile licence note, the Windows option (cross-build on Linux with cargo-xwin after the licence is accepted once and recorded, or a Windows runner; D144), and a signing row in the provisioning ledger. Phase 7 generates the Cargo workspace layout, and Mode 2 audits it. No section is renumbered. (DS197)
+
+**R5.22** — `assets/tooling/rust/` ships `Cargo.toml` (resolver 2, `crates/*` members, `[workspace.package]`, `[workspace.dependencies]`, a fixed release profile), `rust-toolchain.toml` (exact `1.91.0`, minimal profile, rustfmt and clippy, empty targets), `rustfmt.toml` and `deny.toml` (advisories, bans, licenses, sources). The wizard copies them to the repository root beside `crates/guards`. Every cargo command uses `--locked`, and CI installs the exact toolchain version. The tooling README maps each STACKSPEC invariant to its Rust command. (DS198)
 
 ## 6. Non-functional requirements
 
@@ -180,6 +199,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.8.0 | 2026-11-09 | RELEASE-71 | Stop hook counts agents with an ETA and no agent-done; says questions wait when one is due within 60 minutes. Clarifying-questions rule: a routine held for an owner answer is paused, never postponed by minutes.<br>DS196: Rust as a component role beside any API language; parts cli, host-service, library-napi, library-wasm; check_stack.py warnings. Spec text follows in DS203.<br>tech-stack-setup wizard text: machine-side question, native_components binding with written reason, napi build matrix, cross-compile licence and Windows build option, Rust workspace layout, Rust audit wording.<br>Adds R5.14 to R5.22: stop hook ETA parking, pre-push fixes, Rust as a component in the catalog, the wizard and the tooling assets. | DL124, DS196, DS197, DS203 |
 | 0.7.1 | 2026-11-04 | RELEASE-42 | Questions Stop hook blocks a list only when the line above offers a choice, passes 'no open questions', and hook commands keep exit 2 (python3 if present, else python). | DS185 |
 | 0.7.0 | 2026-11-04 | RELEASE-38 | claude-setup installs a user-level Stop hook (questions_stop.py) that blocks plain-text questions and parked questions, enforcing Q-1 and Q-2 (R5.13). | SO6 |
 | 0.6.0 | 2026-11-04 | RELEASE-37 | claude-setup, tech-stack-setup and auth-setup follow the setup pattern: plan first, one line per step, and a Done, Left for you, What you can do now summary. | DL33 |

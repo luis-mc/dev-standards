@@ -102,6 +102,7 @@
 
 - [Set up the CI fallback and try it on a test repository](docs/guides/ci-fallback-test-run.md)
 - [Run work in cloud routines](docs/guides/cloud-routines.md)
+- [Rust beside a JS stack](docs/guides/rust-beside-js.md)
 - [Set up CI for a project](docs/guides/set-up-ci.md)
 - [What the setup skills do and what you can do after](docs/guides/setup-skills.md)
 - [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)

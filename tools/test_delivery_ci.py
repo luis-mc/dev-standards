@@ -99,8 +99,14 @@ if argv[:2] == ["run", "list"]:
         fail("HTTP 404: workflow ci.yml not found on the default branch "
              "(https://api.github.com/repos/OWNER/REPO/actions/workflows/ci.yml)")
     seq = fx["run_list"]
-    resp = seq[min(bump(), len(seq) - 1)]
     wf = argv[argv.index("--workflow") + 1] if "--workflow" in argv else None
+    # DL139: the unfiltered read (no --workflow) only peeks at the current poll; the named-workflow
+    # reads are the polls that advance the sequence.
+    if wf is None:
+        n = int(open(fixture_path + ".calls").read() or 0) if os.path.exists(fixture_path + ".calls") else 0
+        resp = seq[min(max(n - 1, 0), len(seq) - 1)]
+    else:
+        resp = seq[min(bump(), len(seq) - 1)]
     out = [{k: v for k, v in r.items() if k != "_workflow"}
            for r in resp if wf is None or r.get("_workflow", wf) == wf]
     print(json.dumps(out))
@@ -278,7 +284,7 @@ def watch_pr_head_push_skipped_and_pr_queued_keeps_waiting():
         rc, out, err = watch(sb, fx)
         expect_exit(rc, 0, out, err)
         check("no real run yet" in out, f"did not say it was waiting for a real run: {out}")
-        check(len([c for c in sb.calls() if c[:2] == ["run", "list"]]) == 3,
+        check(len([c for c in sb.calls() if c[:2] == ["run", "list"] and "--workflow" in c]) == 3,
               "did not keep waiting through the skipped and queued polls")
     finally:
         sb.close()
@@ -389,7 +395,7 @@ def watch_waits_when_no_run_exists_yet():
     try:
         rc, out, err = watch(sb, {"run_list": [[], [], [run_obj(1, "completed", "success")]]})
         expect_exit(rc, 0, out, err)
-        lists = [c for c in sb.calls() if c[:2] == ["run", "list"]]
+        lists = [c for c in sb.calls() if c[:2] == ["run", "list"] and "--workflow" in c]
         check(len(lists) == 3, f"expected 3 polls (empty, empty, success), got {len(lists)}")
     finally:
         sb.close()
@@ -403,7 +409,7 @@ def watch_waits_while_a_run_is_in_progress():
             [run_obj(1, "in_progress", ""), run_obj(2, "completed", "success")],
             [run_obj(1, "completed", "success"), run_obj(2, "completed", "success")]]})
         expect_exit(rc, 0, out, err)
-        check(len([c for c in sb.calls() if c[:2] == ["run", "list"]]) == 2,
+        check(len([c for c in sb.calls() if c[:2] == ["run", "list"] and "--workflow" in c]) == 2,
               "did not wait for the in-progress run")
     finally:
         sb.close()
@@ -1273,18 +1279,26 @@ def reach_rejects_non_http_urls():
 # Structural checks of the four ci.yml files
 # ---------------------------------------------------------------------------
 
-IF_COND = ("${{ !cancelled() && needs.decide.outputs.skip != 'true' && "
+IF_COND = ("${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && "
            "(github.event_name != 'pull_request' || !github.event.pull_request.draft) }}")
 
 # The ts runner plan (DS9) adds one clause to the jobs it can skip: a planned skip is an explicit 'false'.
-PLAN_CLAUSE = re.compile(r" && needs\.plan\.outputs\.(integration|e2e) != 'false'")
+# DL147: a plan-result check may come first, so a failed plan does not skip the job silently.
+PLAN_CLAUSE = re.compile(
+    r"(?: && needs\.plan\.result != 'failure')? && needs\.plan\.outputs\.(integration|e2e) != 'false'")
+# DL147: the ts aggregate `e2e` job judges the results itself, so it guards on 'cancelled' and not 'failure'.
+E2E_AGGREGATE_COND = (
+    "${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && "
+    "needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && "
+    "needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && "
+    "(github.event_name != 'pull_request' || !github.event.pull_request.draft) }}")
 # The opt-in run-times job (DS26, DL-82) adds the repository-variable clause.
 RUN_TIMES_CLAUSE = re.compile(r" && vars\.CI_RUN_TIMES == 'true'")
 
 
 def if_cond_ok(block: str) -> bool:
     for m in re.finditer(r"^    if: (.*)$", block, re.M):
-        if m.group(1) == IF_COND or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", m.group(1))) == IF_COND:
+        if m.group(1) in (IF_COND, E2E_AGGREGATE_COND) or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", m.group(1))) == IF_COND:
             return True
     return False
 
@@ -1634,6 +1648,8 @@ def workflow_checker_detects_each_defect():
         ("go", go, "missing 'needs: decide'",
          lambda t: mutate(t, "    needs: decide\n", "", 1)),
         ("ts", ts, "exact decide-aware", lambda t: mutate(t, "!cancelled() && ", "")),
+        ("ts", ts, "exact decide-aware",
+         lambda t: mutate(t, "needs.decide.result != 'failure' && ", "")),
         ("ts", ts, "exact decide-aware",
          lambda t: mutate(t, "needs.decide.outputs.skip != 'true' && ", "")),
         ("go", go, "exact decide-aware",
