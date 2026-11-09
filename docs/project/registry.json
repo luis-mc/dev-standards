@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T19:06+00:00",
+  "updated": "2026-11-09T19:07+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2961,12 +2961,11 @@
       "id": "DL148",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Fix Rust workflow ifs and old CI tests for the DL147 guard",
       "detail": "DL147's guard flags two Rust ci.yml jobs that need decide; tools/test_delivery_ci.py hard-codes the old if conditions; one test_ci_speedups case to check. Branch on DS201 with DL147 merged.",
-      "expected": "09 Nov ~19:18",
-      "changed": "2026-11-09T18:28+00:00",
-      "expected_basis": "cloud agent started 18:28, ~50 min",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T19:07+00:00",
       "rides": "DS194",
       "started": "2026-11-09T18:28+00:00"
     },
@@ -5946,13 +5945,12 @@
       "id": "DS203",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Rust docs: specs and guide",
       "detail": "Feature spec rules and a guide: Rust beside a JS stack.",
-      "expected": "09 Nov ~19:38",
-      "changed": "2026-11-09T18:28+00:00",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T19:07+00:00",
       "rides": "DS194",
-      "expected_basis": "cloud agent started 18:28, ~70 min",
       "started": "2026-11-09T18:28+00:00"
     },
     {
