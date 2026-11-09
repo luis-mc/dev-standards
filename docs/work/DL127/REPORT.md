@@ -26,4 +26,13 @@ See the lines above and `docs/architecture/changes/DL127-ci-watch-ledger.md`. No
 - `gh workflow run spec-lint.yml --ref DL127-ci-watch-ledger -f areas=delivery`: run 42656718666 failed: delivery-ci 74/75 passed, the 3 cases above (the first run, 42655366970, also failed on 4 cases before the fix). Every other suite in that run passed or was skipped.
 - `python3 claude/plugins/docs/scripts/docs_check.py`: G1/W1 expected (W1 is this report). Also M1 on `docs/features/delivery/spec.md` and `docs/features/delivery-speed/spec.md`: the feature spec text is for the orchestrator. T2 warnings only.
 
-NOT READY
+## Fix round
+- Cause: DL139 adds one unfiltered `gh run list --commit` after the named workflow's runs are complete. The fake gh in `tools/test_delivery_ci.py` advanced its fixture sequence on every `run list`, so that extra call used up a poll.
+- Change (test side only; `ci_watch.py` untouched): the fake gh now only peeks at the current poll for a `run list` with no `--workflow`. Named-workflow reads still advance the sequence. The three cases count only `--workflow` polls, so each still proves its wait count (3, 2, 3).
+  - Why not skip the read in `ci_watch.py`: the read is the DL139 behaviour and runs only when the named runs are complete, so it should stay.
+- `watch_*` cases of `tools/test_delivery_ci.py` (loader): 39 of 39 pass.
+- `cd claude/plugins/delivery/tests && python3 -m unittest test_dl127_ci_watch_ledger`: 10 tests OK.
+- `gh workflow run spec-lint.yml --ref DL127-ci-watch-ledger -f areas=delivery`: run 42665100724, completed, failure only from "docs check" (M1 and W1, expected). Delivery jobs, all success: smoke test, runner plan, setup preflight, CI scripts and workflow templates, train cleanup, change notes enforced and folded, artifact pruning, branch gate and trust rule, area mapping, plugin ledger/recorder/watcher/hooks, delivery scripts/CI templates/cleanup/prune/change notes. Other areas skipped.
+- Fix commit: c99329d20437cd4c64e880336a7bd8bc4c065f68 (the report commit follows it).
+
+READY
