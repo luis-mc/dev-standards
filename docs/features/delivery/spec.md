@@ -455,6 +455,10 @@ Failure modes:
 | A job is held for a slot while the fallback runs its shard | The held job gets its slot, finds the claim taken, ends with exit 3 and frees the slot (R13.64). |
 | Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R13.66). |
 
+**R13.72** — **Install keeps the prune workflow list** (DL150). After `delivery_ci_install.py update` rewrites `artifact-prune.yml` from the template, it runs `scripts/delivery/artifact_prune.py --sync-workflow` in the project. The project's `artifact_prune.workflows` list is applied and does not revert. When the sync fails, the update prints the error and the fix. It does not undo the update.
+
+**R13.73** — **Install checks time zone data** (DL157). Windows Python has no time zone data, so `zoneinfo` cannot load a zone such as `Europe/Lisbon` and the delivery scripts fall back to UTC. The installer, and the install step of the claude-setup skill, load the `tz` of `.delivery/config.json`. When that fails, they run `python -m pip install --user tzdata`, ask first when interactive, say what they did, and check again. The doctor keeps its own `tz` check.
+
 ## Versions
 
 Written by the release fold. Do not edit by hand.
