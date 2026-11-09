@@ -386,6 +386,11 @@ fails, report it and go on with the rest. Afterwards tell the owner to run
 change plan, show them in step 3, and run them only after the owner confirms.
 Each skips when the plugin is not installed yet; print the command instead.
 
+- **Time zone data (R13.73).** When `.delivery/config.json` has a `tz` and
+  `python -c "import zoneinfo; zoneinfo.ZoneInfo('<tz>')"` fails (Windows Python
+  has no time zone data), plan `python -m pip install --user tzdata`. Run it
+  after the owner confirms, say what you did, and check again. Skip it when the
+  zone loads.
 - **luismc-docs.** In a repo without `docs/docs.json`, run the docs plugin's
   `docs_setup.py init --apply` (it is under `scripts/` in the installed docs
   plugin). In a repo that already has docs, run `docs_setup.py migrate` without
