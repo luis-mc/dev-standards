@@ -13,6 +13,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 # libatomic1: pnpm's standalone binary (@pnpm/exe) needs it. xz-utils, unzip, zip, jq: common actions assume them, as on hosted runners (DL71).
 RUN apt-get update \
  && apt-get install -y --no-install-recommends ca-certificates curl git tini python3 sudo util-linux postgresql-client libicu74 \
+    build-essential pkg-config \
     libatomic1 xz-utils unzip zip jq \
  && rm -rf /var/lib/apt/lists/*
 # GitHub CLI (DL86): hosted runners preinstall gh, so workflows call `gh api` and `gh pr`. Pinned tarball, checked by SHA-256 like the runner.

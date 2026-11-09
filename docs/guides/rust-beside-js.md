@@ -58,9 +58,9 @@ The track lives in `luismc-delivery`. `scripts/delivery/rust_ci.py` holds the st
 
 - **Toolchain.** `rust_ci.py toolchain` installs the exact version in `rust-toolchain.toml` with a pinned `rustup-init`. A channel such as `stable` fails.
 - **LLVM.** The pinned LLVM (`lld-link`, `clang-cl`, `llvm-lib`) sits in the tool cache. `ci_tool.py tool llvm --exe lld-link` prints the path. The Windows MSVC cross-link uses it.
-- **Zig.** A pinned Zig can serve as the Linux host linker. Zig is not pinned yet, so it is optional. Without it, `rust_ci.py env` uses a system `cc`, `gcc` or `clang` and warns. With none of them it fails with `linker cc not found`.
+- **Linux linker.** The runner pool image carries `build-essential` and `pkg-config`, so `rust_ci.py env` uses the system `cc` first. Zig 0.17.1 is pinned from the `ziglang` wheels on PyPI and is used only when no system C compiler exists, or when you choose it (for an older glibc or a static musl build). With neither it fails with `linker cc not found`.
 - **cargo-deny.** `rust_ci.py deny` keeps the RustSec database in the tool cache and fetches it each run. If the fetch fails, a cached copy up to 7 days old gives a warning and the run goes on. An older copy, or none, fails. The committed `deny.toml` is never edited. A generated copy carries the `db-path`.
-- **Gate isolation.** `rust_ci.py run` removes the folders that hold `cc`, `gcc`, `clang` and `ld` from `PATH`, so the pinned tools are what is tested. Set `toolchain-isolated` to false in `gate.json` to turn this off.
+- **Gate isolation.** Off by default. With `toolchain-isolated` set to true in `gate.json`, `rust_ci.py run` removes the folders that hold `cc`, `gcc`, `clang` and `ld` from `PATH`, so only the pinned tools are tested.
 - **Steps.** The gate adds `deny` (when `Cargo.lock` or `deny.toml` changed) and `xwin` (only with a cross target). `smoke.json` lists `binaries`; each is built in debug and run with `--version`.
 - **Workflows.** `ci.yml` and `package.yml` use these steps. `Swatinem/rust-cache` runs on GitHub-hosted runners only. `package.yml` builds a Windows exe with cargo-xwin as `packaged-program-windows`.
 
@@ -79,7 +79,6 @@ The track lives in `luismc-delivery`. `scripts/delivery/rust_ci.py` holds the st
 
 ## Known gaps
 
-- **Zig is not pinned.** Add it with `tools_pin.py entry zig ...` when a URL can be hashed. The doctor reports `rust.pins` as failed until a Zig pin exists, even though Zig is optional for the linker.
 - **`scope_map` is only partly in use.** The gate reads `scope_map` and step `paths` through `plan_step`. The shipped Rust `gate.json` has the key `rust` only. A mixed repo adds a `js` key and marks its JS steps `paths: "js"`.
 - **The workflows have not run on a real Rust project.** Check the first run.
 - **Rust apps under `apps/`** are ignored by the push filter of the Rust workflow.
