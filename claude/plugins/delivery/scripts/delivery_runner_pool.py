@@ -1099,7 +1099,7 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
         want['RUNNER_SHA256'] = sha
     if pw:
         want['PLAYWRIGHT_VERSION'] = pw
-    changes = {k: (env.get(k), v) for k, v in want.items() if env.get(k) != v}
+    changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT') else None)) != v}
     out = {'pool': pool, 'path': path, 'changes': changes, 'why': why, 'playwright_source': pw_source if pw else None}
     if not sha:
         out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
