@@ -26,3 +26,11 @@
 - `cd claude/plugins/delivery/tests && python3 -m unittest test_ds200_rust_ci test_ds199_tool_fetch test_dl115_ci_tool test_dl116_fetch_check`: 52 tests OK.
 - `python3 tools/ci_areas.py --branch-advice`: "unreadable diff, treat as every area"; ran the delivery smoke above.
 - `docs_check.py`: 1 error (W1 docs/work, expected), 1 warning (T2 delivery-speed). M1 passes.
+- `gh workflow run spec-lint.yml --ref DS200-rust-ci-helper -f areas=delivery`: run 42656168372, conclusion **failure**. All delivery suites passed (CI scripts, packaged-program smoke, branch gate, ledger/watcher, change notes, area mapping, setup preflight, train cleanup, prune, scripts job). Only `docs check` failed: M1 on `docs/features/delivery-speed/spec.md` (code inherited from DS199, `ci_tool.py` and `tools.json`, maps to that spec; no note exists for it, and it is not a file I own) and W1 (docs/work, expected). Fix: a `delivery-speed` change note (or `Docs: none`) on DS199 or at the release fold.
+
+## Verdict
+Code and tests are done and the delivery suites are green. The docs check is red from the inherited delivery-speed M1, so this branch is not ready until that note exists.
+
+Branch head: the commit before this report update; see `git log -1` on origin/DS200-rust-ci-helper.
+
+NOT READY
