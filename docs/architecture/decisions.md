@@ -114,8 +114,32 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D148 | When to fix the two Rust workflow path-filter gaps (a JS-only change runs Rust CI; Rust under apps/ is ignored)? | Add to RELEASE-71 | decided | 2026-11-09 |
 | delivery-speed | D149 | Which agent-report follow-ups to schedule? | Both | decided | 2026-11-09 |
 | delivery-speed | D15 | Stop train-cleanup creating a GitHub release on every merge to main? | Stop release per merge | decided | 2026-10-26 |
+| delivery-speed | D150 | When to launch RELEASE-77's agents? | Launch now | decided | 2026-11-09 |
+| delivery-speed | D151 | May RELEASE-77 merge on green overnight without the owner? | Merge on green | decided | 2026-11-09 |
+| delivery-speed | D152 | Add DL146 (default e2e mock handler guard) to RELEASE-77? | Add to RELEASE-77 | decided | 2026-11-09 |
+| delivery-speed | D153 | How does pool-refresh treat layers other repos asked for? | Keep unless dropped | decided | 2026-11-09 |
+| delivery-speed | D154 | Which Playwright version does a shared-pool refresh keep? | Keep highest + flag | decided | 2026-11-09 |
+| delivery-speed | D155 | Which branches does a plain agent_ci.py pass pick? | Open ledger agents | decided | 2026-11-09 |
+| delivery-speed | D156 | What if the pre-push ignore-file bug does not reproduce? | Fix anyway + test | decided | 2026-11-09 |
+| delivery-speed | D157 | How much of the Rust globalSetup pattern ships? | Template + guide | decided | 2026-11-09 |
+| delivery-speed | D158 | Clean the ledger's junk rows? | Clean + prevent | decided | 2026-11-09 |
+| delivery-speed | D159 | How to handle missing time zone data on Windows? | Installer adds tzdata | decided | 2026-11-09 |
 | delivery-speed | D16 | Fix ci_watch.py: right default workflow, repeated gh errors fail instead of green? | Fix ci_watch.py | decided | 2026-10-26 |
+| delivery-speed | D160 | What if some RELEASE-77 tasks report NOT READY overnight? | Hold the whole release | decided | 2026-11-09 |
+| delivery-speed | D161 | Does the DL146 mock-handler guard block or warn? | Block | decided | 2026-11-09 |
+| delivery-speed | D162 | What does the installer do about tzdata when no one can answer a prompt? | Install and say so | decided | 2026-11-09 |
+| delivery-speed | D163 | If DS208's template needs an installer change, when? | Add it at the join | decided | 2026-11-09 |
+| delivery-speed | D164 | May two agents own one file when their notes name disjoint requirement IDs? | Allow disjoint IDs | decided | 2026-11-09 |
+| delivery-speed | D165 | How to tell the owner of an overnight merge or block? | Full Progress only | decided | 2026-11-09 |
+| delivery-speed | D166 | Start other work overnight after RELEASE-77? | Start new peer findings | decided | 2026-11-09 |
+| delivery-speed | D167 | How long may RELEASE-77 be held for a slow task? | Hold until morning | decided | 2026-11-09 |
+| delivery-speed | D168 | What if CI on the joined RELEASE-77 head stays red after one rerun? | One fix agent, then CI | decided | 2026-11-09 |
+| delivery-speed | D169 | Which default Playwright pin does RELEASE-77 ship? | 1.65.0 | decided | 2026-11-09 |
 | delivery-speed | D17 | DELIVERYSPEC Source cells named after another project's memory notes: make generic or keep? | Make them generic | decided | 2026-10-26 |
+| delivery-speed | D170 | Apply LF line endings to dev-standards itself? | Template now, repo next release | decided | 2026-11-09 |
+| delivery-speed | D171 | May a peer session rebuild the shared runner pool unattended once DL155 ships? | OK unattended | decided | 2026-11-09 |
+| delivery-speed | D172 | When does DL161 (dev-standards LF renormalize) run? | Tonight after RELEASE-77 | decided | 2026-11-09 |
+| delivery-speed | D173 | How to handle a peer finding that needs a design choice overnight? | My pick, recorded | decided | 2026-11-09 |
 | delivery-speed | D18 | Commit the uncommitted artifacts record and docs/drafts? | Commit both | decided | 2026-10-26 |
 | delivery-speed | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | decided | 2026-10-26 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
