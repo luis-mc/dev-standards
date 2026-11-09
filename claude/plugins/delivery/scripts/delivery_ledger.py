@@ -368,13 +368,37 @@ def prune_watchers(led: dict, now: datetime, alive) -> int:
     return len(rows) - len(kept)
 
 
+def _guard_state(led: dict) -> tuple:
+    ids = [t.get("id") for t in led.get("trains") or [] if isinstance(t, dict)]
+    dup = {i for i in ids if ids.count(i) > 1}
+    bare = [a for a in led.get("agents") or [] if isinstance(a, dict) and not a.get("task")]
+    return dup, [json.dumps(a, sort_keys=True, default=str) for a in bare]
+
+
+def check_write_guards(led: dict, before: tuple) -> None:
+    """DL156: refuse a write that adds a duplicate train id or an agent row without a task. Rows that were
+    already wrong when the ledger was read stay loadable and writable."""
+    dup_before, bare_before = before
+    dup_now, bare_now = _guard_state(led)
+    new_dup = sorted(str(i) for i in dup_now - dup_before)
+    if new_dup:
+        raise LedgerError("train id %s is already in the ledger; nothing was written. Run `delivery_ledger.py plan` "
+                          "again: it picks the next free id." % ", ".join(new_dup))
+    fresh = [r for r in bare_now if r not in bare_before]
+    if fresh:
+        raise LedgerError("an agent row has no task; nothing was written. Name the task in the launch block "
+                          "(`task: <ID>`) or set `task` on the row.")
+
+
 def update(root, fn, **lock_kw) -> dict:
     """Lock, load, expire old finished rows, apply fn(ledger), derive phases, cap events, write. Returns the ledger."""
     with locked(root, **lock_kw):
         led = load_for_write(root)
         merge_agent_rows(led)
         prune(led, retention_days(load_config(root)))   # before fn: a row fn adds or changes now is never pruned in this write
+        before = _guard_state(led)
         fn(led)
+        check_write_guards(led, before)
         for train in led.get("trains", []):
             derive_phases(train)
         led["events"] = led.get("events", [])[-EVENT_CAP:]
@@ -519,14 +543,23 @@ def derive_phases(train: dict) -> list[dict]:
 
 # --- trains ----------------------------------------------------------------------------
 
+def next_train_id(led: dict, prefix: str) -> str:
+    """DL156: the first free `<prefix>NN`, above every number already used (a count could repeat an id)."""
+    used = 0
+    for t in led.get("trains") or []:
+        tail = str(t.get("id", ""))[len(prefix):] if str(t.get("id", "")).startswith(prefix) else ""
+        if tail.isdigit():
+            used = max(used, int(tail))
+    return "%s%02d" % (prefix, used + 1)
+
+
 def new_train(led: dict, branch: str, release_no=None, cargo=None, cfg=None, planned=None,
               now: datetime | None = None) -> dict:
     now = now or utcnow()
     day = now.astimezone(owner_tz(cfg=cfg or {})).strftime("%Y-%m-%d")
     prefix = "T-%s-" % day
-    taken = [t["id"] for t in led["trains"] if str(t.get("id", "")).startswith(prefix)]
     train = {
-        "id": "%s%02d" % (prefix, len(taken) + 1),
+        "id": next_train_id(led, prefix),
         "release_no": release_no, "branch": branch, "pr": None, "state": "planned",
         "hold": None, "cargo": cargo or [],
         "phases": {"planned": planned or [], "actual": []},
@@ -575,6 +608,32 @@ def hold_active(train: dict, now: datetime | None = None) -> bool:
     return not (until and until <= (now or utcnow()))
 
 
+def _ci_train(led: dict, kw: dict):
+    """DL156: the train a CI result belongs to, by PR number and head SHA, never by id alone. A train with a PR
+    takes the result only for that PR; one whose head is known takes it only for that commit (or for a push it
+    has not seen, when the PR matches)."""
+    pr, sha = kw.get("pr"), str(kw.get("sha") or "")
+
+    def head_ok(t):
+        head = str((t.get("ci") or {}).get("head_sha") or "")
+        return not (head and sha) or head.startswith(sha[:7]) or sha.startswith(head[:7])
+
+    trains = led.get("trains") or []
+    if pr is not None:
+        rows = [t for t in trains if t.get("pr") == pr]
+        rows = [t for t in rows if not kw.get("train") or t.get("id") == kw["train"]] or rows
+        if rows:
+            return next((t for t in rows if head_ok(t)), rows[0] if len(rows) == 1 else None)
+    if sha:
+        hit = next((t for t in trains if str((t.get("ci") or {}).get("head_sha") or "").startswith(sha[:7])), None)
+        if hit:
+            return hit
+    t = find_train(led, kw.get("train"), branch=kw.get("branch"))
+    if t is not None and (not sha or head_ok(t)) and (not kw.get("branch") or t.get("branch") == kw["branch"] or kw.get("train")):
+        return t if not t.get("pr") or t.get("pr") == pr else None   # a train with another PR is not ours
+    return None
+
+
 # --- generic best-effort entry point for other scripts ---------------------------------
 
 def record(root, op: str, **kw) -> bool:
@@ -620,16 +679,16 @@ def record(root, op: str, **kw) -> bool:
                         a["needs_check"], a["done_at"] = False, iso()
                         add_event(led, "agent.done", "%s by %s (shipped)" % (a.get("task") or a.get("id"), by), by)
                 return
-            train = find_train(led, kw.get("train"), pr=kw.get("pr"), branch=kw.get("branch"))
-            if train is None and op == "ci" and kw.get("sha"):
-                sha = str(kw["sha"])[:7]
-                train = next((t for t in led["trains"] if str((t.get("ci") or {}).get("head_sha") or "").startswith(sha)), None)
-                if train is None:
-                    # DS97: fall back only to the one unheld pushed/ci train whose head is not known yet;
-                    # a held train, or a train whose head is another commit, never takes a stray result
-                    cands = [t for t in led["trains"] if t.get("state") in ("pushed", "ci") and not hold_active(t)
-                             and not (t.get("ci") or {}).get("head_sha")]
-                    train = cands[0] if len(cands) == 1 else None
+            if op == "ci":
+                train = _ci_train(led, kw)
+            else:
+                train = find_train(led, kw.get("train"), pr=kw.get("pr"), branch=kw.get("branch"))
+            if train is None and op == "ci" and kw.get("sha") and not kw.get("pr") and not kw.get("train"):
+                # DS97: fall back only to the one unheld pushed/ci train whose head is not known yet;
+                # a held train, or a train whose head is another commit, never takes a stray result
+                cands = [t for t in led["trains"] if t.get("state") in ("pushed", "ci") and not hold_active(t)
+                         and not (t.get("ci") or {}).get("head_sha")]
+                train = cands[0] if len(cands) == 1 else None
             if train is None and op == "ci" and kw.get("create") and kw.get("branch"):
                 # DL138: no train for the branch or the PR head: make it, as `plan --branch` would
                 train = new_train(led, str(kw["branch"]), cfg=load_config(root))
@@ -801,9 +860,32 @@ _PROJECT_CHIP_RE = re.compile(r'status-chip\s+status-([a-z-]+)', re.I)
 CLOSED_STATUSES = ("live", "dropped", "built")
 
 
+def _registry_statuses(root) -> dict | None:
+    """DL151: {task id: status} from registry.json in the artifacts record_dir (default docs/project).
+    None when there is no readable registry."""
+    rec = "docs/project"
+    try:
+        cfg = json.loads((Path(root) / "docs" / "docs.json").read_text(encoding="utf-8"))
+        if isinstance(cfg, dict) and isinstance(cfg.get("record_dir"), str) and cfg["record_dir"]:
+            rec = cfg["record_dir"]
+    except (OSError, ValueError, TypeError):
+        pass
+    try:
+        data = json.loads((Path(root) / rec / "registry.json").read_text(encoding="utf-8"))
+        rows = data.get("tasks") if isinstance(data, dict) else None
+        if not isinstance(rows, list):
+            return None
+        return {str(r["id"]): str(r.get("status") or "").lower() for r in rows if isinstance(r, dict) and r.get("id")}
+    except (OSError, ValueError, TypeError):
+        return None
+
+
 def project_statuses(root) -> dict:
-    """DL127: {task id: status} from the data-task rows of docs/project/*.html. Read defensively: a missing
-    folder, an unreadable file or a row without a status chip is skipped; never raises."""
+    """DL127/DL151: {task id: status} from the project record: registry.json first, then the data-task rows
+    of docs/project/*.html. Read defensively: anything missing or unreadable is skipped; never raises."""
+    reg = _registry_statuses(root)
+    if reg:
+        return reg
     out = {}
     try:
         d = Path(root) / "docs" / "project"
@@ -822,11 +904,19 @@ def project_statuses(root) -> dict:
     return out
 
 
-def stale_agents(root, led: dict) -> list:
-    """DL127: [(task, status)] of open agents whose task the project record shows as Live, Dropped or Built."""
+def stale_agents(root, record=None, led: dict | None = None) -> list:
+    """DL151: open ledger agents whose task the project record shows as Live, Built or Dropped, as
+    [{task, id, status}]. `record` is {task: status}; None reads the project record under `root`.
+    `led` defaults to the ledger of `root`. No record, no ledger or any error: []."""
     try:
-        status = project_statuses(root)
-        return [(str(a["task"]), status[str(a["task"])]) for a in led.get("agents") or []
+        if isinstance(record, dict) and "agents" in record:   # older call: (root, ledger)
+            record, led = None, record
+        status = project_statuses(root) if record is None else {str(k): str(v).lower() for k, v in record.items()}
+        if not status:
+            return []
+        led = led if led is not None else load(root)
+        return [{"task": str(a["task"]), "id": a.get("id") or "-", "status": status[str(a["task"])]}
+                for a in led.get("agents") or []
                 if isinstance(a, dict) and a.get("task") and a.get("state") not in _AGENT_DONE
                 and status.get(str(a["task"])) in CLOSED_STATUSES]
     except Exception:  # noqa: BLE001
@@ -865,11 +955,11 @@ def _cmd_show(root, args) -> int:
         for ph in t.get("phases", {}).get("actual", []):
             print("  %-7s %s -> %s" % (ph["name"], local_iso(ph["start"], cfg=cfg), local_iso(ph["end"], cfg=cfg)))
     for a in led["agents"]:
-        print("agent %s %s state=%s" % (a.get("task"), a.get("branch"), a.get("state")))
+        print("agent %s %s %s state=%s" % (a.get("task") or "-", a.get("id") or "-", a.get("branch") or "-", a.get("state") or "-"))
     stale = stale_agents(root, led)
     if stale:
         print("open agents whose task the project record shows as finished: %s; close each with agent-done "
-              "or record a look with agent-check" % ", ".join("%s (%s)" % (t, st.capitalize()) for t, st in stale))
+              "or record a look with agent-check" % ", ".join("%s (%s)" % (r["task"], r["status"].capitalize()) for r in stale))
     open_q = [q for q in led["owner_questions"] if not q.get("answered_at")]
     print("owner questions open: %d; events: %d" % (len(open_q), len(led["events"])))
     return 0

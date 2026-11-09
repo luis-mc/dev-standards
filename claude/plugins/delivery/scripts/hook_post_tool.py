@@ -515,6 +515,9 @@ def rec_agent(led, data, cfg, now, where="local") -> None:
     }
     if where == "local" and not inp.get("run_in_background"):
         row["state"] = "done"  # a foreground Agent finished inside the call
+    if not row["task"]:   # DL156: the ledger refuses a row without a task; note it instead of losing the whole write
+        L.add_event(led, "agent.no_task", str(ident or inp.get("description") or ""), "hook_post_tool", now)
+        return
     led["agents"].append(row)
     L.add_event(led, "agent.%s" % row["state"], str(row["task"] or ident or ""), "hook_post_tool", now)
 
