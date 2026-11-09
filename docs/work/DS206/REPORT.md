@@ -17,3 +17,12 @@ No `changes` job: the repo checks fix the exact job `if` text and `needs` of the
 - The feature spec text of `features/delivery` was not edited (not in the owned files); the feature note is added.
 
 ## Tests
+- `python3 -m unittest discover -s claude/plugins/delivery/tests -p "test_ds20*"`: 31 OK.
+- `workflows_conform` and `every_track_ci_skips_docs_and_markdown_on_push` (called directly from tools/test_delivery_ci.py; the full suite is blocked locally by the session guard): both OK.
+- `python3 claude/plugins/docs/scripts/docs_check.py`: W1 (docs/work, expected) and two T2 warnings.
+- `gh workflow run spec-lint.yml --ref DS206-rust-filters -f areas=delivery`, run 42684214850: overall failure from `docs check` only (W1). Delivery jobs, all success: setup preflight, train cleanup, CI scripts and workflow templates, packaged-program smoke test, runner plan, plugin ledger/recorder/watcher/hooks, artifact pruning, branch gate and trust rule, change notes enforced and folded, area mapping, delivery scripts/CI templates/cleanup/prune/change notes. Other jobs skipped (other areas).
+- Workflows were not run on a real Rust or JS project.
+
+Branch head: see `git log -1` on origin/DS206-rust-filters.
+
+READY
