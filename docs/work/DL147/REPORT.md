@@ -26,6 +26,13 @@ Fix for both: `!cancelled() && needs.decide.result != 'failure' && needs.decide.
 - `python3 tools/test_ci_speedups.py`: 23 passed, 1 failed.
 - `python3 tools/test_delivery_fallback.py`: OK (28). `python3 tools/test_shard_guard.py`: OK (19).
 - `python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors, 2 warnings (T2 on other docs). G1 and W1 not shown.
-- spec-lint workflow: see below.
+- `gh workflow run spec-lint.yml --ref DL147-workflow-needs-guard -f areas=delivery` (run 42666349403), delivery jobs:
+  - success: train cleanup, branch gate and trust rule, change notes enforced and folded, packaged-program smoke test, artifact pruning, setup preflight, runner plan, area mapping.
+  - failure: CI scripts and workflow templates (`tools/test_delivery_ci.py` `workflows_conform` and `workflow_checker_detects_each_defect`: the hard-coded `IF_COND` no longer matches `ts/ci.yml`; 76 passed, 2 failed).
+  - failure: plugin ledger, recorder, watcher and hooks (only `test_every_template_workflow`, the rust findings).
+  - skipped: branch gate shard matrix.
+- docs check in CI: only W1 (expected on a branch: `docs/work/DL147/REPORT.md`) plus T2 warnings on other docs.
+
+Both delivery failures clear when the orchestrator fixes the rust ci.yml and updates `IF_COND` in `tools/test_delivery_ci.py` at the join.
 
 NOT READY
