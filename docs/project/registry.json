@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T18:28+00:00",
+  "updated": "2026-11-09T19:06+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2971,6 +2971,19 @@
       "started": "2026-11-09T18:28+00:00"
     },
     {
+      "id": "DL149",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool image: opt-in windows-packaging layer and project apt fragment",
+      "detail": "Pool Dockerfile template gains an opt-in layer (dotnet-sdk-8.0 wine wine64 xvfb xauth msitools) and a project fragment .delivery/pool.apt merged at build. delivery-ci-setup asks if the project builds Windows installers on Linux (or has *.wxs). Doctor checks wine, xvfb-run, dotnet when on; flags a repo infra/runners/*/Dockerfile the pool ignores; checks the tool cache is writable and persistent. Rebuild refuses while a runner is busy.",
+      "expected": "09 Nov ~20:11",
+      "changed": "2026-11-09T19:06+00:00",
+      "expected_basis": "cloud agent started 19:06, ~65 min",
+      "rides": "DS194",
+      "started": "2026-11-09T19:05+00:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -5777,30 +5790,30 @@
       "status": "Running",
       "item": "RELEASE: plugin fixes, audits specs and Rust track",
       "detail": "One release for every open fix: audits and test-cost specs, artifact prune list, join.py, ci_watch and ledger, hooks and gate, Rust track. Join, fold notes, CI, merge, install, smoke, cleanup.",
-      "expected": "09 Nov ~20:25",
-      "changed": "2026-11-09T17:29+00:00",
-      "expected_basis": "Rust docs agent after DS201 ~19:40, join 15 + CI 25 min",
+      "expected": "09 Nov ~20:55",
+      "changed": "2026-11-09T19:06+00:00",
+      "expected_basis": "pool layer agent ~20:11, join 15 + CI 25 min",
       "release": 71,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-09T16:00+00:00",
-          "end": "2026-11-09T19:40+00:00"
+          "end": "2026-11-09T20:11+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-09T19:40+00:00",
-          "end": "2026-11-09T19:55+00:00"
+          "start": "2026-11-09T20:11+00:00",
+          "end": "2026-11-09T20:26+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-09T19:55+00:00",
-          "end": "2026-11-09T20:20+00:00"
+          "start": "2026-11-09T20:26+00:00",
+          "end": "2026-11-09T20:51+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-09T20:20+00:00",
-          "end": "2026-11-09T20:25+00:00"
+          "start": "2026-11-09T20:51+00:00",
+          "end": "2026-11-09T20:55+00:00"
         }
       ],
       "started": "2026-11-09T15:57+00:00",
@@ -5941,6 +5954,54 @@
       "rides": "DS194",
       "expected_basis": "cloud agent started 18:28, ~70 min",
       "started": "2026-11-09T18:28+00:00"
+    },
+    {
+      "id": "DS204",
+      "owner": "project",
+      "app": "",
+      "status": "Dropped",
+      "item": "RELEASE: pool image packaging layer and Zig pin",
+      "detail": "DL149, DL150, DL151, DS205: join after RELEASE-71 merges, fold notes, CI, merge, install, smoke, cleanup.",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T19:05+00:00",
+      "release": 76,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T18:40+00:00",
+          "end": "2026-11-09T19:50+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-09T20:25+00:00",
+          "end": "2026-11-09T20:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-09T20:40+00:00",
+          "end": "2026-11-09T21:05+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-09T21:05+00:00",
+          "end": "2026-11-09T21:10+00:00"
+        }
+      ],
+      "dropped_into": "DS194",
+      "dropped_reason": "Folded into RELEASE-71: a project needs the pool layer before ~21:45"
+    },
+    {
+      "id": "DS205",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Pin Zig from the PyPI ziglang wheel",
+      "detail": "Zig's own hosts refused the sandbox; the ziglang wheel on PyPI (about 101 MB) carries the zig binary. Pin it per platform with sha256 in tools.json and make ci_tool.py tool zig unpack it; then the doctor and rust_ci messages say Zig is pinned.",
+      "expected": "09 Nov ~19:51",
+      "changed": "2026-11-09T19:06+00:00",
+      "expected_basis": "cloud agent started 19:06, ~45 min",
+      "rides": "DS194",
+      "started": "2026-11-09T19:05+00:00"
     },
     {
       "id": "DU1",
