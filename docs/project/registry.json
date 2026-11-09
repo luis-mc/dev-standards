@@ -3131,21 +3131,27 @@
       "id": "DL162",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "pool-refresh copies the current pool template files before rebuilding",
       "detail": "refresh() only rewrites .env and runs docker compose up -d --build; Dockerfile, compose.yaml, hooks and machine scripts stay from the first pool-run. On this PC they date from 10:33, so the 20:53 and 23:34 refreshes rebuilt the old Dockerfile (cache hit): no gcc, no windows-packaging layer, container not recreated. Fix: back up and copy the template files (keep .env, agents.json, db-admin.pw), then build; doctor flags pool files older than the plugin.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T23:38+00:00"
+      "expected": "10 Nov ~00:42",
+      "changed": "2026-11-09T23:38+00:00",
+      "expected_basis": "cloud agent from 23:42: setup 5 + work 35 + checks 20",
+      "rides": "DS210",
+      "started": "2026-11-09T23:38+00:00"
     },
     {
       "id": "DL163",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Ledger: join and link create rows with a free release id",
       "detail": "With 1.18.0 (DL156 shipped) join --create plus link still gave RELEASE-78 the id of RELEASE-77 (T-2026-11-09-04). DL156 covered plan and the write path but not the row that join/link create. Fix that path and test it.",
-      "expected": "10 Nov",
-      "changed": "2026-11-09T23:38+00:00"
+      "expected": "10 Nov ~00:42",
+      "changed": "2026-11-09T23:38+00:00",
+      "expected_basis": "cloud agent from 23:42: setup 5 + work 35 + checks 20",
+      "rides": "DS210",
+      "started": "2026-11-09T23:38+00:00"
     },
     {
       "id": "DS1",
@@ -6255,6 +6261,45 @@
         }
       ],
       "started": "2026-11-09T23:35+00:00"
+    },
+    {
+      "id": "DS210",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: pool-refresh template files and ledger release ids",
+      "detail": "DL162 and DL163 from tonight's peer findings (D166): two cloud agents, join, CI, merge on green.",
+      "expected": "10 Nov ~01:30",
+      "changed": "2026-11-09T23:38+00:00",
+      "expected_basis": "2 cloud agents ~60 min, join 13, CI 25, merge 10",
+      "release": 79,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-09T23:42+00:00",
+          "end": "2026-11-10T00:42+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T00:42+00:00",
+          "end": "2026-11-10T00:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T00:55+00:00",
+          "end": "2026-11-10T01:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T01:20+00:00",
+          "end": "2026-11-10T01:30+00:00"
+        }
+      ],
+      "risk": {
+        "label": "fix round",
+        "minutes": 30
+      },
+      "started": "2026-11-09T23:38+00:00"
     },
     {
       "id": "DU1",
