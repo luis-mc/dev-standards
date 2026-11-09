@@ -10,6 +10,7 @@ type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+  - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - tools/test_delivery_*.py
 last_verified: 2026-11-08
 artifact: feature-delivery-speed.html
@@ -92,6 +93,12 @@ flowchart LR
 **R5.12** — `ci.limits` in `.delivery/config.json` sets `browser_workers`, `integration_workers` and `memory_gib` per CI option. `delivery_config.ci_limits()` returns them with the measured defaults: 2 browser workers and 8.5 GiB.
 
 **R5.13** — `db_per_worker.py` prints (or runs with `psql`) the SQL for one Postgres database per test worker, copied from a migrated template. Names are checked so they cannot carry SQL. Postgres projects only.
+
+**R5.14** — `ci_tool.py tool <name> [--platform P] [--exe NAME] [--dir]` reads `scripts/delivery/tools.json` (env `CI_TOOLS_JSON` overrides the file). A pin is `{"version", "platforms": {<plat>: {"kind", "url", "sha256", "file"?, "bin"?, "bin_dir"?}}}`. Kind `file` downloads once, caches and makes the file executable. Kind `archive` (tar.gz, tar.xz, zip) is verified and unpacked once into `<tool>/<version>/unpacked-<plat>/`; a member that escapes the folder, a link that escapes, or a device is refused. Kind `crate` verifies and unpacks the `.crate`, then builds it once with `cargo install --locked --path <src> --root <tool>/<version>/root-<plat>` (env `CI_TOOL_CARGO` names cargo). Unpack and build go to a unique `.partial` folder that is renamed, so a failure leaves nothing. It prints the absolute path of `bin_dir/<bin>`, of `bin_dir/<exe>` with `--exe`, or of the bin folder with `--dir`. Exit 0 prints the path; 1 is a fetch, checksum, unpack or build failure, or a missing exe or pin; 2 is bad usage. `fetch` and `gitleaks` are unchanged. (DS199)
+
+**R5.15** — `tools_pin.py` has the commands `rustup-init`, `crate` and `entry`; each merges a pin into `tools.json`. The shipped pins are `rustup-init` 1.29.3 (five platforms), `llvm` 20.1.8 (`linux_x64`, `linux_arm64`, `windows_x64`), and `cargo-deny` 0.20.2 and `cargo-xwin` 0.23.1 (crate sha256, five platforms). Zig is not pinned yet. Add it with `tools_pin.py entry zig ...` once a URL can be hashed; until then every check treats Zig as optional. (DS199)
+
+**R5.16** — A gate step in `gate.json` may carry `paths: KEY`. When `scope_map` maps path prefixes to keys, `plan_step` in `delivery_common.py` skips that step if files changed, every changed file lies under some `scope_map` key, and none lies under KEY. An unmapped file, an unknown key or a missing `scope_map` changes nothing. The rust `gate.json` ships the key `rust` only, so a Rust-only change skips JS steps only in a project that adds a `js` key and marks its JS steps `paths: "js"`. (DS201)
 
 ## 6. Non-functional requirements
 
