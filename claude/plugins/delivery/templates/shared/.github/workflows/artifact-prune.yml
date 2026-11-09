@@ -6,10 +6,15 @@ name: Artifact prune
 # every run of a workflow that uploads one, and a daily sweep deletes any the
 # per-run pruning missed.
 #
-# PRODUCT: `workflows:` below must list the `name:` of EVERY workflow of this
-# repository that uploads an artifact (actions/upload-artifact). The template
-# lists `CI` and `Package` (package.yml); add each release or installer workflow you create, or its
-# artifacts are only caught by the daily sweep.
+# PROJECT: `workflows:` below must list the `name:` of EVERY workflow of this
+# repository that uploads an artifact (actions/upload-artifact). GitHub reads
+# the list before any step runs, so it cannot be dynamic. The list is owned by
+# the project in `.delivery/config.json`:
+#   {"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}}
+# Unset, it is `CI` and `Package` (package.yml). After a change or after a
+# plugin update run `python3 scripts/delivery/artifact_prune.py --sync-workflow`
+# and commit the file. The step "Check the workflow list" warns when they differ.
+# Until then the daily sweep catches the artifacts of any other workflow.
 #
 # Installer artifacts (CIR10 W5): when a workflow publishes them, add to the run line
 # `--hold windows-installer --hold-workflow package-windows.yml`, so a failed publish keeps its installer.
@@ -46,6 +51,8 @@ jobs:
       actions: write
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Check the workflow list
+        run: python3 scripts/delivery/artifact_prune.py --check-workflow || echo "::warning::artifact-prune.yml lists other workflows than artifact_prune.workflows; run scripts/delivery/artifact_prune.py --sync-workflow"
       - name: Delete all but the newest artifact of each name
         env:
           GH_TOKEN: ${{ github.token }}
