@@ -13,4 +13,8 @@
 - unittest test_dl99_join_fresh_branches + test_dl111_join_keeps_clean: 9 OK
 - python3 tools/ci_areas.py --branch-advice: "heavy: unreadable diff" (uncommitted at the time); spec-lint dispatch: see below.
 - python3 claude/plugins/docs/scripts/docs_check.py: only M1 for docs/features/delivery/spec.md and docs/features/delivery-speed/spec.md (spec text is left to the orchestrator; the change note names the plugin only). No G1/W1 seen.
-- Not run: the gh workflow (no gh CLI auth here; see below).
+- gh workflow run spec-lint.yml --ref DL128-join-fixes -f areas=delivery: dispatched, run https://github.com/luis-mc/dev-standards/actions/runs/42654360882 (result not awaited; check it).
+
+Code head: fc61e3d799aa94dbe47288fd1c7736293bfe9580 (this report commit follows it).
+
+READY
