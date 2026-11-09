@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T23:45+00:00",
+  "updated": "2026-11-09T23:55+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3130,12 +3130,11 @@
       "id": "DL162",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "pool-refresh copies the current pool template files before rebuilding",
       "detail": "refresh() only rewrites .env and runs docker compose up -d --build; Dockerfile, compose.yaml, hooks and machine scripts stay from the first pool-run. On this PC they date from 10:33, so the 20:53 and 23:34 refreshes rebuilt the old Dockerfile (cache hit): no gcc, no windows-packaging layer, container not recreated. Fix: back up and copy the template files (keep .env, agents.json, db-admin.pw), then build; doctor flags pool files older than the plugin.",
-      "expected": "10 Nov ~00:42",
-      "changed": "2026-11-09T23:38+00:00",
-      "expected_basis": "cloud agent from 23:42: setup 5 + work 35 + checks 20",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T23:55+00:00",
       "rides": "DS210",
       "started": "2026-11-09T23:38+00:00"
     },
@@ -3143,12 +3142,11 @@
       "id": "DL163",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Ledger: join and link create rows with a free release id",
       "detail": "With 1.18.0 (DL156 shipped) join --create plus link still gave RELEASE-78 the id of RELEASE-77 (T-2026-11-09-04). DL156 covered plan and the write path but not the row that join/link create. Fix that path and test it.",
-      "expected": "10 Nov ~00:42",
-      "changed": "2026-11-09T23:38+00:00",
-      "expected_basis": "cloud agent from 23:42: setup 5 + work 35 + checks 20",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T23:55+00:00",
       "rides": "DS210",
       "started": "2026-11-09T23:38+00:00"
     },

@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T23:45+00:00",
+ "updated": "2026-11-09T23:55+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4010,12 +4010,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL162",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "pool-refresh copies the current pool template files before rebuilding",
    "detail": "refresh() only rewrites .env and runs docker compose up -d --build; Dockerfile, compose.yaml, hooks and machine scripts stay from the first pool-run. On this PC they date from 10:33, so the 20:53 and 23:34 refreshes rebuilt the old Dockerfile (cache hit): no gcc, no windows-packaging layer, container not recreated. Fix: back up and copy the template files (keep .env, agents.json, db-admin.pw), then build; doctor flags pool files older than the plugin.",
-   "expected": "10 Nov ~00:42",
-   "changed": "2026-11-09T23:38+00:00",
-   "expected_basis": "cloud agent from 23:42: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:55+00:00",
    "rides": "DS210",
    "started": "2026-11-09T23:38+00:00"
   },
@@ -4023,12 +4022,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL163",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Ledger: join and link create rows with a free release id",
    "detail": "With 1.18.0 (DL156 shipped) join --create plus link still gave RELEASE-78 the id of RELEASE-77 (T-2026-11-09-04). DL156 covered plan and the write path but not the row that join/link create. Fix that path and test it.",
-   "expected": "10 Nov ~00:42",
-   "changed": "2026-11-09T23:38+00:00",
-   "expected_basis": "cloud agent from 23:42: setup 5 + work 35 + checks 20",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T23:55+00:00",
    "rides": "DS210",
    "started": "2026-11-09T23:38+00:00"
   },
@@ -7773,16 +7771,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T23:45+00:00">09 Nov 23:45</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T23:55+00:00">09 Nov 23:55</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL162"><span class="task-id">DL162</span>pool-refresh copies the current pool template files before rebuilding <span class="glance-expected">10 Nov ~00:42</span><span class="glance-basis">cloud agent from 23:42: setup 5 + work 35 + checks 20</span></li>
-<li data-glance-task="DL163"><span class="task-id">DL163</span>Ledger: join and link create rows with a free release id <span class="glance-expected">10 Nov ~00:42</span><span class="glance-basis">cloud agent from 23:42: setup 5 + work 35 + checks 20</span></li>
 <li data-glance-task="DS210"><span class="task-id">DS210</span><span class="release-name">RELEASE-79</span>RELEASE: pool-refresh template files and ledger release ids <span class="glance-expected">10 Nov ~01:30</span><span class="glance-basis">2 cloud agents ~60 min, join 13, CI 25, merge 10</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL162"><span class="task-id">DL162</span>pool-refresh copies the current pool template files before rebuilding</li>
+<li data-glance-task="DL163"><span class="task-id">DL163</span>Ledger: join and link create rows with a free release id</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">59 tasks</span></summary>
@@ -7799,7 +7801,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">474</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">474</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -7815,15 +7817,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <text class="rt-risk-label" x="731" y="67">fix round → worst ~02:00</text>
 <polygon class="rt-expected" points="616,50 624,63 616,76 608,63"/>
 <text class="rt-live-label" x="616" y="92">live ~01:30</text>
-<line class="rt-now" x1="252" y1="36" x2="252" y2="148"/><text class="rt-now-label" x="252" y="161">now 23:45</text>
+<line class="rt-now" x1="286.7" y1="36" x2="286.7" y2="148"/><text class="rt-now-label" x="286.7" y="161">now 23:55</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <details class="status-fold release-group" data-group="release-79" open><summary><strong>RELEASE-79 · live ~01:30 · worst ~02:00</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS210"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS210</span><span class="release-name">RELEASE-79</span>RELEASE: pool-refresh template files and ledger release ids</td><td data-label="App / service"></td><td data-label="Detail">DL162 and DL163 from tonight&#x27;s peer findings (D166): two cloud agents, join, CI, merge on green.</td><td data-label="Expected">10 Nov ~01:30<span class="expected-basis">2 cloud agents ~60 min, join 13, CI 25, merge 10</span></td></tr>
-<tr data-task="DL162"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL162</span>pool-refresh copies the current pool template files before rebuilding</a></td><td data-label="App / service"></td><td data-label="Detail">refresh() only rewrites .env and runs docker compose up -d --build; Dockerfile, compose.yaml, hooks and machine scripts stay from the first pool-run. On this PC they date from 10:33, so the 20:53 and 23:34 refreshes rebuilt the old Dockerfile (cache hit): no gcc, no windows-packaging layer, container not recreated. Fix: back up and copy the template files (keep .env, agents.json, db-admin.pw), then build; doctor flags pool files older than the plugin.</td><td data-label="Expected">10 Nov ~00:42<span class="expected-basis">cloud agent from 23:42: setup 5 + work 35 + checks 20</span></td></tr>
-<tr data-task="DL163"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL163</span>Ledger: join and link create rows with a free release id</a></td><td data-label="App / service"></td><td data-label="Detail">With 1.18.0 (DL156 shipped) join --create plus link still gave RELEASE-78 the id of RELEASE-77 (T-2026-11-09-04). DL156 covered plan and the write path but not the row that join/link create. Fix that path and test it.</td><td data-label="Expected">10 Nov ~00:42<span class="expected-basis">cloud agent from 23:42: setup 5 + work 35 + checks 20</span></td></tr>
+<tr data-task="DL162"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL162</span>pool-refresh copies the current pool template files before rebuilding</a></td><td data-label="App / service"></td><td data-label="Detail">refresh() only rewrites .env and runs docker compose up -d --build; Dockerfile, compose.yaml, hooks and machine scripts stay from the first pool-run. On this PC they date from 10:33, so the 20:53 and 23:34 refreshes rebuilt the old Dockerfile (cache hit): no gcc, no windows-packaging layer, container not recreated. Fix: back up and copy the template files (keep .env, agents.json, db-admin.pw), then build; doctor flags pool files older than the plugin.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DL163"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL163</span>Ledger: join and link create rows with a free release id</a></td><td data-label="App / service"></td><td data-label="Detail">With 1.18.0 (DL156 shipped) join --create plus link still gave RELEASE-78 the id of RELEASE-77 (T-2026-11-09-04). DL156 covered plan and the write path but not the row that join/link create. Fix that path and test it.</td><td data-label="Expected">09 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">484 tasks</span></summary>
@@ -8322,7 +8324,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904465"><time datetime="2026-11-09T23:45+00:00">09 Nov 23:45</time></td><td data-label="Tasks">DL1 to DL163</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29904475"><time datetime="2026-11-09T23:55+00:00">09 Nov 23:55</time></td><td data-label="Tasks">DL1 to DL163</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
