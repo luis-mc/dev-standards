@@ -37,6 +37,17 @@ commits the removal as "Strip temporary agent docs", and saves each report's sum
 join-result.json ("docs_summaries") and to .delivery/docs-summaries.md for the ready pull request body. Without the
 plugin it says so and goes on.
 
+DL128: when a branch to join already contains an older head of another branch in the same call (stacked), the
+join stops that branch with "B is stacked on an older A; prefer B's side for files B rewrote" (git merge-base
+--is-ancestor), unless B alone carries A (A's head is already in B). DL129: `--into X` with X missing on the remote
+stops with the exact command to create it; `--create` pushes origin/<default> as X and goes on. DL135: a failed
+light check whose output has an api-mock "unhandled API call" teardown error is reported as a join-interaction
+failure. DL140: before the ready pull request the join runs, when the docs plugin is present, the design-system
+review visuals rebuild (design_system.py visuals --apply), docs_index.py build and docs_check.py --strict, and lists
+the specs with T2 findings; a missing script is skipped with a note. DL145: when local INTEGRATION is ahead of
+origin/INTEGRATION the join builds on it; it refuses when local has commits that are not descendants of
+origin/INTEGRATION (they would be lost). Conflicts under docs/work/ resolve by taking either side.
+
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
 configuration error (or no result), 3 stopped at a conflict.
 """
@@ -140,6 +151,98 @@ def strip_temporary_docs(root: Path) -> dict:
         dc.run_git(["commit", "-q", "-m", "Strip temporary agent docs"], cwd=root, check=False, env=dc.git_env())
     print("join: stripped docs/work/ (%d report summaries kept for the PR body)" % len(summaries), flush=True)
     return {"stripped": True, "summaries": summaries}
+
+
+def stacked_on_older(root: Path, remote: str, branch: str, others: list[str], trunk: str = "HEAD") -> str | None:
+    """DL128: the name of another branch A such that `branch` (B) contains an older head of A, but not A's
+    current head. Merging both would replay A's old work over A's newer work. None when there is none."""
+    b_ref = "refs/remotes/%s/%s" % (remote, branch)
+    for a in others:
+        if a == branch:
+            continue
+        a_ref = "refs/remotes/%s/%s" % (remote, a)
+        if dc.rev(a_ref, root) is None or dc.rev(b_ref, root) is None:
+            continue
+        a_in_b = dc.run_git(["merge-base", "--is-ancestor", a_ref, b_ref], cwd=root, check=False).returncode == 0
+        if a_in_b:
+            continue  # B carries A's whole head: nothing older
+        base = dc.run_git(["merge-base", a_ref, b_ref], cwd=root, check=False)
+        mb = base.stdout.strip() if base.returncode == 0 else ""
+        if not mb:
+            continue
+        # The merge-base is A's own commit (not the shared trunk) when it lies on A's side only:
+        # it is not an ancestor of the integration head.
+        on_trunk = dc.run_git(["merge-base", "--is-ancestor", mb, trunk], cwd=root, check=False).returncode == 0
+        if not on_trunk:
+            return a
+    return None
+
+
+def is_docs_work(path: str) -> bool:
+    return path.replace("\\", "/").startswith("docs/work/")
+
+
+def resolve_docs_work(root: Path, paths: list[str]) -> bool:
+    """DL145: a conflict under docs/work/ takes the branch's side (the strip removes them anyway)."""
+    for path in paths:
+        if dc.run_git(["checkout", "--theirs", "--", path], cwd=root, check=False).returncode != 0:
+            if dc.run_git(["rm", "-q", "--", path], cwd=root, check=False).returncode != 0:
+                return False
+            continue
+        dc.run_git(["add", "--", path], cwd=root, check=False)
+    return True
+
+
+MOCK_ERROR = "unhandled api call"
+
+
+def mock_interaction_note(root: Path) -> str | None:
+    """DL135: the note for a failed check whose logs hold an api-mock 'unhandled API call' error."""
+    logs = root / dc.LOG_DIR / "join"
+    if not logs.is_dir():
+        return None
+    for f in sorted(logs.rglob("*")):
+        if f.is_file():
+            try:
+                if MOCK_ERROR in f.read_text(encoding="utf-8", errors="replace").lower():
+                    return ("join-interaction failure: the e2e teardown reports an api-mock 'unhandled API call'. Each branch "
+                            "passed alone; a call one branch added is not mocked by another branch's test. Add the mock "
+                            "to the other branch's test (see %s)." % f.name)
+            except OSError:
+                continue
+    return None
+
+
+def pre_pr_docs(root: Path) -> dict:
+    """DL140: the docs steps before the ready pull request. Each is skipped with a note when its script is absent."""
+    out: dict = {"steps": {}, "t2_specs": []}
+
+    def run(label: str, name: str, args: list[str]):
+        script = find_docs_script(name)
+        if script is None:
+            print("join: luismc-docs %s not found; %s skipped" % (name, label), flush=True)
+            out["steps"][label] = "skipped: script absent"
+            return None
+        done = subprocess.run([sys.executable, str(script), "--root", str(root)] + args, capture_output=True, text=True, cwd=root)
+        out["steps"][label] = "ok" if done.returncode == 0 else "failed (exit %d)" % done.returncode
+        print("join: %s: %s" % (label, out["steps"][label]), flush=True)
+        return done
+
+    run("design-system visuals rebuild", "design_system.py", ["visuals", "--apply"]) if (root / "docs" / "design-system" / "next-version").is_dir() else None
+    run("docs index build", "docs_index.py", ["build"])
+    dc.run_git(["add", "--", "docs"], cwd=root, check=False)
+    if dc.run_git(["diff", "--cached", "--quiet"], cwd=root, check=False).returncode != 0:
+        dc.run_git(["commit", "-q", "-m", "Rebuild generated docs"], cwd=root, check=False, env=dc.git_env())
+    done = run("docs check --strict", "docs_check.py", ["--strict"])
+    if done is not None:
+        specs = sorted({l.split()[2].rstrip(":") for l in done.stdout.splitlines()
+                        if l.split()[:2] and len(l.split()) > 2 and l.split()[1] == "T2"})
+        out["t2_specs"] = specs
+        if specs:
+            print("join: specs with T2 findings, verify before push:", flush=True)
+            for sp in specs:
+                print("    " + sp, flush=True)
+    return out
 
 
 def merge_in_progress(root: Path) -> bool:
@@ -299,6 +402,8 @@ def main(argv: list[str] | None = None) -> int:
                     help="join branches whose gate is their branch CI run: no gate result required (DL-83)")
     ap.add_argument("--push", action="store_true", help="push INTEGRATION (and its gate result) when done")
     ap.add_argument("--remote", default="origin")
+    ap.add_argument("--create", action="store_true",
+                    help="DL129: when INTEGRATION is not on the remote, push the default branch as INTEGRATION")
     args = ap.parse_args(argv)
 
     root = dc.repo_root()
@@ -332,8 +437,32 @@ def main(argv: list[str] | None = None) -> int:
     dc.git(["fetch", "--quiet", remote], cwd=root)
     integ_ref = "%s/%s" % (remote, into)
     if dc.rev(integ_ref, root) is None:
-        raise dc.DeliveryError("integration branch '%s' not found on remote '%s'" % (into, remote))
-    dc.git(["checkout", "--quiet", "-B", into, integ_ref], cwd=root)
+        default_ref = "%s/%s" % (remote, cfg["default_branch"])
+        create_cmd = "git push %s %s:refs/heads/%s" % (remote, default_ref, into)
+        if not args.create:
+            raise dc.DeliveryError("integration branch '%s' not found on remote '%s'; run again with --create, or create it: %s"
+                                   % (into, remote, create_cmd))
+        if dc.rev(default_ref, root) is None:
+            raise dc.DeliveryError("cannot create '%s': %s not found" % (into, default_ref))
+        made = dc.run_git(["push", "--quiet", "--no-verify", remote, "%s:refs/heads/%s" % (default_ref, into)], cwd=root, check=False)
+        if made.returncode != 0:
+            raise dc.DeliveryError("could not create '%s' on '%s': %s; create it yourself: %s"
+                                   % (into, remote, made.stderr.strip(), create_cmd))
+        print("join: created %s on %s from %s" % (into, remote, default_ref), flush=True)
+        dc.git(["fetch", "--quiet", remote], cwd=root)
+    # DL145: build on the local branch when it is ahead of the remote one; never drop local commits.
+    local = dc.rev("refs/heads/%s" % into, root)
+    remote_head = dc.rev(integ_ref, root)
+    start_ref = integ_ref
+    if local is not None and local != remote_head:
+        if dc.run_git(["merge-base", "--is-ancestor", remote_head, local], cwd=root, check=False).returncode == 0:
+            start_ref = "refs/heads/%s" % into
+            print("join: local %s is ahead of %s; building on the local branch" % (into, integ_ref), flush=True)
+        elif dc.run_git(["merge-base", "--is-ancestor", local, remote_head], cwd=root, check=False).returncode != 0:
+            raise dc.DeliveryError(
+                "local %s has commits that are not in %s and %s is not built on them; joining would lose them. "
+                "Push or rebase local %s first." % (into, integ_ref, integ_ref, into))
+    dc.git(["checkout", "--quiet", "-B", into, start_ref], cwd=root)
     print("join: %s at %s" % (into, dc.rev("HEAD", root)[:10]))
 
     ci_gate = args.ci_gate or bool(cfg.get("ci_gate"))
@@ -355,6 +484,15 @@ def main(argv: list[str] | None = None) -> int:
             stop_code, stop_branch, stop_reason = verdict["exit"], branch, "; ".join(verdict["reasons"])
             break
 
+        older = stacked_on_older(root, remote, branch, args.branches, join_start)
+        if older is not None:
+            reason = "%s is stacked on an older %s; prefer %s's side for files %s rewrote" % (branch, older, branch, branch)
+            dc.eprint("join: " + reason)
+            dc.eprint("join: merge %s alone (it carries %s's older work) or rebase %s on the current %s" % (branch, older, branch, older))
+            conflicting[branch] = []
+            stop_reason = reason
+            continue
+
         print("join: merging %s" % branch, flush=True)
         merge = dc.run_git(
             ["merge", "--no-ff", "-m", "Join %s" % branch, "%s/%s" % (remote, branch)],
@@ -374,6 +512,19 @@ def main(argv: list[str] | None = None) -> int:
             stop_code, stop_branch, stop_reason = dc.EXIT_USAGE, branch, "merge failed"
             break
 
+        work_files = [c for c in conflicts if is_docs_work(c)]
+        if work_files:
+            if resolve_docs_work(root, work_files):
+                print("join: %s: took the branch's side of %s under docs/work/ (the strip removes them)" % (branch, ", ".join(work_files)), flush=True)
+                conflicts = unmerged(root)
+                if not conflicts:
+                    commit = dc.run_git(["commit", "--no-edit"], cwd=root, check=False, env=dc.git_env())
+                    if commit.returncode == 0:
+                        joined.append(branch)
+                        continue
+                    abort_merge(root)
+                    conflicting[branch] = work_files
+                    continue
         lock = [c for c in conflicts if dc.is_lockfile(c, cfg)]
         if len(lock) == len(conflicts):
             print("join: %s conflicts only in %s; taking %s's version and re-running setup" % (branch, ", ".join(lock), into))
@@ -428,9 +579,15 @@ def main(argv: list[str] | None = None) -> int:
         extra["quick_check"] = qc
         write_join_result(root, joined, None, [], extra=extra)
         if code != 0:
+            note = mock_interaction_note(root)
+            if note:
+                dc.eprint("join: " + note)
+                extra["quick_check"]["join_interaction"] = note
+                write_join_result(root, joined, None, [], extra=extra)
             dc.eprint("join: the light check on the joined head did not pass (exit %d); nothing pushed" % code)
             return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE, dc.EXIT_TIMEOUT) else dc.EXIT_FAIL
 
+    extra["pre_pr_docs"] = pre_pr_docs(root)
     # Runner health (DL7): warnings only, never a reason to stop.
     try:
         health = runner_health.check(root)
