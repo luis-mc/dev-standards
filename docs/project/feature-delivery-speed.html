@@ -888,7 +888,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T23:03+00:00">09 Nov 23:03</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T23:09+00:00">09 Nov 23:09</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">09 Nov 23:04</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -1124,6 +1124,134 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D167">
+<h3 class="decision-head"><span class="decision-id">D167</span> <span class="decision-question">How long may RELEASE-77 be held for a slow task?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold until 03:00</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Then ship the ready part.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Hold until morning</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Merge only when all are ready.</p>
+<blockquote class="decision-words">&ldquo;Hold until morning&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold until 01:30</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Shorter wait.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D166">
+<h3 class="decision-head"><span class="decision-id">D166</span> <span class="decision-question">Start other work overnight after RELEASE-77?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Nothing more</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only hourly check-ins; new findings recorded as To do.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Start new peer findings</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Record a reported bug and launch it as the next release under the overnight rules.</p>
+<blockquote class="decision-words">&ldquo;Start new peer findings&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D165">
+<h3 class="decision-head"><span class="decision-id">D165</span> <span class="decision-question">How to tell the owner of an overnight merge or block?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Full Progress only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Page shows it; summary waits in the session.</p>
+<blockquote class="decision-words">&ldquo;Full Progress only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Push notification too</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Also a device push.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D164">
+<h3 class="decision-head"><span class="decision-id">D164</span> <span class="decision-question">May two agents own one file when their notes name disjoint requirement IDs?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL158</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Allow disjoint IDs</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Same file with different requirement IDs passes; otherwise refused.</p>
+<blockquote class="decision-words">&ldquo;Allow disjoint IDs (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always refuse</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One owner per file.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D163">
+<h3 class="decision-head"><span class="decision-id">D163</span> <span class="decision-question">If DS208&#x27;s template needs an installer change, when?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS208</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add it at the join</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Small installer change at the join so it ships tonight.</p>
+<blockquote class="decision-words">&ldquo;Add it at the join (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Next release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Template and guide now, installer copy later.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D162">
+<h3 class="decision-head"><span class="decision-id">D162</span> <span class="decision-question">What does the installer do about tzdata when no one can answer a prompt?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL157</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Install and say so</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">pip install --user tzdata without asking, one line saying so.</p>
+<blockquote class="decision-words">&ldquo;Install and say so (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Print the fix only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Never installs without a yes.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D161">
+<h3 class="decision-head"><span class="decision-id">D161</span> <span class="decision-question">Does the DL146 mock-handler guard block or warn?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL146</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Block</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Fails the branch gate and pre-push with the route and mock file.</p>
+<blockquote class="decision-words">&ldquo;Block (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Prints and passes; projects turn blocking on.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D160">
+<h3 class="decision-head"><span class="decision-id">D160</span> <span class="decision-question">What if some RELEASE-77 tasks report NOT READY overnight?</span></h3>
+<p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ship the ready ones</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Merge READY branches; one fix round for the rest, then next release.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Hold the whole release</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 09 Nov</span></div>
+<p class="decision-summary">Wait for every task, one fix round each, merge together.</p>
+<blockquote class="decision-words">&ldquo;Hold the whole release&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ship ready ones, no fix round</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave NOT READY tasks for the morning.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D159">
 <h3 class="decision-head"><span class="decision-id">D159</span> <span class="decision-question">How to handle missing time zone data on Windows?</span></h3>
 <p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DL157</p>
