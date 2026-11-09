@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-09T19:29+00:00",
+  "updated": "2026-11-09T19:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -2973,12 +2973,11 @@
       "id": "DL149",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool image: opt-in windows-packaging layer and project apt fragment",
       "detail": "Pool Dockerfile template gains an opt-in layer (dotnet-sdk-8.0 wine wine64 xvfb xauth msitools) and a project fragment .delivery/pool.apt merged at build. delivery-ci-setup asks if the project builds Windows installers on Linux (or has *.wxs). Doctor checks wine, xvfb-run, dotnet when on; flags a repo infra/runners/*/Dockerfile the pool ignores; checks the tool cache is writable and persistent. Rebuild refuses while a runner is busy.",
-      "expected": "09 Nov ~20:11",
-      "changed": "2026-11-09T19:06+00:00",
-      "expected_basis": "cloud agent started 19:06, ~65 min",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T19:30+00:00",
       "rides": "DS194",
       "started": "2026-11-09T19:05+00:00"
     },
@@ -6014,12 +6013,11 @@
       "id": "DS205",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pin Zig from the PyPI ziglang wheel",
       "detail": "Zig's own hosts refused the sandbox; the ziglang wheel on PyPI (about 101 MB) carries the zig binary. Pin it per platform with sha256 in tools.json and make ci_tool.py tool zig unpack it; then the doctor and rust_ci messages say Zig is pinned.",
-      "expected": "09 Nov ~19:51",
-      "changed": "2026-11-09T19:06+00:00",
-      "expected_basis": "cloud agent started 19:06, ~45 min",
+      "expected": "09 Nov",
+      "changed": "2026-11-09T19:30+00:00",
       "rides": "DS194",
       "started": "2026-11-09T19:05+00:00"
     },
