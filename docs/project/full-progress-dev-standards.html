@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-09T16:30+00:00",
+ "updated": "2026-11-09T16:32+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -6613,12 +6613,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS191",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Review audits and test-cost specs against code",
    "detail": "docs_check T2 still warns for both after DS190 (the cloud checkout missed them)",
-   "expected": "09 Nov ~16:40",
-   "changed": "2026-11-09T15:57+00:00",
-   "expected_basis": "cloud agent from 15:56",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:31+00:00",
    "rides": "DS194",
    "started": "2026-11-09T15:57+00:00"
   },
@@ -6726,12 +6725,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS196",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Rust catalog: component role, pairings, warnings",
    "detail": "languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).",
-   "expected": "09 Nov ~16:51",
-   "changed": "2026-11-09T16:29+00:00",
-   "expected_basis": "cloud agent from 15:56",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:31+00:00",
    "rides": "DS194",
    "started": "2026-11-09T15:57+00:00"
   },
@@ -6739,23 +6737,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS197",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Rust wizard text: questions, layout, reason",
    "detail": "tech-stack-setup SKILL.md: machine-side parts question, native_components role (CLI, host service, napi or WASM library), written reason, Cargo workspace layout.",
-   "expected": "10 Nov",
-   "changed": "2026-11-09T16:29+00:00",
-   "rides": "DS194"
+   "expected": "09 Nov ~17:22",
+   "changed": "2026-11-09T16:32+00:00",
+   "rides": "DS194",
+   "expected_basis": "cloud agent started 16:32, ~50 min",
+   "started": "2026-11-09T16:32+00:00"
   },
   {
    "id": "DS198",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Rust tooling assets: workspace skeleton",
    "detail": "Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.",
-   "expected": "09 Nov ~16:46",
-   "changed": "2026-11-09T16:29+00:00",
-   "expected_basis": "cloud agent from 15:56",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:31+00:00",
    "rides": "DS194",
    "started": "2026-11-09T15:57+00:00"
   },
@@ -6763,12 +6762,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS199",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Generic tool fetcher and pins",
-   "detail": "ci_tool.py fetches any pinned, sha256-checked tool from tools.json into the tool cache (rustup-init, LLVM, Zig, cargo-deny, cargo-xwin).",
-   "expected": "09 Nov ~16:57",
-   "changed": "2026-11-09T16:29+00:00",
-   "expected_basis": "cloud agent from 15:56",
+   "detail": "ci_tool.py tool command (file, archive, crate kinds) and pins for rustup-init, llvm, cargo-deny, cargo-xwin. Unit tests pass (37). Branch CI cancelled by the docs check (spec text is DS203). Zig not pinned: its download hosts refused the cloud sandbox.",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:31+00:00",
    "rides": "DS194",
    "started": "2026-11-09T15:57+00:00"
   },
@@ -6776,12 +6774,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS200",
    "owner": "project",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "Rust CI helper",
    "detail": "rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).",
-   "expected": "10 Nov",
-   "changed": "2026-11-09T16:29+00:00",
-   "rides": "DS194"
+   "expected": "09 Nov ~17:52",
+   "changed": "2026-11-09T16:32+00:00",
+   "rides": "DS194",
+   "expected_basis": "cloud agent started 16:32, ~80 min",
+   "started": "2026-11-09T16:32+00:00"
   },
   {
    "id": "DS201",
@@ -6798,12 +6798,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS202",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Doctor checks for the rust track",
-   "detail": "delivery_doctor.py: linker available, clang-cl and lld-link for Windows targets, exact toolchain, pinned tools, advisory DB age.",
-   "expected": "09 Nov ~16:47",
-   "changed": "2026-11-09T16:29+00:00",
-   "expected_basis": "cloud agent from 15:56",
+   "detail": "Doctor rust check: toolchain, linker, windows linkers, pins, advisory db age, disk. Unit tests pass (33). Branch CI cancelled by the docs check (spec text is DS203). Fix commands name ci_tool.py ensure; DS199 shipped ci_tool.py tool, so DS200 aligns them.",
+   "expected": "09 Nov",
+   "changed": "2026-11-09T16:31+00:00",
    "rides": "DS194",
    "started": "2026-11-09T15:57+00:00"
   },
@@ -7412,21 +7411,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T16:30+00:00">09 Nov 16:30</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-09T16:32+00:00">09 Nov 16:32</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">27 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">24 tasks</span></summary>
 <ul>
-<li data-glance-task="DS191"><span class="task-id">DS191</span>Review audits and test-cost specs against code <span class="glance-expected">09 Nov ~16:40</span><span class="glance-basis">cloud agent from 15:56</span></li>
-<li data-glance-task="DS198"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton <span class="glance-expected">09 Nov ~16:46</span><span class="glance-basis">cloud agent from 15:56</span></li>
-<li data-glance-task="DS202"><span class="task-id">DS202</span>Doctor checks for the rust track <span class="glance-expected">09 Nov ~16:47</span><span class="glance-basis">cloud agent from 15:56</span></li>
-<li data-glance-task="DS196"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings <span class="glance-expected">09 Nov ~16:51</span><span class="glance-basis">cloud agent from 15:56</span></li>
-<li data-glance-task="DS199"><span class="task-id">DS199</span>Generic tool fetcher and pins <span class="glance-expected">09 Nov ~16:57</span><span class="glance-basis">cloud agent from 15:56</span></li>
 <li data-glance-task="DS193"><span class="task-id">DS193</span>docs_work.py strip --apply always commits or fails loudly <span class="glance-expected">09 Nov ~17:02</span><span class="glance-basis">cloud agent from 16:22, ~40 min</span></li>
 <li data-glance-task="AR67"><span class="task-id">AR67</span>mark-published after pending --refresh needs no extra render <span class="glance-expected">09 Nov ~17:07</span><span class="glance-basis">cloud agent from 16:22, ~45 min</span></li>
 <li data-glance-task="AR68"><span class="task-id">AR68</span>task-status-update skill lists the four --phase names <span class="glance-expected">09 Nov ~17:07</span><span class="glance-basis">cloud agent from 16:22, ~45 min</span></li>
+<li data-glance-task="DS197"><span class="task-id">DS197</span>Rust wizard text: questions, layout, reason <span class="glance-expected">09 Nov ~17:22</span><span class="glance-basis">cloud agent started 16:32, ~50 min</span></li>
 <li data-glance-task="DL122"><span class="task-id">DL122</span>Project-owned workflow list for artifact prune <span class="glance-expected">09 Nov ~17:27</span><span class="glance-basis">cloud agent started 16:26, ~60 min</span></li>
 <li data-glance-task="DL124"><span class="task-id">DL124</span>Questions stop hook counts running cloud agents <span class="glance-expected">09 Nov ~17:38</span><span class="glance-basis">cloud agent DL124 started 16:28, ~70 min</span></li>
 <li data-glance-task="DL133"><span class="task-id">DL133</span>DL-53 hook accepts /c/... paths under the work root <span class="glance-expected">09 Nov ~17:38</span><span class="glance-basis">cloud agent DL124 started 16:28, ~70 min</span></li>
@@ -7445,7 +7440,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL134"><span class="task-id">DL134</span>branch_gate logs are UTF-8 on Windows <span class="glance-expected">09 Nov ~17:48</span><span class="glance-basis">cloud agent DL130 started 16:28, ~80 min</span></li>
 <li data-glance-task="DL137"><span class="task-id">DL137</span>Pre-push guard resolves paths from the current worktree <span class="glance-expected">09 Nov ~17:48</span><span class="glance-basis">cloud agent DL130 started 16:28, ~80 min</span></li>
 <li data-glance-task="DL141"><span class="task-id">DL141</span>Agent gate compiles native C# on Linux, or flags it <span class="glance-expected">09 Nov ~17:48</span><span class="glance-basis">cloud agent DL130 started 16:28, ~80 min</span></li>
+<li data-glance-task="DS200"><span class="task-id">DS200</span>Rust CI helper <span class="glance-expected">09 Nov ~17:52</span><span class="glance-basis">cloud agent started 16:32, ~80 min</span></li>
 <li data-glance-task="DS194"><span class="task-id">DS194</span><span class="release-name">RELEASE-71</span>RELEASE: plugin fixes, audits specs and Rust track <span class="glance-expected">09 Nov ~20:45</span><span class="glance-basis">last agent (Rust docs) ~20:00, join 15 + CI 25 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">5 tasks</span></summary>
+<ul>
+<li data-glance-task="DS191"><span class="task-id">DS191</span>Review audits and test-cost specs against code</li>
+<li data-glance-task="DS196"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings</li>
+<li data-glance-task="DS198"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton</li>
+<li data-glance-task="DS199"><span class="task-id">DS199</span>Generic tool fetcher and pins</li>
+<li data-glance-task="DS202"><span class="task-id">DS202</span>Doctor checks for the rust track</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">7 tasks</span></summary>
@@ -7460,7 +7465,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">27</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">5</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">9</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">422</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">5</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">24</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">9</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -7476,7 +7481,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <text class="rt-risk-label" x="699.5" y="67">+1 fix round → worst ~21:10</text>
 <polygon class="rt-expected" points="649.1,50 657.1,63 649.1,76 641.1,63"/>
 <text class="rt-live-label" x="649.1" y="92">live ~20:45</text>
-<line class="rt-now" x1="247.3" y1="36" x2="247.3" y2="148"/><text class="rt-now-label" x="247.3" y="161">now 16:30</text>
+<line class="rt-now" x1="250.4" y1="36" x2="250.4" y2="148"/><text class="rt-now-label" x="250.4" y="161">now 16:32</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
@@ -7503,17 +7508,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL140"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL140</span>Join runs the strict docs check before the ready PR</a></td><td data-label="App / service"></td><td data-label="Detail">Joining makes review visuals stale (DS4) and trips T2 for specs whose code changed; the ready PR&#x27;s CI fails. The join runs design_system.py visuals --apply, docs_index.py build and docs_check.py --strict, and lists T2 specs to verify.</td><td data-label="Expected">09 Nov ~17:42<span class="expected-basis">cloud agent from 16:22, ~80 min</span></td></tr>
 <tr data-task="DL141"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL141</span>Agent gate compiles native C# on Linux, or flags it</a></td><td data-label="App / service"></td><td data-label="Detail">A Linux agent gate never compiles Windows C#, so an ambiguous type (CS0104 under /warnaserror+) surfaced only in release CI. Compile with mono mcs or the dotnet SDK csc against the same framework assemblies, or flag &#x27;C# changed, not compiled&#x27; in the gate result.</td><td data-label="Expected">09 Nov ~17:48<span class="expected-basis">cloud agent DL130 started 16:28, ~80 min</span></td></tr>
 <tr data-task="DL145"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL145</span>join.py keeps unpushed local joins; docs/work conflicts auto-resolve</a></td><td data-label="App / service"></td><td data-label="Detail">A second join.py --into run rebuilt the integration branch from origin and silently dropped earlier unpushed local merge commits. Build on the local branch when it is ahead of origin, or refuse when commits would be lost. Auto-resolve docs/work conflicts, since the strip removes them.</td><td data-label="Expected">09 Nov ~17:42<span class="expected-basis">cloud agent from 16:22, ~80 min</span></td></tr>
-<tr data-task="DS191"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS191</span>Review audits and test-cost specs against code</td><td data-label="App / service"></td><td data-label="Detail">docs_check T2 still warns for both after DS190 (the cloud checkout missed them)</td><td data-label="Expected">09 Nov ~16:40<span class="expected-basis">cloud agent from 15:56</span></td></tr>
 <tr data-task="DS193"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS193</span>docs_work.py strip --apply always commits or fails loudly</td><td data-label="App / service"></td><td data-label="Detail">On a Windows worktree it staged 94 deletions under docs/work and exited without committing or saying so.</td><td data-label="Expected">09 Nov ~17:02<span class="expected-basis">cloud agent from 16:22, ~40 min</span></td></tr>
-<tr data-task="DS196"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings</td><td data-label="App / service"></td><td data-label="Detail">languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).</td><td data-label="Expected">09 Nov ~16:51<span class="expected-basis">cloud agent from 15:56</span></td></tr>
-<tr data-task="DS198"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton</td><td data-label="App / service"></td><td data-label="Detail">Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.</td><td data-label="Expected">09 Nov ~16:46<span class="expected-basis">cloud agent from 15:56</span></td></tr>
-<tr data-task="DS199"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS199</span>Generic tool fetcher and pins</td><td data-label="App / service"></td><td data-label="Detail">ci_tool.py fetches any pinned, sha256-checked tool from tools.json into the tool cache (rustup-init, LLVM, Zig, cargo-deny, cargo-xwin).</td><td data-label="Expected">09 Nov ~16:57<span class="expected-basis">cloud agent from 15:56</span></td></tr>
-<tr data-task="DS202"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS202</span>Doctor checks for the rust track</td><td data-label="App / service"></td><td data-label="Detail">delivery_doctor.py: linker available, clang-cl and lld-link for Windows targets, exact toolchain, pinned tools, advisory DB age.</td><td data-label="Expected">09 Nov ~16:47<span class="expected-basis">cloud agent from 15:56</span></td></tr>
+<tr data-task="DS197"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS197</span>Rust wizard text: questions, layout, reason</td><td data-label="App / service"></td><td data-label="Detail">tech-stack-setup SKILL.md: machine-side parts question, native_components role (CLI, host service, napi or WASM library), written reason, Cargo workspace layout.</td><td data-label="Expected">09 Nov ~17:22<span class="expected-basis">cloud agent started 16:32, ~50 min</span></td></tr>
+<tr data-task="DS200"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS200</span>Rust CI helper</td><td data-label="App / service"></td><td data-label="Detail">rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).</td><td data-label="Expected">09 Nov ~17:52<span class="expected-basis">cloud agent started 16:32, ~80 min</span></td></tr>
 <tr data-task="DL146"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL146</span>Guard: a new client API call needs a default e2e mock handler</a></td><td data-label="App / service"></td><td data-label="Detail">From a project&#x27;s RELEASE-28: branch A added an endpoint and mocked it only in its unit tests; branch B triggered the call on a screen; 44 e2e failures on the joined head. When a branch adds a client API function, a check asks for a default handler in the shared e2e mock.</td><td data-label="Expected">Not scheduled</td></tr>
-<tr data-task="DS197"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS197</span>Rust wizard text: questions, layout, reason</td><td data-label="App / service"></td><td data-label="Detail">tech-stack-setup SKILL.md: machine-side parts question, native_components role (CLI, host service, napi or WASM library), written reason, Cargo workspace layout.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DS200"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS200</span>Rust CI helper</td><td data-label="App / service"></td><td data-label="Detail">rust_ci.py: toolchain from rust-toolchain.toml, LLVM for Windows cross-link and Zig for the Linux host linker, gate without system compilers, cached RustSec DB (warn 7 days, then fail).</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DS201"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS201</span>Rust workflows</td><td data-label="App / service"></td><td data-label="Detail">rust template ci.yml and package.yml use rust_ci.py; cargo-xwin with recorded licence, else a Windows runner; path filters. Every workflow that packages a Rust binary has its own Linux build job and needs: + artifact download into its Windows packaging job, under the same change-plan skip logic; a workflow test asserts that wiring (a cross-built exe never reached the Windows jobs in a real project).</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DS203"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DS203</span>Rust docs: specs and guide</td><td data-label="App / service"></td><td data-label="Detail">Feature spec rules and a guide: Rust beside a JS stack.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DS191"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS191</span>Review audits and test-cost specs against code</td><td data-label="App / service"></td><td data-label="Detail">docs_check T2 still warns for both after DS190 (the cloud checkout missed them)</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS196"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS196</span>Rust catalog: component role, pairings, warnings</td><td data-label="App / service"></td><td data-label="Detail">languages.yaml rust component role beside any API language, pairings, check_stack.py warnings (reason required, napi build matrix, cross-compile licence note).</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS198"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS198</span>Rust tooling assets: workspace skeleton</td><td data-label="App / service"></td><td data-label="Detail">Cargo workspace skeleton, exact rust-toolchain.toml, rustfmt.toml, deny.toml, tooling README Rust wording for STACKSPEC invariants.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS199"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS199</span>Generic tool fetcher and pins</td><td data-label="App / service"></td><td data-label="Detail">ci_tool.py tool command (file, archive, crate kinds) and pins for rustup-init, llvm, cargo-deny, cargo-xwin. Unit tests pass (37). Branch CI cancelled by the docs check (spec text is DS203). Zig not pinned: its download hosts refused the cloud sandbox.</td><td data-label="Expected">09 Nov</td></tr>
+<tr data-task="DS202"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS202</span>Doctor checks for the rust track</td><td data-label="App / service"></td><td data-label="Detail">Doctor rust check: toolchain, linker, windows linkers, pins, advisory db age, disk. Unit tests pass (33). Branch CI cancelled by the docs check (spec text is DS203). Fix commands name ci_tool.py ensure; DS199 shipped ci_tool.py tool, so DS200 aligns them.</td><td data-label="Expected">09 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">431 tasks</span></summary>
