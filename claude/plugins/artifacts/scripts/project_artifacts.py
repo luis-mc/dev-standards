@@ -2284,17 +2284,17 @@ def cmd_design(args):
     return 0
 
 
-def cmd_render(args):
-    ctx = make_ctx(args)
+def render_changed(ctx, render_all=False):
+    """Renders every artifact that is missing or differs from a fresh render (all of them with render_all).
+    Returns the run_change result."""
 
     def apply(rec):
-        now = rec.now()
         for key, _kind, e in rec.artifacts():
             if key in rec.broken():          # cannot be rendered until edit-content fixes it (R7.1a)
                 rec.skipped.append(key)
                 continue
             old = read_html(rec.dir / e['file'])
-            if args.all or old is None:
+            if render_all or old is None:
                 rec.render_keys[key] = 'new'
                 continue
             st = existing_stamp(old)
@@ -2304,7 +2304,12 @@ def cmd_render(args):
         rec.noop = not rec.render_keys
         return {'command': 'render'}
 
-    res = run_change(ctx, apply)
+    return run_change(ctx, apply)
+
+
+def cmd_render(args):
+    ctx = make_ctx(args)
+    res = render_changed(ctx, args.all)
     emit(args, res, ['rendered: ' + (', '.join(res['rendered']) or 'nothing to do')])
     return 0
 
@@ -2394,7 +2399,7 @@ def cmd_mark_published(args):
         if old is None or st is None:
             raise Fail(1, '%s has not been rendered; run render first' % e['file'])
         if render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
-            raise Fail(1, '%s differs from a fresh render; run render first' % e['file'])
+            raise Fail(1, '%s differs from a fresh render; run `render` (or `pending --json --refresh`, which renders first), then publish the new copy and run mark-published again' % e['file'])
         stale = stale_copy_reason(ctx, rec, e)
         if stale:
             raise Fail(1, 'refusing to mark published: ' + stale)
@@ -2810,6 +2815,13 @@ def cmd_pending(args):
     A feature artifact is never listed (R9.5)."""
     ctx, rec = load_for_read(args)
     refresh = bool(getattr(args, 'refresh', False))
+    if refresh and rec is not None:
+        # AR67: render first, so the publish copy and the committed file match a fresh render and mark-published accepts them
+        try:
+            render_changed(ctx)
+        except Fail as fl:
+            warn('pending --refresh could not render first (%s)' % fl.msg)
+        ctx, rec = load_for_read(args)
     arts, deferred = [], []
     if rec is not None:
         for key, kind, e in rec.artifacts():

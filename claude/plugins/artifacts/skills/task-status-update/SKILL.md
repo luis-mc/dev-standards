@@ -70,6 +70,10 @@ exit, read the message, fix the cause and rerun.
      task's bar starts on the release timeline. Give it for work that began
      earlier and is now Waiting or Needs you. A task that first moves to
      Running gets the current time by itself (R5.48).
+   - `--phase NAME=HH:MM-HH:MM`: a release phase, repeatable, in the project's
+     zone (`NAME=DD Mon HH:MM-DD Mon HH:MM` for another day). NAME is one of
+     `agents`, `join`, `ci`, `merge`. `--phase ""` clears the phases; give it
+     alone.
    - `Dropped`: closes a task truthfully when its work was folded into another
      task or is no longer wanted (not Live, not Failed, not On hold). Give
      `--into <task ID or RELEASE-n>` (required for a release: the release that
