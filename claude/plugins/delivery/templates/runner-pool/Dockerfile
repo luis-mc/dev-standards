@@ -18,6 +18,7 @@ RUN apt-get update \
  && rm -rf /var/lib/apt/lists/*
 # DL167: cargo-xwin needs clang-cl, lld-link and llvm-lib to build C/C++ crates for x86_64-pc-windows-msvc, and gcc cannot make MSVC-ABI objects.
 # Ubuntu keeps these under /usr/lib/llvm-<N>/bin (some only as clang-cl-<N>), so N is found at build time and linked into /usr/local/bin.
+# DL169: Ubuntu 24.04 ships no clang-cl at all; clang runs in MSVC mode when called as clang-cl, so clang is linked under that name.
 RUN apt-get update \
  && apt-get install -y --no-install-recommends clang lld llvm \
  && rm -rf /var/lib/apt/lists/* \
@@ -29,7 +30,8 @@ RUN apt-get update \
       for c in "$llvmdir/bin/$t" "/usr/bin/$t-$n"; do \
         if [ -x "$c" ]; then ln -sf "$c" "/usr/local/bin/$t"; break; fi; \
       done; \
-    done
+    done \
+ && { command -v clang-cl >/dev/null 2>&1 || ln -sf "$llvmdir/bin/clang" /usr/local/bin/clang-cl; }
 # DL167: image self-check, so a broken LLVM install fails the build.
 RUN clang-cl --version && lld-link --version && llvm-lib /? >/dev/null
 # GitHub CLI (DL86): hosted runners preinstall gh, so workflows call `gh api` and `gh pr`. Pinned tarball, checked by SHA-256 like the runner.

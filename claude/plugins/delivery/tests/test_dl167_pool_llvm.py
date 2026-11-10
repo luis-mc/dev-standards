@@ -43,6 +43,11 @@ class PoolLlvm(unittest.TestCase):
         for cmd in ('clang-cl --version', 'lld-link --version', 'llvm-lib'):
             self.assertIn(cmd, later[0])
 
+    def test_clang_linked_as_clang_cl_when_missing(self):
+        """DL169: Ubuntu 24.04 ships no clang-cl; clang from the build-time LLVM dir is linked under that name."""
+        _, r = self.install_index()
+        self.assertIn('command -v clang-cl >/dev/null 2>&1 || ln -sf "$llvmdir/bin/clang" /usr/local/bin/clang-cl', r)
+
     def test_names_dl167(self):
         self.assertIn('DL167', DF.read_text(encoding='utf-8'))
 
