@@ -132,7 +132,7 @@ The list is ranked by how much each change cuts the owner's wait. It also says w
 
 **Not recommended.** Removing `template-build`'s Windows jobs: they exist for a path-separator bug that only Windows shows. Rewriting the artifacts suite to run in one process: it would cut the Windows time several-fold, but S4 and S6 already remove most local runs, so the rewrite is not worth its risk now.
 
-Related: [delivery speed](../delivery-speed/spec.md), [delivery](../delivery/spec.md), [artifacts](../artifacts/spec.md). How to test here: `docs/testing.md`.
+Related: [delivery speed](../delivery-speed/spec.md), [delivery](../delivery/spec.md), [artifacts](../artifacts/spec.md). How to test here: `docs/guides/testing.md`.
 
 ```mermaid
 flowchart LR

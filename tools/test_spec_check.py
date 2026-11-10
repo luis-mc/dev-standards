@@ -26,20 +26,8 @@ TOOLS = pathlib.Path(__file__).resolve().parent
 
 
 def load_spec_check():
-    """Import tools/spec_check.py, which is a git symlink to the plugin asset.
-
-    A checkout without symlink support (Windows without Developer Mode or
-    core.symlinks) turns the link into a one-line text file holding the target
-    path, which Python cannot import. Follow that path by hand in that case; a
-    real symlink or a real file imports exactly as before.
-    """
-    link = TOOLS / "spec_check.py"
-    head = link.read_text(encoding="utf-8")
-    if link.is_symlink() or "\n" in head.strip() or not head.strip().endswith(".py"):
-        sys.path.insert(0, str(TOOLS))
-        import spec_check
-        return spec_check
-    target = (link.parent / head.strip()).resolve()
+    """Import the spec-check plugin asset."""
+    target = TOOLS.parent / "claude/plugins/specs/skills/spec-check/assets/spec_check.py"
     spec = importlib.util.spec_from_file_location("spec_check", target)
     module = importlib.util.module_from_spec(spec)
     sys.modules["spec_check"] = module

@@ -1,1 +1,0 @@
-../claude/plugins/specs/skills/spec-check/assets/spec_check.py

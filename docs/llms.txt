@@ -5,8 +5,6 @@
 ## architecture
 
 - [DELIVERYSPEC — Delivery rules](docs/architecture/DELIVERYSPEC.md)
-- [Performance audit of the plugin hooks and delivery scripts, 2026-11-01](docs/architecture/audits/2026-11-01-performance-audit.md)
-- [Security audit: dev-standards plugin scripts and hooks (2026-11-01)](docs/architecture/audits/2026-11-01-security-audit.md)
 - [Rewrite every doc to DOCSPEC, requirement IDs kept](docs/architecture/decisions/0001-docs-rewrite.md)
 - [The artifacts plugin never commits or pushes](docs/architecture/decisions/0010-artifacts-never-commit-or-push.md)
 - [Only Full Progress is published to claude.ai](docs/architecture/decisions/0011-only-full-progress-is-published.md)
@@ -30,17 +28,18 @@
 - [Every shipped rule line is tagged, and a check that finds a break blocks](docs/architecture/decisions/0040-rule-tags-and-blocking-checks.md)
 - [Upgrade notes are how-to guides, the originals are archived](docs/architecture/decisions/0050-upgrade-notes-are-guides.md)
 - [claude-setup turns on and configures all plugins in the project](docs/architecture/decisions/0070-claude-setup-all-plugins.md)
-- [Hook list mismatch: ARTIFACTSPEC section 8 vs hooks.json](docs/architecture/hook-list-mismatch.md)
-- [Rust beside a JS stack: plan](docs/architecture/rust-beside-js-plan.md)
 
 ## archive
 
 - [AR50 contract: the plugin never commits or pushes (ARTIFACTSPEC 1.8.0, luismc-artifacts 1.8.0)](docs/archive/contracts/AR50-no-git-writes.md)
 - [AR43 train: release timeline and feature State column](docs/archive/plans/ar43-train.md)
 - [DL12 train](docs/archive/plans/dl12-train.md)
+- [Rust beside a JS stack: plan](docs/archive/plans/rust-beside-js-plan.md)
 - [TC8 train: generic CI speed for products](docs/archive/plans/tc8-train.md)
 - [Test-cost train (TC6)](docs/archive/plans/test-cost-train.md)
 - [DS64 train: transcript-folds, marketplace rename, DS63](docs/archive/plans/transcript-folds.md)
+- [Performance audit of the plugin hooks and delivery scripts, 2026-11-01](docs/archive/reports/2026-11-01-performance-audit.md)
+- [Security audit: dev-standards plugin scripts and hooks (2026-11-01)](docs/archive/reports/2026-11-01-security-audit.md)
 - [CO669: Full Progress page at narrow widths, collapsible contents](docs/archive/reports/CO669.md)
 - [CO672 report:](docs/archive/reports/CO672.md)
 - [DOC2 report: luismc-docs plugin, DOCSPEC, two luismc-delivery fixes](docs/archive/reports/DOC2.md)
@@ -76,12 +75,12 @@
 - [DV350 — watcher re-checks red trains](docs/archive/reports/dv350-report.md)
 - [DV414: delivery watcher re-reads a red release on its new head](docs/archive/reports/dv414-report.md)
 - [DV438 report: start time and dropped releases](docs/archive/reports/dv438-report.md)
+- [Hook list mismatch: ARTIFACTSPEC section 8 vs hooks.json](docs/archive/reports/hook-list-mismatch.md)
 - [Upgrade to STACKSPEC 8.0.0](docs/archive/upgrades/stackspec-8.0.0.md)
 
 ## docs
 
 - [Documentation](docs/README.md)
-- [Testing in dev-standards](docs/testing.md)
 
 ## features
 
@@ -106,6 +105,7 @@
 - [Rust beside a JS stack](docs/guides/rust-beside-js.md)
 - [Set up CI for a project](docs/guides/set-up-ci.md)
 - [What the setup skills do and what you can do after](docs/guides/setup-skills.md)
+- [Testing in dev-standards](docs/guides/testing.md)
 - [Upgrade a project to STACKSPEC 8](docs/guides/upgrade-stackspec-8.md)
 - [Windows packaging on the Linux pool](docs/guides/windows-packaging.md)
 

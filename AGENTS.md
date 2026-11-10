@@ -9,7 +9,7 @@ Standing rules for every agent working in this repository. `CLAUDE.md` imports t
 - Requirement IDs, section numbers and `**Version:**` lines in the shipped specs stay where they are. Projects, hooks and tests cite them.
 - Plugins write files in the working tree. They never commit, push or merge.
 - Name no other project in any file or commit message. Only dev-standards and its plugins.
-- Keep tests light: `python tools/ci_areas.py --branch-advice` says what to run. Run no mutation passes and no Docker unless the task says so. See `docs/testing.md`.
+- Keep tests light: `python tools/ci_areas.py --branch-advice` says what to run. Run no mutation passes and no Docker unless the task says so. See `docs/guides/testing.md`.
 - Write plain, short English: one idea per sentence, no marketing words.
 
 ## Documentation (DOCSPEC)

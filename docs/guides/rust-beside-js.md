@@ -4,7 +4,7 @@ type: how-to
 ---
 # Rust beside a JS stack
 
-Use this guide to decide whether a part of a JS product should be written in Rust, and to see what `luismc-project-setup` and `luismc-delivery` give you when it should. The rules are in the [project setup spec](../features/project-setup/spec.md) and the [delivery spec](../features/delivery/spec.md). The plan with the owner decisions is in [rust-beside-js-plan](../architecture/rust-beside-js-plan.md).
+Use this guide to decide whether a part of a JS product should be written in Rust, and to see what `luismc-project-setup` and `luismc-delivery` give you when it should. The rules are in the [project setup spec](../features/project-setup/spec.md) and the [delivery spec](../features/delivery/spec.md). The plan with the owner decisions is in [rust-beside-js-plan](../archive/plans/rust-beside-js-plan.md).
 
 The default is to stay in the main language. Rust needs a written reason. The wizard records it in the Stack Profile. No measured number is required.
 

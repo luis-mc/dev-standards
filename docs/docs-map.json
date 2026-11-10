@@ -107,9 +107,6 @@
     "tools/fixtures/vitest_shim/*.mjs": [
       "docs/features/docs/spec.md"
     ],
-    "tools/spec_check.py": [
-      "docs/features/specs/spec.md"
-    ],
     "tools/test_artifact_prune.py": [
       "docs/features/artifacts/spec.md"
     ],
