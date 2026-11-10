@@ -4485,6 +4485,50 @@
    "chosen": "Fix everything",
    "decided": "2026-11-11",
    "owner_words": "Fix everything"
+  },
+  {
+   "id": "D198",
+   "question": "If one RELEASE-92 agent is late or NOT READY, ship the other alone?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DS227",
+   "options": [
+    {
+     "label": "Ship the ready one (Recommended)",
+     "summary": "Ready one ships; other retries for RELEASE-93"
+    },
+    {
+     "label": "Wait for both",
+     "summary": "Hold RELEASE-92 until both READY, one retry"
+    },
+    {
+     "label": "Ship ready, park the other",
+     "summary": "No retry"
+    }
+   ],
+   "chosen": "Wait for both",
+   "decided": "2026-11-11",
+   "owner_words": "Wait for both"
+  },
+  {
+   "id": "D199",
+   "question": "Send the morning summary to the project sessions too?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DS227",
+   "options": [
+    {
+     "label": "Yes, short notes (Recommended)",
+     "summary": "One factual note per affected peer"
+    },
+    {
+     "label": "Only to you",
+     "summary": "No peer messages"
+    }
+   ],
+   "chosen": "Yes, short notes (Recommended)",
+   "decided": "2026-11-11",
+   "owner_words": "Yes, short notes (Recommended)"
   }
  ]
 }
