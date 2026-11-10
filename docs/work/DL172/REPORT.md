@@ -17,8 +17,22 @@
 
 ## Files outside my owns list that had to change (they cited the moved paths)
 
-`tools/ci_areas.py` (HOOKS path), `tools/test_ci_areas.py` (pre-push path), `tools/test_delivery_gate.py` (pre-push path, mutant copy), `claude/plugins/delivery/tests/test_dl130_gate_fixes.py`, `test_config.py`, `test_dl150_install_sync.py` (install now creates `.delivery/`). One-line path edits each.
+`tools/ci_areas.py` (HOOKS path), `tools/test_ci_areas.py` (pre-push path), `tools/test_delivery_gate.py` (pre-push path, mutant copy), `claude/plugins/delivery/tests/test_dl130_gate_fixes.py`, `test_config.py`, `test_dl150_install_sync.py` (install now creates `.delivery/`), `tools/test_session_guard.py` (reads the entry from the installer), `docs/features/delivery-speed/spec.md` (one Source path). `docs/architecture/DELIVERYSPEC.md` line 306 still names the old delivery-config.json path; left alone (another agent rewrites that spec). One-line path edits each.
 
 ## Tests
 
-See the results appended below.
+
+| Command | Result |
+|---|---|
+| tools/test_claude_setup_plugins.py | 0 problems |
+| tools/test_project_setup_fixes.py | 0 problems |
+| tools/test_setup_pattern.py | 0 problems |
+| tools/test_ci_areas.py | all checks passed |
+| delivery tests: dl120, dl150, ci_options, dl157, dl112, dl130, config, dl172 (unittest) | OK |
+| tools/test_delivery_gate.py | all mutants caught, exit 0 |
+| spec-lint areas=delivery,profiles,specs (run 42826758653) | all jobs pass except docs check: G1 (stale generated files) and W1 (this report), both expected |
+| docs_check.py | only G1 and W1 |
+
+Branch head: see `git rev-parse DL172-setup-delivery-bounds` on origin.
+
+READY
