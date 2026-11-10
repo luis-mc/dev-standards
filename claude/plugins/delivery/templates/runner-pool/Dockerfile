@@ -17,23 +17,21 @@ RUN apt-get update \
     libatomic1 xz-utils unzip zip jq \
  && rm -rf /var/lib/apt/lists/*
 # DL167: cargo-xwin needs clang-cl, lld-link and llvm-lib to build C/C++ crates for x86_64-pc-windows-msvc, and gcc cannot make MSVC-ABI objects.
-# Ubuntu keeps these under /usr/lib/llvm-<N>/bin (some only as clang-cl-<N>), so N is found at build time and linked into /usr/local/bin.
-# DL169: Ubuntu 24.04 ships no clang-cl at all; clang runs in MSVC mode when called as clang-cl, so clang is linked under that name.
+# DL170: the MSVC CRT that cargo-xwin downloads asserts Clang 19 or newer (STL1000), and Ubuntu 24.04's default clang is 18,
+# so the LLVM version is pinned here, the one place it is set. Every tool is linked from /usr/lib/llvm-<N>/bin into /usr/local/bin,
+# which comes first on PATH. DL169: Ubuntu ships no clang-cl binary; clang runs in MSVC mode when called as clang-cl.
+ARG LLVM_VERSION=19
 RUN apt-get update \
- && apt-get install -y --no-install-recommends clang lld llvm \
+ && apt-get install -y --no-install-recommends "clang-${LLVM_VERSION}" "lld-${LLVM_VERSION}" "llvm-${LLVM_VERSION}" \
  && rm -rf /var/lib/apt/lists/* \
- && llvmdir="$(ls -d /usr/lib/llvm-* | sort -t- -k2 -n | tail -n 1)" \
- && test -d "$llvmdir/bin" \
- && n="${llvmdir##*-}" \
- && for t in clang-cl lld-link llvm-lib llvm-ar llvm-rc lld; do \
-      command -v "$t" >/dev/null 2>&1 && continue; \
-      for c in "$llvmdir/bin/$t" "/usr/bin/$t-$n"; do \
-        if [ -x "$c" ]; then ln -sf "$c" "/usr/local/bin/$t"; break; fi; \
-      done; \
-    done \
- && { command -v clang-cl >/dev/null 2>&1 || ln -sf "$llvmdir/bin/clang" /usr/local/bin/clang-cl; }
-# DL167: image self-check, so a broken LLVM install fails the build.
-RUN clang-cl --version && lld-link --version && llvm-lib /? >/dev/null
+ && llvmdir="/usr/lib/llvm-${LLVM_VERSION}" \
+ && test -x "$llvmdir/bin/clang" \
+ && ln -sf "$llvmdir/bin/clang" /usr/local/bin/clang-cl \
+ && for t in clang lld-link llvm-lib llvm-ar llvm-rc lld; do ln -sf "$llvmdir/bin/$t" "/usr/local/bin/$t"; done
+# DL167/DL170: image self-check, so a broken or too-old LLVM fails the build.
+RUN clang-cl --version && lld-link --version && llvm-lib /? >/dev/null \
+ && v="$(clang-cl --version | sed -n 's/.*clang version \([0-9][0-9]*\).*/\1/p' | head -n 1)" \
+ && test "${v:-0}" -ge "$LLVM_VERSION"
 # GitHub CLI (DL86): hosted runners preinstall gh, so workflows call `gh api` and `gh pr`. Pinned tarball, checked by SHA-256 like the runner.
 ARG GH_VERSION=2.103.3
 ARG GH_SHA256=4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d
