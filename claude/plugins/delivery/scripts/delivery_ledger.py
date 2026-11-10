@@ -677,6 +677,7 @@ def record(root, op: str, **kw) -> bool:
                     if str(a.get("task")) in tasks or (a.get("branch") and str(a["branch"]) in branches):
                         a["state"], a["done_by"], a["result"] = "done", by, "ready"
                         a["needs_check"], a["done_at"] = False, iso()
+                        a.setdefault("finished_at", a["done_at"])   # DL168
                         add_event(led, "agent.done", "%s by %s (shipped)" % (a.get("task") or a.get("id"), by), by)
                 return
             if op == "ci":
@@ -717,6 +718,9 @@ def record(root, op: str, **kw) -> bool:
                 add_event(led, "cargo.%s" % kw.get("task"), train["id"], by)
             elif op == "ci":
                 train["ci"].update({"head_sha": kw.get("sha"), "state": kw.get("state")})
+                for k in ("run_started_at", "run_completed_at"):   # DL168: wall time of the run
+                    if kw.get(k):
+                        train["ci"][k] = kw[k]
                 if kw.get("state") == "success":
                     set_train_state(train, "green")
                 elif kw.get("state") == "failure":
@@ -850,6 +854,7 @@ def _cmd_agent_done(root, args) -> int:
         a["result"] = args.result
         a["needs_check"] = args.result == "not-ready"
         a["done_at"] = iso()
+        a.setdefault("finished_at", a["done_at"])   # DL168
         add_event(led, "agent.%s" % a["state"], "%s by %s (%s)" % (a.get("task") or a.get("id"), args.by, args.result),
                   "delivery_ledger")
     update(root, fn)
@@ -942,6 +947,28 @@ def _cmd_agent_check(root, args) -> int:
     return 0
 
 
+def agent_minutes(a: dict):
+    """DL168: minutes from an agent's start to its finish (finished_at, else done_at); None when unknown."""
+    start, end = parse_iso(a.get("started")), parse_iso(a.get("finished_at") or a.get("done_at"))
+    if not start or not end or end < start:
+        return None
+    return (end - start).total_seconds() / 60.0
+
+
+def eta_summary(led: dict, last: int = 20):
+    """DL168: 'cloud agents: eta median X min vs actual median Y min (last 20)', or None without done cloud agents."""
+    import statistics
+    rows = [a for a in led.get("agents") or [] if isinstance(a, dict) and a.get("where") == "cloud"
+            and a.get("state") == "done" and agent_minutes(a) is not None
+            and isinstance(a.get("eta"), dict) and a["eta"].get("total_min")]
+    rows = sorted(rows, key=lambda a: parse_iso(a.get("finished_at") or a.get("done_at")))[-last:]
+    if not rows:
+        return None
+    return "cloud agents: eta median %.0f min vs actual median %.0f min (last %d)" % (
+        statistics.median(float(a["eta"]["total_min"]) for a in rows),
+        statistics.median(agent_minutes(a) for a in rows), last)
+
+
 def _cmd_show(root, args) -> int:
     led = load(root)
     if args.json:
@@ -960,7 +987,15 @@ def _cmd_show(root, args) -> int:
         for ph in t.get("phases", {}).get("actual", []):
             print("  %-7s %s -> %s" % (ph["name"], local_iso(ph["start"], cfg=cfg), local_iso(ph["end"], cfg=cfg)))
     for a in led["agents"]:
-        print("agent %s %s %s state=%s" % (a.get("task") or "-", a.get("id") or "-", a.get("branch") or "-", a.get("state") or "-"))
+        took = agent_minutes(a)
+        eta_min = (a.get("eta") or {}).get("total_min") if isinstance(a.get("eta"), dict) else None
+        extra = ""
+        if a.get("state") == "done" and took is not None and eta_min:
+            extra = " eta %s min, took %.0f min" % (eta_min, took)
+        print("agent %s %s %s state=%s%s" % (a.get("task") or "-", a.get("id") or "-", a.get("branch") or "-", a.get("state") or "-", extra))
+    line = eta_summary(led)
+    if line:
+        print(line)
     stale = stale_agents(root, led)
     if stale:
         print("open agents whose task the project record shows as finished: %s; close each with agent-done "

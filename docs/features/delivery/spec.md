@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.19.1
+version: 0.20.0
 owner: agents
 type: reference
 code:
@@ -466,6 +466,10 @@ flowchart LR
 
 **R13.87** — **Pool refresh reports the build truthfully** (DL166). When the build fails, `pool-refresh` prints `the rebuild failed: ...`, exits 1 and leaves the old container running. It reads the container id, the image the container runs and the tagged image id before the build and again after it. A changed tagged id is `image rebuilt`. A changed container id or container image is `container recreated`, and the command is not run again. Only when the tagged id is the same before and after, and the container is unchanged, does it say `image unchanged (cache hit)`.
 
+**R13.88** — **Pool image has the LLVM tools for Windows builds** (DL167). The pool image always installs the distro `clang`, `lld` and `llvm` packages (about 250 MB) in its base apt layer, not behind `POOL_LAYERS`. It links `clang-cl`, `lld-link`, `llvm-lib`, `llvm-ar`, `llvm-rc` and `lld` into `/usr/local/bin` from the LLVM version found at build time, so every user finds them. A build-time check runs `clang-cl --version`, `lld-link --version` and `llvm-lib /?`, so a broken install fails the build. `cargo xwin build --target x86_64-pc-windows-msvc` needs these tools for crates with C or C++ code.
+
+**R13.89** — **ETAs from measured history** (DL168). The ledger records `finished_at` for an agent when it is marked done (the report commit time when the watcher reads the READY line) and the start and end of each CI run on the train row (`ci.run_started_at`, `ci.run_completed_at`). Old rows without them still load. `delivery_eta.py --kind agent|ci|join|pool-refresh` prints the median and p75 in minutes and the sample size, and says `no history` with fewer than 3 samples. The launch check (DL-30) refuses a brief whose `eta:` total is more than 50 % above the measured p75 for that kind and place, when there are at least 5 samples. The message names the median and p75. The fix is a lower eta or an `eta-reason: <why>` line in the delivery block. `delivery_ledger.py show` prints `eta <N> min, took <M> min` for done agents and one `cloud agents: eta median ... vs actual median ...` line.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:
@@ -493,6 +497,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.0 | 2026-11-10 | RELEASE-81 | R13.88: the pool image installs clang, lld and llvm and links clang-cl, lld-link and llvm-lib onto PATH, with a build-time self-check.<br>R13.89: ETAs from measured history. The ledger records agent finish time and CI wall time; delivery_eta.py gives median and p75; the DL-30 launch check refuses an eta more than 50 % above the measured p75 without an eta-reason line; show prints eta against time taken. | DL167, DL168 |
 | 0.19.1 | 2026-11-10 | RELEASE-80 | R13.86 and R13.87: pool-refresh fixes a wrong runner hash, exits non-zero on a failed build, and reports the build result from image ids read before and after. | DL165 |
 | 0.19.0 | 2026-11-09 | RELEASE-79 | R13.84: pool-refresh copies the plugin's pool files (with a backup), compares image ids after the build, recreates the container when the image changed, and reports what really happened; the doctor warns on stale pool files.<br>R13.85: every path that makes a train row takes a free id; link makes a new row for an unknown branch; show warns about duplicate ids. | DL162, DL163 |
 | 0.18.0 | 2026-11-09 | RELEASE-77 | Section 13 gains R13.81: the mock handler guard fails a branch that adds a client API function whose route has no default handler in the shared e2e mock.<br>The installer update applies artifact_prune.workflows after it rewrites the prune workflow (R13.72).<br>R13.74: stale_agents reads the project record; the session summary lists open agents of finished tasks with the agent-done fix.<br>DL152 adds R13.76: guidance names core PermissionEx for service DACLs in WiX 5.<br>agent_ci.py runs only ledger-open agents, or --task/--branch picks; --all keeps the old scan; task ids parse with a prefix like claude/RS (R13.77).<br>The pre-push secret scan reads .gitleaksignore and .gitleaks.toml from the pushed commit (R13.78).<br>Shared pool refresh: layers and apt names merge (R13.79), Playwright never drops (R13.80); R13.68 updated.<br>R13.75: unique train ids, no taskless agent rows, CI matched by PR and head SHA, readable show.<br>The installer installs tzdata when the configured tz does not load (R13.73).<br>R13.83: the DL-41 owns overlap check compares paths segment by segment; notes are read; disjoint requirement IDs on one file are allowed.<br>Runner pool: the pinned Playwright fallback is 1.65.0 (was 1.62.1); it applies only when no lockfile, flag or pool .env sets a version.<br>R13.82: rust track ships a vitest globalSetup that builds the crates a TS test spawns; the JS unit job installs the Rust toolchain on the Rust track only. | DL146, DL150, DL151, DL152, DL153, DL154, DL155, DL156, DL157, DL158, DL159, DS208 |
