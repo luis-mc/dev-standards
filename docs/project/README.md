@@ -1,7 +1,7 @@
 # Project artifacts
 
 This folder is the record of dev-standards's project artifacts (ARTIFACTSPEC 1.0.0). It is generated and committed by
-`scripts/project_artifacts.py` of the `luismc-artifacts` plugin; do not edit the JSON or the
+`scripts/project_artifacts.py` of the `luismc-docs` plugin; do not edit the JSON or the
 rendered HTML by hand.
 
 | Artifact | File | Where |

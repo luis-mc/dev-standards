@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T15:26+00:00",
+  "updated": "2026-11-10T15:37+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6628,11 +6628,11 @@
       "id": "DS219",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Merge luismc-artifacts and luismc-specs into luismc-docs",
       "detail": "D182/D185/D186: one plugin, name luismc-docs; artifacts and specs skills move under it; record defaults to docs/project; hard switch: both plugins leave the marketplace in the same release. After RELEASE-84 merges (shared files).",
       "expected": "10 Nov",
-      "changed": "2026-11-10T15:26+00:00",
+      "changed": "2026-11-10T15:37+00:00",
       "rides": "DS221",
       "started": "2026-11-10T14:35+00:00"
     },
@@ -6674,12 +6674,11 @@
       "id": "DS221",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-86: artifacts and specs merged into luismc-docs",
       "detail": "Carries DS219 (D182, D185, D186): one cloud agent moves luismc-artifacts and luismc-specs into luismc-docs with a hard switch; both leave the marketplace in this release.",
-      "expected": "10 Nov ~15:36",
-      "changed": "2026-11-10T15:26+00:00",
-      "expected_basis": "CI on joined head started 15:27, ~5 min; merge within 4 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T15:37+00:00",
       "release": 86,
       "phases": [
         {
