@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T16:46+00:00",
+  "updated": "2026-11-10T16:51+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3286,12 +3286,11 @@
       "id": "DL175",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool upgrade: 12 GiB and 8 CPUs, Docker VM 14 GB",
       "detail": "Owner asked 'upgrade pool' (D188, D189). Raises the pool from 8.5 GiB/4 CPUs to 12 GiB/8 CPUs (4 GiB per runner) and the WSL VM from 11 to 14 GB. Done by hand because the setup tool's resize misreads the cap (DL176).",
-      "expected": "10 Nov ~17:10",
-      "changed": "2026-11-10T16:46+00:00",
-      "expected_basis": "waits for idle pool, then WSL restart ~2 min and pool start ~3 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T16:51+00:00",
       "no_release": "machine change only; no repo code",
       "started": "2026-11-10T16:46+00:00"
     },
