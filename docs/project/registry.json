@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T19:17+00:00",
+  "updated": "2026-11-10T19:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3310,11 +3310,11 @@
       "id": "DL177",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool sizing: VM measured by its working set; docker read fails",
       "detail": "detect_host takes the WSL VM size from vmmemWSL's working set, which swung 5.7-11.9 GiB in minutes, so 'used outside WSL' swung 9.7-17.2 GiB. container_gib runs 'wsl docker', which fails on Docker Desktop ('docker could not be found in this WSL 2 distro'), so pool and other container use read 0.",
       "expected": "10 Nov",
-      "changed": "2026-11-10T19:17+00:00",
+      "changed": "2026-11-10T19:22+00:00",
       "rides": "DS223",
       "started": "2026-11-10T19:07+00:00"
     },
@@ -6789,12 +6789,11 @@
       "id": "DS223",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-88: pool sizing reads the VM and Docker right (DL177)",
       "detail": "Carries DL177: the WSL VM size and container use are read reliably on Docker Desktop, so --resize and --pool-gib size the pool from stable figures.",
-      "expected": "10 Nov ~19:27",
-      "changed": "2026-11-10T19:17+00:00",
-      "expected_basis": "CI on joined head started 19:18, ~5 min; merge within 4 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T19:22+00:00",
       "release": 88,
       "phases": [
         {

@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T19:17+00:00",
+ "updated": "2026-11-10T19:22+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4190,11 +4190,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL177",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Pool sizing: VM measured by its working set; docker read fails",
    "detail": "detect_host takes the WSL VM size from vmmemWSL's working set, which swung 5.7-11.9 GiB in minutes, so 'used outside WSL' swung 9.7-17.2 GiB. container_gib runs 'wsl docker', which fails on Docker Desktop ('docker could not be found in this WSL 2 distro'), so pool and other container use read 0.",
    "expected": "10 Nov",
-   "changed": "2026-11-10T19:17+00:00",
+   "changed": "2026-11-10T19:22+00:00",
    "rides": "DS223",
    "started": "2026-11-10T19:07+00:00"
   },
@@ -7669,12 +7669,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS223",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-88: pool sizing reads the VM and Docker right (DL177)",
    "detail": "Carries DL177: the WSL VM size and container use are read reliably on Docker Desktop, so --resize and --pool-gib size the pool from stable figures.",
-   "expected": "10 Nov ~19:27",
-   "changed": "2026-11-10T19:17+00:00",
-   "expected_basis": "CI on joined head started 19:18, ~5 min; merge within 4 min",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T19:22+00:00",
    "release": 88,
    "phases": [
     {
@@ -8294,60 +8293,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T19:17+00:00">10 Nov 19:17</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T19:22+00:00">10 Nov 19:22</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DS223"><span class="task-id">DS223</span><span class="release-name">RELEASE-88</span>pool sizing reads the VM and Docker right (DL177) <span class="glance-expected">10 Nov ~19:27</span><span class="glance-basis">CI on joined head started 19:18, ~5 min; merge within 4 min</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">83 tasks</span></summary>
 <ul>
 <li data-glance-task="DL177"><span class="task-id">DL177</span>Pool sizing: VM measured by its working set; docker read fails</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">81 tasks</span></summary>
-<ul>
+<li data-glance-task="DS223"><span class="task-id">DS223</span><span class="release-name">RELEASE-88</span>pool sizing reads the VM and Docker right (DL177)</li>
 <li data-glance-task="DL178"><span class="task-id">DL178</span>Pool resize to 10 GiB / 7 CPUs</li>
 <li data-glance-task="DL176"><span class="task-id">DL176</span>Fix pool resize: cap counts the VM as used; drops POOL_BROWSERS</li>
 <li data-glance-task="DS222"><span class="task-id">DS222</span><span class="release-name">RELEASE-87</span>pool resize fix (DL176)</li>
 <li data-glance-task="DL175"><span class="task-id">DL175</span>Pool upgrade: 12 GiB and 8 CPUs, Docker VM 14 GB</li>
 <li data-glance-task="DS219"><span class="task-id">DS219</span>Merge luismc-artifacts and luismc-specs into luismc-docs</li>
 <li data-glance-task="DS221"><span class="task-id">DS221</span><span class="release-name">RELEASE-86</span>artifacts and specs merged into luismc-docs</li>
-<li data-glance-task="DS218"><span class="task-id">DS218</span>Cleanup: screenshots, one-off migration, 4 CI steps, docs layout</li>
-<li data-glance-task="DS220"><span class="task-id">DS220</span><span class="release-name">RELEASE-85</span>leftover cleanup (DS218 rerun)</li>
-<li class="glance-more">and 73 more</li>
+<li class="glance-more">and 75 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">503</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">505</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS223 (pool sizing reads the VM and Docker right (DL177)) expected live about 19:27." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">19:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">19:30</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-88 · pool sizing reads the VM and Docker right (DL177)</title>RELEASE-88 · pool sizing…</text>
-<text class="rt-sub" x="0" y="77"><title>DL177</title>DL177</text>
-<rect class="rt-bar agents" x="338.7" y="52" width="138.7" height="22"><title>agents 19:08-19:16</title></rect>
-<rect class="rt-bar join" x="477.3" y="52" width="34.7" height="22"><title>join 19:16-19:18</title></rect>
-<rect class="rt-bar ci" x="512" y="52" width="86.7" height="22"><title>PR CI 19:18-19:23</title></rect>
-<rect class="rt-bar merge" x="598.7" y="52" width="69.3" height="22"><title>merge + cleanup 19:23-19:27</title></rect>
-<polygon class="rt-expected" points="668,50 676,63 668,76 660,63"/>
-<text class="rt-live-label" x="668" y="92">live ~19:27</text>
-<line class="rt-now" x1="494.7" y1="36" x2="494.7" y2="148"/><text class="rt-now-label" x="494.7" y="161">now 19:17</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-88" open><summary><strong>RELEASE-88 · live ~19:27</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">515 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS223"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS223</span><span class="release-name">RELEASE-88</span>pool sizing reads the VM and Docker right (DL177)</td><td data-label="App / service"></td><td data-label="Detail">Carries DL177: the WSL VM size and container use are read reliably on Docker Desktop, so --resize and --pool-gib size the pool from stable figures.</td><td data-label="Expected">10 Nov ~19:27<span class="expected-basis">CI on joined head started 19:18, ~5 min; merge within 4 min</span></td></tr>
-<tr data-task="DL177"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL177</span>Pool sizing: VM measured by its working set; docker read fails</a></td><td data-label="App / service"></td><td data-label="Detail">detect_host takes the WSL VM size from vmmemWSL&#x27;s working set, which swung 5.7-11.9 GiB in minutes, so &#x27;used outside WSL&#x27; swung 9.7-17.2 GiB. container_gib runs &#x27;wsl docker&#x27;, which fails on Docker Desktop (&#x27;docker could not be found in this WSL 2 distro&#x27;), so pool and other container use read 0.</td><td data-label="Expected">10 Nov</td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">513 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL177"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL177</span>Pool sizing: VM measured by its working set; docker read fails</a><span class="release-line"><span class="release-name">RELEASE-88</span></span></td><td data-label="App / service"></td><td data-label="Detail">detect_host takes the WSL VM size from vmmemWSL&#x27;s working set, which swung 5.7-11.9 GiB in minutes, so &#x27;used outside WSL&#x27; swung 9.7-17.2 GiB. container_gib runs &#x27;wsl docker&#x27;, which fails on Docker Desktop (&#x27;docker could not be found in this WSL 2 distro&#x27;), so pool and other container use read 0.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DS223"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS223</span><span class="release-name">RELEASE-88</span>pool sizing reads the VM and Docker right (DL177)</td><td data-label="App / service"></td><td data-label="Detail">Carries DL177: the WSL VM size and container use are read reliably on Docker Desktop, so --resize and --pool-gib size the pool from stable figures.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL178"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL178</span>Pool resize to 10 GiB / 7 CPUs</a><span class="no-release-line">ships nothing: machine change only; no repo code</span></td><td data-label="App / service"></td><td data-label="Detail">Owner chose 10 GiB / 7 CPUs (D190) after the PC reached 83% with the 12 GiB pool. Done by hand: the tool refuses because its outside-WSL figure is unreliable (DL177). Lowers the WSL VM ceiling from 14 to 12 GB.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL176"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL176</span>Fix pool resize: cap counts the VM as used; drops POOL_BROWSERS</a><span class="release-line"><span class="release-name">RELEASE-87</span></span></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_setup pool-plan --resize gave 12, 2.5 and 6.5 GiB caps in a few minutes on the same PC: it subtracts the running Docker VM from free memory, so it cannot size the VM upward. It also shows POOL_BROWSERS none when the pool .env has chromium, even with --browsers chromium; --cpus 4 gave a 0.5 GiB cap.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DS222"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS222</span><span class="release-name">RELEASE-87</span>pool resize fix (DL176)</td><td data-label="App / service"></td><td data-label="Detail">Carries DL176: pool-plan keeps the pool&#x27;s browsers, layers and cap, takes explicit pool memory and CPUs, and never shrinks the cap silently.</td><td data-label="Expected">10 Nov</td></tr>
@@ -8869,13 +8839,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
-<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905637"><time datetime="2026-11-10T19:17+00:00">10 Nov 19:17</time></td><td data-label="Tasks">DL1 to DL178</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-</tbody></table></div>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
+<p class="feature-none">No feature artifacts in progress.</p>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (8)</strong><span class="fold-count">8 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905642"><time datetime="2026-11-10T19:22+00:00">10 Nov 19:22</time></td><td data-label="Tasks">DL1 to DL178</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904292"><time datetime="2026-11-09T20:52+00:00">09 Nov 20:52</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
