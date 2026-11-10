@@ -48,6 +48,15 @@ Time zone data (DL157). Windows Python has no time zone data. After the run the 
 `.delivery/config.json` through `zoneinfo`. When that fails it runs `python -m pip install --user tzdata` (it asks
 first when the terminal is interactive), says what it did, and checks again. The doctor keeps its own check.
 
+Moved from project-setup (DL172). The installer also writes, at the same project paths as before:
+`.githooks/pre-push` and `.githooks/commit-msg` (they call the delivery scripts and read `.delivery/config.json`),
+and `.delivery/config.json` (project-owned: written when absent, never overwritten, also by `update`). On
+`install`, a `.githooks/pre-push` that differs and is not this plugin's hook is moved to `pre-push.local` first
+(the hook runs it after its guards); an existing `pre-push.local` is never replaced. It also merges the
+`session_guard.py` PreToolUse entry into the project's `.claude/settings.json`: other entries stay, an entry that
+is already there is not added twice, and a settings file that is not valid JSON is left alone with a warning.
+`--only config,settings` (no --track needed) does just those two steps and leaves the template files alone.
+
 Exit 0 done, 1 a bad track, 2 a missing template folder or a bad ci-install.json, 3 a managed script imports a sibling module that is
 not in the project (the files were still written). Untracked files do not change the exit code.
 Standard library only.
@@ -71,6 +80,15 @@ TRACKS = ("ts", "go", "rust", "dotnet")
 PROJECT_OWNED_NAMES = {"gate.json", "smoke.json", "ci-areas.json", "ci-timings.json", "ci-scope.json",
                        "quarantine.json", "ci-shards.json", "ci-shards.example.json", "ci.yml", "package.yml", "nightly-full.yml",
                        "ci-install.json"}
+# Project-owned by relative path (the name `config.json` is too common to own by name).
+PROJECT_OWNED_PATHS = {".delivery/config.json"}
+HOOKS_DIR = ".githooks"
+PRE_PUSH = ".githooks/pre-push"
+SETTINGS = ".claude/settings.json"
+GUARD_MARK = "scripts/delivery/session_guard.py"
+GUARD_COMMAND = ("[ -f \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\" ] || exit 0; "
+                 "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; "
+                 "else python \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; fi")
 SKIP_DIRS = {"__pycache__"}
 SKIP_FILES = {"CONTRACT.md"}
 
@@ -129,7 +147,7 @@ def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
             action = "written"
         elif same(src, dst):
             action = "same"
-        elif mode == "update" and os.path.basename(rel) not in PROJECT_OWNED_NAMES:
+        elif mode == "update" and os.path.basename(rel) not in PROJECT_OWNED_NAMES and rel not in PROJECT_OWNED_PATHS:
             action = "overwritten"
         else:
             action = "differs" if mode == "update" else "kept"
@@ -141,18 +159,88 @@ def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
     return out
 
 
+def write_config(src: str, dst: str) -> None:
+    """Copy the config template without its `_` keys (_doc, _example...) (DL172)."""
+    with open(src, "rb") as f:
+        data = json.loads(f.read().decode("utf-8-sig"))
+    data = {k: v for k, v in data.items() if not k.startswith("_")}
+    os.makedirs(os.path.dirname(dst), exist_ok=True)
+    with open(dst, "w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(data, indent=2) + "\n")
+
+
 def apply(items: list, root: str) -> None:
     for rel, src, action in items:
         if action not in ("written", "overwritten"):
             continue
         dst = os.path.join(root, rel.replace("/", os.sep))
         os.makedirs(os.path.dirname(dst), exist_ok=True)
+        if rel in PROJECT_OWNED_PATHS:
+            if not os.path.exists(dst):
+                write_config(src, dst)
+            continue
         shutil.copyfile(src, dst)
         if rel.endswith(".sh") or rel.endswith(".py"):
             try:
                 os.chmod(dst, os.stat(dst).st_mode | 0o111)
             except OSError:
                 pass
+
+
+def keep_old_pre_push(items: list, root: str) -> None:
+    """`install` only: a project's own pre-push hook becomes pre-push.local, so it survives (DL172)."""
+    for rel, src, action in items:
+        if rel != PRE_PUSH or action != "kept":
+            continue
+        dst = os.path.join(root, rel.replace("/", os.sep))
+        local = dst + ".local"
+        if os.path.exists(local):
+            continue
+        with open(dst, "rb") as f:
+            text = f.read()
+        if b"fast_guards.py" in text:
+            continue                                     # an older copy of this hook: update replaces it
+        os.replace(dst, local)
+        print("moved %s to %s (it runs after the guards)" % (rel, rel + ".local"))
+        shutil.copyfile(src, dst)
+        try:
+            os.chmod(dst, os.stat(dst).st_mode | 0o111)
+        except OSError:
+            pass
+        for i, (r, s_, a) in enumerate(items):
+            if r == rel:
+                items[i] = (r, s_, "written")
+
+
+def merge_session_guard(root: str, dry_run: bool = False) -> str:
+    """Add the session_guard PreToolUse entry to .claude/settings.json. Returns what happened (DL172)."""
+    path = os.path.join(root, SETTINGS.replace("/", os.sep))
+    data = {}
+    if os.path.exists(path):
+        try:
+            with open(path, "rb") as f:
+                data = json.loads(f.read().decode("utf-8-sig"))
+        except (OSError, ValueError):
+            return "warning: %s is not valid JSON; the session_guard entry was not added" % SETTINGS
+        if not isinstance(data, dict):
+            return "warning: %s is not a JSON object; the session_guard entry was not added" % SETTINGS
+    hooks = data.get("hooks", {})
+    pre = hooks.get("PreToolUse", []) if isinstance(hooks, dict) else None
+    if not isinstance(pre, list):
+        return "warning: %s has an unexpected hooks.PreToolUse; the session_guard entry was not added" % SETTINGS
+    for entry in pre:
+        for h in (entry.get("hooks", []) if isinstance(entry, dict) else []):
+            if isinstance(h, dict) and GUARD_MARK in str(h.get("command", "")):
+                return "same"
+    if dry_run:
+        return "would add"
+    pre.append({"matcher": "Bash", "hooks": [{"type": "command", "command": GUARD_COMMAND}]})
+    hooks["PreToolUse"] = pre
+    data["hooks"] = hooks
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(data, indent=2) + "\n")
+    return "added"
 
 
 def imported_names(path: str) -> set:
@@ -284,13 +372,36 @@ def ensure_tzdata(root: str, interactive=None, ask=input) -> None:
         print("time zone %r still does not load; check the `tz` key or restart the shell." % name)
 
 
+def only_steps(root: str, only: set, action: str, dry_run: bool) -> int:
+    if "config" in only:
+        src = os.path.join(TEMPLATES, "shared", ".delivery", "config.json")
+        dst = os.path.join(root, ".delivery", "config.json")
+        if os.path.exists(dst):
+            print("same        .delivery/config.json (kept: the project owns it)")
+        else:
+            if not dry_run:
+                os.makedirs(os.path.dirname(dst), exist_ok=True)
+                write_config(src, dst)
+            print("written     .delivery/config.json")
+    if "settings" in only:
+        print("settings    %s: %s" % (SETTINGS, merge_session_guard(root, dry_run)))
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci_install.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("action", choices=["install", "update"])
-    ap.add_argument("--track", required=True)
+    ap.add_argument("--track", default=None)
+    ap.add_argument("--only", default=None, help="config,settings: write only .delivery/config.json and/or the session_guard settings entry")
     ap.add_argument("--root", default=".", help="the project root (default: the current folder)")
     ap.add_argument("--dry-run", action="store_true")
     args = ap.parse_args(argv)
+    only = set(args.only.split(",")) if args.only else None
+    if only is not None and not only <= {"config", "settings"}:
+        print("delivery_ci_install: --only takes config and/or settings", file=sys.stderr)
+        return 1
+    if only is not None and args.track is None:
+        return only_steps(os.path.abspath(args.root), only, args.action, args.dry_run)
     if args.track not in TRACKS:
         print("delivery_ci_install: --track must be one of %s" % ", ".join(TRACKS), file=sys.stderr)
         return 1
@@ -308,7 +419,10 @@ def main(argv=None) -> int:
     for rel in sorted((keep | skip) - managed):
         print("warning: %s lists %s, which the plugin does not manage" % (CONFIG, rel))
     if not args.dry_run:
+        if args.action == "install":
+            keep_old_pre_push(items, root)
         apply(items, root)
+        print("settings    %s: %s" % (SETTINGS, merge_session_guard(root)))
     if not args.dry_run and args.action == "update":
         sync_prune_workflow(items, root)
     if not args.dry_run:

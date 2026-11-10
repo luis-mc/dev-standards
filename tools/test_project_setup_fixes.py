@@ -17,6 +17,7 @@ CS = PS / "claude-setup"
 TS = PS / "tech-stack-setup"
 AS = PS / "auth-setup"
 HOOKS = TS / "assets/tooling/shared/.githooks"
+DELIV = ROOT / "claude/plugins/delivery/templates/shared"
 STOP = CS / "assets/.claude/hooks/questions_stop.py"
 SH = shutil.which("sh") or "sh"
 
@@ -203,16 +204,16 @@ def f27():
     d = Path(tempfile.mkdtemp())
     sh("git init -q .", cwd=d)
     (d / ".delivery").mkdir()
-    shutil.copy(CS / "assets/delivery-config.json", d / ".delivery/config.json")
+    shutil.copy(DELIV / ".delivery/config.json", d / ".delivery/config.json")
     msg = d / "msg"
     msg.write_text("t\n\nCo-Authored-By: A <a@example.com>\n")
     e = []
-    if sh([SH, str(HOOKS / "commit-msg"), str(msg)], cwd=d).returncode != 0:
+    if sh([SH, str(DELIV / ".githooks/commit-msg"), str(msg)], cwd=d).returncode != 0:
         e.append("F27 nested no_attribution true blocks")
     cfg = json.loads((d / ".delivery/config.json").read_text())
     cfg["no_attribution"] = True
     (d / ".delivery/config.json").write_text(json.dumps(cfg))
-    if sh([SH, str(HOOKS / "commit-msg"), str(msg)], cwd=d).returncode == 0:
+    if sh([SH, str(DELIV / ".githooks/commit-msg"), str(msg)], cwd=d).returncode == 0:
         e.append("F27 top-level true no longer blocks")
     return e
 
@@ -223,7 +224,7 @@ def f28():
 
 
 def f29():
-    c = json.loads((CS / "assets/delivery-config.json").read_text())
+    c = json.loads((DELIV / ".delivery/config.json").read_text())
     return [] if c["enforcement"]["mode"] == "warn" else ["F29 template enforcement mode is not warn"]
 
 

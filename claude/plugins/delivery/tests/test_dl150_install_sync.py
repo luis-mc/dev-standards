@@ -27,7 +27,7 @@ class Sync(unittest.TestCase):
         run("install", "--track", "ts", "--root", str(self.root))
 
     def test_update_applies_project_list(self):
-        (self.root / ".delivery").mkdir()
+        (self.root / ".delivery").mkdir(exist_ok=True)
         (self.root / ".delivery" / "config.json").write_text('{"artifact_prune": {"workflows": ["CI", "Installers"]}}')
         (self.root / WF).write_text("old\n")
         code, out = run("update", "--track", "ts", "--root", str(self.root))
@@ -36,7 +36,7 @@ class Sync(unittest.TestCase):
         self.assertIn("synced", out)
 
     def test_failed_sync_keeps_update(self):
-        (self.root / ".delivery").mkdir()
+        (self.root / ".delivery").mkdir(exist_ok=True)
         (self.root / ".delivery" / "config.json").write_text("{not json")
         (self.root / WF).write_text("old\n")
         code, out = run("update", "--track", "ts", "--root", str(self.root))

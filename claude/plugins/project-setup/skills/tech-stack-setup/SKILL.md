@@ -335,7 +335,7 @@ Build in dependency order. Each step is a precondition of the next: Print one li
 ### Step 1 in detail — what is copied where
 
 Paths and owners are fixed by `CONTRACT.md` in `luismc-delivery` (`templates/shared/scripts/delivery/CONTRACT.md`).
-This skill carries no CI logic. It picks technologies and copies the hooks, linters and guards below. At the end of step 1 it calls the delivery installer, which writes the delivery scripts, the workflow files and the per-track `gate.json` and `smoke.json`:
+This skill carries no CI logic. It picks technologies and copies the linters, guards and the `pre-commit` hook below. At the end of step 1 it calls the delivery installer, which writes the delivery scripts, the workflow files, the per-track `gate.json` and `smoke.json`, the `pre-push` and `commit-msg` hooks, `.delivery/config.json` and the `session_guard` entry in `.claude/settings.json` (DL172):
 
 `python3 <luismc-delivery>/scripts/delivery_ci_install.py install --track <track> --root .`
 
@@ -345,8 +345,8 @@ Do it in the first commit, so the first branch is already gated:
 |---|---|---|
 | `scripts/delivery/*`, `.github/workflows/*`, `scripts/delivery/gate.json`, `smoke.json` | the delivery installer (`luismc-delivery`, `templates/`). Afterwards set `default_branch` in `gate.json` to the repo's own and `ui_paths` to the apps that exist. `CONTRACT.md` is not copied. | `§13.5`, `§13.6`, `§13.1`, `§11.2` |
 | `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
-| `.githooks/pre-push` | `shared/.githooks/pre-push`, beside `pre-commit` | `§13.5` |
-| `.githooks/commit-msg` | `shared/.githooks/commit-msg`, beside `pre-commit`; does nothing unless `.delivery/config.json` sets `no_attribution: true` (DL-74). `pre-commit` also refuses staged conflict markers (DL-24) | DELIVERYSPEC |
+| `.githooks/pre-push` | the delivery installer (`templates/shared/.githooks/pre-push`), beside `pre-commit`; an existing different hook becomes `pre-push.local` | `§13.5` |
+| `.githooks/commit-msg` | the delivery installer (`templates/shared/.githooks/commit-msg`); does nothing unless `.delivery/config.json` sets `no_attribution: true` (DL-74). `pre-commit` also refuses staged conflict markers (DL-24) | DELIVERYSPEC |
 | `.gitattributes` | `shared/.gitattributes` — LF for shell scripts, hooks and the delivery scripts, so a CRLF checkout cannot break them | `§13.5` |
 | the guard-test starter, TypeScript | `ts/guards/*.guard.test.ts` and `ts/vitest.config.ts` (its `guard` project) | `§13.5` item 4 |
 | the guard-test starter, Go | `go/guards/` (`TestGuard*`) | `§13.5` item 4 |
@@ -402,7 +402,7 @@ specs number their change-log headings, set `changelog_headings` in
 Install the pre-push hook so a project's existing check survives:
 
 - Find the existing pre-push hook: in `.githooks/`, in the directory `core.hooksPath` points to, or `.git/hooks/pre-push` when `core.hooksPath` is unset.
-- If it differs from the template, move it to `pre-push.local` in that hooks directory before copying the template; never overwrite it.
+- The installer moves a different hook to `pre-push.local` in `.githooks/` before it writes its own; it never overwrites it. When `core.hooksPath` points elsewhere, do the same by hand there.
 - The template runs `pre-push.local` after its own guards pass, with the same arguments and stdin, and fails the push if it fails.
 - If `core.hooksPath` already points at another directory (for example `.husky`), install both hooks into that directory; do not change `core.hooksPath`.
 - If `core.hooksPath` is unset, copy into `.githooks/` and set it: `git config core.hooksPath .githooks`; say so in the repo's setup notes.

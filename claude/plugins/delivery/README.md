@@ -130,7 +130,7 @@ The branch gate runs the always-on guards, then typecheck + lint of the touched 
 
 ## CI-gate path (opt-in, DL-80..83)
 
-For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in `luismc-project-setup` (`tooling/shared/scripts/delivery/`). The project's patterns live in `scripts/delivery/ci-scope.json`. This plugin carries the rules, the spec and the brief:
+For a project whose agents are gated by CI on their branch instead of a full local gate. Nothing changes for a project that does not opt in. The scripts live in this plugin (`templates/shared/scripts/delivery/`). The project's patterns live in `scripts/delivery/ci-scope.json`. This plugin carries the rules, the spec and the brief:
 
 - **Agents** run the tests of what they touch and the fast guards, push, and write a `CODE DONE` line in their report. `agent_ci.py` merges the branch onto its base (`--base`, default `origin/master`; a release branch while a train is open) into a two-parent commit on `ci/<task>` and starts one `workflow_dispatch` CI run per branch head; that run is the gate. A conflict is reported by file and starts nothing; `cleanup.py --pr N` removes the `ci/<task>` refs. The manual run plans `origin/<default>...HEAD`.
 - **Caps** (DL-38): defaults cloud 50, local 3, total 53; a project's `.delivery/config.json` `caps` overrides them.
