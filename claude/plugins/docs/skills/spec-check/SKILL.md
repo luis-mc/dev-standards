@@ -10,7 +10,7 @@ effort: medium
 Runs `assets/spec_check.py` over a specification. It reports every structural
 defect it can decide from the text alone. It is the partner to `spec-new`: that
 skill writes specs to a numbering discipline, and this one proves the discipline
-held. Both ship in the `luismc-specs` plugin.
+held. Both ship in the `luismc-docs` plugin.
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/spec-check/assets/spec_check.py" specs/mine.md

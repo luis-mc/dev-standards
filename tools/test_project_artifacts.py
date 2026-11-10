@@ -3026,7 +3026,7 @@ def test_migrate_copies_the_old_record_once_and_only_when_newer(env):
     newer_task(old / 'docs' / 'artifacts')
     r = p.run('migrate')
     assert r.code == 0 and len(r.out.strip().splitlines()) == 1, r.all
-    assert r.out.startswith('luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed '
+    assert r.out.startswith('luismc-docs: the record now lives in docs/artifacts/ and is never committed or pushed '
                             'by the plugin; copied it from '), r.out
     assert 'git worktree remove' in r.out and str(old).replace('\\', '/') .lower() in r.out.replace('\\', '/').lower()
     assert p.task('AR1')['status'] == 'Waiting' and (p.rdir / 'only-in-old.txt').is_file()
@@ -3112,7 +3112,7 @@ def SKIP(msg):
 def real_available():
     f = REAL_PLUGIN / 'scripts' / 'render_artifacts.py'
     if not f.is_file():
-        return 'render_artifacts.py is not in claude/plugins/artifacts/scripts yet'
+        return 'render_artifacts.py is not in claude/plugins/docs/scripts yet'
     r = subprocess.run([sys.executable, '-c', 'import render_artifacts'], cwd=str(f.parent),
                        capture_output=True, text=True)
     if r.returncode != 0:

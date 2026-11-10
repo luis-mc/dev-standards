@@ -79,6 +79,6 @@ if __name__ == '__main__':
     try:
         code = main()
     except Exception as exc:   # a cron helper never fails loudly
-        print('luismc-artifacts: publish_hourly skipped (%s: %s)' % (type(exc).__name__, exc), file=sys.stderr)
+        print('luismc-docs: publish_hourly skipped (%s: %s)' % (type(exc).__name__, exc), file=sys.stderr)
         code = 0
     sys.exit(code)

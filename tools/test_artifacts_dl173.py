@@ -57,7 +57,7 @@ def ledger_newer_schema_warns_once():
     assert PA.ledger_release_numbers(root) == set()
     assert PA.ledger_release_numbers(root) == set()
     w = PA.schema_warnings(root)
-    assert w == ['delivery ledger schema 3 is newer than this reader (1): update luismc-artifacts'], w
+    assert w == ['delivery ledger schema 3 is newer than this reader (1): update luismc-docs'], w
 
 
 @case

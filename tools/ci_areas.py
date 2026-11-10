@@ -19,14 +19,14 @@ Area map (first matching rule wins; see RULES):
              assets/tooling/ (git hooks, linters, guards) and claude/plugins/delivery/
              (hooks, scripts, templates/ with the delivery scripts and ci.yml files),
              the delivery/cleanup/prune/change-notes/preflight tests.
-  artifacts  claude/plugins/artifacts/ (renderer, commands, hooks, templates)
-             and their tests; ARTIFACTSPEC itself counts as specs.
+  artifacts  the artifacts files in claude/plugins/docs/ (renderer, commands, hooks,
+             templates, design) and their tests; ARTIFACTSPEC itself counts as specs.
   profiles   every SKILL.md, the claude-setup assets, the architect agent and
              test_model_profiles.py.
   transcript-folds  everything under claude/plugins/transcript-folds/ except
              its .claude-plugin/ manifest (node --test over hooks/fold/*.ts).
-  docs       everything under claude/plugins/docs/ except its manifest and
-             SKILL.md files (unit tests of the scripts; DOCSPEC under
+  docs       everything under claude/plugins/docs/ except its manifest, SKILL.md
+             files and the artifacts files above (unit tests of the scripts; DOCSPEC under
              references/ also counts as specs).
 
 Shared paths run every area: this workflow, this script and its test,
@@ -125,9 +125,9 @@ RULES: list[tuple[str, frozenset[str]]] = [
     # specs
     (re.escape(TS) + r"/references/.*", frozenset({"specs"})),
     (re.escape(PS) + r"/auth-setup/references/.*", frozenset({"specs"})),
-    (r"claude/plugins/artifacts/references/.*", frozenset({"specs"})),
-    (r"claude/plugins/specs/skills/spec-new/assets/.*", frozenset({"specs"})),
-    (r"claude/plugins/specs/skills/spec-check/assets/.*", frozenset({"specs"})),
+    (r"claude/plugins/docs/references/artifactspec\.md", frozenset({"specs"})),
+    (r"claude/plugins/docs/skills/spec-new/assets/.*", frozenset({"specs"})),
+    (r"claude/plugins/docs/skills/spec-check/assets/.*", frozenset({"specs"})),
     (re.escape(TS) + r"/assets/stack-profile\.md", frozenset({"specs"})),
     (r"tools/(authspec_check|test_spec_check|test_authspec_check)\.py",
      frozenset({"specs"})),
@@ -138,7 +138,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/test_rule_tags\.py", frozenset({"specs"})),
     # the plugin smoke (DL-18 for this repository) and its test run in the profiles job
     (r"tools/(plugin_smoke|test_plugin_smoke)\.py", frozenset({"profiles"})),
-    (r"claude/plugins/artifacts/rules/.*", frozenset({"specs", "artifacts"})),
+    (r"claude/plugins/docs/rules/.*", frozenset({"specs", "artifacts"})),
     (re.escape(PS) + r"/claude-setup/assets/\.claude/rules/.*", frozenset({"specs", "profiles"})),
     # profiles (SKILL.md anywhere under the plugins, before the area folders)
     (r"claude/plugins/.*/SKILL\.md", frozenset({"profiles"})),
@@ -153,14 +153,19 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
     # the design-system enforcement kit test (docs job) also covers these two scripts
     (r"claude/plugins/delivery/scripts/hook_design_edit\.py", frozenset({"delivery", "docs"})),
-    (r"claude/plugins/artifacts/scripts/plan_rows_check\.py", frozenset({"artifacts", "docs"})),
+    (r"claude/plugins/docs/scripts/plan_rows_check\.py", frozenset({"artifacts", "docs"})),
     (r"tools/test_ds_enforcement\.py", frozenset({"docs"})),
+    # the artifacts files that live in the docs plugin (DS219), before the docs rules below
+    (r"claude/plugins/docs/hooks/hooks\.json", frozenset({"docs", "artifacts"})),
+    (r"claude/plugins/docs/scripts/(artifacts/.*|artifact_[a-z]+|project_artifacts|render_artifacts|publish_hourly"
+     r"|hook_after_command|hook_end_of_turn)\.py", frozenset({"artifacts"})),
+    (r"claude/plugins/docs/(design|templates/(feature-artifact|full-progress-artifact|project-artifact))[^/]*(/.*)?",
+     frozenset({"artifacts"})),
     # docs (SKILL.md and the manifest are matched above)
     (r"claude/plugins/docs/references/.*", frozenset({"specs", "docs"})),
     (r"claude/plugins/docs/.*", frozenset({"docs"})),
     (r"tools/test_ds_guard_templates\.py", frozenset({"docs"})),
     # artifacts
-    (r"claude/plugins/artifacts/.*", frozenset({"artifacts"})),
     (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+)\.py",
      frozenset({"artifacts"})),
     # delivery

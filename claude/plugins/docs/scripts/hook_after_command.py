@@ -59,7 +59,7 @@ def hooks_off():
 def warn(message):
     """One line on stderr naming the dependency and the exit code (R8.2, R11.1)."""
     try:
-        print('luismc-artifacts: ' + message.replace('\n', ' '), file=sys.stderr)
+        print('luismc-docs: ' + message.replace('\n', ' '), file=sys.stderr)
     except Exception:
         pass
 
@@ -234,8 +234,8 @@ def hook_root(data):
 
 RULE_PATH = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
                          'rules', 'project-artifacts.md')
-RULE_HEADING = 'luismc-artifacts: rules for work in this project (ARTIFACTSPEC 1.10.0)'
-UPDATED_LINE = ('luismc-artifacts was updated; this rule replaces earlier instructions about publishing '
+RULE_HEADING = 'luismc-docs: rules for work in this project (ARTIFACTSPEC 1.10.0)'
+UPDATED_LINE = ('luismc-docs was updated; this rule replaces earlier instructions about publishing '
                 'feature artifacts.')
 
 

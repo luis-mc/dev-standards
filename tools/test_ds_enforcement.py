@@ -3,7 +3,7 @@
 
 Covers: the kit templates of luismc-docs (copied by `design_system.py guards --stack typescript-vitest-kit`,
 self-tested with plain Node through a small vitest stand-in), the edit-time hook of luismc-delivery
-(`hook_design_edit.py`) and the plan-rows check of luismc-artifacts (`plan_rows_check.py`).
+(`hook_design_edit.py`) and the plan-rows check of luismc-docs (`plan_rows_check.py`).
 
 Run: python -I tools/test_ds_enforcement.py
 Standard library only (the Node self-tests are skipped when Node 22.6 or later is not on PATH).

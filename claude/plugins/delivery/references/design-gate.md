@@ -46,4 +46,4 @@ On Option 3 (statuses-only token), the cloud session posts one status per shard;
 ## 4. What this does not do
 
 - No screenshot comparison and no baseline images.
-- No periodic audit run. The tests run on every change; findings of a one-off audit become tasks (`luismc-artifacts`, `scripts/plan_rows_check.py`).
+- No periodic audit run. The tests run on every change; findings of a one-off audit become tasks (`luismc-docs`, `scripts/plan_rows_check.py`).

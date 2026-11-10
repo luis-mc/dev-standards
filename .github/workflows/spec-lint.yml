@@ -23,8 +23,8 @@ on:
     paths:
       - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
       - 'claude/plugins/project-setup/skills/auth-setup/references/**'
-      - 'claude/plugins/specs/skills/spec-new/assets/spec-template.md'
-      - 'claude/plugins/specs/skills/spec-check/assets/spec_check.py'
+      - 'claude/plugins/docs/skills/spec-new/assets/spec-template.md'
+      - 'claude/plugins/docs/skills/spec-check/assets/spec_check.py'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
       - 'tools/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
@@ -143,7 +143,7 @@ jobs:
       # requirement definition — and they used to be validated in two separate
       # scripts, which made it easy to assume either covered the other.
       - name: Check numbering and internal references
-        run: python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py
+        run: python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py
 
       # The spec-new template teaches the numbering rules, so it has to obey
       # them — a template that violates its own rule 11 teaches the violation
@@ -151,8 +151,8 @@ jobs:
       # default, because it is a skeleton rather than a binding spec.
       - name: Check the spec-new template obeys its own numbering rules
         run: |
-          python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py \
-            claude/plugins/specs/skills/spec-new/assets/spec-template.md
+          python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py \
+            claude/plugins/docs/skills/spec-new/assets/spec-template.md
 
       # The Stack Profile template is the document products copy, and nearly
       # every reference in it is outbound at STACKSPEC. It became checkable
@@ -162,7 +162,7 @@ jobs:
       # that meant something else entirely.
       - name: Check the Stack Profile template
         run: |
-          python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py \
+          python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py \
             claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md
 
       # Also blocking, and it guards the gate itself. Every check in
@@ -173,11 +173,11 @@ jobs:
       - name: Prove every check still fires
         run: python3 tools/test_spec_check.py
 
-      # ARTIFACTSPEC is what luismc-artifacts is built from, so it obeys the
+      # ARTIFACTSPEC is what the luismc-docs artifacts are built from, so it obeys the
       # same numbering and reference rules as the other binding specs.
       - name: Check ARTIFACTSPEC numbering and references
         run: |
-          python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py             claude/plugins/artifacts/references/artifactspec.md
+          python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py             claude/plugins/docs/references/artifactspec.md
 
       # Blocking, and now the whole check set. authspec_check.py holds the
       # checks that need AUTHSPEC's own content — §4 entity tables, §19.4
@@ -711,7 +711,7 @@ jobs:
         run: python3 -I -m unittest discover -s claude/plugins/docs/tests -t claude/plugins/docs/tests
 
       - name: DOCSPEC numbering and references
-        run: python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py claude/plugins/docs/references/docspec.md
+        run: python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py claude/plugins/docs/references/docspec.md
 
       # The TypeScript guard templates run for real: fixture projects are built with
       # design_system.py, vitest (exact version, temp dir only) runs the four files.

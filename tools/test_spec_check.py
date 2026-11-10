@@ -27,7 +27,7 @@ TOOLS = pathlib.Path(__file__).resolve().parent
 
 def load_spec_check():
     """Import the spec-check plugin asset."""
-    target = TOOLS.parent / "claude/plugins/specs/skills/spec-check/assets/spec_check.py"
+    target = TOOLS.parent / "claude/plugins/docs/skills/spec-check/assets/spec_check.py"
     spec = importlib.util.spec_from_file_location("spec_check", target)
     module = importlib.util.module_from_spec(spec)
     sys.modules["spec_check"] = module
@@ -146,7 +146,7 @@ for case in CASES:
 # DS186: command-line cases (F31, F32, F41, F42). Each runs the script from a
 # directory that is not the repo root.
 import subprocess, tempfile
-CLI = TOOLS.parent / "claude/plugins/specs/skills/spec-check/assets/spec_check.py"
+CLI = TOOLS.parent / "claude/plugins/docs/skills/spec-check/assets/spec_check.py"
 
 
 def cli(name, files, args, want_code, want_text):

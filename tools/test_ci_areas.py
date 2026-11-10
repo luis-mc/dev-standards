@@ -40,9 +40,9 @@ def mflags_early(path_list):
 for path, want in [
     (f"{TS}/references/invariants.md", {"specs"}),
     ("claude/plugins/project-setup/skills/auth-setup/references/authentication.md", {"specs"}),
-    ("claude/plugins/artifacts/references/artifactspec.md", {"specs"}),
-    ("claude/plugins/specs/skills/spec-new/assets/spec-template.md", {"specs"}),
-    ("claude/plugins/specs/skills/spec-check/assets/spec_check.py", {"specs"}),
+    ("claude/plugins/docs/references/artifactspec.md", {"specs"}),
+    ("claude/plugins/docs/skills/spec-new/assets/spec-template.md", {"specs"}),
+    ("claude/plugins/docs/skills/spec-check/assets/spec_check.py", {"specs"}),
     (f"{TS}/assets/stack-profile.md", {"specs"}),
     ("tools/authspec_check.py", {"specs"}),
     ("tools/test_spec_check.py", {"specs"}),
@@ -61,10 +61,11 @@ for path, want in [
     ("tools/test_change_notes.py", {"delivery"}),
     ("tools/test_preflight.py", {"delivery"}),
     ("tools/test_rule_tags.py", {"specs"}),
-    ("claude/plugins/artifacts/rules/project-artifacts.md", {"specs", "artifacts"}),
+    ("claude/plugins/docs/rules/project-artifacts.md", {"specs", "artifacts"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md", {"specs", "profiles"}),
-    ("claude/plugins/artifacts/scripts/render_artifacts.py", {"artifacts"}),
-    ("claude/plugins/artifacts/hooks/hooks.json", {"artifacts"}),
+    ("claude/plugins/docs/scripts/render_artifacts.py", {"artifacts"}),
+    ("claude/plugins/docs/scripts/artifacts/hook_session_start.py", {"artifacts"}),
+    ("claude/plugins/docs/design/DESIGN.md", {"artifacts"}),
     ("tools/test_project_artifacts_hooks.py", {"artifacts"}),
     ("tools/test_render_artifacts.py", {"artifacts"}),
     ("claude/plugins/audits/skills/security-audit/SKILL.md", {"profiles"}),
@@ -78,7 +79,7 @@ for path, want in [
     ("claude/plugins/transcript-folds/types/state.d.ts", {"transcript-folds"}),
     ("claude/plugins/docs/scripts/docs_check.py", {"docs"}),
     ("claude/plugins/docs/tests/test_check.py", {"docs"}),
-    ("claude/plugins/docs/hooks/hooks.json", {"docs"}),
+    ("claude/plugins/docs/hooks/hooks.json", {"docs", "artifacts"}),
     ("claude/plugins/docs/templates/feature-spec.md", {"docs"}),
     ("claude/plugins/docs/references/docspec.md", {"specs", "docs"}),
     ("claude/plugins/docs/skills/docs-check/SKILL.md", {"profiles"}),
@@ -91,7 +92,7 @@ for path in [".github/workflows/spec-lint.yml", "tools/ci_areas.py", "tools/test
     check(f"shared {path}", hit([path]), ALL)
 
 # unknown under tools/ or claude/ runs everything
-for path in ["tools/brand_new_script.py", "claude/plugins/specs/skills/spec-new/notes.txt",
+for path in ["tools/brand_new_script.py", "claude/plugins/brand-new-plugin/notes.txt",
              "claude/other/file.txt"]:
     check(f"unknown {path}", hit([path]), ALL)
 
@@ -99,7 +100,6 @@ for path in ["tools/brand_new_script.py", "claude/plugins/specs/skills/spec-new/
 for path in ["docs/artifacts/feature-x.html", "docs/plans/test-cost-train.md",
              "docs/specs/changes/foo.md", "README.md", ".gitignore",
              ".github/workflows/nightly.yml", ".github/workflows/template-build.yml",
-             "claude/plugins/artifacts/.claude-plugin/plugin.json",
              "claude/plugins/transcript-folds/.claude-plugin/plugin.json",
              "claude/plugins/docs/.claude-plugin/plugin.json",
              f"{TS}/assets/catalog/tech/data.yaml", f"{TS}/assets/check_stack.py",
@@ -186,7 +186,7 @@ check("advice specs light", ca.advice([f"{TS}/references/invariants.md"]),
 check("advice heavy delivery", ca.advice([f"{TS}/assets/preflight.py"], "DS9-a"),
       "heavy: delivery -> run `gh workflow run spec-lint.yml --ref DS9-a -f areas=delivery`")
 check("advice heavy lists touched areas",
-      ca.advice(["claude/plugins/artifacts/x.py", "tools/test_model_profiles.py"], "b"),
+      ca.advice(["claude/plugins/docs/scripts/render_artifacts.py", "tools/test_model_profiles.py"], "b"),
       "heavy: artifacts -> run `gh workflow run spec-lint.yml --ref b -f areas=artifacts,profiles`")
 check("advice shared path is every area, heavy",
       ca.advice(["tools/ci_areas.py"], "b"),

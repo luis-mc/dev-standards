@@ -40,7 +40,7 @@ flowchart TD
   g --> h[Done / Left for you / What you can do now]
 ```
 
-After it: `/luismc-project-setup:claude-setup status` shows what is set, `/luismc-docs:docs-check` checks the docs, `/luismc-specs:spec-new` writes a spec, `/luismc-audits:security-audit` audits security, `ctrl+x d` toggles syntax highlighting. Reload with `/reload-plugins`.
+After it: `/luismc-project-setup:claude-setup status` shows what is set, `/luismc-docs:docs-check` checks the docs, `/luismc-docs:spec-new` writes a spec, `/luismc-audits:security-audit` audits security, `ctrl+x d` toggles syntax highlighting. Reload with `/reload-plugins`.
 
 ## docs-setup
 
