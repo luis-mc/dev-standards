@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T22:30+00:00",
+  "updated": "2026-11-10T22:36+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3356,11 +3356,11 @@
       "id": "DL181",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "CI rerun runs not-yet-passed jobs first",
       "detail": "Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.",
       "expected": "10 Nov",
-      "changed": "2026-11-10T22:28+00:00",
+      "changed": "2026-11-10T22:36+00:00",
       "rides": "DS226",
       "started": "2026-11-10T22:14+00:00"
     },
@@ -6943,12 +6943,11 @@
       "id": "DS226",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-91: DL181 CI rerun runs not-yet-passed jobs first",
       "detail": "Join DL181, CI, merge, plugin update.",
-      "expected": "10 Nov ~22:43",
-      "changed": "2026-11-10T22:30+00:00",
-      "expected_basis": "secret-scan false positive fixed; rerun CI ~5 min from ~22:34",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T22:36+00:00",
       "release": 91,
       "phases": [
         {

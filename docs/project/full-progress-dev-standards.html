@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T22:30+00:00",
+ "updated": "2026-11-10T22:36+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4236,11 +4236,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL181",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "CI rerun runs not-yet-passed jobs first",
    "detail": "Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.",
    "expected": "10 Nov",
-   "changed": "2026-11-10T22:28+00:00",
+   "changed": "2026-11-10T22:36+00:00",
    "rides": "DS226",
    "started": "2026-11-10T22:14+00:00"
   },
@@ -7823,12 +7823,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS226",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-91: DL181 CI rerun runs not-yet-passed jobs first",
    "detail": "Join DL181, CI, merge, plugin update.",
-   "expected": "10 Nov ~22:43",
-   "changed": "2026-11-10T22:30+00:00",
-   "expected_basis": "secret-scan false positive fixed; rerun CI ~5 min from ~22:34",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T22:36+00:00",
    "release": 91,
    "phases": [
     {
@@ -8448,65 +8447,36 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T22:30+00:00">10 Nov 22:30</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T22:36+00:00">10 Nov 22:36</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DS226"><span class="task-id">DS226</span><span class="release-name">RELEASE-91</span>DL181 CI rerun runs not-yet-passed jobs first <span class="glance-expected">10 Nov ~22:43</span><span class="glance-basis">secret-scan false positive fixed; rerun CI ~5 min from ~22:34</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">54 tasks</span></summary>
 <ul>
 <li data-glance-task="DL181"><span class="task-id">DL181</span>CI rerun runs not-yet-passed jobs first</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">52 tasks</span></summary>
-<ul>
+<li data-glance-task="DS226"><span class="task-id">DS226</span><span class="release-name">RELEASE-91</span>DL181 CI rerun runs not-yet-passed jobs first</li>
 <li data-glance-task="DL182"><span class="task-id">DL182</span>Wine wrapper self-check: hash -r before command -v</li>
 <li data-glance-task="DS225"><span class="task-id">DS225</span><span class="release-name">RELEASE-90</span>DL182 Wine wrapper self-check fix</li>
 <li data-glance-task="DL179"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</li>
 <li data-glance-task="DL180"><span class="task-id">DL180</span>Pool Wine drops TMPDIR (wrappers in windows-packaging layer)</li>
 <li data-glance-task="DS224"><span class="task-id">DS224</span><span class="release-name">RELEASE-89</span>pool sets up a Wine prefix at start (DL179)</li>
 <li data-glance-task="DL177"><span class="task-id">DL177</span>Pool sizing: VM measured by its working set; docker read fails</li>
-<li data-glance-task="DS223"><span class="task-id">DS223</span><span class="release-name">RELEASE-88</span>pool sizing reads the VM and Docker right (DL177)</li>
-<li data-glance-task="DL178"><span class="task-id">DL178</span>Pool resize to 10 GiB / 7 CPUs</li>
-<li class="glance-more">and 44 more</li>
+<li class="glance-more">and 46 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">510</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">512</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS226 (DL181 CI rerun runs not-yet-passed jobs first) expected live about 22:43." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">22:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">22:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">23:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-91 · DL181 CI rerun runs not-yet-passed jobs first</title>RELEASE-91 · DL181 CI rer…</text>
-<text class="rt-sub" x="0" y="77"><title>DL181</title>DL181</text>
-<rect class="rt-bar agents" x="330" y="52" width="104" height="22"><title>agents 22:15-22:27</title></rect>
-<rect class="rt-bar join" x="434" y="52" width="60.7" height="22"><title>join 22:27-22:34</title></rect>
-<rect class="rt-bar ci" x="494.7" y="52" width="43.3" height="22"><title>PR CI 22:34-22:39</title></rect>
-<rect class="rt-bar merge" x="538" y="52" width="34.7" height="22"><title>merge + cleanup 22:39-22:43</title></rect>
-<polygon class="rt-expected" points="572.7,50 580.7,63 572.7,76 564.7,63"/>
-<text class="rt-live-label" x="572.7" y="92">live ~22:43</text>
-<line class="rt-now" x1="460" y1="36" x2="460" y2="148"/><text class="rt-now-label" x="460" y="161">now 22:30</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-91" open><summary><strong>RELEASE-91 · live ~22:43</strong><span class="fold-count">2 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS226"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS226</span><span class="release-name">RELEASE-91</span>DL181 CI rerun runs not-yet-passed jobs first</td><td data-label="App / service"></td><td data-label="Detail">Join DL181, CI, merge, plugin update.</td><td data-label="Expected">10 Nov ~22:43<span class="expected-basis">secret-scan false positive fixed; rerun CI ~5 min from ~22:34</span></td></tr>
-<tr data-task="DL181"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL181</span>CI rerun runs not-yet-passed jobs first</a></td><td data-label="App / service"></td><td data-label="Detail">Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.</td><td data-label="Expected">10 Nov</td></tr>
-</tbody></table></div>
-</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL183"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends</a></td><td data-label="App / service"></td><td data-label="Detail">DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.</td><td data-label="Expected">11 Nov<span class="expected-basis">after RELEASE-91; before any project turns rerun_first on</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">520 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">522 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL181"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL181</span>CI rerun runs not-yet-passed jobs first</a><span class="release-line"><span class="release-name">RELEASE-91</span></span></td><td data-label="App / service"></td><td data-label="Detail">Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DS226"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS226</span><span class="release-name">RELEASE-91</span>DL181 CI rerun runs not-yet-passed jobs first</td><td data-label="App / service"></td><td data-label="Detail">Join DL181, CI, merge, plugin update.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL182"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL182</span>Wine wrapper self-check: hash -r before command -v</a><span class="release-line"><span class="release-name">RELEASE-90</span></span></td><td data-label="App / service"></td><td data-label="Detail">RELEASE-89 image build failed: dash caches /usr/bin/wine after the first command -v, so the DL180 self-check saw the old path. Add hash -r before the check; test asserts it.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DS225"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS225</span><span class="release-name">RELEASE-90</span>DL182 Wine wrapper self-check fix</td><td data-label="App / service"></td><td data-label="Detail">Fix forward for RELEASE-89: join DL182, CI, merge, plugin update.</td><td data-label="Expected">10 Nov</td></tr>
 <tr data-task="DL179"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</a><span class="release-line"><span class="release-name">RELEASE-89</span></span></td><td data-label="App / service"></td><td data-label="Detail">D192: a CI job&#x27;s first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.</td><td data-label="Expected">10 Nov</td></tr>
@@ -9037,7 +9007,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905828"><time datetime="2026-11-10T22:28+00:00">10 Nov 22:28</time></td><td data-label="Tasks">DL1 to DL183</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905836"><time datetime="2026-11-10T22:36+00:00">10 Nov 22:36</time></td><td data-label="Tasks">DL1 to DL183</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
