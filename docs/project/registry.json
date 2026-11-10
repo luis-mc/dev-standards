@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T13:24+00:00",
+  "updated": "2026-11-10T14:01+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3238,12 +3238,11 @@
       "id": "DL171",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once",
       "detail": "D183: DL-42 matched docker ps inside docker exec as a kill; DL-63 read a hard-coded docs/artifacts registry; the plain-text question rule ran in two hooks with different code.",
-      "expected": "10 Nov ~13:57",
-      "changed": "2026-11-10T13:23+00:00",
-      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T13:55+00:00",
       "rides": "DS217",
       "started": "2026-11-10T13:23+00:00"
     },
@@ -3251,12 +3250,11 @@
       "id": "DL172",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "project-setup holds no CI logic: move CI files to delivery",
       "detail": "D183: CONTRACT.md says tech-stack-setup carries no CI logic, but project-setup ships .githooks/pre-push, delivery-config.json, ci/dev-standards.yml and session_guard wiring. Move them into delivery templates; project-setup calls the installer.",
-      "expected": "10 Nov ~13:57",
-      "changed": "2026-11-10T13:23+00:00",
-      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T13:56+00:00",
       "rides": "DS217",
       "started": "2026-11-10T13:23+00:00"
     },
@@ -3264,12 +3262,11 @@
       "id": "DL173",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Cross-plugin schema and version checks",
       "detail": "D183: artifacts reads .delivery/ledger.json without checking its schema field; nothing warns when installed luismc-* plugins are at versions that do not fit. Add the schema check and a doctor version-skew check.",
-      "expected": "10 Nov ~13:57",
-      "changed": "2026-11-10T13:23+00:00",
-      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T13:56+00:00",
       "rides": "DS217",
       "started": "2026-11-10T13:23+00:00"
     },
@@ -3277,12 +3274,11 @@
       "id": "DL174",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner-pool spec of its own inside luismc-delivery",
       "detail": "D181/D184: move R13.60-R13.89 text into docs/features/runner-pool/spec.md; each old R13 line stays as a one-line pointer so citations resolve.",
-      "expected": "10 Nov ~13:57",
-      "changed": "2026-11-10T13:24+00:00",
-      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T13:56+00:00",
       "rides": "DS217",
       "started": "2026-11-10T13:24+00:00"
     },
@@ -6589,30 +6585,30 @@
       "status": "Running",
       "item": "RELEASE-84: cleanup, hook fixes, bounds, version checks, pool spec",
       "detail": "Five cloud agents (DS217 cleanup, DL171 hook rules, DL172 project-setup/delivery bounds, DL173 schema and version-skew checks, DL174 runner-pool spec), then join, CI, watcher merge, plugin updates, smoke, cleanup.",
-      "expected": "10 Nov ~14:12",
-      "changed": "2026-11-10T13:21+00:00",
-      "expected_basis": "agents 25-35 min measured, join 10, CI 5, merge 2",
+      "expected": "10 Nov ~14:09",
+      "changed": "2026-11-10T14:01+00:00",
+      "expected_basis": "CI rerun on fixed head started 14:00, ~5 min; merge 1-4 min after",
       "release": 84,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-10T13:22+00:00",
-          "end": "2026-11-10T13:57+00:00"
+          "start": "2026-11-10T13:27+00:00",
+          "end": "2026-11-10T13:44+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-10T13:57+00:00",
-          "end": "2026-11-10T14:05+00:00"
+          "start": "2026-11-10T13:52+00:00",
+          "end": "2026-11-10T14:00+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-10T14:05+00:00",
-          "end": "2026-11-10T14:10+00:00"
+          "start": "2026-11-10T14:00+00:00",
+          "end": "2026-11-10T14:05+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-10T14:10+00:00",
-          "end": "2026-11-10T14:12+00:00"
+          "start": "2026-11-10T14:05+00:00",
+          "end": "2026-11-10T14:09+00:00"
         }
       ],
       "started": "2026-11-10T13:21+00:00"
@@ -6624,10 +6620,10 @@
       "status": "Running",
       "item": "Cleanup: screenshots, one-off migration, 4 CI steps, docs layout",
       "detail": "D180: delete 11 unreferenced CO669 screenshots and fix CO669.md; delete convert_interim_record.py and its test; add CI steps for 4 tests run nowhere; testing.md to guides, dated notes to archive, CI runs the plugin spec_check.py and the tools copy goes.",
-      "expected": "10 Nov ~13:57",
-      "changed": "2026-11-10T13:21+00:00",
-      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
-      "rides": "DS217",
+      "expected": "10 Nov ~14:20",
+      "changed": "2026-11-10T13:56+00:00",
+      "expected_basis": "rerun cloud agent launched 13:55, 25 min",
+      "rides": "DS220",
       "started": "2026-11-10T13:21+00:00"
     },
     {
@@ -6640,6 +6636,41 @@
       "expected": "10 Nov ~15:30",
       "changed": "2026-11-10T13:21+00:00",
       "expected_basis": "starts after RELEASE-84 ~14:12; agent ~60 min, join, CI"
+    },
+    {
+      "id": "DS220",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-85: leftover cleanup (DS218 rerun)",
+      "detail": "Carries DS218, rerun from current main after the first run branched from a 3 Nov commit. Joins after RELEASE-84 merges.",
+      "expected": "10 Nov ~14:37",
+      "changed": "2026-11-10T13:56+00:00",
+      "expected_basis": "DS218 cloud agent launched 13:55, 25 min",
+      "release": 85,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-10T13:55+00:00",
+          "end": "2026-11-10T14:20+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T14:20+00:00",
+          "end": "2026-11-10T14:28+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T14:28+00:00",
+          "end": "2026-11-10T14:33+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T14:33+00:00",
+          "end": "2026-11-10T14:37+00:00"
+        }
+      ],
+      "started": "2026-11-10T13:56+00:00"
     },
     {
       "id": "DU1",
