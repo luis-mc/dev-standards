@@ -1,6 +1,6 @@
 # DS219 report
 
-Branch DS219-docs-merge. In progress; the last line says READY or NOT READY.
+Branch DS219-docs-merge, rides RELEASE-86.
 
 ## Base check
 `git fetch origin main && git checkout -B DS219-docs-merge origin/main`, then `git merge-base --is-ancestor 1d82f859 HEAD` succeeded (HEAD was 1d82f85 at the start).
@@ -36,4 +36,30 @@ artifact_queue.record_rel: .claude/artifacts.json record_dir, else docs/artifact
 ## Docs
 Notes: docs/architecture/changes/DS219-docs.md (major), DS219-delivery.md (patch), DS219-project-setup.md (minor). Feature notes (docs_fold.py note): artifacts, specs, docs (major), delivery, models, project-setup. Guide: docs/guides/migrate-to-luismc-docs-2.md, linked from the docs plugin README.
 
-(Tests, CI and head SHA are filled in below.)
+## Left as is, on purpose
+- `.gitleaksignore`: fingerprints of old commits that name the old paths.
+- `docs/architecture/decisions/*`, change logs and version tables: history.
+- `docs/features/artifacts/ci-runs-mockup.html`: sample data.
+- Mentions in the migration guide, the upgrade-stackspec-8 pointer, the two feature specs and the docs README tell readers what the old names map to.
+- Generated files (docs/index.html, llms.txt, features/index.md, docs-map.json) are not committed. docs_check says G1 stale for three of them; the release fold regenerates them. W1 on this report is the expected docs/work guard.
+
+## Tests (local, python -I)
+- tools/test_ci_areas.py: all checks passed
+- tools/test_artifacts_ds219.py: 7 passed, 0 failed
+- tools/test_artifacts_ar59/60/63/66/67/dl173.py: all passed
+- tools/test_project_artifacts.py: 139 passed, 0 failed, 1 skipped
+- tools/test_project_artifacts_hooks.py: 101 passed, 0 failed
+- tools/test_ds_enforcement.py: 33 passed; test_claude_setup_plugins (6 plugins checked, 0 problems); test_model_profiles, test_rule_tags (74 tagged), test_spec_check (24/24), test_plugin_smoke, test_session_guard (18, 0 failed): passed
+- docs plugin unit tests (unittest discover): 189 OK; delivery test_dl173_compat: 7 OK
+- tools/test_artifact_prune.py: did not finish inside 100 s locally; its CI job passed
+- python3 claude/plugins/docs/scripts/docs_check.py: only the three G1 stale generated files (and W1 on this report); everything else clean
+- spec_check.py on docspec.md, artifactspec.md: clean. On docs/features/{artifacts,specs,docs}/spec.md: 5, 1 and 24 errors, the same counts as on origin/main before this task (references to ARTIFACTSPEC and DOCSPEC ids outside the file); no new ones.
+
+## CI: gh workflow run spec-lint.yml --ref DS219-docs-merge (all areas)
+First run 42838307812 (earlier head): failed in docs check (G1), docs plugin (test_ds_enforcement old path) and artifacts (4 move-record tests). Fixed.
+Second run 42840514289, head b6e1f73: success for which-areas, delivery train cleanup, specs/templates/AUTHSPEC, delivery setup preflight, delivery branch gate and trust rule, artifact renderer/commands/hooks, docs plugin, delivery CI scripts and templates, runner plan, area mapping, transcript folds, plugin ledger/recorder/watcher/hooks, change notes enforced and folded, artifact pruning, packaged-program smoke, model profiles, the delivery summary job. Skipped (pull request only): change notes, change notes folded, branch gate shard matrix. Failed: docs check, only for G1 (three generated files stale) and W1 (this report under docs/work/): both expected, neither is a real failure. No job was cancelled.
+
+## Head SHA
+Code head tested by run 42840514289: b6e1f7333cae99451abfb37010574044646648b0 (the next commit changes only this report). The final branch head is the commit that adds this text; see `git log -1 origin/DS219-docs-merge`.
+
+READY
