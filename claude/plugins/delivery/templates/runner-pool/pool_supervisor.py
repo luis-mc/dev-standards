@@ -12,6 +12,7 @@ import argparse
 import json
 import os
 import posixpath
+import shutil
 import signal
 import subprocess
 import sys
@@ -118,6 +119,39 @@ def prepare_tmp(agent, base, run=None, log=_log):
     return True
 
 
+WINE_TIMEOUT_SEC = 180
+
+
+def wine_prefix(agent, base):
+    """DL179: the agent's own Wine prefix, inside its home (/agents/<slug>)."""
+    return posixpath.join(base, agent['slug'], '.wine')
+
+
+def prepare_wine_prefix(agent, base, run=None, which=shutil.which, exists=os.path.exists, log=_log):
+    """DL179: boot a Wine prefix once per agent user, so a job can use or copy it instead of booting a fresh one.
+
+    Does nothing when wine is not on PATH or the prefix already holds system.reg. A failure is logged and never raised.
+    Returns the prefix path when wine is present, else None.
+    """
+    if not which('wine'):
+        return None
+    prefix = wine_prefix(agent, base)
+    if exists(posixpath.join(prefix, 'system.reg')):
+        return prefix
+    run = run or (lambda argv: subprocess.run(argv, check=False, timeout=WINE_TIMEOUT_SEC + 30).returncode)
+    inner = 'xvfb-run -a wineboot --init; wineserver -w'
+    argv = ['runuser', '-u', agent['user'], '--', 'env', 'WINEPREFIX=' + prefix, 'WINEDEBUG=-all',
+            'timeout', str(WINE_TIMEOUT_SEC), 'sh', '-c', inner]
+    try:
+        rc = run(argv)
+    except Exception as exc:  # a Wine problem must never stop the runner
+        log('wine prefix for %s failed: %s' % (agent['user'], exc))
+        return prefix
+    if rc not in (0, None):
+        log('wine prefix for %s failed (exit %s); the runner starts anyway' % (agent['user'], rc))
+    return prefix
+
+
 def per_agent_parallel(environ, n_agents):
     """DL83: the pool's CPU count divided by its agents, at least 1. Jobs size their workers from it."""
     raw = environ.get('POOL_CPUS_INT') or environ.get('CI_MAX_PARALLEL') or '1'
@@ -139,8 +173,9 @@ def popen_spawn(agent, base, env=None):
 
 
 class Supervisor:
-    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None, environ=None):
+    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None, environ=None, which=shutil.which):
         self.agents_file, self.base = agents_file, base
+        self.which = which
         self.environ = environ if environ is not None else os.environ
         self.n_agents = 1
         self.ensure = ensure or (lambda a: True)  # main() passes ensure_user
@@ -150,14 +185,19 @@ class Supervisor:
         self.state = {}  # slug -> {proc, started, fails, next}
         self.stopping = False
 
-    def agent_env(self):
-        """The environment for a new agent: a copy with CI_MAX_PARALLEL set for the current agent count."""
+    def agent_env(self, agent=None):
+        """The environment for a new agent: a copy with CI_MAX_PARALLEL set for the current agent count.
+
+        DL179: with wine on PATH it also sets POOL_WINE_PREFIX to the agent's prepared prefix.
+        """
         env = dict(self.environ)
         env['CI_MAX_PARALLEL'] = str(per_agent_parallel(self.environ, self.n_agents))
+        if agent is not None and self.which('wine'):
+            env['POOL_WINE_PREFIX'] = wine_prefix(agent, self.base)
         return env
 
     def _default_spawn(self, agent):
-        env = self.agent_env()
+        env = self.agent_env(agent)
         _log('agent %s starts with CI_MAX_PARALLEL=%s (%d agents)' % (agent['slug'], env['CI_MAX_PARALLEL'], self.n_agents))
         return popen_spawn(agent, self.base, env)
 
@@ -211,6 +251,13 @@ class Supervisor:
                 s['proc'].kill()
 
 
+def prepare_wine_ok(agent, base):
+    """DL179: run prepare_wine_prefix for a real folder only; always True so the runner starts."""
+    if os.path.isdir(posixpath.join(base, agent['slug'])):
+        prepare_wine_prefix(agent, base)
+    return True
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(description=__doc__.split('\n\n')[0])
     ap.add_argument('--agents', default='/agents.json')
@@ -219,7 +266,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     for agent in load_agents(args.agents):
         ensure_user(agent, args.base)
-    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base))
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))

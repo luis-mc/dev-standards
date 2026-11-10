@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.4.0
+version: 0.5.0
 owner: agents
 type: reference
 code:
@@ -80,6 +80,12 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.16** (was delivery R13.88) — **Pool image has the LLVM tools for Windows builds** (DL167). The pool image always installs the distro `clang`, `lld` and `llvm` packages (about 250 MB) in its base apt layer, not behind `POOL_LAYERS`. It links `clang-cl`, `lld-link`, `llvm-lib`, `llvm-ar`, `llvm-rc` and `lld` into `/usr/local/bin` from the LLVM version found at build time, so every user finds them. A build-time check runs `clang-cl --version`, `lld-link --version` and `llvm-lib /?`, so a broken install fails the build. `cargo xwin build --target x86_64-pc-windows-msvc` needs these tools for crates with C or C++ code.
 
+**R5.17** — **Wine prefix per agent** (DL179, D192). Only when the image has the `windows-packaging` layer (`wine` is on PATH), `pool_supervisor.py` prepares a Wine prefix for each agent user before it starts that agent's runner. It runs, as that user, `WINEPREFIX=/agents/<slug>/.wine wineboot --init` under `xvfb-run -a`, with `WINEDEBUG=-all`, a 180 s timeout and `wineserver -w` after it. It skips an agent whose prefix already holds `system.reg`. A failure is logged and never stops the runner from starting. Without `wine` nothing runs. The prefix lives in `/agents`, so a container recreated by a resize or refresh keeps it.
+
+**R5.18** — **`POOL_WINE_PREFIX`** (DL179, D192). With `wine` on PATH, the supervisor sets `POOL_WINE_PREFIX=/agents/<slug>/.wine` in each agent's environment. A job can use it directly or copy it (`cp -a "$POOL_WINE_PREFIX" "$WINEPREFIX"`) instead of booting a fresh prefix. Without `wine` the variable is not set.
+
+**R5.19** — **Wine runs without `TMPDIR`** (DL180). Wine aborts with `free(): invalid pointer` when `TMPDIR` is set, to any value. With the `windows-packaging` layer the image wraps each Wine entry tool (`wine`, `wine64`, `wine-stable`, `wineboot`, `wineserver`, `winecfg`, `msiexec`) in `/usr/local/bin` with a script that unsets `TMPDIR` and runs the real tool from `/usr/bin`. The pool still sets `TMPDIR` for every other tool. The image build fails if `wine` on PATH is not the wrapper.
+
 ### 5.3 Pool doctor checks and setup
 
 **R5.17** (was delivery R13.70) — **Doctor pool checks** (DL149). `pool.<name>.layer-windows-packaging`: with the layer on, `wine`, `xvfb-run` and `dotnet` exist in the pool image (a warning when Docker cannot be read). `pool.<name>.layers-config`: the project config and the pool `.env` agree. `pool.<name>.stray-dockerfile`: a Dockerfile under a `runners` or `runner` folder of the project is flagged, because the pool never uses it; the fix is `.delivery/pool.apt` or a layer. `pool.<name>.tool-cache`: `compose.yaml` mounts a named volume at `/ci-tools` and it is writable.
@@ -129,6 +135,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.0 | 2026-11-10 | RELEASE-89 | Wine prefix prepared per agent at container start and exported as POOL_WINE_PREFIX (R5.17, R5.18).<br>Wine entry tools in the pool image run through wrappers that unset TMPDIR, because Wine aborts with free(): invalid pointer when it is set. | DL179, DL180 |
 | 0.4.0 | 2026-11-10 | RELEASE-88 | Pool sizing measures the WSL VM (larger of working set and private bytes, never below container use), reads Docker through the Windows CLI before wsl, judges fit against the host-load sample too, and names sizes that pass (R5.22 to R5.24). | DL177 |
 | 0.3.0 | 2026-11-10 | RELEASE-87 | Pool plans keep browsers, layers, apt and Playwright from the pool .env; the memory figure is a median of samples; a --resize that lowers the cap needs --shrink; --pool-gib and --pool-cpus set the pool size (R5.19 to R5.21). | DL176 |
 | 0.2.0 | 2026-11-10 | RELEASE-84 | Runner-pool requirements move here from the delivery spec (D181, D184); old IDs stay as pointers. | DL174 |
