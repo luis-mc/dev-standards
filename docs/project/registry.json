@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T19:01+00:00",
+  "updated": "2026-11-10T19:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3323,9 +3323,9 @@
       "status": "Needs you",
       "item": "Pool resize to 10 GiB / 7 CPUs",
       "detail": "Owner chose 10 GiB / 7 CPUs (D190) after the PC reached 83% with the 12 GiB pool. Done by hand: the tool refuses because its outside-WSL figure is unreliable (DL177). Lowers the WSL VM ceiling from 14 to 12 GB.",
-      "expected": "10 Nov ~17:45",
-      "changed": "2026-11-10T19:01+00:00",
-      "expected_basis": "owner runs the WSL restart; ~2 min after",
+      "expected": "10 Nov ~19:10",
+      "changed": "2026-11-10T19:02+00:00",
+      "expected_basis": "if the owner runs the WSL restart by 19:05; ~5 min to runners online",
       "no_release": "machine change only; no repo code"
     },
     {
