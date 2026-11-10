@@ -123,6 +123,16 @@ def read_json(path):
     return value
 
 
+def record_dir(root):
+    """DL171: the project record folder: `record_dir` in docs/docs.json, then in .claude/artifacts.json, default
+    docs/project (the order and default of delivery_ledger.py)."""
+    for rel in (('docs', 'docs.json'), ('.claude', 'artifacts.json')):
+        cfg = read_json(os.path.join(root, *rel))
+        if isinstance(cfg, dict) and isinstance(cfg.get('record_dir'), str) and cfg['record_dir']:
+            return cfg['record_dir']
+    return 'docs/project'
+
+
 def load_config(root):
     cfg = copy.deepcopy(DEFAULTS)
     user = read_json(os.path.join(root, '.delivery', 'config.json'))

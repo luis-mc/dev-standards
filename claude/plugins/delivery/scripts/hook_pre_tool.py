@@ -155,13 +155,29 @@ def check_kill(seg, command):
         deny(msg)
     if prog == 'taskkill' and any(x in ('/im', '-im') for x in t):
         deny(msg)
-    if prog == 'docker' and any(x in ('stop', 'kill', 'rm') for x in t) and any('$(' in x or '`' in x for x in t):
-        deny(msg)
-    if re.search(r'docker\s+(?:container\s+)?ls?\b[^|;&]*\|\s*xargs\s+docker|docker\s+ps[^|;&]*\|\s*xargs\s+docker|'
-                 r'\$\(\s*docker\s+(?:ps|container\s+ls)', command):
-        deny(msg)
-    if prog == 'kill' and any('$(pgrep' in x or '`pgrep' in x for x in t):
-        deny(msg)
+    if is_stop_program(t):
+        if any('$(' in x or '`' in x for x in t) and re.search(
+                r'[$(`]\s*\(?\s*(?:docker\s+(?:ps|container\s+ls)|pgrep)\b', ' '.join(t)):
+            deny(msg)
+    if prog == 'xargs' and is_stop_program(t[1:]) and re.search(r'docker\s+(?:ps|container\s+ls|ls)\b', command):
+        deny(msg)        # `docker ps -q | xargs docker stop`: the list comes from the segment before the pipe
+
+
+def is_stop_program(t):
+    """DL171: the segment stops or kills something: docker stop/kill/rm, docker compose down/stop/kill/rm, kill,
+    taskkill, pkill, Stop-Process. A `$(docker ps ...)` inside docker exec, logs, inspect or cp is only a lookup."""
+    if not t:
+        return False
+    if t[0] in ('kill', 'killall', 'pkill', 'taskkill', 'stop-process'):
+        return True
+    if t[0] != 'docker':
+        return False
+    rest = [x for x in t[1:] if not x.startswith('-')]
+    if rest[:1] in (['stop'], ['kill'], ['rm']):
+        return True
+    if rest[:2] in (['container', 'stop'], ['container', 'kill'], ['container', 'rm']):
+        return True
+    return rest[:1] == ['compose'] and rest[1:2] in (['down'], ['stop'], ['kill'], ['rm'])
 
 
 def norm_path(p):

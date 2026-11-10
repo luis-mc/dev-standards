@@ -100,10 +100,11 @@ def f18():
               "Done. I chose the simpler option and changed:\n- config.py\n- README.md"):
         if stop(m) == 2:
             e.append(f"F18 blocked a list of done work: {m[:30]!r}")
-    if stop("Which one do you want?\n\n- A\n- B") != 2:
-        e.append("F18 real options list no longer blocked")
-    if stop("Pick one:\n- A\n- B") != 2:
-        e.append("F18 'Pick one:' list no longer blocked")
+    # DL171: Q-2 (a question asked in plain text) lives only in the delivery Stop hook; this hook lets these through.
+    if stop("Which one do you want?\n\n- A\n- B") != 0:
+        e.append("F18 options list blocked by the user-level hook (Q-2 moved to delivery)")
+    if stop("Pick one:\n- A\n- B") != 0:
+        e.append("F18 'Pick one:' list blocked by the user-level hook (Q-2 moved to delivery)")
     return e
 
 
