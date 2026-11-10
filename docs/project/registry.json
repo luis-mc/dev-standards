@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T21:22+00:00",
+  "updated": "2026-11-10T21:31+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3333,24 +3333,22 @@
       "id": "DL179",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool sets up a Wine prefix at container start",
       "detail": "D192: a CI job's first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.",
-      "expected": "10 Nov ~21:46",
-      "changed": "2026-11-10T21:17+00:00",
-      "rides": "DS224",
-      "expected_basis": "cloud agent from 21:18, 28 min"
+      "expected": "10 Nov ~22:01",
+      "changed": "2026-11-10T21:24+00:00",
+      "rides": "DS224"
     },
     {
       "id": "DL180",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool Wine drops TMPDIR (wrappers in windows-packaging layer)",
       "detail": "Peer finding: in the pool every wine run aborts with free(): invalid pointer when TMPDIR is set (any value); unset works. Runner .env sets TMPDIR (DL87). Fix: /usr/local/bin wrappers for the wine tools that exec the real tool with TMPDIR unset.",
-      "expected": "10 Nov ~22:01",
-      "changed": "2026-11-10T21:21+00:00",
-      "expected_basis": "cloud agent ~25 min, then RELEASE-89 join + CI",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T21:31+00:00",
       "rides": "DS224",
       "started": "2026-11-10T21:21+00:00"
     },

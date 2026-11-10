@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T21:22+00:00",
+ "updated": "2026-11-10T21:31+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4213,24 +4213,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL179",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Pool sets up a Wine prefix at container start",
    "detail": "D192: a CI job's first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.",
-   "expected": "10 Nov ~21:46",
-   "changed": "2026-11-10T21:17+00:00",
-   "rides": "DS224",
-   "expected_basis": "cloud agent from 21:18, 28 min"
+   "expected": "10 Nov ~22:01",
+   "changed": "2026-11-10T21:24+00:00",
+   "rides": "DS224"
   },
   {
    "id": "DL180",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Pool Wine drops TMPDIR (wrappers in windows-packaging layer)",
    "detail": "Peer finding: in the pool every wine run aborts with free(): invalid pointer when TMPDIR is set (any value); unset works. Runner .env sets TMPDIR (DL87). Fix: /usr/local/bin wrappers for the wine tools that exec the real tool with TMPDIR unset.",
-   "expected": "10 Nov ~22:01",
-   "changed": "2026-11-10T21:21+00:00",
-   "expected_basis": "cloud agent ~25 min, then RELEASE-89 join + CI",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T21:31+00:00",
    "rides": "DS224",
    "started": "2026-11-10T21:21+00:00"
   },
@@ -8363,16 +8361,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T21:22+00:00">10 Nov 21:22</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T21:31+00:00">10 Nov 21:31</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL179"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start <span class="glance-expected">10 Nov ~21:46</span><span class="glance-basis">cloud agent from 21:18, 28 min</span></li>
-<li data-glance-task="DL180"><span class="task-id">DL180</span>Pool Wine drops TMPDIR (wrappers in windows-packaging layer) <span class="glance-expected">10 Nov ~22:01</span><span class="glance-basis">cloud agent ~25 min, then RELEASE-89 join + CI</span></li>
 <li data-glance-task="DS224"><span class="task-id">DS224</span><span class="release-name">RELEASE-89</span>pool sets up a Wine prefix at start (DL179) <span class="glance-expected">10 Nov ~22:01</span><span class="glance-basis">agent from 21:18, 28 min; CI 5; merge 4</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL180"><span class="task-id">DL180</span>Pool Wine drops TMPDIR (wrappers in windows-packaging layer)</li>
+<li data-glance-task="DL179"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">47 tasks</span></summary>
@@ -8389,7 +8391,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">505</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">505</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -8402,15 +8404,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <rect class="rt-bar merge" x="529.3" y="52" width="23.1" height="22"><title>merge + cleanup 21:57-22:01</title></rect>
 <polygon class="rt-expected" points="552.4,50 560.4,63 552.4,76 544.4,63"/>
 <text class="rt-live-label" x="552.4" y="92">live ~22:01</text>
-<line class="rt-now" x1="327.1" y1="36" x2="327.1" y2="148"/><text class="rt-now-label" x="327.1" y="161">now 21:22</text>
+<line class="rt-now" x1="379.1" y1="36" x2="379.1" y2="148"/><text class="rt-now-label" x="379.1" y="161">now 21:31</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <details class="status-fold release-group" data-group="release-89" open><summary><strong>RELEASE-89 · live ~22:01</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS224"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS224</span><span class="release-name">RELEASE-89</span>pool sets up a Wine prefix at start (DL179)</td><td data-label="App / service"></td><td data-label="Detail">Carries DL179 (D192).</td><td data-label="Expected">10 Nov ~22:01<span class="expected-basis">agent from 21:18, 28 min; CI 5; merge 4</span></td></tr>
-<tr data-task="DL179"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</a></td><td data-label="App / service"></td><td data-label="Detail">D192: a CI job&#x27;s first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.</td><td data-label="Expected">10 Nov ~21:46<span class="expected-basis">cloud agent from 21:18, 28 min</span></td></tr>
-<tr data-task="DL180"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL180</span>Pool Wine drops TMPDIR (wrappers in windows-packaging layer)</a></td><td data-label="App / service"></td><td data-label="Detail">Peer finding: in the pool every wine run aborts with free(): invalid pointer when TMPDIR is set (any value); unset works. Runner .env sets TMPDIR (DL87). Fix: /usr/local/bin wrappers for the wine tools that exec the real tool with TMPDIR unset.</td><td data-label="Expected">10 Nov ~22:01<span class="expected-basis">cloud agent ~25 min, then RELEASE-89 join + CI</span></td></tr>
+<tr data-task="DL179"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</a></td><td data-label="App / service"></td><td data-label="Detail">D192: a CI job&#x27;s first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.</td><td data-label="Expected">10 Nov ~22:01</td></tr>
+<tr data-task="DL180"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL180</span>Pool Wine drops TMPDIR (wrappers in windows-packaging layer)</a></td><td data-label="App / service"></td><td data-label="Detail">Peer finding: in the pool every wine run aborts with free(): invalid pointer when TMPDIR is set (any value); unset works. Runner .env sets TMPDIR (DL87). Fix: /usr/local/bin wrappers for the wine tools that exec the real tool with TMPDIR unset.</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
@@ -8945,7 +8947,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905762"><time datetime="2026-11-10T21:22+00:00">10 Nov 21:22</time></td><td data-label="Tasks">DL1 to DL181</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905771"><time datetime="2026-11-10T21:31+00:00">10 Nov 21:31</time></td><td data-label="Tasks">DL1 to DL181</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">2 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
