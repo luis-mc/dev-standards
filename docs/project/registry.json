@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T16:51+00:00",
+  "updated": "2026-11-10T16:52+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3298,11 +3298,14 @@
       "id": "DL176",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Fix pool resize: cap counts the VM as used; drops POOL_BROWSERS",
       "detail": "delivery_ci_setup pool-plan --resize gave 12, 2.5 and 6.5 GiB caps in a few minutes on the same PC: it subtracts the running Docker VM from free memory, so it cannot size the VM upward. It also shows POOL_BROWSERS none when the pool .env has chromium, even with --browsers chromium; --cpus 4 gave a 0.5 GiB cap.",
-      "expected": "11 Nov",
-      "changed": "2026-11-10T16:46+00:00"
+      "expected": "10 Nov ~17:24",
+      "changed": "2026-11-10T16:52+00:00",
+      "expected_basis": "cloud agent from 16:56, 28 min",
+      "rides": "DS222",
+      "started": "2026-11-10T16:52+00:00"
     },
     {
       "id": "DS1",
@@ -6725,6 +6728,41 @@
         }
       ],
       "started": "2026-11-10T14:35+00:00"
+    },
+    {
+      "id": "DS222",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-87: pool resize fix (DL176)",
+      "detail": "Carries DL176: pool-plan keeps the pool's browsers, layers and cap, takes explicit pool memory and CPUs, and never shrinks the cap silently.",
+      "expected": "10 Nov ~17:39",
+      "changed": "2026-11-10T16:52+00:00",
+      "expected_basis": "cloud agent from 16:56, 28 min; CI 5; merge 4",
+      "release": 87,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-10T16:56+00:00",
+          "end": "2026-11-10T17:24+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T17:24+00:00",
+          "end": "2026-11-10T17:30+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T17:30+00:00",
+          "end": "2026-11-10T17:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T17:35+00:00",
+          "end": "2026-11-10T17:39+00:00"
+        }
+      ],
+      "started": "2026-11-10T16:52+00:00"
     },
     {
       "id": "DU1",
