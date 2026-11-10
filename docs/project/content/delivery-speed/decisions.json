@@ -3949,6 +3949,30 @@
    "chosen": "Run it now",
    "decided": "2026-11-10",
    "owner_words": "Run it now (Recommended)"
+  },
+  {
+   "id": "D175",
+   "question": "When should DL165 (wrong RUNNER_SHA256 kept; test wrote into the real machine folder) and DL166 (pool-refresh exit 0 and wrong result text) ship?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL165",
+   "options": [
+    {
+     "label": "Launch now as RELEASE-80",
+     "summary": "Cloud agent now, join and CI after, merge on green."
+    },
+    {
+     "label": "Ride the next release",
+     "summary": "Keep them To do for the next release."
+    },
+    {
+     "label": "Hold",
+     "summary": "Recorded only."
+    }
+   ],
+   "chosen": "Launch now as RELEASE-80",
+   "decided": "2026-11-10",
+   "owner_words": "Launch now as RELEASE-80 (Recommended)"
   }
  ]
 }

@@ -888,12 +888,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T07:21+00:00">10 Nov 07:21</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T07:22+00:00">10 Nov 07:22</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">10 Nov 07:21</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL165"><span class="task-id">DL165</span>pool-refresh trusts a wrong RUNNER_SHA256 in the pool .env <span class="glance-expected">10 Nov</span></li>
+<li data-glance-task="DL166"><span class="task-id">DL166</span>pool-refresh exits 0 and misreports when the build fails or recreates <span class="glance-expected">10 Nov</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">42 tasks</span></summary>
 <ul>
@@ -909,12 +915,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">158</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">158</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL165"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL165</span>pool-refresh trusts a wrong RUNNER_SHA256 in the pool .env</td><td data-label="Detail">Refresh keeps an existing RUNNER_SHA256 (delivery_runner_pool.py:1157) even when it differs from the pinned hash for the same RUNNER_VERSION. The shared pool .env held the 64-&#x27;a&#x27; test value from test_dl92_pool_fixes ENV_OK, so the 1.19.0 Dockerfile check failed the build. Fix: correct it to the pinned or released hash; doctor flags a mismatch; find the test that wrote into the real machine dir.</td><td data-label="Expected">10 Nov</td></tr>
-<tr data-task="DL166"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><span class="task-id">DL166</span>pool-refresh exits 0 and misreports when the build fails or recreates</td><td data-label="Detail">pool-refresh --yes printed &#x27;the rebuild failed&#x27; with exit 0, and after a 5-min rebuild that replaced the container it printed &#x27;image unchanged (cache hit); the container already runs it&#x27;. compose up --build recreates the container itself, so the before/after image id must be read before the build. Fix: non-zero exit on build failure; compare the container&#x27;s image id before and after.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL165"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL165</span>pool-refresh trusts a wrong RUNNER_SHA256 in the pool .env<span class="release-line"><span class="release-name">RELEASE-80</span></span></td><td data-label="Detail">Refresh keeps an existing RUNNER_SHA256 (delivery_runner_pool.py:1157) even when it differs from the pinned hash for the same RUNNER_VERSION. The shared pool .env held the 64-&#x27;a&#x27; test value from test_dl92_pool_fixes ENV_OK, so the 1.19.0 Dockerfile check failed the build. Fix: correct it to the pinned or released hash; doctor flags a mismatch; find the test that wrote into the real machine dir.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL166"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL166</span>pool-refresh exits 0 and misreports when the build fails or recreates<span class="release-line"><span class="release-name">RELEASE-80</span></span></td><td data-label="Detail">pool-refresh --yes printed &#x27;the rebuild failed&#x27; with exit 0, and after a 5-min rebuild that replaced the container it printed &#x27;image unchanged (cache hit); the container already runs it&#x27;. compose up --build recreates the container itself, so the before/after image id must be read before the build. Fix: non-zero exit on build failure; compare the container&#x27;s image id before and after.</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">164 tasks</span></summary>
@@ -1118,6 +1124,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D175">
+<h3 class="decision-head"><span class="decision-id">D175</span> <span class="decision-question">When should DL165 (wrong RUNNER_SHA256 kept; test wrote into the real machine folder) and DL166 (pool-refresh exit 0 and wrong result text) ship?</span></h3>
+<p class="decision-meta">Asked 10 Nov · Decided 10 Nov · Task DL165</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Launch now as RELEASE-80</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Nov</span></div>
+<p class="decision-summary">Cloud agent now, join and CI after, merge on green.</p>
+<blockquote class="decision-words">&ldquo;Launch now as RELEASE-80 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ride the next release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep them To do for the next release.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Recorded only.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D174">
 <h3 class="decision-head"><span class="decision-id">D174</span> <span class="decision-question">May the session run luismc-delivery 1.19.0 pool-refresh --yes on the shared runner pool (new Dockerfile and compose.yaml, Playwright 1.63.0 -&gt; 1.65.0, keep windows-packaging, rebuild, recreate)?</span></h3>
 <p class="decision-meta">Asked 10 Nov · Decided 10 Nov · Task DL162</p>
