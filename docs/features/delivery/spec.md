@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.20.0
+version: 0.20.1
 owner: agents
 type: reference
 code:
@@ -497,6 +497,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.1 | 2026-11-10 | RELEASE-82 | The pool image links clang as clang-cl when the distro ships no clang-cl (Ubuntu 24.04), so the LLVM self-check passes (R13.88). | DL169 |
 | 0.20.0 | 2026-11-10 | RELEASE-81 | R13.88: the pool image installs clang, lld and llvm and links clang-cl, lld-link and llvm-lib onto PATH, with a build-time self-check.<br>R13.89: ETAs from measured history. The ledger records agent finish time and CI wall time; delivery_eta.py gives median and p75; the DL-30 launch check refuses an eta more than 50 % above the measured p75 without an eta-reason line; show prints eta against time taken. | DL167, DL168 |
 | 0.19.1 | 2026-11-10 | RELEASE-80 | R13.86 and R13.87: pool-refresh fixes a wrong runner hash, exits non-zero on a failed build, and reports the build result from image ids read before and after. | DL165 |
 | 0.19.0 | 2026-11-09 | RELEASE-79 | R13.84: pool-refresh copies the plugin's pool files (with a backup), compares image ids after the build, recreates the container when the image changed, and reports what really happened; the doctor warns on stale pool files.<br>R13.85: every path that makes a train row takes a free id; link makes a new row for an unknown branch; show warns about duplicate ids. | DL162, DL163 |
