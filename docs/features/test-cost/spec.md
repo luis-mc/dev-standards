@@ -1,7 +1,7 @@
 ---
 id: test-cost
 title: Test and validation cost
-apps: [luismc-project-setup, luismc-artifacts]
+apps: [luismc-project-setup, luismc-docs]
 topics: [ci, testing]
 status: live
 version: 0.2.2
@@ -26,12 +26,12 @@ All eight fixes shipped in #47: CI runs only the areas a change touches, mutatio
 
 The owner was right about duplication, but wrong in one place: the checks themselves are good. All 94 gate mutants are caught. The extra CI runs found three Linux-only bugs and one weak test. The problem is *how often* the checks run and that they run for every change. There are four causes:
 
-1. **Everything runs for every change.** spec-lint is one job of 17 steps with no scoping, so a luismc-artifacts patch pays 13.7 minutes for delivery-script tests it cannot affect, including an 8.8-minute mutation pass.
+1. **Everything runs for every change.** spec-lint is one job of 17 steps with no scoping, so a luismc-docs patch pays 13.7 minutes for delivery-script tests it cannot affect, including an 8.8-minute mutation pass.
 2. **The same commit is tested at three stages.** Agents ran the full workflow on their branches (half of all CI time). The ready PR ran it again on the joined result. Then `main` ran it a third time on a tree that differs only in record files.
 3. **Tests that once had a reason were never retired.** The fake-renderer group covered the time before the real renderer existed. Now it doubles the artifacts suite. Mutants rerun whole scenarios after they are already caught.
 4. **The record writes to main like a chat.** One push per status change: 264 commits in a day, each scanned, all of them moving `main` under the CI runs that are meant to test a fixed tree.
 
-What this cost the owner: a release that changes only luismc-artifacts waits about 17.5 minutes for its ready-PR run where about 3.8 would prove the same, plus 17.4 more on `main`. A train like 7.1.0 spent 1 h 54 between its first branch run and its merge.
+What this cost the owner: a release that changes only luismc-docs waits about 17.5 minutes for its ready-PR run where about 3.8 would prove the same, plus 17.4 more on `main`. A train like 7.1.0 spent 1 h 54 between its first branch run and its merge.
 
 ## 3. How it works
 
@@ -39,7 +39,7 @@ What this cost the owner: a release that changes only luismc-artifacts waits abo
 
 On 11 October the owner wrote: I'm concerned we're overdoing it in terms of tests and validations and there might be a lot of duplication and unnecessary tests being run. This page answers that with measurements, not impressions: what runs, how often, for how long, and what each run actually caught.
 
-Scope: the test suites in `tools/`, the GitHub workflows of this repository (`spec-lint`, `secret-scan`, `template-build`, `train-cleanup`), the runs agents and the session made on this PC, and the record commands of luismc-artifacts. Window: 10 October 20:35 to 11 October 11:00 (Lisbon), the two days in which STACKSPEC 7.0.0 and 7.1.0 and luismc-artifacts 1.1.0 to 1.3.1 were built.
+Scope: the test suites in `tools/`, the GitHub workflows of this repository (`spec-lint`, `secret-scan`, `template-build`, `train-cleanup`), the runs agents and the session made on this PC, and the record commands of luismc-docs. Window: 10 October 20:35 to 11 October 11:00 (Lisbon), the two days in which STACKSPEC 7.0.0 and 7.1.0 and luismc-docs 1.1.0 to 1.3.1 were built.
 
 **One correction up front.** This repository is public, so GitHub Actions minutes are free (a sampled run reports 0 billable milliseconds). The cost is not money. The cost is the owner's waiting time before a merge, this PC's CPU while agents test, and noise in the history. The findings below are weighed on those three.
 
@@ -83,7 +83,7 @@ There are ten hypotheses. Each has the test that could have proved it wrong. Thr
 
 ##### One ready-PR run, step by step (7.1.0, 17.5 min)
 
-    Gate suite: mutants8.8 Gate suite: scenarios2.1 Artifacts commands3.1 Train cleanup1.7 CI scripts, templates0.8 Artifacts hooks0.3 Change notes0.3 Spec checks, rest0.4   05 min10 min needed by a luismc-artifacts change not touched by one  Step times from the CI run of PR #45; the gate suite's split from E2 (81% mutants). A change to luismc-artifacts alone needs about 3.8 of the 17.5 minutes; the other 13.7 test the delivery scripts it never touched.
+    Gate suite: mutants8.8 Gate suite: scenarios2.1 Artifacts commands3.1 Train cleanup1.7 CI scripts, templates0.8 Artifacts hooks0.3 Change notes0.3 Spec checks, rest0.4   05 min10 min needed by a luismc-docs change not touched by one  Step times from the CI run of PR #45; the gate suite's split from E2 (81% mutants). A change to luismc-docs alone needs about 3.8 of the 17.5 minutes; the other 13.7 test the delivery scripts it never touched.
 
 ##### The full run doubled in six hours
 
@@ -95,7 +95,7 @@ A mutant breaks one rule in a copy of the delivery scripts and reruns the scenar
 
    timeout (7)196 s e2e_map (7)174 s push_check (13)173 s verify (8)157 s fast_report (7)156 s fork_point (7)94 s the other 45407 s* until the first failed check after it: the mutant is already caught E2, Windows · 2.04 px per second · * this row at half scale  E2 on this PC: 1,357 s of mutant runs, 692 s of them up to the first failed check (51%). Stopping at the first failure saves about 49%, about 4.3 of the 8.8 minutes on Linux.
 
-The larger saving is in *when* the pass runs. The gate mutants guard six files under `templates/shared/scripts/delivery/` in `luismc-delivery` and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only `cleanup.py`, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-artifacts 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with `git diff` of each merge.
+The larger saving is in *when* the pass runs. The gate mutants guard six files under `templates/shared/scripts/delivery/` in `luismc-delivery` and the pre-push hook. Of the five releases in the window, two changed those files (STACKSPEC 7.0.0 and 7.1.0). A third (#42) changed only `cleanup.py`, which the cleanup suite's own 54 mutants guard. For #42 and the other two (luismc-docs 1.1.0 and 1.1.1) the gate's 8.8 minutes proved nothing new, checked with `git diff` of each merge.
 
 ### Repeats and noise
 
@@ -119,7 +119,7 @@ The list is ranked by how much each change cuts the owner's wait. It also says w
 
 | # | Change | Saves | Risk, and how it is covered | Task |
 |---|---|---|---|---|
-| S1 | Split spec-lint into jobs by area (delivery, artifacts, specs, auth) that run only when their files change; anything shared runs all | A luismc-artifacts PR: 17.5 → about 3.8 min. Jobs also run side by side, so a full run's wait becomes its longest job, not the sum | A file used by two areas but listed under one. Covered by a "shared" path list that runs every job, checked by a test | DS43 (chosen) |
+| S1 | Split spec-lint into jobs by area (delivery, artifacts, specs, auth) that run only when their files change; anything shared runs all | A luismc-docs PR: 17.5 → about 3.8 min. Jobs also run side by side, so a full run's wait becomes its longest job, not the sum | A file used by two areas but listed under one. Covered by a "shared" path list that runs every job, checked by a test | DS43 (chosen) |
 | S2 | Run each mutation pass only when the files it mutates (or its test) change; run all mutants on `main` once a night | 8.8 min on every PR that does not touch the delivery scripts (3 of 5 releases in the window) | A mutant's target text drifting unseen: it can only drift when its file changes, which is exactly when the pass runs. The nightly run covers Python and runner image changes | TC1 (open: D6) |
 | S3 | A mutant stops at its first failed check | About 4.3 of the 8.8 mutant minutes whenever they do run (E2: 49%) | A mutant caught only by a later check would show as NOT CAUGHT: loud, never silent | TC2 |
 | S4 | No full branch runs by agents; the ready PR is the one full run. An agent triggers CI on its branch only for a Linux-specific change, and then only its area's job | About 132 min per train like 7.1.0, and this PC's CPU | Linux-only bugs surface at the ready PR, not on the branch: 3 in the window, each one more fix-forward round (about 4 to 17 min) | DS45 (chosen) |
@@ -128,7 +128,7 @@ The list is ranked by how much each change cuts the owner's wait. It also says w
 | S7 | Cancel a ready PR's older spec-lint run when a newer commit arrives | A whole duplicate run each time a ready PR gets a fix (twice for DS17) | None: the newer commit's run decides | TC4 |
 | S8 | The record commits on every change but pushes once, at the end of the turn (the end-of-turn hook already runs there) | About 250 pushes and scans a day; `main` stops moving under CI, so S5's tree check can match exactly | A session that dies before the end of its turn loses that turn's status changes until the next push. Covered by pushing before any PR, merge or publish | TC5 (open: D8) |
 
-**Together**, for a release that changes only luismc-artifacts: S1, S5 and S6 take the wait from about 35 minutes (ready PR plus `main`) to about 2.5. For a release of the delivery scripts: S3 and S5 take it from about 35 to about 13. S4 removes the branch runs before either.
+**Together**, for a release that changes only luismc-docs: S1, S5 and S6 take the wait from about 35 minutes (ready PR plus `main`) to about 2.5. For a release of the delivery scripts: S3 and S5 take it from about 35 to about 13. S4 removes the branch runs before either.
 
 **Not recommended.** Removing `template-build`'s Windows jobs: they exist for a path-separator bug that only Windows shows. Rewriting the artifacts suite to run in one process: it would cut the Windows time several-fold, but S4 and S6 already remove most local runs, so the rewrite is not worth its risk now.
 

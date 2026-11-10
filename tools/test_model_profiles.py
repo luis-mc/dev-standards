@@ -12,7 +12,7 @@ What is checked against a repo root:
   S1  the settings template registers the SessionStart effort_drift.py hook
       and the hook file ships next to it
   M1  no model-delegation.md remains in the claude-setup assets
-  E1  the settings template enables luismc-artifacts@{{MARKETPLACE}} and
+  E1  the settings template enables luismc-docs@{{MARKETPLACE}} and
       SKILL.md says how the placeholder is filled
   K1  assets/keybindings.json parses and holds exactly the Global context with
       the two transcript-folds chords and their actions; when the plugin's
@@ -31,7 +31,7 @@ Each check is then proved able to fail: a clean copy of the relevant files is
 mutated one way at a time, and the mutation must produce the matching finding.
 The hook is exercised the same way, on small settings fixtures.
 
-feature-artifact-new belongs to the luismc-artifacts plugin, which is edited
+feature-artifact-new belongs to the luismc-docs plugin, which is edited
 on its own branch; until it is joined, the real tree reports its old effort as
 a P2 failure. That is expected; every other check passes.
 
@@ -72,7 +72,7 @@ RULE_LINES = [
     "- Create every doc under `docs/`.",
 ]
 PLACEHOLDER = "{{SUBAGENT_EFFORT}}"
-ARTIFACTS_PLUGIN = "luismc-artifacts@{{MARKETPLACE}}"
+ARTIFACTS_PLUGIN = "luismc-docs@{{MARKETPLACE}}"
 SKILL = SETUP + "/SKILL.md"
 ARCHITECT = "claude/plugins/agents/agents/architect.md"
 KEYBINDINGS = ASSETS + "/keybindings.json"
@@ -292,12 +292,12 @@ def edit(path, old, new):
 
 # (name, mutation(root), substring the findings must contain)
 def m_wrong_model(r):
-    set_frontmatter(r / "claude/plugins/specs/skills/spec-new/SKILL.md",
+    set_frontmatter(r / "claude/plugins/docs/skills/spec-new/SKILL.md",
                     "sonnet", "high")
 
 
 def m_wrong_effort(r):
-    set_frontmatter(r / "claude/plugins/specs/skills/spec-check/SKILL.md",
+    set_frontmatter(r / "claude/plugins/docs/skills/spec-check/SKILL.md",
                     "sonnet", "high")
 
 
@@ -309,7 +309,7 @@ def m_no_model_line(r):
 
 
 def m_unknown_skill(r):
-    d = r / "claude/plugins/specs/skills/brand-new-skill"
+    d = r / "claude/plugins/docs/skills/brand-new-skill"
     d.mkdir(parents=True)
     (d / "SKILL.md").write_text("---\nmodel: opus\neffort: high\n---\n",
                                 encoding="utf-8")
@@ -449,8 +449,8 @@ MUTATIONS = [
     ("S1 hook not registered", m_no_hook_registration, "registers no SessionStart"),
     ("S1 hook file missing", m_no_hook_file, "effort_drift.py is missing"),
     ("M1 old rule file present", m_old_rule, "model-delegation.md is still"),
-    ("E1 plugin not enabled", m_no_enabled_plugins, "does not enable luismc-artifacts"),
-    ("E1 marketplace hard-coded", m_hardcoded_marketplace, "does not enable luismc-artifacts"),
+    ("E1 plugin not enabled", m_no_enabled_plugins, "does not enable luismc-docs"),
+    ("E1 marketplace hard-coded", m_hardcoded_marketplace, "does not enable luismc-docs"),
     ("E1 placeholder unexplained", m_marketplace_unexplained, "does not say how {{MARKETPLACE}}"),
     ("K1 keybinding action wrong", m_kb_wrong_action, "chords are not exactly"),
     ("K1 extra chord", m_kb_extra_chord, "chords are not exactly"),

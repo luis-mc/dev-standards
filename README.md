@@ -15,9 +15,7 @@ claude plugin marketplace add luis-mc/dev-standards   # once per machine
 # then, inside each project:
 claude plugin install luismc-audits@dev-standards --scope project
 claude plugin install luismc-agents@dev-standards --scope project
-claude plugin install luismc-specs@dev-standards --scope project
 claude plugin install luismc-project-setup@dev-standards --scope project
-claude plugin install luismc-artifacts@dev-standards --scope project
 claude plugin install luismc-docs@dev-standards --scope project
 claude plugin install luismc-delivery@dev-standards --scope project
 claude plugin install luismc-transcript-folds@dev-standards --scope project
@@ -83,7 +81,7 @@ Sets up:
   for removal; and a table mapping your memory notes to the rule ids that now
   enforce them (reported only, nothing deleted)
 - `.claude/hooks/effort_drift.py` — a SessionStart alias-drift warning
-- `enabledPlugins` — turns on all eight plugins for the project, including
+- `enabledPlugins` — turns on all six plugins for the project, including
   `luismc-transcript-folds` (project target only; other entries are kept, and an
   entry you set to `false` stays)
 - `extraKnownMarketplaces.dev-standards` in the project's `.claude/settings.json`
@@ -192,7 +190,7 @@ the way `tech-stack-setup` audits the rest of the stack.
 
 ---
 
-## `luismc-artifacts` — see what is live, running and waiting without reading code
+## `luismc-docs`, project artifacts — see what is live, running and waiting without reading code
 
 Keeps a project's status in front of you. It makes one **feature artifact** per
 feature and one **full-progress artifact** for the whole project. Each has a
@@ -212,15 +210,15 @@ and confirmed with you, or a default one.
 
 Five skills:
 
-- **`/luismc-artifacts:feature-artifact-new`** — asks the feature, its apps and
+- **`/luismc-docs:feature-artifact-new`** — asks the feature, its apps and
   task prefix, finds the project's design, and writes the content and tasks of
   its standalone file.
-- **`/luismc-artifacts:full-progress-artifact-new`** — creates the project's one
+- **`/luismc-docs:full-progress-artifact-new`** — creates the project's one
   full-progress artifact.
-- **`/luismc-artifacts:task-add`** — records work as a task before it starts.
-- **`/luismc-artifacts:task-status-update`** — changes a status through the
+- **`/luismc-docs:task-add`** — records work as a task before it starts.
+- **`/luismc-docs:task-status-update`** — changes a status through the
   script; Full Progress is published once, at the end of the turn.
-- **`/luismc-artifacts:project-artifact-check`** — checks the artifacts against
+- **`/luismc-docs:project-artifact-check`** — checks the artifacts against
   the spec and explains each finding with its requirement ID.
 
 Hooks queue status changes when a pull request is opened, readied or merged,
@@ -278,12 +276,12 @@ for you.
 
 ---
 
-## `luismc-specs` — think it through before you build it
+## `luismc-docs`, specs — think it through before you build it
 
 Two skills that make "write the spec first" practical for anything that touches
 more than one file.
 
-### `/luismc-specs:spec-new`
+### `/luismc-docs:spec-new`
 
 Interviews you about a feature, component, or migration. It asks about scope
 boundaries, what data must never be lost, how the feature should fail when a
@@ -295,7 +293,7 @@ Nothing goes in that cannot be verified. The skill stops once it has written the
 spec. Implementation happens in a fresh session, so you build against the spec
 and not against the options discarded in the interview.
 
-### `/luismc-specs:spec-check`
+### `/luismc-docs:spec-check`
 
 Validates the numbering and cross-references in any spec, this repo's own
 binding specs included. It catches duplicate or out-of-order section numbers,

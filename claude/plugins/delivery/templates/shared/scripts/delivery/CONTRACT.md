@@ -167,7 +167,7 @@ timed out. A script never exits 0 when it could not decide.
   `widen_on`) for paths whose change cannot affect what a gate result tested.
   `gate_verify.py` keeps a result valid across a move of the base that touches only
   these paths. tech-stack-setup writes the key into each track's `gate.json`; when
-  luismc-artifacts is enabled it adds `docs/artifacts/**` only if `docs/**` is not
+  luismc-docs is enabled it adds `docs/artifacts/**` only if `docs/**` is not
   already listed, and the default already covers it.
 - `env` (optional, per step): an object of names to string values added to the
   environment of that step's command, e.g. `"env": {"CI": "true"}` for a test
@@ -910,7 +910,7 @@ One or two sentences for the change log.
 
 `ci_skip_check.py` today skips a default-branch run only when the pushed tree
 equals a passed PR head's tree. Commits that land on the default branch between
-the PR's last run and its merge (docs, the luismc-artifacts record, Markdown,
+the PR's last run and its merge (docs, the luismc-docs record, Markdown,
 mobile apps with their own workflows) make the trees differ, so the full suite
 ran again for nothing. New rule: skip when `git diff --name-only <head> <sha>`
 is empty **or every changed path matches the workflow's own push

@@ -19,7 +19,7 @@ The normative rules are in [DOCSPEC](../../../claude/plugins/docs/references/doc
 
 ## 1. In one paragraph
 
-`luismc-docs` puts a project's documents where each reader expects them and keeps them true to the code. It lays out `docs/`. It builds an offline site with search. It folds one-line change notes into one version per release. It checks links, `Source:` lines and freshness. It warns the coding agent when code changed without its docs.
+`luismc-docs` puts a project's documents where each reader expects them and keeps them true to the code. It lays out `docs/`. It builds an offline site with search. It folds one-line change notes into one version per release. It checks links, `Source:` lines and freshness. It warns the coding agent when code changed without its docs. Since DS219 it also holds what `luismc-artifacts` and `luismc-specs` did: the project record and artifacts (see [Project artifacts](../artifacts/spec.md)) and the `spec-new` and `spec-check` skills (see [Spec authoring and checking](../specs/spec.md)). Those two plugins left the marketplace. Their skills are `luismc-docs:<skill>` now.
 
 ## 2. Why
 
@@ -27,7 +27,7 @@ Documents scatter and go stale. They pile up as briefs and reports that nobody r
 
 Goals: one layout for every project, no server to browse it, checks that a gate can enforce, and nothing specific to one project.
 
-Non-goals: the content of a project's docs, publishing to a web host, the artifacts record, and how work is delivered.
+Non-goals: the content of a project's docs, publishing to a web host, and how work is delivered.
 
 ## 3. How it works
 

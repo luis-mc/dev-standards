@@ -14,7 +14,7 @@ import traceback
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts')
+PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs')
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 sys.path.insert(0, SCRIPTS)
 

@@ -3,12 +3,10 @@
   "docspec": "1.0.0",
   "apps": [
     "luismc-agents",
-    "luismc-artifacts",
     "luismc-audits",
     "luismc-delivery",
     "luismc-docs",
     "luismc-project-setup",
-    "luismc-specs",
     "luismc-transcript-folds"
   ],
   "topics": [

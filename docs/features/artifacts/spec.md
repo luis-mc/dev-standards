@@ -1,15 +1,32 @@
 ---
 id: artifacts
 title: Project artifacts
-apps: [luismc-artifacts]
+apps: [luismc-docs]
 topics: [artifacts]
 status: live
 version: 0.6.0
 owner: agents
 type: reference
 code:
-  - claude/plugins/artifacts/**
-  - claude/plugins/artifacts/references/artifactspec.md
+  - claude/plugins/docs/references/artifactspec.md
+  - claude/plugins/docs/rules/**
+  - claude/plugins/docs/design/**
+  - claude/plugins/docs/scripts/artifacts/**
+  - claude/plugins/docs/scripts/artifact_*.py
+  - claude/plugins/docs/scripts/project_artifacts.py
+  - claude/plugins/docs/scripts/render_artifacts.py
+  - claude/plugins/docs/scripts/publish_hourly.py
+  - claude/plugins/docs/scripts/plan_rows_check.py
+  - claude/plugins/docs/scripts/hook_after_command.py
+  - claude/plugins/docs/scripts/hook_end_of_turn.py
+  - claude/plugins/docs/skills/feature-artifact-new/**
+  - claude/plugins/docs/skills/full-progress-artifact-new/**
+  - claude/plugins/docs/skills/project-artifact-check/**
+  - claude/plugins/docs/skills/task-add/**
+  - claude/plugins/docs/skills/task-status-update/**
+  - claude/plugins/docs/templates/feature-artifact.html
+  - claude/plugins/docs/templates/full-progress-artifact.html
+  - claude/plugins/docs/templates/project-artifact.css
   - tools/test_project_artifacts.py
   - tools/test_project_artifacts_hooks.py
   - tools/test_render_artifacts.py
@@ -20,11 +37,11 @@ artifact: feature-project-artifacts-standard.html
 ---
 # Project artifacts
 
-This page describes the `luismc-artifacts` plugin as it is built. The normative rules are in [ARTIFACTSPEC](../../../claude/plugins/artifacts/references/artifactspec.md); this page links to them. It does not copy them.
+This page describes the `luismc-docs` plugin as it is built. The normative rules are in [ARTIFACTSPEC](../../../claude/plugins/docs/references/artifactspec.md); this page links to them. It does not copy them.
 
 ## 1. In one paragraph
 
-`luismc-artifacts` keeps one record of a project's work in `docs/artifacts/` and draws it as pages. Each feature has a feature artifact (a standalone HTML file). The whole project has one full-progress artifact. It is published to claude.ai once per turn. An owner can see what is live, what is running and what needs them without reading code or chat. Every status is written once, in a task registry. Every page is generated from it.
+`luismc-docs` keeps one record of a project's work in `docs/artifacts/` and draws it as pages. Each feature has a feature artifact (a standalone HTML file). The whole project has one full-progress artifact. It is published to claude.ai once per turn. An owner can see what is live, what is running and what needs them without reading code or chat. Every status is written once, in a task registry. Every page is generated from it.
 
 ## 2. Why
 
@@ -224,6 +241,10 @@ The full list is the ARTIFACTSPEC decision record (D1 to D24). These are the las
 | ARTIFACTSPEC D15 | Which rows fold into Earlier? | Live rows older than 14 days; Built never | 2026-10-12 |
 | ARTIFACTSPEC D24 | What happens to a finished feature artifact? | `retire` | 2026-10-30 |
 
+Where the record lives when nothing says (D182, DS219): `docs/project`. `.claude/artifacts.json` with a `record_dir` wins. A `record_dir` in `docs/docs.json` is used when there is no `.claude/artifacts.json`. A `.claude/artifacts.json` without `record_dir` keeps the old `docs/artifacts`. With no setting at all, a record that already sits in `docs/artifacts` (and none in `docs/project`) is still found there. The tests are in `tools/test_artifacts_ds219.py`.
+
+The plugin is part of `luismc-docs` since DS219. The five skills are `luismc-docs:feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add` and `task-status-update`. The artifacts hooks run beside the docs hooks in one `hooks/hooks.json`. The artifacts session hook is `scripts/artifacts/hook_session_start.py`, because the docs plugin has a `scripts/hook_session_start.py` of its own.
+
 ## 11. Not built yet
 
 - A cloud routine that catches changes made outside a session. Today the next session start catches them (ARTIFACTSPEC D3).
@@ -231,7 +252,12 @@ The full list is the ARTIFACTSPEC decision record (D1 to D24). These are the las
 
 ## 12. Code map
 
-Source: `claude/plugins/artifacts/`
+Source: claude/plugins/docs/references/artifactspec.md
+Source: claude/plugins/docs/scripts/project_artifacts.py
+Source: claude/plugins/docs/scripts/render_artifacts.py
+Source: claude/plugins/docs/scripts/hook_after_command.py
+Source: claude/plugins/docs/scripts/hook_end_of_turn.py
+Source: claude/plugins/docs/scripts/artifacts/hook_session_start.py
 
 | Path | Holds |
 |---|---|

@@ -6,6 +6,8 @@ type: how-to
 
 Use this guide to bring a project up to STACKSPEC 8.0.0. It was released with `luismc-project-setup` 14.0.0 and `luismc-artifacts` 1.4.0. The rules are in [STACKSPEC](../../claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md). Later releases may add more. The plugin ships the current spec.
 
+Since DS219 the `luismc-artifacts` plugin is part of `luismc-docs`; read `luismc-artifacts` below as `luismc-docs` and see [Move to luismc-docs 2](migrate-to-luismc-docs-2.md).
+
 You need Claude Code open in the project.
 
 ## Steps

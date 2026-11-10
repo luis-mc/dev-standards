@@ -1,22 +1,23 @@
 ---
 id: specs
-title: Spec authoring and checking (luismc-specs)
-apps: [luismc-specs]
+title: Spec authoring and checking (luismc-docs)
+apps: [luismc-docs]
 topics: [specs]
 status: live
 version: 0.1.2
 owner: agents
 type: reference
 code:
-  - claude/plugins/specs/**
+  - claude/plugins/docs/skills/spec-new/**
+  - claude/plugins/docs/skills/spec-check/**
   - tools/test_spec_check.py
 last_verified: 2026-11-01
 ---
-# Spec authoring and checking (luismc-specs)
+# Spec authoring and checking (luismc-docs)
 
 ## 1. In one paragraph
 
-`luismc-specs` has two skills. `spec-new` interviews the user and writes a numbered spec with testable requirements before any code. `spec-check` reads a spec and reports numbering errors and references that point nowhere. One skill writes to a discipline. The other proves that the discipline held.
+The `luismc-docs` plugin carries two spec skills (the old `luismc-specs` plugin was merged into it in DS219; the skill names are `luismc-docs:spec-new` and `luismc-docs:spec-check`). `spec-new` interviews the user and writes a numbered spec with testable requirements before any code. `spec-check` reads a spec and reports numbering errors and references that point nowhere. One skill writes to a discipline. The other proves that the discipline held.
 
 ## 2. Why
 
@@ -66,7 +67,7 @@ flowchart LR
 
 ## 7. Design
 
-`claude/plugins/specs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. The repository's tests and CI run that same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
+`claude/plugins/docs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. The repository's tests and CI run that same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
 
 ## 8. Failure modes
 
@@ -89,10 +90,10 @@ NOT YET IMPLEMENTED: a test that a spec written from `spec-template.md` passes `
 
 ## 12. Code map
 
-Source: claude/plugins/specs/skills/spec-new/SKILL.md
-Source: claude/plugins/specs/skills/spec-new/assets/spec-template.md
-Source: claude/plugins/specs/skills/spec-check/SKILL.md
-Source: claude/plugins/specs/skills/spec-check/assets/spec_check.py
+Source: claude/plugins/docs/skills/spec-new/SKILL.md
+Source: claude/plugins/docs/skills/spec-new/assets/spec-template.md
+Source: claude/plugins/docs/skills/spec-check/SKILL.md
+Source: claude/plugins/docs/skills/spec-check/assets/spec_check.py
 Source: tools/test_spec_check.py
 
 ## Versions

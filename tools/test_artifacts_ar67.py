@@ -12,7 +12,7 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
 import test_project_artifacts as T          # the throwaway-repository harness
 
 TESTS = []
