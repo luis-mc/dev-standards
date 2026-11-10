@@ -13,7 +13,7 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
 import test_project_artifacts as T
 import project_artifacts as PA
 
@@ -57,7 +57,7 @@ def ledger_newer_schema_warns_once():
     assert PA.ledger_release_numbers(root) == set()
     assert PA.ledger_release_numbers(root) == set()
     w = PA.schema_warnings(root)
-    assert w == ['delivery ledger schema 3 is newer than this reader (1): update luismc-artifacts'], w
+    assert w == ['delivery ledger schema 3 is newer than this reader (1): update luismc-docs'], w
 
 
 @case

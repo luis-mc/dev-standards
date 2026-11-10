@@ -28,7 +28,7 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REAL_PLUGIN = ROOT / 'claude' / 'plugins' / 'artifacts'
+REAL_PLUGIN = ROOT / 'claude' / 'plugins' / 'docs'
 NOW = '2026-10-10T11:39:00+00:00'
 
 RULE_TEXT = '- Record work as a task before starting it.\n'
@@ -142,6 +142,9 @@ class Project:
         seed.mkdir()
         git(seed, 'init', '-q', '-b', 'main')
         (seed / 'README.md').write_text('seed\n', encoding='utf-8')
+        # these fixtures keep the record in docs/artifacts: an artifacts.json without record_dir says so (D182 moved the default)
+        (seed / '.claude').mkdir()
+        (seed / '.claude' / 'artifacts.json').write_text('{}\n', encoding='utf-8')
         git(seed, 'add', '.')
         git(seed, 'commit', '-q', '-m', 'seed')
         git(seed, 'remote', 'add', 'origin', self.bare)
@@ -3026,7 +3029,7 @@ def test_migrate_copies_the_old_record_once_and_only_when_newer(env):
     newer_task(old / 'docs' / 'artifacts')
     r = p.run('migrate')
     assert r.code == 0 and len(r.out.strip().splitlines()) == 1, r.all
-    assert r.out.startswith('luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed '
+    assert r.out.startswith('luismc-docs: the record now lives in docs/artifacts/ and is never committed or pushed '
                             'by the plugin; copied it from '), r.out
     assert 'git worktree remove' in r.out and str(old).replace('\\', '/') .lower() in r.out.replace('\\', '/').lower()
     assert p.task('AR1')['status'] == 'Waiting' and (p.rdir / 'only-in-old.txt').is_file()
@@ -3112,7 +3115,7 @@ def SKIP(msg):
 def real_available():
     f = REAL_PLUGIN / 'scripts' / 'render_artifacts.py'
     if not f.is_file():
-        return 'render_artifacts.py is not in claude/plugins/artifacts/scripts yet'
+        return 'render_artifacts.py is not in claude/plugins/docs/scripts yet'
     r = subprocess.run([sys.executable, '-c', 'import render_artifacts'], cwd=str(f.parent),
                        capture_output=True, text=True)
     if r.returncode != 0:
@@ -3508,6 +3511,14 @@ def test_retire_leaves_git_alone_and_a_failed_retire_restores_the_files(env):
 NEW_REC = 'docs/work/artifacts'
 
 
+def drop_seed_setting(p):
+    """The fixtures seed an empty .claude/artifacts.json (D182 moved the default); a test of the no-setting case drops it.
+    A record already in docs/artifacts is still found there."""
+    f = p.clone / '.claude' / 'artifacts.json'
+    if f.exists():
+        f.unlink()
+
+
 def write_setting(p, value):
     f = p.clone / '.claude' / 'artifacts.json'
     f.parent.mkdir(parents=True, exist_ok=True)
@@ -3577,6 +3588,7 @@ def exercise_every_command_after_init(p):
 def test_record_dir_setting_outside_docs_is_refused(env):
     """DS32: the setting and move-record accept only a relative folder strictly under docs/."""
     p = env.baseline()
+    drop_seed_setting(p)
     before = p.files()
     for bad in ('src/artifacts', '../x', '/abs/docs/x', 'docs', 'docs/../src', 'artifacts', 'C:/docs/x', ''):
         r = p.run('move-record', bad, '--yes')
@@ -3592,6 +3604,7 @@ def test_record_dir_setting_outside_docs_is_refused(env):
 def test_move_record_dry_run_changes_nothing(env):
     """DS32: without --yes it prints the plan and writes nothing."""
     p = env.baseline()
+    drop_seed_setting(p)
     before = p.files()
     r = p.run('move-record', NEW_REC)
     assert r.code == 0 and 'dry run' in r.out and NEW_REC in r.out, r.all
@@ -3605,6 +3618,7 @@ def test_move_record_dry_run_changes_nothing(env):
 def test_move_record_moves_the_folder_and_writes_the_setting(env):
     """DS32: a plain file move, the setting written, git left alone, and the way back removes the setting."""
     p = env.baseline()
+    drop_seed_setting(p)
     before = p.files()
     state = p.git_state()
     r = p.ok('move-record', NEW_REC, '--yes')

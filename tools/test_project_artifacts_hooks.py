@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for the luismc-artifacts hooks (ARTIFACTSPEC 1.8.0 section 8, R13.2).
+"""Tests for the luismc-docs hooks (ARTIFACTSPEC 1.8.0 section 8, R13.2).
 
 Feeds sample hook input to each hook in throwaway git repos (with a bare remote)
 and asserts the queue, the exit code and the output, including R8.2, R8.4, R8.5,
@@ -23,7 +23,7 @@ import time
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts')
+PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs')
 
 
 def rule_file_text():
@@ -36,7 +36,7 @@ SCRIPTS = os.path.join(PLUGIN, 'scripts')
 AFTER = os.path.join(SCRIPTS, 'hook_after_command.py')
 STOP = os.path.join(SCRIPTS, 'hook_end_of_turn.py')
 BEFORE = os.path.join(SCRIPTS, 'hook_before_command.py')
-START = os.path.join(SCRIPTS, 'hook_session_start.py')
+START = os.path.join(SCRIPTS, 'artifacts', 'hook_session_start.py')
 
 TESTS = []
 INV4 = {'runs': 0, 'violations': []}
@@ -154,6 +154,8 @@ def make_repo(manifest=True, branch='AR5-x', merged_status='Live', manifest_on_o
     sh(['init', '-q', '-b', 'main'], work)
     sh(['remote', 'add', 'origin', remote], work)
     write(os.path.join(work, 'README.md'), 'demo\n')
+    if manifest:
+        write(os.path.join(work, '.claude', 'artifacts.json'), '{}\n')   # the record stays in docs/artifacts (D182 moved the default)
     sh(['add', '-A'], work)
     sh(['commit', '-q', '-m', 'readme'], work)
     if manifest:
@@ -365,11 +367,11 @@ def after_errors_never_fail_garbage_stdin():
 @test
 def after_internal_error_exits_zero_with_one_line_on_stderr():
     work = make_repo()
-    write(os.path.join(work, '.claude'), 'a file where the queue folder should be\n')
+    os.makedirs(os.path.join(work, '.claude', 'artifacts-queue.json'))   # a folder where the queue file should be
     rc, out, err, _ = after(work, 'gh pr create')
     assert rc == 0 and out == '', (rc, out)
     lines = [ln for ln in err.splitlines() if ln.strip()]
-    assert len(lines) == 1 and 'luismc-artifacts' in lines[0], err
+    assert len(lines) == 1 and 'luismc-docs' in lines[0], err
 
 
 @test
@@ -513,7 +515,7 @@ with open(os.path.join(here, "calls.log"), "a") as f:
 mode = open(os.path.join(here, "mode")).read().strip() if os.path.exists(os.path.join(here, "mode")) else ""
 if sys.argv[1:2] == ["migrate"]:
     if mode == "migrate-note":
-        print("luismc-artifacts: the record now lives in docs/artifacts/ and is never committed or pushed by the plugin; copied it from OLD")
+        print("luismc-docs: the record now lives in docs/artifacts/ and is never committed or pushed by the plugin; copied it from OLD")
     sys.exit(0)
 if mode == "broken":
     sys.stderr.write("boom")
@@ -1206,7 +1208,7 @@ def rule_file_carries_the_activity_rules():
 # --- upgrading a project: the rule, migration, old pages (R8.12 to R8.15) -------------------
 
 RULE = rule_file_text().strip()
-UPDATED = 'luismc-artifacts was updated; this rule replaces earlier instructions about publishing feature artifacts.'
+UPDATED = 'luismc-docs was updated; this rule replaces earlier instructions about publishing feature artifacts.'
 OLD_URL_A = 'https://claude.ai/artifact/old-a'
 OLD_URL_B = 'https://claude.ai/artifact/old-b'
 
@@ -1489,13 +1491,14 @@ def rule_file_carries_the_rides_rule():
 def hooks_json_registers_the_three_hooks():
     cfg = read_json(os.path.join(PLUGIN, 'hooks', 'hooks.json'))
     assert cfg and isinstance(cfg.get('hooks'), dict), cfg
+    # luismc-docs holds the artifacts hooks and its own docs hooks (Stop, SessionStart): the artifacts one is among them
     want = {'PostToolUse': 'hook_after_command.py', 'PostToolUseFailure': 'hook_after_command.py',
-            'Stop': 'hook_end_of_turn.py', 'SessionStart': 'hook_session_start.py'}
+            'Stop': 'hook_end_of_turn.py', 'SessionStart': 'artifacts/hook_session_start.py'}
     for event, script in want.items():
         groups = cfg['hooks'].get(event)
         assert groups, event
         cmds = [h['command'] for g in groups for h in g['hooks'] if h.get('type') == 'command']
-        assert cmds and all('${CLAUDE_PLUGIN_ROOT}/scripts/' + script in c for c in cmds), (event, cmds)
+        assert any('${CLAUDE_PLUGIN_ROOT}/scripts/' + script in c for c in cmds), (event, cmds)
         assert all(c.startswith('if command -v python3 ') and '; else python ' in c and '||' not in c for c in cmds), cmds
         assert os.path.isfile(os.path.join(SCRIPTS, script)), script
     # R8.8: Agent and Task start background work, so PostToolUse also covers them

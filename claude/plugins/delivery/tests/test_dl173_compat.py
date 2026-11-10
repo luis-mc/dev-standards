@@ -18,7 +18,7 @@ def cache_with(base, plugins):
             (Path(base) / "dev-standards" / name / v).mkdir(parents=True)
 
 
-COMPAT = {"requires": {"luismc-artifacts": {"luismc-delivery": {"version": ">=1.18.0", "why": "ledger"}}}}
+COMPAT = {"requires": {"luismc-docs": {"luismc-delivery": {"version": ">=1.18.0", "why": "ledger"}}}}
 
 
 class Compat(unittest.TestCase):
@@ -33,7 +33,7 @@ class Compat(unittest.TestCase):
         return D.compat_items(D.installed_versions(self.cache), self.compat)
 
     def test_meets(self):
-        cache_with(self.cache, {"luismc-artifacts": ["1.3.3"], "luismc-delivery": ["1.17.0", "1.20.2"]})
+        cache_with(self.cache, {"luismc-docs": ["1.3.3"], "luismc-delivery": ["1.17.0", "1.20.2"]})
         self.assertEqual(self.items(), [])
 
     def test_highest_version_is_picked(self):
@@ -41,14 +41,14 @@ class Compat(unittest.TestCase):
         self.assertEqual(D.installed_versions(self.cache)["luismc-delivery"], "1.20.2")
 
     def test_fails(self):
-        cache_with(self.cache, {"luismc-artifacts": ["1.3.3"], "luismc-delivery": ["1.17.9"]})
+        cache_with(self.cache, {"luismc-docs": ["1.3.3"], "luismc-delivery": ["1.17.9"]})
         items = self.items()
         self.assertEqual(len(items), 1)
         self.assertEqual(items[0]["status"], "warn")
         self.assertIn("claude plugin update luismc-delivery@dev-standards", items[0]["detail"])
 
     def test_plugin_absent(self):
-        cache_with(self.cache, {"luismc-artifacts": ["1.3.3"]})
+        cache_with(self.cache, {"luismc-docs": ["1.3.3"]})
         self.assertEqual(self.items(), [])
         self.assertEqual(D.compat_items({}, self.compat), [])
 
@@ -56,7 +56,7 @@ class Compat(unittest.TestCase):
         self.assertEqual(D.installed_versions(os.path.join(self.tmp, "none")), {})
 
     def test_check_warns_but_passes(self):
-        cache_with(self.cache, {"luismc-artifacts": ["1.3.3"], "luismc-delivery": ["1.0.0"]})
+        cache_with(self.cache, {"luismc-docs": ["1.3.3"], "luismc-delivery": ["1.0.0"]})
         with mock.patch.dict(os.environ, {"DELIVERY_PLUGIN_CACHE": self.cache}), \
                 mock.patch.object(D, "PLUGIN", os.path.join(self.tmp, "p")):
             os.makedirs(os.path.join(self.tmp, "p", "references"))

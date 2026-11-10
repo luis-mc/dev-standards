@@ -62,7 +62,7 @@ except ImportError as _e:
 
 SPEC = 'ARTIFACTSPEC 1.0.0'
 FP_NAME = 'full-progress'
-RECORD_REL = 'docs/artifacts'       # the default; the project's record_dir setting overrides it (current_rel)
+RECORD_REL = 'docs/artifacts'       # the old record folder (the old record worktree held it); the default is docs/project (current_rel)
 WAITS_ON = ('owner', 'work')   # R5.34a: who a Waiting or On hold task waits on; absent means work
 BASIS_MAX = 80            # R6.10: longest Expected basis
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')     # R6.6
@@ -329,7 +329,7 @@ def current_rel(root=None):
     """The record folder for messages: never raises, falls back to the default."""
     root = root or session_root()
     if artifact_queue is None or not root:
-        return RECORD_REL
+        return 'docs/project'
     return artifact_queue.record_rel_safe(str(root))
 
 
@@ -365,7 +365,7 @@ def make_ctx(args, branch=None):
     if not root:
         raise Fail(2, 'not inside a git repository')
     if getattr(args, 'push', False):
-        print('luismc-artifacts: ' + NO_COMMIT_MSG % current_rel(root), file=sys.stderr)       # R4.28: --push does nothing
+        print('luismc-docs: ' + NO_COMMIT_MSG % current_rel(root), file=sys.stderr)       # R4.28: --push does nothing
     return Ctx(root, branch or detect_default_branch(root, getattr(args, 'default_branch', None)))
 
 
@@ -471,7 +471,7 @@ def migrate_record(ctx):
             dest = ctx.record_dir / p.relative_to(old_dir)
             dest.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(str(p), str(dest))
-    return ('luismc-artifacts: the record now lives in %s/ and is never committed or pushed by the '
+    return ('luismc-docs: the record now lives in %s/ and is never committed or pushed by the '
             'plugin; copied it from %s. You may remove that worktree with git worktree remove %s' % (ctx.rel, old, old))
 
 
@@ -596,9 +596,9 @@ def schema_gate(label, raw, known, required=True):
     if isinstance(sch, int) and not isinstance(sch, bool) and 0 < sch <= known:
         return True
     if isinstance(sch, int) and not isinstance(sch, bool) and sch > known:
-        msg = 'delivery %s schema %d is newer than this reader (%d): update luismc-artifacts' % (label, sch, known)
+        msg = 'delivery %s schema %d is newer than this reader (%d): update luismc-docs' % (label, sch, known)
     else:
-        msg = 'delivery %s has no usable schema (this reader knows %d): update luismc-delivery and luismc-artifacts' % (label, known)
+        msg = 'delivery %s has no usable schema (this reader knows %d): update luismc-delivery and luismc-docs' % (label, known)
     if msg not in _SCHEMA_WARNINGS:
         _SCHEMA_WARNINGS.append(msg)
     return False
@@ -1275,7 +1275,7 @@ def readme_text(manifest):
     return (
         '# Project artifacts\n\n'
         'This folder is the record of %s\'s project artifacts (%s). It is generated and committed by\n'
-        '`scripts/project_artifacts.py` of the `luismc-artifacts` plugin; do not edit the JSON or the\n'
+        '`scripts/project_artifacts.py` of the `luismc-docs` plugin; do not edit the JSON or the\n'
         'rendered HTML by hand.\n\n'
         '%s\n\n'
         'A feature artifact is a standalone HTML file: open it in a browser, no server needed. It is\n'
@@ -2679,7 +2679,7 @@ def cmd_check(args):
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
     if args.record:
         d = Path(args.record)
-        rel = current_rel(d) if (d / '.claude' / 'artifacts.json').is_file() else RECORD_REL
+        rel = current_rel(d)
         if (d / rel / 'manifest.json').is_file():
             d = d / rel
         rec = Record.load(d)

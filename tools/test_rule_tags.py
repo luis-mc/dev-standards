@@ -32,7 +32,7 @@ SPEC = "docs/architecture/DELIVERYSPEC.md"
 BULLET_RE = re.compile(r"^\s*[-*] ")
 LATE = ("claude/plugins/delivery/templates/shared/scripts/delivery/session_guard.py",)
 EXPECTED = (
-    "claude/plugins/artifacts/rules/project-artifacts.md",
+    "claude/plugins/docs/rules/project-artifacts.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/clarifying-questions.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/delivery-timing.md",

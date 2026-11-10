@@ -294,10 +294,10 @@ measure_globs, eta_table, heavy_commands, outbound_deny). The home is the plugin
 
 **(c) runner_plan + artifacts publish-on-change / hourly**
 - `tech-stack-setup/.../scripts/delivery/runner_plan.py` (generic heavy-job wrapper: waits for train CI, pauses and resumes the local runner, runs one heavy job at a time, keeps a memory floor, optional affinity/priority; records `jobs[]` and `runners[].paused_by`. The `runners` subcommand is D6a: it reports offline runners, repairs them via `runners[].repair` every `retry_seconds` (300), and re-runs the failed train CI runs that are still wanted. A run is still wanted when its head is the branch's current head, it is the newest run of its workflow for that head, no run of the branch is queued or running, and it did not end `cancelled` unless `rerun_cancelled` is true. Ledger events `runner.offline|repair|retry|online|rerun|rerun_skipped|giveup`) + its test; a project's heavy-job script becomes a thin caller later (project branch, not here)
-- `claude/plugins/artifacts/scripts/hook_end_of_turn.py` (hourly fail-safe: block when `publishes[full-progress].last_at` > 60 min; fresh-copy check DL-62)
-- `claude/plugins/artifacts/scripts/project_artifacts.py` (`pending --json` records copy hash/time; `mark-published` refuses when no publish of the current copy is recorded; expired-Expected check DL-63)
-- `claude/plugins/artifacts/scripts/publish_hourly.py` (new: what the hourly cron/watcher calls)
-- `claude/plugins/artifacts/references/artifactspec.md` + `plugin.json` version bump, artifacts tests
+- `claude/plugins/docs/scripts/hook_end_of_turn.py` (hourly fail-safe: block when `publishes[full-progress].last_at` > 60 min; fresh-copy check DL-62)
+- `claude/plugins/docs/scripts/project_artifacts.py` (`pending --json` records copy hash/time; `mark-published` refuses when no publish of the current copy is recorded; expired-Expected check DL-63)
+- `claude/plugins/docs/scripts/publish_hourly.py` (new: what the hourly cron/watcher calls)
+- `claude/plugins/docs/references/artifactspec.md` + `plugin.json` version bump, artifacts tests
 
 **(d) claude-setup wiring + rules + per-project config**
 - `project-setup/skills/claude-setup/SKILL.md` (enable `luismc-delivery`, write `.delivery/config.json`, retire `~/.claude/hooks/no-tomorrow.mjs` and its `settings.local.json` entry once (b) ships)
@@ -316,7 +316,7 @@ fixtures. The join runs (a) first. A project then wires the plugin, adds `.deliv
 These decisions are binding. They override sections 1-4 where they differ.
 
 - D1 Approach B+C: hooks enforce inside sessions; watcher scripts (no model) act on time-critical steps.
-- D2 Home: the new plugin `claude/plugins/delivery/`, named `luismc-delivery`. claude-setup installs, enables and configures it per project (`.delivery/config.json`). Full Progress publishing stays in `luismc-artifacts`. Delivery only feeds it (publish-on-phase-change + hourly, brief (c)).
+- D2 Home: the new plugin `claude/plugins/delivery/`, named `luismc-delivery`. claude-setup installs, enables and configures it per project (`.delivery/config.json`). Full Progress publishing stays in `luismc-docs`. Delivery only feeds it (publish-on-phase-change + hourly, brief (c)).
 - D3 Stop-hook findings BLOCK (not warn), with the block-once-per-fingerprint and 3-block ceiling pattern of artifacts R8.4.
 - D4 Cloud first: PreToolUse DENIES a local `Agent` call unless its prompt carries a `PC-bound:` reason line, or the cloud cap is full (DL-39).
 - D5 The watcher pushes the next train, opens its ready PR AND merges the previous train the moment its CI is green for the PR's current head. The script checks this through the head's workflow runs; it never uses `gh pr merge --auto`. Holds (`trains[].hold`) stop it.

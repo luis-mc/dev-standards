@@ -786,7 +786,7 @@ distinction is the difference between a finding and a false positive.
 # Editing `STACKSPEC` itself
 
 Not part of using this skill. The spec is maintained in the `dev-standards`
-repository, which gates every edit with `tools/spec_check.py` and documents the
+repository, which gates every edit with the luismc-docs spec-check skill (`skills/spec-check/assets/spec_check.py`) and documents the
 process in its README. A product never edits its copy, because it never has one.
 
 Two governance rules worth knowing before proposing a change (`§20`):

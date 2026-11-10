@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Tests for claude/plugins/artifacts/scripts/render_artifacts.py (ARTIFACTSPEC 1.8.0, sections 4 to 6 and 14).
+"""Tests for claude/plugins/docs/scripts/render_artifacts.py (ARTIFACTSPEC 1.8.0, sections 4 to 6 and 14).
 
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.
@@ -19,7 +19,7 @@ import traceback
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'artifacts')
+PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'docs')
 sys.path.insert(0, os.path.join(PLUGIN, 'scripts'))
 
 import render_artifacts as R  # noqa: E402
@@ -37,10 +37,10 @@ def task(tid, owner, status, item, expected, changed='', app='', detail=None):
 
 def base_registry():
     return {'spec': R.SPEC, 'updated': STAMP_ISO, 'tasks': [
-        task('AR5', 'artifacts', 'Built', 'ARTIFACTSPEC 1.0.0', '10 Oct', '2026-10-10T11:00+01:00', 'luismc-artifacts'),
-        task('AR6', 'artifacts', 'Running', 'Templates', '10 Oct ~15:30', '2026-10-10T12:00+01:00', 'luismc-artifacts'),
-        task('AR7', 'artifacts', 'To do', 'project_artifacts.py', '11 Oct', '2026-10-09T09:00+01:00', 'luismc-artifacts'),
-        task('AR16', 'artifacts', 'Built', 'Record saved', '20 Sep', '2026-09-20T10:00+01:00', 'luismc-artifacts'),
+        task('AR5', 'artifacts', 'Built', 'ARTIFACTSPEC 1.0.0', '10 Oct', '2026-10-10T11:00+01:00', 'luismc-docs'),
+        task('AR6', 'artifacts', 'Running', 'Templates', '10 Oct ~15:30', '2026-10-10T12:00+01:00', 'luismc-docs'),
+        task('AR7', 'artifacts', 'To do', 'project_artifacts.py', '11 Oct', '2026-10-09T09:00+01:00', 'luismc-docs'),
+        task('AR16', 'artifacts', 'Built', 'Record saved', '20 Sep', '2026-09-20T10:00+01:00', 'luismc-docs'),
         task('DS1', 'project', 'Live', 'AUTHSPEC 3.1.0', '24 Sep', '2026-09-24T10:00+01:00', 'luismc-project-setup'),
         task('DS2', 'models', 'Live', 'Effort question', '05 Oct', '2026-10-05T10:00+01:00', 'luismc-project-setup'),
         task('DS3', 'project', 'Live', 'tech-stack-setup 11.2.0', '02 Oct', '2026-10-02T10:00+01:00', 'luismc-project-setup'),
@@ -63,7 +63,7 @@ def base_manifest():
                                    'file': 'full-progress-dev-standards.html', 'published_sha256': ''},
         'feature_artifacts': [
             {'key': 'artifacts', 'title': 'Feature: Project artifacts standard',
-             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-artifacts'], 'updated': '2026-10-10T12:39+01:00'},
+             'file': AR_FILE, 'prefix': 'AR', 'apps': ['luismc-docs'], 'updated': '2026-10-10T12:39+01:00'},
             {'key': 'models', 'title': 'Feature: Model and effort profiles',
              'file': MP_FILE, 'prefix': 'MP', 'apps': ['luismc-project-setup'], 'updated': '2026-10-09T18:00+01:00'},
         ],
@@ -2422,7 +2422,7 @@ def phase(name, start, end):
 
 
 def release(tid, item, expected, phases=None, risk=None, status='Running', number=None):
-    row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-artifacts')
+    row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-docs')
     row['release'] = number or int(tid[2:]) - 50       # DS51 is RELEASE-1, DS52 RELEASE-2 (R5.45)
     if phases:
         row['phases'] = phases
@@ -2743,7 +2743,7 @@ def timeline_is_never_scaled_up(fx):
 
 
 def no_release_task(tid, item, expected, status='Running', basis='', started=None):
-    row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-artifacts')
+    row = task(tid, 'project', status, item, expected, '2026-10-10T12:00+01:00', 'luismc-docs')
     row['no_release'] = 'catalogue check'
     if basis:
         row['expected_basis'] = basis

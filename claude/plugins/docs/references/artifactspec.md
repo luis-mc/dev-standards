@@ -2,8 +2,8 @@
 
 **Status:** Normative
 **Version:** 1.20.2
-**Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-artifacts` plugin
-**Audience:** Claude Code sessions in those projects, and the implementers of `luismc-artifacts`
+**Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
+**Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
 **Last reviewed:** 2026-10-11
 **Changes in 1.3.0:** an open row's Expected can say what sets the estimate: an optional `expected_basis` (at most 80 characters, open statuses only), given with `--basis`, shown in a small muted line under the Expected value and dropped when the row goes Live, Built or Failed (R6.10, R6.11); and where the record worktree lives is a per-project setting, the environment variable `LUISMC_ARTIFACTS_WORKTREE` first, else `record_worktree` in the git-ignored `.claude/artifacts-local.json`, else the default, resolved by one function for the script and the hooks, with the old worktree removed when the setting moves (R4.24 to R4.27). Nothing is required of an existing record or project.
@@ -20,7 +20,7 @@ ARTIFACTSPEC defines how a project shows its work to its owner. A project keeps
 a record of files in `docs/artifacts/`: a manifest, a task registry and the
 content of each feature. Everything the owner reads is generated from that
 record: one HTML file per feature, and one full-progress artifact. It is for
-Claude Code sessions in projects that use `luismc-artifacts`, and for the
+Claude Code sessions in projects that use `luismc-docs`, and for the
 people who build that plugin.
 
 ### Why
@@ -74,7 +74,7 @@ This specification defines:
 - the record in the project's repository that they are generated from;
 - the commands and hooks that keep them current.
 
-An implementer can build `luismc-artifacts` from it. A reviewer can check a
+An implementer can build `luismc-docs` from it. A reviewer can check a
 project's artifacts against it with `project-artifact-check`.
 
 **What this document is not:** it does not define the content of a feature
@@ -504,7 +504,7 @@ docs/artifacts/
 
 ```json
 {"spec": "ARTIFACTSPEC 1.0.0", "updated": "2026-10-10T12:39+01:00",
- "tasks": [{"id": "AR5", "owner": "artifacts", "app": "luismc-artifacts",
+ "tasks": [{"id": "AR5", "owner": "artifacts", "app": "luismc-docs",
             "status": "Running", "item": "ARTIFACTSPEC 1.0.0",
             "detail": "...", "expected": "10 Oct ~14:15",
             "changed": "2026-10-10T13:02+01:00"}]}
@@ -644,7 +644,7 @@ docs/artifacts/
   and its `docs/artifacts/registry.json` is newer than the working tree's (by
   the newest `changed` stamp of its tasks, or the working tree has no
   registry), the files of its `docs/artifacts/` are copied into the working
-  tree's `docs/artifacts/`, and the script says, once: `luismc-artifacts: the
+  tree's `docs/artifacts/`, and the script says, once: `luismc-docs: the
   record now lives in docs/artifacts/ and is never committed or pushed by the
   plugin; copied it from <old path>. You may remove that worktree with git
   worktree remove <path>`. The plugin never removes the worktree itself. The
@@ -1650,7 +1650,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   this session (`session_id`) has not yet been given the current rule text, it
   prints `{"hookSpecificOutput": {"hookEventName": "PostToolUse",
   "additionalContext": ...}}` with the rule text, the context of R8.13 to R8.15
-  and the line `luismc-artifacts was updated; this rule replaces earlier
+  and the line `luismc-docs was updated; this rule replaces earlier
   instructions about publishing feature artifacts.` It records a hash of the
   delivered text per session in `.claude/artifacts-stop-state.json` (key
   `rule:<session_id>`; the session-start hook records it too), so it prints
@@ -1791,7 +1791,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 ## 10. Installation and the rule file
 
 - **R10.1** — The plugin is installable on its own
-  (`/plugin install luismc-artifacts@<marketplace>`) and is enabled by
+  (`/plugin install luismc-docs@<marketplace>`) and is enabled by
   `luismc-project-setup`'s `claude-setup` in every project it sets up, through
   `enabledPlugins` in the project's `.claude/settings.json`. `<marketplace>` is
   the name under which the owner registered this plugin's marketplace: the

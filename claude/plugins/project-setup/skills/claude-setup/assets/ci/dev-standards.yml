@@ -7,7 +7,7 @@
 #   {{DEV_STANDARDS_REPO}}  the marketplace repository, as owner/name
 #   {{DEV_STANDARDS_REF}}   a tag or full commit SHA (not a branch)
 #   {{DOCS_SCRIPTS}}        path of the docs plugin scripts inside that checkout
-#   {{SPEC_CHECK}}          path of spec_check.py inside that checkout
+#   {{SPEC_CHECK}}          path of spec_check.py inside that checkout: claude/plugins/docs/skills/spec-check/assets/spec_check.py
 #   {{DEFAULT_BRANCH}}      the repository's default branch (claude-setup reads it
 #                           with `gh repo view --json defaultBranchRef`)
 name: dev-standards

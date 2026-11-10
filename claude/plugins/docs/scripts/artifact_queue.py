@@ -22,7 +22,9 @@ class WorktreeSettingError(ValueError):
 
 
 SETTINGS_NAME = os.path.join('.claude', 'artifacts.json')       # committed, per project
-DEFAULT_RECORD_REL = 'docs/artifacts'
+DEFAULT_RECORD_REL = 'docs/artifacts'       # when .claude/artifacts.json exists and names no record_dir
+PROJECT_RECORD_REL = 'docs/project'         # the default with neither .claude/artifacts.json nor a docs.json record_dir (D182)
+DOCS_SETTINGS_NAME = os.path.join('docs', 'docs.json')
 
 
 class RecordDirError(ValueError):
@@ -45,12 +47,37 @@ def check_record_rel(raw, source='record_dir'):
     return '/'.join(parts)
 
 
+def _docs_json_rel(root):
+    """record_dir of docs/docs.json, else docs/project. An unreadable file or a missing key gives the default,
+    except that a record already in the old default folder (docs/artifacts has a manifest, docs/project has
+    none) is still found there, so a project that never wrote .claude/artifacts.json keeps working."""
+    try:
+        with open(os.path.join(root, DOCS_SETTINGS_NAME), encoding='utf-8') as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        data = None
+    if isinstance(data, dict) and 'record_dir' in data:
+        return check_record_rel(data['record_dir'], 'docs/docs.json record_dir')
+    has = lambda rel: os.path.isfile(os.path.join(root, *rel.split('/'), 'manifest.json'))  # noqa: E731
+    if has(DEFAULT_RECORD_REL) and not has(PROJECT_RECORD_REL):
+        return DEFAULT_RECORD_REL
+    return PROJECT_RECORD_REL
+
+
+def _docs_json_rel_safe(root):
+    try:
+        return _docs_json_rel(root)
+    except RecordDirError:
+        return PROJECT_RECORD_REL
+
+
 def record_rel(root):
     """The record folder relative to the repository root: "record_dir" in <root>/.claude/artifacts.json,
-    else docs/artifacts. Raises RecordDirError when the setting is set and unusable."""
+    else docs/artifacts when that file exists. With no such file: "record_dir" in docs/docs.json, else
+    docs/project (D182). Raises RecordDirError when the setting is set and unusable."""
     path = os.path.join(root, SETTINGS_NAME)
     if not os.path.isfile(path):
-        return DEFAULT_RECORD_REL
+        return _docs_json_rel(root)
     try:
         with open(path, encoding='utf-8') as fh:
             data = json.load(fh)
@@ -68,7 +95,7 @@ def record_rel_safe(root):
     try:
         return record_rel(root)
     except RecordDirError:
-        return DEFAULT_RECORD_REL
+        return DEFAULT_RECORD_REL if os.path.isfile(os.path.join(root, SETTINGS_NAME)) else _docs_json_rel_safe(root)
 
 
 def _same_path(a, b):

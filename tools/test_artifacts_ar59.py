@@ -13,17 +13,23 @@ import traceback
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'artifacts')
+PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs')
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 sys.path.insert(0, SCRIPTS)
 
 import artifact_hourly as H  # noqa: E402
 import artifact_queue as Q  # noqa: E402
 import hook_after_command as A  # noqa: E402
-import hook_session_start as S  # noqa: E402
 import project_artifacts as P  # noqa: E402
 import publish_hourly as PH  # noqa: E402
 import render_artifacts as R  # noqa: E402
+import importlib.util  # noqa: E402
+
+# the artifacts session hook sits in scripts/artifacts/ (the docs plugin has its own hook_session_start.py)
+_spec = importlib.util.spec_from_file_location('artifacts_hook_session_start',
+                                               os.path.join(SCRIPTS, 'artifacts', 'hook_session_start.py'))
+S = importlib.util.module_from_spec(_spec)
+_spec.loader.exec_module(S)
 
 TESTS = []
 

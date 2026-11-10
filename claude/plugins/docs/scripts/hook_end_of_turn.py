@@ -285,7 +285,7 @@ def build_migration_reason(script, reasons):
 
 
 def retired_message(retired):
-    return ('luismc-artifacts: old claude.ai pages of feature artifacts are still up (%s). They are deleted only '
+    return ('luismc-docs: old claude.ai pages of feature artifacts are still up (%s). They are deleted only '
             'with the owner\'s confirmation: ask the owner, delete each confirmed page with the Artifact tool '
             '(action: delete), then run mark-deleted.'
             % '; '.join('%s %s' % (e.get('key'), e.get('url')) for e in retired))
@@ -314,7 +314,7 @@ def tell_retired_once(root, sid, retired):
 
 
 def deferred_message(deferred):
-    return ("luismc-artifacts: the Full Progress publish is deferred (claude.ai's daily limit): %s. Not asking for it "
+    return ("luismc-docs: the Full Progress publish is deferred (claude.ai's daily limit): %s. Not asking for it "
             "before then; the end of the turn does not block on it."
             % '; '.join(str(e.get('reason') or 'deferred') for e in deferred))
 
@@ -465,7 +465,7 @@ def main():
             state[sid] = entry
             write_state(state_path, state)
         print(json.dumps({'systemMessage': '\n'.join(filter(None, [(
-            'luismc-artifacts: letting the turn end after %d blocks with no change. Still unpublished, '
+            'luismc-docs: letting the turn end after %d blocks with no change. Still unpublished, '
             'unapplied, unrecorded or unmigrated: %s. Run `pending` in the next session.'
             % (BLOCK_LIMIT, describe(artifacts, queue, background, migration, stale, overdue, plan))), told]))}))
         return 0

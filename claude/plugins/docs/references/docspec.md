@@ -447,7 +447,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
   | R15.9 | `tools/test_ds_enforcement.py` |
   | R15.10 | `test_components.py`, `tools/test_ds_guard_templates.py` |
   | R15.11 | `test_components.py`, `tools/test_ds_guard_templates.py` |
-- **R13.3** — This specification MUST pass `python3 tools/spec_check.py claude/plugins/docs/references/docspec.md`.
+- **R13.3** — This specification MUST pass `python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py claude/plugins/docs/references/docspec.md`.
 
 ---
 

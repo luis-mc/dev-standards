@@ -67,11 +67,11 @@ because an unintended gap looks identical to a deliberate one and only the
 author can tell them apart.
 
 Usage:
-    python3 tools/spec_check.py                    # every spec under references/
-    python3 tools/spec_check.py path/to/spec.md    # one named spec
-    python3 tools/spec_check.py --strict           # warnings become failures
-    python3 tools/spec_check.py --json
-    python3 tools/spec_check.py doc.md --external OTHERSPEC=path/to/other.md
+    python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py                    # every spec under references/
+    python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py path/to/spec.md    # one named spec
+    python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py --strict           # warnings become failures
+    python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py --json
+    python3 claude/plugins/docs/skills/spec-check/assets/spec_check.py doc.md --external OTHERSPEC=path/to/other.md
 
 Exit codes:
     0  no errors (warnings may be present unless --strict)
