@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T14:35+00:00",
+ "updated": "2026-11-10T15:26+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -7508,12 +7508,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS219",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Merge luismc-artifacts and luismc-specs into luismc-docs",
    "detail": "D182/D185/D186: one plugin, name luismc-docs; artifacts and specs skills move under it; record defaults to docs/project; hard switch: both plugins leave the marketplace in the same release. After RELEASE-84 merges (shared files).",
-   "expected": "10 Nov ~15:17",
-   "changed": "2026-11-10T14:35+00:00",
-   "expected_basis": "cloud agent from 14:37, 40 min",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T15:26+00:00",
    "rides": "DS221",
    "started": "2026-11-10T14:35+00:00"
   },
@@ -7558,30 +7557,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "RELEASE-86: artifacts and specs merged into luismc-docs",
    "detail": "Carries DS219 (D182, D185, D186): one cloud agent moves luismc-artifacts and luismc-specs into luismc-docs with a hard switch; both leave the marketplace in this release.",
-   "expected": "10 Nov ~15:34",
-   "changed": "2026-11-10T14:35+00:00",
-   "expected_basis": "cloud agent from 14:37, 40 min (3x a 17-min move task)",
+   "expected": "10 Nov ~15:36",
+   "changed": "2026-11-10T15:26+00:00",
+   "expected_basis": "CI on joined head started 15:27, ~5 min; merge within 4 min",
    "release": 86,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-11-10T14:37+00:00",
-     "end": "2026-11-10T15:17+00:00"
+     "start": "2026-11-10T14:35+00:00",
+     "end": "2026-11-10T15:08+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-10T15:17+00:00",
-     "end": "2026-11-10T15:25+00:00"
+     "start": "2026-11-10T15:25+00:00",
+     "end": "2026-11-10T15:27+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-10T15:25+00:00",
-     "end": "2026-11-10T15:30+00:00"
+     "start": "2026-11-10T15:27+00:00",
+     "end": "2026-11-10T15:32+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-10T15:30+00:00",
-     "end": "2026-11-10T15:34+00:00"
+     "start": "2026-11-10T15:32+00:00",
+     "end": "2026-11-10T15:36+00:00"
     }
    ],
    "started": "2026-11-10T14:35+00:00"
@@ -8180,18 +8179,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T14:35+00:00">10 Nov 14:35</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T15:26+00:00">10 Nov 15:26</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DS219"><span class="task-id">DS219</span>Merge luismc-artifacts and luismc-specs into luismc-docs <span class="glance-expected">10 Nov ~15:17</span><span class="glance-basis">cloud agent from 14:37, 40 min</span></li>
-<li data-glance-task="DS221"><span class="task-id">DS221</span><span class="release-name">RELEASE-86</span>artifacts and specs merged into luismc-docs <span class="glance-expected">10 Nov ~15:34</span><span class="glance-basis">cloud agent from 14:37, 40 min (3x a 17-min move task)</span></li>
+<li data-glance-task="DS221"><span class="task-id">DS221</span><span class="release-name">RELEASE-86</span>artifacts and specs merged into luismc-docs <span class="glance-expected">10 Nov ~15:36</span><span class="glance-basis">CI on joined head started 15:27, ~5 min; merge within 4 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">82 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DS219"><span class="task-id">DS219</span>Merge luismc-artifacts and luismc-specs into luismc-docs</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">78 tasks</span></summary>
 <ul>
 <li data-glance-task="DS218"><span class="task-id">DS218</span>Cleanup: screenshots, one-off migration, 4 CI steps, docs layout</li>
 <li data-glance-task="DS220"><span class="task-id">DS220</span><span class="release-name">RELEASE-85</span>leftover cleanup (DS218 rerun)</li>
@@ -8201,31 +8204,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL174"><span class="task-id">DL174</span>Runner-pool spec of its own inside luismc-delivery</li>
 <li data-glance-task="DS217"><span class="task-id">DS217</span><span class="release-name">RELEASE-84</span>cleanup, hook fixes, bounds, version checks, pool spec</li>
 <li data-glance-task="DL170"><span class="task-id">DL170</span>Pool image: pin LLVM 19 for the MSVC CRT (STL1000)</li>
-<li class="glance-more">and 74 more</li>
+<li class="glance-more">and 70 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">497</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">497</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS221 (artifacts and specs merged into luismc-docs) expected live about 15:34." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">14:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">15:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">15:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">16:00</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS221 (artifacts and specs merged into luismc-docs) expected live about 15:36." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">14:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">15:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">15:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">16:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-86 · artifacts and specs merged into luismc-docs</title>RELEASE-86 · artifacts an…</text>
 <text class="rt-sub" x="0" y="77"><title>DS219</title>DS219</text>
-<rect class="rt-bar agents" x="240.4" y="52" width="231.1" height="22"><title>agents 14:37-15:17</title></rect>
-<rect class="rt-bar join" x="471.6" y="52" width="46.2" height="22"><title>join 15:17-15:25</title></rect>
-<rect class="rt-bar ci" x="517.8" y="52" width="28.9" height="22"><title>PR CI 15:25-15:30</title></rect>
-<rect class="rt-bar merge" x="546.7" y="52" width="23.1" height="22"><title>merge + cleanup 15:30-15:34</title></rect>
-<polygon class="rt-expected" points="569.8,50 577.8,63 569.8,76 561.8,63"/>
-<text class="rt-live-label" x="569.8" y="92">live ~15:34</text>
-<line class="rt-now" x1="228.9" y1="36" x2="228.9" y2="148"/><text class="rt-now-label" x="228.9" y="161">now 14:35</text>
+<rect class="rt-bar agents" x="228.9" y="52" width="190.7" height="22"><title>agents 14:35-15:08</title></rect>
+<rect class="rt-bar join" x="517.8" y="52" width="11.6" height="22"><title>join 15:25-15:27</title></rect>
+<rect class="rt-bar ci" x="529.3" y="52" width="28.9" height="22"><title>PR CI 15:27-15:32</title></rect>
+<rect class="rt-bar merge" x="558.2" y="52" width="23.1" height="22"><title>merge + cleanup 15:32-15:36</title></rect>
+<polygon class="rt-expected" points="581.3,50 589.3,63 581.3,76 573.3,63"/>
+<text class="rt-live-label" x="581.3" y="92">live ~15:36</text>
+<line class="rt-now" x1="523.6" y1="36" x2="523.6" y2="148"/><text class="rt-now-label" x="523.6" y="161">now 15:26</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-86" open><summary><strong>RELEASE-86 · live ~15:34</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-86" open><summary><strong>RELEASE-86 · live ~15:36</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS221"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS221</span><span class="release-name">RELEASE-86</span>artifacts and specs merged into luismc-docs</td><td data-label="App / service"></td><td data-label="Detail">Carries DS219 (D182, D185, D186): one cloud agent moves luismc-artifacts and luismc-specs into luismc-docs with a hard switch; both leave the marketplace in this release.</td><td data-label="Expected">10 Nov ~15:34<span class="expected-basis">cloud agent from 14:37, 40 min (3x a 17-min move task)</span></td></tr>
-<tr data-task="DS219"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS219</span>Merge luismc-artifacts and luismc-specs into luismc-docs</td><td data-label="App / service"></td><td data-label="Detail">D182/D185/D186: one plugin, name luismc-docs; artifacts and specs skills move under it; record defaults to docs/project; hard switch: both plugins leave the marketplace in the same release. After RELEASE-84 merges (shared files).</td><td data-label="Expected">10 Nov ~15:17<span class="expected-basis">cloud agent from 14:37, 40 min</span></td></tr>
+<tr data-task="DS221"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS221</span><span class="release-name">RELEASE-86</span>artifacts and specs merged into luismc-docs</td><td data-label="App / service"></td><td data-label="Detail">Carries DS219 (D182, D185, D186): one cloud agent moves luismc-artifacts and luismc-specs into luismc-docs with a hard switch; both leave the marketplace in this release.</td><td data-label="Expected">10 Nov ~15:36<span class="expected-basis">CI on joined head started 15:27, ~5 min; merge within 4 min</span></td></tr>
+<tr data-task="DS219"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">DS219</span>Merge luismc-artifacts and luismc-specs into luismc-docs</td><td data-label="App / service"></td><td data-label="Detail">D182/D185/D186: one plugin, name luismc-docs; artifacts and specs skills move under it; record defaults to docs/project; hard switch: both plugins leave the marketplace in the same release. After RELEASE-84 merges (shared files).</td><td data-label="Expected">10 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">507 tasks</span></summary>
