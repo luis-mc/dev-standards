@@ -66,6 +66,28 @@ HOOK_SCRIPTS = ("hook_pre_tool.py", "hook_post_tool.py", "hook_stop.py", "hook_s
 SETTINGS = (os.path.join(".claude", "settings.json"), os.path.join(".claude", "settings.local.json"))
 
 
+def _pool_files_items(POOL, root):
+    """DL162: one check per pool, `pool.<name>.files-current`: warns when a pool file differs from the plugin's template."""
+    out = []
+    try:
+        pools = POOL._pools_dir(root)
+        names = sorted(n for n in os.listdir(pools) if os.path.isfile(os.path.join(pools, n, "compose.yaml")))
+    except (OSError, TypeError, AttributeError):   # no pools folder, or a pool module without these helpers
+        return out
+    for n in names:
+        try:
+            diff = POOL.pool_template_diffs(os.path.join(pools, n))
+        except (OSError, TypeError, AttributeError) as exc:
+            out.append(_item("pool.%s.files-current" % n, "warn", "could not compare the pool files: %s" % exc))
+            continue
+        if diff:
+            out.append(_item("pool.%s.files-current" % n, "warn", "pool file(s) differ from the installed plugin's template: %s. "
+                             "Run `delivery_ci_setup.py pool-refresh --yes` (old copies go to bak-<time>/)." % ", ".join(diff)))
+        else:
+            out.append(_item("pool.%s.files-current" % n, "ok", "pool files match the installed plugin"))
+    return out
+
+
 def check_config(root, cfg):
     path = C.config_file(root)
     errors, warnings, status = C.validate_file(path)
@@ -558,6 +580,7 @@ def machine_items(root, cfg):
         items.append(_item("pool", "skip", "delivery_runner_pool is not installed"))
     else:
         try:
+            items += _pool_files_items(POOL, root)
             for r in POOL.doctor_checks(root, repo_paths=[root]):
                 if isinstance(r, dict) and r.get("id"):
                     items.append(_item(str(r["id"]), r.get("status") if r.get("status") in ("ok", "warn", "fail", "skip")
