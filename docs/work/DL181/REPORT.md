@@ -69,6 +69,6 @@ Not run: the new workflow path on a real pull request (no PR may be opened); the
 
 ## Branch head
 
-HEAD_SHA
+Code head: 7a9e238 (the report commit follows it; the branch head is the commit after).
 
 READY
