@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T22:14+00:00",
+  "updated": "2026-11-10T22:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3369,12 +3369,11 @@
       "id": "DL182",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Wine wrapper self-check: hash -r before command -v",
       "detail": "RELEASE-89 image build failed: dash caches /usr/bin/wine after the first command -v, so the DL180 self-check saw the old path. Add hash -r before the check; test asserts it.",
-      "expected": "10 Nov ~22:30",
-      "changed": "2026-11-10T22:12+00:00",
-      "expected_basis": "my edit ~5 min, then RELEASE-90",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T22:17+00:00",
       "rides": "DS225",
       "started": "2026-11-10T22:12+00:00"
     },
@@ -6905,12 +6904,11 @@
       "id": "DS225",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-90: DL182 Wine wrapper self-check fix",
       "detail": "Fix forward for RELEASE-89: join DL182, CI, merge, plugin update.",
-      "expected": "10 Nov ~22:30",
-      "changed": "2026-11-10T22:12+00:00",
-      "expected_basis": "join now, CI ~5 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T22:17+00:00",
       "release": 90,
       "phases": [
         {
