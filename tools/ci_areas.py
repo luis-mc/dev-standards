@@ -129,7 +129,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/specs/skills/spec-new/assets/.*", frozenset({"specs"})),
     (r"claude/plugins/specs/skills/spec-check/assets/.*", frozenset({"specs"})),
     (re.escape(TS) + r"/assets/stack-profile\.md", frozenset({"specs"})),
-    (r"tools/(spec_check|authspec_check|test_spec_check|test_authspec_check)\.py",
+    (r"tools/(authspec_check|test_spec_check|test_authspec_check)\.py",
      frozenset({"specs"})),
     (r"tools/route-ratelimit-map\.json", frozenset({"specs"})),
     # this repository's .claude/ settings and suites: test_session_guard.py (specs) reads them (DS91)
@@ -145,7 +145,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (re.escape(PS) + r"/claude-setup/assets/.*", frozenset({"profiles"})),
     (r"claude/plugins/agents/agents/.*", frozenset({"profiles"})),
     (r"tools/test_model_profiles\.py", frozenset({"profiles"})),
-    (r"tools/test_claude_setup_plugins\.py", frozenset({"profiles"})),
+    (r"tools/(test_claude_setup_plugins|test_check_stack_rust)\.py", frozenset({"profiles"})),
     (r"tools/test_setup_pattern\.py", frozenset({"profiles"})),
     (r"tools/(test_questions_stop|test_project_setup_fixes)\.py", frozenset({"profiles"})),
     (r"\.claude-plugin/marketplace\.json", frozenset({"profiles"})),
@@ -161,7 +161,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/test_ds_guard_templates\.py", frozenset({"docs"})),
     # artifacts
     (r"claude/plugins/artifacts/.*", frozenset({"artifacts"})),
-    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+|convert_interim_record)\.py",
+    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+)\.py",
      frozenset({"artifacts"})),
     # delivery
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
