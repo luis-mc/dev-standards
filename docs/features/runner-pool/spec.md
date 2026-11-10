@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.3.0
+version: 0.4.0
 owner: agents
 type: reference
 code:
@@ -129,5 +129,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.0 | 2026-11-10 | RELEASE-88 | Pool sizing measures the WSL VM (larger of working set and private bytes, never below container use), reads Docker through the Windows CLI before wsl, judges fit against the host-load sample too, and names sizes that pass (R5.22 to R5.24). | DL177 |
 | 0.3.0 | 2026-11-10 | RELEASE-87 | Pool plans keep browsers, layers, apt and Playwright from the pool .env; the memory figure is a median of samples; a --resize that lowers the cap needs --shrink; --pool-gib and --pool-cpus set the pool size (R5.19 to R5.21). | DL176 |
 | 0.2.0 | 2026-11-10 | RELEASE-84 | Runner-pool requirements move here from the delivery spec (D181, D184); old IDs stay as pointers. | DL174 |
