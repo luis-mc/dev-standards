@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T10:53+00:00",
+ "updated": "2026-11-10T11:05+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4077,6 +4077,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-10T10:53+00:00",
    "rides": "DS212",
    "started": "2026-11-10T10:53+00:00"
+  },
+  {
+   "id": "DL168",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "ETAs sized from measured history, checked at launch",
+   "detail": "The no-padding rule is text only: DL-31 checks an ETA's shape, not its size; the brief eta block is guessed; the ledger never compares eta with actual. Fix: record agent finish (report pushed) and CI wall times; delivery_eta.py gives median/p75 per kind; the launch hook rejects an eta above p75 without a reason line; ledger show prints eta vs actual.",
+   "expected": "10 Nov ~11:45",
+   "changed": "2026-11-10T11:05+00:00",
+   "expected_basis": "agent ~25 min from 11:00, then join and CI ~5 min",
+   "rides": "DS212",
+   "started": "2026-11-10T11:05+00:00"
   },
   {
    "id": "DS1",
@@ -7887,13 +7900,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T10:53+00:00">10 Nov 10:53</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T11:05+00:00">10 Nov 11:05</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
+<li data-glance-task="DL168"><span class="task-id">DL168</span>ETAs sized from measured history, checked at launch <span class="glance-expected">10 Nov ~11:45</span><span class="glance-basis">agent ~25 min from 11:00, then join and CI ~5 min</span></li>
 <li data-glance-task="DS212"><span class="task-id">DS212</span><span class="release-name">RELEASE-81</span>LLVM in the runner-pool image <span class="glance-expected">10 Nov ~12:35</span><span class="glance-basis">agent 11:01-12:01, join, CI ~25 min, refresh ~5 min</span></li>
 <li data-glance-task="DL167"><span class="task-id">DL167</span>Runner pool: LLVM for cargo-xwin (clang-cl, lld-link, llvm-lib) <span class="glance-expected">10 Nov</span></li>
 </ul>
@@ -7912,27 +7926,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">481</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">481</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS212 (LLVM in the runner-pool image) expected live about 12:35." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">11:00</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="140"/><text x="330" y="28">11:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="140"/><text x="460" y="28">12:00</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="140"/><text x="590" y="28">12:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">13:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-81 · LLVM in the runner-pool image</title>RELEASE-81 · LLVM in the…</text>
-<text class="rt-sub" x="0" y="77"><title>DL167</title>DL167</text>
+<text class="rt-sub" x="0" y="77"><title>DL167, DL168</title>DL167, DL168</text>
 <rect class="rt-bar agents" x="204.3" y="52" width="260" height="22"><title>agents 11:01-12:01</title></rect>
 <rect class="rt-bar join" x="464.3" y="52" width="17.3" height="22"><title>join 12:01-12:05</title></rect>
 <rect class="rt-bar ci" x="481.7" y="52" width="108.3" height="22"><title>PR CI 12:05-12:30</title></rect>
 <rect class="rt-bar merge" x="590" y="52" width="21.7" height="22"><title>merge + cleanup 12:30-12:35</title></rect>
 <polygon class="rt-expected" points="611.7,50 619.7,63 611.7,76 603.7,63"/>
 <text class="rt-live-label" x="611.7" y="92">live ~12:35</text>
-
+<line class="rt-now" x1="221.7" y1="36" x2="221.7" y2="148"/><text class="rt-now-label" x="221.7" y="161">now 11:05</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-81" open><summary><strong>RELEASE-81 · live ~12:35</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-81" open><summary><strong>RELEASE-81 · live ~12:35</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS212"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS212</span><span class="release-name">RELEASE-81</span>LLVM in the runner-pool image</td><td data-label="App / service"></td><td data-label="Detail">One cloud agent for DL167, join, CI, watcher merges on green, plugin update, smoke, cleanup, then pool-refresh --yes (D178) and tell both peer sessions with the image creation time.</td><td data-label="Expected">10 Nov ~12:35<span class="expected-basis">agent 11:01-12:01, join, CI ~25 min, refresh ~5 min</span></td></tr>
 <tr data-task="DL167"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL167</span>Runner pool: LLVM for cargo-xwin (clang-cl, lld-link, llvm-lib)</a></td><td data-label="App / service"></td><td data-label="Detail">Peer finding 10 Nov ~10:55: since the pool has gcc, rust_ci.py skips its Zig wrappers (it writes them only when no cc), so cargo xwin for x86_64-pc-windows-msvc finds no clang-cl and fails on C/C++ crates. Add clang, lld, llvm to templates/runner-pool/Dockerfile with unversioned clang-cl, lld-link, llvm-lib on PATH and an image self-check; ~+250 MB. Then a pool refresh.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL168"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL168</span>ETAs sized from measured history, checked at launch</a></td><td data-label="App / service"></td><td data-label="Detail">The no-padding rule is text only: DL-31 checks an ETA&#x27;s shape, not its size; the brief eta block is guessed; the ledger never compares eta with actual. Fix: record agent finish (report pushed) and CI wall times; delivery_eta.py gives median/p75 per kind; the launch hook rejects an eta above p75 without a reason line; ledger show prints eta vs actual.</td><td data-label="Expected">10 Nov ~11:45<span class="expected-basis">agent ~25 min from 11:00, then join and CI ~5 min</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">491 tasks</span></summary>
@@ -8438,7 +8453,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905133"><time datetime="2026-11-10T10:53+00:00">10 Nov 10:53</time></td><td data-label="Tasks">DL1 to DL167</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905145"><time datetime="2026-11-10T11:05+00:00">10 Nov 11:05</time></td><td data-label="Tasks">DL1 to DL168</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>

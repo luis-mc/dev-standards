@@ -4041,6 +4041,30 @@
    "chosen": "Yes, refresh after merge",
    "decided": "2026-11-10",
    "owner_words": "Yes, refresh after merge (Recommended)"
+  },
+  {
+   "id": "D179",
+   "question": "Ship DL168 (ETAs sized from measured history; launch hook rejects an eta above p75 without a reason; ledger shows ETA vs actual)?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL168",
+   "options": [
+    {
+     "label": "Launch now as its own release",
+     "summary": "Rides a release after RELEASE-81."
+    },
+    {
+     "label": "Ride with RELEASE-81",
+     "summary": "Join it with DL167; the pool change waits for this agent."
+    },
+    {
+     "label": "Record only",
+     "summary": "Keep To do; size ETAs by hand."
+    }
+   ],
+   "chosen": "Ride with RELEASE-81",
+   "decided": "2026-11-10",
+   "owner_words": "Ride with RELEASE-81"
   }
  ]
 }
