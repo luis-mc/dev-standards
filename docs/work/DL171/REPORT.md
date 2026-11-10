@@ -20,3 +20,8 @@
 ## CI (spec-lint delivery,profiles)
 - First run failed: G1 and W1 (expected) and `model profiles`: `tools/test_project_setup_fixes.py` F18 expected the user-level hook to block a plain-text options list. Q-2 moved, so I changed F18 to expect no block (file outside my owns list; needed by the decision).
 - `run_suite.py --measure project-setup-fixes`: 0 problems.
+
+- Second run (spec-lint delivery,profiles): `model profiles` passes. Only `docs check` fails, with G1 (generated decisions.md stale, not from this branch) and W1 (expected). No other errors.
+- Code head SHA (before this report line): 9c16d7b5b3a9221830a4a7445346e9ecbcff70f3. The branch head is the commit after it.
+
+READY
