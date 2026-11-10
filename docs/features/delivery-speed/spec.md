@@ -9,7 +9,7 @@ owner: agents
 type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
-  - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+  - claude/plugins/delivery/templates/shared/.githooks/pre-push
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - tools/test_delivery_*.py
 last_verified: 2026-11-08
@@ -163,7 +163,7 @@ Nothing from the plan is open. Late branches ride the next train by design.
 ## 12. Code map
 
 Source: claude/plugins/delivery/templates/shared/scripts/delivery/
-Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+Source: claude/plugins/delivery/templates/shared/.githooks/pre-push
 
 ## Versions
 
