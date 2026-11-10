@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T11:59+00:00",
+ "updated": "2026-11-10T12:10+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4101,6 +4101,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-10T11:47+00:00",
    "rides": "DS213",
    "started": "2026-11-10T11:40+00:00"
+  },
+  {
+   "id": "DL170",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Built",
+   "item": "Pool image: pin LLVM 19 for the MSVC CRT (STL1000)",
+   "detail": "cargo-xwin's MSVC CRT asserts Clang >= 19 (yvals_core.h STL1000); Ubuntu 24.04 default clang is 18.1.3. Install clang-19, lld-19, llvm-19 via ARG LLVM_VERSION=19, link clang-cl, clang, lld-link, llvm-lib, llvm-ar, llvm-rc, lld from /usr/lib/llvm-19/bin, and fail the build when clang-cl is older than 19.",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T12:10+00:00",
+   "rides": "DS214",
+   "started": "2026-11-10T12:07+00:00"
   },
   {
    "id": "DS1",
@@ -7346,6 +7358,36 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-10T11:40+00:00"
   },
   {
+   "id": "DS214",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "RELEASE-83: clang 19 in the pool image",
+   "detail": "Fix forward: the MSVC CRT that cargo-xwin downloads needs clang >= 19 (STL1000), the image had 18.1.3. Pin LLVM_VERSION=19 (clang-19, lld-19, llvm-19 from Ubuntu 24.04), link all tools from it, self-check the version, join, CI, watcher merge, plugin update, pool-refresh (D178), tell the comics-organizer session before its 12:40 UTC round.",
+   "expected": "10 Nov ~12:27",
+   "changed": "2026-11-10T12:07+00:00",
+   "expected_basis": "edit+test from 12:08 ~8 min, CI 5, merge 2, rebuild 6",
+   "release": 83,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-10T12:08+00:00",
+     "end": "2026-11-10T12:16+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-10T12:16+00:00",
+     "end": "2026-11-10T12:21+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-10T12:21+00:00",
+     "end": "2026-11-10T12:27+00:00"
+    }
+   ],
+   "started": "2026-11-10T12:07+00:00"
+  },
+  {
    "id": "DU1",
    "owner": "design-field-updates",
    "app": "luismc-docs",
@@ -7939,10 +7981,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T11:59+00:00">10 Nov 11:59</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T12:10+00:00">10 Nov 12:10</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DS214"><span class="task-id">DS214</span><span class="release-name">RELEASE-83</span>clang 19 in the pool image <span class="glance-expected">10 Nov ~12:27</span><span class="glance-basis">edit+test from 12:08 ~8 min, CI 5, merge 2, rebuild 6</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL170"><span class="task-id">DL170</span>Pool image: pin LLVM 19 for the MSVC CRT (STL1000)</li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">71 tasks</span></summary>
 <ul>
@@ -7958,8 +8010,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">486</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">486</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<figure class="release-timeline">
+<figcaption>Next releases (Lisbon)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS214 (clang 19 in the pool image) expected live about 12:27." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">12:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">12:30</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-83 · clang 19 in the pool image</title>RELEASE-83 · clang 19 in…</text>
+<text class="rt-sub" x="0" y="77"><title>DL170</title>DL170</text>
+<rect class="rt-bar agents" x="338.7" y="52" width="138.7" height="22"><title>agents 12:08-12:16</title></rect>
+<rect class="rt-bar ci" x="477.3" y="52" width="86.7" height="22"><title>PR CI 12:16-12:21</title></rect>
+<rect class="rt-bar merge" x="564" y="52" width="104" height="22"><title>merge + cleanup 12:21-12:27</title></rect>
+<polygon class="rt-expected" points="668,50 676,63 668,76 660,63"/>
+<text class="rt-live-label" x="668" y="92">live ~12:27</text>
+<line class="rt-now" x1="373.3" y1="36" x2="373.3" y2="148"/><text class="rt-now-label" x="373.3" y="161">now 12:10</text>
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+</figure>
+<details class="status-fold release-group" data-group="release-83" open><summary><strong>RELEASE-83 · live ~12:27</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS214"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS214</span><span class="release-name">RELEASE-83</span>clang 19 in the pool image</td><td data-label="App / service"></td><td data-label="Detail">Fix forward: the MSVC CRT that cargo-xwin downloads needs clang &gt;= 19 (STL1000), the image had 18.1.3. Pin LLVM_VERSION=19 (clang-19, lld-19, llvm-19 from Ubuntu 24.04), link all tools from it, self-check the version, join, CI, watcher merge, plugin update, pool-refresh (D178), tell the comics-organizer session before its 12:40 UTC round.</td><td data-label="Expected">10 Nov ~12:27<span class="expected-basis">edit+test from 12:08 ~8 min, CI 5, merge 2, rebuild 6</span></td></tr>
+<tr data-task="DL170"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL170</span>Pool image: pin LLVM 19 for the MSVC CRT (STL1000)</a></td><td data-label="App / service"></td><td data-label="Detail">cargo-xwin&#x27;s MSVC CRT asserts Clang &gt;= 19 (yvals_core.h STL1000); Ubuntu 24.04 default clang is 18.1.3. Install clang-19, lld-19, llvm-19 via ARG LLVM_VERSION=19, link clang-cl, clang, lld-link, llvm-lib, llvm-ar, llvm-rc, lld from /usr/lib/llvm-19/bin, and fail the build when clang-cl is older than 19.</td><td data-label="Expected">10 Nov</td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">496 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS213"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS213</span><span class="release-name">RELEASE-82</span>clang-cl link fix for the pool image</td><td data-label="App / service"></td><td data-label="Detail">Fix forward for RELEASE-81: Ubuntu 24.04 ships no clang-cl, so the DL167 self-check failed the pool build. Link clang as clang-cl (cargo-xwin&#x27;s documented method), join, CI, watcher merge, plugin update, pool-refresh (D178), tell the comics-organizer session.</td><td data-label="Expected">10 Nov</td></tr>
@@ -8466,12 +8538,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
-<p class="feature-none">No feature artifacts in progress.</p>
-</details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (8)</strong><span class="fold-count">8 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905187"><time datetime="2026-11-10T11:47+00:00">10 Nov 11:47</time></td><td data-label="Tasks">DL1 to DL169</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905210"><time datetime="2026-11-10T12:10+00:00">10 Nov 12:10</time></td><td data-label="Tasks">DL1 to DL170</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904292"><time datetime="2026-11-09T20:52+00:00">09 Nov 20:52</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
