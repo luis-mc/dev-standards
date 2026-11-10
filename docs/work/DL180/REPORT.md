@@ -1,4 +1,4 @@
-# DL180 report (in progress)
+# DL180 report (final)
 
 ## Base check
 `git fetch origin main && git checkout -B DL180-wine-tmpdir origin/main`; `git merge-base --is-ancestor 8d7358b1 HEAD` rc=0 (HEAD 8d7358b).
@@ -17,4 +17,5 @@
 Runner pool: the image wraps each Wine entry tool (wine, wine64, wineboot, wineserver, winecfg, msiexec) in `/usr/local/bin` with a script that unsets `TMPDIR` and runs the real tool. Wine aborts with `free(): invalid pointer` when `TMPDIR` is set. The pool still sets `TMPDIR` for every other tool. The image build fails if `wine` on PATH is not the wrapper.
 
 ## CI
-(pending)
+spec-lint run 42904606928 (areas=delivery,docs), first run: failure only in `docs check`: G1 (decisions.md stale, generated, not touched by this branch), M1 (delivery spec mapped to the Dockerfile; fixed by `Docs: none` in the next commit message, the runner-pool note covers the change), W1 (this report, expected). All other jobs success; skipped: change notes folded, change notes, shard job, specs/templates, artifact renderer, transcript folds, model profiles.
+Rerun below.
