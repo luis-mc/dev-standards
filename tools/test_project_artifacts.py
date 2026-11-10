@@ -28,7 +28,7 @@ import traceback
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REAL_PLUGIN = ROOT / 'claude' / 'plugins' / 'artifacts'
+REAL_PLUGIN = ROOT / 'claude' / 'plugins' / 'docs'
 NOW = '2026-10-10T11:39:00+00:00'
 
 RULE_TEXT = '- Record work as a task before starting it.\n'
@@ -142,6 +142,9 @@ class Project:
         seed.mkdir()
         git(seed, 'init', '-q', '-b', 'main')
         (seed / 'README.md').write_text('seed\n', encoding='utf-8')
+        # these fixtures keep the record in docs/artifacts: an artifacts.json without record_dir says so (D182 moved the default)
+        (seed / '.claude').mkdir()
+        (seed / '.claude' / 'artifacts.json').write_text('{}\n', encoding='utf-8')
         git(seed, 'add', '.')
         git(seed, 'commit', '-q', '-m', 'seed')
         git(seed, 'remote', 'add', 'origin', self.bare)

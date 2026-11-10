@@ -1,5 +1,5 @@
 ---
-description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 8 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), turns on luismc-transcript-folds in the project like the other seven and binds its two chords in ~/.claude/keybindings.json, defaults every config file to the project's .claude/, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
+description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 6 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), turns on luismc-transcript-folds in the project like the other five and binds its two chords in ~/.claude/keybindings.json, defaults every config file to the project's .claude/, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
 model: sonnet
 effort: medium
 ---
@@ -150,7 +150,7 @@ the owner. Steps only the owner can do go to the "Left for you" list.
 - **design system** — run `/luismc-docs:design-system-setup`: `init`, `guards`, style reading, review gallery. Then tell the owner how to open the gallery, what to look at and how to approve (the approval command or the words to say). Promotion to v1 only with the owner's approval date and evidence.
 - **delivery** — `.delivery/config.json` (add if missing, with the chosen `enforcement.mode`), then `delivery_doctor.py`.
 - **project record** — `.claude/artifacts.json` with `record_dir` `docs/project`.
-- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}`). Fill `{{DEFAULT_BRANCH}}` from `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` (ask the owner when `gh` cannot tell); the workflow's push trigger and design-guard base use it. Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file.
+- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}` is `claude/plugins/docs/skills/spec-check/assets/spec_check.py`, the luismc-docs spec-check skill's script). Fill `{{DEFAULT_BRANCH}}` from `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` (ask the owner when `gh` cannot tell); the workflow's push trigger and design-guard base use it. Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file.
 - **branch protection** — after a yes, check whether the workflow has run on the default branch: `gh run list --workflow dev-standards.yml --branch <default>`.
   - If it has run: read the current protection first with `gh api repos/<owner>/<repo>/branches/<default>/protection`. Merge the `checks` job of the `dev-standards` workflow into `required_status_checks` and keep all existing protection. Then run `gh api -X PUT repos/<owner>/<repo>/branches/<default>/protection --input -` with the merged body.
   - If it has not run yet: record the yes in `.delivery/config.json` as `pending_protection: true`. Add it only if the file is created this run or the key is missing. Never change other keys. `claude-setup status` or the next run applies it once the check exists.
@@ -264,7 +264,7 @@ The keys, and what each is for:
 | `effortLevel` | `"medium"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents, which run Opus; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
 | `hooks.Stop` | the questions-hook entry (user target only), see "The questions Stop hook" | runs `hooks/questions_stop.py` when Claude stops |
-| `enabledPlugins."<plugin>@<marketplace>"` for each of the 8 plugins: `luismc-agents`, `luismc-artifacts`, `luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`, `luismc-specs`, `luismc-transcript-folds` | `true`, project target only (transcript-folds included); marketplace as found below; the plugin list is read from `.claude-plugin/marketplace.json` (see "All plugins") | turns on every plugin of the marketplace for the project (artifacts: ARTIFACTSPEC R10.1; delivery: DELIVERYSPEC D2, it supplies the hooks that enforce the rule tags) |
+| `enabledPlugins."<plugin>@<marketplace>"` for each of the 6 plugins: `luismc-agents`, `luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`, `luismc-transcript-folds` | `true`, project target only (transcript-folds included); marketplace as found below; the plugin list is read from `.claude-plugin/marketplace.json` (see "All plugins") | turns on every plugin of the marketplace for the project (artifacts: ARTIFACTSPEC R10.1; delivery: DELIVERYSPEC D2, it supplies the hooks that enforce the rule tags) |
 | `extraKnownMarketplaces.<marketplace>` | `{"source": {"source": "github", "repo": "luis-mc/dev-standards"}}`, project target only, only when the key is missing; use the marketplace name and source found below | lets the project's `claude plugin install --scope project` find the marketplace (see "Marketplace entry") |
 
 **The effort keys are written from the user's answer, not queued as missing.**
@@ -349,10 +349,12 @@ stale: replace it, because `||` runs the hook twice when it exits 2 and the bloc
 
 **Which plugins.** Read `.claude-plugin/marketplace.json` at the marketplace
 root and take every name in `plugins[]`, so a plugin added later is not
-forgotten. If the file cannot be read, use the eight names in the table above
-and say so in the report. Today that is `luismc-agents`, `luismc-artifacts`,
-`luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`,
-`luismc-specs` and `luismc-transcript-folds`. Scope is the project: everything
+forgotten. If the file cannot be read, use the six names in the table above
+and say so in the report. Today that is `luismc-agents`, `luismc-audits`,
+`luismc-delivery`, `luismc-docs`, `luismc-project-setup` and
+`luismc-transcript-folds`. `luismc-docs` also holds what `luismc-artifacts` and
+`luismc-specs` once did (DS219). When the project's settings still enable either
+old name, remove that key and say so in the report. Scope is the project: everything
 is turned on in the target's `.claude/settings.json`, not at user level. That
 includes `luismc-transcript-folds`. Only its two chords stay at user level (next
 section).
@@ -396,7 +398,7 @@ Each skips when the plugin is not installed yet; print the command instead.
   plugin). In a repo that already has docs, run `docs_setup.py migrate` without
   `--apply` and show its dry-run plan in the summary. Never apply `migrate`
   without the owner saying so.
-- **luismc-artifacts.** When `.claude/artifacts.json` is absent, create it with
+- **luismc-docs record (once `luismc-artifacts`).** When `.claude/artifacts.json` is absent, create it with
   `{"record_dir": "docs/project"}`. When `docs/docs.json` exists it names the
   same `record_dir` (DOCSPEC R2.4: both files name the same folder). Do not
   change an existing `.claude/artifacts.json`; if its `record_dir` differs from
@@ -415,7 +417,7 @@ Each skips when the plugin is not installed yet; print the command instead.
 `luismc-transcript-folds` folds long diffs and finished shell commands in the
 transcript into one line each, with a band above the prompt and two toggle
 chords. It is turned on in the project's `.claude/settings.json`
-`enabledPlugins` like the other seven plugins (see "All plugins") and installed
+`enabledPlugins` like the other five plugins (see "All plugins") and installed
 with `--scope project`. Its two chords stay in `~/.claude/keybindings.json`,
 because keybindings have no project scope. On **every run, whatever target was
 picked**, the change plan includes the chords. They land outside the repo and
@@ -660,7 +662,7 @@ Group every queued change by target and by file. List what is being added, what
 is being overwritten unconditionally, what is being removed (a target's old
 `rules/model-delegation.md`), and which individual settings keys are being
 added, including the `hooks.SessionStart` entry and, for a project target, the
-`enabledPlugins` entry for each of the 8 plugins (or that it is already there).
+`enabledPlugins` entry for each of the 6 plugins (or that it is already there).
 For a project target also list:
 
 - the plugins to install with `claude plugin install <name>@<marketplace>
@@ -760,7 +762,7 @@ model-split conflict left in place. Say whether the model split is now enforced
 for this project only or for all projects. Give the effort chosen for each model
 (Opus main session, Sonnet subagents) and where it was written, and the
 top-level `effortLevel` (added as `medium`, or the existing value left alone)
-that cloud agents fall back to. Say which of the 8 plugins were enabled for the
+that cloud agents fall back to. Say which of the 6 plugins were enabled for the
 project, which were installed, and which install commands the owner still has to
 run, with the marketplace name used and where it came from (run the install yourself after the owner's yes; list a command here only when it failed). Tell the owner to
 run `/reload-plugins`. Say what was configured for docs (init applied, or the
@@ -799,10 +801,8 @@ only the plugins that are enabled in this project.
 | Plugin | What it gives now | Example |
 |---|---|---|
 | `luismc-project-setup` | `/luismc-project-setup:claude-setup`, `tech-stack-setup`, `auth-setup` | `/luismc-project-setup:claude-setup status` shows what is set |
-| `luismc-docs` | `/luismc-docs:docs-check`, `docs-index`, `docs-note`, `docs-setup`, `feature-spec-new`, `design-system-setup` | `/luismc-docs:docs-check` checks links and freshness |
+| `luismc-docs` | `/luismc-docs:docs-check`, `docs-index`, `docs-note`, `docs-setup`, `feature-spec-new`, `design-system-setup`, `spec-new`, `spec-check`, `feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add`, `task-status-update` | `/luismc-docs:docs-check` checks links and freshness; `/luismc-docs:task-add` adds a task to the project record; `/luismc-docs:spec-new` interviews you and writes a spec |
 | `luismc-delivery` | the delivery guard rails and ledger, `/luismc-delivery:delivery-ci-setup` | `/luismc-delivery:delivery-ci-setup` sets up CI and runners |
-| `luismc-artifacts` | `feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add`, `task-status-update` | `/luismc-artifacts:task-add` adds a task to the project record |
-| `luismc-specs` | `/luismc-specs:spec-new`, `spec-check` | `/luismc-specs:spec-new` interviews you and writes a spec |
 | `luismc-audits` | `/luismc-audits:security-audit`, `compliance-audit`, `performance-audit` | `/luismc-audits:security-audit` ranks security findings |
 | `luismc-agents` | the `architect` agent for hard design calls | ask the `architect` agent to compare two designs |
 | `luismc-transcript-folds` | long diffs and shell commands fold to one line; chords `ctrl+x d` and `ctrl+x f` | press `ctrl+x d` to toggle syntax highlighting |

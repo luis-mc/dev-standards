@@ -27,7 +27,7 @@ flowchart LR
 
 ## claude-setup
 
-Applies the Claude Code configuration to the project and/or your user folder, turns on the eight plugins, installs the missing ones, then runs the setups you pick.
+Applies the Claude Code configuration to the project and/or your user folder, turns on the six plugins, installs the missing ones, then runs the setups you pick.
 
 ```mermaid
 flowchart TD

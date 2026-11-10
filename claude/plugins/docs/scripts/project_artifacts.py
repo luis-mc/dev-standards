@@ -62,7 +62,7 @@ except ImportError as _e:
 
 SPEC = 'ARTIFACTSPEC 1.0.0'
 FP_NAME = 'full-progress'
-RECORD_REL = 'docs/artifacts'       # the default; the project's record_dir setting overrides it (current_rel)
+RECORD_REL = 'docs/artifacts'       # the old record folder (the old record worktree held it); the default is docs/project (current_rel)
 WAITS_ON = ('owner', 'work')   # R5.34a: who a Waiting or On hold task waits on; absent means work
 BASIS_MAX = 80            # R6.10: longest Expected basis
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')     # R6.6
@@ -329,7 +329,7 @@ def current_rel(root=None):
     """The record folder for messages: never raises, falls back to the default."""
     root = root or session_root()
     if artifact_queue is None or not root:
-        return RECORD_REL
+        return 'docs/project'
     return artifact_queue.record_rel_safe(str(root))
 
 
@@ -2679,7 +2679,7 @@ def cmd_check(args):
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
     if args.record:
         d = Path(args.record)
-        rel = current_rel(d) if (d / '.claude' / 'artifacts.json').is_file() else RECORD_REL
+        rel = current_rel(d)
         if (d / rel / 'manifest.json').is_file():
             d = d / rel
         rec = Record.load(d)

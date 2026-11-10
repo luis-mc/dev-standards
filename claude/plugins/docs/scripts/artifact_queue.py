@@ -22,7 +22,9 @@ class WorktreeSettingError(ValueError):
 
 
 SETTINGS_NAME = os.path.join('.claude', 'artifacts.json')       # committed, per project
-DEFAULT_RECORD_REL = 'docs/artifacts'
+DEFAULT_RECORD_REL = 'docs/artifacts'       # when .claude/artifacts.json exists and names no record_dir
+PROJECT_RECORD_REL = 'docs/project'         # the default with neither .claude/artifacts.json nor a docs.json record_dir (D182)
+DOCS_SETTINGS_NAME = os.path.join('docs', 'docs.json')
 
 
 class RecordDirError(ValueError):
@@ -45,12 +47,25 @@ def check_record_rel(raw, source='record_dir'):
     return '/'.join(parts)
 
 
+def _docs_json_rel(root):
+    """record_dir of docs/docs.json, else docs/project. An unreadable file or a missing key gives the default."""
+    try:
+        with open(os.path.join(root, DOCS_SETTINGS_NAME), encoding='utf-8') as fh:
+            data = json.load(fh)
+    except (OSError, ValueError):
+        return PROJECT_RECORD_REL
+    if not isinstance(data, dict) or 'record_dir' not in data:
+        return PROJECT_RECORD_REL
+    return check_record_rel(data['record_dir'], 'docs/docs.json record_dir')
+
+
 def record_rel(root):
     """The record folder relative to the repository root: "record_dir" in <root>/.claude/artifacts.json,
-    else docs/artifacts. Raises RecordDirError when the setting is set and unusable."""
+    else docs/artifacts when that file exists. With no such file: "record_dir" in docs/docs.json, else
+    docs/project (D182). Raises RecordDirError when the setting is set and unusable."""
     path = os.path.join(root, SETTINGS_NAME)
     if not os.path.isfile(path):
-        return DEFAULT_RECORD_REL
+        return _docs_json_rel(root)
     try:
         with open(path, encoding='utf-8') as fh:
             data = json.load(fh)
@@ -68,7 +83,7 @@ def record_rel_safe(root):
     try:
         return record_rel(root)
     except RecordDirError:
-        return DEFAULT_RECORD_REL
+        return DEFAULT_RECORD_REL if os.path.isfile(os.path.join(root, SETTINGS_NAME)) else PROJECT_RECORD_REL
 
 
 def _same_path(a, b):

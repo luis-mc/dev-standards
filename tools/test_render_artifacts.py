@@ -19,7 +19,7 @@ import traceback
 from html.parser import HTMLParser
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'artifacts')
+PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'docs')
 sys.path.insert(0, os.path.join(PLUGIN, 'scripts'))
 
 import render_artifacts as R  # noqa: E402
