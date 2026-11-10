@@ -401,8 +401,9 @@ Each skips when the plugin is not installed yet; print the command instead.
   same `record_dir` (DOCSPEC R2.4: both files name the same folder). Do not
   change an existing `.claude/artifacts.json`; if its `record_dir` differs from
   `docs/docs.json`, report it.
-- **luismc-delivery.** Write `.delivery/config.json` from
-  `assets/delivery-config.json` when absent (caps cloud 50, local 3, total 53,
+- **luismc-delivery.** Write `.delivery/config.json` when absent by running
+  `python3 <luismc-delivery>/scripts/delivery_ci_install.py install --only config,settings --root .`
+  (the template is `templates/shared/.delivery/config.json` in `luismc-delivery`; DL172) (caps cloud 50, local 3, total 53,
   and `watcher.ci_workflows` `["ci.yml"]`), as in the `.delivery/config.json`
   section below. When the file is present, leave every key alone except `caps`:
   when an old `caps` value is lower than the template's (for example `total` 5),
@@ -567,8 +568,8 @@ spec does not define.
 
 ### `.delivery/config.json` — project target, add if missing, NEVER overwrite
 
-Per-project settings for the `luismc-delivery` plugin, from
-`assets/delivery-config.json`. Write it to `<repo>/.delivery/config.json` only when
+Per-project settings for the `luismc-delivery` plugin. The file belongs to delivery: the template is
+`templates/shared/.delivery/config.json` in `luismc-delivery`, and `delivery_ci_install.py` writes it (this skill only calls the installer, DL172). Write it to `<repo>/.delivery/config.json` only when
 the file is absent. An existing file is the owner's. Leave it exactly as it is
 (report keys the template has that it lacks, and change nothing), except
 `caps`: raise a value that is lower than the template's, after the summary shows
@@ -583,7 +584,7 @@ with `_` (the template's `_doc` and `_example_windows_monorepo`) when writing.
 Ask once in step 1 whether to fill the project's values. For a Windows monorepo,
 the documented example is `work_root` `C:\\Work`, `tz` `Europe/Lisbon`, `caps`
 50/3/53 (cloud/local/total; an existing smaller cap is raised to 50/3/53 on the next run, which the owner can decline), and `no_attribution` `true`, which makes the
-`commit-msg` hook that `tech-stack-setup` installs refuse `Co-Authored-By` and AI
+`commit-msg` hook that the delivery installer writes refuse `Co-Authored-By` and AI
 attribution trailers (DL-74). Without the answer, write the neutral defaults.
 
 Add `.delivery/` to the project's `.gitignore` in the same change (the ledger,

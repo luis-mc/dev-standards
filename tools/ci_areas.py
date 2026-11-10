@@ -79,7 +79,7 @@ TS = PS + "/tech-stack-setup"
 TOOLING = TS + "/assets/tooling"
 TEMPLATES = "claude/plugins/delivery/templates"
 DELIVERY_SCRIPTS = TEMPLATES + "/shared/scripts/delivery/"
-HOOKS = TOOLING + "/shared/.githooks/"
+HOOKS = TEMPLATES + "/shared/.githooks/"
 DS = DELIVERY_SCRIPTS
 # TC7: suite -> the files whose change turns its mutation pass on. Derived from
 # what each suite copies, imports or mutates. A path ending in "/" is a folder.

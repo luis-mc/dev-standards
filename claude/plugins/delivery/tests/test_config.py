@@ -47,7 +47,7 @@ class SpawnShell(FakeShell):
 class ValidateTests(unittest.TestCase):
     def test_sample_project_config_and_template_are_valid(self):
         self.assertEqual(C.validate_config(SAMPLE_PROJECT), ([], []))
-        tpl = Path(__file__).resolve().parents[2] / "project-setup/skills/claude-setup/assets/delivery-config.json"
+        tpl = Path(__file__).resolve().parents[1] / "templates/shared/.delivery/config.json"
         self.assertEqual(C.validate_config(json.loads(tpl.read_text(encoding="utf-8"))), ([], []))
 
     def test_0_1_0_config_and_empty_config_stay_valid(self):

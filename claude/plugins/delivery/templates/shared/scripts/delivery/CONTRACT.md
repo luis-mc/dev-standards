@@ -10,8 +10,10 @@ are built against; change it first, then the code.
 
 Sources named `templates/...` are in `luismc-delivery` (`claude/plugins/delivery/templates/`) and are written by
 `delivery_ci_install.py install|update --track <track>`. Sources named `tooling/...` are in `luismc-project-setup`
-(`tech-stack-setup/assets/tooling/`); tech-stack-setup copies them itself (hooks, linters, guards). tech-stack-setup
-carries no CI logic (DL15).
+(`tech-stack-setup/assets/tooling/`): repo tooling only (formatters, linters, `.gitattributes`, the `pre-commit`
+hook, language guard tests). tech-stack-setup and claude-setup carry no CI or delivery logic: they call the installer
+(DL15, DL172). Moved to delivery in DL172, written at the same project paths as before: `.githooks/pre-push`,
+`.githooks/commit-msg`, `.delivery/config.json` and the `session_guard.py` entry in `.claude/settings.json`.
 
 | Repository path | Source in this plugin | Owner |
 |---|---|---|
@@ -53,7 +55,10 @@ carries no CI logic (DL15).
 | `.github/workflows/artifact-prune.yml` | `templates/shared/.github/workflows/artifact-prune.yml` | ci |
 | `scripts/delivery/tools.json` | same | gate |
 | `scripts/delivery/gate.json` | `templates/<track>/scripts/delivery/gate.json` | gate |
-| `.githooks/pre-push` | `tooling/shared/.githooks/pre-push` | gate |
+| `.githooks/pre-push` | `templates/shared/.githooks/pre-push` (`install` moves a different existing hook to `pre-push.local`; DL172) | gate |
+| `.githooks/commit-msg` | `templates/shared/.githooks/commit-msg` (acts only when `.delivery/config.json` sets `no_attribution`; DL172) | gate |
+| `.delivery/config.json` | `templates/shared/.delivery/config.json`, written without its `_` keys; written when absent, never overwritten, also by `update` (DL172) | gate |
+| `.claude/settings.json` | not copied: `delivery_ci_install.py` merges the `session_guard.py` PreToolUse entry for `Bash`; other entries stay; added once (DL172) | gate |
 | `.gitattributes` | `tooling/shared/.gitattributes` (LF for scripts and hooks) | gate |
 | guard starter, TS | `tooling/ts/guards/*.guard.test.ts`, run by the Vitest `guard` project in `vitest.config.ts` | gate |
 | guard starter, Go | `tooling/go/guards/` | gate |

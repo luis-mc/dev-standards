@@ -146,7 +146,7 @@ for path, want in [
     (D + "change_notes.py", (T, F, F, T)),
     (D + "CONTRACT.md", (F, F, F, F)), (D + "ci_watch.py", (F, F, F, F)),
     (D + "smoke_packaged.py", (F, F, F, F)), (D + "artifact_prune.py", (F, F, F, F)),
-    (f"{TOOL}/shared/.githooks/pre-push", (T, T, F, F)),
+    ("claude/plugins/delivery/templates/shared/.githooks/pre-push", (T, T, F, F)),
     ("claude/plugins/delivery/templates/shared/.github/workflows/train-cleanup.yml", (T, F, T, F)),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", (T, F, T, F)),
     ("tools/test_delivery_gate.py", (T, T, T, F)),
