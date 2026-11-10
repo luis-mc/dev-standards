@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.20.1
+version: 0.20.2
 owner: agents
 type: reference
 code:
@@ -497,6 +497,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.2 | 2026-11-10 | RELEASE-83 | The pool image pins LLVM 19 (ARG LLVM_VERSION) because the MSVC CRT asserts Clang 19 or newer; every LLVM tool links from that version and the self-check fails an older clang-cl (R13.88). | DL170 |
 | 0.20.1 | 2026-11-10 | RELEASE-82 | The pool image links clang as clang-cl when the distro ships no clang-cl (Ubuntu 24.04), so the LLVM self-check passes (R13.88). | DL169 |
 | 0.20.0 | 2026-11-10 | RELEASE-81 | R13.88: the pool image installs clang, lld and llvm and links clang-cl, lld-link and llvm-lib onto PATH, with a build-time self-check.<br>R13.89: ETAs from measured history. The ledger records agent finish time and CI wall time; delivery_eta.py gives median and p75; the DL-30 launch check refuses an eta more than 50 % above the measured p75 without an eta-reason line; show prints eta against time taken. | DL167, DL168 |
 | 0.19.1 | 2026-11-10 | RELEASE-80 | R13.86 and R13.87: pool-refresh fixes a wrong runner hash, exits non-zero on a failed build, and reports the build result from image ids read before and after. | DL165 |
