@@ -69,6 +69,8 @@ RUN pk=""; \
       apt-get update && apt-get install -y --no-install-recommends $pk && rm -rf /var/lib/apt/lists/*; \
     fi
 # DL180: Wine aborts with "free(): invalid pointer" when TMPDIR is set, even to /tmp. The pool sets TMPDIR per agent (DL87) and that stays for every other tool.
+# DL182: hash -r before the self-check, because dash caches the first path command -v found.
+# DL182: hash -r before the self-check, because dash caches the first path that command -v found.
 # So each Wine entry tool gets a small wrapper in /usr/local/bin (first on PATH) that unsets TMPDIR and runs the real tool.
 RUN if command -v wine >/dev/null 2>&1; then \
       for t in wine wine64 wine-stable wineboot wineserver winecfg msiexec; do \
@@ -76,7 +78,7 @@ RUN if command -v wine >/dev/null 2>&1; then \
         printf '#!/bin/sh\n# DL180: Wine aborts with free(): invalid pointer when TMPDIR is set.\nunset TMPDIR\nexec /usr/bin/%s "$@"\n' "$t" > "/usr/local/bin/$t"; \
         chmod 0755 "/usr/local/bin/$t"; \
       done; \
-      [ "$(command -v wine)" = /usr/local/bin/wine ]; \
+      hash -r; [ "$(command -v wine)" = /usr/local/bin/wine ]; \
     fi
 COPY pool_supervisor.py pool_agents.py /opt/pool/
 COPY pool-add-agent pool-remove-agent /usr/local/bin/
