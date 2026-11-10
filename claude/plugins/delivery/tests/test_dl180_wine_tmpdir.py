@@ -46,7 +46,8 @@ class WineTmpdir(unittest.TestCase):
 
     def test_path_self_check(self):
         _, r = block_index()
-        self.assertIn('[ "$(command -v wine)" = /usr/local/bin/wine ]', r)
+        # DL182: dash caches the path of wine after the first command -v; hash -r makes the check see the wrapper.
+        self.assertIn('hash -r; [ "$(command -v wine)" = /usr/local/bin/wine ]', r)
 
     def test_comment_explains(self):
         text = DF.read_text(encoding='utf-8')
