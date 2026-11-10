@@ -1003,6 +1003,36 @@ def runner_sha(probe, version=RUNNER_VERSION):
     return m.group(1) if m else None
 
 
+def sha_is_bad(value):
+    """DL165: a runner hash that is not 64 hex characters, or is one repeated character, is never right."""
+    v = (value or '').strip().lower()
+    return not re.fullmatch(r'[0-9a-f]{64}', v) or len(set(v)) == 1
+
+
+def short_sha(value):
+    v = (value or '').strip()
+    return v[:8] if len(v) > 8 else (v or 'unset')
+
+
+def judge_sha(probe, version, current):
+    """DL165: (hash to write or keep, reason text or '', note). The pinned hash rules for the pinned version; another
+    version uses the released hash; when that cannot be read the value stays (unless it is malformed)."""
+    cur = (current or '').strip()
+    if not cur:
+        return runner_sha(probe, version), '', ''
+    bad = sha_is_bad(cur)
+    want = RUNNER_SHA256 if version == RUNNER_VERSION else runner_sha(probe, version)
+    if want and cur.lower() != want.lower():
+        return want, 'did not match the pinned hash for %s' % version if version == RUNNER_VERSION else \
+            'did not match the released hash for %s' % version, ''
+    if want:
+        return cur, '', ''
+    if bad:
+        return None, '', ''
+    return cur, '', ('kept RUNNER_SHA256 %s: the release hash for runner %s could not be read, so it was not checked.'
+                     % (short_sha(cur), version))
+
+
 def pool_dir(pool):
     base = MS.machine_dir() if MS else os.environ.get('DELIVERY_MACHINE_DIR', '/etc/luismc-delivery')
     return os.path.join(str(base), 'pools', pool)
@@ -1154,12 +1184,12 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
     if not env:
         return {'pool': pool, 'path': path, 'error': 'no pool .env at %s; run pool-run first' % path, 'changes': {}}
     version = env.get('RUNNER_VERSION') or RUNNER_VERSION
-    sha = env.get('RUNNER_SHA256') or runner_sha(probe, version)
+    sha, sha_reason, sha_note = judge_sha(probe, version, env.get('RUNNER_SHA256'))
     picked, why = pick_browsers(probe, browsers, repo_paths)
     if browsers not in BROWSERS and env.get('POOL_BROWSERS') == 'chromium':
         picked, why = 'chromium', None  # kept: only an explicit --browsers none removes it
     pw, pw_source = resolve_playwright(probe, picked, playwright_version, repo_paths)
-    notes = []
+    notes = [sha_note] if sha_note else []
     cur_pw = env.get('PLAYWRIGHT_VERSION')
     if pw and not playwright_version and valid_playwright_version(cur_pw) and _pw_tuple(cur_pw) > _pw_tuple(pw):
         notes.append('kept Playwright %s: it is higher than %s (%s). Pass --playwright %s to lower it.' % (cur_pw, pw, pw_source, pw))
@@ -1177,7 +1207,7 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
         want['PLAYWRIGHT_VERSION'] = pw
     changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT', 'POOL_LAYER_SOURCES') else None)) != v}
     files = pool_template_diffs(pool_dir(pool))
-    out = {'pool': pool, 'path': path, 'changes': changes, 'files': files, 'why': why, 'playwright_source': pw_source if pw else None,
+    out = {'pool': pool, 'path': path, 'changes': changes, 'files': files, 'sha_reason': sha_reason if 'RUNNER_SHA256' in changes else '', 'why': why, 'playwright_source': pw_source if pw else None,
            'layers': [(x, sources.get(x)) for x in layers], 'notes': notes}
     if not sha:
         out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
@@ -1332,11 +1362,11 @@ class Executor:
         version = read_pool_env(self.probe, step['pool']).get('RUNNER_VERSION') or RUNNER_VERSION
         if below_floor(version):
             return False, below_floor(version)
-        sha = read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256') or runner_sha(self.probe, version)
+        sha = judge_sha(self.probe, version, read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256'))[0]
         if not sha:
             return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
         env_path = os.path.join(pool_dir(step['pool']), '.env')
-        if os.path.isfile(env_path) and not read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256'):
+        if os.path.isfile(env_path) and read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256') != sha:
             # B14: a later `docker compose up --no-build` needs it in .env (compose.yaml requires it).
             set_env_values(env_path, {'RUNNER_SHA256': sha})
         browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
@@ -1379,22 +1409,36 @@ class Executor:
         if not force and not (rp.get('repos')) and self.runners_busy():
             return True, text + ('. A job may run (or the runners cannot be read), so the pool was not rebuilt. '
                                  'By hand: cd %s && docker compose up -d --build' % pool_dir(rp['pool']))
+        before = self.image_ids(rp['pool'])
         ok, detail = self.do_pool_up({'pool': rp['pool']})
         if not ok:
-            return ok, text + '; the rebuild failed: ' + detail
-        return True, text + '; ' + self.image_state(rp, force)
+            return ok, text + '; the rebuild failed: ' + detail + '. The old container keeps running.'
+        return True, text + '; ' + self.image_state(rp, force, before)
 
-    def image_state(self, rp, force=False):
-        """DL162: say what the build really did. The container is recreated only when its image is not the tagged one
-        and no job runs."""
+    def image_ids(self, pool):
+        """DL166: (container id, image the container runs, tagged image id); an empty string when one cannot be read."""
+        def one(argv):
+            r = self.probe.sh(argv)
+            return r[1].strip() if r and r[0] == 0 else ''
+        c = 'pool-%s-pool-1' % pool
+        return (one(['docker', 'inspect', '--format', '{{.Id}}', c]),
+                one(['docker', 'inspect', '--format', '{{.Image}}', c]),
+                one(['docker', 'image', 'inspect', '--format', '{{.Id}}', 'luismc-runner-pool:%s' % pool]))
+
+    def image_state(self, rp, force=False, before=None):
+        """DL162/DL166: say what the build really did, from ids read before and after it. The container is recreated
+        here only when it still runs an older image than the tag; never when compose already recreated it."""
         pool = rp['pool']
-        run_id = self.probe.sh(['docker', 'inspect', '--format', '{{.Image}}', 'pool-%s-pool-1' % pool])
-        tag_id = self.probe.sh(['docker', 'image', 'inspect', '--format', '{{.Id}}', 'luismc-runner-pool:%s' % pool])
-        run_id = run_id[1].strip() if run_id and run_id[0] == 0 else ''
-        tag_id = tag_id[1].strip() if tag_id and tag_id[0] == 0 else ''
+        cid, run_id, tag_id = self.image_ids(pool)
+        b_cid, b_run, b_tag = before or ('', '', '')
         if not run_id or not tag_id:
             return 'build finished; could not compare the image ids, so the container was not touched'
-        if run_id == tag_id:
+        if b_tag and tag_id != b_tag:
+            if run_id == tag_id:
+                return 'image rebuilt, container recreated by the build' if cid != b_cid else 'image rebuilt; the container runs it'
+        elif run_id == tag_id:
+            if b_cid and cid != b_cid or b_run and run_id != b_run:
+                return 'container recreated (the build replaced it); the image id did not change'
             return 'image unchanged (cache hit); the container already runs it'
         cmd = recreate_command(pool)
         if not force and self.runners_busy():
@@ -1747,6 +1791,16 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
             ('compose.yaml requires %s but .env has no value for it, so `docker compose up` fails. Run `delivery_ci_setup.py pool-refresh --yes`; it writes '
              'RUNNER_SHA256 and keeps the cap.'
              % ', '.join(missing)) if missing else 'every required variable of compose.yaml is in .env')
+        ev = {l.split('=', 1)[0].strip(): l.split('=', 1)[1].strip() for l in env.splitlines() if '=' in l and not l.lstrip().startswith('#')}
+        if ev.get('RUNNER_SHA256'):
+            ver = ev.get('RUNNER_VERSION') or RUNNER_VERSION
+            want = RUNNER_SHA256 if ver == RUNNER_VERSION else runner_sha(probe, ver)
+            have = ev['RUNNER_SHA256']
+            if sha_is_bad(have) or (want and have.lower() != want.lower()):
+                add('runner-sha', 'warn', 'RUNNER_SHA256 %s in .env is not the pinned or released hash for runner %s, so the image build '
+                    'fails its checksum. Run `delivery_ci_setup.py pool-refresh --yes`.' % (short_sha(have), ver))
+            else:
+                add('runner-sha', 'ok', 'RUNNER_SHA256 matches runner %s' % ver)
         has_cap = 'POOL_CPUS=' in env and 'POOL_MEM=' in env
         add('cap', 'ok' if has_cap else 'fail', 'cap set in .env' if has_cap else '.env has no POOL_CPUS and POOL_MEM')
         env_vals = dict(l.split('=', 1) for l in env.splitlines() if '=' in l and not l.startswith('#'))
