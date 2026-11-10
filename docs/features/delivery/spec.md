@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.21.1
+version: 0.22.0
 owner: agents
 type: reference
 code:
@@ -499,6 +499,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.22.0 | 2026-11-10 | RELEASE-91 | A repeat CI run starts with the jobs that have not passed yet: ci_rerun_first.py, opt in with rerun_first in ci-areas.json (ts template). | DL181 |
 | 0.21.1 | 2026-11-10 | RELEASE-86 | plugin-compat.json names luismc-docs (2.0.0 or later) in place of luismc-artifacts; the artifacts plugin merged into luismc-docs. | DS219 |
 | 0.21.0 | 2026-11-10 | RELEASE-84 | DL-42 is checked per command segment and only for stop or kill programs; DL-63 reads the registry from the project record folder; Q-2 is checked only in the delivery Stop hook and ignores code, quotes and a closing 'no question' line.<br>Moved from project-setup: the pre-push and commit-msg hooks, the .delivery/config.json template and the session_guard settings entry. delivery_ci_install.py writes them at the same project paths; install moves a different pre-push to pre-push.local; settings are merged, never overwritten.<br>plugins.compat doctor check and references/plugin-compat.json warn when installed luismc plugin versions do not fit each other.<br>Runner-pool requirements R13.60 to R13.71, R13.79, R13.80, R13.84, R13.86 to R13.88 are now pointers to the runner-pool spec (D181, D184). | DL171, DL172, DL173, DL174 |
 | 0.20.2 | 2026-11-10 | RELEASE-83 | The pool image pins LLVM 19 (ARG LLVM_VERSION) because the MSVC CRT asserts Clang 19 or newer; every LLVM tool links from that version and the self-check fails an older clang-cl (R13.88). | DL170 |
