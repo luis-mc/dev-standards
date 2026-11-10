@@ -888,12 +888,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T00:09+00:00">10 Nov 00:09</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">10 Nov 00:09</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T07:10+00:00">10 Nov 07:10</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">10 Nov 07:11</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL164"><span class="task-id">DL164</span>Refresh the shared runner pool with luismc-delivery 1.19.0 <span class="glance-expected">10 Nov ~07:40</span><span class="glance-basis">docker build started 07:10, ~30 min</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">41 tasks</span></summary>
 <ul>
@@ -909,8 +914,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">157</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">157</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL164"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL164</span>Refresh the shared runner pool with luismc-delivery 1.19.0<span class="no-release-line">ships nothing: machine maintenance, ships no code</span></td><td data-label="Detail">D174: pool-refresh --yes on pool main: new Dockerfile and compose.yaml (backup kept), Playwright 1.65.0, windows-packaging layer kept, image rebuilt and container recreated. Then tell moobable-28 and comics-organizer-dd the new image is up.</td><td data-label="Expected">10 Nov ~07:40<span class="expected-basis">docker build started 07:10, ~30 min</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">163 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL162"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL162</span>pool-refresh copies the current pool template files before rebuilding<span class="release-line"><span class="release-name">RELEASE-79</span></span></td><td data-label="Detail">refresh() only rewrites .env and runs docker compose up -d --build; Dockerfile, compose.yaml, hooks and machine scripts stay from the first pool-run. On this PC they date from 10:33, so the 20:53 and 23:34 refreshes rebuilt the old Dockerfile (cache hit): no gcc, no windows-packaging layer, container not recreated. Fix: back up and copy the template files (keep .env, agents.json, db-admin.pw), then build; doctor flags pool files older than the plugin.</td><td data-label="Expected">10 Nov</td></tr>
@@ -1111,6 +1121,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D174">
+<h3 class="decision-head"><span class="decision-id">D174</span> <span class="decision-question">May the session run luismc-delivery 1.19.0 pool-refresh --yes on the shared runner pool (new Dockerfile and compose.yaml, Playwright 1.63.0 -&gt; 1.65.0, keep windows-packaging, rebuild, recreate)?</span></h3>
+<p class="decision-meta">Asked 10 Nov · Decided 10 Nov · Task DL162</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Run it now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 10 Nov</span></div>
+<p class="decision-summary">Run as planned with Playwright 1.65.0; tell both peer sessions when the new image is up.</p>
+<blockquote class="decision-words">&ldquo;Run it now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Run, keep Playwright 1.63</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Refresh and rebuild, leave PLAYWRIGHT_VERSION at 1.63.0.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hold</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave the shared pool unchanged.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D173">
 <h3 class="decision-head"><span class="decision-id">D173</span> <span class="decision-question">How to handle a peer finding that needs a design choice overnight?</span></h3>
 <p class="decision-meta">Asked 09 Nov · Decided 09 Nov · Task DS207</p>

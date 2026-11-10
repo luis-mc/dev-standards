@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T00:09+00:00",
+  "updated": "2026-11-10T07:10+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3149,6 +3149,19 @@
       "changed": "2026-11-10T00:09+00:00",
       "rides": "DS210",
       "started": "2026-11-09T23:38+00:00"
+    },
+    {
+      "id": "DL164",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Refresh the shared runner pool with luismc-delivery 1.19.0",
+      "detail": "D174: pool-refresh --yes on pool main: new Dockerfile and compose.yaml (backup kept), Playwright 1.65.0, windows-packaging layer kept, image rebuilt and container recreated. Then tell moobable-28 and comics-organizer-dd the new image is up.",
+      "expected": "10 Nov ~07:40",
+      "changed": "2026-11-10T07:10+00:00",
+      "expected_basis": "docker build started 07:10, ~30 min",
+      "no_release": "machine maintenance, ships no code",
+      "started": "2026-11-10T07:10+00:00"
     },
     {
       "id": "DS1",
