@@ -66,3 +66,4 @@ d1ac4e03b555e6665897639c21cd2c3f50290f78:claude/plugins/docs/templates/design-sy
 9cb9ec8418d51ea4688dd76d0948842e9df5fa45:tools/test_project_setup_fixes.py:project-named-secret:116
 9cb9ec8418d51ea4688dd76d0948842e9df5fa45:tools/test_project_setup_fixes.py:project-named-secret:50
 9cb9ec8418d51ea4688dd76d0948842e9df5fa45:tools/test_project_setup_fixes.py:stripe-access-token:50
+a3eb73f07f8715c9b53c34435b3743ea5c0d048b:claude/plugins/delivery/templates/shared/scripts/delivery/ci_rerun_first.py:project-named-secret:93

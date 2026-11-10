@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.21.1
+version: 0.22.0
 owner: agents
 type: reference
 code:
@@ -179,6 +179,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.50** — The rust `ci.yml` and `package.yml` install the toolchain with `rust_ci.py toolchain` and write the linker env from `rust_ci.py env`. `Swatinem/rust-cache` runs only on GitHub-hosted runners. The pinned cargo-deny runs as `rust_ci.py deny`. The sqlx-cli install no longer ends in `|| true`. On `pull_request` the rust workflow runs only for its paths (`crates/**`, `**/Cargo.toml`, `Cargo.lock`, `rust-toolchain.toml`, `rustfmt.toml`, `deny.toml`, `**/*.rs`, `scripts/delivery/rust_ci.py`, `tools.json` and the workflow itself), so Rust under `apps/` runs it. On push it keeps `paths-ignore` for docs, Markdown and JS-only paths; `apps/**` is not ignored. The ts workflow's `paths-ignore` adds the Rust-only paths, so a Rust-only change skips the JS suite and a mixed change runs both. A push to the default branch that changes only JS under `apps/` still runs the rust workflow; pull requests are exact. Branch protection must not require rust jobs on JS-only pull requests. (DS206, D148) `cancel-in-progress` equals the one in the ts workflow. `package.yml` builds a Windows exe with cargo-xwin as the artifact `packaged-program-windows`, beside `packaged-program`, and downloads nothing from other runs. (DS201, D144)
 
 **R5.51** — `delivery_doctor.py` has a `rust` check. It shows nothing unless gate.json `track` is `rust` or `scripts/delivery/rust_ci.py` exists. Failures: `rust.toolchain` (file missing, or channel not `X.Y.Z`), `rust.linker` (no `cc` or `zig` on PATH or in the tool cache; message `linker cc not found. Fix: ...`), `rust.windows` (`clang-cl` or `lld-link` missing while a `targets` entry names `windows`), `rust.pins` (`rustup-init`, `llvm`, `zig` or `cargo-deny` has no 64-hex sha256 in `scripts/delivery/tools.json`; a missing file, bad JSON or missing keys are findings, never a crash). Warnings: `rust.advisory` (no `advisory-db*` folder in the tool cache, or older than 7 days) and `rust.disk` (under 10 GB free). Warnings never fail the check. The doctor changes nothing and prints the fix command. (DS202, D142)
+
+**R5.52** — A repeat CI run starts with the jobs that have not passed yet (DL181, next to R5.30, DL-80). When `scripts/delivery/ci-areas.json` has `"rerun_first": true`, the ts `ci.yml` plan job runs `ci_rerun_first.py` on a pull-request push. The script finds the previous head's newest completed run of the same workflow and lists the jobs that failed, were cancelled, timed out, or were skipped or absent while selected (matrix shards count as their job). The `integration` and `e2e-shard` jobs that passed there are held back as a planned skip, the others run, and the last step of `e2e` dispatches a second run (`workflow_dispatch` input `only`) for the held jobs once the first set passed. `verify` is never held. The held jobs read as skipped until the second run ends, so a merge waits for it. A first run, a key that is off or missing, a fork, an all-green previous head, or any error gives `rerun=false`: the run is exactly as before.
 
 ## 6. Non-functional requirements
 
@@ -497,6 +499,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.22.0 | 2026-11-10 | RELEASE-91 | A repeat CI run starts with the jobs that have not passed yet: ci_rerun_first.py, opt in with rerun_first in ci-areas.json (ts template). | DL181 |
 | 0.21.1 | 2026-11-10 | RELEASE-86 | plugin-compat.json names luismc-docs (2.0.0 or later) in place of luismc-artifacts; the artifacts plugin merged into luismc-docs. | DS219 |
 | 0.21.0 | 2026-11-10 | RELEASE-84 | DL-42 is checked per command segment and only for stop or kill programs; DL-63 reads the registry from the project record folder; Q-2 is checked only in the delivery Stop hook and ignores code, quotes and a closing 'no question' line.<br>Moved from project-setup: the pre-push and commit-msg hooks, the .delivery/config.json template and the session_guard settings entry. delivery_ci_install.py writes them at the same project paths; install moves a different pre-push to pre-push.local; settings are merged, never overwritten.<br>plugins.compat doctor check and references/plugin-compat.json warn when installed luismc plugin versions do not fit each other.<br>Runner-pool requirements R13.60 to R13.71, R13.79, R13.80, R13.84, R13.86 to R13.88 are now pointers to the runner-pool spec (D181, D184). | DL171, DL172, DL173, DL174 |
 | 0.20.2 | 2026-11-10 | RELEASE-83 | The pool image pins LLVM 19 (ARG LLVM_VERSION) because the MSVC CRT asserts Clang 19 or newer; every LLVM tool links from that version and the self-check fails an older clang-cl (R13.88). | DL170 |
