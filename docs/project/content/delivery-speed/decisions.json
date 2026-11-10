@@ -4065,6 +4065,162 @@
    "chosen": "Ride with RELEASE-81",
    "decided": "2026-11-10",
    "owner_words": "Ride with RELEASE-81"
+  },
+  {
+   "id": "D180",
+   "question": "Which leftover cleanups ship as one release? (several could be picked)",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DS218",
+   "options": [
+    {
+     "label": "All four cleanups",
+     "summary": "Delete 11 CO669 screenshots; delete the one-off migration; add 4 missing CI steps; tidy docs layout and the spec_check.py duplicate"
+    },
+    {
+     "label": "Some of them",
+     "summary": "Pick a subset"
+    },
+    {
+     "label": "None",
+     "summary": "No cleanup"
+    }
+   ],
+   "chosen": "All four cleanups",
+   "decided": "2026-11-10",
+   "owner_words": "Delete CO669 screenshots, Delete one-off migration, Add 4 missing CI steps, Tidy docs layout + dup"
+  },
+  {
+   "id": "D181",
+   "question": "How should the runner pool be organized?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL174",
+   "options": [
+    {
+     "label": "Own plugin",
+     "summary": "luismc-runner-pool with its own version line"
+    },
+    {
+     "label": "Own spec, same plugin",
+     "summary": "Runner-pool spec inside luismc-delivery"
+    },
+    {
+     "label": "Keep as is",
+     "summary": "No change"
+    }
+   ],
+   "chosen": "Own spec, same plugin",
+   "decided": "2026-11-10",
+   "owner_words": "Own spec, same plugin"
+  },
+  {
+   "id": "D182",
+   "question": "Which shape for docs, artifacts and specs?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DS219",
+   "options": [
+    {
+     "label": "Merge specs into docs",
+     "summary": "Artifacts separate; one record_dir"
+    },
+    {
+     "label": "Merge all three",
+     "summary": "One plugin for docs, specs and the project record"
+    },
+    {
+     "label": "Only fix the record setting",
+     "summary": "Keep 3 plugins"
+    }
+   ],
+   "chosen": "Merge all three",
+   "decided": "2026-11-10",
+   "owner_words": "Merge all three"
+  },
+  {
+   "id": "D183",
+   "question": "What to do about project-setup/delivery bounds and hook overlaps?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL171",
+   "options": [
+    {
+     "label": "Fix all",
+     "summary": "Move CI files to delivery, one owner per hook rule, fix DL-42 and DL-63, schema and version-skew checks"
+    },
+    {
+     "label": "Bugs only",
+     "summary": "DL-42 and DL-63"
+    },
+    {
+     "label": "Leave",
+     "summary": "No change"
+    }
+   ],
+   "chosen": "Fix all",
+   "decided": "2026-11-10",
+   "owner_words": "Fix all (Recommended)"
+  },
+  {
+   "id": "D184",
+   "question": "How does the runner-pool spec move keep R13.60-R13.89 citations working?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL174",
+   "options": [
+    {
+     "label": "New spec, old IDs kept",
+     "summary": "Old R13.xx lines stay as pointers"
+    },
+    {
+     "label": "Renumber and fix citations",
+     "summary": "New IDs, rewrite citations"
+    }
+   ],
+   "chosen": "New spec, old IDs kept",
+   "decided": "2026-11-10",
+   "owner_words": "New spec, old IDs kept (Recommended)"
+  },
+  {
+   "id": "D185",
+   "question": "Name of the merged docs, artifacts and specs plugin?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DS219",
+   "options": [
+    {
+     "label": "luismc-docs",
+     "summary": "Keep the docs name; absorb the other two"
+    },
+    {
+     "label": "New name",
+     "summary": "Rename everything"
+    }
+   ],
+   "chosen": "luismc-docs",
+   "decided": "2026-11-10",
+   "owner_words": "luismc-docs (Recommended)"
+  },
+  {
+   "id": "D186",
+   "question": "How do projects move to the merged plugin?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DS219",
+   "options": [
+    {
+     "label": "Stub plugins for one release",
+     "summary": "Old plugins point to the new one for a release"
+    },
+    {
+     "label": "Hard switch",
+     "summary": "Remove both plugins in the same release"
+    }
+   ],
+   "chosen": "Hard switch",
+   "decided": "2026-11-10",
+   "owner_words": "Hard switch"
   }
  ]
 }

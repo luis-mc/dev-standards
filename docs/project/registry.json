@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T12:53+00:00",
+  "updated": "2026-11-10T13:24+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3226,13 +3226,65 @@
       "id": "DL170",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool image: pin LLVM 19 for the MSVC CRT (STL1000)",
       "detail": "cargo-xwin's MSVC CRT asserts Clang >= 19 (yvals_core.h STL1000); Ubuntu 24.04 default clang is 18.1.3. Install clang-19, lld-19, llvm-19 via ARG LLVM_VERSION=19, link clang-cl, clang, lld-link, llvm-lib, llvm-ar, llvm-rc, lld from /usr/lib/llvm-19/bin, and fail the build when clang-cl is older than 19.",
       "expected": "10 Nov",
-      "changed": "2026-11-10T12:10+00:00",
+      "changed": "2026-11-10T13:23+00:00",
       "rides": "DS214",
       "started": "2026-11-10T12:07+00:00"
+    },
+    {
+      "id": "DL171",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once",
+      "detail": "D183: DL-42 matched docker ps inside docker exec as a kill; DL-63 read a hard-coded docs/artifacts registry; the plain-text question rule ran in two hooks with different code.",
+      "expected": "10 Nov ~13:57",
+      "changed": "2026-11-10T13:23+00:00",
+      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "rides": "DS217",
+      "started": "2026-11-10T13:23+00:00"
+    },
+    {
+      "id": "DL172",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "project-setup holds no CI logic: move CI files to delivery",
+      "detail": "D183: CONTRACT.md says tech-stack-setup carries no CI logic, but project-setup ships .githooks/pre-push, delivery-config.json, ci/dev-standards.yml and session_guard wiring. Move them into delivery templates; project-setup calls the installer.",
+      "expected": "10 Nov ~13:57",
+      "changed": "2026-11-10T13:23+00:00",
+      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "rides": "DS217",
+      "started": "2026-11-10T13:23+00:00"
+    },
+    {
+      "id": "DL173",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Cross-plugin schema and version checks",
+      "detail": "D183: artifacts reads .delivery/ledger.json without checking its schema field; nothing warns when installed luismc-* plugins are at versions that do not fit. Add the schema check and a doctor version-skew check.",
+      "expected": "10 Nov ~13:57",
+      "changed": "2026-11-10T13:23+00:00",
+      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "rides": "DS217",
+      "started": "2026-11-10T13:23+00:00"
+    },
+    {
+      "id": "DL174",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner-pool spec of its own inside luismc-delivery",
+      "detail": "D181/D184: move R13.60-R13.89 text into docs/features/runner-pool/spec.md; each old R13 line stays as a one-line pointer so citations resolve.",
+      "expected": "10 Nov ~13:57",
+      "changed": "2026-11-10T13:24+00:00",
+      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "rides": "DS217",
+      "started": "2026-11-10T13:24+00:00"
     },
     {
       "id": "DS1",
@@ -6529,6 +6581,65 @@
       "changed": "2026-11-10T12:53+00:00",
       "no_release": "study; any change ships later as its own release",
       "started": "2026-11-10T12:28+00:00"
+    },
+    {
+      "id": "DS217",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-84: cleanup, hook fixes, bounds, version checks, pool spec",
+      "detail": "Five cloud agents (DS217 cleanup, DL171 hook rules, DL172 project-setup/delivery bounds, DL173 schema and version-skew checks, DL174 runner-pool spec), then join, CI, watcher merge, plugin updates, smoke, cleanup.",
+      "expected": "10 Nov ~14:12",
+      "changed": "2026-11-10T13:21+00:00",
+      "expected_basis": "agents 25-35 min measured, join 10, CI 5, merge 2",
+      "release": 84,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-10T13:22+00:00",
+          "end": "2026-11-10T13:57+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T13:57+00:00",
+          "end": "2026-11-10T14:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T14:05+00:00",
+          "end": "2026-11-10T14:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T14:10+00:00",
+          "end": "2026-11-10T14:12+00:00"
+        }
+      ],
+      "started": "2026-11-10T13:21+00:00"
+    },
+    {
+      "id": "DS218",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Cleanup: screenshots, one-off migration, 4 CI steps, docs layout",
+      "detail": "D180: delete 11 unreferenced CO669 screenshots and fix CO669.md; delete convert_interim_record.py and its test; add CI steps for 4 tests run nowhere; testing.md to guides, dated notes to archive, CI runs the plugin spec_check.py and the tools copy goes.",
+      "expected": "10 Nov ~13:57",
+      "changed": "2026-11-10T13:21+00:00",
+      "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+      "rides": "DS217",
+      "started": "2026-11-10T13:21+00:00"
+    },
+    {
+      "id": "DS219",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Merge luismc-artifacts and luismc-specs into luismc-docs",
+      "detail": "D182/D185/D186: one plugin, name luismc-docs; artifacts and specs skills move under it; record defaults to docs/project; hard switch: both plugins leave the marketplace in the same release. After RELEASE-84 merges (shared files).",
+      "expected": "10 Nov ~15:30",
+      "changed": "2026-11-10T13:21+00:00",
+      "expected_basis": "starts after RELEASE-84 ~14:12; agent ~60 min, join, CI"
     },
     {
       "id": "DU1",
