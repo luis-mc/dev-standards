@@ -4221,6 +4221,30 @@
    "chosen": "Hard switch",
    "decided": "2026-11-10",
    "owner_words": "Hard switch"
+  },
+  {
+   "id": "D187",
+   "question": "Uninstall luismc-artifacts and luismc-specs from the user scope on this PC now?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DS219",
+   "options": [
+    {
+     "label": "Uninstall now (Recommended)",
+     "summary": "Remove both from the user scope; running sessions keep what they loaded"
+    },
+    {
+     "label": "Wait for the other session",
+     "summary": "Keep both until the other project has moved"
+    },
+    {
+     "label": "Leave it to you",
+     "summary": "The owner runs the uninstall"
+    }
+   ],
+   "chosen": "Uninstall now (Recommended)",
+   "decided": "2026-11-10",
+   "owner_words": "Uninstall now (Recommended)"
   }
  ]
 }
