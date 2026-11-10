@@ -691,7 +691,11 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
         print("delivery_ci_setup: %s" % rp["error"], file=sys.stderr)
         return 1
     lines = ["Refresh plan for pool \"%s\" (the cap and every other line stay):" % args.pool]
-    lines += ["  - %s: %s -> %s" % (k, old or "unset", new) for k, (old, new) in sorted(rp["changes"].items())]
+    for k, (old, new) in sorted(rp["changes"].items()):
+        if k == "RUNNER_SHA256" and rp.get("sha_reason"):
+            lines.append("  - %s: %s -> %s (%s)" % (k, P.short_sha(old), P.short_sha(new), rp["sha_reason"]))
+        else:
+            lines.append("  - %s: %s -> %s" % (k, old or "unset", new))
     ver = _plugin_version()
     lines += ["  - %s: differs from luismc-delivery %s" % (f, ver) for f in rp.get("files", [])]
     lines += ["  - layer %s%s" % (n, " (asked by %s)" % who if who else "") for n, who in rp.get("layers", [])]
