@@ -18,4 +18,9 @@ Runner pool: the image wraps each Wine entry tool (wine, wine64, wineboot, wines
 
 ## CI
 spec-lint run 42904606928 (areas=delivery,docs), first run: failure only in `docs check`: G1 (decisions.md stale, generated, not touched by this branch), M1 (delivery spec mapped to the Dockerfile; fixed by `Docs: none` in the next commit message, the runner-pool note covers the change), W1 (this report, expected). All other jobs success; skipped: change notes folded, change notes, shard job, specs/templates, artifact renderer, transcript folds, model profiles.
-Rerun below.
+
+Second run 42905091020: every job success or skipped except `docs check`, which has only G1 and W1 left (M1 gone). Jobs: which areas, delivery (12 jobs), docs plugin: success; change notes folded, change notes, shard job, specs/templates, artifact renderer, transcript folds, model profiles: skipped.
+
+Branch head: see `git rev-parse origin/DL180-wine-tmpdir` (the final commit only adds this paragraph).
+
+READY
