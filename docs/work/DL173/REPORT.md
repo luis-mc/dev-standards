@@ -11,6 +11,12 @@
 ## Tests
 - `python -I tools/test_artifacts_dl173.py`: 8 passed, 0 failed
 - `cd claude/plugins/delivery/tests && python -m unittest test_dl173_compat test_doctor test_ds202_rust_doctor`: 40 tests OK
-- `python -I tools/test_project_artifacts.py`: see below
+- `python -I tools/test_project_artifacts.py`: 139 passed, 0 failed, 1 skipped
 - `python3 claude/plugins/docs/scripts/docs_check.py`: G1 (generated decisions.md stale, expected), M1 and T2 warnings
 
+- `gh workflow run spec-lint.yml --ref DL173-schema-version-checks -f areas=delivery,artifacts` (run 42825466573): all delivery and artifacts jobs passed. Only the docs check failed, on G1 (generated decisions.md stale) and W1 (this report); both are expected.
+
+## Branch head
+Code and notes at 3de67b93578f42172af649ace06fa3bf70a782ab (the report commit follows it; see `git log`).
+
+READY
