@@ -20,3 +20,7 @@
 - `spec_check.py docs/features/delivery/spec.md`: 0 errors, 2 warnings (both existed before).
 - `gh workflow run spec-lint.yml --ref DL174-runner-pool-spec -f areas=docs,specs` (run 42824970395): failed only on 4 G1 (generated files, allowed) and 1 W1 (this report, allowed). No other finding.
 
+
+Branch head (before this line): f2da6866493f9d38b896ab8831a1aa8d3591b4ca
+
+READY
