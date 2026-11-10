@@ -147,6 +147,13 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D178 | May the session run pool-refresh --yes on the shared runner pool right after RELEASE-81 merges? | Yes, refresh after merge | decided | 2026-11-10 |
 | delivery-speed | D179 | Ship DL168 (ETAs sized from measured history; launch hook rejects an eta above p75 without a reason; ledger shows ETA vs actual)? | Ride with RELEASE-81 | decided | 2026-11-10 |
 | delivery-speed | D18 | Commit the uncommitted artifacts record and docs/drafts? | Commit both | decided | 2026-10-26 |
+| delivery-speed | D180 | Which leftover cleanups ship as one release? (several could be picked) | All four cleanups | decided | 2026-11-10 |
+| delivery-speed | D181 | How should the runner pool be organized? | Own spec, same plugin | decided | 2026-11-10 |
+| delivery-speed | D182 | Which shape for docs, artifacts and specs? | Merge all three | decided | 2026-11-10 |
+| delivery-speed | D183 | What to do about project-setup/delivery bounds and hook overlaps? | Fix all | decided | 2026-11-10 |
+| delivery-speed | D184 | How does the runner-pool spec move keep R13.60-R13.89 citations working? | New spec, old IDs kept | decided | 2026-11-10 |
+| delivery-speed | D185 | Name of the merged docs, artifacts and specs plugin? | luismc-docs | decided | 2026-11-10 |
+| delivery-speed | D186 | How do projects move to the merged plugin? | Hard switch | decided | 2026-11-10 |
 | delivery-speed | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | decided | 2026-10-26 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
 | delivery-speed | D20 | How does a finished cloud agent row become done in the ledger? | Both | decided | 2026-11-02 |

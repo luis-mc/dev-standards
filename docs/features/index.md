@@ -28,6 +28,7 @@
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.20.2 | 2026-11-01 |
+| [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.1.0 | 2026-11-10 |
 
 ### luismc-docs
 
@@ -86,6 +87,7 @@
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.20.2 | 2026-11-01 |
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.6.0 | 2026-11-08 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.8.0 | 2026-11-08 |
+| [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.1.0 | 2026-11-10 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
 
 ### delivery
@@ -95,6 +97,7 @@
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.20.2 | 2026-11-01 |
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.6.0 | 2026-11-08 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.8.0 | 2026-11-08 |
+| [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.1.0 | 2026-11-10 |
 
 ### docs
 
@@ -108,6 +111,7 @@
 |---|---|---|---|---|---|
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.20.2 | 2026-11-01 |
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 0.10.1 | 2026-11-01 |
+| [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.1.0 | 2026-11-10 |
 | [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.2.1 | 2026-11-01 |
 
 ### models
@@ -158,6 +162,7 @@
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.1.3 | 2026-11-08 |
 | [Project artifacts](artifacts/spec.md) | luismc-artifacts | artifacts | live | 0.5.0 | 2026-11-01 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.8.0 | 2026-11-08 |
+| [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.1.0 | 2026-11-10 |
 | [Spec authoring and checking (luismc-specs)](specs/spec.md) | luismc-specs | specs | live | 0.1.2 | 2026-11-01 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
 | [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.2.1 | 2026-11-01 |
