@@ -37,7 +37,7 @@ def load(path, name):
 
 DS = load(os.path.join(PLUGINS, 'docs', 'scripts', 'design_system.py'), 'design_system')
 HOOK = load(os.path.join(PLUGINS, 'delivery', 'scripts', 'hook_design_edit.py'), 'hook_design_edit')
-ROWS = load(os.path.join(PLUGINS, 'artifacts', 'scripts', 'plan_rows_check.py'), 'plan_rows_check')
+ROWS = load(os.path.join(PLUGINS, 'docs', 'scripts', 'plan_rows_check.py'), 'plan_rows_check')
 
 TESTS = []
 
@@ -328,7 +328,7 @@ def run_check(tasks, extra=None):
         rep = os.path.join(d, 'P1.md')
         open(rep, 'w', encoding='utf-8').write(PLAN)
         reg = os.path.join(d, 'docs', 'artifacts', 'registry.json')
-        return subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'artifacts', 'scripts', 'plan_rows_check.py'),
+        return subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'docs', 'scripts', 'plan_rows_check.py'),
                                rep, '--registry', reg] + (extra or []), capture_output=True, text=True)
     finally:
         shutil.rmtree(d, ignore_errors=True)
@@ -347,7 +347,7 @@ def plan_rows_all_tasked_pass_and_a_bad_registry_is_a_usage_error():
     tasks = [{'id': 'T%d' % i, 'item': 'x', 'detail': k} for i, k in enumerate(['P1#1', 'P1#2', 'P1#3', 'P1#B07'])]
     r = run_check(tasks)
     assert r.returncode == 0, r.stdout + r.stderr
-    r = subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'artifacts', 'scripts', 'plan_rows_check.py'),
+    r = subprocess.run([sys.executable, '-I', os.path.join(PLUGINS, 'docs', 'scripts', 'plan_rows_check.py'),
                         __file__, '--registry', os.path.join(tempfile.gettempdir(), 'nope-registry.json')],
                        capture_output=True, text=True)
     assert r.returncode == 2
@@ -585,13 +585,15 @@ def the_known_list_globs_are_configurable():
 # --- plan rows in the Stop hook ---------------------------------------------------------------
 
 def stop_module():
-    sys.path.insert(0, os.path.join(PLUGINS, 'artifacts', 'scripts'))
-    return load(os.path.join(PLUGINS, 'artifacts', 'scripts', 'hook_end_of_turn.py'), 'hook_end_of_turn')
+    sys.path.insert(0, os.path.join(PLUGINS, 'docs', 'scripts'))
+    return load(os.path.join(PLUGINS, 'docs', 'scripts', 'hook_end_of_turn.py'), 'hook_end_of_turn')
 
 
 def plan_project(tasks, name='plan.md', folder='P1'):
     d = tempfile.mkdtemp()
     os.makedirs(os.path.join(d, 'docs', 'artifacts'))
+    os.makedirs(os.path.join(d, '.claude'))
+    open(os.path.join(d, '.claude', 'artifacts.json'), 'w').write('{}')   # the record stays in docs/artifacts (D182 moved the default)
     json.dump({'spec': 'x', 'tasks': tasks}, open(os.path.join(d, 'docs', 'artifacts', 'registry.json'), 'w'))
     os.makedirs(os.path.join(d, 'docs', 'work', folder))
     open(os.path.join(d, 'docs', 'work', folder, name), 'w', encoding='utf-8').write(PLAN)
@@ -682,13 +684,13 @@ def without_a_turn_stamp_the_two_hour_window_still_applies():
 
 @test
 def the_turn_start_hook_stamps_the_session_and_is_wired_on_user_prompt_submit():
-    hooks = json.load(open(os.path.join(PLUGINS, 'artifacts', 'hooks', 'hooks.json'), encoding='utf-8'))
+    hooks = json.load(open(os.path.join(PLUGINS, 'docs', 'hooks', 'hooks.json'), encoding='utf-8'))
     cmds = [h['command'] for g in hooks['hooks']['UserPromptSubmit'] for h in g['hooks']]
     assert any('hook_turn_start.py' in c for c in cmds), cmds
     d = plan_project([])
     try:
         git(d, 'init', '-q', '-b', 'main')
-        script = os.path.join(PLUGINS, 'artifacts', 'scripts', 'hook_turn_start.py')
+        script = os.path.join(PLUGINS, 'docs', 'scripts', 'hook_turn_start.py')
         before = time.time()
         r = subprocess.run([sys.executable, '-I', script], input=json.dumps({'session_id': 's9', 'cwd': d}),
                            capture_output=True, text=True, cwd=d)
