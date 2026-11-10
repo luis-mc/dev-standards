@@ -4385,6 +4385,106 @@
    "chosen": "Right after merge, if idle (Recommended)",
    "decided": "2026-11-10",
    "owner_words": "Right after merge, if idle (Recommended)"
+  },
+  {
+   "id": "D194",
+   "question": "Merge RELEASE-92 unattended if CI is green?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DS227",
+   "options": [
+    {
+     "label": "Merge on green (Recommended)",
+     "summary": "Merge, update, smoke, clean up; one fix + one rerun on red"
+    },
+    {
+     "label": "Join only, hold merge",
+     "summary": "Owner merges in the morning"
+    },
+    {
+     "label": "Stop after the agent",
+     "summary": "No join tonight"
+    }
+   ],
+   "chosen": "Merge on green (Recommended)",
+   "decided": "2026-11-11",
+   "owner_words": "Merge on green (Recommended)"
+  },
+  {
+   "id": "D195",
+   "question": "When should DL183 (rerun_first pending status) run?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DL183",
+   "options": [
+    {
+     "label": "Tonight, after RELEASE-92 (Recommended)",
+     "summary": "Own release after RELEASE-92"
+    },
+    {
+     "label": "Tomorrow, with you",
+     "summary": "Leave To do"
+    },
+    {
+     "label": "Tonight, in parallel",
+     "summary": "Start beside DL184"
+    },
+    {
+     "label": "merge into release 92",
+     "summary": "Owner's own answer: ship it in RELEASE-92"
+    }
+   ],
+   "chosen": "merge into release 92",
+   "decided": "2026-11-11",
+   "owner_words": "merge into release 92"
+  },
+  {
+   "id": "D196",
+   "question": "May the pool be refreshed tonight if DL184 needs it?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DL184",
+   "options": [
+    {
+     "label": "Yes, only when idle (Recommended)",
+     "summary": "Wait for no running job, then refresh"
+    },
+    {
+     "label": "No, wait for me",
+     "summary": "Leave the pool"
+    },
+    {
+     "label": "Write the file only",
+     "summary": "pool-version.json by hand"
+    }
+   ],
+   "chosen": "Yes, only when idle (Recommended)",
+   "decided": "2026-11-11",
+   "owner_words": "Yes, only when idle (Recommended)"
+  },
+  {
+   "id": "D197",
+   "question": "What to do with new requests from other project sessions overnight?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DL184",
+   "options": [
+    {
+     "label": "Fix bugs, park features (Recommended)",
+     "summary": "Bugs ship, features wait"
+    },
+    {
+     "label": "Record only",
+     "summary": "Start nothing"
+    },
+    {
+     "label": "Fix everything",
+     "summary": "Start work on any request they relay"
+    }
+   ],
+   "chosen": "Fix everything",
+   "decided": "2026-11-11",
+   "owner_words": "Fix everything"
   }
  ]
 }

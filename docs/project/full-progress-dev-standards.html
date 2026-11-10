@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T23:53+00:00",
+ "updated": "2026-11-10T23:55+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4260,12 +4260,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL183",
    "owner": "delivery-speed",
    "app": "",
-   "status": "To do",
+   "status": "Running",
    "item": "rerun_first: PR stays pending until run 2 ends",
    "detail": "DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.",
-   "expected": "11 Nov",
-   "changed": "2026-11-10T22:28+00:00",
-   "expected_basis": "after RELEASE-91; before any project turns rerun_first on"
+   "expected": "11 Nov ~00:37",
+   "changed": "2026-11-10T23:55+00:00",
+   "expected_basis": "cloud agent ~30 min from ~23:59, then RELEASE-92",
+   "rides": "DS227",
+   "started": "2026-11-10T23:55+00:00"
   },
   {
    "id": "DL184",
@@ -8495,13 +8497,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T23:53+00:00">10 Nov 23:53</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T23:55+00:00">10 Nov 23:55</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
+<li data-glance-task="DL183"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends <span class="glance-expected">11 Nov ~00:37</span><span class="glance-basis">cloud agent ~30 min from ~23:59, then RELEASE-92</span></li>
 <li data-glance-task="DL184"><span class="task-id">DL184</span>Pool setup, apply and doctor agree (image, template, runner names, labels) <span class="glance-expected">11 Nov ~00:37</span><span class="glance-basis">cloud agent ~30 min, then RELEASE-92</span></li>
 <li data-glance-task="DS227"><span class="task-id">DS227</span><span class="release-name">RELEASE-92</span>DL184 pool setup, apply and doctor agree <span class="glance-expected">11 Nov ~00:37</span><span class="glance-basis">cloud agent ~30 min from 23:53, CI ~5 min</span></li>
 </ul>
@@ -8520,32 +8523,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">512</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">512</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
 <div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS227 (DL184 pool setup, apply and doctor agree) expected live about 00:37." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">23:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">11 Nov 00:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">11 Nov 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">01:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-92 · DL184 pool setup, apply and doctor agree</title>RELEASE-92 · DL184 pool s…</text>
-<text class="rt-sub" x="0" y="77"><title>DL184</title>DL184</text>
+<text class="rt-sub" x="0" y="77"><title>DL183, DL184</title>DL183, DL184</text>
 <rect class="rt-bar agents" x="332.9" y="52" width="173.3" height="22"><title>agents 23:53-00:23</title></rect>
 <rect class="rt-bar join" x="506.2" y="52" width="34.7" height="22"><title>join 00:23-00:29</title></rect>
 <rect class="rt-bar ci" x="540.9" y="52" width="28.9" height="22"><title>PR CI 00:29-00:34</title></rect>
 <rect class="rt-bar merge" x="569.8" y="52" width="17.3" height="22"><title>merge + cleanup 00:34-00:37</title></rect>
 <polygon class="rt-expected" points="587.1,50 595.1,63 587.1,76 579.1,63"/>
 <text class="rt-live-label" x="587.1" y="92">live ~00:37</text>
-<line class="rt-now" x1="332.9" y1="36" x2="332.9" y2="148"/><text class="rt-now-label" x="332.9" y="161">now 23:53</text>
+<line class="rt-now" x1="344.4" y1="36" x2="344.4" y2="148"/><text class="rt-now-label" x="344.4" y="161">now 23:55</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-92" open><summary><strong>RELEASE-92 · live ~00:37</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-92" open><summary><strong>RELEASE-92 · live ~00:37</strong><span class="fold-count">3 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS227"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS227</span><span class="release-name">RELEASE-92</span>DL184 pool setup, apply and doctor agree</td><td data-label="App / service"></td><td data-label="Detail">Join DL184, CI, merge, plugin update.</td><td data-label="Expected">11 Nov ~00:37<span class="expected-basis">cloud agent ~30 min from 23:53, CI ~5 min</span></td></tr>
+<tr data-task="DL183"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends</a></td><td data-label="App / service"></td><td data-label="Detail">DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.</td><td data-label="Expected">11 Nov ~00:37<span class="expected-basis">cloud agent ~30 min from ~23:59, then RELEASE-92</span></td></tr>
 <tr data-task="DL184"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL184</span>Pool setup, apply and doctor agree (image, template, runner names, labels)</a></td><td data-label="App / service"></td><td data-label="Detail">Owner ask via a peer session: right after pool-run + apply, the doctor reported 4 false findings: stale image ID for the layer check, template drift, runner &#x27;main&#x27; missing (pool agents are main-&lt;repo&gt;), CI_RUNS_ON pool-main label &#x27;wrong&#x27;. One source of truth; doctor clean right after setup.</td><td data-label="Expected">11 Nov ~00:37<span class="expected-basis">cloud agent ~30 min, then RELEASE-92</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL183"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends</a></td><td data-label="App / service"></td><td data-label="Detail">DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.</td><td data-label="Expected">11 Nov<span class="expected-basis">after RELEASE-91; before any project turns rerun_first on</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">522 tasks</span></summary>
@@ -9082,7 +9081,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905913"><time datetime="2026-11-10T23:53+00:00">10 Nov 23:53</time></td><td data-label="Tasks">DL1 to DL184</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905915"><time datetime="2026-11-10T23:55+00:00">10 Nov 23:55</time></td><td data-label="Tasks">DL1 to DL184</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
