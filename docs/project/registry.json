@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T07:10+00:00",
+  "updated": "2026-11-10T07:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3154,14 +3154,33 @@
       "id": "DL164",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Refresh the shared runner pool with luismc-delivery 1.19.0",
       "detail": "D174: pool-refresh --yes on pool main: new Dockerfile and compose.yaml (backup kept), Playwright 1.65.0, windows-packaging layer kept, image rebuilt and container recreated. Then tell moobable-28 and comics-organizer-dd the new image is up.",
-      "expected": "10 Nov ~07:40",
-      "changed": "2026-11-10T07:10+00:00",
-      "expected_basis": "docker build started 07:10, ~30 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T07:21+00:00",
       "no_release": "machine maintenance, ships no code",
       "started": "2026-11-10T07:10+00:00"
+    },
+    {
+      "id": "DL165",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "pool-refresh trusts a wrong RUNNER_SHA256 in the pool .env",
+      "detail": "Refresh keeps an existing RUNNER_SHA256 (delivery_runner_pool.py:1157) even when it differs from the pinned hash for the same RUNNER_VERSION. The shared pool .env held the 64-'a' test value from test_dl92_pool_fixes ENV_OK, so the 1.19.0 Dockerfile check failed the build. Fix: correct it to the pinned or released hash; doctor flags a mismatch; find the test that wrote into the real machine dir.",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T07:20+00:00"
+    },
+    {
+      "id": "DL166",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "pool-refresh exits 0 and misreports when the build fails or recreates",
+      "detail": "pool-refresh --yes printed 'the rebuild failed' with exit 0, and after a 5-min rebuild that replaced the container it printed 'image unchanged (cache hit); the container already runs it'. compose up --build recreates the container itself, so the before/after image id must be read before the build. Fix: non-zero exit on build failure; compare the container's image id before and after.",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T07:20+00:00"
     },
     {
       "id": "DS1",
