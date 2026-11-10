@@ -3997,6 +3997,50 @@
    "chosen": "Watcher keeps merging",
    "decided": "2026-11-10",
    "owner_words": "Watcher keeps merging (Recommended)"
+  },
+  {
+   "id": "D177",
+   "question": "When should DL167 (LLVM in the runner-pool image for cargo-xwin) ship?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL167",
+   "options": [
+    {
+     "label": "Launch now as RELEASE-81",
+     "summary": "One cloud agent now, join, CI, watcher merges on green."
+    },
+    {
+     "label": "Ride the next release",
+     "summary": "Keep To do."
+    },
+    {
+     "label": "Hold",
+     "summary": "Recorded only."
+    }
+   ],
+   "chosen": "Launch now as RELEASE-81",
+   "decided": "2026-11-10",
+   "owner_words": "Launch now as RELEASE-81 (Recommended)"
+  },
+  {
+   "id": "D178",
+   "question": "May the session run pool-refresh --yes on the shared runner pool right after RELEASE-81 merges?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL167",
+   "options": [
+    {
+     "label": "Yes, refresh after merge",
+     "summary": "Refresh once the new luismc-delivery is installed; tell both peer sessions."
+    },
+    {
+     "label": "Ask me after the merge",
+     "summary": "Wait for the owner's OK."
+    }
+   ],
+   "chosen": "Yes, refresh after merge",
+   "decided": "2026-11-10",
+   "owner_words": "Yes, refresh after merge (Recommended)"
   }
  ]
 }

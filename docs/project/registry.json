@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T07:47+00:00",
+  "updated": "2026-11-10T10:53+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3187,6 +3187,18 @@
       "started": "2026-11-10T07:22+00:00"
     },
     {
+      "id": "DL167",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner pool: LLVM for cargo-xwin (clang-cl, lld-link, llvm-lib)",
+      "detail": "Peer finding 10 Nov ~10:55: since the pool has gcc, rust_ci.py skips its Zig wrappers (it writes them only when no cc), so cargo xwin for x86_64-pc-windows-msvc finds no clang-cl and fails on C/C++ crates. Add clang, lld, llvm to templates/runner-pool/Dockerfile with unversioned clang-cl, lld-link, llvm-lib on PATH and an image self-check; ~+250 MB. Then a pool refresh.",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T10:53+00:00",
+      "rides": "DS212",
+      "started": "2026-11-10T10:53+00:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -6365,6 +6377,41 @@
         }
       ],
       "started": "2026-11-10T07:22+00:00"
+    },
+    {
+      "id": "DS212",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-81: LLVM in the runner-pool image",
+      "detail": "One cloud agent for DL167, join, CI, watcher merges on green, plugin update, smoke, cleanup, then pool-refresh --yes (D178) and tell both peer sessions with the image creation time.",
+      "expected": "10 Nov ~12:35",
+      "changed": "2026-11-10T10:53+00:00",
+      "expected_basis": "agent 11:01-12:01, join, CI ~25 min, refresh ~5 min",
+      "release": 81,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-10T11:01+00:00",
+          "end": "2026-11-10T12:01+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T12:01+00:00",
+          "end": "2026-11-10T12:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T12:05+00:00",
+          "end": "2026-11-10T12:30+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T12:30+00:00",
+          "end": "2026-11-10T12:35+00:00"
+        }
+      ],
+      "started": "2026-11-10T10:53+00:00"
     },
     {
       "id": "DU1",
