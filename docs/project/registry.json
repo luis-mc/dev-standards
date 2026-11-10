@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T16:53+00:00",
+  "updated": "2026-11-10T17:04+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3298,12 +3298,11 @@
       "id": "DL176",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Fix pool resize: cap counts the VM as used; drops POOL_BROWSERS",
       "detail": "delivery_ci_setup pool-plan --resize gave 12, 2.5 and 6.5 GiB caps in a few minutes on the same PC: it subtracts the running Docker VM from free memory, so it cannot size the VM upward. It also shows POOL_BROWSERS none when the pool .env has chromium, even with --browsers chromium; --cpus 4 gave a 0.5 GiB cap.",
-      "expected": "10 Nov ~17:21",
-      "changed": "2026-11-10T16:53+00:00",
-      "expected_basis": "cloud agent from 16:53, 28 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T17:04+00:00",
       "rides": "DS222",
       "started": "2026-11-10T16:52+00:00"
     },
@@ -6736,30 +6735,30 @@
       "status": "Running",
       "item": "RELEASE-87: pool resize fix (DL176)",
       "detail": "Carries DL176: pool-plan keeps the pool's browsers, layers and cap, takes explicit pool memory and CPUs, and never shrinks the cap silently.",
-      "expected": "10 Nov ~17:36",
-      "changed": "2026-11-10T16:53+00:00",
-      "expected_basis": "agent from 16:53, 28 min; CI 5; merge 4",
+      "expected": "10 Nov ~17:14",
+      "changed": "2026-11-10T17:04+00:00",
+      "expected_basis": "CI on joined head started 17:05, ~5 min; merge within 4 min",
       "release": 87,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-10T16:53+00:00",
-          "end": "2026-11-10T17:21+00:00"
+          "end": "2026-11-10T17:02+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-10T17:21+00:00",
-          "end": "2026-11-10T17:27+00:00"
+          "start": "2026-11-10T17:03+00:00",
+          "end": "2026-11-10T17:05+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-10T17:27+00:00",
-          "end": "2026-11-10T17:32+00:00"
+          "start": "2026-11-10T17:05+00:00",
+          "end": "2026-11-10T17:10+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-10T17:32+00:00",
-          "end": "2026-11-10T17:36+00:00"
+          "start": "2026-11-10T17:10+00:00",
+          "end": "2026-11-10T17:14+00:00"
         }
       ],
       "started": "2026-11-10T16:52+00:00"
