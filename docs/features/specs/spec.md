@@ -93,7 +93,6 @@ Source: claude/plugins/specs/skills/spec-new/SKILL.md
 Source: claude/plugins/specs/skills/spec-new/assets/spec-template.md
 Source: claude/plugins/specs/skills/spec-check/SKILL.md
 Source: claude/plugins/specs/skills/spec-check/assets/spec_check.py
-Source: tools/spec_check.py
 Source: tools/test_spec_check.py
 
 ## Versions
