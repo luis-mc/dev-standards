@@ -1,0 +1,22 @@
+{
+  "schema": 1,
+  "about": "For each luismc plugin that reads another plugin's files: the lowest version of the other plugin it needs. delivery_doctor.py check plugins.compat compares these with the installed plugin cache. Plugins are named, never their folders, so a plugin can move without changing this file.",
+  "requires": {
+    "luismc-artifacts": {
+      "luismc-delivery": {
+        "version": ">=1.18.0",
+        "why": "Reads .delivery/ledger.json (trains[].release_no, schema) and .delivery/ci-runs.json."
+      }
+    },
+    "luismc-delivery": {
+      "luismc-artifacts": {
+        "version": ">=1.3.0",
+        "why": "Reads the artifacts registry.json in the record_dir for task statuses."
+      },
+      "luismc-docs": {
+        "version": ">=1.8.0",
+        "why": "Reads record_dir from docs/docs.json; join.py calls the luismc-docs scripts (docs_fold.py, docs_check.py)."
+      }
+    }
+  }
+}
