@@ -142,6 +142,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D173 | How to handle a peer finding that needs a design choice overnight? | My pick, recorded | decided | 2026-11-09 |
 | delivery-speed | D174 | May the session run luismc-delivery 1.19.0 pool-refresh --yes on the shared runner pool (new Dockerfile and compose.yaml, Playwright 1.63.0 -> 1.65.0, keep windows-packaging, rebuild, recreate)? | Run it now | decided | 2026-11-10 |
 | delivery-speed | D175 | When should DL165 (wrong RUNNER_SHA256 kept; test wrote into the real machine folder) and DL166 (pool-refresh exit 0 and wrong result text) ship? | Launch now as RELEASE-80 | decided | 2026-11-10 |
+| delivery-speed | D176 | The delivery watcher merged PRs #178, #180 and #181 on green (watcher.merge_on_green on by default). What should happen from now on? | Watcher keeps merging | decided | 2026-11-10 |
+| delivery-speed | D177 | When should DL167 (LLVM in the runner-pool image for cargo-xwin) ship? | Launch now as RELEASE-81 | decided | 2026-11-10 |
+| delivery-speed | D178 | May the session run pool-refresh --yes on the shared runner pool right after RELEASE-81 merges? | Yes, refresh after merge | decided | 2026-11-10 |
+| delivery-speed | D179 | Ship DL168 (ETAs sized from measured history; launch hook rejects an eta above p75 without a reason; ledger shows ETA vs actual)? | Ride with RELEASE-81 | decided | 2026-11-10 |
 | delivery-speed | D18 | Commit the uncommitted artifacts record and docs/drafts? | Commit both | decided | 2026-10-26 |
 | delivery-speed | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | decided | 2026-10-26 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |

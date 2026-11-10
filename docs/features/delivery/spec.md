@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.19.1
+version: 0.20.0
 owner: agents
 type: reference
 code:
@@ -497,6 +497,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.0 | 2026-11-10 | RELEASE-81 | R13.88: the pool image installs clang, lld and llvm and links clang-cl, lld-link and llvm-lib onto PATH, with a build-time self-check.<br>R13.89: ETAs from measured history. The ledger records agent finish time and CI wall time; delivery_eta.py gives median and p75; the DL-30 launch check refuses an eta more than 50 % above the measured p75 without an eta-reason line; show prints eta against time taken. | DL167, DL168 |
 | 0.19.1 | 2026-11-10 | RELEASE-80 | R13.86 and R13.87: pool-refresh fixes a wrong runner hash, exits non-zero on a failed build, and reports the build result from image ids read before and after. | DL165 |
 | 0.19.0 | 2026-11-09 | RELEASE-79 | R13.84: pool-refresh copies the plugin's pool files (with a backup), compares image ids after the build, recreates the container when the image changed, and reports what really happened; the doctor warns on stale pool files.<br>R13.85: every path that makes a train row takes a free id; link makes a new row for an unknown branch; show warns about duplicate ids. | DL162, DL163 |
 | 0.18.0 | 2026-11-09 | RELEASE-77 | Section 13 gains R13.81: the mock handler guard fails a branch that adds a client API function whose route has no default handler in the shared e2e mock.<br>The installer update applies artifact_prune.workflows after it rewrites the prune workflow (R13.72).<br>R13.74: stale_agents reads the project record; the session summary lists open agents of finished tasks with the agent-done fix.<br>DL152 adds R13.76: guidance names core PermissionEx for service DACLs in WiX 5.<br>agent_ci.py runs only ledger-open agents, or --task/--branch picks; --all keeps the old scan; task ids parse with a prefix like claude/RS (R13.77).<br>The pre-push secret scan reads .gitleaksignore and .gitleaks.toml from the pushed commit (R13.78).<br>Shared pool refresh: layers and apt names merge (R13.79), Playwright never drops (R13.80); R13.68 updated.<br>R13.75: unique train ids, no taskless agent rows, CI matched by PR and head SHA, readable show.<br>The installer installs tzdata when the configured tz does not load (R13.73).<br>R13.83: the DL-41 owns overlap check compares paths segment by segment; notes are read; disjoint requirement IDs on one file are allowed.<br>Runner pool: the pinned Playwright fallback is 1.65.0 (was 1.62.1); it applies only when no lockfile, flag or pool .env sets a version.<br>R13.82: rust track ships a vitest globalSetup that builds the crates a TS test spawns; the JS unit job installs the Rust toolchain on the Rust track only. | DL146, DL150, DL151, DL152, DL153, DL154, DL155, DL156, DL157, DL158, DL159, DS208 |
