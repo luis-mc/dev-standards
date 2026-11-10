@@ -3973,6 +3973,30 @@
    "chosen": "Launch now as RELEASE-80",
    "decided": "2026-11-10",
    "owner_words": "Launch now as RELEASE-80 (Recommended)"
+  },
+  {
+   "id": "D176",
+   "question": "The delivery watcher merged PRs #178, #180 and #181 on green (watcher.merge_on_green on by default). What should happen from now on?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DS211",
+   "options": [
+    {
+     "label": "Watcher keeps merging",
+     "summary": "Leave merge_on_green on; reports say the watcher merged."
+    },
+    {
+     "label": "Only the session merges",
+     "summary": "Set watcher.merge_on_green false; the session merges each green PR."
+    },
+    {
+     "label": "Ask me before each merge",
+     "summary": "Hold every green PR until the owner says merge."
+    }
+   ],
+   "chosen": "Watcher keeps merging",
+   "decided": "2026-11-10",
+   "owner_words": "Watcher keeps merging (Recommended)"
   }
  ]
 }
