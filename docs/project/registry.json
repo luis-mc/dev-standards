@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T21:32+00:00",
+  "updated": "2026-11-10T22:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3333,22 +3333,22 @@
       "id": "DL179",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool sets up a Wine prefix at container start",
       "detail": "D192: a CI job's first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.",
-      "expected": "10 Nov ~22:01",
-      "changed": "2026-11-10T21:24+00:00",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T22:14+00:00",
       "rides": "DS224"
     },
     {
       "id": "DL180",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool Wine drops TMPDIR (wrappers in windows-packaging layer)",
       "detail": "Peer finding: in the pool every wine run aborts with free(): invalid pointer when TMPDIR is set (any value); unset works. Runner .env sets TMPDIR (DL87). Fix: /usr/local/bin wrappers for the wine tools that exec the real tool with TMPDIR unset.",
       "expected": "10 Nov",
-      "changed": "2026-11-10T21:31+00:00",
+      "changed": "2026-11-10T22:14+00:00",
       "rides": "DS224",
       "started": "2026-11-10T21:21+00:00"
     },
@@ -3356,12 +3356,27 @@
       "id": "DL181",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "CI rerun runs not-yet-passed jobs first",
       "detail": "Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.",
-      "expected": "11 Nov",
-      "changed": "2026-11-10T21:22+00:00",
-      "expected_basis": "after RELEASE-89; needs a design pass"
+      "expected": "10 Nov ~23:12",
+      "changed": "2026-11-10T22:14+00:00",
+      "expected_basis": "cloud agent ~40 min, then RELEASE-91",
+      "rides": "DS226",
+      "started": "2026-11-10T22:14+00:00"
+    },
+    {
+      "id": "DL182",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Wine wrapper self-check: hash -r before command -v",
+      "detail": "RELEASE-89 image build failed: dash caches /usr/bin/wine after the first command -v, so the DL180 self-check saw the old path. Add hash -r before the check; test asserts it.",
+      "expected": "10 Nov ~22:30",
+      "changed": "2026-11-10T22:12+00:00",
+      "expected_basis": "my edit ~5 min, then RELEASE-90",
+      "rides": "DS225",
+      "started": "2026-11-10T22:12+00:00"
     },
     {
       "id": "DS1",
@@ -6857,12 +6872,11 @@
       "id": "DS224",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-89: pool sets up a Wine prefix at start (DL179)",
       "detail": "Carries DL179 (D192).",
-      "expected": "10 Nov ~21:42",
-      "changed": "2026-11-10T21:32+00:00",
-      "expected_basis": "PR #190 CI started 21:33, ~5 min, then merge",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T22:14+00:00",
       "release": 89,
       "phases": [
         {
@@ -6886,6 +6900,71 @@
           "end": "2026-11-10T21:42+00:00"
         }
       ]
+    },
+    {
+      "id": "DS225",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-90: DL182 Wine wrapper self-check fix",
+      "detail": "Fix forward for RELEASE-89: join DL182, CI, merge, plugin update.",
+      "expected": "10 Nov ~22:30",
+      "changed": "2026-11-10T22:12+00:00",
+      "expected_basis": "join now, CI ~5 min",
+      "release": 90,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-10T22:16+00:00",
+          "end": "2026-11-10T22:22+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T22:22+00:00",
+          "end": "2026-11-10T22:27+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T22:27+00:00",
+          "end": "2026-11-10T22:30+00:00"
+        }
+      ],
+      "started": "2026-11-10T22:12+00:00"
+    },
+    {
+      "id": "DS226",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-91: DL181 CI rerun runs not-yet-passed jobs first",
+      "detail": "Join DL181, CI, merge, plugin update.",
+      "expected": "10 Nov ~23:12",
+      "changed": "2026-11-10T22:14+00:00",
+      "expected_basis": "cloud agent ~40 min from 22:16, CI ~5 min",
+      "release": 91,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-10T22:16+00:00",
+          "end": "2026-11-10T22:56+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T22:56+00:00",
+          "end": "2026-11-10T23:04+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T23:04+00:00",
+          "end": "2026-11-10T23:09+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T23:09+00:00",
+          "end": "2026-11-10T23:12+00:00"
+        }
+      ],
+      "started": "2026-11-10T22:14+00:00"
     },
     {
       "id": "DU1",

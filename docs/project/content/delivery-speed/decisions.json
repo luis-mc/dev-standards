@@ -4357,6 +4357,34 @@
    "chosen": "Add it now",
    "decided": "2026-11-10",
    "owner_words": "Add it now"
+  },
+  {
+   "id": "D193",
+   "question": "When should the pool be rebuilt and recreated to get the RELEASE-89 Wine fixes?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL180",
+   "options": [
+    {
+     "label": "Right after merge, if idle (Recommended)",
+     "summary": "Build, wait until no job runs, then recreate"
+    },
+    {
+     "label": "Right after merge, now",
+     "summary": "Recreate at once; running jobs fail"
+    },
+    {
+     "label": "I'll do it myself",
+     "summary": "Owner refreshes the pool"
+    },
+    {
+     "label": "Tonight, unattended",
+     "summary": "Refresh at a quiet hour"
+    }
+   ],
+   "chosen": "Right after merge, if idle (Recommended)",
+   "decided": "2026-11-10",
+   "owner_words": "Right after merge, if idle (Recommended)"
   }
  ]
 }
