@@ -16,3 +16,7 @@
 ## docs_check
 - G1 (decisions.md stale): generated file, not mine; the release fold rebuilds it.
 - M1 (project-setup spec): `questions_stop.py` changed; the project-setup feature spec is not in my owns list, so the commit says `Docs: none` and the plugin change note carries it. Orchestrator may add a project-setup feature note.
+
+## CI (spec-lint delivery,profiles)
+- First run failed: G1 and W1 (expected) and `model profiles`: `tools/test_project_setup_fixes.py` F18 expected the user-level hook to block a plain-text options list. Q-2 moved, so I changed F18 to expect no block (file outside my owns list; needed by the decision).
+- `run_suite.py --measure project-setup-fixes`: 0 problems.
