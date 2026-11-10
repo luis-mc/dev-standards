@@ -31,7 +31,7 @@ Branch DS219-docs-merge. In progress; the last line says READY or NOT READY.
 - Version lines, change logs, version tables, requirement IDs: not touched.
 
 ## Record default (item 4)
-artifact_queue.record_rel: .claude/artifacts.json record_dir, else docs/artifacts when that file exists; with no such file docs/docs.json record_dir, else docs/project. Hooks and project_artifacts.py all use this function.
+artifact_queue.record_rel: .claude/artifacts.json record_dir, else docs/artifacts when that file exists; with no such file docs/docs.json record_dir, else docs/project; as a safety, with no setting at all a record that already sits in docs/artifacts (none in docs/project) is still found there, so old projects and the old test fixtures keep working. The fixture seed of artifacts.json was dropped for that reason. Hooks and project_artifacts.py all use this function.
 
 ## Docs
 Notes: docs/architecture/changes/DS219-docs.md (major), DS219-delivery.md (patch), DS219-project-setup.md (minor). Feature notes (docs_fold.py note): artifacts, specs, docs (major), delivery, models, project-setup. Guide: docs/guides/migrate-to-luismc-docs-2.md, linked from the docs plugin README.

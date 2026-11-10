@@ -15,12 +15,6 @@ Ships shared custom agents. Today that is the `architect` subagent. It gives a d
 
 Features: [agents](../features/agents/spec.md).
 
-## luismc-artifacts
-
-Keeps project status in front of the owner. From a record in the repository, it generates one feature artifact per feature (a standalone HTML file) and one Full Progress artifact per project. Hooks keep the record current. They block the end of a turn until Full Progress is published.
-
-Features: [artifacts](../features/artifacts/spec.md).
-
 ## luismc-audits
 
 Three review skills: security, performance and compliance. Each skill reads the code, verifies each finding and hands back a report ranked by severity. It never changes code.
@@ -39,17 +33,13 @@ The documentation standard (DOCSPEC) as a plugin. It lays out `docs/` by reader 
 
 Features: [docs](../features/docs/spec.md).
 
+Since DS219 it also holds what `luismc-artifacts` and `luismc-specs` did. The project record and artifacts: one feature artifact per feature and one Full Progress artifact per project, kept current by hooks (features: [artifacts](../features/artifacts/spec.md)). The `spec-new` and `spec-check` skills for numbered specs (features: [specs](../features/specs/spec.md)).
+
 ## luismc-project-setup
 
 Takes a repository from empty to production-ready with three skills: `tech-stack-setup` (stack and delivery tooling, to STACKSPEC), `auth-setup` (authentication, to AUTHSPEC) and `claude-setup` (Claude Code configuration and the model split). It also audits an existing repo against the same specs.
 
 Features: [project-setup](../features/project-setup/spec.md), [models](../features/models/spec.md).
-
-## luismc-specs
-
-Two skills for spec-first work. `spec-new` interviews the owner and writes a numbered spec with testable requirements. `spec-check` validates numbering and cross-references.
-
-Features: [specs](../features/specs/spec.md).
 
 ## luismc-transcript-folds
 

@@ -3511,6 +3511,14 @@ def test_retire_leaves_git_alone_and_a_failed_retire_restores_the_files(env):
 NEW_REC = 'docs/work/artifacts'
 
 
+def drop_seed_setting(p):
+    """The fixtures seed an empty .claude/artifacts.json (D182 moved the default); a test of the no-setting case drops it.
+    A record already in docs/artifacts is still found there."""
+    f = p.clone / '.claude' / 'artifacts.json'
+    if f.exists():
+        f.unlink()
+
+
 def write_setting(p, value):
     f = p.clone / '.claude' / 'artifacts.json'
     f.parent.mkdir(parents=True, exist_ok=True)
@@ -3580,6 +3588,7 @@ def exercise_every_command_after_init(p):
 def test_record_dir_setting_outside_docs_is_refused(env):
     """DS32: the setting and move-record accept only a relative folder strictly under docs/."""
     p = env.baseline()
+    drop_seed_setting(p)
     before = p.files()
     for bad in ('src/artifacts', '../x', '/abs/docs/x', 'docs', 'docs/../src', 'artifacts', 'C:/docs/x', ''):
         r = p.run('move-record', bad, '--yes')
@@ -3595,6 +3604,7 @@ def test_record_dir_setting_outside_docs_is_refused(env):
 def test_move_record_dry_run_changes_nothing(env):
     """DS32: without --yes it prints the plan and writes nothing."""
     p = env.baseline()
+    drop_seed_setting(p)
     before = p.files()
     r = p.run('move-record', NEW_REC)
     assert r.code == 0 and 'dry run' in r.out and NEW_REC in r.out, r.all
@@ -3608,6 +3618,7 @@ def test_move_record_dry_run_changes_nothing(env):
 def test_move_record_moves_the_folder_and_writes_the_setting(env):
     """DS32: a plain file move, the setting written, git left alone, and the way back removes the setting."""
     p = env.baseline()
+    drop_seed_setting(p)
     before = p.files()
     state = p.git_state()
     r = p.ok('move-record', NEW_REC, '--yes')

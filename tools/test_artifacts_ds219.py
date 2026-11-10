@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DS219 (D182): where the project record lives when nothing says.
 
-  1. no .claude/artifacts.json and no docs/docs.json record_dir: docs/project
+  1. no .claude/artifacts.json and no docs/docs.json record_dir: docs/project (unless only docs/artifacts holds a record)
   2. docs/docs.json record_dir, no artifacts.json: that folder
   3. .claude/artifacts.json without record_dir: docs/artifacts (the old default)
   4. .claude/artifacts.json record_dir wins over docs.json
@@ -45,6 +45,15 @@ def nothing_set_gives_docs_project():
         write(d, 'docs/docs.json', json.dumps({'schema': 1}))
         assert Q.record_rel(d) == 'docs/project'
         assert Q.record_rel_safe(d) == 'docs/project'
+
+
+@case
+def a_record_already_in_docs_artifacts_is_still_found():
+    with tempfile.TemporaryDirectory() as d:
+        write(d, 'docs/artifacts/manifest.json', '{}')
+        assert Q.record_rel(d) == 'docs/artifacts'
+        write(d, 'docs/project/manifest.json', '{}')
+        assert Q.record_rel(d) == 'docs/project'
 
 
 @case

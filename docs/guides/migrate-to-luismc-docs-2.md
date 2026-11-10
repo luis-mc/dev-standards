@@ -43,6 +43,6 @@ You need Claude Code open in the project.
 
 - The scripts are in the `luismc-docs` plugin now. A command that ran `luismc-artifacts/scripts/project_artifacts.py` from the plugin cache runs `luismc-docs/scripts/project_artifacts.py`. The spec checker is `luismc-docs/skills/spec-check/assets/spec_check.py`.
 - The artifacts session hook is `scripts/artifacts/hook_session_start.py`. You do not call it.
-- Where the record lives when nothing says: `docs/project`. A project with `.claude/artifacts.json` keeps what that file says. A project whose `.claude/artifacts.json` has no `record_dir` keeps `docs/artifacts`. A project with a `record_dir` in `docs/docs.json` and no `.claude/artifacts.json` uses that folder.
+- Where the record lives when nothing says: `docs/project`. A project with `.claude/artifacts.json` keeps what that file says. A project whose `.claude/artifacts.json` has no `record_dir` keeps `docs/artifacts`. A project with no setting and a record already in `docs/artifacts` keeps finding it there. A project with a `record_dir` in `docs/docs.json` and no `.claude/artifacts.json` uses that folder.
 - `luismc-delivery` needs `luismc-docs` 2.0.0 or later. `delivery_doctor.py check plugins.compat` says so when it is older.
 - A project CI file that checks specs with the old script path (`claude/plugins/specs/skills/spec-check/assets/spec_check.py`) uses `claude/plugins/docs/skills/spec-check/assets/spec_check.py`. The `claude-setup` CI template does this already.
