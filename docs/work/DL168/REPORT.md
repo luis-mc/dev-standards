@@ -11,3 +11,10 @@
 - `python -m unittest test_dl168_measured_etas` (in tests/): 11 tests, OK.
 - `python -m unittest test_ledger test_pre_tool test_watch test_dl96_cloud_create test_dl127_ci_watch_ledger test_dl151_stale_agents test_dl156_ledger_guards test_dl163_ledger_join_ids test_watch_ci_runs test_stop test_post_tool`: 293 tests, OK.
 - `python3 claude/plugins/docs/scripts/docs_check.py`: one error, G1 `docs/architecture/decisions.md` generated file stale. It fails the same way on clean main, so it is not from this branch. W1 for this report is expected.
+
+## CI
+`gh workflow run spec-lint.yml --ref DL168-measured-etas -f areas=delivery`, run 42804995482: all delivery jobs success (branch gate, train cleanup, setup preflight, CI scripts and templates, runner plan, artifact pruning, ledger/recorder/watcher/hooks, change notes, packaged-program smoke, area mapping, combined delivery job). Other areas skipped. `docs check` failed only on G1 (`docs/architecture/decisions.md` generated file stale), which also fails on clean main; it is not from this branch and I did not edit the generated file.
+
+Code head (before this CI note): 4751cd9b039d031420d1a9c1fd0e8c99877782c7 plus the report commit; final head is the branch tip.
+
+READY
