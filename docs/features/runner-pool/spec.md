@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.1.0
+version: 0.2.0
 owner: agents
 type: reference
 code:
@@ -108,3 +108,11 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 Source: claude/plugins/delivery/scripts/delivery_runner_pool.py
 Source: claude/plugins/delivery/scripts/machine_slots.py
 Source: claude/plugins/delivery/templates/runner-pool/
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.2.0 | 2026-11-10 | RELEASE-84 | Runner-pool requirements move here from the delivery spec (D181, D184); old IDs stay as pointers. | DL174 |
