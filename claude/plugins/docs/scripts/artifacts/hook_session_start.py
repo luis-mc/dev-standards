@@ -25,7 +25,7 @@ import json
 import os
 import sys
 
-sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from hook_after_command import (RULE_HEADING, RULE_PATH, TASK_ID_RE, command_for, context_text, record_rel_of,  # noqa: E402,F401
                                 hook_root, hooks_off, load_manifest, mark_delivered,
