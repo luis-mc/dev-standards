@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T11:05+00:00",
+  "updated": "2026-11-10T11:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3190,11 +3190,11 @@
       "id": "DL167",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner pool: LLVM for cargo-xwin (clang-cl, lld-link, llvm-lib)",
       "detail": "Peer finding 10 Nov ~10:55: since the pool has gcc, rust_ci.py skips its Zig wrappers (it writes them only when no cc), so cargo xwin for x86_64-pc-windows-msvc finds no clang-cl and fails on C/C++ crates. Add clang, lld, llvm to templates/runner-pool/Dockerfile with unversioned clang-cl, lld-link, llvm-lib on PATH and an image self-check; ~+250 MB. Then a pool refresh.",
       "expected": "10 Nov",
-      "changed": "2026-11-10T10:53+00:00",
+      "changed": "2026-11-10T11:34+00:00",
       "rides": "DS212",
       "started": "2026-11-10T10:53+00:00"
     },
@@ -3202,12 +3202,11 @@
       "id": "DL168",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "ETAs sized from measured history, checked at launch",
       "detail": "The no-padding rule is text only: DL-31 checks an ETA's shape, not its size; the brief eta block is guessed; the ledger never compares eta with actual. Fix: record agent finish (report pushed) and CI wall times; delivery_eta.py gives median/p75 per kind; the launch hook rejects an eta above p75 without a reason line; ledger show prints eta vs actual.",
-      "expected": "10 Nov ~11:45",
-      "changed": "2026-11-10T11:05+00:00",
-      "expected_basis": "agent ~25 min from 11:00, then join and CI ~5 min",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T11:34+00:00",
       "rides": "DS212",
       "started": "2026-11-10T11:05+00:00"
     },
