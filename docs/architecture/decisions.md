@@ -154,6 +154,9 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D184 | How does the runner-pool spec move keep R13.60-R13.89 citations working? | New spec, old IDs kept | decided | 2026-11-10 |
 | delivery-speed | D185 | Name of the merged docs, artifacts and specs plugin? | luismc-docs | decided | 2026-11-10 |
 | delivery-speed | D186 | How do projects move to the merged plugin? | Hard switch | decided | 2026-11-10 |
+| delivery-speed | D187 | Uninstall luismc-artifacts and luismc-specs from the user scope on this PC now? | Uninstall now (Recommended) | decided | 2026-11-10 |
+| delivery-speed | D188 | How many CPUs should the pool get with the 12 GiB resize? | 8 CPUs (Recommended) | decided | 2026-11-10 |
+| delivery-speed | D189 | When should the WSL restart for the pool upgrade happen? | Next idle moment (Recommended) | decided | 2026-11-10 |
 | delivery-speed | D19 | docs/drafts/delivery-inventory.md is an older copy of DELIVERYSPEC full of another project's paths and rules: what happens to it? | Delete it | decided | 2026-10-26 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
 | delivery-speed | D20 | How does a finished cloud agent row become done in the ledger? | Both | decided | 2026-11-02 |
