@@ -572,6 +572,11 @@ def render_plan(pl, found) -> list:
         else:
             how = "measured on this machine unless you gave a number" if m else "from the numbers you gave"
         lines.append("Pool cap: %s GiB memory, %s CPUs (%s)." % (cap["mem_gib"], cap["cpus"], how))
+        if m:
+            lines.append("  Sizing inputs: total %s GiB; used outside WSL %s GiB (median of %s samples); %d%% budget %s GiB; "
+                         "room %s GiB; Docker ceiling %s." % (
+                             m.get("total_gib"), m.get("used_gib"), m.get("samples") or 1, 85, m.get("budget_gib"),
+                             m.get("room_gib"), ("%s GiB" % m["docker_gib"]) if m.get("docker_gib") is not None else "not set"))
         if cap.get("reason"):
             lines.append("  Cap changed: %s." % cap["reason"])
     if pl.get("derived") and not pl.get("blocked"):
@@ -623,8 +628,9 @@ def cmd_pool(args, root) -> int:
     if args.action == "pool-refresh":
         return cmd_pool_refresh(args, root, P, probe)
     found["pool_env"] = P.read_pool_env(probe, args.pool)
-    cap = P.measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
-    cap = P.keep_owner_cap(cap, found["pool_env"], getattr(args, "resize", False), (found.get("host") or {}).get("cpus"))
+    cap = P.resolve_cap(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib,
+                        getattr(args, "resize", False), getattr(args, "shrink", False), getattr(args, "pool_gib", None),
+                        getattr(args, "pool_cpus", None))
     if cap is None:
         print("delivery_ci_setup: this machine's memory or CPUs could not be measured. Give --total-gib and --cpus.",
               file=sys.stderr)
@@ -632,7 +638,12 @@ def cmd_pool(args, root) -> int:
     if not cap["ok"]:
         print("delivery_ci_setup: %s" % cap["message"], file=sys.stderr)
         return 1
-    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap, repo_paths=[root], probe=probe)
+    if getattr(args, "playwright", None) and not P.valid_playwright_version(args.playwright):
+        print("delivery_ci_setup: --playwright needs a version like 1.62.1", file=sys.stderr)
+        return 2
+    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap, repo_paths=[root], probe=probe,
+                browsers=getattr(args, "browsers", None), playwright_version=getattr(args, "playwright", None),
+                drop_layers=getattr(args, "drop_layer", None) or (), drop_apt=getattr(args, "drop_apt", None) or ())
     print("\n".join(render_plan(pl, found)))
     if args.action == "pool-plan":
         return 0
@@ -727,15 +738,18 @@ def main(argv=None) -> int:
     ap.add_argument("--windows-repos", help="pool-*: repositories that test on Windows")
     ap.add_argument("--pool", default="main")
     ap.add_argument("--total-gib", type=float)
-    ap.add_argument("--used-gib", type=float)
-    ap.add_argument("--cpus", type=float)
+    ap.add_argument("--used-gib", type=float, help="pool-*: memory used outside WSL, in GiB (default: measured). Not the PC's whole use")
+    ap.add_argument("--cpus", type=float, help="pool-*: this machine's CPU count (default: measured). Not the pool's CPUs")
     ap.add_argument("--docker-gib", type=float)
     ap.add_argument("--largest-shard-gib", type=float)
     ap.add_argument("--resize", action="store_true", help="pool-plan/run: use the measured cap, not the one in the pool .env")
-    ap.add_argument("--browsers", choices=["none", "chromium"], help="pool-refresh: set POOL_BROWSERS (default: keep or detect)")
-    ap.add_argument("--drop-layer", action="append", metavar="NAME", help="pool-refresh: remove this layer from the pool (repeatable)")
-    ap.add_argument("--drop-apt", action="append", metavar="NAME", help="pool-refresh: remove this apt package from the pool (repeatable)")
-    ap.add_argument("--playwright", metavar="X", help="pool-refresh: set PLAYWRIGHT_VERSION exactly (may lower it)")
+    ap.add_argument("--shrink", action="store_true", help="pool-plan/run: allow --resize to lower POOL_MEM or POOL_CPUS")
+    ap.add_argument("--pool-gib", type=float, help="pool-plan/run: the pool's memory you want, in GiB (used as given if it fits the budgets)")
+    ap.add_argument("--pool-cpus", type=float, help="pool-plan/run: the pool's CPUs you want (used as given if it fits the budgets)")
+    ap.add_argument("--browsers", choices=["none", "chromium"], help="pool-plan/run/refresh: set POOL_BROWSERS (default: keep the .env value; detection may raise none to chromium)")
+    ap.add_argument("--drop-layer", action="append", metavar="NAME", help="pool-plan/run/refresh: remove this layer from the pool (repeatable)")
+    ap.add_argument("--drop-apt", action="append", metavar="NAME", help="pool-plan/run/refresh: remove this apt package from the pool (repeatable)")
+    ap.add_argument("--playwright", metavar="X", help="pool-plan/run/refresh: set PLAYWRIGHT_VERSION exactly (may lower it)")
     ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")

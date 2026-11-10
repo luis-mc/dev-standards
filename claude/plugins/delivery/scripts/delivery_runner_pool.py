@@ -328,17 +328,44 @@ def detect_wsl(probe):
     return out
 
 
-def detect_host(probe):
-    """This machine's figures for sizing: platform, python, machine folder, CPUs, total and used GiB (None when unmeasurable)."""
-    mem = probe.memory_gib()
-    vm, box = probe.wsl_vm_gib(), probe.container_gib()
-    used = mem[1] if mem else None
-    if used is not None:
+HOST_SAMPLES, HOST_SAMPLE_GAP = 5, 1  # DL176: memory is read this many times, this many seconds apart; the median is used
+
+
+def median(values):
+    v = sorted(values)
+    if not v:
+        return None
+    mid = len(v) // 2
+    return v[mid] if len(v) % 2 else (v[mid - 1] + v[mid]) / 2.0
+
+
+def detect_host(probe, samples=None, gap=None):
+    """This machine's figures for sizing: platform, python, machine folder, CPUs, total and used GiB (None when unmeasurable).
+
+    DL176: `used_gib` is the median of several samples taken `gap` seconds apart (about 5, 1 s), so another program's short
+    spike does not cut the room. `used_samples` lists them."""
+    n = max(1, samples if samples is not None else HOST_SAMPLES)
+    gap = HOST_SAMPLE_GAP if gap is None else gap
+    mem, vm, used_list = None, 0.0, []
+    for i in range(n):
+        if i:
+            probe.sleep(gap)
+        m, v = probe.memory_gib(), probe.wsl_vm_gib()
+        if m is None:
+            continue
+        if mem is None:
+            mem = m
+        vm = v
+        used_list.append((m[1], v))
+    box = probe.container_gib()
+    used = None
+    if used_list:
         # The WSL VM holds the pool and every other container: leave it out of "used". With no VM (native Linux), leave
         # out the pool's own containers instead. A rerun then sees the same figure as the first run.
-        used = round(max(0.0, used - (vm if vm > 0 else box['pool'])), 1)
+        used = round(max(0.0, median([u - (v if v > 0 else box['pool']) for u, v in used_list])), 1)
     return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
             'total_gib': mem[0] if mem else None, 'used_gib': used, 'wsl_vm_gib': vm,
+            'used_samples': [round(max(0.0, u - (v if v > 0 else box['pool'])), 1) for u, v in used_list],
             'other_containers_gib': box['other'], 'other_containers': box['others']}
 
 
@@ -391,7 +418,7 @@ def env_number(value):
         return None
 
 
-def keep_owner_cap(cap, pool_env, resize=False, host_cpus=None):
+def keep_owner_cap(cap, pool_env, resize=False, host_cpus=None, shrink=False):
     """B14: a rerun keeps the cap already in the pool's .env; the owner chose it. The measured cap replaces it only with
     `resize`, or when the kept cap is under the floor; `reason` then says why. The kept cap sets the WSL values too."""
     if not cap:
@@ -401,6 +428,11 @@ def keep_owner_cap(cap, pool_env, resize=False, host_cpus=None):
     if mem is None or cpus is None:
         return dict(cap, source='measured')
     if resize:
+        if not shrink and cap.get('ok') and (cap['mem_gib'] < mem or cap['cpus'] < cpus):
+            return dict(cap, ok=False, source='measured', message=(
+                '--resize would lower the pool from POOL_MEM %gg and POOL_CPUS %g in .env to %gg and %g (measured now). '
+                'Nothing was changed. Close other programs and try again, give the size you want with --pool-gib and '
+                '--pool-cpus, or pass --shrink if you want the lower cap.' % (mem, cpus, cap['mem_gib'], cap['cpus'])))
         return dict(cap, source='measured', reason='--resize: the measured cap replaces %g GiB and %g CPUs from .env'
                     % (mem, cpus))
     if mem < MIN_POOL_GIB or cpus < MIN_POOL_CPUS:
@@ -480,8 +512,79 @@ def measured_sizing(found, total_gib=None, used_gib=None, cpus=None, docker_gib=
                  others_run=bool(others), wsl_current=(found.get('wsl') or {}).get('memory'),
                  docker_cpus=host.get('docker_cpus'))
     res['measured'] = {'total_gib': total, 'used_gib': used or 0.0, 'cpus': n, 'docker_gib': docker,
-                       'other_containers_gib': host.get('other_containers_gib') or 0.0}
+                       'other_containers_gib': host.get('other_containers_gib') or 0.0,
+                       'budget_gib': round(total * MEM_PCT / 100.0, 1), 'room_gib': res['memory_room_gib'],
+                       'samples': len(host.get('used_samples') or [])}
     return res
+
+
+def owner_target(cap, found, pool_gib=None, pool_cpus=None, largest_shard_gib=None):
+    """DL176: the owner's own pool size (--pool-gib, --pool-cpus). It is used as given when it fits the memory budget
+    (85% of the machine, leaving the sidecar and the VM), the CPU budget (60%) and the floors; else the cap comes back
+    with ok False and a message that names the budget that is short. The `.wslconfig` memory rises to fit. A target
+    given for one number leaves the other as `cap` has it."""
+    if pool_gib is None and pool_cpus is None:
+        return cap
+    if not cap or not cap.get('measured'):
+        return dict(cap or {}, ok=False, message='The pool size you gave cannot be checked: this machine\'s memory or CPUs '
+                    'could not be measured. Give --total-gib and --cpus.')
+    m = cap['measured']
+    whole = lambda v: int(v) if float(v) == int(v) else float(v)  # noqa: E731  (12.0 prints as 12)
+    mem = whole(pool_gib) if pool_gib is not None else cap.get('mem_gib')
+    cpus = whole(pool_cpus) if pool_cpus is not None else cap.get('cpus')
+    host = found.get('host') or {}
+    others = host.get('other_containers') or []
+    other_gib = (host.get('other_containers_gib') or 0.0) if others else 0.0
+    wsl_mem = int(math.ceil(mem + SIDECAR_GIB + VM_GIB))
+    if others:
+        wsl_mem = max(wsl_mem, int(math.ceil(other_gib + mem + SIDECAR_GIB + VM_GIB)))
+    wsl_cur = (found.get('wsl') or {}).get('memory')
+    room, budget = m['room_gib'], m['budget_gib']
+    cpu_budget = max(1.0, math.floor(m['cpus'] * CPU_PCT / 100.0 * 2) / 2.0)
+    problems = []
+    if wsl_mem > room:
+        problems.append('Memory budget short: a pool of %g GiB needs %d GiB for the WSL VM (pool, %g GiB sidecar, %g GiB VM'
+                        ' headroom%s), but the room is %.1f GiB (%d%% of %.1f GiB = %.1f GiB, minus %.1f GiB used outside WSL).'
+                        % (mem, wsl_mem, SIDECAR_GIB, VM_GIB, ', other containers' if others else '', room, MEM_PCT,
+                           m['total_gib'], budget, m['used_gib']))
+    if cpus > cpu_budget:
+        problems.append('CPU budget short: %g pool CPUs is over %g, which is %d%% of this machine\'s %g CPUs.'
+                        % (cpus, cpu_budget, CPU_PCT, m['cpus']))
+    if mem < MIN_POOL_GIB or cpus < MIN_POOL_CPUS:
+        problems.append('Floor: the pool needs at least %g GiB and %g CPUs; you gave %g GiB and %g CPUs.'
+                        % (MIN_POOL_GIB, MIN_POOL_CPUS, mem, cpus))
+    if cpus > 0 and mem / cpus < MIN_GIB_PER_CPU:
+        problems.append('Memory per CPU short: %g GiB for %g CPUs is under %g GiB per CPU (needs at least %g GiB).'
+                        % (mem, cpus, MIN_GIB_PER_CPU, math.ceil(cpus * MIN_GIB_PER_CPU * 2) / 2.0))
+    if largest_shard_gib is not None and mem < largest_shard_gib:
+        problems.append('The pool (%g GiB) is below the largest Linux shard (%.1f GiB).' % (mem, largest_shard_gib))
+    if problems:
+        return dict(cap, ok=False, message=' '.join(problems) + ' Nothing was changed.')
+    procs = min(int(math.floor(cpus)) + 1, int(m['cpus'])) if m['cpus'] else int(math.floor(cpus)) + 1
+    return dict(cap, mem_gib=mem, cpus=cpus, ok=True, message='', source='target',
+                wsl={'memory': wsl_mem, 'processors': max(1, procs)},
+                cpus_text='size set by --pool-gib/--pool-cpus',
+                reason='the pool size you gave (%g GiB, %g CPUs) replaces the cap in .env' % (mem, cpus))
+
+
+def resolve_cap(found, total_gib=None, used_gib=None, cpus=None, docker_gib=None, largest_shard_gib=None, resize=False,
+                shrink=False, pool_gib=None, pool_cpus=None):
+    """DL176: the cap for a plan: measured, then the .env cap kept (or replaced by --resize, which refuses to lower it
+    without --shrink), then the owner's --pool-gib/--pool-cpus. None when memory or CPUs cannot be measured."""
+    cap = measured_sizing(found, total_gib, used_gib, cpus, docker_gib, largest_shard_gib)
+    cap = keep_owner_cap(cap, found.get('pool_env'), resize, (found.get('host') or {}).get('cpus'), shrink)
+    if pool_gib is not None or pool_cpus is not None:
+        env = found.get('pool_env') or {}
+        if cap is not None and cap.get('measured'):
+            # a number the owner did not give stays as the .env has it, else as measured
+            cap = dict(cap, ok=True, message='')
+            if cap.get('source') != 'kept':
+                if env_number(env.get('POOL_MEM')) is not None and pool_gib is None:
+                    cap['mem_gib'] = env_number(env.get('POOL_MEM'))
+                if env_number(env.get('POOL_CPUS')) is not None and pool_cpus is None:
+                    cap['cpus'] = env_number(env.get('POOL_CPUS'))
+        cap = owner_target(cap, found, pool_gib, pool_cpus, largest_shard_gib)
+    return cap
 
 
 def derive_repos(found):
@@ -693,10 +796,13 @@ def playwright_use(probe, repo_path):
     return None
 
 
-def pick_browsers(probe, browsers, repo_paths):
-    """(browsers, one line saying why). An explicit choice wins. Otherwise chromium when any served repository uses Playwright."""
+def pick_browsers(probe, browsers, repo_paths, current=None):
+    """(browsers, one line saying why). An explicit choice wins. Then the pool's current POOL_BROWSERS (`current`, from its
+    .env): chromium stays chromium. Detection may raise none to chromium, never lower it (DL176)."""
     if browsers in BROWSERS:
         return browsers, None
+    if current == 'chromium':
+        return 'chromium', None
     for path in repo_paths or []:
         why = playwright_use(probe, path)
         if why:
@@ -760,7 +866,7 @@ def _wanted_windows(found, repo):
 
 
 def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
-         browsers=None, playwright_version=None, repo_paths=None, probe=None):
+         browsers=None, playwright_version=None, repo_paths=None, probe=None, drop_layers=(), drop_apt=()):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
     With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
@@ -860,19 +966,32 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         old = found.get('pool_env') or {}
         probe = probe or Probe()
         paths = repo_paths or ([repo_path] if repo_path else [])
-        browsers, why = pick_browsers(probe, browsers, paths)
+        browsers, why = pick_browsers(probe, browsers, paths, old.get('POOL_BROWSERS'))
         if why:
             print(why)
-        pw, pw_source = resolve_playwright(probe, browsers, playwright_version, paths)
+        # DL176: a plan keeps what the pool .env has (Playwright version, layers, apt names) unless a flag changes it.
+        if browsers == 'chromium' and not playwright_version and old.get('POOL_BROWSERS') == 'chromium' \
+                and valid_playwright_version(old.get('PLAYWRIGHT_VERSION')):
+            pw, pw_source = old['PLAYWRIGHT_VERSION'], 'kept from the pool .env'
+        else:
+            pw, pw_source = resolve_playwright(probe, browsers, playwright_version, paths)
+        layers, apt, lsources, lnotes = merge_pool_layers(old, [], [], None, drop_layers, drop_apt)
+        env_extra = {}
+        if old.get('POOL_LAYERS') is not None or old.get('POOL_APT') is not None or drop_layers or drop_apt:
+            env_extra = {'POOL_LAYERS': ','.join(layers), 'POOL_APT': ' '.join(apt)}
+            if old.get('POOL_LAYER_SOURCES') is not None or lsources:
+                env_extra['POOL_LAYER_SOURCES'] = ','.join('%s:%s' % kv for kv in lsources.items())
         pw_text = ' Playwright %s (%s).' % (pw, pw_source) if pw else ''
+        keep_text = (' Layers kept: %s.' % ', '.join(layers)) if layers else ''
+        keep_text += (' Apt packages kept: %s.' % ' '.join(apt)) if apt else ''
         kept = ' (kept)' if (cap or {}).get('source') == 'kept' else ''
         steps.append(_step('pool-files', 'Write the pool files for "%s" (compose, agents.json, .env: POOL_MEM %s -> %sg%s, '
-                           'POOL_CPUS %s -> %s%s, POOL_CPUSET, POOL_CPUS_INT, POOL_BROWSERS %s). %s%s%s' % (
+                           'POOL_CPUS %s -> %s%s, POOL_CPUSET, POOL_CPUS_INT, POOL_BROWSERS %s). %s%s%s%s' % (
                                pool, old.get('POOL_MEM') or 'unset', (cap or {}).get('mem_gib', 4), kept,
                                old.get('POOL_CPUS') or 'unset', (cap or {}).get('cpus', 1), kept, browsers,
-                               browsers_note(browsers), pw_text,
+                               browsers_note(browsers), pw_text, keep_text,
                                (' ' + cap['cpus_text'] + '.') if (cap or {}).get('cpus_text') else ''),
-                           'pool-files', pool=pool, cap=cap, browsers=browsers, playwright_version=pw))
+                           'pool-files', pool=pool, cap=cap, browsers=browsers, playwright_version=pw, env_extra=env_extra))
         steps.append(_step('pool-up', 'Build and start the pool container', 'pool-up', pool=pool))
         for repo in keep_l:
             s = _step('agent:%s' % repo, 'Add one pool agent for %s' % repo, 'add-agent', repo=repo, pool=pool, slug=slug_of(repo))
@@ -1095,7 +1214,7 @@ def copy_pool_templates(dest, copy_from=None, only=None):
 
 
 def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none',
-                     playwright_version=None, runner_sha256=None):
+                     playwright_version=None, runner_sha256=None, keep_env=None):
     """Write the pool folder. `.env` holds the cap and the machine dir only (D42); the database password is a 0600 file."""
     dest = dest or pool_dir(pool)
     os.makedirs(dest, exist_ok=True)
@@ -1111,6 +1230,12 @@ def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, 
         sha = runner_sha256 or (RUNNER_SHA256 if (runner_version or RUNNER_VERSION) == RUNNER_VERSION else None)
         if sha:
             f.write('RUNNER_SHA256=%s\n' % sha)
+        # DL176: every other line of the old .env stays (POOL_LAYERS, POOL_APT, POOL_LAYER_SOURCES, ...).
+        written = {'POOL_CPUSET', 'POOL_CPUS_INT', 'POOL_NAME', 'POOL_CPUS', 'POOL_MEM', 'MACHINE_DIR', 'RUNNER_VERSION',
+                   'POOL_BROWSERS', 'PLAYWRIGHT_VERSION', 'RUNNER_SHA256'}
+        for k, v in (keep_env or {}).items():
+            if k not in written:
+                f.write('%s=%s\n' % (k, v))
     agents = os.path.join(dest, 'agents.json')
     if not os.path.exists(agents):
         with open(agents, 'w', encoding='utf-8') as f:
@@ -1328,8 +1453,10 @@ class Executor:
             cap['cpus'] = cap_cpus(cap['cpus'], docker_ncpu(self.probe))
             cap['cpus'] = cap_mem_cpus(cap['cpus'], cap.get('mem_gib'))
         old = read_pool_env(self.probe, step['pool'])
+        keep = dict(old, **(step.get('env_extra') or {}))
+        pw = step.get('playwright_version') or (old.get('PLAYWRIGHT_VERSION') if valid_playwright_version(old.get('PLAYWRIGHT_VERSION')) else None)
         dest = write_pool_files(step['pool'], cap, runner_version=version, browsers=step.get('browsers') or 'none',
-                                playwright_version=step.get('playwright_version'), runner_sha256=sha)
+                                playwright_version=pw, runner_sha256=sha, keep_env=keep)
         text = 'wrote %s (runner %s, %s)' % (dest, version, source)
         text += self.apply_cap(step['pool'], old, read_pool_env(self.probe, step['pool']))
         if step.get('browsers') == 'chromium':
@@ -1870,11 +1997,14 @@ def main(argv=None):
                     help='a local checkout of an agent repository (workflows checked for CI_RUNS_ON; lockfiles read for the Playwright version); repeatable')
     ap.add_argument('--playwright-version', default=None, help='X.Y.Z; overrides the version found in the lockfiles (chromium only)')
     ap.add_argument('--total-gib', type=float)
-    ap.add_argument('--used-gib', type=float)
-    ap.add_argument('--cpus', type=float)
+    ap.add_argument('--used-gib', type=float, help='memory used outside WSL, in GiB (default: measured)')
+    ap.add_argument('--cpus', type=float, help="this machine's CPU count (default: measured)")
     ap.add_argument('--docker-gib', type=float)
     ap.add_argument('--largest-shard-gib', type=float)
     ap.add_argument('--resize', action='store_true', help='use the measured cap instead of the one already in the pool .env')
+    ap.add_argument('--shrink', action='store_true', help='allow --resize to lower POOL_MEM or POOL_CPUS')
+    ap.add_argument('--pool-gib', type=float, help="the pool's memory you want, in GiB (checked against the budgets)")
+    ap.add_argument('--pool-cpus', type=float, help="the pool's CPUs you want (checked against the budgets)")
     args = ap.parse_args(argv)
     split = lambda s: [x for x in s.split(',') if x]  # noqa: E731
     if args.action == 'detect':
@@ -1882,8 +2012,8 @@ def main(argv=None):
     elif args.action in ('sizing', 'plan'):
         found = detect()
         found['pool_env'] = read_pool_env(Probe(), args.pool)
-        res = measured_sizing(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib)
-        res = keep_owner_cap(res, found['pool_env'], args.resize, (found.get('host') or {}).get('cpus'))
+        res = resolve_cap(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib, args.resize,
+                          args.shrink, args.pool_gib, args.pool_cpus)
         if args.action == 'sizing':
             if res is None:
                 print('sizing could not measure this machine; give --total-gib and --cpus', file=sys.stderr)
