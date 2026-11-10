@@ -10,13 +10,17 @@ The documentation standard for every project, to **DOCSPEC** (`references/docspe
 | `docs-check` | Links, `Source:` lines, front matter, version tables, generated files and reference, code-to-doc map, `docs/work` guard, UX rules, freshness |
 | `design-system-setup` | Create `docs/design-system/` (README with the order of work, `next-version/` with rules, components, tokens, words, changes and an offline gallery); promote `next-version` to read-only `v1`, `v2` ... only with a recorded owner approval; guard-test templates per stack (DOCSPEC §15); opt-in shared component templates for React and TypeScript: `DatePicker`, `TimePicker` (h, hm, hms) and `NumberKeypad` (`design_system.py components`, R15.10), with their words in `content.md` and drawings in the gallery; starter rule UX-56 and the kit's raw-inputs guard ban native date, time and number inputs (R15.11) |
 | `docs-note` | One-line change notes; the release fold writes one version row per doc per release |
-| Hooks | SessionStart hands the agent the docs rule; Stop warns when mapped code changed without docs. Opt-in with `docs/docs.json`; they only warn |
+| `feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add`, `task-status-update` | The project record and artifacts, to ARTIFACTSPEC (`references/artifactspec.md`; was `luismc-artifacts`): a feature artifact per feature, one Full Progress artifact, a task registry, by `scripts/project_artifacts.py` |
+| `spec-new`, `spec-check` | Write a normative spec with IDed requirements; check its numbering and references (was `luismc-specs`) |
+| Hooks | SessionStart hands the agent the docs rule and the artifacts rule; Stop warns when mapped code changed without docs and keeps Full Progress published. The docs hooks are opt-in with `docs/docs.json` and only warn. The artifacts hooks queue status events and never run a git or gh write |
 
 Bundled: `vendor/mermaid.min.js`, Mermaid 11.4.1 from the npm package `mermaid@11.4.1` (MIT, `vendor/LICENSE-mermaid`). `docs_index.py` uses it by default (`--mermaid PATH` and `fetch-mermaid` override).
 
-Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py`, `design_system.py`, `docs_lib.py`, `hook_stop.py`, `hook_session_start.py`. Tests: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
+Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py`, `design_system.py`, `docs_lib.py`, `hook_stop.py`, `hook_session_start.py`, and for the artifacts `project_artifacts.py`, `render_artifacts.py`, `artifact_*.py`, `publish_hourly.py`, `hook_after_command.py`, `hook_end_of_turn.py`, `artifacts/hook_session_start.py`. Tests: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
 
 Install: `claude plugin install luismc-docs@dev-standards --scope project`. First use in a repo: `python3 <plugin>/scripts/docs_setup.py migrate` (plan), then `--apply`, set `apps` and `topics` in `docs/docs.json`, `docs_index.py build`, `docs_check.py`.
+
+Coming from `luismc-artifacts` or `luismc-specs`: see [Move to luismc-docs 2](../../../docs/guides/migrate-to-luismc-docs-2.md).
 
 Settings live in `docs/docs.json`: `apps`, `topics`, `record_dir` (default `docs/project`), `default_branch`, `stale_days` (90), `binding`, `code_roots`, `generated_reference`.
 

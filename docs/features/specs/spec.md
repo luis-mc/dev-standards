@@ -17,7 +17,7 @@ last_verified: 2026-11-01
 
 ## 1. In one paragraph
 
-The `luismc-docs` plugin carries two spec skills (the old `luismc-specs` plugin was merged into it). `spec-new` interviews the user and writes a numbered spec with testable requirements before any code. `spec-check` reads a spec and reports numbering errors and references that point nowhere. One skill writes to a discipline. The other proves that the discipline held.
+The `luismc-docs` plugin carries two spec skills (the old `luismc-specs` plugin was merged into it in DS219; the skill names are `luismc-docs:spec-new` and `luismc-docs:spec-check`). `spec-new` interviews the user and writes a numbered spec with testable requirements before any code. `spec-check` reads a spec and reports numbering errors and references that point nowhere. One skill writes to a discipline. The other proves that the discipline held.
 
 ## 2. Why
 

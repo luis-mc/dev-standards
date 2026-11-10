@@ -4,7 +4,9 @@ type: how-to
 ---
 # Upgrade a project to STACKSPEC 8
 
-Use this guide to bring a project up to STACKSPEC 8.0.0. It was released with `luismc-project-setup` 14.0.0 and `luismc-docs` 1.4.0. The rules are in [STACKSPEC](../../claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md). Later releases may add more. The plugin ships the current spec.
+Use this guide to bring a project up to STACKSPEC 8.0.0. It was released with `luismc-project-setup` 14.0.0 and `luismc-artifacts` 1.4.0. The rules are in [STACKSPEC](../../claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md). Later releases may add more. The plugin ships the current spec.
+
+Since DS219 the `luismc-artifacts` plugin is part of `luismc-docs`; read `luismc-artifacts` below as `luismc-docs` and see [Move to luismc-docs 2](migrate-to-luismc-docs-2.md).
 
 You need Claude Code open in the project.
 
@@ -13,11 +15,11 @@ You need Claude Code open in the project.
 Paste the prompt below into Claude Code in the project.
 
 ```
-dev-standards released STACKSPEC 8.0.0 (luismc-project-setup 14.0.0, luismc-docs 1.4.0).
+dev-standards released STACKSPEC 8.0.0 (luismc-project-setup 14.0.0, luismc-artifacts 1.4.0).
 
 1. Update the plugins: `claude plugin marketplace update dev-standards`, then
    `claude plugin update luismc-project-setup@dev-standards` and
-   `claude plugin update luismc-docs@dev-standards` at every scope where they are installed
+   `claude plugin update luismc-artifacts@dev-standards` at every scope where they are installed
    for this project (user and project); check with `claude plugin list`. Restart Claude Code.
 2. Run /luismc-project-setup:tech-stack-setup in audit mode against this repository and apply its 8.0.0 items:
    - If this product ships a packaged program (single executable, installer, app bundle, container image):
@@ -30,7 +32,7 @@ dev-standards released STACKSPEC 8.0.0 (luismc-project-setup 14.0.0, luismc-docs
 3. Run /luismc-project-setup:claude-setup so the project's agents rule picks up
    "agents test only what they touch" and the area-only branch CI run.
 4. Run any status change once (or `render`) so the artifact pages pick up the At a glance block, then publish
-   Full Progress once and check it with /luismc-docs:project-artifact-check.
+   Full Progress once and check it with /luismc-artifacts:project-artifact-check.
    Shorten any lede that check warns about to one or two sentences.
 Change the Stack Profile's claimed version to 8.0.0 only after the audit passes.
 ```
@@ -50,7 +52,7 @@ Change the Stack Profile's claimed version to 8.0.0 only after the audit passes.
 
 ## Only the artifacts plugin
 
-A project that uses `luismc-docs` but has not taken STACKSPEC 8.0.0 needs only step 1 (the artifacts plugin) and step 4.
+A project that uses `luismc-artifacts` but has not taken STACKSPEC 8.0.0 needs only step 1 (the artifacts plugin) and step 4.
 
 ## See also
 

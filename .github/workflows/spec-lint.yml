@@ -658,6 +658,10 @@ jobs:
       - name: Prove the AR67 artifact fix still holds
         run: python3 -I tools/test_artifacts_ar67.py
 
+      # DS219 (D182): the record defaults to docs/project when nothing says.
+      - name: Prove the record default still holds
+        run: python3 -I tools/test_artifacts_ds219.py
+
       # DL173: a ledger or ci-runs file with a missing or newer schema warns.
       - name: Prove the DL173 schema check still holds
         run: python3 -I tools/test_artifacts_dl173.py

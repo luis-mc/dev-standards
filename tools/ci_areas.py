@@ -166,7 +166,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/docs/.*", frozenset({"docs"})),
     (r"tools/test_ds_guard_templates\.py", frozenset({"docs"})),
     # artifacts
-    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+)\.py",
+    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+|test_artifacts_ds[0-9]+)\.py",
      frozenset({"artifacts"})),
     # delivery
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
