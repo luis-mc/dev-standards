@@ -17,6 +17,7 @@
     {"name": "artifacts-ar60", "full": "python tools/test_artifacts_ar60.py", "cases": ""},
     {"name": "artifacts-ar63", "full": "python tools/test_artifacts_ar63.py", "cases": ""},
     {"name": "artifacts-ar66", "full": "python tools/test_artifacts_ar66.py", "cases": ""},
+    {"name": "artifacts-dl173", "full": "python tools/test_artifacts_dl173.py", "cases": ""},
     {"name": "artifacts-ar67", "full": "python tools/test_artifacts_ar67.py", "cases": ""},
     {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": ""},
     {"name": "artifact-prune", "full": "python tools/test_artifact_prune.py", "cases": ""},

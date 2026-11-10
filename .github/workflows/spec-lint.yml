@@ -646,6 +646,10 @@ jobs:
       - name: Prove the AR66 artifact fix still holds
         run: python3 -I tools/test_artifacts_ar66.py
 
+      # DL173: a ledger or ci-runs file with a missing or newer schema warns.
+      - name: Prove the DL173 schema check still holds
+        run: python3 -I tools/test_artifacts_dl173.py
+
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
       # let a turn end after three blocks, or a session that cannot publish

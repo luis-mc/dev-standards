@@ -40,10 +40,28 @@
     "claude/plugins/delivery/scripts/*.py": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/scripts/delivery_runner_pool.py": [
+      "docs/features/runner-pool/spec.md"
+    ],
+    "claude/plugins/delivery/scripts/machine_slots.py": [
+      "docs/features/runner-pool/spec.md"
+    ],
+    "claude/plugins/delivery/scripts/runner_job_done.*": [
+      "docs/features/runner-pool/spec.md"
+    ],
+    "claude/plugins/delivery/scripts/runner_load_gate.*": [
+      "docs/features/runner-pool/spec.md"
+    ],
     "claude/plugins/delivery/templates/**": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/templates/runner-pool/**": [
+      "docs/features/runner-pool/spec.md"
+    ],
     "claude/plugins/delivery/templates/rust/scripts/delivery/*.py": [
+      "docs/features/delivery-speed/spec.md"
+    ],
+    "claude/plugins/delivery/templates/shared/.githooks/pre-push": [
       "docs/features/delivery-speed/spec.md"
     ],
     "claude/plugins/delivery/templates/shared/scripts/delivery/*.py": [
@@ -76,9 +94,6 @@
     ],
     "claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json": [
       "docs/features/models/spec.md"
-    ],
-    "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push": [
-      "docs/features/delivery-speed/spec.md"
     ],
     "claude/plugins/specs/**": [
       "docs/features/specs/spec.md"

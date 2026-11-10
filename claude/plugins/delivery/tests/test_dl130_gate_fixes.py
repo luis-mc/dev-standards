@@ -13,7 +13,7 @@ PLUGINS = HERE.parent.parent
 sys.path.insert(0, str(HERE.parent / "templates" / "shared" / "scripts" / "delivery"))
 import branch_gate as G  # noqa: E402
 
-HOOK = PLUGINS / "project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push"
+HOOK = HERE.parent / "templates/shared/.githooks/pre-push"
 
 
 def git(cwd, *a):

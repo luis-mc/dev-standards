@@ -4,12 +4,12 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.6.0
+version: 0.6.1
 owner: agents
 type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
-  - claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+  - claude/plugins/delivery/templates/shared/.githooks/pre-push
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - tools/test_delivery_*.py
 last_verified: 2026-11-08
@@ -163,7 +163,7 @@ Nothing from the plan is open. Late branches ride the next train by design.
 ## 12. Code map
 
 Source: claude/plugins/delivery/templates/shared/scripts/delivery/
-Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared/.githooks/pre-push
+Source: claude/plugins/delivery/templates/shared/.githooks/pre-push
 
 ## Versions
 
@@ -171,6 +171,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.1 | 2026-11-10 | RELEASE-84 | The pre-push hook source moved to delivery templates/shared/.githooks. | DL172 |
 | 0.6.0 | 2026-11-09 | RELEASE-71 | DS199's ci_tool.py tool command and tools.json pins (rustup-init, llvm, cargo-deny, cargo-xwin) are used by the Rust workflows in DS201. The tool cache is kept on pool runners; hosted runners use Swatinem/rust-cache.<br>Adds R5.14 to R5.16: the generic tool fetcher, the Rust tool pins and the gate scope map.<br>Zig is pinned from the ziglang wheel on PyPI; ci_tool.py gets a wheel kind, and tool zig prints the zig path. | DS201, DS203, DS205 |
 | 0.5.2 | 2026-11-07 | RELEASE-60 | ci_watch reports exit code 137 or Killed as killed for memory with the pool cap, and a slow Set up runner failure as a runner start-up failure, never as a stale lockfile. | DL92 |
 | 0.5.1 | 2026-11-05 | RELEASE-47 | The join rebuilds the next-version design-system gallery and commits it when a joined branch changed that folder. | DU4 |

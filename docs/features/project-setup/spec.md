@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.8.0
+version: 0.9.0
 owner: agents
 type: reference
 code:
@@ -132,7 +132,7 @@ flowchart TB
 ```
 
 - The catalog is data, not requirements. STACKSPEC defines a `CHOICE` level. A choice is reported as recorded or unrecorded, never as violating.
-- The shared delivery tooling (scripts and workflows in `luismc-delivery` `templates/`) is written into each generated repository by the delivery installer; the git hooks, linters and guards in `assets/tooling/` are copied by `tech-stack-setup`. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
+- The shared delivery tooling (scripts and workflows in `luismc-delivery` `templates/`) is written into each generated repository by the delivery installer; the delivery installer also writes the `pre-push` and `commit-msg` hooks, `.delivery/config.json` and the `session_guard.py` entry in `.claude/settings.json` (DL172). The linters, guards and the `pre-commit` hook in `assets/tooling/` are copied by `tech-stack-setup`. Its rules and tests belong to [delivery](../delivery/spec.md) and [delivery-speed](../delivery-speed/spec.md). This page does not repeat them.
 - The questions Stop hook (R5.13) never loops (`stop_hook_active` allows), ignores code blocks, inline code and quoted lines, lets a park through while agents of the wave still run (Q-5, a running agent in `.delivery/ledger.json`), and fails open on any error. It blocks a list only when the line above it reads as an offer to pick from (not "Files changed:"), and a reply that says there are no open questions passes. Its hook command runs `python3` when present and `python` only otherwise, so exit 2 reaches Claude Code. Turn it off with `CLAUDE_QUESTIONS_STOP=off` (shell or settings `env` block) or `"questionsStop": "off"` in `~/.claude/settings.json`.
 
 ```mermaid
@@ -199,6 +199,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.9.0 | 2026-11-10 | RELEASE-84 | The delivery installer writes the pre-push and commit-msg hooks, .delivery/config.json and the session_guard settings entry; project-setup only calls it. | DL172 |
 | 0.8.0 | 2026-11-09 | RELEASE-71 | Stop hook counts agents with an ETA and no agent-done; says questions wait when one is due within 60 minutes. Clarifying-questions rule: a routine held for an owner answer is paused, never postponed by minutes.<br>DS196: Rust as a component role beside any API language; parts cli, host-service, library-napi, library-wasm; check_stack.py warnings. Spec text follows in DS203.<br>tech-stack-setup wizard text: machine-side question, native_components binding with written reason, napi build matrix, cross-compile licence and Windows build option, Rust workspace layout, Rust audit wording.<br>Adds R5.14 to R5.22: stop hook ETA parking, pre-push fixes, Rust as a component in the catalog, the wizard and the tooling assets. | DL124, DS196, DS197, DS203 |
 | 0.7.1 | 2026-11-04 | RELEASE-42 | Questions Stop hook blocks a list only when the line above offers a choice, passes 'no open questions', and hook commands keep exit 2 (python3 if present, else python). | DS185 |
 | 0.7.0 | 2026-11-04 | RELEASE-38 | claude-setup installs a user-level Stop hook (questions_stop.py) that blocks plain-text questions and parked questions, enforcing Q-1 and Q-2 (R5.13). | SO6 |

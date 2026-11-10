@@ -94,6 +94,7 @@
 - [Documentation standard plugin (luismc-docs)](docs/features/docs/spec.md)
 - [Model and effort profiles](docs/features/models/spec.md)
 - [Project setup (luismc-project-setup)](docs/features/project-setup/spec.md)
+- [Shared runner pool](docs/features/runner-pool/spec.md)
 - [Spec authoring and checking (luismc-specs)](docs/features/specs/spec.md)
 - [Test and validation cost](docs/features/test-cost/spec.md)
 - [Transcript folds](docs/features/transcript-folds/spec.md)

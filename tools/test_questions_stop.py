@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""SO6: the questions Stop hook (Q-1, Q-2) against recorded inputs, plus the claude-setup wiring.
+"""SO6: the questions Stop hook (Q-1, Q-5; Q-2 lives in the delivery hook since DL171) against recorded inputs, plus the claude-setup wiring.
 No network. Run: python3 tools/test_questions_stop.py"""
 import json
 import os
@@ -47,16 +47,16 @@ def main():
         elif code == 2 and "AskUserQuestion" not in err:
             errors.append(f"{name}: reason does not name AskUserQuestion")
 
-    expect("plain question at end", 2, {"last_assistant_message": "Done with part one.\n\nShould I rename the module?"})
-    expect("question in bold", 2, {"last_assistant_message": "Notes.\n\n**Do you want me to continue?**"})
-    expect("options listed", 2, {"last_assistant_message": "Two ways.\n\nWhich one do you prefer:\n- A: keep it\n- B: drop it"})
-    expect("option lines", 2, {"last_assistant_message": "Pick one.\n\nOption A: keep it\nOption B: drop it"})
-    expect("list after a lead-in paragraph", 2, {"last_assistant_message": "Choose how to go on.\n\n1. keep it\n2. drop it"})
+    expect("plain question at end (Q-2 moved to delivery, DL171)", 0, {"last_assistant_message": "Done with part one.\n\nShould I rename the module?"})
+    expect("question in bold (Q-2 moved to delivery, DL171)", 0, {"last_assistant_message": "Notes.\n\n**Do you want me to continue?**"})
+    expect("options listed (Q-2 moved to delivery, DL171)", 0, {"last_assistant_message": "Two ways.\n\nWhich one do you prefer:\n- A: keep it\n- B: drop it"})
+    expect("option lines (Q-2 moved to delivery, DL171)", 0, {"last_assistant_message": "Pick one.\n\nOption A: keep it\nOption B: drop it"})
+    expect("list after a lead-in paragraph (Q-2 moved to delivery, DL171)", 0, {"last_assistant_message": "Choose how to go on.\n\n1. keep it\n2. drop it"})
     expect("parked", 2, {"last_assistant_message": "Finished. I will ask the open questions later."})
     expect("waiting on decision", 2, {"last_assistant_message": "Waiting on your decision for the schema."})
     expect("AskUserQuestion used", 0, {"last_assistant_message": "Should I rename the module?",
                                        "transcript_path": transcript(tmp, ask=True)})
-    expect("no ask in transcript still blocks", 2, {"last_assistant_message": "Should I rename the module?",
+    expect("no ask in transcript, no plain-text check", 0, {"last_assistant_message": "Should I rename the module?",
                                                     "transcript_path": transcript(tmp)})
     expect("stop_hook_active", 0, {"last_assistant_message": "Should I rename it?", "stop_hook_active": True})
     expect("code block question", 0, {"last_assistant_message": "Added the check.\n\n```\nprint('what now, you?')  # really?\n```\n\nDone."})
@@ -65,6 +65,7 @@ def main():
     expect("inline code", 0, {"last_assistant_message": "The flag `--yes` answers \"do you want to go on?\". Done."})
     expect("plain statement", 0, {"last_assistant_message": "All done. Tests pass."})
     expect("rhetorical not addressed", 0, {"last_assistant_message": "The cache was stale. Why did it fail?"})
+    expect("turn without any question", 0, {"last_assistant_message": "Everything is done.\n\nNo question for you."})
     expect("empty input", 0, {})
     p = subprocess.run([sys.executable, str(HOOK)], input="not json", capture_output=True, text=True)
     if p.returncode != 0:
@@ -80,7 +81,7 @@ def main():
     ledger.write_text(json.dumps({"agents": [{"state": "done"}]}))
     expect("parked, agents done", 2, msg)
     ledger.write_text(json.dumps({"agents": [{"state": "running"}]}))
-    expect("plain question, agents running", 2, {"last_assistant_message": "Should I go on?", "cwd": str(proj)})
+    expect("plain question, agents running", 0, {"last_assistant_message": "Should I go on?", "cwd": str(proj)})
 
     # DL124: an agent with an ETA and no agent-done counts as running.
     from datetime import datetime, timedelta, timezone
@@ -100,8 +101,9 @@ def main():
     expect("parked, no ledger", 2, msg)
 
     # switches
-    q = {"last_assistant_message": "Should I rename it?"}
+    q = {"last_assistant_message": "I will ask the open questions later."}
     expect("env off", 0, q, env={"CLAUDE_QUESTIONS_STOP": "off"})
+    expect("switch not set", 2, q)
     home = tempfile.mkdtemp()
     (Path(home) / ".claude").mkdir()
     (Path(home) / ".claude/settings.json").write_text(json.dumps({"questionsStop": "off"}))

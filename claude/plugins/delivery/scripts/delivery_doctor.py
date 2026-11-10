@@ -42,6 +42,10 @@ Eight checks (a ninth, `rust`, appears only on the rust track: see below), each 
            stable); tools.json without a sha256 for rustup-init, llvm, zig or cargo-deny (missing keys are findings).
            WARNS (never fails) on: advisory DB cache older than 7 days or absent; under 10 GB free for target/.
            It changes nothing; each finding prints the command.
+  plugins  (DL173) `plugins.compat`: the highest installed version of each luismc-* plugin, read from the Claude plugin cache
+           (~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/; DELIVERY_PLUGIN_CACHE replaces the root in tests),
+           against references/plugin-compat.json. WARNS (never fails) per pair that does not fit, with
+           `claude plugin update <plugin>@dev-standards`. A plugin that is not installed is skipped; with nothing to warn about there is no row. No network.
 Exit 0 all ok, 1 at least one FAIL, 2 no .delivery/ folder. Standard library only.
 """
 from __future__ import annotations
@@ -786,8 +790,64 @@ def check_rust(root, cfg):
     return ok, "; ".join(bad) or "; ".join(i["detail"] for i in items), items
 
 
+def _vtuple(text):
+    parts = re.findall(r"\d+", str(text))[:3]
+    return tuple(int(p) for p in parts) + (0,) * (3 - len(parts))
+
+
+def installed_versions(cache=None):
+    """{plugin name: highest installed version string} from <cache>/<marketplace>/<plugin>/<version>/."""
+    cache = cache or os.environ.get("DELIVERY_PLUGIN_CACHE") or os.path.join(os.path.expanduser("~"), ".claude", "plugins", "cache")
+    out = {}
+    try:
+        markets = [os.path.join(cache, m) for m in os.listdir(cache)]
+    except OSError:
+        return out
+    for market in markets:
+        try:
+            plugins = os.listdir(market)
+        except OSError:
+            continue
+        for plugin in plugins:
+            try:
+                versions = [v for v in os.listdir(os.path.join(market, plugin)) if re.match(r"\d+(\.\d+)*", v)]
+            except OSError:
+                continue
+            for v in versions:
+                if plugin not in out or _vtuple(v) > _vtuple(out[plugin]):
+                    out[plugin] = v
+    return out
+
+
+def compat_items(installed=None, compat_path=None):
+    """One warn item per installed plugin pair that does not meet plugin-compat.json."""
+    compat = _read_json(compat_path or os.path.join(PLUGIN, "references", "plugin-compat.json")) or {}
+    installed = installed_versions() if installed is None else installed
+    items = []
+    for plugin, needs in (compat.get("requires") or {}).items():
+        if plugin not in installed:
+            continue
+        for other, rule in needs.items():
+            if other not in installed:
+                continue
+            want = str(rule.get("version", "")).lstrip(">= ")
+            if _vtuple(installed[other]) < _vtuple(want):
+                items.append(_item("%s>%s" % (plugin, other), "warn",
+                                   "%s %s needs %s >=%s, installed %s (%s). Run: claude plugin update %s@dev-standards"
+                                   % (plugin, installed[plugin], other, want, installed[other], rule.get("why", ""), other)))
+    return items
+
+
+def check_plugins(root, cfg):
+    items = compat_items()
+    if not items:
+        return None      # nothing to say: no row (also when no plugin is installed)
+    return True, "WARN plugins.compat: " + "; ".join(i["detail"] for i in items), items
+
+
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
-          ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust))
+          ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust),
+          ("plugins", check_plugins))
 
 
 def run_checks(root):

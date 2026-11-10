@@ -306,7 +306,13 @@ def suites_file_locations():
 
 @case
 def template_settings_register_a_guarded_hook():
-    cfg = json.loads(SETTINGS.read_text(encoding="utf-8"))
+    # DL172: the delivery installer writes the entry; the claude-setup asset no longer carries it
+    assert "PreToolUse" not in json.loads(SETTINGS.read_text(encoding="utf-8")).get("hooks", {})
+    sys.path.insert(0, str(ROOT / "claude/plugins/delivery/scripts"))
+    import delivery_ci_install as ins
+    with tempfile.TemporaryDirectory() as d:
+        assert ins.merge_session_guard(d) == "added"
+        cfg = json.loads((Path(d) / ".claude/settings.json").read_text(encoding="utf-8"))
     entry = cfg["hooks"]["PreToolUse"][0]
     cmd = entry["hooks"][0]["command"]
     assert entry["matcher"] == "Bash" and "scripts/delivery/session_guard.py" in cmd

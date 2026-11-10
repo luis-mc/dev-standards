@@ -262,7 +262,7 @@ class Box:
         if hooks:
             (self.work / ".githooks").mkdir()
             hook = shared / ".githooks/pre-push"  # a mutant copy carries its own hook
-            self.copy_text(hook if hook.exists() else HOOKS_SHARED / ".githooks/pre-push", self.work / ".githooks/pre-push")
+            self.copy_text(hook if hook.exists() else SHARED / ".githooks/pre-push", self.work / ".githooks/pre-push")
         for exe in (d / "agent_setup.sh", self.work / ".githooks/pre-push"):
             if exe.exists():
                 exe.chmod(0o755)
@@ -2701,10 +2701,10 @@ def sc_assets(t: T, shared: Path) -> None:
             'path.join(".git").exists()' in starters["rust"][0].read_text(encoding="utf-8"))
     t.check("dotnet guard skips another checkout (a directory holding .git)",
             "IsOtherCheckout(sub)" in starters["dotnet"][0].read_text(encoding="utf-8"))
-    hook = (HOOKS_SHARED / ".githooks/pre-push").read_text(encoding="utf-8")
+    hook = (SHARED / ".githooks/pre-push").read_text(encoding="utf-8")
     t.check("pre-push is a POSIX sh script", hook.startswith("#!/bin/sh"))
     # a Windows checkout must not turn the hook or the scripts into CRLF (sh: not found)
-    rels = [(HOOKS_SHARED / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
+    rels = [(SHARED / ".githooks/pre-push"), (shared / "scripts/delivery/agent_setup.sh"),
             (shared / "scripts/delivery/branch_gate.py"), (shared / "scripts/delivery/gate.json")]
     attr = run(["git", "check-attr", "eol", "--", *[r.as_posix() for r in rels]], cwd=shared)
     lines = [l for l in attr.out.splitlines() if l.strip()]
@@ -3755,8 +3755,6 @@ SCENARIOS = {
 def mutated_shared(rel: str, old: str, new: str) -> Path | None:
     dst = Path(tempfile.mkdtemp(dir=_TMP_ROOT, prefix="mutant-"))
     shutil.copytree(SHARED, dst / "shared", ignore=shutil.ignore_patterns("CONTRACT.md"))
-    # the hooks stay with tech-stack-setup (DL15); the mutants of .githooks/pre-push need them here
-    shutil.copytree(HOOKS_SHARED / ".githooks", dst / "shared" / ".githooks")
     target = dst / "shared" / rel
     text = target.read_bytes().decode("utf-8").replace("\r\n", "\n")
     if text.count(old) != 1:

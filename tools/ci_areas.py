@@ -79,7 +79,7 @@ TS = PS + "/tech-stack-setup"
 TOOLING = TS + "/assets/tooling"
 TEMPLATES = "claude/plugins/delivery/templates"
 DELIVERY_SCRIPTS = TEMPLATES + "/shared/scripts/delivery/"
-HOOKS = TOOLING + "/shared/.githooks/"
+HOOKS = TEMPLATES + "/shared/.githooks/"
 DS = DELIVERY_SCRIPTS
 # TC7: suite -> the files whose change turns its mutation pass on. Derived from
 # what each suite copies, imports or mutates. A path ending in "/" is a folder.
@@ -161,7 +161,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/test_ds_guard_templates\.py", frozenset({"docs"})),
     # artifacts
     (r"claude/plugins/artifacts/.*", frozenset({"artifacts"})),
-    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|convert_interim_record)\.py",
+    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+|convert_interim_record)\.py",
      frozenset({"artifacts"})),
     # delivery
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),

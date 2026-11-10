@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-artifacts]
 topics: [artifacts]
 status: live
-version: 0.5.0
+version: 0.6.0
 owner: agents
 type: reference
 code:
@@ -254,6 +254,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.0 | 2026-11-10 | RELEASE-84 | The ledger and ci-runs readers warn in check and pending when the file's schema is missing or newer than the reader knows. | DL173 |
 | 0.5.0 | 2026-11-09 | RELEASE-71 | pending --refresh renders first, so mark-published accepts the publish copy; the task-status-update skill lists the phase names agents, join, ci, merge (AR67, AR68).<br>Adds R5.15 and R5.16: pending --refresh renders first, and the phase flag in the status skill. | AR67, DS203 |
 | 0.4.2 | 2026-11-07 | RELEASE-63 | A release with no Expected and no timed phases is headed RELEASE-<n> · not scheduled (R5.46). | AR66 |
 | 0.4.1 | 2026-11-07 | RELEASE-59 | The stop hook no longer leaves state temp files behind.<br>The hourly Full Progress publish applies only while work is open (Running, Waiting or Needs you).<br>the mark-published refusal names the steps in order and the hook says to change statuses before pending<br>--expected accepts DD Mon HH:MM and stores DD Mon ~HH:MM<br>Expected is optional on To do and On hold and shows Not scheduled; Running and Waiting need one | AR60, AR61, AR63, AR64, AR65 |

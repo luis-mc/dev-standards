@@ -582,6 +582,36 @@ def release_arg(text):
     return int(text)
 
 
+LEDGER_SCHEMA = 1        # the delivery ledger schema this reader knows
+CI_RUNS_SCHEMA = 1       # the ci-runs schema this reader knows
+_SCHEMA_WARNINGS = []
+
+
+def schema_gate(label, raw, known, required=True):
+    """DL173: True when `raw` (a parsed delivery file) has a schema this reader knows. Otherwise records one warning
+    for `check` and `pending` and returns False. `required` False lets a file with no schema field through."""
+    sch = raw.get('schema') if isinstance(raw, dict) else None
+    if sch is None and not required:
+        return True
+    if isinstance(sch, int) and not isinstance(sch, bool) and 0 < sch <= known:
+        return True
+    if isinstance(sch, int) and not isinstance(sch, bool) and sch > known:
+        msg = 'delivery %s schema %d is newer than this reader (%d): update luismc-artifacts' % (label, sch, known)
+    else:
+        msg = 'delivery %s has no usable schema (this reader knows %d): update luismc-delivery and luismc-artifacts' % (label, known)
+    if msg not in _SCHEMA_WARNINGS:
+        _SCHEMA_WARNINGS.append(msg)
+    return False
+
+
+def schema_warnings(root):
+    """DL173: read the delivery files once, then list the schema warnings recorded so far."""
+    if root:
+        ledger_release_numbers(root)
+        read_ci_runs(root)
+    return list(_SCHEMA_WARNINGS)
+
+
 def ledger_release_numbers(root):
     """R5.45: the release numbers the delivery ledger records (`trains[].release_no`); read only, never written.
     An empty set when there is no ledger or it cannot be read."""
@@ -591,6 +621,8 @@ def ledger_release_numbers(root):
         with open(os.path.join(str(root), '.delivery', 'ledger.json'), encoding='utf-8') as fh:
             raw = json.load(fh)
     except (OSError, ValueError):
+        return set()
+    if not schema_gate('ledger', raw, LEDGER_SCHEMA):
         return set()
     trains = raw.get('trains') if isinstance(raw, dict) else None
     out = set()
@@ -831,9 +863,11 @@ def load_contents(rec):
 def read_ci_runs(root):
     """The parsed .delivery/ci-runs.json (written by the delivery plugin), or None when it is missing or unreadable."""
     try:
-        return json.loads((Path(root) / '.delivery' / 'ci-runs.json').read_text(encoding='utf-8'))
+        raw = json.loads((Path(root) / '.delivery' / 'ci-runs.json').read_text(encoding='utf-8'))
     except (OSError, ValueError):
         return None
+    # DL173: the writer sets no schema field today, so a missing one passes; a newer one is refused with a warning
+    return raw if schema_gate('ci-runs', raw, CI_RUNS_SCHEMA, required=False) else None
 
 
 def render_one(rec, key, stamp_t, stamp_i, links=None, root=None):
@@ -2660,6 +2694,7 @@ def cmd_check(args):
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
     warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec)
+    warnings += [('.delivery', m) for m in schema_warnings(session_root(str(rec.dir)))]
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
                   'notes': notes}
@@ -2864,10 +2899,13 @@ def cmd_pending(args):
     queue = artifact_queue.read_queue(str(ctx.root))
     retired = [{'key': e.get('key', ''), 'title': e.get('title', ''), 'url': e.get('url', ''),
                 'retired': e.get('retired', '')} for e in (AR.retired_pages(rec.manifest) if AR and rec else [])]
+    schema_warns = schema_warnings(str(ctx.root))      # DL173
     if args.json_out:
         out = {'artifacts': arts, 'queue': queue, 'retired': retired}
         if deferred:
             out['deferred'] = deferred
+        if schema_warns:
+            out['warnings'] = [{'file': '.delivery', 'message': m} for m in schema_warns]
         print(json.dumps(out, indent=2, ensure_ascii=False))
     else:
         for a in arts:
@@ -2879,6 +2917,8 @@ def cmd_pending(args):
             print('deferred %s (%s): %s' % (d['key'], d['file'], d['reason']))
         if not arts and not queue and not deferred:
             print('nothing pending')
+        for m in schema_warns:
+            print('warning  .delivery: %s' % m)
         for e in retired:
             print('retired %s "%s" %s: ask the owner to confirm, delete it with the Artifact tool (action: delete), '
                   'then run mark-deleted %s --url %s' % (e['key'], e['title'], e['url'], e['key'], e['url']))
