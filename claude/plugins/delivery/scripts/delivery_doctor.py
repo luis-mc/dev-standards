@@ -72,10 +72,14 @@ def _pool_files_items(POOL, root):
     try:
         pools = POOL._pools_dir(root)
         names = sorted(n for n in os.listdir(pools) if os.path.isfile(os.path.join(pools, n, "compose.yaml")))
-    except OSError:
+    except (OSError, TypeError, AttributeError):   # no pools folder, or a pool module without these helpers
         return out
     for n in names:
-        diff = POOL.pool_template_diffs(os.path.join(pools, n))
+        try:
+            diff = POOL.pool_template_diffs(os.path.join(pools, n))
+        except (OSError, TypeError, AttributeError) as exc:
+            out.append(_item("pool.%s.files-current" % n, "warn", "could not compare the pool files: %s" % exc))
+            continue
         if diff:
             out.append(_item("pool.%s.files-current" % n, "warn", "pool file(s) differ from the installed plugin's template: %s. "
                              "Run `delivery_ci_setup.py pool-refresh --yes` (old copies go to bak-<time>/)." % ", ".join(diff)))
