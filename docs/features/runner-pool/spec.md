@@ -84,6 +84,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.18** — **`POOL_WINE_PREFIX`** (DL179, D192). With `wine` on PATH, the supervisor sets `POOL_WINE_PREFIX=/agents/<slug>/.wine` in each agent's environment. A job can use it directly or copy it (`cp -a "$POOL_WINE_PREFIX" "$WINEPREFIX"`) instead of booting a fresh prefix. Without `wine` the variable is not set.
 
+**R5.19** — **Wine runs without `TMPDIR`** (DL180). Wine aborts with `free(): invalid pointer` when `TMPDIR` is set, to any value. With the `windows-packaging` layer the image wraps each Wine entry tool (`wine`, `wine64`, `wine-stable`, `wineboot`, `wineserver`, `winecfg`, `msiexec`) in `/usr/local/bin` with a script that unsets `TMPDIR` and runs the real tool from `/usr/bin`. The pool still sets `TMPDIR` for every other tool. The image build fails if `wine` on PATH is not the wrapper.
+
 ### 5.3 Pool doctor checks and setup
 
 **R5.17** (was delivery R13.70) — **Doctor pool checks** (DL149). `pool.<name>.layer-windows-packaging`: with the layer on, `wine`, `xvfb-run` and `dotnet` exist in the pool image (a warning when Docker cannot be read). `pool.<name>.layers-config`: the project config and the pool `.env` agree. `pool.<name>.stray-dockerfile`: a Dockerfile under a `runners` or `runner` folder of the project is flagged, because the pool never uses it; the fix is `.delivery/pool.apt` or a layer. `pool.<name>.tool-cache`: `compose.yaml` mounts a named volume at `/ci-tools` and it is writable.
