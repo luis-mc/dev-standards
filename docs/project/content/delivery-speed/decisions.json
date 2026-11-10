@@ -4313,6 +4313,50 @@
    "chosen": "10 GiB / 7 CPUs (Recommended)",
    "decided": "2026-11-10",
    "owner_words": "10 GiB / 7 CPUs (Recommended)"
+  },
+  {
+   "id": "D191",
+   "question": "Which size should the pool keep after it was set to 10 GiB / 6 CPUs?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL178",
+   "options": [
+    {
+     "label": "Keep 10 GiB / 6 CPUs (Recommended)",
+     "summary": "No change, no restart"
+    },
+    {
+     "label": "10.5 GiB / 7 CPUs",
+     "summary": "One more CPU; WSL restart"
+    }
+   ],
+   "chosen": "Keep 10 GiB / 6 CPUs (Recommended)",
+   "decided": "2026-11-10",
+   "owner_words": "Keep 10 GiB / 6 CPUs (Recommended)"
+  },
+  {
+   "id": "D192",
+   "question": "Should the pool set up the Wine prefix when the container starts?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL179",
+   "options": [
+    {
+     "label": "Wait for the rerun (Recommended)",
+     "summary": "Decide after the rerun"
+    },
+    {
+     "label": "Add it now",
+     "summary": "Delivery task now"
+    },
+    {
+     "label": "No",
+     "summary": "Each project's job sets up its own prefix"
+    }
+   ],
+   "chosen": "Add it now",
+   "decided": "2026-11-10",
+   "owner_words": "Add it now"
   }
  ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T19:22+00:00",
+  "updated": "2026-11-10T21:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3328,6 +3328,18 @@
       "expected": "10 Nov",
       "changed": "2026-11-10T19:06+00:00",
       "no_release": "machine change only; no repo code"
+    },
+    {
+      "id": "DL179",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool sets up a Wine prefix at container start",
+      "detail": "D192: a CI job's first Wine start on a fresh prefix in a new pool container crashed (free(): invalid pointer) where the old container had a prefix. The pool prepares a prefix per agent at start so a restart never leaves it empty.",
+      "expected": "10 Nov ~21:46",
+      "changed": "2026-11-10T21:17+00:00",
+      "rides": "DS224",
+      "expected_basis": "cloud agent from 21:18, 28 min"
     },
     {
       "id": "DS1",
@@ -6818,6 +6830,40 @@
         }
       ],
       "started": "2026-11-10T19:07+00:00"
+    },
+    {
+      "id": "DS224",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-89: pool sets up a Wine prefix at start (DL179)",
+      "detail": "Carries DL179 (D192).",
+      "expected": "10 Nov ~22:01",
+      "changed": "2026-11-10T21:17+00:00",
+      "expected_basis": "agent from 21:18, 28 min; CI 5; merge 4",
+      "release": 89,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-10T21:18+00:00",
+          "end": "2026-11-10T21:46+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-10T21:46+00:00",
+          "end": "2026-11-10T21:52+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-10T21:52+00:00",
+          "end": "2026-11-10T21:57+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-10T21:57+00:00",
+          "end": "2026-11-10T22:01+00:00"
+        }
+      ]
     },
     {
       "id": "DU1",
