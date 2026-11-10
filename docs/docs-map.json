@@ -13,12 +13,6 @@
     "claude/plugins/agents/agents/*.md": [
       "docs/features/models/spec.md"
     ],
-    "claude/plugins/artifacts/**": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "claude/plugins/artifacts/references/artifactspec.md": [
-      "docs/features/artifacts/spec.md"
-    ],
     "claude/plugins/audits/**": [
       "docs/features/audits/spec.md"
     ],
@@ -77,6 +71,69 @@
     "claude/plugins/docs/**": [
       "docs/features/docs/spec.md"
     ],
+    "claude/plugins/docs/design/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/references/artifactspec.md": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/rules/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/artifact_*.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/artifacts/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/hook_after_command.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/hook_end_of_turn.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/plan_rows_check.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/project_artifacts.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/publish_hourly.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/render_artifacts.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/skills/feature-artifact-new/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/skills/full-progress-artifact-new/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/skills/project-artifact-check/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/skills/spec-check/**": [
+      "docs/features/specs/spec.md"
+    ],
+    "claude/plugins/docs/skills/spec-new/**": [
+      "docs/features/specs/spec.md"
+    ],
+    "claude/plugins/docs/skills/task-add/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/skills/task-status-update/**": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/templates/feature-artifact.html": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/templates/full-progress-artifact.html": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/templates/project-artifact.css": [
+      "docs/features/artifacts/spec.md"
+    ],
     "claude/plugins/project-setup/**": [
       "docs/features/project-setup/spec.md"
     ],
@@ -94,9 +151,6 @@
     ],
     "claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json": [
       "docs/features/models/spec.md"
-    ],
-    "claude/plugins/specs/**": [
-      "docs/features/specs/spec.md"
     ],
     "claude/plugins/transcript-folds/**": [
       "docs/features/transcript-folds/spec.md"

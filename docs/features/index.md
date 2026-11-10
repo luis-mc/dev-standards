@@ -10,13 +10,6 @@
 | [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-01 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.1.3 | 2026-11-08 |
 
-### luismc-artifacts
-
-| Feature | Apps | Topics | Status | Version | Last verified |
-|---|---|---|---|---|---|
-| [Project artifacts](artifacts/spec.md) | luismc-artifacts | artifacts | live | 0.6.0 | 2026-11-01 |
-| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
-
 ### luismc-audits
 
 | Feature | Apps | Topics | Status | Version | Last verified |
@@ -35,6 +28,9 @@
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 0.10.1 | 2026-11-01 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.6.0 | 2026-11-01 |
+| [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.1.2 | 2026-11-01 |
+| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.2.2 | 2026-11-09 |
 
 ### luismc-project-setup
 
@@ -44,14 +40,8 @@
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.6.1 | 2026-11-08 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.1.3 | 2026-11-08 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.9.0 | 2026-11-08 |
-| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
+| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.2.2 | 2026-11-09 |
 | [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.2.1 | 2026-11-01 |
-
-### luismc-specs
-
-| Feature | Apps | Topics | Status | Version | Last verified |
-|---|---|---|---|---|---|
-| [Spec authoring and checking (luismc-specs)](specs/spec.md) | luismc-specs | specs | live | 0.1.2 | 2026-11-01 |
 
 ### luismc-transcript-folds
 
@@ -65,7 +55,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Project artifacts](artifacts/spec.md) | luismc-artifacts | artifacts | live | 0.6.0 | 2026-11-01 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.6.0 | 2026-11-01 |
 
 ### audits
 
@@ -88,7 +78,7 @@
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.6.1 | 2026-11-08 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.9.0 | 2026-11-08 |
 | [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.2.0 | 2026-11-10 |
-| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
+| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.2.2 | 2026-11-09 |
 
 ### delivery
 
@@ -127,7 +117,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Spec authoring and checking (luismc-specs)](specs/spec.md) | luismc-specs | specs | live | 0.1.2 | 2026-11-01 |
+| [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.1.2 | 2026-11-01 |
 
 ### stack
 
@@ -140,7 +130,7 @@
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.9.0 | 2026-11-08 |
-| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
+| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.2.2 | 2026-11-09 |
 
 ### transcripts
 
@@ -160,11 +150,11 @@
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.6.1 | 2026-11-08 |
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 0.10.1 | 2026-11-01 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.1.3 | 2026-11-08 |
-| [Project artifacts](artifacts/spec.md) | luismc-artifacts | artifacts | live | 0.6.0 | 2026-11-01 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.6.0 | 2026-11-01 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.9.0 | 2026-11-08 |
 | [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.2.0 | 2026-11-10 |
-| [Spec authoring and checking (luismc-specs)](specs/spec.md) | luismc-specs | specs | live | 0.1.2 | 2026-11-01 |
-| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-artifacts | ci, testing | live | 0.2.2 | 2026-11-09 |
+| [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.1.2 | 2026-11-01 |
+| [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.2.2 | 2026-11-09 |
 | [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.2.1 | 2026-11-01 |
 
 ## Gaps

@@ -94,7 +94,7 @@
 - [Model and effort profiles](docs/features/models/spec.md)
 - [Project setup (luismc-project-setup)](docs/features/project-setup/spec.md)
 - [Shared runner pool](docs/features/runner-pool/spec.md)
-- [Spec authoring and checking (luismc-specs)](docs/features/specs/spec.md)
+- [Spec authoring and checking (luismc-docs)](docs/features/specs/spec.md)
 - [Test and validation cost](docs/features/test-cost/spec.md)
 - [Transcript folds](docs/features/transcript-folds/spec.md)
 
@@ -102,6 +102,7 @@
 
 - [Set up the CI fallback and try it on a test repository](docs/guides/ci-fallback-test-run.md)
 - [Run work in cloud routines](docs/guides/cloud-routines.md)
+- [Move a project to luismc-docs 2](docs/guides/migrate-to-luismc-docs-2.md)
 - [Rust beside a JS stack](docs/guides/rust-beside-js.md)
 - [Set up CI for a project](docs/guides/set-up-ci.md)
 - [What the setup skills do and what you can do after](docs/guides/setup-skills.md)
