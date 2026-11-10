@@ -30,7 +30,7 @@ class KeepCapTests(unittest.TestCase):
         self.assertTrue(P.keep_owner_cap(refused, OWNER)['ok'])
 
     def test_resize_uses_the_measured_cap_and_says_why(self):
-        cap = P.keep_owner_cap(dict(MEASURED), OWNER, resize=True)
+        cap = P.keep_owner_cap(dict(MEASURED), OWNER, resize=True, shrink=True)  # DL176: lowering needs shrink
         self.assertEqual((cap['mem_gib'], cap['source']), (4.0, 'measured'))
         self.assertIn('--resize', cap['reason'])
 
