@@ -3925,6 +3925,30 @@
    "chosen": "My pick, recorded",
    "decided": "2026-11-09",
    "owner_words": "My pick, recorded (Recommended)"
+  },
+  {
+   "id": "D174",
+   "question": "May the session run luismc-delivery 1.19.0 pool-refresh --yes on the shared runner pool (new Dockerfile and compose.yaml, Playwright 1.63.0 -> 1.65.0, keep windows-packaging, rebuild, recreate)?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL162",
+   "options": [
+    {
+     "label": "Run it now",
+     "summary": "Run as planned with Playwright 1.65.0; tell both peer sessions when the new image is up."
+    },
+    {
+     "label": "Run, keep Playwright 1.63",
+     "summary": "Refresh and rebuild, leave PLAYWRIGHT_VERSION at 1.63.0."
+    },
+    {
+     "label": "Hold",
+     "summary": "Leave the shared pool unchanged."
+    }
+   ],
+   "chosen": "Run it now",
+   "decided": "2026-11-10",
+   "owner_words": "Run it now (Recommended)"
   }
  ]
 }
