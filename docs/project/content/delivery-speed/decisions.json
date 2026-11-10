@@ -4245,6 +4245,50 @@
    "chosen": "Uninstall now (Recommended)",
    "decided": "2026-11-10",
    "owner_words": "Uninstall now (Recommended)"
+  },
+  {
+   "id": "D188",
+   "question": "How many CPUs should the pool get with the 12 GiB resize?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL175",
+   "options": [
+    {
+     "label": "8 CPUs (Recommended)",
+     "summary": "12 GiB and 8 CPUs; up to 40% of the PC when all runners are busy"
+    },
+    {
+     "label": "Keep 4 CPUs",
+     "summary": "Only memory goes up"
+    }
+   ],
+   "chosen": "8 CPUs (Recommended)",
+   "decided": "2026-11-10",
+   "owner_words": "8 CPUs (Recommended)"
+  },
+  {
+   "id": "D189",
+   "question": "When should the WSL restart for the pool upgrade happen?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL175",
+   "options": [
+    {
+     "label": "Next idle moment (Recommended)",
+     "summary": "Tell the sessions, restart when no runner has a job"
+    },
+    {
+     "label": "Ask the other sessions to pause",
+     "summary": "Wait for their replies first"
+    },
+    {
+     "label": "Set a fixed time",
+     "summary": "The owner gives a time"
+    }
+   ],
+   "chosen": "Next idle moment (Recommended)",
+   "decided": "2026-11-10",
+   "owner_words": "do it now"
   }
  ]
 }
