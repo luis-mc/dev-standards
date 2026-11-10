@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T17:10+00:00",
+  "updated": "2026-11-10T19:01+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3305,6 +3305,28 @@
       "changed": "2026-11-10T17:10+00:00",
       "rides": "DS222",
       "started": "2026-11-10T16:52+00:00"
+    },
+    {
+      "id": "DL177",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pool sizing: VM measured by its working set; docker read fails",
+      "detail": "detect_host takes the WSL VM size from vmmemWSL's working set, which swung 5.7-11.9 GiB in minutes, so 'used outside WSL' swung 9.7-17.2 GiB. container_gib runs 'wsl docker', which fails on Docker Desktop ('docker could not be found in this WSL 2 distro'), so pool and other container use read 0.",
+      "expected": "11 Nov",
+      "changed": "2026-11-10T19:00+00:00"
+    },
+    {
+      "id": "DL178",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Needs you",
+      "item": "Pool resize to 10 GiB / 7 CPUs",
+      "detail": "Owner chose 10 GiB / 7 CPUs (D190) after the PC reached 83% with the 12 GiB pool. Done by hand: the tool refuses because its outside-WSL figure is unreliable (DL177). Lowers the WSL VM ceiling from 14 to 12 GB.",
+      "expected": "10 Nov ~17:45",
+      "changed": "2026-11-10T19:01+00:00",
+      "expected_basis": "owner runs the WSL restart; ~2 min after",
+      "no_release": "machine change only; no repo code"
     },
     {
       "id": "DS1",

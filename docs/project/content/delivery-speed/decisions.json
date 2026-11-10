@@ -4289,6 +4289,30 @@
    "chosen": "Next idle moment (Recommended)",
    "decided": "2026-11-10",
    "owner_words": "do it now"
+  },
+  {
+   "id": "D190",
+   "question": "What size should the pool be after the PC reached 83% memory with the 12 GiB pool?",
+   "asked": "2026-11-10",
+   "status": "decided",
+   "task": "DL178",
+   "options": [
+    {
+     "label": "Keep 12 GiB / 8 CPUs",
+     "summary": "Keep 4 GiB per runner; busy moments may cross 85%"
+    },
+    {
+     "label": "10 GiB / 7 CPUs (Recommended)",
+     "summary": "About 3.3 GiB per runner; WSL restart"
+    },
+    {
+     "label": "Back to 8.5 GiB / 4 CPUs",
+     "summary": "Undo today's upgrade"
+    }
+   ],
+   "chosen": "10 GiB / 7 CPUs (Recommended)",
+   "decided": "2026-11-10",
+   "owner_words": "10 GiB / 7 CPUs (Recommended)"
   }
  ]
 }

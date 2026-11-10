@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T17:10+00:00",
+ "updated": "2026-11-10T19:01+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4185,6 +4185,28 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-10T17:10+00:00",
    "rides": "DS222",
    "started": "2026-11-10T16:52+00:00"
+  },
+  {
+   "id": "DL177",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "To do",
+   "item": "Pool sizing: VM measured by its working set; docker read fails",
+   "detail": "detect_host takes the WSL VM size from vmmemWSL's working set, which swung 5.7-11.9 GiB in minutes, so 'used outside WSL' swung 9.7-17.2 GiB. container_gib runs 'wsl docker', which fails on Docker Desktop ('docker could not be found in this WSL 2 distro'), so pool and other container use read 0.",
+   "expected": "11 Nov",
+   "changed": "2026-11-10T19:00+00:00"
+  },
+  {
+   "id": "DL178",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Needs you",
+   "item": "Pool resize to 10 GiB / 7 CPUs",
+   "detail": "Owner chose 10 GiB / 7 CPUs (D190) after the PC reached 83% with the 12 GiB pool. Done by hand: the tool refuses because its outside-WSL figure is unreliable (DL177). Lowers the WSL VM ceiling from 14 to 12 GB.",
+   "expected": "10 Nov ~17:45",
+   "changed": "2026-11-10T19:01+00:00",
+   "expected_basis": "owner runs the WSL restart; ~2 min after",
+   "no_release": "machine change only; no repo code"
   },
   {
    "id": "DS1",
@@ -8236,10 +8258,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T17:10+00:00">10 Nov 17:10</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T19:01+00:00">10 Nov 19:01</time> (Lisbon)</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
-<p class="glance-none">Nothing needs you.</p>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL178"><span class="task-id">DL178</span><span class="glance-dep">owner runs the WSL restart; ~2 min after</span> Pool resize to 10 GiB / 7 CPUs <span class="glance-expected">10 Nov ~17:45</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">80 tasks</span></summary>
 <ul>
@@ -8255,8 +8279,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">502</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">502</div><div class="label">tasks live</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<figure class="release-timeline">
+<figcaption>Next releases (~17:45 · owner runs the WSL restart; ~2 min after)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DL178 (Pool resize to 10 GiB / 7 CPUs) Needs you, expected about 17:45, overdue." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="174"/><text x="200" y="28">17:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="174"/><text x="720" y="28">18:00</text></g>
+<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
+<text class="rt-name" x="0" y="94"><title>DL178 · Pool resize to 10 GiB / 7 CPUs</title>DL178 · Pool resize to 10…</text>
+<rect class="rt-other status-needs-you overdue" x="460" y="89" width="4" height="16"><title>Needs you 17:45-17:45</title></rect>
+<text class="rt-other-label" x="460" y="122">~17:45 · owner runs the WSL restart; ~2 min after</text>
+
+</svg></div>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
+</figure>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL177"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL177</span>Pool sizing: VM measured by its working set; docker read fails</a></td><td data-label="App / service"></td><td data-label="Detail">detect_host takes the WSL VM size from vmmemWSL&#x27;s working set, which swung 5.7-11.9 GiB in minutes, so &#x27;used outside WSL&#x27; swung 9.7-17.2 GiB. container_gib runs &#x27;wsl docker&#x27;, which fails on Docker Desktop (&#x27;docker could not be found in this WSL 2 distro&#x27;), so pool and other container use read 0.</td><td data-label="Expected">11 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL178"><td data-label="Status"><span class="status-chip status-needs-you">Needs you</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL178</span>Pool resize to 10 GiB / 7 CPUs</a><span class="no-release-line">ships nothing: machine change only; no repo code</span></td><td data-label="App / service"></td><td data-label="Detail">Owner chose 10 GiB / 7 CPUs (D190) after the PC reached 83% with the 12 GiB pool. Done by hand: the tool refuses because its outside-WSL figure is unreliable (DL177). Lowers the WSL VM ceiling from 14 to 12 GB.</td><td data-label="Expected">10 Nov ~17:45<span class="expected-basis">owner runs the WSL restart; ~2 min after</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">512 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL176"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL176</span>Fix pool resize: cap counts the VM as used; drops POOL_BROWSERS</a><span class="release-line"><span class="release-name">RELEASE-87</span></span></td><td data-label="App / service"></td><td data-label="Detail">delivery_ci_setup pool-plan --resize gave 12, 2.5 and 6.5 GiB caps in a few minutes on the same PC: it subtracts the running Docker VM from free memory, so it cannot size the VM upward. It also shows POOL_BROWSERS none when the pool .env has chromium, even with --browsers chromium; --cpus 4 gave a 0.5 GiB cap.</td><td data-label="Expected">10 Nov</td></tr>
@@ -8779,12 +8824,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
-<p class="feature-none">No feature artifacts in progress.</p>
-</details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (8)</strong><span class="fold-count">8 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905510"><time datetime="2026-11-10T17:10+00:00">10 Nov 17:10</time></td><td data-label="Tasks">DL1 to DL176</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905621"><time datetime="2026-11-10T19:01+00:00">10 Nov 19:01</time></td><td data-label="Tasks">DL1 to DL178</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-needs-you">1 Needs you</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904292"><time datetime="2026-11-09T20:52+00:00">09 Nov 20:52</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
