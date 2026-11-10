@@ -466,6 +466,8 @@ flowchart LR
 
 **R13.87** — **Pool refresh reports the build truthfully** (DL166). When the build fails, `pool-refresh` prints `the rebuild failed: ...`, exits 1 and leaves the old container running. It reads the container id, the image the container runs and the tagged image id before the build and again after it. A changed tagged id is `image rebuilt`. A changed container id or container image is `container recreated`, and the command is not run again. Only when the tagged id is the same before and after, and the container is unchanged, does it say `image unchanged (cache hit)`.
 
+**R13.89** — **ETAs from measured history** (DL168). The ledger records `finished_at` for an agent when it is marked done (the report commit time when the watcher reads the READY line) and the start and end of each CI run on the train row (`ci.run_started_at`, `ci.run_completed_at`). Old rows without them still load. `delivery_eta.py --kind agent|ci|join|pool-refresh` prints the median and p75 in minutes and the sample size, and says `no history` with fewer than 3 samples. The launch check (DL-30) refuses a brief whose `eta:` total is more than 50 % above the measured p75 for that kind and place, when there are at least 5 samples. The message names the median and p75. The fix is a lower eta or an `eta-reason: <why>` line in the delivery block. `delivery_ledger.py show` prints `eta <N> min, took <M> min` for done agents and one `cloud agents: eta median ... vs actual median ...` line.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:

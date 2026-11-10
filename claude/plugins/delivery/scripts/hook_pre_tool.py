@@ -520,6 +520,42 @@ def check_join_brief(cfg, text, block):
              'guards (fast_guards.py), push, open the ready PR; its CI is the one full run.' % named.group(0))
 
 
+ETA_LINE_RE = re.compile(r'^\s*eta\s*:\s*(.+)$', re.M | re.I)
+ETA_REASON_RE = re.compile(r'^\s*eta-reason\s*:\s*\S', re.M | re.I)
+ETA_MIN_SAMPLES = 5
+ETA_SLACK = 1.5
+
+
+def eta_total_min(text):
+    """Minutes of the brief's `eta:` line: the number after '=', else the sum of its 'word N' parts; None if none."""
+    m = ETA_LINE_RE.search(text)
+    if not m:
+        return None
+    line = m.group(1)
+    tot = re.search(r'=\s*(\d+(?:\.\d+)?)\s*min', line)
+    if tot:
+        return float(tot.group(1))
+    parts = re.findall(r'[A-Za-z]+\s+(\d+(?:\.\d+)?)', line.split('(')[0])
+    return float(sum(float(x) for x in parts)) if parts else None
+
+
+def check_eta_measured(ledger, text, where):
+    """DL-30 (DL168): an agent ETA more than 50 % above the measured p75 needs a lower eta or an eta-reason line."""
+    total = eta_total_min(text)
+    if total is None or ETA_REASON_RE.search(text):
+        return
+    try:
+        import delivery_eta as E
+        est = E.estimate_ledger(ledger, 'agent', where)
+    except Exception:  # noqa: BLE001 - fail open
+        return
+    if est['n'] < ETA_MIN_SAMPLES or est['p75'] is None or total <= est['p75'] * ETA_SLACK:
+        return
+    deny('DL-30 the brief eta is %g min, but %d %s agents took a median of %g min (p75 %g min). Do not pad: lower the '
+         'eta, or add a line "eta-reason: <why this one is longer>" in the delivery block.'
+         % (total, est['n'], where, est['median'], est['p75']))
+
+
 def check_launch(cfg, ledger, data, where):
     ti = data.get('tool_input') or {}
     if where == 'cloud':
@@ -534,6 +570,8 @@ def check_launch(cfg, ledger, data, where):
     block = delivery_block(text)
     if H.check_on(cfg, 'DL-11'):
         check_join_brief(cfg, text, block)
+    if H.check_on(cfg, 'DL-30'):
+        check_eta_measured(ledger, text, where)
     cloud_running = len(H.running_agents(ledger, 'cloud'))
     local_running = len(H.running_agents(ledger, 'local'))
     caps = cfg['caps']

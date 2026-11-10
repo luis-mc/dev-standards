@@ -51,7 +51,7 @@ DEFAULT_CHECK_MIN = 15
 WORKFLOW = "ci.yml"
 ACTIVE_CI_STATES = ("pushed", "ci")
 CI_RUNS_MIN_INTERVAL_S = 60
-RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName"
+RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName,startedAt,updatedAt,createdAt"
 
 
 # DL109: on Windows a console child of a process with no visible console opens its own window; every gh and git
@@ -146,6 +146,19 @@ def pr_workflows(root) -> list:
         if _runs_on_every_pr_commit(block):
             out.append(p.name)
     return out
+
+
+def ci_wall(runs: list, state: str) -> dict:
+    """DL168: when the CI runs of one commit started and ended, for the ledger. Empty unless the state is final."""
+    if state not in ("success", "failure"):
+        return {}
+    starts = [r.get("startedAt") or r.get("createdAt") for r in runs if isinstance(r, dict)]
+    ends = [r.get("updatedAt") for r in runs if isinstance(r, dict)]
+    starts = [x for x in starts if isinstance(x, str) and x]
+    ends = [x for x in ends if isinstance(x, str) and x]
+    if not starts or not ends:
+        return {}
+    return {"run_started_at": min(starts), "run_completed_at": max(ends)}
 
 
 def ci_state_from_runs(runs: list[dict], required: list[str] | None = None) -> str:
@@ -313,7 +326,7 @@ class Watcher:
         if not branch or a.get("where") == "cloud-skip" or remote_seen is None:
             return None
         done = lambda by: {"state": "done", "done_by": by, "needs_check": by == "report-not-ready",
-                           "done_at": L.iso(self.now())}
+                           "done_at": L.iso(self.now()), "finished_at": L.iso(self.now())}
         if not remote_seen:                               # ls-remote answered, no such branch
             # Only a branch the ledger saw before counts as deleted. A branch that never appeared is an agent that
             # has not pushed yet (a late start is common); the session check after the ETA covers it (DL-32a).
@@ -327,7 +340,13 @@ class Watcher:
                 if rc == 0:
                     return done("merged")
         verdict = self._report_verdict(a, branch)
-        return done("report-" + verdict) if verdict else None
+        if not verdict:
+            return None
+        out = done("report-" + verdict)
+        rc, when, _ = self.read(["git", "log", "-1", "--format=%cI", "origin/%s" % branch])   # DL168: the report push
+        stamp = L.parse_iso(when.strip()) if rc == 0 and when.strip() else None
+        out["finished_at"] = L.iso(stamp) if stamp else out["done_at"]
+        return out
 
     def _apply_agent(self, idx: int, before: dict, changes: dict) -> None:
         def fn(led):
@@ -601,7 +620,7 @@ class Watcher:
             if runs is None:
                 continue
             state = ci_state_from_runs(runs, self.ci_required())
-            ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state}
+            ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state, **ci_wall(runs, state)}
             if state == "success" and train.get("state") != "green":
                 self._set_train(train, "green", ci=ci)
             elif state == "failure" and train.get("state") != "red":
@@ -644,7 +663,7 @@ class Watcher:
         state = ci_state_from_runs(runs, self.ci_required())
         if not moved and state != "success":
             return
-        ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state}
+        ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state, **ci_wall(runs, state)}
         if state == "success":
             self._set_train(train, "green", ci=ci)
             if self.flags["merge_on_green"]:
