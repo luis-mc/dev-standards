@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T12:10+00:00",
+  "updated": "2026-11-10T12:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6481,12 +6481,11 @@
       "id": "DS214",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-83: clang 19 in the pool image",
       "detail": "Fix forward: the MSVC CRT that cargo-xwin downloads needs clang >= 19 (STL1000), the image had 18.1.3. Pin LLVM_VERSION=19 (clang-19, lld-19, llvm-19 from Ubuntu 24.04), link all tools from it, self-check the version, join, CI, watcher merge, plugin update, pool-refresh (D178), tell the comics-organizer session before its 12:40 UTC round.",
-      "expected": "10 Nov ~12:27",
-      "changed": "2026-11-10T12:07+00:00",
-      "expected_basis": "edit+test from 12:08 ~8 min, CI 5, merge 2, rebuild 6",
+      "expected": "10 Nov",
+      "changed": "2026-11-10T12:20+00:00",
       "release": 83,
       "phases": [
         {
