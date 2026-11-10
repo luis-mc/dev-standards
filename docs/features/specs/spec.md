@@ -9,7 +9,6 @@ owner: agents
 type: reference
 code:
   - claude/plugins/specs/**
-  - tools/spec_check.py
   - tools/test_spec_check.py
 last_verified: 2026-11-01
 ---
@@ -67,7 +66,7 @@ flowchart LR
 
 ## 7. Design
 
-`claude/plugins/specs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. `tools/spec_check.py` is a symlink to it, so the repository's tests and CI run the same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
+`claude/plugins/specs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. The repository's tests and CI run that same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
 
 ## 8. Failure modes
 

@@ -143,7 +143,7 @@ jobs:
       # requirement definition — and they used to be validated in two separate
       # scripts, which made it easy to assume either covered the other.
       - name: Check numbering and internal references
-        run: python3 tools/spec_check.py
+        run: python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py
 
       # The spec-new template teaches the numbering rules, so it has to obey
       # them — a template that violates its own rule 11 teaches the violation
@@ -151,7 +151,7 @@ jobs:
       # default, because it is a skeleton rather than a binding spec.
       - name: Check the spec-new template obeys its own numbering rules
         run: |
-          python3 tools/spec_check.py \
+          python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py \
             claude/plugins/specs/skills/spec-new/assets/spec-template.md
 
       # The Stack Profile template is the document products copy, and nearly
@@ -162,7 +162,7 @@ jobs:
       # that meant something else entirely.
       - name: Check the Stack Profile template
         run: |
-          python3 tools/spec_check.py \
+          python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py \
             claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md
 
       # Also blocking, and it guards the gate itself. Every check in
@@ -177,7 +177,7 @@ jobs:
       # same numbering and reference rules as the other binding specs.
       - name: Check ARTIFACTSPEC numbering and references
         run: |
-          python3 tools/spec_check.py             claude/plugins/artifacts/references/artifactspec.md
+          python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py             claude/plugins/artifacts/references/artifactspec.md
 
       # Blocking, and now the whole check set. authspec_check.py holds the
       # checks that need AUTHSPEC's own content — §4 entity tables, §19.4
@@ -337,6 +337,9 @@ jobs:
 
       - name: Prove Option 4 (the fallback core and the launchers)
         run: python3 tools/test_delivery_fallback.py && python3 tools/test_delivery_fallback_launch.py
+
+      - name: Prove the cloud delivery scripts
+        run: python3 tools/test_delivery_cloud.py
 
   # STACKSPEC 7.0.0 section 13.6: once a train merges, cleanup.py removes its
   # branches, gate-result refs and worktrees. A cleanup that deletes a
@@ -604,6 +607,12 @@ jobs:
       - name: Prove claude-setup names every marketplace plugin
         run: python3 tools/test_claude_setup_plugins.py
 
+      - name: Prove the Rust checks in check_stack.py still hold
+        run: python3 tools/test_check_stack_rust.py
+
+      - name: Prove the questions stop hook still holds
+        run: python3 tools/test_questions_stop.py
+
   artifacts:
     name: artifact renderer, commands and hooks
     needs: areas
@@ -645,6 +654,9 @@ jobs:
       # AR66: a release with no Expected is headed "not scheduled" and passes R5.46.
       - name: Prove the AR66 artifact fix still holds
         run: python3 -I tools/test_artifacts_ar66.py
+
+      - name: Prove the AR67 artifact fix still holds
+        run: python3 -I tools/test_artifacts_ar67.py
 
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
@@ -695,7 +707,7 @@ jobs:
         run: python3 -I -m unittest discover -s claude/plugins/docs/tests -t claude/plugins/docs/tests
 
       - name: DOCSPEC numbering and references
-        run: python3 tools/spec_check.py claude/plugins/docs/references/docspec.md
+        run: python3 claude/plugins/specs/skills/spec-check/assets/spec_check.py claude/plugins/docs/references/docspec.md
 
       # The TypeScript guard templates run for real: fixture projects are built with
       # design_system.py, vitest (exact version, temp dir only) runs the four files.
