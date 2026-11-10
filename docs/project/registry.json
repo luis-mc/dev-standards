@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T11:42+00:00",
+  "updated": "2026-11-10T11:47+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3214,11 +3214,11 @@
       "id": "DL169",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool image: link clang as clang-cl (Ubuntu ships no clang-cl)",
       "detail": "RELEASE-81's DL167 self-check failed the pool build with exit 127: Ubuntu 24.04 clang-18 has no clang-cl binary or clang-cl-18. lld-link and llvm-lib are already on PATH. Fix: when clang-cl is missing, link /usr/lib/llvm-N/bin/clang as /usr/local/bin/clang-cl. Verified in an Ubuntu 24.04 container: self-check passes, clang-cl builds an MSVC object, llvm-lib makes a .lib.",
       "expected": "10 Nov",
-      "changed": "2026-11-10T11:42+00:00",
+      "changed": "2026-11-10T11:47+00:00",
       "rides": "DS213",
       "started": "2026-11-10T11:40+00:00"
     },
