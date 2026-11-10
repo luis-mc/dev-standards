@@ -177,7 +177,7 @@ class RefreshTests(unittest.TestCase):
 
     def test_refresh_with_no_change_still_rebuilds(self):
         self.env('POOL_MEM=8g\nPOOL_CPUS=4\nPOOL_BROWSERS=chromium\nRUNNER_SHA256=%s\nPLAYWRIGHT_VERSION=%s\n'
-                 % ('c' * 64, P.PLAYWRIGHT_VERSION))
+                 % (P.RUNNER_SHA256, P.PLAYWRIGHT_VERSION))  # DL165: a repeated-character hash is wrong, so the pinned one is used
         rp = P.refresh_plan(OfflineProbe(), 'main', [], 'chromium', P.PLAYWRIGHT_VERSION)
         self.assertEqual(rp['changes'], {})
         P.copy_pool_templates(self.pool)  # DL162: the pool files match, so only the .env is judged

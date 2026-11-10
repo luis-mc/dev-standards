@@ -462,6 +462,10 @@ flowchart LR
 
 **R13.85** — **Train ids on every path** (DL163). Every path that makes a train row takes the next free id of the day: `plan`, the CI record with `create`, the join script (which records its `into` branch with `create`), the post-tool hook and `link`. `link` for a PR and branch that no open row has makes a new row; it never attaches the PR to another branch's row. The write guard counts copies, so a ledger that already holds a duplicate id still loads, but a write cannot add another copy. `show` prints a warning for each duplicate id and says how to fix it.
 
+**R13.86** — **Pool refresh fixes a wrong runner hash** (DL165). A `RUNNER_SHA256` in the pool `.env` that is not 64 hex characters, or is one repeated character, is always wrong. When `RUNNER_VERSION` is the pinned version and the hash differs from the pinned hash, the plan lists `RUNNER_SHA256: <short old> -> <short pinned> (did not match the pinned hash for <version>)` and `--yes` writes the pinned hash. For another version it uses the released hash from `runner_sha`; when that cannot be read it keeps the value and says so in the plan. The doctor check `pool.<name>.runner-sha` warns when the hash is not the pinned or released hash for its version and names `pool-refresh --yes`. Tests never write to the real machine folder.
+
+**R13.87** — **Pool refresh reports the build truthfully** (DL166). When the build fails, `pool-refresh` prints `the rebuild failed: ...`, exits 1 and leaves the old container running. It reads the container id, the image the container runs and the tagged image id before the build and again after it. A changed tagged id is `image rebuilt`. A changed container id or container image is `container recreated`, and the command is not run again. Only when the tagged id is the same before and after, and the container is unchanged, does it say `image unchanged (cache hit)`.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:
