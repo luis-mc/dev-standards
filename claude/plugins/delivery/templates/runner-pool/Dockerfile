@@ -16,6 +16,22 @@ RUN apt-get update \
     build-essential pkg-config \
     libatomic1 xz-utils unzip zip jq \
  && rm -rf /var/lib/apt/lists/*
+# DL167: cargo-xwin needs clang-cl, lld-link and llvm-lib to build C/C++ crates for x86_64-pc-windows-msvc, and gcc cannot make MSVC-ABI objects.
+# Ubuntu keeps these under /usr/lib/llvm-<N>/bin (some only as clang-cl-<N>), so N is found at build time and linked into /usr/local/bin.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends clang lld llvm \
+ && rm -rf /var/lib/apt/lists/* \
+ && llvmdir="$(ls -d /usr/lib/llvm-* | sort -t- -k2 -n | tail -n 1)" \
+ && test -d "$llvmdir/bin" \
+ && n="${llvmdir##*-}" \
+ && for t in clang-cl lld-link llvm-lib llvm-ar llvm-rc lld; do \
+      command -v "$t" >/dev/null 2>&1 && continue; \
+      for c in "$llvmdir/bin/$t" "/usr/bin/$t-$n"; do \
+        if [ -x "$c" ]; then ln -sf "$c" "/usr/local/bin/$t"; break; fi; \
+      done; \
+    done
+# DL167: image self-check, so a broken LLVM install fails the build.
+RUN clang-cl --version && lld-link --version && llvm-lib /? >/dev/null
 # GitHub CLI (DL86): hosted runners preinstall gh, so workflows call `gh api` and `gh pr`. Pinned tarball, checked by SHA-256 like the runner.
 ARG GH_VERSION=2.103.3
 ARG GH_SHA256=4c806978ffce1cec70853302a56d70ac6da4f19bae7adca4e1a8ab00633dd91d
