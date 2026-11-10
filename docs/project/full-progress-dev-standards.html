@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-10T13:24+00:00",
+ "updated": "2026-11-10T14:01+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4118,12 +4118,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL171",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once",
    "detail": "D183: DL-42 matched docker ps inside docker exec as a kill; DL-63 read a hard-coded docs/artifacts registry; the plain-text question rule ran in two hooks with different code.",
-   "expected": "10 Nov ~13:57",
-   "changed": "2026-11-10T13:23+00:00",
-   "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T13:55+00:00",
    "rides": "DS217",
    "started": "2026-11-10T13:23+00:00"
   },
@@ -4131,12 +4130,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL172",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "project-setup holds no CI logic: move CI files to delivery",
    "detail": "D183: CONTRACT.md says tech-stack-setup carries no CI logic, but project-setup ships .githooks/pre-push, delivery-config.json, ci/dev-standards.yml and session_guard wiring. Move them into delivery templates; project-setup calls the installer.",
-   "expected": "10 Nov ~13:57",
-   "changed": "2026-11-10T13:23+00:00",
-   "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T13:56+00:00",
    "rides": "DS217",
    "started": "2026-11-10T13:23+00:00"
   },
@@ -4144,12 +4142,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL173",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Cross-plugin schema and version checks",
    "detail": "D183: artifacts reads .delivery/ledger.json without checking its schema field; nothing warns when installed luismc-* plugins are at versions that do not fit. Add the schema check and a doctor version-skew check.",
-   "expected": "10 Nov ~13:57",
-   "changed": "2026-11-10T13:23+00:00",
-   "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T13:56+00:00",
    "rides": "DS217",
    "started": "2026-11-10T13:23+00:00"
   },
@@ -4157,12 +4154,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL174",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "Runner-pool spec of its own inside luismc-delivery",
    "detail": "D181/D184: move R13.60-R13.89 text into docs/features/runner-pool/spec.md; each old R13 line stays as a one-line pointer so citations resolve.",
-   "expected": "10 Nov ~13:57",
-   "changed": "2026-11-10T13:24+00:00",
-   "expected_basis": "cloud agent from 13:22, 25-35 min measured",
+   "expected": "10 Nov",
+   "changed": "2026-11-10T13:56+00:00",
    "rides": "DS217",
    "started": "2026-11-10T13:24+00:00"
   },
@@ -7469,30 +7465,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "RELEASE-84: cleanup, hook fixes, bounds, version checks, pool spec",
    "detail": "Five cloud agents (DS217 cleanup, DL171 hook rules, DL172 project-setup/delivery bounds, DL173 schema and version-skew checks, DL174 runner-pool spec), then join, CI, watcher merge, plugin updates, smoke, cleanup.",
-   "expected": "10 Nov ~14:12",
-   "changed": "2026-11-10T13:21+00:00",
-   "expected_basis": "agents 25-35 min measured, join 10, CI 5, merge 2",
+   "expected": "10 Nov ~14:09",
+   "changed": "2026-11-10T14:01+00:00",
+   "expected_basis": "CI rerun on fixed head started 14:00, ~5 min; merge 1-4 min after",
    "release": 84,
    "phases": [
     {
      "name": "agents",
-     "start": "2026-11-10T13:22+00:00",
-     "end": "2026-11-10T13:57+00:00"
+     "start": "2026-11-10T13:27+00:00",
+     "end": "2026-11-10T13:44+00:00"
     },
     {
      "name": "join",
-     "start": "2026-11-10T13:57+00:00",
-     "end": "2026-11-10T14:05+00:00"
+     "start": "2026-11-10T13:52+00:00",
+     "end": "2026-11-10T14:00+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-10T14:05+00:00",
-     "end": "2026-11-10T14:10+00:00"
+     "start": "2026-11-10T14:00+00:00",
+     "end": "2026-11-10T14:05+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-10T14:10+00:00",
-     "end": "2026-11-10T14:12+00:00"
+     "start": "2026-11-10T14:05+00:00",
+     "end": "2026-11-10T14:09+00:00"
     }
    ],
    "started": "2026-11-10T13:21+00:00"
@@ -7504,10 +7500,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "status": "Running",
    "item": "Cleanup: screenshots, one-off migration, 4 CI steps, docs layout",
    "detail": "D180: delete 11 unreferenced CO669 screenshots and fix CO669.md; delete convert_interim_record.py and its test; add CI steps for 4 tests run nowhere; testing.md to guides, dated notes to archive, CI runs the plugin spec_check.py and the tools copy goes.",
-   "expected": "10 Nov ~13:57",
-   "changed": "2026-11-10T13:21+00:00",
-   "expected_basis": "cloud agent from 13:22, 25-35 min measured",
-   "rides": "DS217",
+   "expected": "10 Nov ~14:20",
+   "changed": "2026-11-10T13:56+00:00",
+   "expected_basis": "rerun cloud agent launched 13:55, 25 min",
+   "rides": "DS220",
    "started": "2026-11-10T13:21+00:00"
   },
   {
@@ -7520,6 +7516,41 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "expected": "10 Nov ~15:30",
    "changed": "2026-11-10T13:21+00:00",
    "expected_basis": "starts after RELEASE-84 ~14:12; agent ~60 min, join, CI"
+  },
+  {
+   "id": "DS220",
+   "owner": "project",
+   "app": "",
+   "status": "Running",
+   "item": "RELEASE-85: leftover cleanup (DS218 rerun)",
+   "detail": "Carries DS218, rerun from current main after the first run branched from a 3 Nov commit. Joins after RELEASE-84 merges.",
+   "expected": "10 Nov ~14:37",
+   "changed": "2026-11-10T13:56+00:00",
+   "expected_basis": "DS218 cloud agent launched 13:55, 25 min",
+   "release": 85,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-10T13:55+00:00",
+     "end": "2026-11-10T14:20+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-10T14:20+00:00",
+     "end": "2026-11-10T14:28+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-10T14:28+00:00",
+     "end": "2026-11-10T14:33+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-10T14:33+00:00",
+     "end": "2026-11-10T14:37+00:00"
+    }
+   ],
+   "started": "2026-11-10T13:56+00:00"
   },
   {
    "id": "DU1",
@@ -8115,19 +8146,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-10T13:24+00:00">10 Nov 13:24</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-10T14:01+00:00">10 Nov 14:01</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">6 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
 <ul>
-<li data-glance-task="DL171"><span class="task-id">DL171</span>Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once <span class="glance-expected">10 Nov ~13:57</span><span class="glance-basis">cloud agent from 13:22, 25-35 min measured</span></li>
-<li data-glance-task="DL172"><span class="task-id">DL172</span>project-setup holds no CI logic: move CI files to delivery <span class="glance-expected">10 Nov ~13:57</span><span class="glance-basis">cloud agent from 13:22, 25-35 min measured</span></li>
-<li data-glance-task="DL173"><span class="task-id">DL173</span>Cross-plugin schema and version checks <span class="glance-expected">10 Nov ~13:57</span><span class="glance-basis">cloud agent from 13:22, 25-35 min measured</span></li>
-<li data-glance-task="DL174"><span class="task-id">DL174</span>Runner-pool spec of its own inside luismc-delivery <span class="glance-expected">10 Nov ~13:57</span><span class="glance-basis">cloud agent from 13:22, 25-35 min measured</span></li>
-<li data-glance-task="DS218"><span class="task-id">DS218</span>Cleanup: screenshots, one-off migration, 4 CI steps, docs layout <span class="glance-expected">10 Nov ~13:57</span><span class="glance-basis">cloud agent from 13:22, 25-35 min measured</span></li>
-<li data-glance-task="DS217"><span class="task-id">DS217</span><span class="release-name">RELEASE-84</span>cleanup, hook fixes, bounds, version checks, pool spec <span class="glance-expected">10 Nov ~14:12</span><span class="glance-basis">agents 25-35 min measured, join 10, CI 5, merge 2</span></li>
+<li data-glance-task="DS217"><span class="task-id">DS217</span><span class="release-name">RELEASE-84</span>cleanup, hook fixes, bounds, version checks, pool spec <span class="glance-expected">10 Nov ~14:09</span><span class="glance-basis">CI rerun on fixed head started 14:00, ~5 min; merge 1-4 min after</span></li>
+<li data-glance-task="DS218"><span class="task-id">DS218</span>Cleanup: screenshots, one-off migration, 4 CI steps, docs layout <span class="glance-expected">10 Nov ~14:20</span><span class="glance-basis">rerun cloud agent launched 13:55, 25 min</span></li>
+<li data-glance-task="DS220"><span class="task-id">DS220</span><span class="release-name">RELEASE-85</span>leftover cleanup (DS218 rerun) <span class="glance-expected">10 Nov ~14:37</span><span class="glance-basis">DS218 cloud agent launched 13:55, 25 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">4 tasks</span></summary>
+<ul>
+<li data-glance-task="DL172"><span class="task-id">DL172</span>project-setup holds no CI logic: move CI files to delivery</li>
+<li data-glance-task="DL173"><span class="task-id">DL173</span>Cross-plugin schema and version checks</li>
+<li data-glance-task="DL174"><span class="task-id">DL174</span>Runner-pool spec of its own inside luismc-delivery</li>
+<li data-glance-task="DL171"><span class="task-id">DL171</span>Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">75 tasks</span></summary>
@@ -8144,31 +8180,44 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">490</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">490</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">4</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS217 (cleanup, hook fixes, bounds, version checks, pool spec) expected live about 14:12." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">13:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">13:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">14:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">14:30</text></g>
+<div class="timeline-scroll"><svg viewBox="0 0 960 226" role="img" aria-label="Next releases: DS217 (cleanup, hook fixes, bounds, version checks, pool spec) expected live about 14:09; DS220 (leftover cleanup (DS218 rerun)) expected live about 14:37." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="202"/><text x="200" y="28">13:00</text><line class="rt-grid" x1="330" y1="36" x2="330" y2="202"/><text x="330" y="28">13:30</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="202"/><text x="460" y="28">14:00</text><line class="rt-grid" x1="590" y1="36" x2="590" y2="202"/><text x="590" y="28">14:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="202"/><text x="720" y="28">15:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-84 · cleanup, hook fixes, bounds, version checks, pool spec</title>RELEASE-84 · cleanup, hoo…</text>
-<text class="rt-sub" x="0" y="77"><title>DL171, DL172, DL173, DL174, DS218</title>DL171, DL172, DL173, DL174, DS218</text>
-<rect class="rt-bar agents" x="327.1" y="52" width="202.2" height="22"><title>agents 13:22-13:57</title></rect>
-<rect class="rt-bar join" x="529.3" y="52" width="46.2" height="22"><title>join 13:57-14:05</title></rect>
-<rect class="rt-bar ci" x="575.6" y="52" width="28.9" height="22"><title>PR CI 14:05-14:10</title></rect>
-<rect class="rt-bar merge" x="604.4" y="52" width="11.6" height="22"><title>merge + cleanup 14:10-14:12</title></rect>
-<polygon class="rt-expected" points="616,50 624,63 616,76 608,63"/>
-<text class="rt-live-label" x="616" y="92">live ~14:12</text>
-<line class="rt-now" x1="338.7" y1="36" x2="338.7" y2="148"/><text class="rt-now-label" x="338.7" y="161">now 13:24</text>
+<text class="rt-sub" x="0" y="77"><title>DL171, DL172, DL173, DL174</title>DL171, DL172, DL173, DL174</text>
+<rect class="rt-bar agents" x="317" y="52" width="73.7" height="22"><title>agents 13:27-13:44</title></rect>
+<rect class="rt-bar join" x="425.3" y="52" width="34.7" height="22"><title>join 13:52-14:00</title></rect>
+<rect class="rt-bar ci" x="460" y="52" width="21.7" height="22"><title>PR CI 14:00-14:05</title></rect>
+<rect class="rt-bar merge" x="481.7" y="52" width="17.3" height="22"><title>merge + cleanup 14:05-14:09</title></rect>
+<polygon class="rt-expected" points="499,50 507,63 499,76 491,63"/>
+<text class="rt-live-label" x="499" y="92">live ~14:09</text>
+<text class="rt-name" x="0" y="122"><title>RELEASE-85 · leftover cleanup (DS218 rerun)</title>RELEASE-85 · leftover cle…</text>
+<text class="rt-sub" x="0" y="139"><title>DS218</title>DS218</text>
+<rect class="rt-bar agents" x="438.3" y="114" width="108.3" height="22"><title>agents 13:55-14:20</title></rect>
+<rect class="rt-bar join" x="546.7" y="114" width="34.7" height="22"><title>join 14:20-14:28</title></rect>
+<rect class="rt-bar ci" x="581.3" y="114" width="21.7" height="22"><title>PR CI 14:28-14:33</title></rect>
+<rect class="rt-bar merge" x="603" y="114" width="17.3" height="22"><title>merge + cleanup 14:33-14:37</title></rect>
+<polygon class="rt-expected" points="620.3,112 628.3,125 620.3,138 612.3,125"/>
+<text class="rt-live-label" x="620.3" y="154">live ~14:37</text>
+<line class="rt-now" x1="464.3" y1="36" x2="464.3" y2="210"/><text class="rt-now-label" x="464.3" y="223">now 14:01</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-84" open><summary><strong>RELEASE-84 · live ~14:12</strong><span class="fold-count">6 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-84" open><summary><strong>RELEASE-84 · live ~14:09</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS217"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS217</span><span class="release-name">RELEASE-84</span>cleanup, hook fixes, bounds, version checks, pool spec</td><td data-label="App / service"></td><td data-label="Detail">Five cloud agents (DS217 cleanup, DL171 hook rules, DL172 project-setup/delivery bounds, DL173 schema and version-skew checks, DL174 runner-pool spec), then join, CI, watcher merge, plugin updates, smoke, cleanup.</td><td data-label="Expected">10 Nov ~14:12<span class="expected-basis">agents 25-35 min measured, join 10, CI 5, merge 2</span></td></tr>
-<tr data-task="DL171"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL171</span>Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once</a></td><td data-label="App / service"></td><td data-label="Detail">D183: DL-42 matched docker ps inside docker exec as a kill; DL-63 read a hard-coded docs/artifacts registry; the plain-text question rule ran in two hooks with different code.</td><td data-label="Expected">10 Nov ~13:57<span class="expected-basis">cloud agent from 13:22, 25-35 min measured</span></td></tr>
-<tr data-task="DL172"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL172</span>project-setup holds no CI logic: move CI files to delivery</a></td><td data-label="App / service"></td><td data-label="Detail">D183: CONTRACT.md says tech-stack-setup carries no CI logic, but project-setup ships .githooks/pre-push, delivery-config.json, ci/dev-standards.yml and session_guard wiring. Move them into delivery templates; project-setup calls the installer.</td><td data-label="Expected">10 Nov ~13:57<span class="expected-basis">cloud agent from 13:22, 25-35 min measured</span></td></tr>
-<tr data-task="DL173"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL173</span>Cross-plugin schema and version checks</a></td><td data-label="App / service"></td><td data-label="Detail">D183: artifacts reads .delivery/ledger.json without checking its schema field; nothing warns when installed luismc-* plugins are at versions that do not fit. Add the schema check and a doctor version-skew check.</td><td data-label="Expected">10 Nov ~13:57<span class="expected-basis">cloud agent from 13:22, 25-35 min measured</span></td></tr>
-<tr data-task="DL174"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL174</span>Runner-pool spec of its own inside luismc-delivery</a></td><td data-label="App / service"></td><td data-label="Detail">D181/D184: move R13.60-R13.89 text into docs/features/runner-pool/spec.md; each old R13 line stays as a one-line pointer so citations resolve.</td><td data-label="Expected">10 Nov ~13:57<span class="expected-basis">cloud agent from 13:22, 25-35 min measured</span></td></tr>
-<tr data-task="DS218"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS218</span>Cleanup: screenshots, one-off migration, 4 CI steps, docs layout</td><td data-label="App / service"></td><td data-label="Detail">D180: delete 11 unreferenced CO669 screenshots and fix CO669.md; delete convert_interim_record.py and its test; add CI steps for 4 tests run nowhere; testing.md to guides, dated notes to archive, CI runs the plugin spec_check.py and the tools copy goes.</td><td data-label="Expected">10 Nov ~13:57<span class="expected-basis">cloud agent from 13:22, 25-35 min measured</span></td></tr>
+<tr data-task="DS217"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS217</span><span class="release-name">RELEASE-84</span>cleanup, hook fixes, bounds, version checks, pool spec</td><td data-label="App / service"></td><td data-label="Detail">Five cloud agents (DS217 cleanup, DL171 hook rules, DL172 project-setup/delivery bounds, DL173 schema and version-skew checks, DL174 runner-pool spec), then join, CI, watcher merge, plugin updates, smoke, cleanup.</td><td data-label="Expected">10 Nov ~14:09<span class="expected-basis">CI rerun on fixed head started 14:00, ~5 min; merge 1-4 min after</span></td></tr>
+<tr data-task="DL171"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL171</span>Hook rules: DL-42 per segment, DL-63 follows record_dir, Q-2 once</a></td><td data-label="App / service"></td><td data-label="Detail">D183: DL-42 matched docker ps inside docker exec as a kill; DL-63 read a hard-coded docs/artifacts registry; the plain-text question rule ran in two hooks with different code.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL172"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL172</span>project-setup holds no CI logic: move CI files to delivery</a></td><td data-label="App / service"></td><td data-label="Detail">D183: CONTRACT.md says tech-stack-setup carries no CI logic, but project-setup ships .githooks/pre-push, delivery-config.json, ci/dev-standards.yml and session_guard wiring. Move them into delivery templates; project-setup calls the installer.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL173"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL173</span>Cross-plugin schema and version checks</a></td><td data-label="App / service"></td><td data-label="Detail">D183: artifacts reads .delivery/ledger.json without checking its schema field; nothing warns when installed luismc-* plugins are at versions that do not fit. Add the schema check and a doctor version-skew check.</td><td data-label="Expected">10 Nov</td></tr>
+<tr data-task="DL174"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL174</span>Runner-pool spec of its own inside luismc-delivery</a></td><td data-label="App / service"></td><td data-label="Detail">D181/D184: move R13.60-R13.89 text into docs/features/runner-pool/spec.md; each old R13 line stays as a one-line pointer so citations resolve.</td><td data-label="Expected">10 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold release-group" data-group="release-85" open><summary><strong>RELEASE-85 · live ~14:37</strong><span class="fold-count">2 tasks</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DS220"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS220</span><span class="release-name">RELEASE-85</span>leftover cleanup (DS218 rerun)</td><td data-label="App / service"></td><td data-label="Detail">Carries DS218, rerun from current main after the first run branched from a 3 Nov commit. Joins after RELEASE-84 merges.</td><td data-label="Expected">10 Nov ~14:37<span class="expected-basis">DS218 cloud agent launched 13:55, 25 min</span></td></tr>
+<tr data-task="DS218"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS218</span>Cleanup: screenshots, one-off migration, 4 CI steps, docs layout</td><td data-label="App / service"></td><td data-label="Detail">D180: delete 11 unreferenced CO669 screenshots and fix CO669.md; delete convert_interim_record.py and its test; add CI steps for 4 tests run nowhere; testing.md to guides, dated notes to archive, CI runs the plugin spec_check.py and the tools copy goes.</td><td data-label="Expected">10 Nov ~14:20<span class="expected-basis">rerun cloud agent launched 13:55, 25 min</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
@@ -8688,7 +8737,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905284"><time datetime="2026-11-10T13:24+00:00">10 Nov 13:24</time></td><td data-label="Tasks">DL1 to DL174</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">4 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905316"><time datetime="2026-11-10T13:56+00:00">10 Nov 13:56</time></td><td data-label="Tasks">DL1 to DL174</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">4 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
