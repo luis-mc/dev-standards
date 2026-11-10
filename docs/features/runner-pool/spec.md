@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.2.0
+version: 0.3.0
 owner: agents
 type: reference
 code:
@@ -86,6 +86,12 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.18** (was delivery R13.71) — **Setup asks about Windows installers** (DL149). `/delivery-ci-setup` asks whether the project builds Windows installers on Linux and suggests yes when the repository has `*.wxs` files. Yes adds `windows-packaging` to `pool.layers`. It also names `.delivery/pool.apt`.
 
+**R5.19** — **A pool plan keeps what the pool has** (DL176). `pool-plan` and `pool-run` take `--browsers none|chromium`. With no flag, the plan keeps `POOL_BROWSERS` from the pool `.env`; repository detection may raise `none` to `chromium` and never lowers it. The plan also keeps `POOL_LAYERS`, `POOL_APT`, `POOL_LAYER_SOURCES` and `PLAYWRIGHT_VERSION`, and the pool files it writes keep every other `.env` line. `--drop-layer`, `--drop-apt` and `--playwright` change them, as in `pool-refresh` (R5.11, R5.12).
+
+**R5.20** — **A stable cap that does not shrink by accident** (DL176). The memory used outside WSL is the median of about 5 samples taken 1 second apart, so another program's short spike does not cut the room. The plan prints its inputs: the machine total, the memory used outside WSL, the 85% budget, the room and the Docker ceiling. A `--resize` that would lower `POOL_MEM` or `POOL_CPUS` below the `.env` refuses with a plain message and changes nothing, unless the owner passes `--shrink`.
+
+**R5.21** — **The owner sets the pool size** (DL176). `--cpus` and `--used-gib` are machine numbers: this machine's CPU count and the memory used outside WSL. `--pool-gib N` and `--pool-cpus N` are the owner's target for the pool. The plan uses them as given when they fit the 85% memory budget (the pool, the sidecar and the VM headroom), the 60% CPU budget, the floors (4 GiB, 2 CPUs) and 1.5 GiB per CPU. Otherwise it refuses and names the budget that is short. The `.wslconfig` memory and processors rise to fit.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -102,6 +108,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.1 to R5.8 | `tools/test_delivery_runner.py`, `claude/plugins/delivery/tests/test_load.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R5.9 to R5.16 | `claude/plugins/delivery/tests/test_runner_pool.py`, `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_dl155_pool_refresh_shared.py`, `claude/plugins/delivery/tests/test_dl162_pool_refresh_files.py`, `claude/plugins/delivery/tests/test_dl165_pool_refresh_hash_result.py`, `claude/plugins/delivery/tests/test_dl167_pool_llvm.py` |
 | R5.17, R5.18 | `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_doctor.py` |
+| R5.19 to R5.21 | `claude/plugins/delivery/tests/test_dl176_pool_resize.py`, `claude/plugins/delivery/tests/test_dl103_pool_keep_cap.py` |
 
 ## 12. Code map
 
@@ -115,4 +122,5 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.0 | 2026-11-10 | RELEASE-87 | Pool plans keep browsers, layers, apt and Playwright from the pool .env; the memory figure is a median of samples; a --resize that lowers the cap needs --shrink; --pool-gib and --pool-cpus set the pool size (R5.19 to R5.21). | DL176 |
 | 0.2.0 | 2026-11-10 | RELEASE-84 | Runner-pool requirements move here from the delivery spec (D181, D184); old IDs stay as pointers. | DL174 |
