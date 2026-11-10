@@ -178,9 +178,21 @@ def check_label_text(text, cfg, ledger):
              'train label or branch name.' % ', '.join('"%s"' % h for h in sorted(hits)))]
 
 
+QUOTED_RE = re.compile(r'"[^"\n]*"|\u201c[^\u201d\n]*\u201d|\u2018[^\u2019\n]*\u2019(?=\W|$)')
+NO_QUESTION_RE = re.compile(r"^\W*(?:no|zero|none|there (?:are|is) no)\b[^.\n]*\bquestions?\b[^\n]*$", re.I)
+
+
+def question_text(line):
+    """DL171: the line without quoted text and code spans, so a `?` inside them is not a question."""
+    return QUOTED_RE.sub(' ', CODE_SPAN_RE.sub(' ', line))
+
+
 def trailing_questions(text):
-    """The question lines of a numbered or bulleted list that closes the reply; [] when none (D8 Q-2)."""
-    lines = [l for l in prose(text).rstrip().splitlines()]
+    """The question lines of a numbered or bulleted list that closes the reply; [] when none (D8 Q-2).
+    Block quotes, code, quoted text and a closing "no questions for you" line do not count."""
+    lines = [l for l in prose(text).rstrip().splitlines() if not l.lstrip().startswith('>')]
+    while lines and (not lines[-1].strip() or NO_QUESTION_RE.match(lines[-1].strip())):
+        lines.pop()
     items = []
     for line in reversed(lines):
         if not line.strip():
@@ -194,7 +206,7 @@ def trailing_questions(text):
             break
         items.append(m.group(1))
     items.reverse()
-    asked = [i for i in items if '?' in i]
+    asked = [i for i in items if '?' in question_text(i)]
     return asked if len(items) >= 2 and len(asked) * 2 >= len(items) else []
 
 
@@ -532,7 +544,9 @@ def _owner_tz(cfg):
 
 
 def check_registry(root, cfg, at):
-    reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
+    reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
+    if reg is None:      # older projects keep the record in docs/artifacts
+        reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
     tasks = reg.get('tasks') if isinstance(reg, dict) else None
     if not isinstance(tasks, list):
         return []

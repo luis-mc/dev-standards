@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-"""Stop hook: enforce the clarifying-questions rule (Q-1, Q-2).
+"""Stop hook: enforce the parked-questions rule (Q-1, Q-5).
 
-Blocks the stop (exit 2, reason on stderr) when the final reply
-  1. asks the owner something in plain text: the last paragraph ends with a
-     question mark addressed to the owner, or lists options to pick from; or
-  2. says questions are parked or will be asked later,
-and the turn made no AskUserQuestion call. Claude then gathers every open
+Q-2 (a question asked in plain text) is no longer checked here (DL171): it lives only in
+the delivery plugin's hook_stop.py.
+
+Blocks the stop (exit 2, reason on stderr) when the final reply says questions are
+parked or will be asked later, and the turn made no AskUserQuestion call. Claude then gathers every open
 question and asks them in one AskUserQuestion batch.
 
 Allowed without a block:
   - stop_hook_active is true (never loops);
   - the turn has an AskUserQuestion call;
-  - point 2 only: agents of the wave still run, so Q-5 lets the question park
+  - agents of the wave still run, so Q-5 lets the question park
     (the project's .delivery/ledger.json has an agent in state queued/running,
     or an agent with an ETA (agent-eta) that is not finished (agent-done));
     an agent due within 60 minutes makes the hook say questions wait for its report;
-  - questions inside code blocks, inline code or quoted ("> ") lines;
   - any error: the hook fails open.
 
 Input: the Stop JSON on stdin (last_assistant_message, transcript_path,
@@ -37,10 +36,6 @@ from pathlib import Path
 OFF = {"0", "off", "false", "no"}
 ASK_TOOL = "AskUserQuestion"
 
-# A question mark addressed to the owner: second person, or the agent asking leave.
-ADDRESSED = re.compile(
-    r"\b(you|your|yours|should i|shall i|can i|may i|do i|want me|would it help|"
-    r"which (one|option|of)|let me know|prefer)\b", re.I)
 PARKED = re.compile(
     r"\b(i will ask|i'll ask|will ask (you )?(these |them |this |it )?later|"
     r"ask (you )?(these |them |this |it )?later|questions? (are |is |were |stay |remain )?parked|"
@@ -48,12 +43,6 @@ PARKED = re.compile(
     r"(?:there are|there's|i have|i've got|still|remaining|some|several|a few|\d+) (?!no\b|not\b|zero\b)(?:\w+ )?open questions?|"
     r"still to ask|questions? (still )?to ask|"
     r"waiting (on|for) your (decision|answer|input|reply))\b", re.I)
-# A line that offers a list for the owner to choose from (not "Files changed:").
-CHOOSE_HEAD = re.compile(
-    r"(\?\W*$|^\W*(please )?(pick|choose|select|decide)\b|\b(pick|choose|select) (one|from|between|a|an)\b|"
-    r"\bwhich (one|option|of)\b|\byour call\b|\blet me know which\b|^\W*(options?|choices?)\W*$)", re.I)
-ITEM = re.compile(r"^\s*(?:[-*+]|\d{1,2}[.)]|\(?[A-Da-d][.)])\s+\S")
-OPTION_LINE = re.compile(r"^\s*(?:\*\*)?option\s+[A-Za-z0-9]\b", re.I)
 
 
 def disabled(home):
@@ -78,28 +67,6 @@ def strip_noise(text):
     text = re.sub(r"~~~.*?(~~~|\Z)", "", text, flags=re.S)
     text = re.sub(r"`[^`\n]*`", "", text)
     return "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith(">"))
-
-
-def blocks(text):
-    return [b for b in re.split(r"\n\s*\n", text.strip()) if b.strip()]
-
-
-def plain_question(text):
-    """True when the last paragraph asks the owner something."""
-    paras = blocks(text)
-    if not paras:
-        return False
-    last = paras[-1]
-    lines = [ln for ln in last.splitlines() if ln.strip()]
-    items = [ln for ln in lines if ITEM.match(ln) or OPTION_LINE.match(ln)]
-    if len(items) >= 2:
-        head = [ln for ln in lines if ln not in items]
-        if len(items) == len(lines) and len(paras) > 1:
-            head = [ln for ln in paras[-2].splitlines() if ln.strip()]
-        # Only the line just above the list counts, and it must read as an offer.
-        return bool(head) and bool(CHOOSE_HEAD.search(head[-1].strip()))
-    tail = lines[-1].rstrip().rstrip("*_)\"'” ")
-    return tail.endswith("?") and bool(ADDRESSED.search(last))
 
 
 def read_turn(path):
@@ -204,10 +171,6 @@ def decide(data, home):
     if asked or not isinstance(text, str) or not text.strip():
         return None
     final = strip_noise(text)
-    if plain_question(final):
-        return ("Q-2: you asked the owner a question in plain text. Gather every open question "
-                "and ask them in one AskUserQuestion batch (several calls when more than 4). "
-                "Each question carries its own context.")
     if PARKED.search(final):
         running, soon = agents_running([data.get("cwd"), os.environ.get("CLAUDE_PROJECT_DIR")])
         if running:
