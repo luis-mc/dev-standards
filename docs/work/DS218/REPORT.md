@@ -20,3 +20,10 @@ Base check: `git merge-base --is-ancestor 828faa65 HEAD` passed. origin/main dat
 - python3 -I tools/test_delivery_cloud.py: OK
 - python3 -I tools/test_questions_stop.py: 0 problems
 - docs_check.py: G1 (generated files) expected; M1 handled by commit line `Docs: none, repo cleanup (D180)`.
+
+## CI: spec-lint.yml on DS218-leftover-cleanup (run 42829350761)
+Every job ended success or skipped, except `docs check`: failure from G1 (generated files) and W1 (this report), both expected. First pass had jobs cancelled by the runner (not by a test); they were re-run and passed, including the artifact renderer job with the new ar67 step, the model profiles job with the two new steps, and delivery CI scripts with the cloud step.
+
+Branch head SHA: see `git log -1` of DS218-leftover-cleanup (report written before the final commit).
+
+READY
