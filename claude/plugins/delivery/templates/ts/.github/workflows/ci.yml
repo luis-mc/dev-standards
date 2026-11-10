@@ -51,6 +51,13 @@ on:
   # pull requests run no CI, so this run is the agent's gate. It plans what the branch brings since the default
   # branch (the `plan` job below).
   workflow_dispatch:
+    inputs:
+      # DL181: set by the `rest` job only. The jobs named here run now; the other holdable jobs are skipped
+      # because the run that dispatched this one already ran them. Empty on a manual run.
+      only:
+        description: 'Jobs to run now (integration, e2e-shard); empty runs everything the plan selects'
+        required: false
+        default: ''
 
 concurrency:
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main
@@ -121,9 +128,16 @@ jobs:
     permissions:
       contents: read
     outputs:
-      integration: ${{ steps.areas.outputs.integration }}
-      e2e: ${{ steps.areas.outputs.e2e }}
+      # DL181: a job held back for the second run reads as a planned skip ('false'), so the job conditions and
+      # the `e2e` aggregator need no new clause.
+      integration: ${{ contains(format(',{0},', steps.rerun.outputs.held), ',integration,') && 'false' || steps.areas.outputs.integration }}
+      e2e: ${{ contains(format(',{0},', steps.rerun.outputs.held), ',e2e-shard,') && 'false' || steps.areas.outputs.e2e }}
       scope: ${{ steps.scope.outputs.scope }}
+      # DL181: `held` lists the jobs held back for a second run ('' unless scripts/delivery/ci-areas.json
+      # has "rerun_first": true and the previous head had jobs that did not pass). `rerun` is 'true' when the
+      # `e2e` job must dispatch that second run.
+      rerun: ${{ steps.rerun.outputs.rerun }}
+      held: ${{ steps.rerun.outputs.held }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -149,6 +163,32 @@ jobs:
           else
             python3 scripts/delivery/area_select.py --all --github-output \
               || echo "::warning::runner plan failed; every job runs"
+          fi
+
+      # DL181, opt in with "rerun_first": true in scripts/delivery/ci-areas.json. A new push runs first the jobs
+      # that did not pass on the previous head; the ones that passed are held back and a second run does them
+      # (the last step of `e2e`). Any doubt or error leaves `held` empty: every job runs, as before. Not for fork PRs.
+      - name: Put the jobs that have not passed first
+        id: rerun
+        if: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository) || (github.event_name == 'workflow_dispatch' && inputs.only != '') }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          ONLY: ${{ inputs.only }}
+          HEAD_REF: ${{ github.head_ref }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          SELECTED_INTEGRATION: ${{ steps.areas.outputs.integration }}
+          SELECTED_E2E: ${{ steps.areas.outputs.e2e }}
+        run: |
+          if [ "$EVENT" = workflow_dispatch ]; then
+            python3 scripts/delivery/ci_rerun_first.py --only "$ONLY" || echo "::warning::rerun-first failed; every job runs"
+          else
+            selected=""
+            [ "$SELECTED_INTEGRATION" != false ] && selected="integration"
+            [ "$SELECTED_E2E" != false ] && selected="${selected:+$selected,}e2e-shard"
+            python3 scripts/delivery/ci_rerun_first.py --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
+              --branch "$HEAD_REF" --sha "$HEAD_SHA" --selected "$selected" \
+              || echo "::warning::rerun-first failed; every job runs"
           fi
 
       # Optional (scripts/delivery/ci-scope.json present): full / ci-smoke / affected (DL-80). Jobs that want the
@@ -480,7 +520,7 @@ jobs:
       DELIVERY_SHARD: e2e
     permissions:
       contents: read
-      actions: read
+      actions: write
     steps:
       - name: Every shard passed
         env:
@@ -495,6 +535,19 @@ jobs:
             exit 0
           fi
           [ "$SHARDS" = "success" ]
+
+      # DL181: the first set passed (the step above failed otherwise); now start the second run with the jobs
+      # that passed on the previous head. If the dispatch fails this step fails, so a held job is never forgotten.
+      # Until that run ends the held jobs read as skipped here: do not merge before it finishes.
+      - name: Dispatch the second run (jobs held back by rerun-first)
+        if: ${{ needs.plan.outputs.rerun == 'true' && needs.verify.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.integration.result) }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HELD: ${{ needs.plan.outputs.held }}
+          BRANCH: ${{ github.head_ref }}
+        run: |
+          gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH" -f only="$HELD"
+          echo "Second run dispatched on $BRANCH for: $HELD. Wait for it before merging." | tee -a "$GITHUB_STEP_SUMMARY"
 
       # Opt in with the repository variable CI_RUN_TIMES=true (DL-82). The report is the LAST STEP of the last job, not
       # a job of its own: a job of its own waits for a runner and pays its start-up for a few seconds of work (DL16).
