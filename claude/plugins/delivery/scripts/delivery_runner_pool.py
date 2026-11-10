@@ -143,28 +143,47 @@ class Probe:
         except Exception:  # noqa: BLE001
             return None, None
 
-    def wsl_vm_gib(self):
-        """Memory held by the WSL VM (vmmem / vmmemWSL) in GiB; 0.0 when there is none or it cannot be read."""
+    def wsl_vm_parts(self):
+        """(working set GiB, private bytes GiB) of vmmem / vmmemWSL; (0.0, 0.0) when there is none or it cannot be read.
+        DL177: Windows trims the working set, so it alone under-reads the VM; private bytes are steadier."""
         if not self.platform.startswith('win'):
-            return 0.0
+            return 0.0, 0.0
         r = self.sh(['powershell', '-NoProfile', '-Command',
-                     "(Get-Process -Name vmmem,vmmemWSL -ErrorAction SilentlyContinue | Measure-Object WorkingSet64 -Sum).Sum"])
-        text = r[1].strip() if r and r[0] == 0 else ''
-        return round(int(text) / 2.0 ** 30, 1) if text.isdigit() else 0.0
+                     "$p = Get-Process -Name vmmem,vmmemWSL -ErrorAction SilentlyContinue; "
+                     "($p | Measure-Object WorkingSet64 -Sum).Sum; ($p | Measure-Object PrivateMemorySize64 -Sum).Sum"])
+        lines = [x.strip() for x in (r[1].splitlines() if r and r[0] == 0 else [])]
+        nums = [x for x in lines if x]
+        vals = [round(int(x) / 2.0 ** 30, 1) if x.isdigit() else 0.0 for x in nums[:2]]
+        while len(vals) < 2:
+            vals.append(0.0)
+        return vals[0], vals[1]
+
+    def wsl_vm_gib(self):
+        """Memory held by the WSL VM in GiB: the larger of the vmmem working set and its private bytes (DL177); 0.0 when
+        there is none or it cannot be read. detect_host also floors it at what the containers use."""
+        return max(self.wsl_vm_parts())
+
+    def docker_run(self, args, timeout=60):
+        """Run `docker <args>`. On Windows try the docker CLI on PATH first (Docker Desktop installs it) and fall back to
+        `wsl docker` only when that cannot run (DL177). Returns the sh result or None."""
+        r = self.sh(['docker'] + list(args), timeout=timeout)
+        if self.platform.startswith('win') and (r is None or r[0] != 0):
+            r2 = self.sh(['wsl', 'docker'] + list(args), timeout=timeout)
+            if r2 is not None and r2[0] == 0:
+                return r2
+        return r
 
     def docker_cpus(self):
-        """CPUs Docker sees (`docker info --format {{.NCPU}}`, inside WSL on Windows), or None when Docker cannot be read."""
-        pre = ['wsl'] if self.platform.startswith('win') else []
-        r = self.sh(pre + ['docker', 'info', '--format', '{{.NCPU}}'])
+        """CPUs Docker sees (`docker info --format {{.NCPU}}`), or None when Docker cannot be read."""
+        r = self.docker_run(['info', '--format', '{{.NCPU}}'])
         text = r[1].replace('\x00', '').strip() if r and r[0] == 0 else ''
         return int(text) if text.isdigit() and int(text) > 0 else None
 
     def container_gib(self):
         """{'pool': GiB used by this pool's containers, 'other': GiB used by other containers, 'others': [names]}.
-        Reads `docker ps` and `docker stats` (inside WSL on Windows). Zeros when Docker cannot be read."""
-        pre = ['wsl'] if self.platform.startswith('win') else []
-        names = self.sh(pre + ['docker', 'ps', '--format', '{{.Names}}\t{{.Label "' + LABEL + '"}}\t{{.Label "com.docker.compose.project"}}'])
-        stats = self.sh(pre + ['docker', 'stats', '--no-stream', '--format', '{{.Name}}\t{{.MemUsage}}'])
+        Reads `docker ps` and `docker stats` (Windows: the docker CLI first, then inside WSL). Zeros when Docker cannot be read."""
+        names = self.docker_run(['ps', '--format', '{{.Names}}\t{{.Label "' + LABEL + '"}}\t{{.Label "com.docker.compose.project"}}'])
+        stats = self.docker_run(['stats', '--no-stream', '--format', '{{.Name}}\t{{.MemUsage}}'])
         out = {'pool': 0.0, 'other': 0.0, 'others': []}
         if not names or names[0] != 0:
             return out
@@ -328,6 +347,7 @@ def detect_wsl(probe):
     return out
 
 
+HOST_LOAD_MAX_AGE = 60.0  # DL177: a host-load file older than this (seconds) is ignored
 HOST_SAMPLES, HOST_SAMPLE_GAP = 5, 1  # DL176: memory is read this many times, this many seconds apart; the median is used
 
 
@@ -355,17 +375,32 @@ def detect_host(probe, samples=None, gap=None):
             continue
         if mem is None:
             mem = m
-        vm = v
         used_list.append((m[1], v))
     box = probe.container_gib()
-    used = None
+    # DL177: the VM holds at least what the containers use, whatever the trimmed working set says.
+    floor = round(box['pool'] + box['other'], 1)
+    used_list = [(u, max(v, floor)) for u, v in used_list]
+    vm = max([v for _u, v in used_list] or [0.0])
+    parts = probe.wsl_vm_parts() if hasattr(probe, 'wsl_vm_parts') else (0.0, 0.0)
+    used, load_used, decided, load_state = None, None, 'median', 'missing'
     if used_list:
         # The WSL VM holds the pool and every other container: leave it out of "used". With no VM (native Linux), leave
         # out the pool's own containers instead. A rerun then sees the same figure as the first run.
         used = round(max(0.0, median([u - (v if v > 0 else box['pool']) for u, v in used_list])), 1)
+        figures, age = probe.host_load()
+        if figures and age is not None and age <= HOST_LOAD_MAX_AGE and mem:
+            # DL177: the host-load task's last sample; "fits" is judged against the larger of it and the median.
+            load_state = 'fresh'
+            load_used = round(max(0.0, mem[0] * figures['mem'] / 100.0 - (vm if vm > 0 else box['pool'])), 1)
+            if load_used > used:
+                used, decided = load_used, 'host-load file'
+        elif figures:
+            load_state = 'stale'
     return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
             'total_gib': mem[0] if mem else None, 'used_gib': used, 'wsl_vm_gib': vm,
+            'wsl_working_set_gib': parts[0], 'wsl_private_gib': parts[1], 'containers_gib': floor,
             'used_samples': [round(max(0.0, u - (v if v > 0 else box['pool'])), 1) for u, v in used_list],
+            'load_used_gib': load_used, 'load_file': load_state, 'used_decided_by': decided,
             'other_containers_gib': box['other'], 'other_containers': box['others']}
 
 
@@ -514,7 +549,11 @@ def measured_sizing(found, total_gib=None, used_gib=None, cpus=None, docker_gib=
     res['measured'] = {'total_gib': total, 'used_gib': used or 0.0, 'cpus': n, 'docker_gib': docker,
                        'other_containers_gib': host.get('other_containers_gib') or 0.0,
                        'budget_gib': round(total * MEM_PCT / 100.0, 1), 'room_gib': res['memory_room_gib'],
-                       'samples': len(host.get('used_samples') or [])}
+                       'samples': len(host.get('used_samples') or []),
+                       'vm_gib': host.get('wsl_vm_gib'), 'working_set_gib': host.get('wsl_working_set_gib'),
+                       'private_gib': host.get('wsl_private_gib'), 'containers_gib': host.get('containers_gib'),
+                       'load_used_gib': host.get('load_used_gib'), 'load_file': host.get('load_file'),
+                       'decided_by': host.get('used_decided_by') if used_gib is None else 'your number'}
     return res
 
 
@@ -554,8 +593,11 @@ def owner_target(cap, found, pool_gib=None, pool_cpus=None, largest_shard_gib=No
         problems.append('Floor: the pool needs at least %g GiB and %g CPUs; you gave %g GiB and %g CPUs.'
                         % (MIN_POOL_GIB, MIN_POOL_CPUS, mem, cpus))
     if cpus > 0 and mem / cpus < MIN_GIB_PER_CPU:
-        problems.append('Memory per CPU short: %g GiB for %g CPUs is under %g GiB per CPU (needs at least %g GiB).'
-                        % (mem, cpus, MIN_GIB_PER_CPU, math.ceil(cpus * MIN_GIB_PER_CPU * 2) / 2.0))
+        fit = int(math.floor(mem / MIN_GIB_PER_CPU))
+        problems.append('Memory per CPU short: %g GiB for %g CPUs is under %g GiB per CPU (needs at least %g GiB). '
+                        'Nearest sizes that pass: %g GiB fits %d CPUs; %g CPUs needs %g GiB.'
+                        % (mem, cpus, MIN_GIB_PER_CPU, math.ceil(cpus * MIN_GIB_PER_CPU * 2) / 2.0,
+                           mem, fit, cpus, math.ceil(cpus * MIN_GIB_PER_CPU * 2) / 2.0))
     if largest_shard_gib is not None and mem < largest_shard_gib:
         problems.append('The pool (%g GiB) is below the largest Linux shard (%.1f GiB).' % (mem, largest_shard_gib))
     if problems:

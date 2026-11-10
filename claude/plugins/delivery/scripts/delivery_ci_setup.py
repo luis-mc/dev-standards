@@ -577,6 +577,13 @@ def render_plan(pl, found) -> list:
                          "room %s GiB; Docker ceiling %s." % (
                              m.get("total_gib"), m.get("used_gib"), m.get("samples") or 1, 85, m.get("budget_gib"),
                              m.get("room_gib"), ("%s GiB" % m["docker_gib"]) if m.get("docker_gib") is not None else "not set"))
+            if m.get("vm_gib") is not None:
+                lines.append("  Sizing inputs (DL177): WSL VM %s GiB (working set %s, private bytes %s, containers use %s; the "
+                             "largest counts); host-load file %s%s; decided by: %s." % (
+                                 m.get("vm_gib"), m.get("working_set_gib"), m.get("private_gib"), m.get("containers_gib"),
+                                 m.get("load_file") or "missing",
+                                 (" (%s GiB used outside WSL)" % m["load_used_gib"]) if m.get("load_used_gib") is not None else "",
+                                 m.get("decided_by") or "median"))
         if cap.get("reason"):
             lines.append("  Cap changed: %s." % cap["reason"])
     if pl.get("derived") and not pl.get("blocked"):
