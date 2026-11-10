@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T21:17+00:00",
+  "updated": "2026-11-10T21:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3340,6 +3340,30 @@
       "changed": "2026-11-10T21:17+00:00",
       "rides": "DS224",
       "expected_basis": "cloud agent from 21:18, 28 min"
+    },
+    {
+      "id": "DL180",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool Wine drops TMPDIR (wrappers in windows-packaging layer)",
+      "detail": "Peer finding: in the pool every wine run aborts with free(): invalid pointer when TMPDIR is set (any value); unset works. Runner .env sets TMPDIR (DL87). Fix: /usr/local/bin wrappers for the wine tools that exec the real tool with TMPDIR unset.",
+      "expected": "10 Nov ~22:01",
+      "changed": "2026-11-10T21:21+00:00",
+      "expected_basis": "cloud agent ~25 min, then RELEASE-89 join + CI",
+      "rides": "DS224",
+      "started": "2026-11-10T21:21+00:00"
+    },
+    {
+      "id": "DL181",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "CI rerun runs not-yet-passed jobs first",
+      "detail": "Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.",
+      "expected": "11 Nov",
+      "changed": "2026-11-10T21:22+00:00",
+      "expected_basis": "after RELEASE-89; needs a design pass"
     },
     {
       "id": "DS1",
