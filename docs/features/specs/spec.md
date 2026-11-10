@@ -4,7 +4,7 @@ title: Spec authoring and checking (luismc-docs)
 apps: [luismc-docs]
 topics: [specs]
 status: live
-version: 0.1.2
+version: 0.2.0
 owner: agents
 type: reference
 code:
@@ -102,5 +102,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.0 | 2026-11-10 | RELEASE-86 | The specs plugin is part of luismc-docs; spec-new and spec-check are luismc-docs:spec-new and luismc-docs:spec-check. | DS219 |
 | 0.1.2 | 2026-11-01 | RELEASE-25 | spec-new writes only specs that are not features; feature specs in a DOCSPEC repo are handed to feature-spec-new. | SO3 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS143 |
