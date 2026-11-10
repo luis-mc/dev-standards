@@ -1,4 +1,4 @@
-# DL181 CI rerun first (in progress)
+# DL181 CI rerun first
 
 ## Base check
 
@@ -24,4 +24,51 @@ Opt-in key: `rerun_first: true` in `scripts/delivery/ci-areas.json`. That file a
 
 Held jobs: `verify`, `integration`, `e2e-shard`. The aggregator `e2e` always runs.
 
-(in progress)
+
+### Design change while building
+
+The first wiring added a `rest` job and a hold clause in the job `if:` lines. `tools/test_delivery_ci.py` (`workflows_conform`) refuses both: one job per family, an exact decide-aware `if:`. So the final wiring adds no job and no `if:` change:
+
+- The plan outputs `integration` and `e2e` turn `'false'` for a held job (a planned skip the jobs and the `e2e` aggregator already handle).
+- The dispatch is the second-to-last step of the `e2e` aggregator (it needs `plan`, `verify`, `integration`, `e2e-shard`). It runs only when the first set passed and `rerun` is true. `e2e` gets `actions: write`.
+- `verify` is not held: it has no `needs: plan`, and giving it one would change the graph for every project.
+
+## What changed
+
+- `claude/plugins/delivery/templates/shared/scripts/delivery/ci_rerun_first.py` (new). Opt-in key `rerun_first` in `scripts/delivery/ci-areas.json`: that file already drives the plan job, and `.delivery/config.json` is not read in CI. Previous all green: `rerun=false`, `first=[]`. Every holdable job in the first set: `rerun=false` (nothing to hold). `--only` is the second run.
+- `claude/plugins/delivery/templates/ts/.github/workflows/ci.yml`: `workflow_dispatch` input `only`; plan step `rerun`; plan outputs `rerun`, `held`, and held-aware `integration`/`e2e`; dispatch step in `e2e`. Job set and `needs` unchanged.
+- `claude/plugins/delivery/tests/test_dl181_ci_rerun_first.py` (new, 15 tests).
+- `docs/features/delivery/spec.md`: R5.52. Feature note `docs/features/delivery/changes/DL181.md`. Change note `docs/architecture/changes/DL181-ci-rerun-first.md`.
+- Paths: `tools/ci_areas.py` maps `claude/plugins/delivery/` to the `delivery` area, so the new script and test are covered; no change to `.claude/suites.json` (the delivery tests dir is run by spec-lint through `unittest discover`).
+
+## Tests
+
+- `python3 -m unittest test_dl181_ci_rerun_first test_dl147_workflow_needs test_dl116_fetch_check test_ci_options` (in `claude/plugins/delivery/tests`): 65 tests, OK.
+- `python3 tools/test_delivery_ci.py --no-mutants`: 78 passed, 0 failed (it failed twice before the redesign above).
+- `python3 claude/plugins/docs/scripts/docs_check.py`: one error, W1 (this report under docs/work, expected). M1 for the delivery-speed spec is answered by `Docs: none` in the second commit message.
+- `gh workflow run spec-lint.yml --ref DL181-ci-rerun-first -f areas=delivery,docs`, run 42914080375, every job ended:
+  - success: which areas, delivery ledger/recorder/watcher/hooks, setup preflight, train cleanup, packaged-program smoke, area mapping, CI scripts and workflow templates, branch gate and trust rule, artifact pruning, runner plan, change notes enforced and folded, docs plugin, delivery scripts/CI templates/cleanup/prune/change notes.
+  - skipped: change notes, change notes folded, transcript folds, branch gate shard matrix, specs/templates/AUTHSPEC, model profiles, artifact renderer.
+  - failure: docs check, only W1 (this report).
+
+Not run: the new workflow path on a real pull request (no PR may be opened); the job text and the script are tested, the live dispatch is not.
+
+## Risks
+
+- The held jobs read as skipped (green) in run 1 until run 2 ends. A merge must wait for run 2. The dispatch step writes this in the job summary.
+- Run 2 runs `verify` again (it is never held). It is cheap relative to the held jobs.
+
+## Follow-ups
+
+- Same wiring for the rust, go and dotnet templates.
+- `ci_watch.py`: wait for the dispatched run of the head before it reports done.
+- A commit status that stays pending until run 2 ends.
+- `agent_ci.py`, `ci_scope.py`, `area_select.py`, `ci_skip_check.py`: no change needed now.
+- `CONTRACT.md` table: add `ci_rerun_first.py`.
+- Skip `verify` in run 2 (needs `needs: plan` on `verify`, a graph change).
+
+## Branch head
+
+HEAD_SHA
+
+READY
