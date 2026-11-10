@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.3.0
+version: 0.4.0
 owner: agents
 type: reference
 code:
@@ -92,6 +92,12 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.21** — **The owner sets the pool size** (DL176). `--cpus` and `--used-gib` are machine numbers: this machine's CPU count and the memory used outside WSL. `--pool-gib N` and `--pool-cpus N` are the owner's target for the pool. The plan uses them as given when they fit the 85% memory budget (the pool, the sidecar and the VM headroom), the 60% CPU budget, the floors (4 GiB, 2 CPUs) and 1.5 GiB per CPU. Otherwise it refuses and names the budget that is short. The `.wslconfig` memory and processors rise to fit.
 
+**R5.22** — **The VM is measured, not guessed** (DL177). The size of the WSL VM is the larger of the `vmmem`/`vmmemWSL` working set and its private bytes, and never less than the memory the containers use. Windows trims the working set, so it alone swings. The plan prints each figure on its `Sizing inputs` line.
+
+**R5.23** — **Docker is read through the Windows CLI first** (DL177). On Windows, the container use and the CPUs Docker sees come from the `docker` CLI on `PATH` (Docker Desktop installs it). `wsl docker` is the fallback, used only when that CLI cannot run. If both fail, the use reads 0 and the CPUs read unknown.
+
+**R5.24** — **Sizing does not hang on one moment** (DL177). "Fits" is judged against the larger of the 5-sample median (R5.20) and the host-load file's last sample (memory % of the total, minus the VM). A missing or stale file (over 60 s old) is ignored and the samples alone decide. The `Sizing inputs` line says which decided. A refusal for memory per CPU names the nearest sizes that pass, for example "10 GiB fits 6 CPUs; 7 CPUs needs 10.5 GiB".
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -109,6 +115,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.9 to R5.16 | `claude/plugins/delivery/tests/test_runner_pool.py`, `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_dl155_pool_refresh_shared.py`, `claude/plugins/delivery/tests/test_dl162_pool_refresh_files.py`, `claude/plugins/delivery/tests/test_dl165_pool_refresh_hash_result.py`, `claude/plugins/delivery/tests/test_dl167_pool_llvm.py` |
 | R5.17, R5.18 | `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R5.19 to R5.21 | `claude/plugins/delivery/tests/test_dl176_pool_resize.py`, `claude/plugins/delivery/tests/test_dl103_pool_keep_cap.py` |
+| R5.22 to R5.24 | `claude/plugins/delivery/tests/test_dl177_pool_measure.py` |
 
 ## 12. Code map
 
@@ -122,5 +129,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.0 | 2026-11-10 | RELEASE-88 | Pool sizing measures the WSL VM (larger of working set and private bytes, never below container use), reads Docker through the Windows CLI before wsl, judges fit against the host-load sample too, and names sizes that pass (R5.22 to R5.24). | DL177 |
 | 0.3.0 | 2026-11-10 | RELEASE-87 | Pool plans keep browsers, layers, apt and Playwright from the pool .env; the memory figure is a median of samples; a --resize that lowers the cap needs --shrink; --pool-gib and --pool-cpus set the pool size (R5.19 to R5.21). | DL176 |
 | 0.2.0 | 2026-11-10 | RELEASE-84 | Runner-pool requirements move here from the delivery spec (D181, D184); old IDs stay as pointers. | DL174 |
