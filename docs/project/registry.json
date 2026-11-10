@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T12:20+00:00",
+  "updated": "2026-11-10T12:28+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6505,6 +6505,32 @@
         }
       ],
       "started": "2026-11-10T12:07+00:00"
+    },
+    {
+      "id": "DS215",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Audit: files not needed by the current plugins (leftovers)",
+      "detail": "Find every tracked file in dev-standards that no current plugin, test, CI workflow, tool or doc entry point needs: old specs, archives, retired scripts, fixtures without tests, stale generated output, oversized assets. Report with evidence per file; delete nothing until the owner picks.",
+      "expected": "10 Nov ~13:00",
+      "changed": "2026-11-10T12:28+00:00",
+      "expected_basis": "read-only agent from 12:30, ~25 min",
+      "no_release": "study; deletions ship later as their own release",
+      "started": "2026-11-10T12:28+00:00"
+    },
+    {
+      "id": "DS216",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Review: plugin organization (merge, split, reorganize)",
+      "detail": "Inventory all 8 plugins (skills, scripts, hooks, templates, cross-plugin imports and duplicated code), weigh against what projects using the marketplace hit (setup friction, hooks firing in the wrong plugin, version drift between plugins), and recommend merges, splits or moves with cost and risk. Owner decides.",
+      "expected": "10 Nov ~13:05",
+      "changed": "2026-11-10T12:28+00:00",
+      "expected_basis": "read-only agent from 12:30, ~25 min, then my synthesis ~10 min",
+      "no_release": "study; any change ships later as its own release",
+      "started": "2026-11-10T12:28+00:00"
     },
     {
       "id": "DU1",
