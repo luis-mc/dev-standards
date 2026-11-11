@@ -3926,9 +3926,9 @@
       "status": "Running",
       "item": "Installer adds its copies to .prettierignore",
       "detail": "When a project uses Prettier, the delivery installer adds .delivery/ci-install-base/ and its *.example.json copies to .prettierignore (idempotent), so installed files never fail the project's format check.",
-      "expected": "11 Nov ~15:10",
-      "changed": "2026-11-11T15:23+00:00",
-      "expected_basis": "cloud agent ~18 min",
+      "expected": "11 Nov ~15:48",
+      "changed": "2026-11-11T15:27+00:00",
+      "expected_basis": "cloud agent from 15:25, ~23 min",
       "rides": "DL217"
     },
     {
@@ -3938,9 +3938,9 @@
       "status": "Running",
       "item": "Docs freshness check (T2) gives the same result in CI and locally",
       "detail": "docs_check T2 warned in a project's CI (code changed after the doc's date) but passed locally. Find the cause (shallow checkout, merge commit dates, UTC vs local date) and make both agree.",
-      "expected": "11 Nov ~15:10",
-      "changed": "2026-11-11T15:23+00:00",
-      "expected_basis": "cloud agent ~18 min",
+      "expected": "11 Nov ~15:48",
+      "changed": "2026-11-11T15:27+00:00",
+      "expected_basis": "cloud agent from 15:25, ~23 min",
       "rides": "DL217"
     },
     {
@@ -3950,9 +3950,9 @@
       "status": "Running",
       "item": "Pool image pre-enables corepack so runner users need no write to /opt/node/bin",
       "detail": "After DL215, a job's corepack enable fails as the runner user: EACCES symlink into root-owned /opt/node/bin. Run corepack enable as root at build (shims only, no pinned pnpm) so the job's own enable is a no-op; prove it as a non-root user.",
-      "expected": "11 Nov ~15:55",
-      "changed": "2026-11-11T15:26+00:00",
-      "expected_basis": "cloud agent ~23 min",
+      "expected": "11 Nov ~15:50",
+      "changed": "2026-11-11T15:27+00:00",
+      "expected_basis": "cloud agent from 15:27, ~23 min",
       "rides": "DL217",
       "started": "2026-11-11T15:26+00:00"
     },
