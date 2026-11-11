@@ -182,6 +182,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D204 | Switch the pool to the 01:58 image? | Switch now | decided | 2026-11-11 |
 | delivery-speed | D205 | Old failed ledger row DS218 leftover cleanup? | Look, then close (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D206 | DL201 again: installer update meets a project-changed plugin file? | 3-way merge, ask on conflict | decided | 2026-11-11 |
+| delivery-speed | D207 | Lower the WSL and pool memory limits now, or measure first? | Measure first | decided | 2026-11-11 |
 | delivery-speed | D21 | Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)? | 2 slots | decided | 2026-11-04 |
 | delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
