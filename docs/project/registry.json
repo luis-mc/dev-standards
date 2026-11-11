@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T23:17+00:00",
+  "updated": "2026-11-11T23:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4686,33 +4686,32 @@
       "id": "DL262",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: stale dev-standards pin flagged and bumped",
       "detail": "RELEASE after RELEASE-112: DL262 (peer report: CI pin older than installed docs plugin makes G1 fail).",
-      "expected": "11 Nov ~23:49",
-      "changed": "2026-11-11T23:10+00:00",
-      "expected_basis": "cloud agent ~25 min from 23:10",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:35+00:00",
       "release": 113,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T23:10+00:00",
-          "end": "2026-11-11T23:35+00:00"
+          "end": "2026-11-11T23:28+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T23:35+00:00",
-          "end": "2026-11-11T23:40+00:00"
+          "start": "2026-11-11T23:28+00:00",
+          "end": "2026-11-11T23:30+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T23:40+00:00",
-          "end": "2026-11-11T23:46+00:00"
+          "start": "2026-11-11T23:30+00:00",
+          "end": "2026-11-11T23:36+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T23:46+00:00",
-          "end": "2026-11-11T23:49+00:00"
+          "start": "2026-11-11T23:36+00:00",
+          "end": "2026-11-11T23:39+00:00"
         }
       ],
       "risk": {
@@ -4725,14 +4724,37 @@
       "id": "DL263",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "DL263 flag and bump a stale dev-standards CI pin",
       "detail": "A project's dev-standards.yml pins the dev-standards ref by hand; generated docs built by a newer installed docs plugin then fail CI G1 against the older pinned scripts. Status/doctor flags a pin older than the installed plugins and a command bumps it. D251 (my pick, for review).",
-      "expected": "11 Nov ~23:35",
-      "changed": "2026-11-11T23:10+00:00",
-      "expected_basis": "cloud agent from 23:10, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:35+00:00",
       "rides": "DL262",
       "started": "2026-11-11T23:10+00:00"
+    },
+    {
+      "id": "DL264",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL264 mark-deferred --local accepts the full-progress folder too",
+      "detail": "Peer report: --local DIR is a work root and full-progress/<project> is appended; passing the full-progress folder itself nests full-progress/full-progress/<project> silently. Accept either form.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:35+00:00",
+      "rides": "DL262",
+      "started": "2026-11-11T23:19+00:00"
+    },
+    {
+      "id": "DL265",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL265 DL-06 merge refusal names the missing ledger link",
+      "detail": "Peer report: the DL-06 hook refused a merge until delivery_ledger.py link --pr N --sha S existed; ci_watch recorded nothing for an unlinked PR. The refusal says how to link; ci_watch says when the PR is not linked.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:35+00:00",
+      "rides": "DL262",
+      "started": "2026-11-11T23:19+00:00"
     },
     {
       "id": "DS1",
