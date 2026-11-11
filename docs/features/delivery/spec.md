@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.26.2
+version: 0.26.3
 owner: agents
 type: reference
 code:
@@ -513,6 +513,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.26.3 | 2026-11-11 | RELEASE-100 | Every ci.yml template has a workflow_dispatch trigger, so agent_ci.py and gh workflow run ci.yml work for rust, go and dotnet.<br>The CI secret scan uses --log-opts=HEAD, and the project-named-secret allowlist skips public_key names, NULL/None/nil values, SQL placeholders, wrapped identifiers and env reads.<br>The doctor check ci.scripts-current treats a file equal to the template as ok, whatever the install record says; update refreshes that record.<br>delivery_ci_install.py update reads the track from the project when --track is not given, and the install record stores the track. | DL210, DL211, DL212, DL213 |
 | 0.26.2 | 2026-11-11 | RELEASE-99 | Run the installer (install and update) on the owner's PC, from the installed plugin, not in a cloud agent.<br>hook_stop.py reads the last assistant text from the end of the transcript, in blocks. | DL206, DL208 |
 | 0.26.1 | 2026-11-11 | RELEASE-98 | The installer's state files (.delivery/ci-install-state.json and .delivery/ci-install-base/) are exempt from secret scans, a script variable no longer ends in _key, and branch_gate ignores untracked docs/work/ files. | DL204 |
 | 0.26.0 | 2026-11-11 | RELEASE-96 | update 3-way merges a plugin-owned file the project changed (base kept in .delivery/ci-install-base/), writes <file>.new with conflict markers when it cannot, and ends with a summary line; hashes stay in .delivery/ci-install-state.json. | DL201 |
