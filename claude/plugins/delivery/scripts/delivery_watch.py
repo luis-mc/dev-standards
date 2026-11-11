@@ -795,11 +795,15 @@ class Watcher:
                     seen.add(r["databaseId"])
                     rc, _, _ = self.act(["gh", "run", "cancel", str(r["databaseId"]), *self.repo_args])
                     if rc == 0:
-                        row = {"id": r["databaseId"], "branch": br, "sha": r.get("headSha"), "at": L.iso(self.now())}
+                        row = {"id": r["databaseId"], "branch": br, "sha": r.get("headSha"), "at": L.iso(self.now()),
+                               "state": "held"}  # DL249: a held run is not a failure
+                        print("delivery_watch: HELD run %s on %s (cancelled on purpose while a train's CI runs; "
+                              "it is re-run when that CI ends; not a failure)" % (row["id"], br), flush=True)
                         self.mut(lambda l2, row=row: (l2.setdefault("held_runs", []).append(row),
                                                       L.add_event(l2, "ci.hold", "%s %s" % (row["branch"], row["id"]), "delivery_watch")))
         else:
             for h in led.get("held_runs", []):
+                print("delivery_watch: re-running held run %s on %s" % (h["id"], h.get("branch")), flush=True)
                 self.act(["gh", "run", "rerun", str(h["id"]), *self.repo_args])
             if led.get("held_runs"):
                 n = len(led["held_runs"])

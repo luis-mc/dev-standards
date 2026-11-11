@@ -296,6 +296,39 @@ def unmerged(root: Path) -> list[str]:
     return sorted(p for p in out.split("\0") if p)
 
 
+GENERATED_DOCS = ("docs/index.html", "docs/llms.txt", "docs/features/index.md",
+                  "docs/architecture/decisions.md", "docs/docs-map.json")
+GENERATED_DOCS_DIRS = ("docs/_site/", "docs/reference/")
+
+
+def is_generated_doc(path: str) -> bool:
+    """DL249: a file `docs_index.py build` regenerates."""
+    p = path.replace("\\", "/")
+    return p in GENERATED_DOCS or p.startswith(GENERATED_DOCS_DIRS)
+
+
+def resolve_generated_docs(root: Path, files: list[str]) -> str | None:
+    """DL249: take INTEGRATION's version of generated docs, then rebuild them. None on success, else why not."""
+    for path in files:
+        if dc.run_git(["checkout", "--ours", "--", path], cwd=root, check=False).returncode != 0:
+            dc.run_git(["rm", "-q", "--cached", "--", path], cwd=root, check=False)  # absent on integration
+        else:
+            dc.run_git(["add", "--", path], cwd=root, check=False)
+    script = find_docs_script("docs_index.py")
+    if script is None:
+        return "docs_index.py not found, so the generated docs cannot be rebuilt"
+    done = subprocess.run([sys.executable, str(script), "--root", str(root), "build"], capture_output=True, text=True, cwd=root)
+    if done.returncode != 0:
+        return "docs index build failed (exit %d)" % done.returncode
+    dc.run_git(["add", "--", "docs"], cwd=root, check=False)
+    return None
+
+
+def conflict_files(files: list[str] | None) -> list[str]:
+    """DL249: the list a conflict line prints; never empty."""
+    return list(files) if files else ["(files unknown)"]
+
+
 def is_cargo_lock(path: str) -> bool:
     return path.replace("\\", "/").rsplit("/", 1)[-1] == "Cargo.lock"
 
@@ -453,7 +486,7 @@ def finish_partial(root: Path, args, into: str, joined: list[str], conflicting: 
         extra["refused"] = {"branch": stop_branch, "reason": stop_reason}
     for b, files in conflicting.items():
         dc.eprint("join: %s conflicts with %s in:" % (b, into))
-        for f in files:
+        for f in conflict_files(files):
             dc.eprint("    " + f)
     if stop_branch is not None:
         dc.eprint("join: stopped at %s: %s" % (stop_branch, stop_reason))
@@ -661,14 +694,26 @@ def main(argv: list[str] | None = None) -> int:
             joined.append(branch)
             continue
 
+        gen = [c for c in conflicts if is_generated_doc(c)]
+        if gen and len(gen) == len(conflicts):
+            problem = resolve_generated_docs(root, gen)
+            commit = None
+            if problem is None:
+                commit = dc.run_git(["commit", "--no-edit"], cwd=root, check=False, env=dc.git_env())
+                if commit.returncode != 0:
+                    problem = "could not commit the resolved merge: %s" % (commit.stderr or commit.stdout).strip()
+            if problem is None:
+                print("join: %s conflicts only in generated docs (%s); took %s's version and rebuilt them with docs index build"
+                      % (branch, ", ".join(gen), into), flush=True)
+                joined.append(branch)
+                continue
+            dc.eprint("join: could not resolve the generated docs conflict: %s" % problem)
+
         abort_merge(root)
-        dc.eprint("join: %s conflicts with %s in:" % (branch, into))
-        for c in conflicts:
-            dc.eprint("    " + c)
         conflicting[branch] = conflicts
 
     for b, files in conflicting.items():
-        skips.setdefault(b, "conflict with %s in: %s" % (into, ", ".join(files)))
+        skips.setdefault(b, "conflict with %s in: %s" % (into, ", ".join(conflict_files(files))))
     if conflicting or skips or stop_code is not None:
         return finish_partial(root, args, into, joined, conflicting, stop_code, stop_branch, stop_reason, skips)
 
