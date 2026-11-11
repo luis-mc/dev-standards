@@ -896,15 +896,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T12:43+00:00">11 Nov 12:43</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T12:51+00:00">11 Nov 12:51</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 12:44</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
 <ul>
+<li data-glance-task="DL206"><span class="task-id">DL206</span>Update guide: run the CI installer on the owner&#x27;s PC, not in a cloud agent <span class="glance-expected">11 Nov ~13:18</span><span class="glance-basis">cloud agent from 12:55, ~23 min</span></li>
+<li data-glance-task="DL207"><span class="task-id">DL207</span>Design-system keypad template passes the pre-commit secret pattern <span class="glance-expected">11 Nov ~13:18</span><span class="glance-basis">cloud agent from 12:55, ~23 min</span></li>
+<li data-glance-task="DL205"><span class="task-id">DL205</span><span class="release-name">RELEASE-99</span>RELEASE: update-guide note and keypad template vs secret scan <span class="glance-expected">11 Nov ~13:30</span><span class="glance-basis">agent 12:55-13:18, join 4, CI 5, merge 3</span></li>
 <li data-glance-task="DL202"><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits <span class="glance-expected">12 Nov ~10:45</span><span class="glance-basis">24 h logging from 10:40, then ~5 min analysis</span></li>
 </ul>
 </details>
@@ -922,10 +925,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">197</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">197</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL206"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL206</span>Update guide: run the CI installer on the owner&#x27;s PC, not in a cloud agent<span class="release-line"><span class="release-name">RELEASE-99</span></span></td><td>A cloud sandbox refuses to run delivery_ci_install.py from a cloned dev-standards checkout (Code from External). Say in the delivery spec and the setup skill that installer runs happen on the owner&#x27;s PC (D209).</td><td>11 Nov ~13:18<span class="expected-basis">cloud agent from 12:55, ~23 min</span></td></tr>
+<tr data-task="DL207"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL207</span>Design-system keypad template passes the pre-commit secret pattern<span class="release-line"><span class="release-name">RELEASE-99</span></span></td><td>The pre-commit name pattern flags a CSS selector in the design-system keypad template. Narrow the pattern so CSS selectors do not match (or rename the class), with a test over every shipped template (D210).</td><td>11 Nov ~13:18<span class="expected-basis">cloud agent from 12:55, ~23 min</span></td></tr>
+<tr data-task="DL205"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL205</span><span class="release-name">RELEASE-99</span>RELEASE: update-guide note and keypad template vs secret scan</td><td>Ships DL205 and DL206. Join, fold, CI, merge on green, plugin updates in both scopes, smoke.</td><td>11 Nov ~13:30<span class="expected-basis">agent 12:55-13:18, join 4, CI 5, merge 3</span></td></tr>
 <tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>08:30 spike hit 98%. Log total memory, CPU, the WSL VM, pool containers, running CI jobs and the top processes every minute for 24 h, then propose WSL and pool limits from the data (D207).</td><td>12 Nov ~10:45<span class="expected-basis">24 h logging from 10:40, then ~5 min analysis</span></td></tr>
 </tbody></table></div>
 </details>
@@ -1169,6 +1175,51 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D210">
+<h3 class="decision-head"><span class="decision-id">D210</span> <span class="decision-question">Fix the design-system keypad stylesheet the pre-commit pattern flags?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL207</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix it (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">narrow pattern or rename class, test over all templates</p>
+<blockquote class="decision-words">&ldquo;Fix it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">To do only</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D209">
+<h3 class="decision-head"><span class="decision-id">D209</span> <span class="decision-question">Add &#x27;installer runs on the owner&#x27;s PC, not a cloud agent&#x27; to the update guide?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL206</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add it (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">docs line, next release</p>
+<blockquote class="decision-words">&ldquo;Add it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">no change</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D208">
+<h3 class="decision-head"><span class="decision-id">D208</span> <span class="decision-question">Update comics-organizer&#x27;s project scope to delivery 1.28.1 now?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL204</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Update it now (Recommended)</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">run plugin update for its project scope</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave it to CO1002</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">its own task updates</p>
+<blockquote class="decision-words">&ldquo;Leave it to CO1002&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D207">
 <h3 class="decision-head"><span class="decision-id">D207</span> <span class="decision-question">Lower the WSL and pool memory limits now, or measure first?</span></h3>
 <p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL202</p>

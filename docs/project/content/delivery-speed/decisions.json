@@ -4717,6 +4717,66 @@
       "chosen": "Measure first",
       "decided": "2026-11-11",
       "owner_words": "measure first"
+    },
+    {
+      "id": "D208",
+      "question": "Update comics-organizer's project scope to delivery 1.28.1 now?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL204",
+      "options": [
+        {
+          "label": "Update it now (Recommended)",
+          "summary": "run plugin update for its project scope"
+        },
+        {
+          "label": "Leave it to CO1002",
+          "summary": "its own task updates"
+        }
+      ],
+      "chosen": "Leave it to CO1002",
+      "decided": "2026-11-11",
+      "owner_words": "Leave it to CO1002"
+    },
+    {
+      "id": "D209",
+      "question": "Add 'installer runs on the owner's PC, not a cloud agent' to the update guide?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL206",
+      "options": [
+        {
+          "label": "Add it (Recommended)",
+          "summary": "docs line, next release"
+        },
+        {
+          "label": "Skip",
+          "summary": "no change"
+        }
+      ],
+      "chosen": "Add it (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Add it (Recommended)"
+    },
+    {
+      "id": "D210",
+      "question": "Fix the design-system keypad stylesheet the pre-commit pattern flags?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL207",
+      "options": [
+        {
+          "label": "Fix it (Recommended)",
+          "summary": "narrow pattern or rename class, test over all templates"
+        },
+        {
+          "label": "Later",
+          "summary": "To do only"
+        }
+      ],
+      "chosen": "Fix it (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Fix it (Recommended)"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T12:43+00:00",
+  "updated": "2026-11-11T12:51+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3673,6 +3673,67 @@
       "changed": "2026-11-11T12:43+00:00",
       "rides": "DL203",
       "started": "2026-11-11T12:19+00:00"
+    },
+    {
+      "id": "DL205",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: update-guide note and keypad template vs secret scan",
+      "detail": "Ships DL205 and DL206. Join, fold, CI, merge on green, plugin updates in both scopes, smoke.",
+      "expected": "11 Nov ~13:30",
+      "changed": "2026-11-11T12:50+00:00",
+      "expected_basis": "agent 12:55-13:18, join 4, CI 5, merge 3",
+      "release": 99,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T12:55+00:00",
+          "end": "2026-11-11T13:18+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T13:18+00:00",
+          "end": "2026-11-11T13:22+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T13:22+00:00",
+          "end": "2026-11-11T13:27+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T13:27+00:00",
+          "end": "2026-11-11T13:30+00:00"
+        }
+      ],
+      "started": "2026-11-11T12:50+00:00"
+    },
+    {
+      "id": "DL206",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Update guide: run the CI installer on the owner's PC, not in a cloud agent",
+      "detail": "A cloud sandbox refuses to run delivery_ci_install.py from a cloned dev-standards checkout (Code from External). Say in the delivery spec and the setup skill that installer runs happen on the owner's PC (D209).",
+      "expected": "11 Nov ~13:18",
+      "changed": "2026-11-11T12:51+00:00",
+      "expected_basis": "cloud agent from 12:55, ~23 min",
+      "rides": "DL205",
+      "started": "2026-11-11T12:51+00:00"
+    },
+    {
+      "id": "DL207",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Design-system keypad template passes the pre-commit secret pattern",
+      "detail": "The pre-commit name pattern flags a CSS selector in the design-system keypad template. Narrow the pattern so CSS selectors do not match (or rename the class), with a test over every shipped template (D210).",
+      "expected": "11 Nov ~13:18",
+      "changed": "2026-11-11T12:51+00:00",
+      "expected_basis": "cloud agent from 12:55, ~23 min",
+      "rides": "DL205",
+      "started": "2026-11-11T12:51+00:00"
     },
     {
       "id": "DS1",
