@@ -423,6 +423,7 @@ class WatchHook(unittest.TestCase):
             with mock.patch.object(W, "list_runs", return_value=pending), \
                     mock.patch.object(W, "warn_queued_jobs"), \
                     mock.patch.object(W.shutil, "which", return_value="/bin/gh"), \
+                    mock.patch.object(W, "resolve_repo", side_effect=lambda r: r or "acme/widget"), \
                     mock.patch.object(W.fallback_launch, "check_and_launch") as hook, \
                     mock.patch.object(W, "fallback_deps", return_value=object()):
                 code = W.main(extra + base)

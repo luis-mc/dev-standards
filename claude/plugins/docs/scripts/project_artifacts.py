@@ -2439,17 +2439,22 @@ def cmd_mark_deferred(args):
         if rec.kind(args.key) != 'full-progress':
             raise Fail(1, '%s is a feature artifact: feature artifacts are never published; only the full-progress '
                           'artifact is (R9.5)' % args.key)
+        if deferral(rec, e) is None:
+            e.pop('local_opened', None)             # a new deferral may open the page once more
         e['deferred_until'] = until.isoformat(timespec='minutes')
         target = local_work_dir(ctx, getattr(args, 'local', None)) / 'full-progress' / project_slug(ctx) / str(e.get('file', ''))
         e['local_path'] = str(target)
         rec.message = ctx.rel + ': %s publish deferred' % args.key
+        opens = not getattr(args, 'no_open', False) and not e.get('local_opened')
+        if opens:
+            e['local_opened'] = True                # DL246: opened once per deferral
         return {'command': 'mark-deferred', 'key': args.key, 'until': e['deferred_until'],
-                'local_path': e['local_path']}
+                'local_path': e['local_path'], 'open': opens}
 
     res = run_change(ctx, apply)
     emit(args, res, ['recorded %s deferred until %s (%s)' % (args.key, res['until'], short(res)),
                      'local copy: %s' % res['local_path']])
-    if not getattr(args, 'no_open', False):
+    if res.get('open'):
         open_local(res['local_path'])
     return 0
 
@@ -2911,9 +2916,26 @@ def project_slug(ctx):
     return slug or 'project'
 
 
+def machine_work_root():
+    """DL246 (D245): work_root from machine.json in the delivery machine folder (read the way the delivery
+    plugin does: DELIVERY_MACHINE_DIR, else ProgramData on Windows, else /etc/luismc-delivery), or None."""
+    folder = os.environ.get('DELIVERY_MACHINE_DIR')
+    if not folder:
+        if sys.platform.startswith('win'):
+            folder = os.path.join(os.environ.get('PROGRAMDATA') or 'C:\\ProgramData', 'luismc-delivery')
+        else:
+            folder = '/etc/luismc-delivery'
+    try:
+        cfg = json.loads(Path(folder, 'machine.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    base = cfg.get('work_root') if isinstance(cfg, dict) else None
+    return base if isinstance(base, str) and base.strip() else None
+
+
 def local_work_dir(ctx, local=None):
-    """DL238: the work directory for the local Full Progress page: --local, else work_root of
-    .delivery/config.json, else the publish-copy folder."""
+    """DL238/DL246: the work directory for the local Full Progress page: --local, else work_root of the
+    project's .delivery/config.json, else work_root of machine.json, else the old publish-copy folder (warns)."""
     base = local
     if not base:
         try:
@@ -2922,22 +2944,56 @@ def local_work_dir(ctx, local=None):
         except (OSError, ValueError):
             base = None
     if not isinstance(base, str) or not base.strip():
+        base = machine_work_root()
+    if not isinstance(base, str) or not base.strip():
+        warn('no work root is set, so the local page goes under %s; set "work_root" in machine.json in the '
+             'delivery machine folder (DELIVERY_MACHINE_DIR, else C:\\ProgramData\\luismc-delivery on Windows) '
+             'to keep it out of the repository folder' % PUBLISH_REL.replace(os.sep, '/'))
         return ctx.root / PUBLISH_REL
     return (ctx.root / base) if not os.path.isabs(base) else Path(base)
 
 
+LOCAL_REFRESH_TAG = '<meta http-equiv="refresh" content="60">'
+
+
+def _with_refresh(data):
+    """DL246: the local copies reload themselves every 60 seconds; the repo copy and the publish copy do not."""
+    text = data.decode('utf-8')
+    if LOCAL_REFRESH_TAG in text:
+        return data
+    m = re.search(r'<head[^>]*>', text, re.I)
+    if m is None:
+        return data
+    return (text[:m.end()] + LOCAL_REFRESH_TAG + text[m.end():]).encode('utf-8')
+
+
+def write_local_copy(rec, key, e, target):
+    """DL246 (D246): the local page is the repo copy of Full Progress; every feature page it links to is copied
+    beside it, so each link opens offline. Each copy gets the auto-refresh tag."""
+    target = Path(target)
+    sources = [(rec.dir / str(e.get('file', '')), target.name)]
+    for p in sorted(rec.dir.glob('feature-*.html')):
+        sources.append((p, p.name))
+    target.parent.mkdir(parents=True, exist_ok=True)
+    for src, name in sources:
+        if not src.is_file():
+            continue
+        out = target.parent / name
+        data = _with_refresh(src.read_bytes())
+        if not out.is_file() or out.read_bytes() != data:
+            out.write_bytes(data)
+
+
 def refresh_local_copies(ctx, rec):
-    """DL238: while a deferral is active, overwrite the local copy of Full Progress (same bytes as the publish
-    copy). After the until time the copy is left as it is."""
+    """DL238/DL246: while a deferral is active, overwrite the local copies (Full Progress and its feature pages).
+    After the until time the copies are left as they are."""
     for key, kind, e in rec.artifacts():
         lp = e.get('local_path')
         if kind != 'full-progress' or not isinstance(lp, str) or not lp or deferral(rec, e) is None:
             continue
         try:
-            html = publish_html(ctx, rec, key, e)
-            if html is not None:
-                write_text(Path(lp), html)
-        except (OSError, Fail) as ex:
+            write_local_copy(rec, key, e, lp)
+        except (OSError, UnicodeError) as ex:
             warn('the local copy %s was not refreshed (%s)' % (lp, ex))
 
 

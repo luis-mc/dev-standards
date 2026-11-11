@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.10.0
+version: 0.11.0
 owner: agents
 type: reference
 code:
@@ -138,6 +138,8 @@ flowchart LR
 
 **R5.9** — When claude.ai refuses a publish for its daily limit, the publish is deferred until the reset, and the end-of-turn hook does not block on it.
 
+**R5.9a** — While the publish is deferred, `mark-deferred` writes a local copy of Full Progress: the repo copy, with every `feature-*.html` beside it so each row link opens offline. The folder is `<work root>/full-progress/<project slug>/`. The work root is `--local DIR`, else `work_root` in the project's `.delivery/config.json`, else `work_root` in `machine.json` of the delivery machine folder, else the publish-copy folder with a warning. Each local page has a 60-second auto-refresh tag; the repo and publish copies do not. The page opens in the browser once per deferral, recorded as `local_opened` on the entry. Every writing command refreshes the copies until the reset. (DL246, D245, D246; ARTIFACTSPEC R9.7)
+
 **R5.10** — Full Progress is published at least every 60 minutes while work is open (a task is Running, Waiting or Needs you).
 
 **R5.11** — A release's Expected time is the end of its last phase. Without `--expected`, a write sets it from the phases; an `--expected` that differs is refused.
@@ -215,6 +217,7 @@ flowchart TB
 | R5.3 | `test_set_task_status`, `test_set_task_status_only_touches_its_artifacts` in `tools/test_project_artifacts.py` |
 | R5.17 | `test_badge_in_both_pages`, `test_project_design_changes_accent_not_page_colour`, `test_latest_flag_does_not_make_pages_stale` in `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.4 | `test_status_nearest` in `tools/test_project_artifacts.py` |
+| R5.9a | `tools/test_artifacts_dl246.py` |
 | R5.5 | `test_determinism` in `tools/test_project_artifacts.py` |
 | R5.6 | `test_earlier_findings_do_not_block_a_change`, `test_a_new_finding_is_refused_beside_earlier_ones` in `tools/test_project_artifacts.py` |
 | R5.7 | `test_mark_published_refuses_a_feature_artifact`, `test_pending_never_lists_a_feature_artifact` in `tools/test_project_artifacts.py` |
@@ -285,6 +288,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.0 | 2026-11-11 | RELEASE-108 | Local Full Progress copy is the repo copy with feature pages beside it, uses a machine-wide work root, auto-refreshes, and opens once per deferral. | DL246 |
 | 0.10.0 | 2026-11-11 | RELEASE-107 | Full Progress and feature pages show the generator badge, use the default page colours and 0.9x fonts; the latest flag never makes a page stale (R5.17). | DL239 |
 | 0.9.0 | 2026-11-11 | RELEASE-106 | mark-deferred writes and opens a local Full Progress page in the work directory; pending shows local_path. | DL238 |
 | 0.8.1 | 2026-11-11 | RELEASE-104 | Invalid-record errors name the field, limit or rule; edit-content of decisions says the generated index is stale. | DL228 |

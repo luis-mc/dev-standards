@@ -28,11 +28,16 @@ plan --branch` would, and when no branch can be found the exact plan command is 
 Exit codes (shared by the delivery scripts): 0 every run succeeded or was
 skipped (see above), 1 any other conclusion (the failed jobs are printed), 2 usage
 error or `gh` missing or unusable, 4 timed out ("no real run yet" when only skipped
-runs exist for a pull request head). It never exits 0 when it could not decide.
+runs exist for a pull request head), 5 gave up: gh failed five times in a row, so the result is
+unknown (DL247). It never exits 0 when it could not decide.
 A workflow that does not exist in the repository (HTTP 404, "workflow ... not found") is a
 usage error, not a transient one: it exits 2 at once, without retrying, and lists the
 repository's workflows so the caller can pass the right --workflow. Any other gh error is
-retried and gives up with exit 2 after five in a row.
+retried and gives up with exit 5 after five in a row.
+
+Pinned repository (DL247): at start the watch resolves the repository once (--repo, else
+`gh repo view --json nameWithOwner`) and passes it to every later gh call, so it survives its working
+directory going away. When the repository cannot be resolved it exits 2 at once.
 
 Runner health (DL7, warnings only): while it waits, a job that has been queued for
 more than 10 minutes (--queue-warn-seconds) is reported once, when no online runner
@@ -104,6 +109,7 @@ except ModuleNotFoundError as _exc:
 OK_CONCLUSIONS = {"success", "skipped"}
 LIST_FIELDS = "databaseId,workflowName,status,conclusion,event,headSha"
 MAX_CONSECUTIVE_GH_ERRORS = 5
+GIVE_UP_EXIT = 5  # DL247: gh failed too often in a row; the result is unknown
 TRIM_IMAGES = ("postgres:16",)  # default for `ci.docker_trim_images`
 TRIM_TIMEOUT_SECONDS = 600
 NO_WINDOW = 0x08000000  # CREATE_NO_WINDOW: a child process on Windows opens no console window
@@ -266,6 +272,18 @@ def executed_jobs(run: dict, repo: str | None) -> bool:
     data = gh_json(["run", "view", str(run.get("databaseId")), "--json", "jobs", *repo_args(repo)])
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
     return not jobs or any(j.get("conclusion") != "skipped" for j in jobs if isinstance(j, dict))
+
+
+def resolve_repo(repo: str | None) -> str | None:
+    """DL247: OWNER/NAME for the whole watch: the --repo value, else `gh repo view`. None when unreadable."""
+    if repo:
+        return repo
+    try:
+        data = gh_json(["repo", "view", "--json", "nameWithOwner"])
+    except GhError:
+        return None
+    name = data.get("nameWithOwner") if isinstance(data, dict) else None
+    return name if isinstance(name, str) and re.fullmatch(r"[^/\s]+/[^/\s]+", name) else None
 
 
 def resolve_sha(sha: str, repo: str | None) -> str | None:
@@ -715,7 +733,7 @@ def watch_statuses(sha: str, args: argparse.Namespace) -> int:
             state = f"gh error ({errors}): {exc}"
             if errors >= MAX_CONSECUTIVE_GH_ERRORS:
                 print(f"ci_watch: giving up, gh failed {errors} times in a row: {exc}", file=sys.stderr)
-                return 2
+                return GIVE_UP_EXIT
             got = None
         if got is not None:
             bad = [c for c in args.context if got.get(c) in ("failure", "error")]
@@ -816,7 +834,7 @@ def poll_commit(sha: str, args: argparse.Namespace, st: dict) -> int | None:
             if errors >= MAX_CONSECUTIVE_GH_ERRORS:
                 print(f"ci_watch: giving up, gh failed {errors} times in a row: {exc}",
                       file=sys.stderr)
-                return 2
+                return GIVE_UP_EXIT
             runs = None
         if runs is not None:
             pending = [r for r in runs if r.get("status") != "completed"]
@@ -849,13 +867,15 @@ def poll_commit(sha: str, args: argparse.Namespace, st: dict) -> int | None:
                         state = (f"no real run yet for {sha[:10]}: only skipped {args.workflow} "
                                  f"run(s) so far, waiting for the pull_request run")
                         decided = False
+                    st["late_errors"] = 0
                 except GhError as exc:
-                    errors += 1
-                    state = f"gh error ({errors}): {exc}"
-                    if errors >= MAX_CONSECUTIVE_GH_ERRORS:
-                        print(f"ci_watch: giving up, gh failed {errors} times in a row: {exc}",
+                    # The run list above succeeded and reset `errors`, so this step counts its own failures.
+                    st["late_errors"] = late = st.get("late_errors", 0) + 1
+                    state = f"gh error ({late}): {exc}"
+                    if late >= MAX_CONSECUTIVE_GH_ERRORS:
+                        print(f"ci_watch: giving up, gh failed {late} times in a row: {exc}",
                               file=sys.stderr)
-                        return 2
+                        return GIVE_UP_EXIT
                     decided = False
             if decided:
                 if not bad:
@@ -936,6 +956,11 @@ def main(argv: list[str] | None = None) -> int:
               file=sys.stderr)
         return 2
 
+    args.repo = resolve_repo(args.repo)
+    if not args.repo:
+        print("ci_watch: could not resolve the repository (gh repo view failed); pass --repo OWNER/NAME",
+              file=sys.stderr)
+        return 2
     shas: list[str] = []
     for item in args.sha:
         full = resolve_sha(item.lower(), args.repo)

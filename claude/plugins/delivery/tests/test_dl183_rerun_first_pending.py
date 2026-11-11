@@ -135,6 +135,7 @@ class WatchHeld(unittest.TestCase):
         got = {} if statuses is None else {cw.HELD_CONTEXT: statuses}
         out, err = io.StringIO(), io.StringIO()
         with mock.patch.object(cw.shutil, "which", return_value="gh"), \
+                mock.patch.object(cw, "resolve_repo", side_effect=lambda r: r or "acme/widget"), \
                 mock.patch.object(cw, "resolve_sha", return_value=SHA), \
                 mock.patch.object(cw, "list_runs", side_effect=list_runs), \
                 mock.patch.object(cw, "list_statuses", return_value=got) as ls, \

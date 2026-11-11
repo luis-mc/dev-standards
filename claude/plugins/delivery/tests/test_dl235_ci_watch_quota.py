@@ -44,6 +44,7 @@ def watch(argv, polls, rate=None, run_commits=None):
 
     out = io.StringIO()
     with mock.patch.object(cw.shutil, "which", return_value="gh"), \
+            mock.patch.object(cw, "resolve_repo", side_effect=lambda r: r or "acme/widget"), \
             mock.patch.object(cw, "resolve_sha", side_effect=lambda s, r: s), \
             mock.patch.object(cw, "list_runs", side_effect=list_runs), \
             mock.patch.object(cw, "add_other_workflows", side_effect=lambda runs, *a, **k: runs), \
