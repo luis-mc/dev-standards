@@ -1449,7 +1449,7 @@ def test_publish_copy_links_and_committed_links(env):
         assert os.path.samefile(str(target), str(p.rdir / target.name)), (h, target)   # docs/artifacts/ of the working tree
         assert '<code class="local-path" hidden>%s</code>' % h in copy
     # the checklist rows (AR1, AR2, SI1) carry no link and no button
-    table = copy[copy.index('<table class="status-checklist"'):]
+    table = copy[copy.index('<table class="status-checklist'):]
     table = table[:table.index('</table>')]
     assert '<a ' not in table and 'copy-link' not in table and 'file:///' not in table
     # the copy is outside the record and ignored once .gitignore says so (R10.2)
@@ -3628,6 +3628,7 @@ def test_move_record_moves_the_folder_and_writes_the_setting(env):
     assert moved == before
     assert json.loads((p.clone / '.claude' / 'artifacts.json').read_text(encoding='utf-8')) == {'record_dir': NEW_REC}
     assert p.git_state() == state, 'move-record must not touch HEAD, the index or the refs'
+    p.ok('render')          # AR69: the page names the registry's path, so the moved record needs one render
     exercise_every_command(p, NEW_REC)
     assert p.run('move-record', NEW_REC, '--yes').out.count('nothing to do') == 1
     # an occupied target is refused; moving back removes the setting
