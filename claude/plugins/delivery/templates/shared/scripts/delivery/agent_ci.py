@@ -2,7 +2,7 @@
 """Start one CI run on each agent branch whose report says CODE DONE (DELIVERYSPEC DL-81; DS26).
 
 Agents keep draft pull requests, which run no CI. When an agent has pushed its code it writes a line `CODE DONE`
-in its report (default `docs/work/reports/{task}.md`, DOCSPEC R10.1; the old `docs/work/agents/reports/` and
+in its report (default `docs/work/{task}/REPORT.md`, then `docs/work/reports/{task}.md`, DOCSPEC R10.1; the old `docs/work/agents/reports/` and
 `docs/agents/reports/` are still read while projects migrate). This script merges that branch onto its base without a
 checkout (`git merge-tree --write-tree`), pushes the result as a two-parent commit (the branch head first, the base
 second) to `ci/<task>`, and starts the CI workflow on that ref (`gh workflow run <workflow> --ref ci/<task>`, a
@@ -35,7 +35,7 @@ which wins):
     base           origin/master      ref each branch is merged onto
     branch_prefix  claude/            agent branches are origin/<prefix>*
     ci_prefix      ci/                the merged ref is <ci_prefix><task>
-    report         docs/work/reports/{task}.md       {task} = the branch name after the prefix, up to the first '-'
+    report         docs/work/{task}/REPORT.md        then docs/work/reports/{task}.md; {task} = the branch name after the prefix, up to the first '-'
                    (a string, or a list tried in order; any one with the marker counts)
     marker         ^\\s*CODE DONE\\b   regex, matched per line
 
@@ -60,7 +60,7 @@ import time
 from pathlib import Path
 
 DEFAULTS = {"workflow": "ci.yml", "base": "origin/master", "branch_prefix": "claude/", "ci_prefix": "ci/",
-            "report": ["docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
+            "report": ["docs/work/{task}/REPORT.md", "docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
             "marker": r"^\s*CODE DONE\b", "require_e2e": True}
 CONFIG = "scripts/delivery/ci-scope.json"
 DELIVERY_CONFIG = ".delivery/config.json"
@@ -270,7 +270,8 @@ def one_pass(cfg: dict, dry_run: bool = False, said: dict | None = None, tasks: 
             continue
         state = report_state(branch, cfg)
         if state != "done":
-            path = report_paths(cfg, task_of(branch, cfg["branch_prefix"]))[0]
+            paths = report_paths(cfg, task_of(branch, cfg["branch_prefix"]))[:2]
+            path = " or ".join(paths)
             skip(branch, f"no report {path} on the branch" if state == "missing"
                  else f"report {path} has no CODE DONE line")
             continue
