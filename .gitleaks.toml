@@ -61,6 +61,13 @@ real credential committed into any of these files is still caught.
    pre-commit hook is what caught it.
 """
 regexes = [
+  # DL211: shapes that are not secrets. A name ending in public_key; a value that is NULL, None, null or nil;
+  # a SQL placeholder ($1, ?, :name); a call wrapping an identifier (Some(x)); an env var read.
+  '''(?i)public_key[ \t]*[=:]''',
+  '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*(NULL|None|nil)[ \t]*[,;)]*[ \t]*$''',
+  '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*(\$[0-9]+|\?|:[a-z_][a-z0-9_]*)[ \t]*[,;)]*[ \t]*$''',
+  '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*[a-z_][a-z0-9_.:]*\([ \t]*[&*]?[a-z_][a-z0-9_.:]*(\(\))?[ \t]*\)''',
+  '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*(os\.environ\[|os\.getenv\(|process\.env\.|(std::)?env::var\()''',
   '''\$\{\{\s*(secrets\.[A-Za-z0-9_]+|github\.token)\s*\}\}''',
   '''[:=]\s*\.\.\.''',
   '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',

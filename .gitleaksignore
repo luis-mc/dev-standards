@@ -73,3 +73,4 @@ e9e02736cee8811ef23c9cca99a28f3f5d33d5e0:claude/plugins/delivery/tests/test_dl18
 edb224f6664373dadb88a633c79e7ab791fc8039:claude/plugins/delivery/tests/test_dl186_gitleaks_config.py:generic-api-key:76
 1f9f40cd82b01f38bc5669feaf824c137f373860:docs/work/DL204/REPORT.md:project-named-secret:3
 d4fcb3ac64ed7d1386e89d7d5b82d16335835b77:docs/work/DL204/REPORT.md:project-named-secret:3
+8d3bb09515f733212c7bf52fe08bccf171fc0618:docs/features/delivery/spec.md:project-named-secret:317
