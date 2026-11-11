@@ -146,11 +146,12 @@ class WorkflowTextTests(unittest.TestCase):
     def test_job_graph_unchanged(self):
         import test_dl147_workflow_needs as N
         jobs = N.read_jobs(self.text)
-        self.assertEqual(set(jobs), {"decide", "plan", "verify", "integration", "e2e-shard", "e2e"})
+        self.assertEqual(set(jobs), {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e"})  # DL190: the pool twin
         self.assertEqual(jobs["verify"]["needs"], ["decide"])
         self.assertEqual(jobs["integration"]["needs"], ["decide", "plan"])
+        self.assertEqual(jobs["integration-pool"]["needs"], ["decide", "plan"])
         self.assertEqual(jobs["e2e-shard"]["needs"], ["decide", "plan"])
-        self.assertEqual(jobs["e2e"]["needs"], ["decide", "plan", "verify", "integration", "e2e-shard"])
+        self.assertEqual(jobs["e2e"]["needs"], ["decide", "plan", "verify", "integration", "integration-pool", "e2e-shard"])
 
     def test_key_off_leaves_every_job_running(self):
         # A hold is a planned skip: the plan outputs turn 'false'. With the key off `held` is empty, so the
