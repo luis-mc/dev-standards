@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:49+00:00",
+  "updated": "2026-11-11T00:52+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3440,12 +3440,11 @@
       "id": "DL188",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Doctor: tool cache scan, platform pins, fix text, script age, wait_min",
       "detail": "Peer report: doctor finds Zig/LLVM only on PATH (Windows tool cache unpacks deeper); reads flat sha256 though tools.json 1.24.0 uses platforms; fix text names ci_tool.py ensure zig (does not exist; tool zig does); installed delivery scripts older than templates go unnoticed; ci line says 10 min though ci.wait_min is 30.",
-      "expected": "11 Nov ~01:18",
-      "changed": "2026-11-11T00:40+00:00",
-      "expected_basis": "cloud agent ~30 min, then RELEASE-93",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:52+00:00",
       "rides": "DS228",
       "started": "2026-11-11T00:40+00:00"
     },
