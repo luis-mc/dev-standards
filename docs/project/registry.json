@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T21:45+00:00",
+  "updated": "2026-11-11T21:58+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4414,36 +4414,35 @@
       "id": "DL248",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: join conflict lines, generated-docs conflicts, held-run state",
       "detail": "Release after RELEASE-108: DL249 (join.py prints conflict files on the first line; a conflict only in docs_index.py generated files is resolved by rebuilding; dispatches held by the watcher or a runner-label switch never end as a bare startup_failure).",
-      "expected": "11 Nov ~22:06",
-      "changed": "2026-11-11T21:29+00:00",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T21:58+00:00",
       "release": 109,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T20:46+00:00",
-          "end": "2026-11-11T21:51+00:00"
+          "end": "2026-11-11T21:50+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T21:51+00:00",
-          "end": "2026-11-11T21:58+00:00"
+          "start": "2026-11-11T21:44+00:00",
+          "end": "2026-11-11T21:52+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T21:58+00:00",
-          "end": "2026-11-11T22:03+00:00"
+          "start": "2026-11-11T21:52+00:00",
+          "end": "2026-11-11T21:58+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T22:03+00:00",
-          "end": "2026-11-11T22:06+00:00"
+          "start": "2026-11-11T21:58+00:00",
+          "end": "2026-11-11T22:01+00:00"
         }
       ],
       "started": "2026-11-11T20:41+00:00",
-      "expected_basis": "DL251 agent due 21:50; join after RELEASE-108 merge",
       "risk": {
         "label": "+1 fix round",
         "minutes": 15
@@ -4453,11 +4452,11 @@
       "id": "DL249",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "DL249 join conflict lines, generated-docs conflicts, held runs",
       "detail": "Join conflict line lists files; conflicts only in generated docs are rebuilt like Cargo.lock; startup_failure on held dispatches investigated; held runs get a clear state.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T21:27+00:00",
+      "changed": "2026-11-11T21:58+00:00",
       "rides": "DL248",
       "started": "2026-11-11T20:46+00:00"
     },
@@ -4465,11 +4464,11 @@
       "id": "DL250",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "DL250 edit-content never loses content on a failed replace",
       "detail": "edit-content deleted content/<key>/ before writing; a locked folder on Windows (WinError 32) left it empty. Stage in a temp folder, swap atomically, keep the old content on any failure.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T21:45+00:00",
+      "changed": "2026-11-11T21:58+00:00",
       "rides": "DL248",
       "started": "2026-11-11T21:12+00:00"
     },
@@ -4477,13 +4476,65 @@
       "id": "DL251",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "DL251 check warns on a stale Full Progress lede",
       "detail": "The Full Progress lede (content/full-progress/meta.json) can name an old RELEASE for days. check warns when the lede names a RELEASE older than the newest Live one, or is older than 3 days.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T21:45+00:00",
+      "changed": "2026-11-11T21:58+00:00",
       "rides": "DL248",
       "started": "2026-11-11T21:28+00:00"
+    },
+    {
+      "id": "DL252",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release: local-heavy slots freed when the call ended",
+      "detail": "Next release after RELEASE-109: DL253 (DL-91 slot entries held up to 120 min after the command ended).",
+      "expected": "11 Nov ~22:36",
+      "changed": "2026-11-11T21:53+00:00",
+      "expected_basis": "cloud agent ~25 min from 21:57",
+      "release": 110,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T21:57+00:00",
+          "end": "2026-11-11T22:22+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T22:22+00:00",
+          "end": "2026-11-11T22:28+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T22:28+00:00",
+          "end": "2026-11-11T22:33+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T22:33+00:00",
+          "end": "2026-11-11T22:36+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-11T21:53+00:00"
+    },
+    {
+      "id": "DL253",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL253 free a local-heavy slot when its call has ended",
+      "detail": "DL-91 entries have no pid and are freed only by PostToolUse or after 120 min. An interrupted, timed-out or backgrounded call leaks its slot (peer waited ~1 h; ffmpeg held here). Free entries whose call has ended.",
+      "expected": "11 Nov ~22:22",
+      "changed": "2026-11-11T21:53+00:00",
+      "expected_basis": "cloud agent ~25 min from 21:57",
+      "rides": "DL252",
+      "started": "2026-11-11T21:53+00:00"
     },
     {
       "id": "DS1",
