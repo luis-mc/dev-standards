@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T19:18+00:00",
+  "updated": "2026-11-11T19:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4181,8 +4181,8 @@
       "status": "Running",
       "item": "RELEASE: API-quota-safe CI watching, doctor fix, secret-scan shapes",
       "detail": "Join the three agent branches, fold, CI, merge on green, plugin updates, peer note.",
-      "expected": "11 Nov ~19:25",
-      "changed": "2026-11-11T19:16+00:00",
+      "expected": "11 Nov ~19:31",
+      "changed": "2026-11-11T19:22+00:00",
       "expected_basis": "agents ~25 min + join/CI/merge ~15 min",
       "release": 106,
       "phases": [
@@ -4199,15 +4199,19 @@
         {
           "name": "ci",
           "start": "2026-11-11T19:15+00:00",
-          "end": "2026-11-11T19:21+00:00"
+          "end": "2026-11-11T19:28+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T19:21+00:00",
-          "end": "2026-11-11T19:25+00:00"
+          "start": "2026-11-11T19:28+00:00",
+          "end": "2026-11-11T19:31+00:00"
         }
       ],
-      "started": "2026-11-11T18:25+00:00"
+      "started": "2026-11-11T18:25+00:00",
+      "risk": {
+        "label": "CI rerun after a missing spec row",
+        "minutes": 7
+      }
     },
     {
       "id": "DL235",
@@ -4308,12 +4312,11 @@
       "id": "DL241",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "join.py: sibling-branch stacked report, skipped lines, no quiet partial join",
       "detail": "Peer finding, owner chose fix: join.py reports stacked conflicts with an empty file list for sibling branches cut from one contract branch; --push prints no per-branch skipped line; a partial join is quiet. Fix all three before the peer's next multi-branch join.",
-      "expected": "11 Nov ~19:41",
-      "changed": "2026-11-11T19:12+00:00",
-      "expected_basis": "cloud agent from 19:16, setup 3 + work 15 + CI 7",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T19:22+00:00",
       "rides": "DL240",
       "started": "2026-11-11T19:12+00:00"
     },
@@ -4329,6 +4332,19 @@
       "expected_basis": "cloud agent from 19:20, setup 3 + work 12 + CI 7",
       "rides": "DL240",
       "started": "2026-11-11T19:18+00:00"
+    },
+    {
+      "id": "DL243",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "docs_fold: architecture spec with a Version line gets no front matter",
+      "detail": "Found at the RELEASE-106 join: docs_fold note+fold on architecture/DELIVERYSPEC added YAML front matter (version 0.1.0) and a Versions table, although the spec keeps its own **Version:** line (1.7.0). Fold must bump the existing Version line (or refuse with a clear message), never add a second version scheme.",
+      "expected": "11 Nov ~19:45",
+      "changed": "2026-11-11T19:22+00:00",
+      "expected_basis": "cloud agent from 19:23, setup 3 + work 12 + CI 7",
+      "rides": "DL240",
+      "started": "2026-11-11T19:22+00:00"
     },
     {
       "id": "DS1",
