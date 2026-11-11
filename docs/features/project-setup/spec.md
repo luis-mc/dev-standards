@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.11.1
+version: 0.11.2
 owner: agents
 type: reference
 code:
@@ -201,6 +201,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.2 | 2026-11-11 | RELEASE-99 | The pre-commit secret pattern no longer matches a CSS selector such as a pseudo-class on a class ending in key.<br>questions_stop.py reads only the current turn from the end of the transcript (bounded memory). | DL207, DL208 |
 | 0.11.1 | 2026-11-11 | RELEASE-98 | Secret scans skip the delivery installer's state files; shipped scripts avoid secret-shaped variable names; the branch gate ignores untracked docs/work/ files. | DL204 |
 | 0.11.0 | 2026-11-11 | RELEASE-93 | The delivery installer writes .gitleaks.toml when the project has none (one source, in luismc-delivery), and the shared secret rules skip type annotations, struct fields and empty values. | DL186 |
 | 0.10.0 | 2026-11-10 | RELEASE-86 | claude-setup enables six plugins and removes the keys of the two merged ones; its CI template names the luismc-docs spec-check script. | DS219 |
