@@ -29,3 +29,6 @@ Node 22.23.4 tarball (sha256 checked, OK) copied into a root-owned dir `/opt/dl2
 - Run the real image build once on the pool to confirm `test -L` passes (no Docker here).
 - G1: decisions.md is stale on main; release fold regenerates.
 
+Branch head: bbacdbb193ee37a922a9e0a6d0f8c0de3f93a726
+
+READY
