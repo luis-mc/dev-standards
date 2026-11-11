@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.11.0
+version: 0.11.1
 owner: agents
 type: reference
 code:
@@ -291,6 +291,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.1 | 2026-11-11 | RELEASE-109 | edit-content replaces the content folder atomically; on failure (a locked folder, invalid content) the old content stays complete.<br>Full Progress: check warns and render notes when the lede names an older RELEASE-n than the newest Live release (R5.37a). | DL250, DL251 |
 | 0.11.0 | 2026-11-11 | RELEASE-108 | Local Full Progress copy is the repo copy with feature pages beside it, uses a machine-wide work root, auto-refreshes, and opens once per deferral. | DL246 |
 | 0.10.0 | 2026-11-11 | RELEASE-107 | Full Progress and feature pages show the generator badge, use the default page colours and 0.9x fonts; the latest flag never makes a page stale (R5.17). | DL239 |
 | 0.9.0 | 2026-11-11 | RELEASE-106 | mark-deferred writes and opens a local Full Progress page in the work directory; pending shows local_path. | DL238 |

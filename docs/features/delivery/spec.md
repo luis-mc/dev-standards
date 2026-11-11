@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.31.0
+version: 0.31.1
 owner: agents
 type: reference
 code:
@@ -527,6 +527,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.31.1 | 2026-11-11 | RELEASE-109 | join lists conflicting files, rebuilds generated-docs-only conflicts; watcher records held runs as held | DL249 |
 | 0.31.0 | 2026-11-11 | RELEASE-108 | delivery_ci_install.py install --track rust,ts installs several tracks at once: one merged ci.yml with a tracks job, one gate.json with every track's steps, and ci-scope.json with each track's patterns (R13.95). The doctor checks each track.<br>ci_watch.py exits 5 when gh fails five times in a row and pins the repository at start (R5.56). | DL245, DL247 |
 | 0.30.0 | 2026-11-11 | RELEASE-107 | join.py: sibling branches off one contract branch are not reported as stacked; a stacked stop lists its files; every skipped branch prints a skipped line; a partial join prints a joined N of M summary and exits non-zero unless --allow-partial (R5.57).<br>R5.33: artifact_prune.py --sync-workflow keeps the workflow file's own list when the config sets no artifact_prune.workflows; the default is written only for a new file or a file with no list; one line names the source. | DL241, DL242 |
 | 0.29.0 | 2026-11-11 | RELEASE-106 | ci_watch.py: 60 s default poll, backoff while queued, quota guard, many commits or runs in one process; rule DL-95 (R5.56).<br>update keeps a file the template did not reach (kept, with .new) instead of reporting merged; ci.scripts-current skips the package files the installer skips (R13.92).<br>The shipped .gitleaks.toml allowlist skips a SQL placeholder bound to a _key/_token/_secret/_pass name with more SQL after it, and a nested call such as Some(Arc::new(signer)). Quotes, bare tokens and second assignments stay scanned. | DL235, DL236, DL237 |
