@@ -5169,6 +5169,98 @@
       "chosen": "Pre-create declared roles (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "Pre-create declared roles (Recommended)"
+    },
+    {
+      "id": "D228",
+      "question": "GitHub API quota drained by fast run watchers: fix in dev-standards?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL235",
+      "options": [
+        {
+          "label": "All three (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Only ci_watch.py",
+          "summary": "offered"
+        },
+        {
+          "label": "Later",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "All three (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "All three (Recommended)"
+    },
+    {
+      "id": "D229",
+      "question": "A second pool runner for one project?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL233",
+      "options": [
+        {
+          "label": "Wait for memory study (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Add one now",
+          "summary": "offered"
+        },
+        {
+          "label": "No",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "No",
+      "decided": "2026-11-11",
+      "owner_words": "No"
+    },
+    {
+      "id": "D230",
+      "question": "Peer findings: doctor false warning and secret-scan shapes",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL236",
+      "options": [
+        {
+          "label": "(b) Doctor false warning",
+          "summary": "offered"
+        },
+        {
+          "label": "(a) Widen secret-scan shapes",
+          "summary": "offered"
+        },
+        {
+          "label": "(b) Doctor false warning, (a) Widen secret-scan shapes",
+          "summary": "both, owner's multi-select"
+        }
+      ],
+      "chosen": "(b) Doctor false warning, (a) Widen secret-scan shapes",
+      "decided": "2026-11-11",
+      "owner_words": "(b) Doctor false warning, (a) Widen secret-scan shapes"
+    },
+    {
+      "id": "D231",
+      "question": "A peer's 10 customised files differ from templates: anything for dev-standards?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL233",
+      "options": [
+        {
+          "label": "Nothing, tell it 1.31.0 (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Review the 10 diffs",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Nothing, tell it 1.31.0 (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Nothing, tell it 1.31.0 (Recommended)"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T17:53+00:00",
+  "updated": "2026-11-11T18:28+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4166,13 +4166,87 @@
       "id": "DL233",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Refresh pool to 1.31.0 and declare a peer's database roles",
       "detail": "Rebuild pool main from delivery 1.31.0 when idle and memory <85%, then pool-add-agent --db-role for the peer's two NOLOGIN roles (D227); tell it to rerun.",
-      "expected": "11 Nov ~18:30",
-      "changed": "2026-11-11T17:53+00:00",
-      "expected_basis": "3 pool jobs at 17:52 (~25 min) + rebuild ~5 min",
-      "no_release": "operations on the local pool"
+      "expected": "11 Nov",
+      "changed": "2026-11-11T18:28+00:00",
+      "no_release": "operations on the local pool",
+      "started": "2026-11-11T18:23+00:00"
+    },
+    {
+      "id": "DL234",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: API-quota-safe CI watching, doctor fix, secret-scan shapes",
+      "detail": "Join the three agent branches, fold, CI, merge on green, plugin updates, peer note.",
+      "expected": "11 Nov ~19:12",
+      "changed": "2026-11-11T18:25+00:00",
+      "expected_basis": "agents ~25 min + join/CI/merge ~15 min",
+      "release": 106,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T18:30+00:00",
+          "end": "2026-11-11T18:55+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T18:55+00:00",
+          "end": "2026-11-11T19:00+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T19:00+00:00",
+          "end": "2026-11-11T19:06+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T19:06+00:00",
+          "end": "2026-11-11T19:12+00:00"
+        }
+      ],
+      "started": "2026-11-11T18:25+00:00"
+    },
+    {
+      "id": "DL235",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "ci_watch: backoff, rate-limit check, many runs; rule against fast run watch",
+      "detail": "D228: ci_watch.py polls 60-120 s with backoff while runs are queued, checks gh api rate_limit first, watches several run IDs in one process; a delivery rule says never gh run watch under --interval 60.",
+      "expected": "11 Nov ~18:55",
+      "changed": "2026-11-11T18:25+00:00",
+      "expected_basis": "cloud agent from ~18:30, ~25 min",
+      "rides": "DL234",
+      "started": "2026-11-11T18:25+00:00"
+    },
+    {
+      "id": "DL236",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Doctor: no scripts-current warning on files the installer just wrote",
+      "detail": "D230 (b): the doctor's ci.scripts-current check warned on branch_gate.py and ci_rerun_first.py right after the installer overwrote them; find the cause and fix.",
+      "expected": "11 Nov ~18:55",
+      "changed": "2026-11-11T18:25+00:00",
+      "expected_basis": "cloud agent from ~18:30, ~25 min",
+      "rides": "DL234",
+      "started": "2026-11-11T18:25+00:00"
+    },
+    {
+      "id": "DL237",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Secret scan: narrow shapes for mid-line SQL placeholders and nested calls",
+      "detail": "D230 (a): the template gitleaks allowlist also covers a key column bound to a SQL placeholder with more SQL after it, and an assignment to a nested constructor call; keep shapes narrow and tested.",
+      "expected": "11 Nov ~18:55",
+      "changed": "2026-11-11T18:25+00:00",
+      "expected_basis": "cloud agent from ~18:30, ~25 min",
+      "rides": "DL234",
+      "started": "2026-11-11T18:25+00:00"
     },
     {
       "id": "DS1",
