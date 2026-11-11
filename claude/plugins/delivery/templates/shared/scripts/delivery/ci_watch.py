@@ -500,6 +500,15 @@ def head_of(sha: str, repo: str | None) -> tuple[str | None, int | None]:
     return None, None
 
 
+def ledger_links(root: Path, sha: str) -> bool:
+    """DL265: True when a ledger train records `sha` as its CI head. A missing or unreadable ledger counts as linked."""
+    try:
+        led = json.loads((Path(root) / ".delivery" / "ledger.json").read_text(encoding="utf-8"))
+        return any((t.get("ci") or {}).get("head_sha") == sha for t in led.get("trains", []))
+    except Exception:  # noqa: BLE001
+        return True
+
+
 def ledger_ci(sha: str, state: str, repo: str | None = None) -> None:
     """Best effort: record the decision in the delivery ledger (no-op without the plugin). DL132 the main
     checkout's ledger; DL138 the train is matched by branch or PR head and made when none exists."""
@@ -510,9 +519,10 @@ def ledger_ci(sha: str, state: str, repo: str | None = None) -> None:
         kw = {"branch": branch, "pr": pr, "create": bool(branch)}
         if not dc.ledger_record(root, "ci", sha=sha, state=state, by="ci_watch.py", **kw):
             return
-        if not branch:
-            print("ci_watch: no train matched %s; record it with: python <plugin>/scripts/delivery_ledger.py "
-                  "plan --branch <branch>" % sha[:10], file=sys.stderr)
+        if not ledger_links(root, sha):
+            print("ci_watch: no train in the ledger links %s; the result was not recorded; link it with "
+                  "delivery_ledger.py link --pr N --sha %s --branch <branch>, then run ci_watch again" % (sha, sha),
+                  file=sys.stderr)
     except Exception:  # noqa: BLE001
         return
 
