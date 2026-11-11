@@ -325,6 +325,7 @@ table.history-table td:first-child { font-family: var(--font-mono); white-space:
 
 /* Earlier fold: Live rows older than the fold age, closed by default */
 details.earlier { margin: .9em 0; }
+p.earlier-note { margin: .6em .8em; color: var(--ink-muted); font-size: .9em; }
 details.earlier > summary {
   cursor: pointer;
   font-family: var(--font-mono);
@@ -641,7 +642,6 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
   table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
   table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
-    content: attr(data-label);
     display: block;
     font-family: var(--font-mono);
     font-size: .68rem;
@@ -649,6 +649,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
     letter-spacing: .06em;
     color: var(--ink-muted);
   }
+  /* AR69: the cell labels come from the column, not from an attribute on every cell */
+  table.status-checklist.with-app td:nth-child(3)::before { content: "App / service"; }
+  table.status-checklist.with-app td:nth-child(4)::before, table.status-checklist:not(.with-app) td:nth-child(3)::before { content: "Detail"; }
+  table.status-checklist.with-app td:nth-child(5)::before, table.status-checklist:not(.with-app) td:nth-child(4)::before { content: "Expected"; }
+  table.feature-list td:nth-child(2)::before { content: "Last updated"; }
+  table.feature-list td:nth-child(3)::before { content: "Tasks"; }
+  table.feature-list td:nth-child(4)::before { content: "State"; }
+  table.feature-list td:nth-child(5)::before { content: "Where it stands"; }
   table.status-checklist .release-line::before { content: "Rides "; }
   table.feature-list td:nth-child(1) { font-weight: 600; }
   table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }

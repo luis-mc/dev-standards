@@ -130,6 +130,13 @@ class Fixture:
         shutil.rmtree(self.root, ignore_errors=True)
 
 
+def embedded_window(script):
+    """AR69: the embedded registry, without its `full_registry` path."""
+    data = json.loads(''.join(c.text for c in script.children))
+    assert data.pop('full_registry').endswith('registry.json')
+    return data
+
+
 def sub1(html, old, new, count=1):
     assert html.count(old) == count, 'fixture error: %r found %d times, wanted %d' % (old, html.count(old), count)
     return html.replace(old, new)
@@ -368,7 +375,7 @@ def full_progress_structure(fx):
     assert 'History' not in nav
     scripts = R.find_all(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json')
     assert len(scripts) == 1 and scripts[0].attrs['id'] == 'task-registry'
-    assert json.loads(''.join(c.text for c in scripts[0].children)) == fx.registry
+    assert embedded_window(scripts[0]) == R.registry_window(fx.registry, R._parse_iso('2026-10-10T12:39+01:00'))
     # R5.6: link, task ID range, first sentence of the lede
     s1node = R.find(dom, 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1node, 'tr', pred=lambda n: R.find(n, 'td'))]
@@ -395,7 +402,7 @@ def registry_in_script_cannot_break_out(fx):
     dom = R.parse_dom(out)
     scripts = R.find_all(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json')
     assert len(scripts) == 1
-    assert json.loads(''.join(c.text for c in scripts[0].children)) == fx.registry
+    assert embedded_window(scripts[0]) == R.registry_window(fx.registry, R._parse_iso('2026-10-10T12:39+01:00'))
     assert fx.check(out, 'full-progress') == []
 
 
@@ -443,11 +450,11 @@ def groups_and_order_on_the_full_progress_artifact(fx):
 @with_fixture
 def earlier_fold_older_than_14_days(fx):
     out = fx.render('full-progress')
-    assert table_rows(out, 1) == [('task', 'DS1')], table_rows(out, 1)   # only a Live row folds (24 Sep)
-    dom = R.parse_dom(out)
-    details = R.find_all(dom, 'details', 'earlier')
-    assert len(details) == 1 and 'open' not in details[0].attrs and R.text_of(R.find(details[0], 'summary')) == 'Earlier'
-    assert 'class="earlier"' not in fx.render('artifacts')  # a feature artifact never folds
+    assert table_rows(out, 1) == [], table_rows(out, 1)     # AR69: no Earlier fold
+    assert ('task', 'DS1') not in table_rows(out, 0)          # only a Live row is left out (24 Sep)
+    assert 'class="earlier"' not in out and 'class="earlier-note"' in out
+    assert '1 earlier Live task (over 14 days old) is not shown; the full list is in docs/' in out
+    assert 'class="earlier-note"' not in fx.render('artifacts')  # a feature artifact has no such line
 
 
 @test
@@ -465,11 +472,11 @@ def built_rows_never_fold(fx):
         if task_['id'] == 'AR16':
             task_['status'] = 'Live'
     folded = fx.render('full-progress')
-    assert ('task', 'AR16') in table_rows(folded, 1) and ('task', 'AR16') not in table_rows(folded, 0)
-    # a registry with only old Built rows has no Earlier fold at all
+    assert ('task', 'AR16') not in table_rows(folded, 0) and 'earlier Live task' in folded
+    # a registry with only old Built rows has no earlier line at all
     fx.registry['tasks'] = [dict(t_, status='Built', changed='2025-01-01T10:00+00:00') for t_ in fx.registry['tasks']
                             if t_['status'] in ('Live', 'Built')]
-    assert 'class="earlier"' not in fx.render('full-progress')
+    assert 'class="earlier-note"' not in fx.render('full-progress')
 
 
 @test
@@ -479,7 +486,7 @@ def earlier_fold_boundary_is_14_days_from_the_stamp(fx):
     fx.registry['tasks'][4]['changed'] = '2026-09-26T12:39+01:00'          # DS1: exactly 14 days
     fx.registry['tasks'][6]['changed'] = '2026-09-26T12:38+01:00'          # DS3 (Live): one minute older
     out = fx.render('full-progress')
-    assert table_rows(out, 1) == [('task', 'DS3')], table_rows(out, 1)
+    assert ('task', 'DS3') not in table_rows(out, 0)
     assert ('task', 'DS1') in table_rows(out, 0)
     assert fx.check(out, 'full-progress') == []
 
@@ -488,7 +495,7 @@ def earlier_fold_boundary_is_14_days_from_the_stamp(fx):
 @with_fixture
 def earlier_fold_follows_the_stamp_not_the_clock(fx):
     out = fx.render('full-progress', stamp_text='01 Oct 09:00', stamp_iso='2026-10-01T09:00+01:00')
-    assert 'class="earlier"' not in out  # everything is within 14 days of 1 Oct except AR16 (11 days) - all shown
+    assert 'class="earlier-note"' not in out  # everything is within 14 days of 1 Oct except AR16 (11 days) - all shown
     assert ('task', 'AR16') in table_rows(out, 0)
 
 
@@ -501,8 +508,8 @@ def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
             task_['status'] = 'Live'                                             # Built would stay shown
     out = fx.render('full-progress')
     rows = table_rows(out, 0)
-    assert rows[-1] == ('group', 'built', 'Live or built'), rows               # the group holds only the Earlier fold
-    assert table_rows(out, 1) == [('task', 'DS1'), ('task', 'AR16')]
+    assert rows[-1] == ('group', 'built', 'Live or built'), rows               # the group holds only the count line
+    assert '2 earlier Live tasks (over 14 days old) are not shown' in out
     assert fx.check(out, 'full-progress') == []
 
 
@@ -634,7 +641,7 @@ def check_r64_columns(fx):
     expect(fx, sub1(out, '<th>Detail</th>', '', count=2), 'artifacts', ['R6.4'])
     expect(fx, sub1(out, 'Expected (Lisbon)', 'Expected', count=2), 'artifacts', ['R6.4'])
     fp = fx.render('full-progress')
-    expect(fx, sub1(fp, '<th>App / service</th>', '', count=4), 'full-progress', ['R6.4'])
+    expect(fx, sub1(fp, '<th>App / service</th>', '', count=fp.count('<th>App / service</th>')), 'full-progress', ['R6.4'])
     # a feature artifact must not carry the App / service column
     expect(fx, sub1(out, '<th>Detail</th>', '<th>App / service</th><th>Detail</th>', count=2), 'artifacts', ['R6.4'])
 
@@ -643,9 +650,9 @@ def check_r64_columns(fx):
 @with_fixture
 def check_r61_statuses(fx):
     out = fx.render('artifacts')
-    expect(fx, sub1(out, '<tr data-task="AR6"><td data-label="Status"><span class="status-chip status-running">', '<tr data-task="AR6"><td data-label="Status"><span class="status-chip status-live">'),
+    expect(fx, sub1(out, '<tr data-task="AR6"><td><span class="status-chip status-running">', '<tr data-task="AR6"><td><span class="status-chip status-live">'),
            'artifacts', ['R6.1'])
-    got = fx.check(sub1(out, '<span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">AR6',
+    got = fx.check(sub1(out, '<span class="status-chip status-running">Running</span></td><td><span class="task-id">AR6',
                         '<span class="status-chip status-merged">Merged</span></td><td><span class="task-id">AR6'), 'artifacts')
     assert 'R6.1' in reqs(got), got
 
@@ -693,28 +700,22 @@ def check_r62_groups(fx):
 @with_fixture
 def check_r63_earlier_fold(fx):
     fp = fx.render('full-progress')
-    # un-fold: take the details out
-    start = fp.index('<details class="earlier">')
-    end = fp.index('</details>', start) + len('</details>')
-    expect(fx, fp[:start] + fp[end:], 'full-progress', ['INV-1', 'R6.3'])            # rows lost entirely: also not in the checklist
-    expect(fx, sub1(fp, '<details class="earlier">', '<details class="earlier" open>'), 'full-progress', ['R6.3'])
-    expect(fx, sub1(fp, '<summary>Earlier</summary>', '<summary>Older</summary>'), 'full-progress', ['R6.3'])
-    # a registry whose change dates disagree with the fold
+    note = '<p class="earlier-note">'
+    start = fp.index(note)
+    end = fp.index('</p>', start) + len('</p>')
+    expect(fx, fp[:start] + fp[end:], 'full-progress', ['R6.3'])                       # the line is gone
+    expect(fx, fp[:end] + fp[start:end] + fp[end:], 'full-progress', ['R6.3'])         # twice
+    expect(fx, sub1(fp, 'earlier Live task', 'earlier Live tasks'), 'full-progress', ['R6.3'])
+    # an Earlier fold is the old shape
+    expect(fx, sub1(fp, note, '<details class="earlier"><summary>Earlier</summary></details>' + note), 'full-progress', ['R6.3'])
+    # a registry whose change dates disagree with the line
     registry = copy.deepcopy(fx.registry)
     registry['tasks'][5]['changed'] = '2026-08-01T10:00+01:00'                         # DS2 is old, but shown
-    got = fx.check(sub1(fp, '<script type="application/json" id="task-registry">', '<script type="application/json" id="task-registry">'), 'full-progress', registry=registry)
+    got = fx.check(fp, 'full-progress', registry=registry)
     assert 'R6.3' in reqs(got), got
-    # a Built row is never folded: AR16 (Built, 20 Sep) moved into Earlier by hand
-    start = fp.index('<tr data-task="AR16">')
-    end = fp.index('</tr>', start) + len('</tr>')
-    row = fp[start:end]
-    hidden = fp[:start] + fp[end:]
-    at = hidden.index('</tbody>', hidden.index('<details class="earlier">'))
-    hidden = hidden[:at] + row + '\n' + hidden[at:]
-    assert 'R6.3' in reqs(fx.check(hidden, 'full-progress')), fx.check(hidden, 'full-progress')
-    # a feature artifact has no fold
+    # a feature artifact has no such line
     feature = fx.render('artifacts')
-    wrapped = sub1(feature, '</section>\n<section id="s1">', '<details class="earlier"><summary>Earlier</summary></details></section>\n<section id="s1">')
+    wrapped = sub1(feature, '</section>\n<section id="s1">', note + 'x</p></section>\n<section id="s1">')
     assert 'R6.3' in reqs(fx.check(wrapped, 'artifacts'))
 
 
@@ -813,7 +814,7 @@ def groups_are_collapsible_details(fx):
         assert fx.check(out, name) == []
     fp = R.parse_dom(fx.render('full-progress'))
     built = [f for f in R.find_all(fp, 'details', 'status-fold') if f.attrs['data-group'] == 'built'][0]
-    assert R.find(built, 'details', 'earlier') is not None           # the Earlier fold stays, inside Live or built
+    assert R.find(built, 'p', 'earlier-note') is not None            # the earlier-rows line sits inside Live or built
 
 
 @test
@@ -826,7 +827,7 @@ def live_or_built_starts_closed(fx):
             assert ('open' in fold.attrs) == (fold.attrs['data-group'] != 'built'), (name, fold.attrs)
     fp = R.parse_dom(fx.render('full-progress'))
     built = [f for f in R.find_all(fp, 'details', 'status-fold') if f.attrs['data-group'] == 'built'][0]
-    assert R.text_of(R.find(built, 'span', 'fold-count')) == '2 built, 4 live', R.text_of(R.find(built, 'span', 'fold-count'))
+    assert R.text_of(R.find(built, 'span', 'fold-count')) == '2 built, 3 live, 1 earlier', R.text_of(R.find(built, 'span', 'fold-count'))
 
 
 @test
@@ -967,7 +968,7 @@ def check_r56_feature_list(fx):
     expect(fx, sub1(fp, '<a href="%s">Feature: Project artifacts standard</a>' % AR_FILE, 'Feature: Project artifacts standard'), 'full-progress', ['R5.6'])
     expect(fx, sub1(fp, '<a href="%s">Feature: Model and effort profiles</a>' % MP_FILE, '<a href="https://claude.ai/artifact/x">Feature: Model and effort profiles</a>'),
            'full-progress', ['R5.30'])
-    expect(fx, sub1(fp, '<td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
+    expect(fx, sub1(fp, '<td data-value="feature: model and effort profiles"><a href="%s">Feature: Model and effort profiles</a></td>' % MP_FILE, '<td>Feature: Model and effort</td>'), 'full-progress', ['R5.6'])
 
 
 @test
@@ -1006,7 +1007,7 @@ def check_r54_history(fx):
 def check_r59_registry_script(fx):
     fp = fx.render('full-progress')
     expect(fx, sub1(fp, 'id="task-registry"', 'id="registry"'), 'full-progress', ['R5.9'])
-    expect(fx, sub1(fp, '"status": "Running"', '"status": "Built"', count=fp.count('"status": "Running"')), 'full-progress', ['R5.9'])
+    expect(fx, sub1(fp, '"status":"Running"', '"status":"Built"', count=fp.count('"status":"Running"')), 'full-progress', ['R5.9'])
     start = fp.index('<script type="application/json"')
     end = fp.index('</script>', start) + 9
     expect(fx, fp[:start] + fp[end:], 'full-progress', ['R5.9'])
@@ -1455,7 +1456,7 @@ def publish_copy_has_file_links(fx):
         assert button.attrs['title'].startswith('/home/me/my repo/docs/artifacts/')       # the path, as the tooltip
     # the stamp, the registry script and the rows are those of the committed file
     assert R.text_of(R.find(dom, 'p', 'last-update')) == 'Last update: 10 Oct 12:39 (Lisbon)'
-    assert json.loads(''.join(c.text for c in R.find(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json').children)) == fx.registry
+    assert embedded_window(R.find(dom, 'script', pred=lambda n: n.attrs.get('type') == 'application/json')) == R.registry_window(fx.registry, R._parse_iso(STAMP_ISO))
     assert len(R.find_all(R.find(R.parse_dom(committed), 'table', 'status-checklist'), 'tr')) == len(R.find_all(table, 'tr'))
 
 
@@ -2644,7 +2645,7 @@ def check_finds_a_wrong_timeline(fx):
     gone = re.sub(r'<figure class="release-timeline">.*?</figure>\n?', '', out, flags=re.S)
     assert 'R5.42' in reqs(fx.check(gone, 'full-progress', registry=registry))
     plain = fx.render('full-progress')
-    extra = plain.replace('<div class="table-scroll"><table class="status-checklist">',
+    extra = plain.replace('<div class="table-scroll"><table class="status-checklist with-app">',
                  '<figure class="release-timeline"><figcaption>Next releases (Lisbon)</figcaption></figure>\n<div class="table-scroll"><table class="status-checklist">')
     assert 'R5.42' in reqs(fx.check(extra, 'full-progress'))
     bad = sub1(out, 'role="img"', 'role="presentation"')
@@ -2814,8 +2815,9 @@ def full_progress_groups_by_release(fx):
     first = [r[1] for r in rows[:rows.index(groups[1])] if r[0] == 'task']
     assert first == ['DS51', 'AR6', 'DS6'], first                  # the release, then its riders (ties by ID)
     # a task appears in exactly one group
-    ids = [r[1] for r in rows if r[0] == 'task'] + [r[1] for r in table_rows(out, 1) if r[0] == 'task']
-    assert len(ids) == len(set(ids)) == len(registry['tasks'])
+    ids = [r[1] for r in rows if r[0] == 'task']
+    older = sum(len(old) for _, _, _, old in R.group_tasks(registry['tasks'], R._parse_iso(STAMP_ISO), 'full-progress'))
+    assert len(ids) == len(set(ids)) == len(registry['tasks']) - older
     assert 'AR6' not in [r[1] for r in rows[rows.index(groups[2]):] if r[0] == 'task']
     assert fx.check(out, 'full-progress', registry=registry) == []
     # a feature artifact keeps the groups of R6.2
@@ -2985,18 +2987,20 @@ def narrow_width_css_and_labels(fx):
     """CO669: a task row stacks into a card in a narrow box, every cell carries its label, and the contents nav wraps."""
     css = R.structure_css()
     assert '@container (max-width: 46rem)' in css and '@media (max-width: 56rem)' in css
-    assert 'attr(data-label)' in css and 'content: "Rides "' in css
+    assert 'content: "Rides "' in css
     assert re.search(r'nav\.contents \.contents-links[^{]*\{[^}]*flex-wrap: wrap', css), 'the nav wraps'
     assert 'overflow-wrap: anywhere' in css and 'min-width: 0' in css
     assert '.timeline-scroll' in css and 'container-type: inline-size' in css
+    # AR69: no per-cell data-label in a checklist or feature list; the labels come from the column
     for kind in ('full-progress', 'artifacts'):
         out = fx.render(kind)
-        for label in ('Status', 'Item', 'Detail', 'Expected'):
-            assert 'data-label="%s"' % label in out, (kind, label)
+        for table in R.find_all(R.parse_dom(out), 'table', 'status-checklist'):
+            assert 'data-label' not in str(table.attrs) and not R.find_all(table, 'td', pred=lambda n: 'data-label' in n.attrs)
     fp = fx.render('full-progress')
-    assert 'data-label="App / service"' in fp and 'data-label="State"' in fp
-    for label in ('Feature artifact', 'Last updated', 'Tasks', 'Where it stands'):
-        assert 'data-label="%s"' % label in fp, label
+    assert not re.search(r'<tr data-task="[^"]*">(?:(?!</tr>).)*data-label=', fp, re.S)
+    assert not re.search(r'<td data-value="[^"]*"[^>]*data-label=', fp)
+    for label in ('App / service', 'Detail', 'Expected', 'Last updated', 'Tasks', 'State', 'Where it stands'):
+        assert 'content: "%s"' % label in css, label
 
 
 @test
