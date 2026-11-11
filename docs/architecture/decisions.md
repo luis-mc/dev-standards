@@ -205,7 +205,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D225 | Installer writes package.yml with a docker build placeholder for projects with no Dockerfile: fix? | Fix it (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D226 | playwright install --with-deps needs sudo on pool runners: fix? | Template drops --with-deps on pool (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D227 | A project's migration creates NOLOGIN roles; pool DB user cannot: how? | Pre-create declared roles (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D228 | GitHub API quota drained by fast run watchers: fix in dev-standards? | All three (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D229 | A second pool runner for one project? | No | decided | 2026-11-11 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
+| delivery-speed | D230 | Peer findings: doctor false warning and secret-scan shapes | (b) Doctor false warning, (a) Widen secret-scan shapes | decided | 2026-11-11 |
+| delivery-speed | D231 | A peer's 10 customised files differ from templates: anything for dev-standards? | Nothing, tell it 1.31.0 (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |
 | delivery-speed | D25 | Machine-wide CI load control: when a crashed job keeps its slot, free it after how long? | 2 hours | decided | 2026-11-04 |
 | delivery-speed | D26 | Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config? | Run it with permission | decided | 2026-11-04 |
