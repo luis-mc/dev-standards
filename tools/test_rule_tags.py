@@ -2,7 +2,8 @@
 """Every rule line shipped to projects names what enforces it (STACKSPEC 13.8, "Rules name their check").
 
 A rule file is any `rules/*.md` a plugin ships (outside docs/). Each rule line, a `- ` bullet,
-ends with exactly one tag:
+ends with exactly one tag. In the rule files that ship to projects (delivery/rules and the claude-setup
+assets) only rule IDs are allowed; a path there fails:
 
     <!-- check: <path>[#<function or step>] -->   the named code refuses or reports the rule
     <!-- check: DL-37, Q-2 -->                     the named DELIVERYSPEC ids enforce it (ids must exist in the spec)
@@ -31,7 +32,11 @@ ID_RE = re.compile(r"^(DL-\d\d|Q-\d+)$")
 SPEC = "docs/architecture/DELIVERYSPEC.md"
 BULLET_RE = re.compile(r"^\s*[-*] ")
 LATE = ("claude/plugins/delivery/templates/shared/scripts/delivery/session_guard.py",)
+# Rule files that ship to projects name rule IDs only. A path there is a mistake: the tag test
+# used to accept any path that exists, so a hook path pasted over an ID passed (SO7).
+ID_ONLY = ("claude/plugins/delivery/rules/", "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/")
 EXPECTED = (
+    "claude/plugins/delivery/rules/clarifying-questions.md",
     "claude/plugins/docs/rules/project-artifacts.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md",
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/clarifying-questions.md",
@@ -52,9 +57,11 @@ def rule_files() -> list[str]:
     return sorted(f for f in files if (REPO / f).is_file())
 
 
-def problems(rel: str, text: str, exists=None, ids: set[str] | None = None) -> list[str]:
+def problems(rel: str, text: str, exists=None, ids: set[str] | None = None, id_only: bool | None = None) -> list[str]:
     """Findings for one rule file's text. `exists` replaces the file check in the self-tests."""
     found: list[str] = []
+    if id_only is None:
+        id_only = rel.startswith(ID_ONLY)
     for no, line in enumerate(text.splitlines(), 1):
         if not BULLET_RE.match(line):
             continue
@@ -63,6 +70,9 @@ def problems(rel: str, text: str, exists=None, ids: set[str] | None = None) -> l
             found.append("%s:%d: rule line has no `<!-- check: ... -->` or `<!-- advice -->` tag" % (rel, no))
             continue
         if m.group(1) == "advice":
+            continue
+        if id_only and not all(ID_RE.match(i.strip()) for i in m.group(2).split(",")):
+            found.append("%s:%d: check tag is not a rule ID (Q-1, DL-37): %s" % (rel, no, m.group(2)))
             continue
         if ID_RE.match(m.group(2).split(",")[0].strip()):
             known = spec_ids() if ids is None else ids
@@ -108,6 +118,13 @@ def selftest() -> list[str]:
         bad.append("an id missing from the spec was not reported")
     if not problems("x.md", "- a rule <!-- check: DL-01, nonsense -->\n", ids=fake):
         bad.append("a malformed id in a list was not reported")
+    path_tag = "- a rule <!-- check: claude/plugins/delivery/scripts/hook_session_start.py -->\n"
+    if not problems("claude/plugins/delivery/rules/x.md", path_tag):
+        bad.append("a path where a rule ID belongs was not reported in a shipped rule file")
+    if not problems("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/x.md", path_tag):
+        bad.append("a path where a rule ID belongs was not reported in a claude-setup asset rule file")
+    if problems("claude/plugins/docs/rules/x.md", path_tag):
+        bad.append("a path tag was refused in a rule file that may name code")
     if not {"DL-31", "DL-74", "Q-2", "Q-5"} <= spec_ids():
         bad.append("DELIVERYSPEC ids were not read")
     if not problems("x.md", "- a rule <!-- advice --> trailing\n"):
