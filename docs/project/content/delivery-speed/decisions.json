@@ -4970,8 +4970,20 @@
       "task": "DL221",
       "options": [
         {
+          "label": "I'll update it now",
+          "summary": "offered"
+        },
+        {
+          "label": "Tell it to update",
+          "summary": "offered"
+        },
+        {
+          "label": "Later",
+          "summary": "offered"
+        },
+        {
           "label": "tell lan-link again",
-          "summary": "owner's answer"
+          "summary": "owner's own words"
         }
       ],
       "chosen": "tell lan-link again",
@@ -4986,8 +4998,12 @@
       "task": "DL221",
       "options": [
         {
+          "label": "Keep the hold",
+          "summary": "offered"
+        },
+        {
           "label": "Tell it to update",
-          "summary": "owner's answer"
+          "summary": "offered"
         }
       ],
       "chosen": "Tell it to update",
@@ -5003,7 +5019,15 @@
       "options": [
         {
           "label": "Now",
-          "summary": "owner's answer"
+          "summary": "offered"
+        },
+        {
+          "label": "I'll answer there",
+          "summary": "offered"
+        },
+        {
+          "label": "Later",
+          "summary": "offered"
         }
       ],
       "chosen": "Now",
@@ -5018,13 +5042,133 @@
       "task": "DL221",
       "options": [
         {
+          "label": "I'll do both there",
+          "summary": "offered"
+        },
+        {
           "label": "Tell it: approved",
-          "summary": "owner's answer"
+          "summary": "offered"
+        },
+        {
+          "label": "Later",
+          "summary": "offered"
         }
       ],
       "chosen": "Tell it: approved",
       "decided": "2026-11-11",
       "owner_words": "Tell it: approved"
+    },
+    {
+      "id": "D223",
+      "question": "Fix the 11 peer tooling bugs (lan-link 9, moobable 2)?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL224",
+      "options": [
+        {
+          "label": "Fix all 11 (Recommended)",
+          "summary": "4 cloud agents by file"
+        },
+        {
+          "label": "Only the blockers",
+          "summary": "1-4, 6, 7"
+        },
+        {
+          "label": "Later",
+          "summary": "To do tasks"
+        }
+      ],
+      "chosen": "Fix all 11 (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Fix all 11 (Recommended)"
+    },
+    {
+      "id": "D224",
+      "question": "Docker for pool jobs (isolated from other containers)?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL229",
+      "options": [
+        {
+          "label": "Drop it for now (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Build isolated Docker now",
+          "summary": "offered"
+        },
+        {
+          "label": "Explain more first",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Drop it for now (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Drop it for now (Recommended)"
+    },
+    {
+      "id": "D225",
+      "question": "Installer writes package.yml with a docker build placeholder for projects with no Dockerfile: fix?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL229",
+      "options": [
+        {
+          "label": "Fix it (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Leave it",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Fix it (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Fix it (Recommended)"
+    },
+    {
+      "id": "D226",
+      "question": "playwright install --with-deps needs sudo on pool runners: fix?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL230",
+      "options": [
+        {
+          "label": "Template drops --with-deps on pool (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Image ships the browsers too",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Template drops --with-deps on pool (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Template drops --with-deps on pool (Recommended)"
+    },
+    {
+      "id": "D227",
+      "question": "A project's migration creates NOLOGIN roles; pool DB user cannot: how?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL231",
+      "options": [
+        {
+          "label": "Pre-create declared roles (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Grant CREATEROLE",
+          "summary": "offered"
+        },
+        {
+          "label": "Postgres per project",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Pre-create declared roles (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Pre-create declared roles (Recommended)"
     }
   ]
 }

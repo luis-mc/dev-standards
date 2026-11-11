@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T16:44+00:00",
+  "updated": "2026-11-11T17:36+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4009,6 +4009,162 @@
       "changed": "2026-11-11T16:40+00:00",
       "rides": "DL222",
       "started": "2026-11-11T16:31+00:00"
+    },
+    {
+      "id": "DL224",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE: peer tooling fixes (join, agent_ci, ci_watch, installer, docs record)",
+      "detail": "Join DL225-DL228, fold, CI, merge on green, plugin updates, smoke, cleanup, peer note.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:34+00:00",
+      "release": 104,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T17:02+00:00",
+          "end": "2026-11-11T17:25+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T17:25+00:00",
+          "end": "2026-11-11T17:30+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T17:30+00:00",
+          "end": "2026-11-11T17:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T17:35+00:00",
+          "end": "2026-11-11T17:40+00:00"
+        }
+      ],
+      "started": "2026-11-11T16:59+00:00"
+    },
+    {
+      "id": "DL225",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "join.py: new --into branch, origin/ prefix, Cargo.lock, -integration name",
+      "detail": "Peer findings 2-5: --into a new branch is created from the default branch and pushed; origin/X is stripped to X; Cargo.lock conflicts regenerate the lock (take ours, cargo fetch, commit, then --locked check); the integration branch follows the PR guard's *-integration rule.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:34+00:00",
+      "rides": "DL224",
+      "started": "2026-11-11T16:59+00:00"
+    },
+    {
+      "id": "DL226",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "agent_ci report path; ci_watch waits for every run",
+      "detail": "Peer findings 1 and 7: agent_ci.py accepts docs/work/<TASK>/REPORT.md as well as docs/work/reports/<TASK>.md; ci_watch.py waits until every run of the commit ends before it reports failure.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:34+00:00",
+      "rides": "DL224",
+      "started": "2026-11-11T16:59+00:00"
+    },
+    {
+      "id": "DL227",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Installer: no pyc, workflows list, gitignored config",
+      "detail": "Peer findings 6, 10, 11: the installer never copies __pycache__/*.pyc and ignores them; artifact-prune sync accepts an indented one-line workflows list; a gitignored .delivery/config.json is not listed under not in git yet.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:34+00:00",
+      "rides": "DL224",
+      "started": "2026-11-11T16:59+00:00"
+    },
+    {
+      "id": "DL228",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Docs record: edit-content index hint; task-add field error",
+      "detail": "Peer findings 8 and 9: edit-content rebuilds or names docs_index.py build when decisions.md goes stale; task-add's record-invalid error names the field and its limit.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:34+00:00",
+      "rides": "DL224",
+      "started": "2026-11-11T16:59+00:00"
+    },
+    {
+      "id": "DL229",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Installer skips package.yml when nothing is packaged",
+      "detail": "D225: no package.yml or docker build smoke default when the project has no Dockerfile and no packaged-program setting; the job skips cleanly.",
+      "expected": "11 Nov ~18:00",
+      "changed": "2026-11-11T17:35+00:00",
+      "expected_basis": "cloud agent from ~17:37, ~23 min",
+      "rides": "DL232",
+      "started": "2026-11-11T17:35+00:00"
+    },
+    {
+      "id": "DL230",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "CI template: Playwright without --with-deps on pool runners",
+      "detail": "D226: pool runners have no sudo; the template runs playwright install chromium without --with-deps on self-hosted pool runners (libs from POOL_BROWSERS=chromium) and keeps --with-deps on GitHub-hosted.",
+      "expected": "11 Nov ~18:00",
+      "changed": "2026-11-11T17:35+00:00",
+      "expected_basis": "cloud agent from ~17:37, ~23 min",
+      "rides": "DL232",
+      "started": "2026-11-11T17:35+00:00"
+    },
+    {
+      "id": "DL231",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool pre-creates declared NOLOGIN database roles",
+      "detail": "D227: the pool reads each project's declared NOLOGIN roles, creates them once as admin and grants them to the project's user; no CREATEROLE for project users.",
+      "expected": "11 Nov ~18:00",
+      "changed": "2026-11-11T17:35+00:00",
+      "expected_basis": "cloud agent from ~17:37, ~23 min",
+      "rides": "DL232",
+      "started": "2026-11-11T17:35+00:00"
+    },
+    {
+      "id": "DL232",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: package.yml skip, Playwright on pool, pool DB roles",
+      "detail": "Join DL229-DL231, fold, CI, merge on green, plugin updates, pool refresh when idle, tell home-automation.",
+      "expected": "11 Nov ~18:16",
+      "changed": "2026-11-11T17:36+00:00",
+      "expected_basis": "agents ~23 min + join/CI/merge ~15 min",
+      "release": 105,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T17:36+00:00",
+          "end": "2026-11-11T18:01+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T18:01+00:00",
+          "end": "2026-11-11T18:06+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T18:06+00:00",
+          "end": "2026-11-11T18:11+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T18:11+00:00",
+          "end": "2026-11-11T18:16+00:00"
+        }
+      ],
+      "started": "2026-11-11T17:35+00:00"
     },
     {
       "id": "DS1",
