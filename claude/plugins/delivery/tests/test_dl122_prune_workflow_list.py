@@ -42,7 +42,7 @@ class WorkflowList(unittest.TestCase):
             self.assertEqual(AP.load_workflows(self.cfg), ["CI", "Package"])
         before = Path(self.wf).read_bytes()
         code, out, _ = run("--config", self.cfg, "--sync-workflow", self.wf)
-        self.assertEqual((code, out.strip()), (0, "unchanged"))
+        self.assertEqual((code, out.strip()), (0, "workflow list from: existing file\nunchanged"))
         self.assertEqual(Path(self.wf).read_bytes(), before)
         self.assertEqual(run("--config", self.cfg, "--check-workflow", self.wf)[0], 0)
 
@@ -50,7 +50,7 @@ class WorkflowList(unittest.TestCase):
         self.set_cfg({"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}})
         self.assertEqual(run("--config", self.cfg, "--check-workflow", self.wf)[0], 1)
         code, out, _ = run("--config", self.cfg, "--sync-workflow", self.wf)
-        self.assertEqual((code, out.strip()), (0, "synced"))
+        self.assertEqual((code, out.strip()), (0, "workflow list from: config\nsynced"))
         self.assertIn('workflows: ["CI", "Package", "Installers"]', Path(self.wf).read_text())
         self.assertEqual(run("--config", self.cfg, "--check-workflow", self.wf)[0], 0)
 
