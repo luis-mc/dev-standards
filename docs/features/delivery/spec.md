@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.31.1
+version: 0.31.2
 owner: agents
 type: reference
 code:
@@ -527,6 +527,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.31.2 | 2026-11-11 | RELEASE-110 | The local heavy limit (DL-91) frees an entry as soon as its call has ended: a result in the session transcript, a foreground call past its timeout plus 2 minutes, or a gone or idle transcript. Backgrounded calls count for 30 minutes. The refusal shows age and session. | DL253 |
 | 0.31.1 | 2026-11-11 | RELEASE-109 | join lists conflicting files, rebuilds generated-docs-only conflicts; watcher records held runs as held | DL249 |
 | 0.31.0 | 2026-11-11 | RELEASE-108 | delivery_ci_install.py install --track rust,ts installs several tracks at once: one merged ci.yml with a tracks job, one gate.json with every track's steps, and ci-scope.json with each track's patterns (R13.95). The doctor checks each track.<br>ci_watch.py exits 5 when gh fails five times in a row and pins the repository at start (R5.56). | DL245, DL247 |
 | 0.30.0 | 2026-11-11 | RELEASE-107 | join.py: sibling branches off one contract branch are not reported as stacked; a stacked stop lists its files; every skipped branch prints a skipped line; a partial join prints a joined N of M summary and exits non-zero unless --allow-partial (R5.57).<br>R5.33: artifact_prune.py --sync-workflow keeps the workflow file's own list when the config sets no artifact_prune.workflows; the default is written only for a new file or a file with no list; one line names the source. | DL241, DL242 |
