@@ -130,8 +130,10 @@ def rebuild_draft_gallery(root: Path, start: str) -> dict:
     return {"rebuilt": False, "reason": "gallery already current"}
 
 
-def strip_temporary_docs(root: Path) -> dict:
+def strip_temporary_docs(root: Path, base_ref: str | None = None) -> dict:
     """DOCSPEC R10.3: strip docs/work/ from the joined head and return {"stripped": bool, "summaries": [...]}.
+    DL197: when `base_ref` has a docs/work/ folder, it is restored from there after the strip, so only paths the
+    joined branches added or changed are removed (a changed file goes back to the base's content).
     Skips cleanly (stripped false, with a reason) when the docs plugin is absent or has nothing to strip."""
     script = find_docs_work()
     if script is None:
@@ -147,6 +149,9 @@ def strip_temporary_docs(root: Path) -> dict:
     if done.returncode != 0:
         dc.eprint("join: docs_work.py strip failed (exit %d); going on: %s" % (done.returncode, (done.stderr or done.stdout).strip()))
         return {"stripped": False, "reason": "strip failed", "summaries": summaries}
+    if base_ref and dc.run_git(["ls-tree", "-r", "--name-only", base_ref, "--", "docs/work"], cwd=root, check=False).stdout.strip():
+        dc.run_git(["checkout", base_ref, "--", "docs/work"], cwd=root, check=False)
+        dc.run_git(["add", "-A", "--", "docs/work"], cwd=root, check=False)
     if dc.run_git(["diff", "--cached", "--quiet"], cwd=root, check=False).returncode != 0:
         dc.run_git(["commit", "-q", "-m", "Strip temporary agent docs"], cwd=root, check=False, env=dc.git_env())
     print("join: stripped docs/work/ (%d report summaries kept for the PR body)" % len(summaries), flush=True)
@@ -554,7 +559,7 @@ def main(argv: list[str] | None = None) -> int:
 
     write_join_result(root, joined, None, [])
 
-    docs = strip_temporary_docs(root)
+    docs = strip_temporary_docs(root, "%s/%s" % (remote, cfg["default_branch"]))
     gallery = rebuild_draft_gallery(root, join_start) if join_start else {"rebuilt": False, "reason": "no start"}
     docs_extra: dict = {"docs": {k: v for k, v in docs.items() if k != "summaries"}, "docs_summaries": docs["summaries"],
                         "gallery": gallery}
