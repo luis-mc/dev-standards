@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T01:25+00:00",
+  "updated": "2026-11-11T01:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3514,9 +3514,9 @@
       "status": "Running",
       "item": "Pool tool cache writable by every agent user",
       "detail": "On the pool, ci_tool.py tool cargo-xwin failed with Permission denied on /ci-tools/<tool>/<ver>/*.partial: folders made by one agent user are not writable by another. Make the shared cache work for every agent user.",
-      "expected": "11 Nov ~01:45",
-      "changed": "2026-11-11T01:12+00:00",
-      "expected_basis": "cloud agent ~28 min",
+      "expected": "11 Nov ~01:55",
+      "changed": "2026-11-11T01:46+00:00",
+      "expected_basis": "branch CI rerun 01:46, ~5 min, then report",
       "rides": "DS229",
       "started": "2026-11-11T01:16+00:00"
     },
@@ -7181,30 +7181,30 @@
       "status": "Running",
       "item": "RELEASE-94: rust-track template gaps, second batch",
       "detail": "Join DL192-DL194 (peer report from RELEASE-1 CI of a rust-track project), CI, merge on green, plugin update, pool refresh when idle.",
-      "expected": "11 Nov ~02:02",
-      "changed": "2026-11-11T01:12+00:00",
-      "expected_basis": "agents ~30 min, join 8, CI 5, merge 4",
+      "expected": "11 Nov ~02:12",
+      "changed": "2026-11-11T01:46+00:00",
+      "expected_basis": "DL194 branch CI rerun after a hung job",
       "release": 94,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T01:15+00:00",
-          "end": "2026-11-11T01:45+00:00"
+          "end": "2026-11-11T01:55+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T01:45+00:00",
-          "end": "2026-11-11T01:53+00:00"
+          "start": "2026-11-11T01:55+00:00",
+          "end": "2026-11-11T02:03+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T01:53+00:00",
-          "end": "2026-11-11T01:58+00:00"
+          "start": "2026-11-11T02:03+00:00",
+          "end": "2026-11-11T02:08+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T01:58+00:00",
-          "end": "2026-11-11T02:02+00:00"
+          "start": "2026-11-11T02:08+00:00",
+          "end": "2026-11-11T02:12+00:00"
         }
       ],
       "started": "2026-11-11T01:15+00:00"
