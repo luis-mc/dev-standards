@@ -30,8 +30,15 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # DL191: a pool runner has no sudo but its image already has wine and xvfb-run (windows-packaging layer);
+      # install them only when they are missing (hosted runners).
       - name: Install Wine and a virtual display
-        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends wine xvfb
+        run: |
+          if command -v wine >/dev/null 2>&1 && command -v xvfb-run >/dev/null 2>&1; then
+            echo "wine and xvfb-run are already installed"
+          else
+            sudo apt-get update && sudo apt-get install -y --no-install-recommends wine xvfb
+          fi
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: ~/.cache/msi-build
