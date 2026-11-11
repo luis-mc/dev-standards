@@ -20,9 +20,13 @@ Outputs (to $GITHUB_OUTPUT, appended; stdout with --json, always printed as line
   held=a,b            job keys held back for the second run (empty when rerun=false)
   reason=...          one line
 
+DL183: while jobs are held, the commit carries the status `rerun-first/held` (pending). `--hold-status` sets it
+as the plan decides to hold (if it cannot be set, nothing is held: every job runs). `--set-status STATE` sets
+it later: success / failure / error. A project that does not opt in never gets the status.
+
 Job names from the API map to job keys: a matrix leg ("web E2E shard 2", "build (3)") collapses to its base
 name, then NAME_KEYS maps a display-name prefix to a key. Any error, or no previous run: `rerun=false`,
-which is today's behaviour. Always exits 0. Python 3.8+, standard library only; `gh` is the external tool.
+which is today's behaviour. Always exits 0 (except --set-status: 1 when the status cannot be set). Python 3.8+, standard library only; `gh` is the external tool.
 """
 from __future__ import annotations
 
@@ -44,6 +48,8 @@ NAME_KEYS = (
 NOT_PASSED = {"failure", "cancelled", "timed_out", "action_required", "startup_failure", "stale"}
 SKIPPED = {"skipped", None, ""}
 DEFAULT_CONFIG = "scripts/delivery/ci-areas.json"
+STATUS_CONTEXT = "rerun-first/held"
+STATUS_STATES = ("pending", "success", "failure", "error")
 
 
 class Undecided(Exception):
@@ -69,6 +75,20 @@ def gh_api(path, **query):
         return json.loads(run(cmd) or "null")
     except json.JSONDecodeError as exc:
         raise Undecided(f"gh api {path} returned invalid JSON: {exc}") from exc
+
+
+def post_status(repo, sha, state, description, target_url=""):
+    """Set the `rerun-first/held` commit status on `sha` with the workflow's token. Raises Undecided."""
+    if state not in STATUS_STATES:
+        raise Undecided(f"bad status state {state!r}")
+    if not (repo and sha):
+        raise Undecided("missing --repo or --sha for the status")
+    cmd = ["gh", "api", "--method", "POST", "-H", "Accept: application/vnd.github+json",
+           f"repos/{repo}/statuses/{sha}", "-f", f"state={state}", "-f", f"context={STATUS_CONTEXT}",
+           "-f", f"description={' '.join(description.split())[:140]}"]
+    if target_url:
+        cmd += ["-f", f"target_url={target_url}"]
+    run(cmd)
 
 
 def job_key(name):
@@ -171,9 +191,30 @@ def main(argv=None):
     ap.add_argument("--selected", default=None, help="comma list of jobs the plan selected")
     ap.add_argument("--config", default=DEFAULT_CONFIG)
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--hold-status", action="store_true",
+                    help="when jobs are held, set the pending status first; if that fails, hold nothing")
+    ap.add_argument("--set-status", default="", choices=("",) + STATUS_STATES,
+                    help="only set the status and exit (success, failure or error from the final job)")
+    ap.add_argument("--description", default="")
+    ap.add_argument("--target-url", default="")
     args = ap.parse_args(argv)
+    if args.set_status:
+        try:
+            post_status(args.repo, args.sha, args.set_status, args.description or args.set_status, args.target_url)
+        except Undecided as exc:
+            print(f"ci_rerun_first: could not set the status: {exc}", file=sys.stderr)
+            return 1
+        print(f"ci_rerun_first: {STATUS_CONTEXT} is {args.set_status} on {args.sha[:10]}")
+        return 0
     try:
         rerun, first, held, reason = decide(args)
+        if rerun and args.hold_status:
+            try:
+                post_status(args.repo, args.sha, "pending", "Held jobs not run yet: " + ", ".join(held)
+                            + ". A second run does them.", args.target_url)
+            except Undecided as exc:
+                rerun, first, held = False, [], []
+                reason = f"could not set the pending status, so nothing is held: {exc}"
     except Undecided as exc:
         rerun, first, held, reason = False, [], [], f"could not decide, running today's order: {exc}"
     except Exception as exc:  # fail open on anything unexpected
