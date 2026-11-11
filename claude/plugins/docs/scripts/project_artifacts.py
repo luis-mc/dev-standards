@@ -2094,7 +2094,7 @@ def clean_item(text):
     if not text:
         raise Fail(1, '--item is empty; give the task title')
     if len(text) > ITEM_MAX:
-        raise Fail(1, 'item is %d characters; the limit is %d' % (len(text), ITEM_MAX))
+        raise Fail(1, 'R4.8: item is %d characters; the limit is %d' % (len(text), ITEM_MAX))
     return text
 
 
@@ -2272,7 +2272,7 @@ def cmd_edit_content(args):
             bad = decisions_edit_problems((d / 'decisions.json').read_bytes(), new.get('decisions.json', b''))
             if bad:
                 fnd = [('R5.15', 'content/%s/decisions.json' % key, b) for b in bad]
-            raise Fail(1, with_details('content is invalid; nothing written', fnd), fnd)
+                raise Fail(1, with_details('content is invalid; nothing written', fnd), fnd)
         if d.exists():
             shutil.rmtree(str(d))
         d.mkdir(parents=True)
