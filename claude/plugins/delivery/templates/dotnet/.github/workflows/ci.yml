@@ -15,6 +15,9 @@ on:
     branches: [main]
     paths-ignore: ['apps/ios/**', 'apps/android/**', '**/*.md', 'docs/**']
 
+  # DL210: agent_ci.py and `gh workflow run ci.yml` start a run by hand; without this trigger they get HTTP 422.
+  workflow_dispatch:
+
 concurrency:
   # Outdated PR runs are cancelled. Runs on main never are: every commit on main
   # must finish its run, because cancelling one can leave a merged commit
@@ -88,8 +91,9 @@ jobs:
       # leaked secret fails fast, before the slow gates below.
       # Installed from the release archive at the version pinned in
       # scripts/delivery/tools.json, checksum verified, so CI runs the scanner
-      # the agent setup script installed locally (§13.5). `gitleaks git` with no
-      # log options scans the whole history, which `fetch-depth: 0` provides.
+      # the agent setup script installed locally (§13.5). `gitleaks git` with
+      # `--log-opts="HEAD"` scans the history of the commit under test only, not every remote branch
+      # that `fetch-depth: 0` also fetches (DL211).
       - name: Secret scan (gitleaks, full history)
         run: |
           if ! python3 -c "import json,sys; g = json.load(open('scripts/delivery/tools.json'))['gitleaks']; sys.exit(0 if not isinstance(g, str) and g.get('sha256', {}).get('linux_x64') else 1)"; then
@@ -98,7 +102,7 @@ jobs:
           fi
           # ci_tool.py keeps the archive in a cache that outlives the job and retries the download.
           gitleaks="$(python3 scripts/delivery/ci_tool.py gitleaks --platform linux_x64)"
-          "$gitleaks" git --config .gitleaks.toml --redact --no-banner
+          "$gitleaks" git --config .gitleaks.toml --redact --no-banner --log-opts="HEAD"
 
       # §2.2: the toolchain version is pinned in the repository. global.json is
       # that pin, and setup-dotnet reads it — no second place to update.

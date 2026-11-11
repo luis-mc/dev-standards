@@ -2,7 +2,7 @@
 """Write the CI and delivery files into a project, or update them (DL15).
 
     delivery_ci_install.py install --track ts|go|rust|dotnet [--root DIR] [--dry-run]
-    delivery_ci_install.py update  --track ts|go|rust|dotnet [--root DIR] [--dry-run]
+    delivery_ci_install.py update  [--track ts|go|rust|dotnet] [--root DIR] [--dry-run]
 
 The sources are `templates/shared/` and `templates/<track>/` next to this plugin. They land at the same
 relative path in the project (`scripts/delivery/`, `.github/workflows/`). tech-stack-setup calls `install` at
@@ -173,8 +173,37 @@ def plugin_version() -> str:
         return ""
 
 
-def save_state(items: list, root: str, old: dict) -> None:
-    """Record the hash of every file the run wrote or found equal to the template (DL201)."""
+def _json_of(path: str):
+    try:
+        with open(path, "rb") as f:
+            data = json.loads(f.read().decode("utf-8-sig"))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def known_track(root: str):
+    """The track the project already uses (DL213): .delivery/config.json, then the install record, then the
+    gate.json the installer wrote, then the project's own files. None when nothing says."""
+    cfg = _json_of(os.path.join(root, ".delivery", "config.json"))
+    for val in (cfg.get("track"), cfg.get("stack"), (cfg.get("ci") or {}).get("track") if isinstance(cfg.get("ci"), dict) else None,
+                _json_of(os.path.join(root, STATE.replace("/", os.sep))).get("track"),
+                _json_of(os.path.join(root, "scripts", "delivery", "gate.json")).get("track")):
+        if val in TRACKS:
+            return val
+    for name, t in (("package.json", "ts"), ("go.mod", "go"), ("Cargo.toml", "rust")):
+        if os.path.exists(os.path.join(root, name)):
+            return t
+    try:
+        if any(n.endswith((".sln", ".csproj")) for n in os.listdir(root)):
+            return "dotnet"
+    except OSError:
+        pass
+    return None
+
+
+def save_state(items: list, root: str, old: dict, track: str = "") -> None:
+    """Record the hash of every file the run wrote or found equal to the template, and the track (DL201, DL213)."""
     files = dict(old)
     for rel, src, action in items:
         if action in ("written", "overwritten", "same", MERGED) and rel not in PROJECT_OWNED_PATHS:
@@ -184,7 +213,7 @@ def save_state(items: list, root: str, old: dict) -> None:
     path = os.path.join(root, STATE.replace("/", os.sep))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
-        f.write(json.dumps({"plugin_version": plugin_version(), "files": dict(sorted(files.items()))}, indent=2) + "\n")
+        f.write(json.dumps({"plugin_version": plugin_version(), "track": track, "files": dict(sorted(files.items()))}, indent=2) + "\n")
 
 
 def base_path(root: str, rel: str) -> str:
@@ -610,8 +639,12 @@ def main(argv=None) -> int:
         return 1
     if only is not None and args.track is None:
         return only_steps(os.path.abspath(args.root), only, args.action, args.dry_run)
+    if args.track is None and args.action == "update":
+        args.track = known_track(os.path.abspath(args.root))   # DL213
+        if args.track is not None:
+            print("delivery_ci_install: using track %s from the project" % args.track)
     if args.track not in TRACKS:
-        print("delivery_ci_install: --track must be one of %s" % ", ".join(TRACKS), file=sys.stderr)
+        print("delivery_ci_install: --track must be one of %s (the project does not say which it uses)" % ", ".join(TRACKS), file=sys.stderr)
         return 1
     if not os.path.isdir(os.path.join(TEMPLATES, "shared")) or not os.path.isdir(os.path.join(TEMPLATES, args.track)):
         print("delivery_ci_install: no templates for %r under %s" % (args.track, TEMPLATES), file=sys.stderr)
@@ -641,7 +674,7 @@ def main(argv=None) -> int:
     if not args.dry_run and args.action == "update":
         sync_prune_workflow(items, root)
     if not args.dry_run:
-        save_state(items, root, old_state)
+        save_state(items, root, old_state, args.track)
         record_bases(items, root)
     if not args.dry_run:
         ensure_tzdata(root)

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T13:26+00:00",
+  "updated": "2026-11-11T14:08+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3751,9 +3751,9 @@
       "status": "Running",
       "item": "RELEASE: CI template and installer fixes from a peer alignment report",
       "detail": "Ships DL210-DL213. Join, fold, CI, merge on green, plugin updates in both scopes, smoke, tell the peer projects.",
-      "expected": "11 Nov ~14:04",
-      "changed": "2026-11-11T13:26+00:00",
-      "expected_basis": "agents from 13:26, ~25 min; join, CI, merge",
+      "expected": "11 Nov ~14:17",
+      "changed": "2026-11-11T14:08+00:00",
+      "expected_basis": "CI from 14:09, ~5 min",
       "release": 100,
       "phases": [
         {
@@ -3763,18 +3763,18 @@
         },
         {
           "name": "join",
-          "start": "2026-11-11T13:51+00:00",
-          "end": "2026-11-11T13:55+00:00"
+          "start": "2026-11-11T14:07+00:00",
+          "end": "2026-11-11T14:09+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T13:55+00:00",
-          "end": "2026-11-11T14:00+00:00"
+          "start": "2026-11-11T14:09+00:00",
+          "end": "2026-11-11T14:14+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T14:00+00:00",
-          "end": "2026-11-11T14:04+00:00"
+          "start": "2026-11-11T14:14+00:00",
+          "end": "2026-11-11T14:17+00:00"
         }
       ],
       "started": "2026-11-11T13:25+00:00"
@@ -3783,12 +3783,11 @@
       "id": "DL210",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "ci.yml templates accept workflow_dispatch (gh workflow run gets 422)",
       "detail": "A peer project found agent_ci.py and gh workflow run get HTTP 422: only the ts ci.yml template has workflow_dispatch. Add it to every ci.yml template, with a test.",
-      "expected": "11 Nov ~13:51",
-      "changed": "2026-11-11T13:26+00:00",
-      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:08+00:00",
       "rides": "DL209",
       "started": "2026-11-11T13:25+00:00"
     },
@@ -3796,12 +3795,11 @@
       "id": "DL211",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Secret scan: PR-head history only; no false hits on public keys and NULL",
       "detail": "The full-history gitleaks step fetches every remote branch, so an unrelated open branch fails a release PR. The named-secret rule also flags non-secrets (public keys, NULL, SQL placeholders, Some(...)). Scan only the PR head history; exempt those shapes; tests.",
-      "expected": "11 Nov ~13:51",
-      "changed": "2026-11-11T13:26+00:00",
-      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:08+00:00",
       "rides": "DL209",
       "started": "2026-11-11T13:25+00:00"
     },
@@ -3809,12 +3807,11 @@
       "id": "DL212",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Doctor: a script identical to the template reads as same, not changed by project",
       "detail": "ci.scripts-current reports changed by project for scripts identical to the template (stale install record). Compare content first and refresh the record.",
-      "expected": "11 Nov ~13:51",
-      "changed": "2026-11-11T13:26+00:00",
-      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:08+00:00",
       "rides": "DL209",
       "started": "2026-11-11T13:25+00:00"
     },
@@ -3822,14 +3819,61 @@
       "id": "DL213",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Installer update reads the track from .delivery/config.json",
       "detail": "delivery_ci_install.py update fails unless --track is given. Read the track from .delivery/config.json; error only when none is set.",
-      "expected": "11 Nov ~13:51",
-      "changed": "2026-11-11T13:26+00:00",
-      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:08+00:00",
       "rides": "DL209",
       "started": "2026-11-11T13:25+00:00"
+    },
+    {
+      "id": "DL214",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: Node and corepack in the pool image",
+      "detail": "Ships DL214. Join, fold, CI, merge on green, plugin updates in both scopes, then pool refresh when idle, smoke a ts job.",
+      "expected": "11 Nov ~14:43",
+      "changed": "2026-11-11T14:06+00:00",
+      "expected_basis": "agent from 14:07; join, CI, merge; pool refresh after",
+      "release": 101,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T14:07+00:00",
+          "end": "2026-11-11T14:30+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T14:30+00:00",
+          "end": "2026-11-11T14:34+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T14:34+00:00",
+          "end": "2026-11-11T14:39+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T14:39+00:00",
+          "end": "2026-11-11T14:43+00:00"
+        }
+      ],
+      "started": "2026-11-11T14:06+00:00"
+    },
+    {
+      "id": "DL215",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool image keeps Node LTS with corepack on PATH",
+      "detail": "ts workflows run corepack enable before setup-node; GitHub-hosted runners have Node and corepack, the pool image deletes the Node it uses to install Playwright deps, so every ts job fails (D214). Keep Node LTS with corepack on PATH in the runner-pool image; doctor layer check and test.",
+      "expected": "11 Nov ~14:30",
+      "changed": "2026-11-11T14:06+00:00",
+      "expected_basis": "cloud agent from 14:07, ~23 min",
+      "rides": "DL214",
+      "started": "2026-11-11T14:06+00:00"
     },
     {
       "id": "DS1",

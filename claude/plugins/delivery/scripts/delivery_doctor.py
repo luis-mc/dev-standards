@@ -912,6 +912,8 @@ def scripts_items(root):
         elif action == INST.CHANGED:
             changed.append(rel)
     for rel, _src, _a in INST.plan(track, root, "update", keep, skip):
+        if _a == "same":
+            continue   # DL212: identical to the template is ok, whatever the record or a stale .new says
         if rel.startswith("scripts/delivery/") and rel not in changed and os.path.exists(os.path.join(root, rel.replace("/", os.sep) + ".new")):
             changed.append(rel)   # DL201: a conflict or a kept file waits for a hand merge
     if not stale and not missing and not changed:
