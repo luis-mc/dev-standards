@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T10:41+00:00",
+  "updated": "2026-11-11T11:45+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -1993,9 +1993,9 @@
       "app": "",
       "status": "Live",
       "item": "RELEASE-57: pool gh and per-job tmp",
-      "detail": "Join DL86 and DL87, fold notes (luismc-delivery 1.10.0), PR, CI, merge, install, message moobable.",
-      "expected": "06 Nov",
-      "changed": "2026-11-06T07:11+00:00",
+      "detail": "Join DL86 and DL87, fold notes (luismc-delivery 1.10.0), PR, CI, merge, install, message the peer project session.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T11:45+00:00",
       "release": 57,
       "started": "2026-11-06T07:06+00:00"
     },
@@ -2029,9 +2029,9 @@
       "app": "",
       "status": "Live",
       "item": "RELEASE-58: e2e gate uses a preinstalled Chromium",
-      "detail": "Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message moobable.",
-      "expected": "06 Nov",
-      "changed": "2026-11-06T10:29+00:00",
+      "detail": "Join DL89, fold notes (luismc-delivery 1.11.0), PR, CI, merge, install, message the peer project session.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T11:45+00:00",
       "release": 58,
       "started": "2026-11-06T10:25+00:00"
     },
@@ -3168,9 +3168,9 @@
       "app": "",
       "status": "Live",
       "item": "Refresh the shared runner pool with luismc-delivery 1.19.0",
-      "detail": "D174: pool-refresh --yes on pool main: new Dockerfile and compose.yaml (backup kept), Playwright 1.65.0, windows-packaging layer kept, image rebuilt and container recreated. Then tell moobable-28 and comics-organizer-dd the new image is up.",
-      "expected": "10 Nov",
-      "changed": "2026-11-10T07:21+00:00",
+      "detail": "D174: pool-refresh --yes on pool main: new Dockerfile and compose.yaml (backup kept), Playwright 1.65.0, windows-packaging layer kept, image rebuilt and container recreated. Then tell the peer project sessions the new image is up.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T11:45+00:00",
       "no_release": "machine maintenance, ships no code",
       "started": "2026-11-10T07:10+00:00"
     },
@@ -3573,9 +3573,9 @@
       "app": "",
       "status": "Live",
       "item": "Restart the CI pool after Docker Desktop stopped",
-      "detail": "Docker Desktop started 08:41 (owner's choice); pool container up 08:44:40, runner online 08:44:58; comics-organizer's waiting job started. Container still on the 22:11 image; recreate onto the 01:58 image when idle.",
+      "detail": "Docker Desktop started 08:41 (owner's choice); pool container up 08:44:40, runner online 08:44:58; a peer project's waiting job started. Container still on the 22:11 image; recreate onto the 01:58 image when idle.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T08:46+00:00",
+      "changed": "2026-11-11T11:45+00:00",
       "no_release": "pool upkeep; ships nothing",
       "started": "2026-11-11T08:44+00:00"
     },
@@ -6848,9 +6848,9 @@
       "app": "",
       "status": "Live",
       "item": "RELEASE-82: clang-cl link fix for the pool image",
-      "detail": "Fix forward for RELEASE-81: Ubuntu 24.04 ships no clang-cl, so the DL167 self-check failed the pool build. Link clang as clang-cl (cargo-xwin's documented method), join, CI, watcher merge, plugin update, pool-refresh (D178), tell the comics-organizer session.",
-      "expected": "10 Nov",
-      "changed": "2026-11-10T11:59+00:00",
+      "detail": "Fix forward for RELEASE-81: Ubuntu 24.04 ships no clang-cl, so the DL167 self-check failed the pool build. Link clang as clang-cl (cargo-xwin's documented method), join, CI, watcher merge, plugin update, pool-refresh (D178), tell the peer project session.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T11:45+00:00",
       "release": 82,
       "phases": [
         {
@@ -6877,9 +6877,9 @@
       "app": "",
       "status": "Live",
       "item": "RELEASE-83: clang 19 in the pool image",
-      "detail": "Fix forward: the MSVC CRT that cargo-xwin downloads needs clang >= 19 (STL1000), the image had 18.1.3. Pin LLVM_VERSION=19 (clang-19, lld-19, llvm-19 from Ubuntu 24.04), link all tools from it, self-check the version, join, CI, watcher merge, plugin update, pool-refresh (D178), tell the comics-organizer session before its 12:40 UTC round.",
-      "expected": "10 Nov",
-      "changed": "2026-11-10T12:20+00:00",
+      "detail": "Fix forward: the MSVC CRT that cargo-xwin downloads needs clang >= 19 (STL1000), the image had 18.1.3. Pin LLVM_VERSION=19 (clang-19, lld-19, llvm-19 from Ubuntu 24.04), link all tools from it, self-check the version, join, CI, watcher merge, plugin update, pool-refresh (D178), tell the peer project session before its 12:40 UTC round.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T11:45+00:00",
       "release": 83,
       "phases": [
         {

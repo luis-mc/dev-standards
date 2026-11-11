@@ -597,16 +597,16 @@ class Co688Tests(unittest.TestCase):
         P = ["git", "push", "origin", "release/135"]
         for cmd, argv_head, where in (
             (r"cd C:/GitHub/example-app && gh pr create --draft --head release/135", ["gh", "pr", "create"], "C:/GitHub/example-app"),
-            (r'cd "C:\Users\Luis\x y" && git push origin release/135', P, r"C:\Users\Luis\x y"),
+            (r'cd "C:\Users\dev\x y" && git push origin release/135', P, r"C:\Users\dev\x y"),
             (r"cd C:\Users\tmp\new && git push origin release/135", P, r"C:\Users\tmp\new"),
-            (r"cd 'C:\Users\Luis\x y'; git push origin release/135", P, r"C:\Users\Luis\x y"),
+            (r"cd 'C:\Users\dev\x y'; git push origin release/135", P, r"C:\Users\dev\x y"),
             (r"git -C C:\path\new push origin release/135", P, r"C:\path\new"),
-            (r'git -C "C:\Users\Luis\x y" push origin release/135', P, r"C:\Users\Luis\x y"),
+            (r'git -C "C:\Users\dev\x y" push origin release/135', P, r"C:\Users\dev\x y"),
             (r"Set-Location C:\GitHub\x; git push origin release/135", P, r"C:\GitHub\x"),
             (r'Set-Location -Path "C:\a b"; git push', ["git", "push"], r"C:\a b"),
             (r'& "C:\Program Files\Git\bin\git.exe" push origin release/135', [r"C:\Program Files\Git\bin\git.exe", "push", "origin", "release/135"], "C:/start"),
             (r'cd C:/Work/worktrees/rec134; gh pr create --draft --title "a; b"', ["gh", "pr", "create", "--draft", "--title", "a; b"], "C:/Work/worktrees/rec134"),
-            (r"cd C:\Users\Luis\n && git push origin release/135 &", P, r"C:\Users\Luis\n"),
+            (r"cd C:\Users\dev\n && git push origin release/135 &", P, r"C:\Users\dev\n"),
         ):
             argv, cwd = H.split_commands_cwd(cmd, "C:/start")[-1]
             self.assertEqual(argv[:len(argv_head)], argv_head, cmd)
