@@ -42,6 +42,9 @@ Eight checks (a ninth, `rust`, appears only on the rust track: see below), each 
            stable); tools.json without a sha256 for rustup-init, llvm, zig or cargo-deny (missing keys are findings).
            WARNS (never fails) on: advisory DB cache older than 7 days or absent; under 10 GB free for target/.
            It changes nothing; each finding prints the command.
+  scripts  (DL188) `ci.scripts-current`: scripts/delivery files that are older than, or missing from, the plugin's templates
+           (the same plan `delivery_ci_install.py update` makes; a file in ci-install.json "keep" is ok). WARNS, never fails.
+           With `ci.wait_min` set, the CI line shows that wait (10 when unset). Cached tools are found in the ci_tool cache.
   plugins  (DL173) `plugins.compat`: the highest installed version of each luismc-* plugin, read from the Claude plugin cache
            (~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/; DELIVERY_PLUGIN_CACHE replaces the root in tests),
            against references/plugin-compat.json. WARNS (never fails) per pair that does not fit, with
@@ -348,15 +351,22 @@ def _runner_oses(cfg):
     return out
 
 
+def _wait_min(cfg):
+    """Minutes a job may wait for a runner: ci.wait_min, 10 when unset or bad (DL188)."""
+    ci = cfg.get("ci") if isinstance(cfg.get("ci"), dict) else {}
+    w = ci.get("wait_min")
+    return w if isinstance(w, (int, float)) and not isinstance(w, bool) and w > 0 else C.RUNNER_WAIT_EXAMPLE_MIN
+
+
 def _second_machine_note(cfg, os_name):
     """Option 1 is own runners on ANY machines. Name the machines found for the OS, and the by-hand steps to add one
     more on another machine (a note, never a failure: one runner works, it is only the first bottleneck)."""
     mine = [r for r in cfg.get("runners") or [] if isinstance(r, dict) and os_name in _runner_oses({"runners": [r]})]
     names = ", ".join(str(r.get("name")) for r in mine)
     labels = next((r.get("labels") for r in mine if r.get("labels")), None)
-    steps = "; ".join("(%d) %s" % (i, t) for i, t in enumerate(C.runner_steps(os_name, labels), 1))
+    steps = "; ".join("(%d) %s" % (i, t) for i, t in enumerate(C.runner_steps(os_name, labels, _wait_min(cfg)), 1))
     return "%s: %d runner(s) (%s). %s. To add a runner on another machine, by hand: %s" % (
-        os_name, len(mine), names, C.add_runner_advice(), steps)
+        os_name, len(mine), names, C.add_runner_advice(_wait_min(cfg)), steps)
 
 
 def check_ci(root, cfg):
@@ -684,25 +694,43 @@ def _tools_dir():
     return env or (os.path.join("C:/ci-tools") if os.name == "nt" else os.path.join(os.path.expanduser("~"), ".cache", "ci-tools"))
 
 
+def _ci_tool_module():
+    """The plugin's own ci_tool.py (the one that fills the cache), so the doctor looks where it puts files (DL188)."""
+    import importlib.util
+    path = os.path.join(HERE, os.pardir, "templates", "shared", "scripts", "delivery", "ci_tool.py")
+    spec = importlib.util.spec_from_file_location("ci_tool_for_doctor", os.path.normpath(path))
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[spec.name] = mod
+    spec.loader.exec_module(mod)
+    return mod
+
+
+# tool name on PATH -> (pinned tool in tools.json, exe inside it)
+_PINNED = {"zig": ("zig", None), "clang-cl": ("llvm", "clang-cl"), "lld-link": ("llvm", "lld-link")}
+
+
 def _have(name):
-    """A tool on PATH or in the pinned tool cache (one or two levels down)."""
     import shutil
-    if shutil.which(name):
-        return True
-    base = _tools_dir()
-    exts = (name, name + ".exe")
-    for depth in ("*", os.path.join("*", "*"), os.path.join("*", "*", "bin"), os.path.join("*", "bin")):
-        import glob
-        for e in exts:
-            if glob.glob(os.path.join(glob.escape(base), depth, e)):
+    return bool(shutil.which(name))
+
+
+def _cached(name, root):
+    """True when ci_tool.py's cache holds the tool (DL188)."""
+    if name in _PINNED and root:
+        pinned, exe = _PINNED[name]
+        try:
+            ct = _ci_tool_module()
+            if ct.cached_tool(pinned, ct.current_platform(), exe, os.path.join(root, "scripts", "delivery", "tools.json")):
                 return True
+        except Exception:  # noqa: BLE001 - an unreadable cache is "not found"
+            pass
     return False
 
 
 def _cc_fix():
     if os.name == "nt":
-        return "python scripts/delivery/ci_tool.py ensure zig"
-    return "sudo apt-get install -y build-essential   (or: python3 scripts/delivery/ci_tool.py ensure zig)"
+        return "python scripts/delivery/ci_tool.py tool zig"
+    return "sudo apt-get install -y build-essential   (or: python3 scripts/delivery/ci_tool.py tool zig)"
 
 
 def _advisory_age_days():
@@ -714,6 +742,36 @@ def _advisory_age_days():
         return None
     import time
     return (time.time() - max(os.path.getmtime(p) for p in paths)) / 86400
+
+
+SHA_RE = re.compile(r"[0-9a-fA-F]{64}")
+
+
+def _needed_platforms(targets):
+    """The tools.json platforms this project uses: this host, plus Windows and Linux when the targets name them."""
+    need = {_ci_tool_module().current_platform()}
+    if any("windows" in t for t in targets):
+        need.add("windows_x64")
+    if any("linux" in t for t in targets):
+        need.add("linux_x64")
+    return sorted(need)
+
+
+def _pin_problem(entry, need):
+    """"" when the tool is pinned, else text for the finding. Flat sha256 (string or map) or `platforms` (DL188)."""
+    if not isinstance(entry, dict):
+        return " (no entry)"
+    ok = lambda h: isinstance(h, str) and bool(SHA_RE.fullmatch(h))  # noqa: E731
+    sha = entry.get("sha256")
+    if isinstance(sha, str) and ok(sha):
+        return ""
+    if isinstance(sha, dict) and sha and all(ok(h) for h in sha.values()):
+        return ""
+    plats = entry.get("platforms")
+    if isinstance(plats, dict):
+        missing = [p for p in need if not (isinstance(plats.get(p), dict) and ok(plats[p].get("sha256")))]
+        return (" (platform %s)" % ", ".join(missing)) if missing else ""
+    return " (no sha256)"
 
 
 def rust_items(root):
@@ -731,25 +789,24 @@ def rust_items(root):
             items.append(_item("rust.toolchain", "fail", "rust-toolchain.toml channel is %s, not an exact version. "
                                                          "Set channel = \"1.90.0\" (the version you build with)"
                                % (repr(channel) if channel else "missing")))
-    if _have("cc") or _have("zig"):
+    if _have("cc") or _have("zig") or _cached("zig", root):
         items.append(_item("rust.linker", "ok", "host linker found"))
     else:
         items.append(_item("rust.linker", "fail", "linker cc not found. Fix: " + _cc_fix()))
     if any("windows" in t for t in targets):
-        missing = [n for n in ("clang-cl", "lld-link") if not _have(n)]
+        missing = [n for n in ("clang-cl", "lld-link") if not (_cached(n, root) or _have(n))]
         if missing:
             items.append(_item("rust.windows", "fail", "%s not found for the Windows target. Fix: "
-                               "python scripts/delivery/ci_tool.py ensure llvm" % " and ".join(missing)))
+                               "python scripts/delivery/ci_tool.py tool llvm" % " and ".join(missing)))
         else:
             items.append(_item("rust.windows", "ok", "clang-cl and lld-link found"))
     pins = _read_json(os.path.join(root, "scripts", "delivery", "tools.json"))
+    need = _needed_platforms(targets)
     bad = []
     for name in RUST_TOOLS:
-        entry = pins.get(name)
-        sha = entry.get("sha256") if isinstance(entry, dict) else None
-        hashes = list(sha.values()) if isinstance(sha, dict) else ([sha] if isinstance(sha, str) else [])
-        if not hashes or not all(isinstance(h, str) and re.fullmatch(r"[0-9a-fA-F]{64}", h) for h in hashes):
-            bad.append(name)
+        problem = _pin_problem(pins.get(name), need)
+        if problem:
+            bad.append("%s%s" % (name, problem))
     if bad:
         items.append(_item("rust.pins", "fail", "tools.json has no sha256 pin for: %s. Fix: add each tool with "
                            "`python scripts/delivery/tools_pin.py` and commit scripts/delivery/tools.json" % ", ".join(bad)))
@@ -835,6 +892,45 @@ def compat_items(installed=None, compat_path=None):
     return items
 
 
+def scripts_items(root):
+    """`ci.scripts-current`: the project's scripts/delivery files against the plugin's templates (DL188). Never fails."""
+    import delivery_ci_install as INST
+    track = _read_json(os.path.join(root, "scripts", "delivery", "gate.json")).get("track")
+    if track not in ("ts", "go", "rust", "dotnet"):
+        track = "rust" if os.path.exists(os.path.join(root, "scripts", "delivery", "rust_ci.py")) else "shared"
+    keep, skip = INST.load_config(root)
+    stale, missing, kept = [], [], []
+    for rel, _src, action in INST.plan(track, root, "update", keep, skip):
+        if not rel.startswith("scripts/delivery/"):
+            continue
+        if action == "overwritten":
+            stale.append(rel)
+        elif action == "written":
+            missing.append(rel)
+        elif action == INST.KEPT:
+            kept.append(rel)
+    if not stale and not missing:
+        return [_item("ci.scripts-current", "ok", "scripts/delivery matches the plugin templates%s"
+                      % (" (kept on purpose: %s)" % ", ".join(kept) if kept else ""))]
+    parts = []
+    if stale:
+        parts.append("older than the plugin templates: %s" % ", ".join(stale))
+    if missing:
+        parts.append("missing: %s" % ", ".join(missing))
+    return [_item("ci.scripts-current", "warn", "%s. Refresh: python3 <plugin>/scripts/delivery_ci_install.py update "
+                  "--track %s (add --dry-run first). To keep a file you edited on purpose, list it under \"keep\" in "
+                  "scripts/delivery/ci-install.json" % ("; ".join(parts), track if track != "shared" else "ts|go|rust|dotnet"))]
+
+
+def check_scripts(root, cfg):
+    """None when the project has no scripts/delivery. A warning never fails the check."""
+    if not os.path.isdir(os.path.join(root, "scripts", "delivery")):
+        return None
+    items = scripts_items(root)
+    bad = ["%s %s: %s" % (i["status"], i["id"], i["detail"]) for i in items if i["status"] != "ok"]
+    return True, "; ".join(bad) or items[0]["detail"], items
+
+
 def check_plugins(root, cfg):
     items = compat_items()
     if not items:
@@ -844,7 +940,7 @@ def check_plugins(root, cfg):
 
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust),
-          ("plugins", check_plugins))
+          ("scripts", check_scripts), ("plugins", check_plugins))
 
 
 def run_checks(root):
