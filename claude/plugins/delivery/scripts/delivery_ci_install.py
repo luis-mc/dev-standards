@@ -65,6 +65,11 @@ Prune list sync (DL150). After `update` rewrites `.github/workflows/artifact-pru
 `scripts/delivery/artifact_prune.py --sync-workflow` in the project, so the project's `artifact_prune.workflows`
 list is applied and does not revert. A failed sync prints the error and the fix; the update stays.
 
+Prettier (DL218). When the project uses Prettier (a `.prettierrc*` or `prettier.config.*` file, a `prettier` key in
+package.json, or prettier in its dependencies), the installer keeps a marked block in `.prettierignore`. The block
+lists `.delivery/ci-install-base/` and every `*.example.json` it manages. Other lines are never touched, the file's
+line endings stay, a rerun changes nothing, and `--dry-run` only lists the change. Without Prettier nothing is written.
+
 Time zone data (DL157). Windows Python has no time zone data. After the run the installer loads the `tz` of
 `.delivery/config.json` through `zoneinfo`. When that fails it runs `python -m pip install --user tzdata` (it asks
 first when the terminal is interactive), says what it did, and checks again. The doctor keeps its own check.
@@ -556,6 +561,61 @@ def sync_prune_workflow(items: list, root: str) -> None:
     print("The update is kept. Fix the error, then run `python %s --sync-workflow` in the project." % PRUNE_SCRIPT)
 
 
+PRETTIERIGNORE = ".prettierignore"
+PI_BEGIN = "# luismc-delivery: installer copies (do not edit this block)"
+PI_END = "# luismc-delivery: end of installer copies"
+
+
+def uses_prettier(root: str) -> bool:
+    """DL218: a Prettier config file, a `prettier` key in package.json, or prettier as a dependency."""
+    try:
+        names = os.listdir(root)
+    except OSError:
+        return False
+    if any(n.startswith(".prettierrc") or n.startswith("prettier.config.") for n in names):
+        return True
+    data = _json_of(os.path.join(root, "package.json"))
+    if not isinstance(data, dict):
+        return False
+    if "prettier" in data:
+        return True
+    return any(isinstance(data.get(k), dict) and "prettier" in data[k] for k in ("dependencies", "devDependencies"))
+
+
+def prettierignore(items: list, root: str, dry_run: bool = False) -> str:
+    """DL218: keep a marked block in .prettierignore that lists the installer's own copies.
+    Returns "" (no Prettier), "same", "written" or "updated" ("would ..." on a dry run)."""
+    if not uses_prettier(root):
+        return ""
+    paths = [BASE_DIR + "/"] + sorted(rel for rel, _s, a in items if rel.endswith(".example.json") and a != SKIPPED)
+    block = [PI_BEGIN] + paths + [PI_END]
+    path = os.path.join(root, PRETTIERIGNORE)
+    raw = b""
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            raw = f.read()
+    text = raw.decode("utf-8")
+    eol = "\r\n" if "\r\n" in text else "\n"
+    lines = text.replace("\r\n", "\n").split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    if PI_BEGIN in lines and PI_END in lines[lines.index(PI_BEGIN):]:
+        i = lines.index(PI_BEGIN)
+        j = lines.index(PI_END, i)
+        new = lines[:i] + block + lines[j + 1:]
+    else:
+        new = lines + block
+    data = (eol.join(new) + eol).encode("utf-8")
+    if data == raw:
+        return "same"
+    action = "updated" if raw else "written"
+    if dry_run:
+        return "would be " + action
+    with open(path, "wb") as f:
+        f.write(data)
+    return action
+
+
 def tz_name(root: str):
     """The `tz` key of .delivery/config.json, or None."""
     try:
@@ -671,6 +731,7 @@ def main(argv=None) -> int:
             keep_old_pre_push(items, root)
         apply(items, root)
         print("settings    %s: %s" % (SETTINGS, merge_session_guard(root)))
+    pi = prettierignore(items, root, args.dry_run)
     if not args.dry_run and args.action == "update":
         sync_prune_workflow(items, root)
     if not args.dry_run:
@@ -681,6 +742,8 @@ def main(argv=None) -> int:
     for rel, _src, action in items:
         if action != "same":
             print("%-11s %s" % (action, rel))
+    if pi and pi != "same":
+        print("%-11s %s (installer copies, Prettier)" % (pi, PRETTIERIGNORE))
     counts = {}
     for _r, _s, a in items:
         counts[a] = counts.get(a, 0) + 1
