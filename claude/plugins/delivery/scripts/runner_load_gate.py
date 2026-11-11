@@ -214,6 +214,18 @@ class Marker:
             return False
 
 
+def _ticket_state(ticket, mcfg):
+    """Why a ticket is not in the queue list, for the log."""
+    path = os.path.join(MS.queue_dir(), ticket['file'])
+    if not os.path.exists(path):
+        return 'file missing in %s' % MS.queue_dir()
+    rec = MS._read_json(path)
+    if rec is None:
+        return 'file unreadable'
+    return 'file present; gate pid %s alive %s; age %.0f s' % (rec.get('gate_pid'), MS.pid_alive(rec.get('gate_pid')),
+                                                              time.time() - (rec.get('queued_ts') or 0))
+
+
 def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monotonic, log=print, marker=None,
                priority=None):
     """Take a ticket and wait for: first in line, a free slot, load under the limits. Then take the slot. Returns
@@ -238,6 +250,19 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
                        f['holder'].get('job')))
             why = []
             q = MS.queue_list(mcfg)
+            if not any(t.get('file') == ticket['file'] for t in q):
+                # The own ticket vanished (dropped as unreadable or stale, or removed). Never wait on an empty
+                # queue: write it again, with the first queued time so it keeps its place.
+                log('runner gate: own ticket was gone; queued again (%s)' % _ticket_state(ticket, mcfg))
+                MS.dequeue(ticket)
+                try:
+                    keep = time.time() - queued_ts < mcfg['slot_stale_min'] * 60
+                    ticket = MS.enqueue(ident, ticket['priority'], now=queued_ts if keep else None)
+                    queued_ts = ticket['queued_ts']
+                except OSError as exc:
+                    log('runner gate: cannot queue again (%s)' % exc)
+                else:
+                    q = MS.queue_list(mcfg)
             if not q or q[0].get('file') != ticket['file']:
                 why.append('%d ahead in the queue' % max(0, next((i for i, t in enumerate(q)
                                                                     if t.get('file') == ticket['file']), len(q))))

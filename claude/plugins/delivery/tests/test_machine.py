@@ -361,14 +361,14 @@ class Gate(unittest.TestCase):
             self.assertTrue(any("cannot measure" in l for l in lines))
 
     def test_main_without_the_layer_is_the_old_load_gate(self):
-        with machine(DELIVERY_LOAD="10,10"):
+        with machine(DELIVERY_LOAD="10,10", DELIVERY_GATE_MAX_WAIT_MIN="0.05", DELIVERY_GATE_POLL_SEC="0.01"):
             self.assertFalse(R.layer_ready())
             self.assertEqual(R.main(["--log", os.path.join(MS.machine_dir(), "g.log")]), 0)
             self.assertEqual(MS.queue_list(), [])
 
     def test_main_with_the_layer_takes_a_slot_and_job_done_frees_it(self):
         with machine(DELIVERY_LOAD="10,10", GITHUB_REPOSITORY="owner/example-app", GITHUB_RUN_ID="77", GITHUB_JOB="unit",
-                     RUNNER_NAME="host1-pool-app1"):
+                     RUNNER_NAME="host1-pool-app1", DELIVERY_GATE_MAX_WAIT_MIN="0.05", DELIVERY_GATE_POLL_SEC="0.01"):
             MS.write_machine_config({})
             self.assertEqual(R.main([]), 0)
             held = MS.find_held(MS.ident_from_env())
