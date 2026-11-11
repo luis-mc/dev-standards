@@ -55,6 +55,7 @@ class KeepSkip(unittest.TestCase):
 
     def test_without_keep_an_edited_file_is_kept_with_a_new_file(self):
         run("install", "--track", "ts", "--root", self.tmp)
+        shutil.rmtree(os.path.join(self.tmp, ".delivery", "ci-install-base"))   # no base: kept with a .new
         self.write(WATCH, "# my fix\n")
         run("update", "--track", "ts", "--root", self.tmp)
         self.assertEqual(self.read(WATCH), "# my fix\n")        # DL201: kept, not overwritten

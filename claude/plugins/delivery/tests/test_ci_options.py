@@ -128,6 +128,7 @@ class InstallTests(unittest.TestCase):
         cli(INS.main, "install", "--track", "go", "--root", root)
         script = os.path.join(root, "scripts/delivery/join.py")
         gate = os.path.join(root, "scripts/delivery/gate.json")
+        shutil.rmtree(os.path.join(root, ".delivery", "ci-install-base"))   # no base: kept with a .new
         open(script, "w").write("old\n")
         open(gate, "w").write("{}\n")
         code, out, _ = cli(INS.main, "update", "--track", "go", "--root", root)

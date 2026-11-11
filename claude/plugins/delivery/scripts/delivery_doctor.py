@@ -911,6 +911,9 @@ def scripts_items(root):
             kept.append(rel)
         elif action == INST.CHANGED:
             changed.append(rel)
+    for rel, _src, _a in INST.plan(track, root, "update", keep, skip):
+        if rel.startswith("scripts/delivery/") and rel not in changed and os.path.exists(os.path.join(root, rel.replace("/", os.sep) + ".new")):
+            changed.append(rel)   # DL201: a conflict or a kept file waits for a hand merge
     if not stale and not missing and not changed:
         return [_item("ci.scripts-current", "ok", "scripts/delivery matches the plugin templates%s"
                       % (" (kept on purpose: %s)" % ", ".join(kept) if kept else ""))]
@@ -918,7 +921,7 @@ def scripts_items(root):
     if stale:
         parts.append("older than the plugin templates: %s" % ", ".join(stale))
     if changed:
-        parts.append("changed by the project (an update keeps them and writes <file>.new; merge by hand): %s"
+        parts.append("changed by the project, or a pending <file>.new (an update merges them; resolve a conflict in <file>.new, copy it over the file, rerun update): %s"
                      % ", ".join(changed))
     if missing:
         parts.append("missing: %s" % ", ".join(missing))

@@ -45,6 +45,16 @@ file is kept, the new template goes next to it as `<file>.new`, and the run prin
 `git diff --no-index` command. With no record, a file that differs from the template counts as changed.
 Merge by hand, then delete the .new file. A later update replaces an old .new. The plugin never commits it.
 
+3-way merge (DL201, step 2). The installer also keeps a copy of each template as written in
+`.delivery/ci-install-base/<same path>`. On `update`, a file the project changed and that has a stored base is merged:
+a line-based diff3 (difflib) applies the template's changes since the base to the project file. A clean merge
+writes the file (action "merged") and refreshes the base and the hash. A conflict leaves the project file as it is,
+writes `<file>.new` with `<<<<<<< project` / `||||||| base` / `=======` / `>>>>>>> template` markers (action
+"conflict") and prints "resolve <file>.new, then copy it over <file> and rerun update". A file with no stored base is
+kept with a plain `.new`, and the new template becomes its base. Line endings: the merge runs on LF; the file keeps
+the project's ending. Commit `.delivery/ci-install-base/` so every clone can merge. The run ends with
+"summary: N written, N overwritten, N merged, N conflict, N kept, N same, N skipped" and exits 0 with conflicts.
+
 A path in either list that the plugin does not manage prints a "warning:" line; it is not an error. A file that
 is not valid JSON (or whose lists are not lists of strings) prints one line naming the file and exits 2. With
 no ci-install.json the run is as before. The import check treats a skipped or kept file like any file on disk.
@@ -79,6 +89,7 @@ Standard library only.
 from __future__ import annotations
 
 import argparse
+import difflib
 import ast
 import hashlib
 import json
@@ -129,6 +140,10 @@ SKIPPED = "skipped (ci-install.json)"
 KEPT = "kept (ci-install.json)"
 CHANGED = "kept (project changes)"
 STATE = ".delivery/ci-install-state.json"
+BASE_DIR = ".delivery/ci-install-base"
+MERGED = "merged"
+CONFLICT = "conflict"
+MERGES = {}   # rel -> (text with LF, number of conflicts); set by merge_changed, used by apply
 
 
 def digest(path: str) -> str:
@@ -162,14 +177,115 @@ def save_state(items: list, root: str, old: dict) -> None:
     """Record the hash of every file the run wrote or found equal to the template (DL201)."""
     files = dict(old)
     for rel, src, action in items:
-        if action in ("written", "overwritten", "same") and rel not in PROJECT_OWNED_PATHS:
+        if action in ("written", "overwritten", "same", MERGED) and rel not in PROJECT_OWNED_PATHS:
             files[rel] = digest(src)
-            if rel == PRUNE_WORKFLOW and action != "same":
+            if rel == PRUNE_WORKFLOW and action not in ("same", MERGED):
                 files[rel] = digest(os.path.join(root, rel.replace("/", os.sep)))   # the sync edits it on purpose
     path = os.path.join(root, STATE.replace("/", os.sep))
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(json.dumps({"plugin_version": plugin_version(), "files": dict(sorted(files.items()))}, indent=2) + "\n")
+
+
+def base_path(root: str, rel: str) -> str:
+    return os.path.join(root, BASE_DIR.replace("/", os.sep), rel.replace("/", os.sep))
+
+
+def _text(path: str):
+    """File text with CRLF read as LF, plus whether the file used CRLF. None when it is not UTF-8."""
+    with open(path, "rb") as f:
+        raw = f.read()
+    try:
+        return raw.decode("utf-8").replace("\r\n", "\n"), b"\r\n" in raw
+    except UnicodeDecodeError:
+        return None, False
+
+
+def merge3(base: str, project: str, template: str):
+    """Line-based 3-way merge (DL201). Returns (merged text, number of conflicts).
+
+    Each side's changed hunks against `base` are found with difflib. Hunks that touch or overlap form one group.
+    A group changed by one side takes that side's lines. A group both sides changed to the same text is taken once.
+    Any other group is a conflict, written with <<<<<<< project / ||||||| base / ======= / >>>>>>> template."""
+    b, p, t = base.splitlines(True), project.splitlines(True), template.splitlines(True)
+
+    def hunks(other):
+        sm = difflib.SequenceMatcher(None, b, other, autojunk=False)
+        return [(i1, i2, other[j1:j2]) for tag, i1, i2, j1, j2 in sm.get_opcodes() if tag != "equal"]
+
+    events = sorted([(s_, e_, n, "t") for s_, e_, n in hunks(t)] + [(s_, e_, n, "p") for s_, e_, n in hunks(p)],
+                    key=lambda ev: (ev[0], ev[1]))
+    groups = []
+    for ev in events:
+        if groups and ev[0] <= groups[-1]["hi"]:
+            groups[-1]["hi"] = max(groups[-1]["hi"], ev[1])
+            groups[-1]["ev"].append(ev)
+        else:
+            groups.append({"lo": ev[0], "hi": ev[1], "ev": [ev]})
+
+    def side(group, who):
+        pos, out = group["lo"], []
+        for s_, e_, new, w in group["ev"]:
+            if w == who:
+                out += b[pos:s_] + new
+                pos = e_
+        return out + b[pos:group["hi"]]
+
+    out, pos, conflicts = [], 0, 0
+    for g in groups:
+        out += b[pos:g["lo"]]
+        pos = g["hi"]
+        sides = {w for *_x, w in g["ev"]}
+        if sides == {"t"}:
+            out += side(g, "t")
+        elif sides == {"p"}:
+            out += side(g, "p")
+        elif side(g, "p") == side(g, "t"):
+            out += side(g, "p")
+        else:
+            conflicts += 1
+
+            def block(lines):
+                return lines if not lines or lines[-1].endswith("\n") else lines[:-1] + [lines[-1] + "\n"]
+            out += (["<<<<<<< project\n"] + block(side(g, "p")) + ["||||||| base\n"] + block(b[g["lo"]:g["hi"]])
+                    + ["=======\n"] + block(side(g, "t")) + [">>>>>>> template\n"])
+    out += b[pos:]
+    return "".join(out), conflicts
+
+
+def merge_changed(items: list, root: str) -> list:
+    """Turn each CHANGED item that has a stored base into merged or conflict (DL201). Does not write the project file."""
+    MERGES.clear()
+    out = []
+    for rel, src, action in items:
+        bp = base_path(root, rel)
+        if action == CHANGED and os.path.exists(bp):
+            dst = os.path.join(root, rel.replace("/", os.sep))
+            base, _a = _text(bp)
+            proj, crlf = _text(dst)
+            tpl, _c = _text(src)
+            if None not in (base, proj, tpl):
+                text, n = merge3(base, proj, tpl)
+                MERGES[rel] = (text, n, crlf)
+                action = CONFLICT if n else MERGED
+        out.append((rel, src, action))
+    return out
+
+
+def record_bases(items: list, root: str) -> None:
+    """Keep a copy of each template as written, so the next update has the merge base (DL201)."""
+    for rel, src, action in items:
+        if rel in PROJECT_OWNED_PATHS or action not in ("written", "overwritten", "same", MERGED, CHANGED):
+            continue
+        if action == CHANGED and os.path.exists(base_path(root, rel)):
+            continue
+        text, _c = _text(src)
+        if text is None:
+            continue
+        bp = base_path(root, rel)
+        os.makedirs(os.path.dirname(bp), exist_ok=True)
+        with open(bp, "w", encoding="utf-8", newline="\n") as f:
+            f.write(text)
 
 
 def load_config(root: str):
@@ -250,8 +366,19 @@ def write_config(src: str, dst: str) -> None:
 def apply(items: list, root: str) -> None:
     for rel, src, action in items:
         dst = os.path.join(root, rel.replace("/", os.sep))
+        if action in ("same", "overwritten", "written") and os.path.exists(dst + ".new"):
+            os.remove(dst + ".new")   # a resolved or stale .new (DL201)
         if action == CHANGED:
             shutil.copyfile(src, dst + ".new")
+            continue
+        if action in (MERGED, CONFLICT):
+            text, _n, crlf = MERGES[rel]
+            data = text.replace("\n", "\r\n") if crlf else text
+            target = dst if action == MERGED else dst + ".new"
+            with open(target, "wb") as f:
+                f.write(data.encode("utf-8"))
+            if action == MERGED and os.path.exists(dst + ".new"):
+                os.remove(dst + ".new")
             continue
         if action not in ("written", "overwritten"):
             continue
@@ -379,7 +506,7 @@ PRUNE_SCRIPT = "scripts/delivery/artifact_prune.py"
 
 def sync_prune_workflow(items: list, root: str) -> None:
     """DL150: apply artifact_prune.workflows after `update` rewrote the template's workflow. Never raises."""
-    if not any(rel == PRUNE_WORKFLOW and action == "overwritten" for rel, _s, action in items):
+    if not any(rel == PRUNE_WORKFLOW and action in ("overwritten", MERGED) for rel, _s, action in items):
         return
     script = os.path.join(root, PRUNE_SCRIPT.replace("/", os.sep))
     if not os.path.exists(script):
@@ -501,6 +628,8 @@ def main(argv=None) -> int:
               "Choose it with `delivery_ci.py set`, then run install again.")
     old_state, had_state = load_state(root)
     items = plan(args.track, root, args.action, keep, skip)
+    if args.action == "update":
+        items = merge_changed(items, root)
     managed = {rel for rel, _s, _a in items}
     for rel in sorted((keep | skip) - managed):
         print("warning: %s lists %s, which the plugin does not manage" % (CONFIG, rel))
@@ -513,6 +642,7 @@ def main(argv=None) -> int:
         sync_prune_workflow(items, root)
     if not args.dry_run:
         save_state(items, root, old_state)
+        record_bases(items, root)
     if not args.dry_run:
         ensure_tzdata(root)
     for rel, _src, action in items:
@@ -526,12 +656,24 @@ def main(argv=None) -> int:
         if action == KEPT:
             print("kept %s: the plugin's version differs; diff it with %s and fold your change into the plugin or drop it"
                   % (rel, os.path.relpath(src, PLUGIN).replace(os.sep, "/")))
+    order = ("written", "overwritten", MERGED, CONFLICT, "kept", "same", "skipped")
+    tally = dict.fromkeys(order, 0)
+    for _r, _s, a in items:
+        key = "kept" if a in (CHANGED, KEPT) else "skipped" if a == SKIPPED else a
+        if key in tally:
+            tally[key] += 1
+    print("summary: %s" % ", ".join("%d %s" % (tally[k], k) for k in order))
+    for rel, _s, a in items:
+        if a == CONFLICT:
+            print("conflict %s: %d conflict(s); resolve %s.new, then copy it over %s and rerun update"
+                  % (rel, MERGES[rel][1], rel, rel))
     changed = [rel for rel, _s, a in items if a == CHANGED]
     for rel in changed:
         print("kept (project changes): %s; new template in %s.new; compare with: git diff --no-index %s %s.new"
               % (rel, rel, rel, rel))
     if changed:
-        print("Merge by hand, then delete the .new files. The plugin never commits them.")
+        print("Merge by hand, then delete the .new files. The plugin never commits them. "
+              "The new template is now the merge base, so the next update can merge.")
         if not args.dry_run and not had_state:
             print("No install record was found, so this first update after DL201 is careful: every file that "
                   "differs from the template was kept.")
