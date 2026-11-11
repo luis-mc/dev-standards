@@ -54,8 +54,14 @@ INTEGRATION (neither local nor remote) is created from origin/<default> and push
 --create. A Cargo.lock conflict takes INTEGRATION's lock, runs `cargo fetch` (then `cargo update -w` if
 needed) and verifies with `cargo fetch --locked`; without cargo it stops and names the file.
 
+DL241: a branch cut from a shared contract branch is not stacked on its sibling; stacked means B holds an older
+head of A and the files both sides touched are listed (never an empty list). Every skipped branch prints
+`skipped <branch>: <reason>`. A partial join ends with `joined N of M branches; skipped: <names>`; it exits 5 when a
+branch was missing on the remote, and `--allow-partial` makes any skip (conflict, stacked, missing) exit 0.
+
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
-configuration error (or no result), 3 stopped at a conflict.
+configuration error (or no result), 3 stopped at a conflict or a stacked branch,
+5 partial join: a branch was skipped because it is missing on the remote.
 """
 from __future__ import annotations
 
@@ -77,6 +83,7 @@ import runner_health
 
 # The steps of gate.json the light check runs, by name; a step's own "join": true/false wins.
 QUICK_STEPS = ("typecheck", "lint")
+EXIT_PARTIAL = 5  # DL241: a partial join with a branch missing on the remote (conflicts keep exit 3)
 
 
 def write_join_result(root: Path, joined: list[str], stopped_at: str | None, conflicts: list[str],
@@ -166,10 +173,18 @@ def strip_temporary_docs(root: Path, base_ref: str | None = None) -> dict:
     return {"stripped": True, "summaries": summaries}
 
 
-def stacked_on_older(root: Path, remote: str, branch: str, others: list[str], trunk: str = "HEAD") -> str | None:
-    """DL128: the name of another branch A such that `branch` (B) contains an older head of A, but not A's
-    current head. Merging both would replay A's old work over A's newer work. None when there is none."""
+def _names(root: Path, args: list[str]) -> set[str]:
+    done = dc.run_git(["diff", "--name-only", *args], cwd=root, check=False)
+    return {ln.strip() for ln in done.stdout.splitlines() if ln.strip()} if done.returncode == 0 else set()
+
+
+def stacked_on_older(root: Path, remote: str, branch: str, others: list[str], trunk: str = "HEAD") -> tuple[str, list[str]] | None:
+    """DL128, DL241: (A, files) when `branch` (B) contains an older head of another joined branch A but not A's
+    current head, and both sides touch the same files: A's old work sits in B and A rewrote it later. A shared
+    ancestor that is not a head of a joined branch (a contract branch the siblings are cut from) is not stacking.
+    None when there is none."""
     b_ref = "refs/remotes/%s/%s" % (remote, branch)
+    heads = {dc.rev("refs/remotes/%s/%s" % (remote, o), root) for o in others}
     for a in others:
         if a == branch:
             continue
@@ -183,11 +198,20 @@ def stacked_on_older(root: Path, remote: str, branch: str, others: list[str], tr
         mb = base.stdout.strip() if base.returncode == 0 else ""
         if not mb:
             continue
-        # The merge-base is A's own commit (not the shared trunk) when it lies on A's side only:
-        # it is not an ancestor of the integration head.
-        on_trunk = dc.run_git(["merge-base", "--is-ancestor", mb, trunk], cwd=root, check=False).returncode == 0
-        if not on_trunk:
-            return a
+        # The merge-base must be A's own older commit: not in the integration head, not a head of another
+        # joined branch's sibling base, and not the tip of a remote branch outside this call (a contract branch).
+        if dc.run_git(["merge-base", "--is-ancestor", mb, trunk], cwd=root, check=False).returncode == 0:
+            continue
+        tips = dc.run_git(["for-each-ref", "--format=%(objectname) %(refname)", "refs/remotes/%s/" % remote],
+                          cwd=root, check=False).stdout.splitlines()
+        shared = any(t.split(" ")[0] == mb and t.split(" ", 1)[1] not in
+                     ("refs/remotes/%s/%s" % (remote, o) for o in others) for t in tips if " " in t)
+        if shared:
+            continue
+        # B carries A's old work (trunk...mb); A rewrote those files after mb (mb..A).
+        files = sorted(_names(root, [trunk + "..." + mb]) & _names(root, [mb, a_ref]))
+        if files:
+            return a, files
     return None
 
 
@@ -409,15 +433,20 @@ def quick_check(root: Path, cfg: dict, base_ref: str) -> tuple[int, dict]:
 
 
 def finish_partial(root: Path, args, into: str, joined: list[str], conflicting: dict[str, list[str]],
-                   stop_code: int | None, stop_branch: str | None, stop_reason: str | None) -> int:
+                   stop_code: int | None, stop_branch: str | None, stop_reason: str | None,
+                   skips: dict[str, str] | None = None) -> int:
     """DL111: some branch conflicted or was refused. The clean merges stay on the branch and are pushed with --push.
 
     The steps after the merges (docs stripping, gallery rebuild, light check, ready pull request text) do not run:
     they judge the whole join, and the join is not whole. They run in the call that joins the rest, which sees the
     full head. Exit is EXIT_CONFLICT for conflicts, or the refusal's own code when a refusal stopped the join."""
-    first = stop_branch or next(iter(conflicting))
+    skips = dict(skips or {})
+    first = stop_branch or next(iter(conflicting or skips))
+    for b in args.branches:  # DL241: a branch the loop never reached is skipped too
+        if b not in joined and b not in skips:
+            skips[b] = "not reached, the join stopped at %s" % stop_branch if stop_branch else "not joined"
     flat = [f for files in conflicting.values() for f in files]
-    extra: dict = {"partial": True, "conflicting": conflicting, "pushed": False,
+    extra: dict = {"partial": True, "conflicting": conflicting, "skipped": skips, "pushed": False,
                    "skipped_steps": "docs stripping, gallery rebuild, light check and ready pull request text "
                                     "wait for the join of the remaining branches"}
     if stop_branch is not None:
@@ -451,7 +480,15 @@ def finish_partial(root: Path, args, into: str, joined: list[str], conflicting: 
     else:
         dc.eprint("join: no branch merged cleanly; nothing kept")
     write_join_result(root, joined, first, flat, stop_reason, extra=extra)
-    return stop_code if stop_code is not None else dc.EXIT_CONFLICT
+    for b, why in skips.items():
+        print("skipped %s: %s" % (b, why), flush=True)
+    names = [b for b in args.branches if b not in joined]
+    print("joined %d of %d branches; skipped: %s" % (len(joined), len(args.branches), ", ".join(names)), flush=True)
+    if stop_code is not None:
+        return stop_code
+    if getattr(args, "allow_partial", False):
+        return dc.EXIT_OK
+    return dc.EXIT_CONFLICT if conflicting else EXIT_PARTIAL
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -462,6 +499,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-gate", action="store_true", help="skip the light check on the joined head")
     ap.add_argument("--ci-gate", action="store_true",
                     help="join branches whose gate is their branch CI run: no gate result required (DL-83)")
+    ap.add_argument("--allow-partial", action="store_true",
+                    help="exit 0 when branches were skipped (conflict, stacked, missing); the summary still prints")
     ap.add_argument("--push", action="store_true", help="push INTEGRATION (and its gate result) when done")
     ap.add_argument("--remote", default="origin")
     ap.add_argument("--create", action="store_true",
@@ -541,7 +580,12 @@ def main(argv: list[str] | None = None) -> int:
     stop_code: int | None = None  # DL111: set by a refusal or a failed merge; the loop ends, clean merges are kept
     stop_branch: str | None = None
     stop_reason: str | None = None
+    skips: dict[str, str] = {}  # DL241: branch -> why it was skipped
     for branch in args.branches:
+        if dc.rev("refs/remotes/%s/%s" % (remote, branch), root) is None:
+            dc.eprint("join: %s is missing on %s" % (branch, remote))
+            skips[branch] = "missing on %s" % remote
+            continue
         verdict = gate_verify.verify(branch, integ_ref, remote, allow_older_base=True, root=root) if gated else None
         if verdict is not None and not verdict["trusted"] and ci_gate:
             print("join: %s has no gate result; joined at code push, its branch CI run is its gate (ci_gate)" % branch,
@@ -551,14 +595,18 @@ def main(argv: list[str] | None = None) -> int:
             for reason in verdict["reasons"]:
                 dc.eprint("  - " + reason)
             stop_code, stop_branch, stop_reason = verdict["exit"], branch, "; ".join(verdict["reasons"])
+            skips[branch] = "not ready, no trusted passing gate result: " + stop_reason
             break
 
         older = stacked_on_older(root, remote, branch, args.branches, join_start)
         if older is not None:
+            older, st_files = older
             reason = "%s is stacked on an older %s; prefer %s's side for files %s rewrote" % (branch, older, branch, branch)
             dc.eprint("join: " + reason)
+            dc.eprint("join: files in both: " + ", ".join(st_files))
             dc.eprint("join: merge %s alone (it carries %s's older work) or rebase %s on the current %s" % (branch, older, branch, older))
-            conflicting[branch] = []
+            conflicting[branch] = st_files
+            skips[branch] = "stacked on an older %s, files: %s" % (older, ", ".join(st_files))
             stop_reason = reason
             continue
 
@@ -579,6 +627,7 @@ def main(argv: list[str] | None = None) -> int:
             abort_merge(root)
             dc.eprint("join: git merge failed for %s: %s" % (branch, (merge.stderr or merge.stdout).strip()))
             stop_code, stop_branch, stop_reason = dc.EXIT_USAGE, branch, "merge failed"
+            skips[branch] = "merge failed"
             break
 
         work_files = [c for c in conflicts if is_docs_work(c)]
@@ -618,8 +667,10 @@ def main(argv: list[str] | None = None) -> int:
             dc.eprint("    " + c)
         conflicting[branch] = conflicts
 
-    if conflicting or stop_code is not None:
-        return finish_partial(root, args, into, joined, conflicting, stop_code, stop_branch, stop_reason)
+    for b, files in conflicting.items():
+        skips.setdefault(b, "conflict with %s in: %s" % (into, ", ".join(files)))
+    if conflicting or skips or stop_code is not None:
+        return finish_partial(root, args, into, joined, conflicting, stop_code, stop_branch, stop_reason, skips)
 
     write_join_result(root, joined, None, [])
 
