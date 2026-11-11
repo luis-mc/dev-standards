@@ -1,4 +1,4 @@
-# DL193 report (in progress)
+# DL193 report (done)
 
 ## Base check
 Branch made from origin/DS228-integration. `rust_ci.py` is present.
@@ -21,8 +21,14 @@ I built the exact release (`cargo install --locked cargo-deny@0.20.2`) and ran i
 - `python3 -m unittest test_ds200_rust_ci test_dl193_cargo_deny_flags` (in the tests dir): 18 tests OK.
 - `python3 tools/test_delivery_ci.py --no-mutants`: 78 passed, 0 failed.
 - `docs_check.py`: only W1 (this report under docs/work, expected) and a T2 warning.
-- spec-lint run 42937989695 (areas=delivery,docs): all delivery jobs and docs plugin success; `docs check` failed on M1 (delivery-speed spec maps rust_ci.py) and W1. M1 is fixed by `Docs: none` in the commit message of this report commit; W1 is expected. Rerun result below.
+- spec-lint run 42937989695 (areas=delivery,docs): all delivery jobs and docs plugin success; `docs check` failed on M1 (delivery-speed spec maps rust_ci.py) and W1. M1 is fixed by `Docs: none` in the commit message of this report commit; W1 is expected. 
 
 ## Follow-ups
 - cargo-deny with `--offline` checks the db age against `maximum_db_staleness` (git fetch time), separate from this script's 7-day cache stamp.
 - delivery-speed spec maps rust_ci.py; its owner may want a note.
+
+- Rerun 42938358935: every job success or skipped except `docs check`, which fails only on W1 (expected, this report).
+
+Branch head SHA: see `git rev-parse origin/DL193-cargo-deny-flags` (the commit that holds this report).
+
+READY
