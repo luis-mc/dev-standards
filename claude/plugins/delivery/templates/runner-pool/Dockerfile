@@ -87,7 +87,7 @@ COPY hooks/ /opt/delivery/hooks/
 COPY delivery/ /opt/delivery/
 RUN chmod +x /usr/local/bin/pool-add-agent /usr/local/bin/pool-remove-agent /usr/local/bin/pool-db-env /opt/delivery/hooks/*.sh
 # DL115: the per-runner tool cache (CI_TOOLS_DIR); every agent user writes it.
-# DL194: ci_tool.py makes its own folders 0777, so any agent user can add tools.
+# DL194: ci_tool.py makes its own folders 1777, so any agent user can add tools but not replace another's.
 RUN mkdir -p /ci-tools && chmod 1777 /ci-tools
 VOLUME ["/agents"]
 STOPSIGNAL SIGTERM

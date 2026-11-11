@@ -105,15 +105,16 @@ def _is_shared(path: Path) -> bool:
 
 
 def _mkdirs(path: Path, root: Path) -> None:
-    """Make path and its parents. In a shared cache each new folder is 0777, so any agent user can add to it (DL194)."""
+    """Make path and its parents. In a shared cache each new folder is 1777 (sticky): any agent user can add to it,
+    but no user can replace or delete another user's file or folder (DL194)."""
     path.mkdir(parents=True, exist_ok=True)
     if not _is_shared(root):
         return
     p = path
     while p != root and root in p.parents:
         try:
-            if p.stat().st_uid == os.getuid() and p.stat().st_mode & 0o777 != 0o777:
-                os.chmod(p, 0o777)
+            if p.stat().st_uid == os.getuid() and p.stat().st_mode & 0o1777 != 0o1777:
+                os.chmod(p, 0o1777)
         except OSError:
             pass
         p = p.parent
@@ -170,7 +171,14 @@ def fetch(url: str, sha256: str, name: str) -> Path:
     if target.is_file():
         if sha256_of(target) == sha256:
             return target.resolve()
-        target.unlink()
+        try:
+            target.unlink()
+        except OSError:
+            # A bad file another user owns in a sticky folder: use a per-user cache (DL194).
+            _use_fallback(target.parent)
+            target = cache_dir().joinpath(*parts)
+            if target.is_file() and sha256_of(target) == sha256:
+                return target.resolve()
     root = cache_dir()
     _mkdirs(target.parent, root)
     if not os.access(target.parent, os.W_OK | os.X_OK):
@@ -188,7 +196,12 @@ def fetch(url: str, sha256: str, name: str) -> Path:
             got = sha256_of(partial)
             if got != sha256:
                 raise ToolError(f"checksum mismatch: expected {sha256}, got {got}")
-            os.replace(partial, target)
+            try:
+                os.replace(partial, target)
+            except OSError:
+                # Another user won the race in a sticky folder; their file is fine if it verifies (DL194).
+                if not (target.is_file() and sha256_of(target) == sha256):
+                    raise
             return target.resolve()
         except Exception as exc:  # any error is retried, 5xx included
             last = f"{type(exc).__name__}: {exc}"
@@ -315,7 +328,7 @@ def _install_dir(final: Path, build) -> Path:
     tmp = _fresh_dir(final)
     try:
         build(tmp)
-        os.chmod(tmp, 0o777 if _is_shared(cache_dir()) else 0o755)  # mkdtemp makes 0700 (DL194)
+        os.chmod(tmp, 0o755)  # mkdtemp makes 0700; others read it, only its maker can change it (DL194)
         try:
             os.replace(tmp, final)
         except OSError:

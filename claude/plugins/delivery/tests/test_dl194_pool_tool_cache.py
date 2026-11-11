@@ -49,7 +49,35 @@ class SharedCache(unittest.TestCase):
             p = ci_tool.fetch("http://x/f", SHA, "tool/1.0/f")
         self.assertEqual(p.read_bytes(), DATA)
         for d in (self.cache / "tool", self.cache / "tool" / "1.0"):
-            self.assertEqual(d.stat().st_mode & 0o777, 0o777, d)
+            self.assertEqual(d.stat().st_mode & 0o1777, 0o1777, d)  # sticky: no user replaces another's file
+
+    def test_lost_replace_race_uses_the_winner_file(self):
+        """In a sticky folder os.replace onto another user's file fails; a verified winner file is used."""
+        target = self.cache / "tool" / "1.0" / "f"
+
+        def racing_download(url, partial):
+            fake_download(url, partial)
+            if not target.exists():
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_bytes(DATA)
+
+        real_replace = os.replace
+
+        def deny_replace(src, dst):
+            if Path(dst) == target:
+                raise PermissionError(1, "Operation not permitted")
+            return real_replace(src, dst)
+
+        with mock.patch.object(ci_tool, "_download", racing_download),                 mock.patch.object(ci_tool.os, "replace", deny_replace):
+            p = ci_tool.fetch("http://x/f", SHA, "tool/1.0/f")
+        self.assertEqual(p.read_bytes(), DATA)
+        self.assertEqual(list((self.cache / "tool" / "1.0").glob("*.partial")), [])
+
+    def test_installed_folder_is_read_only_to_others(self):
+        final = self.cache / "tool" / "1.0" / "linux_x64"
+        ci_tool._mkdirs(final.parent, self.cache)
+        ci_tool._install_dir(final, lambda tmp: (tmp / "bin").write_bytes(b"x"))
+        self.assertEqual(final.stat().st_mode & 0o777, 0o755)
 
     def test_unwritable_version_folder_falls_back(self):
         folder = self.cache / "tool" / "1.0"
