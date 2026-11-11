@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T06:21+00:00",
+  "updated": "2026-11-11T06:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7248,30 +7248,30 @@
       "status": "Running",
       "item": "RELEASE-95: join keeps the default branch's docs/work",
       "detail": "DL197 (peer report). Join, CI, merge on green, plugin update in both scopes.",
-      "expected": "11 Nov ~06:55",
-      "changed": "2026-11-11T06:14+00:00",
-      "expected_basis": "agent ~24 min, join 6, CI 5, merge 4",
+      "expected": "11 Nov ~06:32",
+      "changed": "2026-11-11T06:22+00:00",
+      "expected_basis": "PR 196 CI started 06:23, ~5 min",
       "release": 95,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-11T06:16+00:00",
-          "end": "2026-11-11T06:40+00:00"
+          "start": "2026-11-11T06:14+00:00",
+          "end": "2026-11-11T06:21+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T06:40+00:00",
-          "end": "2026-11-11T06:46+00:00"
+          "start": "2026-11-11T06:21+00:00",
+          "end": "2026-11-11T06:23+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T06:46+00:00",
-          "end": "2026-11-11T06:51+00:00"
+          "start": "2026-11-11T06:23+00:00",
+          "end": "2026-11-11T06:28+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T06:51+00:00",
-          "end": "2026-11-11T06:55+00:00"
+          "start": "2026-11-11T06:28+00:00",
+          "end": "2026-11-11T06:32+00:00"
         }
       ],
       "started": "2026-11-11T06:16+00:00"
