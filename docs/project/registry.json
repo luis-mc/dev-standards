@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T13:00+00:00",
+  "updated": "2026-11-11T13:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3678,12 +3678,11 @@
       "id": "DL205",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: update-guide note and keypad template vs secret scan",
       "detail": "Ships DL205 and DL206. Join, fold, CI, merge on green, plugin updates in both scopes, smoke.",
-      "expected": "11 Nov ~13:10",
-      "changed": "2026-11-11T13:00+00:00",
-      "expected_basis": "CI from 13:01, ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T13:05+00:00",
       "release": 99,
       "phases": [
         {
@@ -3713,11 +3712,11 @@
       "id": "DL206",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Update guide: run the CI installer on the owner's PC, not in a cloud agent",
       "detail": "A cloud sandbox refuses to run delivery_ci_install.py from a cloned dev-standards checkout (Code from External). Say in the delivery spec and the setup skill that installer runs happen on the owner's PC (D209).",
       "expected": "11 Nov",
-      "changed": "2026-11-11T12:59+00:00",
+      "changed": "2026-11-11T13:04+00:00",
       "rides": "DL205",
       "started": "2026-11-11T12:51+00:00"
     },
@@ -3725,11 +3724,11 @@
       "id": "DL207",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Design-system keypad template passes the pre-commit secret pattern",
       "detail": "The pre-commit name pattern flags a CSS selector in the design-system keypad template. Narrow the pattern so CSS selectors do not match (or rename the class), with a test over every shipped template (D210).",
       "expected": "11 Nov",
-      "changed": "2026-11-11T12:59+00:00",
+      "changed": "2026-11-11T13:05+00:00",
       "rides": "DL205",
       "started": "2026-11-11T12:51+00:00"
     },
@@ -3737,11 +3736,11 @@
       "id": "DL208",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Stop hooks read only the transcript tail (20.9 GB memory spikes)",
       "detail": "questions_stop.py reads the whole transcript into memory. A 2.4 GB session transcript made it use ~20.9 GB, pushing the PC to 100% (10:47, 11:07, 12:31, 12:39, DL202 log). Read only the tail, scanning back to the last real user message; check every shipped hook that reads a transcript.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T12:59+00:00",
+      "changed": "2026-11-11T13:05+00:00",
       "rides": "DL205",
       "started": "2026-11-11T12:53+00:00"
     },
