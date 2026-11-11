@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.1.0
+version: 1.1.1
 owner: agents
 type: reference
 code:
@@ -78,6 +78,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 **R5.10** — `docs_check.py` reports layout, front matter, link, image, `Source:`, test-path, version-table, generated-file, map and `docs/work/` findings. It exits 1 on any error (DOCSPEC R8.1).
 
 **R5.11** — `docs_check.py` warns on stale or missing `last_verified`, code newer than its doc, and a spec with no diagram. `--strict` turns warnings into failures (DOCSPEC R8.2).
+
+**R5.11a** — The "code newer than its doc" warning (T2) gives the same result on a developer machine, in CI and on a pull request merge ref. It compares UTC dates of the last non-merge commit for the code and for the doc, so a commit's time zone and a merge commit dated "now" change nothing. On a shallow clone the dates are wrong, so T2 is skipped and one info line goes to stderr; fetch full history to run it.
 
 **R5.12** — `docs_work.py guard` exits 1 when a branch adds files under `docs/work/`. `strip` and `summaries` serve the join step (DOCSPEC R10.2, R10.3).
 
@@ -168,6 +170,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.1.1 | 2026-11-11 | RELEASE-102 | T2 compares UTC dates of non-merge commits, so CI and local runs agree; T2 is skipped with an info line on a shallow clone. | DL219 |
 | 1.1.0 | 2026-11-11 | RELEASE-96 | Full Progress page is lighter: a windowed embedded registry, one line for older Live rows, no per-cell data-label (ARTIFACTSPEC R5.9, R6.3). | AR69 |
 | 1.0.0 | 2026-11-10 | RELEASE-86 | luismc-docs now holds the project record, artifacts and the spec skills; luismc-artifacts and luismc-specs leave the marketplace (D182, D185, D186). | DS219 |
 | 0.10.1 | 2026-11-09 | RELEASE-71 | docs_work.py strip --apply commits the docs/work/ removal, or exits 1 and says what is left staged. | DS193 |

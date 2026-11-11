@@ -25,9 +25,8 @@ class PoolNodeTests(unittest.TestCase):
         self.assertRegex(self.df, r"ARG NODE_SHA256=[0-9a-f]{64}")
         self.assertIn('echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c -', self.df)
 
-    def test_self_check_and_no_global_corepack_enable(self):
+    def test_self_check_runs_node_and_corepack(self):
         self.assertIn("RUN node --version && corepack --version", self.df)
-        self.assertNotRegex(self.df, r"(?m)^(RUN|\s+&&).*corepack enable")
 
     def test_corepack_fallback_is_pinned(self):
         self.assertRegex(self.df, r"ARG COREPACK_VERSION=\d+\.\d+\.\d+")

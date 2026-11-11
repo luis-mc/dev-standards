@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.6.2
+version: 0.6.3
 owner: agents
 type: reference
 code:
@@ -106,7 +106,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.24** — **Sizing does not hang on one moment** (DL177). "Fits" is judged against the larger of the 5-sample median (R5.20) and the host-load file's last sample (memory % of the total, minus the VM). A missing or stale file (over 60 s old) is ignored and the samples alone decide. The `Sizing inputs` line says which decided. A refusal for memory per CPU names the nearest sizes that pass, for example "10 GiB fits 6 CPUs; 7 CPUs needs 10.5 GiB".
 
-**R5.26** — **The pool image carries Node LTS with corepack** (DL215). Like GitHub-hosted runners, the image keeps the official Node LTS tarball (SHA-256 checked) at `/opt/node`, with its `bin` first on `PATH` for every user and the runner. It does not depend on `POOL_BROWSERS`. Node 22 bundles corepack; a newer Node without it gets corepack from npm at a pinned version. The image does not run `corepack enable`: the CI workflows do. `actions/setup-node` still puts the project's own Node first. A build-time check runs `node --version && corepack --version`. Playwright `install-deps` (R5.15) uses this Node.
+**R5.26** — **The pool image carries Node LTS with corepack** (DL215). Like GitHub-hosted runners, the image keeps the official Node LTS tarball (SHA-256 checked) at `/opt/node`, with its `bin` first on `PATH` for every user and the runner. It does not depend on `POOL_BROWSERS`. Node 22 bundles corepack; a newer Node without it gets corepack from npm at a pinned version. The image runs `corepack enable` once as root at build time, so the pnpm and yarn shims exist in `/opt/node/bin` and an unprivileged job's own `corepack enable` needs no write access (DL220). The shims pin no version; they read `packageManager` from each project. `actions/setup-node` still puts the project's own Node first. A build-time check runs `node --version && corepack --version` and checks the pnpm shim exists. Playwright `install-deps` (R5.15) uses this Node.
 
 ## 8. Failure modes
 
@@ -140,6 +140,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.3 | 2026-11-11 | RELEASE-102 | The pool image runs corepack enable as root at build time, so an unprivileged job's corepack enable needs no write access (R5.26). | DL220 |
 | 0.6.2 | 2026-11-11 | RELEASE-101 | The pool image carries Node LTS with corepack on PATH, like GitHub-hosted runners (R5.26). | DL215 |
 | 0.6.1 | 2026-11-11 | RELEASE-96 | The doctor's layer check probes tools with docker exec in the running pool container, and reports a docker error as a warning, not as a missing tool (R5.17).<br>The runner gate queues its own ticket again when it vanished from the queue, so it never waits on an empty queue. | DL199, DL200 |
 | 0.6.0 | 2026-11-11 | RELEASE-94 | The shared tool cache works for every agent user: shared-mode folders and a per-user fallback (R5.25). | DL194 |
