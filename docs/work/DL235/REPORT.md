@@ -17,3 +17,5 @@ Base check: ci_watch.py exists on origin/main.
 ## Follow-ups
 - Rules file lives in project-setup, outside the owned list; the task pointed to it.
 - Other specs (delivery-speed, models, project-setup) are covered by a `Docs: none` commit line.
+Branch head: 164a8ad4775aebf64ebb5ea57a9ba3fc3f5de54f
+READY
