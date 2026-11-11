@@ -17,7 +17,8 @@ def git(cwd, *a):
 def commit(w, name, text, msg):
     p = Path(w) / name
     p.parent.mkdir(parents=True, exist_ok=True)
-    p.write_text(text)
+    with open(p, "w", newline="\n") as f:  # LF on Windows too, so a commit never rewrites other files
+        f.write(text)
     git(w, "add", ".")
     git(w, "commit", "-q", "-m", msg)
 
@@ -27,6 +28,7 @@ def repo():
     git(base, "init", "-q", "--bare", "-b", "main", "origin.git")
     git(base, "clone", "-q", str(base / "origin.git"), "app1")
     w = base / "app1"
+    git(w, "config", "core.autocrlf", "false")
     commit(w, "a.txt", "a\n", "first")
     git(w, "push", "-q", "origin", "HEAD:main")
     git(w, "push", "-q", "origin", "HEAD:refs/heads/integ")
@@ -42,7 +44,7 @@ def branch(w, name, start, fname, text):
 def siblings(w):
     branch(w, "contract", "origin/main", "api.txt", "api\n")
     for n in "ABC":
-        branch(w, n, "contract", n + ".txt", n + "\n")
+        branch(w, n, "contract", "sib-" + n + ".txt", n + "\n")  # not n + ".txt": A.txt is a.txt on Windows
     git(w, "checkout", "-q", "main")
 
 
