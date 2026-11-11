@@ -100,7 +100,7 @@ BACKOFF_CAP = 60.0
 DEFAULT_CONFIG = ".delivery/config.json"
 DEFAULT_WORKFLOWS = ["CI", "Package"]
 DEFAULT_WORKFLOW_FILE = ".github/workflows/artifact-prune.yml"
-WORKFLOWS_LINE_RE = re.compile(r"^(?P<indent>[ \t]+)workflows:[ \t]*\[[^\]\n]*\][ \t]*$", re.MULTILINE)
+WORKFLOWS_LINE_RE = re.compile(r"^(?P<indent>[ \t]*)workflows:[ \t]*\[[^\]\r\n]*\][ \t]*(?:#[^\r\n]*)?(?=\r?$)", re.MULTILINE)
 
 
 def _env_float(name: str, default: float) -> float:

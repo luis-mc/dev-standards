@@ -366,7 +366,8 @@ def print_failed_jobs(run: dict, repo: str | None) -> None:
         print(f"    could not read the jobs: {exc}")
         return
     jobs = data.get("jobs", []) if isinstance(data, dict) else []
-    bad = [j for j in jobs if j.get("conclusion") not in OK_CONCLUSIONS]
+    # A job still queued or in progress is not failed (DL226).
+    bad = [j for j in jobs if j.get("status", "completed") == "completed" and j.get("conclusion") not in OK_CONCLUSIONS]
     if not bad:
         print("    no failed job reported")
     for job in bad:
@@ -828,11 +829,12 @@ def main(argv: list[str] | None = None) -> int:
                 if not args.only_workflow:
                     runs = add_other_workflows(runs, sha, args.repo, warned)
                 pending = [r for r in runs if r.get("status") != "completed"]
-                bad = [r for r in runs if r.get("conclusion") not in OK_CONCLUSIONS]
-                decided = not pending or bool(bad)
-                if pending and not bad:
+                # A run still queued or in progress has no conclusion yet: it is never a failure (DL226).
+                bad = [r for r in runs if r.get("status") == "completed" and r.get("conclusion") not in OK_CONCLUSIONS]
+                decided = not pending
+                if pending:
                     state = f"{len(pending)} of {len(runs)} run(s) not completed (other workflows)"
-                elif not pending and not bad and waiting_for_held_jobs(sha, runs, args.repo):
+                elif not bad and waiting_for_held_jobs(sha, runs, args.repo):
                     state = "waiting for held jobs (run 2)"
                     decided = False
             if decided and not pending:

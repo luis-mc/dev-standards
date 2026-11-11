@@ -195,7 +195,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D216 | docs_check passes locally but warns in CI: investigate? | Investigate and fix (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D217 | How should a peer project's failed CI run be rerun after the pool refresh? | I rerun it with gh (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D218 | Tell open peer sessions to update to delivery 1.29.0 / docs 2.1.1? | Send after pool refresh (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D219 | lan-link plugin update to 1.29.1/2.1.1? | tell lan-link again | decided | 2026-11-11 |
 | delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
+| delivery-speed | D220 | home-automation update during its no-new-work hold? | Tell it to update | decided | 2026-11-11 |
+| delivery-speed | D221 | When should comics-organizer take CO1002 (update)? | Now | decided | 2026-11-11 |
+| delivery-speed | D222 | moobable installer-rerun RELEASE approval? | Tell it: approved | decided | 2026-11-11 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
 | delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |
 | delivery-speed | D25 | Machine-wide CI load control: when a crashed job keeps its slot, free it after how long? | 2 hours | decided | 2026-11-04 |

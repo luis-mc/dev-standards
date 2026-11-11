@@ -26,7 +26,8 @@ and `package.yml` runs its Windows steps only when the repository variable `CI_W
 After the run (also with --dry-run) it checks the imports (DL112). For every .py it manages under
 `scripts/delivery/` it reads the `import x` and `from x import y` lines (top level and inside functions) with
 `ast`. A sibling module that is not in the project is listed under "missing imports:". In a git repo, managed
-files that exist but are not tracked are listed under "not in git yet (commit them):". With --dry-run the
+files that exist but are not tracked are listed under "not in git yet (commit them):" (DL227: files that .gitignore
+ignores are left out and named on one line, `ignored by .gitignore: ...`). With --dry-run the
 check looks at the project as it is now plus what the run would write.
 
 Keep and skip lists (DL120). A project may own `scripts/delivery/ci-install.json`. Install and update never
@@ -123,13 +124,14 @@ GUARD_COMMAND = ("[ -f \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"
                  "else python \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; fi")
 SKIP_DIRS = {"__pycache__"}
 SKIP_FILES = {"CONTRACT.md"}
+SKIP_SUFFIXES = (".pyc", ".pyo")   # DL227: never copy compiled Python into a project
 
 
 def files_of(base: str) -> list:
     out = []
     for dirpath, dirnames, filenames in os.walk(base):
         dirnames[:] = sorted(d for d in dirnames if d not in SKIP_DIRS)
-        for name in sorted(f for f in filenames if f not in SKIP_FILES):
+        for name in sorted(f for f in filenames if f not in SKIP_FILES and not f.endswith(SKIP_SUFFIXES)):
             full = os.path.join(dirpath, name)
             out.append(os.path.relpath(full, base).replace(os.sep, "/"))
     return out
@@ -530,23 +532,40 @@ def untracked(items: list, root: str) -> list:
     except (OSError, subprocess.CalledProcessError):
         return []
     tracked = set(proc.stdout.decode("utf-8", "replace").split("\0"))
-    return [rel for rel, _s, a in items if os.path.exists(os.path.join(root, rel.replace("/", os.sep)))
-            and rel not in tracked]
+    loose = [rel for rel, _s, a in items if os.path.exists(os.path.join(root, rel.replace("/", os.sep)))
+             and rel not in tracked]
+    return [rel for rel in loose if rel not in ignored_by_git(loose, root)]
+
+
+def ignored_by_git(rels: list, root: str) -> set:
+    """DL227: the paths in `rels` that .gitignore ignores (`git check-ignore`). An empty set when git cannot say."""
+    if not rels:
+        return set()
+    try:
+        proc = subprocess.run(["git", "-C", root, "check-ignore", "-z", "--stdin"], capture_output=True,
+                              input="\0".join(rels).encode("utf-8"))
+    except OSError:
+        return set()
+    return set(proc.stdout.decode("utf-8", "replace").split("\0")) - {""}
 
 
 PRUNE_WORKFLOW = ".github/workflows/artifact-prune.yml"
 PRUNE_SCRIPT = "scripts/delivery/artifact_prune.py"
 
 
-def sync_prune_workflow(items: list, root: str) -> None:
-    """DL150: apply artifact_prune.workflows after `update` rewrote the template's workflow. Never raises."""
+SYNC_FAILED = "sync failed"
+
+
+def sync_prune_workflow(items: list, root: str) -> bool:
+    """DL150: apply artifact_prune.workflows after `update` rewrote the template's workflow. Never raises.
+    False when the sync failed (DL227: the caller then does not report the file as merged)."""
     if not any(rel == PRUNE_WORKFLOW and action in ("overwritten", MERGED) for rel, _s, action in items):
-        return
+        return True
     script = os.path.join(root, PRUNE_SCRIPT.replace("/", os.sep))
     if not os.path.exists(script):
         print("could not sync %s: %s is not in the project. Fix: run `python %s --sync-workflow` once it is."
               % (PRUNE_WORKFLOW, PRUNE_SCRIPT, PRUNE_SCRIPT))
-        return
+        return False
     try:
         proc = subprocess.run([sys.executable, script, "--sync-workflow"], cwd=root, capture_output=True, text=True)
     except OSError as e:
@@ -556,9 +575,59 @@ def sync_prune_workflow(items: list, root: str) -> None:
         detail = (proc.stderr or proc.stdout).strip()
     if proc is not None and proc.returncode == 0:
         print("artifact_prune: %s" % (proc.stdout.strip() or "synced"))
-        return
+        return True
     print("could not sync %s: %s" % (PRUNE_WORKFLOW, detail))
     print("The update is kept. Fix the error, then run `python %s --sync-workflow` in the project." % PRUNE_SCRIPT)
+    return False
+
+
+GITIGNORE = ".gitignore"
+GI_BEGIN = "# luismc-delivery: compiled Python (do not edit this block)"
+GI_END = "# luismc-delivery: end of compiled Python"
+
+
+def gitignore(root: str, dry_run: bool = False) -> str:
+    """DL227: keep a marked block in .gitignore that ignores __pycache__/ and *.pyc.
+    Returns "same", "written" or "updated" ("would be ..." on a dry run). Other lines and line endings stay."""
+    block = [GI_BEGIN, "__pycache__/", "*.pyc", GI_END]
+    path = os.path.join(root, GITIGNORE)
+    raw = b""
+    if os.path.exists(path):
+        with open(path, "rb") as f:
+            raw = f.read()
+    text = raw.decode("utf-8")
+    eol = "\r\n" if "\r\n" in text else "\n"
+    lines = text.replace("\r\n", "\n").split("\n")
+    if lines and lines[-1] == "":
+        lines.pop()
+    if GI_BEGIN in lines and GI_END in lines[lines.index(GI_BEGIN):]:
+        i = lines.index(GI_BEGIN)
+        new = lines[:i] + block + lines[lines.index(GI_END, i) + 1:]
+    else:
+        new = lines + block
+    data = (eol.join(new) + eol).encode("utf-8")
+    if data == raw:
+        return "same"
+    action = "updated" if raw else "written"
+    if dry_run:
+        return "would be " + action
+    with open(path, "wb") as f:
+        f.write(data)
+    return action
+
+
+def tracked_pyc(items: list, root: str) -> list:
+    """DL227: tracked .pyc files under installed folders. Reported only; never removed."""
+    try:
+        proc = subprocess.run(["git", "-C", root, "ls-files", "-z"], capture_output=True, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        return []
+    dirs = {rel.rsplit("/", 1)[0] + "/" for rel, _s, _a in items if "/" in rel}
+    out = []
+    for f in proc.stdout.decode("utf-8", "replace").split("\0"):
+        if f.endswith((".pyc", ".pyo")) and any(f.startswith(d) for d in dirs):
+            out.append(f)
+    return out
 
 
 PRETTIERIGNORE = ".prettierignore"
@@ -732,8 +801,10 @@ def main(argv=None) -> int:
         apply(items, root)
         print("settings    %s: %s" % (SETTINGS, merge_session_guard(root)))
     pi = prettierignore(items, root, args.dry_run)
+    gi = gitignore(root, args.dry_run)
     if not args.dry_run and args.action == "update":
-        sync_prune_workflow(items, root)
+        if not sync_prune_workflow(items, root):
+            items = [(r, sr, SYNC_FAILED if r == PRUNE_WORKFLOW and a == MERGED else a) for r, sr, a in items]
     if not args.dry_run:
         save_state(items, root, old_state, args.track)
         record_bases(items, root)
@@ -744,6 +815,8 @@ def main(argv=None) -> int:
             print("%-11s %s" % (action, rel))
     if pi and pi != "same":
         print("%-11s %s (installer copies, Prettier)" % (pi, PRETTIERIGNORE))
+    if gi != "same":
+        print("%-11s %s (compiled Python)" % (gi, GITIGNORE))
     counts = {}
     for _r, _s, a in items:
         counts[a] = counts.get(a, 0) + 1
@@ -778,6 +851,16 @@ def main(argv=None) -> int:
         print("not in git yet (commit them):")
         for rel in loose:
             print("  " + rel)
+    quiet = ignored_by_git([rel for rel, _s, _a in items], root)
+    quiet = sorted(r for r in quiet if os.path.exists(os.path.join(root, r.replace("/", os.sep))))
+    if quiet:
+        print("ignored by .gitignore: " + ", ".join(quiet))
+    pyc = tracked_pyc(items, root)
+    if pyc:
+        print("tracked .pyc files (the installer does not remove them):")
+        for f in pyc:
+            print("  " + f)
+        print("Untrack them with: git rm --cached " + " ".join(pyc))
     missing = missing_imports(items, root)
     if missing:
         print("missing imports:")

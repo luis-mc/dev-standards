@@ -103,6 +103,20 @@ def warn(msg):
     print('project_artifacts: warning: ' + msg, file=sys.stderr)
 
 
+def with_details(msg, findings):
+    """DL228: the message plus what the validator found, so a caller that reads only the message sees the field,
+    the limit or the rule."""
+    texts = []
+    for fd in findings or []:
+        t = fd[2] if isinstance(fd, (tuple, list)) and len(fd) >= 3 else str(fd)
+        if t not in texts:
+            texts.append(t)
+    if not texts:
+        return msg
+    shown = '; '.join(texts[:5]) + ('; and %d more' % (len(texts) - 5) if len(texts) > 5 else '')
+    return '%s: %s' % (msg, shown)
+
+
 def fmt_finding(f):
     req, file, msg = f
     return '%s  %s: %s' % (req, file, msg)
@@ -874,7 +888,8 @@ def render_one(rec, key, stamp_t, stamp_i, links=None, root=None):
     """Render one artifact; `links` ({feature key: (href, path text)}) is only for the publish copy."""
     try:
         if key in rec.broken():
-            raise Fail(1, 'content/%s is invalid; fix it with edit-content; nothing written' % key, rec.broken()[key])
+            raise Fail(1, with_details('content/%s is invalid; fix it with edit-content; nothing written' % key, rec.broken()[key]),
+                       rec.broken()[key])
         extra = {} if links is None else {'links': links}
         if links is not None and root is not None and key == (rec.manifest.get('full_progress_artifact') or {}).get('key', 'full-progress'):
             extra['ci_runs'] = read_ci_runs(root)      # R5.51: the publish copy only; the committed render never reads it
@@ -883,8 +898,8 @@ def render_one(rec, key, stamp_t, stamp_i, links=None, root=None):
     except Fail:
         raise
     except R.ContentError as ce:
-        raise Fail(1, 'content is invalid; nothing written',
-                   problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key))
+        fnd = problems_to_findings(getattr(ce, 'problems', None) or [str(ce)], key)
+        raise Fail(1, with_details('content is invalid; nothing written', fnd), fnd)
     except Exception as e:
         raise Fail(2, 'render of %s failed: %s: %s' % (key, type(e).__name__, e))
 
@@ -1396,7 +1411,7 @@ def finish_change(ctx, rec, result):
     post += [fd for fd in rec.pre_findings if fd[1] in files and fd[1] not in written]
     added, remaining = compare_findings(rec.pre_findings, post)
     if added:
-        raise Fail(1, 'the change would make the record invalid; nothing written', added)
+        raise Fail(1, with_details('the change would make the record invalid; nothing written', added), added)
     result['rendered'] = sorted(rec.rendered)
     result['stamp'] = now.iso
     return add_notes(result, remaining, sorted(set(rec.skipped)))
@@ -1468,7 +1483,7 @@ def add_notes(result, remaining, skipped):
         notes.append('not rendered, because its content is invalid: %s; edit-content renders it once fixed'
                      % ', '.join(skipped))
     if notes:
-        result['notes'] = notes
+        result['notes'] = list(result.get('notes') or []) + notes
     return result
 
 
@@ -2001,6 +2016,7 @@ def cmd_task_add(args):
         if not (getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase)):
             raise Fail(1, '--expected is required (only a --release task with --phase may leave it out: Expected is then the end of the last phase)')
         args.expected = 'pending'
+    args.item = clean_item(args.item) if args.item is not None else args.item
     waits_on = clean_waits_on(args.waits_on) if args.waits_on is not None else ''
     if waits_on and status not in ('Waiting', 'On hold'):
         warn('--waits-on ignored: only a Waiting or On hold row waits')
@@ -2078,7 +2094,7 @@ def clean_item(text):
     if not text:
         raise Fail(1, '--item is empty; give the task title')
     if len(text) > ITEM_MAX:
-        raise Fail(1, '--item is %d characters; at most %d' % (len(text), ITEM_MAX))
+        raise Fail(1, 'R4.8: item is %d characters; the limit is %d' % (len(text), ITEM_MAX))
     return text
 
 
@@ -2255,8 +2271,8 @@ def cmd_edit_content(args):
         if (d / 'decisions.json').is_file():
             bad = decisions_edit_problems((d / 'decisions.json').read_bytes(), new.get('decisions.json', b''))
             if bad:
-                raise Fail(1, 'content is invalid; nothing written',
-                           [('R5.15', 'content/%s/decisions.json' % key, b) for b in bad])
+                fnd = [('R5.15', 'content/%s/decisions.json' % key, b) for b in bad]
+                raise Fail(1, with_details('content is invalid; nothing written', fnd), fnd)
         if d.exists():
             shutil.rmtree(str(d))
         d.mkdir(parents=True)
@@ -2265,12 +2281,16 @@ def cmd_edit_content(args):
             (d / name).write_bytes(data)
         rec.invalidate()
         if key in rec.broken():              # validates what the session supplied; other artifacts may stay as they are
-            raise Fail(1, 'content is invalid; nothing written', rec.broken()[key])
+            raise Fail(1, with_details('content is invalid; nothing written', rec.broken()[key]), rec.broken()[key])
         rec.render_keys[key] = 'new'
         if key != FP_NAME:
             rec.render_keys[FP_NAME] = 'new'   # section 1 quotes each lede
         rec.message = ctx.rel + ': edit %s' % key
-        return {'command': 'edit-content', 'key': key, 'files': sorted(src)}
+        res = {'command': 'edit-content', 'key': key, 'files': sorted(src)}
+        if 'decisions.json' in src or (d / 'decisions.json').is_file():
+            # DL228: docs/architecture/decisions.md is built from these files; this script does not run docs_index
+            res['notes'] = ['run docs_index.py build: docs/architecture/decisions.md is now stale']
+        return res
 
     res = run_change(ctx, apply)
     emit(args, res, 'edit-content %s: %s' % (key, 'no change' if res.get('no_change') else short(res)))
@@ -2506,7 +2526,8 @@ def retire_plan(rec, key):
         raise Fail(1, 'feature "%s" is not finished; refused: %s (every task must be %s)' % (
             key, ', '.join('%s %s' % (t.get('id'), t.get('status')) for t in unfinished), ' or '.join(RETIRABLE_STATUSES)))
     if key in rec.broken():
-        raise Fail(1, 'content/%s is invalid; fix it with edit-content before retiring it' % key, rec.broken()[key])
+        raise Fail(1, with_details('content/%s is invalid; fix it with edit-content before retiring it' % key, rec.broken()[key]),
+                       rec.broken()[key])
     open_dec = R.open_decisions(rec.contents()[key].get('decisions') or [])
     if open_dec:
         raise Fail(1, 'feature "%s" has open decisions (%s); decide them first' % (

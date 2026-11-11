@@ -272,7 +272,8 @@ def check_pr(root: Path, toks: list[str]) -> str | None:
         return None
     return ("%s is not a release branch (%s), so no ready pull request may come from it. "
             "Open a draft instead: gh pr create --draft. The ready pull request goes from the "
-            "integration branch once the train is joined (scripts/delivery/join.py)."
+            "integration branch once the train is joined (scripts/delivery/join.py). Name it "
+            "<task>-integration, made by: join.py --into <task>-integration --create."
             % (head or "this branch", ", ".join(patterns)))
 
 
