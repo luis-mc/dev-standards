@@ -389,6 +389,30 @@ def windows_deferred(root: str) -> bool:
     return val not in ("self-hosted", "github-hosted", "cloud")
 
 
+# DL229: the ts package.yml and smoke.json carry a `docker build` placeholder. A project with no Dockerfile and no
+# packaged-program setting (a static web app) gets neither. An installed file is never deleted.
+PACKAGE_FILES = (".github/workflows/package.yml", "scripts/delivery/smoke.json")
+PACKAGE_TRACKS = ("ts",)
+NO_PACKAGE = "no Dockerfile and no packaged-program setting"
+NOPKG = "skipped (no packaged program)"
+
+
+def has_packaged_program(root: str) -> bool:
+    """True when a Dockerfile exists at the root (or the configured path), or .delivery/config.json has a
+    `packaged_program` setting: a build command (string) or an object with `build` and/or `dockerfile`."""
+    cfg = _json_of(os.path.join(root, ".delivery", "config.json"))
+    setting = cfg.get("packaged_program") if isinstance(cfg, dict) else None
+    paths = ["Dockerfile"]
+    if isinstance(setting, str) and setting.strip():
+        return True
+    if isinstance(setting, dict):
+        if isinstance(setting.get("build"), str) and setting["build"].strip():
+            return True
+        if isinstance(setting.get("dockerfile"), str) and setting["dockerfile"].strip():
+            paths.append(setting["dockerfile"])
+    return any(os.path.isfile(os.path.join(root, p.replace("/", os.sep))) for p in paths)
+
+
 def write_config(src: str, dst: str) -> None:
     """Copy the config template without its `_` keys (_doc, _example...) (DL172)."""
     with open(src, "rb") as f:
@@ -788,8 +812,14 @@ def main(argv=None) -> int:
         skip = set(skip) | set(WINDOWS_FILES)
         print("Windows is deferred (no ci.options.windows in .delivery/config.json): the Windows workflows are not installed. "
               "Choose it with `delivery_ci.py set`, then run install again.")
+    no_package = args.track in PACKAGE_TRACKS and not has_packaged_program(root)
+    user_skip = set(skip)
+    if no_package:
+        skip = set(skip) | set(PACKAGE_FILES)
     old_state, had_state = load_state(root)
     items = plan(args.track, root, args.action, keep, skip)
+    if no_package:
+        items = [(r, sr, NOPKG if r in PACKAGE_FILES and a == SKIPPED and r not in (user_skip) else a) for r, sr, a in items]
     if args.action == "update":
         items = merge_changed(items, root)
     managed = {rel for rel, _s, _a in items}
@@ -817,6 +847,12 @@ def main(argv=None) -> int:
         print("%-11s %s (installer copies, Prettier)" % (pi, PRETTIERIGNORE))
     if gi != "same":
         print("%-11s %s (compiled Python)" % (gi, GITIGNORE))
+    if no_package:
+        for rel, _s, a in items:
+            if rel in PACKAGE_FILES and a == NOPKG:
+                print("skipped: %s (%s)" % (NO_PACKAGE, rel))
+            elif rel in PACKAGE_FILES and a != "written":
+                print("%s is installed and kept: %s; the installer never deletes it" % (rel, NO_PACKAGE))
     counts = {}
     for _r, _s, a in items:
         counts[a] = counts.get(a, 0) + 1
@@ -828,7 +864,7 @@ def main(argv=None) -> int:
     order = ("written", "overwritten", MERGED, CONFLICT, "kept", "same", "skipped")
     tally = dict.fromkeys(order, 0)
     for _r, _s, a in items:
-        key = "kept" if a in (CHANGED, KEPT) else "skipped" if a == SKIPPED else a
+        key = "kept" if a in (CHANGED, KEPT) else "skipped" if a in (SKIPPED, NOPKG) else a
         if key in tally:
             tally[key] += 1
     print("summary: %s" % ", ".join("%d %s" % (tally[k], k) for k in order))

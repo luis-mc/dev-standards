@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.28.0
+version: 0.28.1
 owner: agents
 type: reference
 code:
@@ -95,6 +95,8 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 **R5.13** — Shared scripts (generated into a product): `branch_gate.py` runs the gate and writes `gate-result.json`; `gate_verify.py` trusts a result only for the same head and base; `join.py` merges trusted branches and runs the quick check; `ci_watch.py` watches the runs of one head; `cleanup.py` removes merged branches; `train_freeze.py` refuses pushes to a train in CI. Exit codes are shared: 0 pass, 1 failed or untrusted, 2 usage, 3 join conflict, 4 timed out.
 
 **R5.14** — A branch that changes UI code or e2e specs runs the e2e specs of the screens it changed before it is done (DL-86). `branch_gate.py` records them in `gate-result.json` (`e2e`), `branch_gate.py --e2e-only` does it alone for an agent on the CI-gate path, `gate_verify.py` and `agent_ci.py` refuse a UI branch without a passing record for the head (DL-87), `e2e_push_check.py` in the pre-push hook refuses a push of changed e2e specs that were not run and passed (DL-88), and the launch check requires the brief to say so (DL-89).
+
+The template's `playwright install` step picks by runner (DL230). On GitHub-hosted runners (`RUNNER_ENVIRONMENT=github-hosted`) it runs `playwright install --with-deps chromium`. On self-hosted pool runners, which have no sudo, it runs `playwright install chromium` and prints that the system libraries come from the pool's `POOL_BROWSERS=chromium` layer. Both `ci.yml` and `nightly-full.yml` do this.
 
 The TS template's e2e step downloads Chromium unless `E2E_CHROMIUM_PATH` points at an existing executable (DL89). `agent_setup.sh` sets it for the session when a sandbox has a Chromium preinstalled under `/opt/pw-browsers`. A project that wants this sets the path in `playwright.config`:
 
@@ -404,6 +406,8 @@ flowchart LR
 
 **R13.93** — Secret scans skip the installer's state (DL204). `.delivery/ci-install-state.json` holds file names next to sha256 hashes, and `.delivery/ci-install-base/` holds copies of templates. Neither holds a secret. The shipped `.gitleaks.toml` allowlists exactly these two paths, and the project-setup pre-commit hook skips them in its pattern check. Every other path stays scanned. No shipped script assigns a variable whose name ends in `_key`, `_token`, `_secret` or `_pass`; a test pins this. `branch_gate.py` does not count untracked files under `docs/work/` as a dirty tree.
 
+**R13.94** — No package placeholder (DL229, D225). On the ts track the installer writes `package.yml` and `smoke.json` only when the project has a `Dockerfile` at the root, a Dockerfile at the path in `packaged_program.dockerfile` of `.delivery/config.json`, or a `packaged_program` setting there (a build command string, or an object with `build`). Otherwise both are skipped and the run says `skipped: no Dockerfile and no packaged-program setting (<path>)`; the summary counts them as skipped. An installed `package.yml` or `smoke.json` is never deleted; the run lists it with the same hint. The ts `package.yml` keeps its build command in the job env `PACKAGE_BUILD`. Its guard step checks that the command is still the shipped `docker build` placeholder and that no `Dockerfile` exists. If so, it prints a notice and the other steps are skipped, so the job ends successfully.
+
 **R13.50** — The setup is a conversation with **no default at any question**. It reads the project, asks per OS for the option, asks that option's own questions, writes the config, runs the installer and the doctor, and prints the **by-hand list**: the steps only a person can do (runner install, tokens, repository variables, the ruleset, the spending limit). The doctor re-checks each one. Step by step, see the guide.
 
 **R13.51** — **Option 4: own runners first, a fallback after a wait.** The config for an OS holds `ci.fallback`: the fallback kind (`cloud` or `github-hosted`; for Windows only `github-hosted`), `after_min` (X, the minutes a shard may wait for the main runners; the setup shows 10 as an example and has no default), and optional caps `max_shards_per_day`, `max_minutes_per_month` (hosted) and `only_for`. Every run may use the fallback; `only_for` narrows it (owner answer 6). Hosted Windows runs only the Windows-only set, on ready pull requests to the default branch, within the caps if set (owner answer 7).
@@ -515,6 +519,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.28.1 | 2026-11-11 | RELEASE-105 | The ts installer skips package.yml and smoke.json when the project has no Dockerfile and no packaged-program setting; the package job skips on the placeholder (R13.94).<br>The ts template installs Playwright with --with-deps only on GitHub-hosted runners; self-hosted pool runners run playwright install chromium without it (D226). | DL229, DL230 |
 | 0.28.0 | 2026-11-11 | RELEASE-104 | join.py: a new --into branch is created and pushed; origin/X means X; --into defaults to <first task id>-integration; a Cargo.lock conflict is resolved with cargo fetch and verified with --locked; the ready-PR guard names the <task>-integration convention.<br>agent_ci.py reads the agent report at docs/work/<TASK>/REPORT.md first, then docs/work/reports/<TASK>.md. ci_watch.py waits until every run of the commit has completed before it reports a failure, and never labels an in-progress job as failed.<br>Installer: no compiled Python copied, a .gitignore block for it, tracked .pyc reported, the prune workflow list accepts indent and CRLF, ignored files are not listed as not in git yet. | DL225, DL226, DL227 |
 | 0.27.0 | 2026-11-11 | RELEASE-102 | The installer adds its own copies to a marked block in .prettierignore when the project uses Prettier (R13.92). | DL218 |
 | 0.26.3 | 2026-11-11 | RELEASE-100 | Every ci.yml template has a workflow_dispatch trigger, so agent_ci.py and gh workflow run ci.yml work for rust, go and dotnet.<br>The CI secret scan uses --log-opts=HEAD, and the project-named-secret allowlist skips public_key names, NULL/None/nil values, SQL placeholders, wrapped identifiers and env reads.<br>The doctor check ci.scripts-current treats a file equal to the template as ok, whatever the install record says; update refreshes that record.<br>delivery_ci_install.py update reads the track from the project when --track is not given, and the install record stores the track. | DL210, DL211, DL212, DL213 |

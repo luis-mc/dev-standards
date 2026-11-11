@@ -200,6 +200,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D220 | home-automation update during its no-new-work hold? | Tell it to update | decided | 2026-11-11 |
 | delivery-speed | D221 | When should comics-organizer take CO1002 (update)? | Now | decided | 2026-11-11 |
 | delivery-speed | D222 | moobable installer-rerun RELEASE approval? | Tell it: approved | decided | 2026-11-11 |
+| delivery-speed | D223 | Fix the 11 peer tooling bugs (lan-link 9, moobable 2)? | Fix all 11 (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D224 | Docker for pool jobs (isolated from other containers)? | Drop it for now (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D225 | Installer writes package.yml with a docker build placeholder for projects with no Dockerfile: fix? | Fix it (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D226 | playwright install --with-deps needs sudo on pool runners: fix? | Template drops --with-deps on pool (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D227 | A project's migration creates NOLOGIN roles; pool DB user cannot: how? | Pre-create declared roles (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
 | delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |
 | delivery-speed | D25 | Machine-wide CI load control: when a crashed job keeps its slot, free it after how long? | 2 hours | decided | 2026-11-04 |

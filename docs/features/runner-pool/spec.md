@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.6.4
+version: 0.7.0
 owner: agents
 type: reference
 code:
@@ -108,6 +108,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.26** — **The pool image carries Node LTS with corepack** (DL215). Like GitHub-hosted runners, the image keeps the official Node LTS tarball (SHA-256 checked) at `/opt/node`, with its `bin` first on `PATH` for every user and the runner. `PATH` is set before the build step that installs Node, because corepack and npm start with `#!/usr/bin/env node` (DL223). It does not depend on `POOL_BROWSERS`. Node 22 bundles corepack; a newer Node without it gets corepack from npm at a pinned version. The image runs `corepack enable` once as root at build time, so the pnpm and yarn shims exist in `/opt/node/bin` and an unprivileged job's own `corepack enable` needs no write access (DL220). The shims pin no version; they read `packageManager` from each project. `actions/setup-node` still puts the project's own Node first. A build-time check runs `node --version && corepack --version` and checks the pnpm shim exists. Playwright `install-deps` (R5.15) uses this Node.
 
+**R5.27** — **A repository can declare NOLOGIN database roles** (DL231). Roles are server-wide and a project login has no CREATEROLE (D227), so a migration that runs `CREATE ROLE` fails. `pool-add-agent --db-role NAME` (repeatable) stores `db_roles` on the repository's entry in `agents.json`. As admin, the pool then makes each missing role with `CREATE ROLE NAME NOLOGIN` behind an `IF NOT EXISTS` check on `pg_roles`, and runs `GRANT NAME TO <login> WITH ADMIN OPTION`. The pool database is PostgreSQL 16, where the grant defaults to INHERIT and SET true, so the project user can `GRANT` on its own objects to the role and `SET ROLE` to it. A name is lowercase letters, digits and underscore, at most 63. The pool refuses a reserved name (`postgres`, `public`, `pg_*`), a pool login or database name, and a role another repository declares, naming both repositories. A rerun repeats the SQL safely and keeps earlier roles. A project migration must be exists-safe: check `pg_roles` before `CREATE ROLE`, because the role already exists.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -140,6 +142,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.0 | 2026-11-11 | RELEASE-105 | A repository can declare NOLOGIN database roles; the pool creates them and grants them to its login (R5.27). | DL231 |
 | 0.6.4 | 2026-11-11 | RELEASE-103 | The image sets PATH to /opt/node/bin before the step that runs corepack enable, so corepack and npm find node at build time. | DL223 |
 | 0.6.3 | 2026-11-11 | RELEASE-102 | The pool image runs corepack enable as root at build time, so an unprivileged job's corepack enable needs no write access (R5.26). | DL220 |
 | 0.6.2 | 2026-11-11 | RELEASE-101 | The pool image carries Node LTS with corepack on PATH, like GitHub-hosted runners (R5.26). | DL215 |

@@ -539,7 +539,13 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.probe.outputs.present == 'true'
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          if [ "$RUNNER_ENVIRONMENT" = "github-hosted" ]; then
+            pnpm exec playwright install --with-deps chromium
+          else
+            echo "Self-hosted runner: system libraries come from the pool's POOL_BROWSERS=chromium layer."
+            pnpm exec playwright install chromium
+          fi
 
       # Shards balanced by measured seconds (scripts/delivery/shard_balance.py,
       # the committed scripts/delivery/ci-timings.json). Without a timings file,

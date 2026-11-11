@@ -144,7 +144,13 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.probe.outputs.present == 'true'
-        run: pnpm exec playwright install --with-deps chromium
+        run: |
+          if [ "$RUNNER_ENVIRONMENT" = "github-hosted" ]; then
+            pnpm exec playwright install --with-deps chromium
+          else
+            echo "Self-hosted runner: system libraries come from the pool's POOL_BROWSERS=chromium layer."
+            pnpm exec playwright install chromium
+          fi
 
       - name: E2E (gating specs)
         if: steps.probe.outputs.present == 'true'
