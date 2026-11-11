@@ -4849,6 +4849,30 @@
       "chosen": "Leave it",
       "decided": "2026-11-11",
       "owner_words": "Leave it"
+    },
+    {
+      "id": "D214",
+      "question": "Pool runners have no Node/corepack, so ts CI fails at corepack enable: fix where?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL215",
+      "options": [
+        {
+          "label": "Pool image (Recommended)",
+          "summary": "Node LTS + corepack in the runner-pool image"
+        },
+        {
+          "label": "Template",
+          "summary": "reorder ts workflow steps"
+        },
+        {
+          "label": "Both",
+          "summary": "image and template"
+        }
+      ],
+      "chosen": "Pool image (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "option 1 tell dev-standards to do it"
     }
   ]
 }
