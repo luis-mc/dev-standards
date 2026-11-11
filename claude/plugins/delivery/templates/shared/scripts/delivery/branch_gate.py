@@ -195,6 +195,18 @@ def setup_failure_lines(exit_code):
     ]
 
 
+def ignore_untracked_work(root, dirty):
+    """Drop untracked paths under docs/work/ (agent reports live there by rule, DL204).
+    A tracked file there that changed still counts as dirty. git folds a wholly untracked
+    folder into one 'dir/' entry, so those are expanded to their files first."""
+    untracked = [p for p in dc.run_git(["ls-files", "--others", "--exclude-standard"],
+                                       cwd=root, check=False).stdout.split("\n") if p]
+    out = []
+    for p in dirty:
+        out.extend([u for u in untracked if u.startswith(p)] if p.endswith("/") else [p])
+    return [p for p in out if not (p.startswith("docs/work/") and p in untracked)]
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="branch_gate.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--base-ref", help="branch this one will join (default origin/<default_branch>)")
@@ -231,7 +243,7 @@ def main(argv: list[str] | None = None) -> int:
     partial = only is not None or bool(skip) or args.no_setup
     selected = (only if only is not None else set(names)) - skip
 
-    dirty = dc.dirty_paths(root)
+    dirty = ignore_untracked_work(root, dc.dirty_paths(root))
     if dirty:
         dc.eprint("error: working tree is not clean; commit or stash first (the gate tests committed work):")
         for p in dirty[:10]:

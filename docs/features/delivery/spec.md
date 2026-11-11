@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.26.0
+version: 0.26.1
 owner: agents
 type: reference
 code:
@@ -400,6 +400,8 @@ flowchart LR
 
 **R13.92** — Keep, merge and report (DL201, D206). The installer records a sha256 of every file it writes in `.delivery/ci-install-state.json` (path to hash, plus the plugin version). It also keeps a copy of each template as written in `.delivery/ci-install-base/<same path>`, the merge base. The project should commit `.delivery/ci-install-base/` so every clone can merge; the plugin never commits it. `update` compares an installed plugin-owned file with the record. Equal to the new template: `same`. Equal to the record (untouched): overwritten, and the base is refreshed. Different from the record (the project changed it) with a stored base: a line-based 3-way merge (standard library, difflib) applies the template's changes since the base to the project file. A clean merge writes the file (action `merged`) and refreshes the base. The record then holds the template hash, so the next update still sees the project's lines as its own and never overwrites them. A hunk that both sides changed differently is a conflict: the project file stays untouched, `<file>.new` holds the merged text with `<<<<<<< project`, `||||||| base`, `=======` and `>>>>>>> template` markers (action `conflict`), and the run prints `resolve <file>.new, then copy it over <file> and rerun update` with the number of conflicts. The project file is never overwritten silently. The merge runs on LF; the file keeps the line ending the project used. With no stored base (an install from before DL201, or a step-1 install) the file is kept with `<file>.new` holding the plain new template, reported as `kept (project changes)` to resolve by hand, and the new template is recorded as the base so the next update can merge. The run ends with `summary: N written, N overwritten, N merged, N conflict, N kept, N same, N skipped` and exits 0 even with conflicts. The doctor check `ci.scripts-current` warns and names each file that is changed by the project or has a pending `<file>.new`. A `ci-install.json` keep or skip entry still wins.
 
+**R13.93** — Secret scans skip the installer's state (DL204). `.delivery/ci-install-state.json` holds file names next to sha256 hashes, and `.delivery/ci-install-base/` holds copies of templates. Neither holds a secret. The shipped `.gitleaks.toml` allowlists exactly these two paths, and the project-setup pre-commit hook skips them in its pattern check. Every other path stays scanned. No shipped script assigns a variable whose name ends in `_key`, `_token`, `_secret` or `_pass`; a test pins this. `branch_gate.py` does not count untracked files under `docs/work/` as a dirty tree.
+
 **R13.50** — The setup is a conversation with **no default at any question**. It reads the project, asks per OS for the option, asks that option's own questions, writes the config, runs the installer and the doctor, and prints the **by-hand list**: the steps only a person can do (runner install, tokens, repository variables, the ruleset, the spending limit). The doctor re-checks each one. Step by step, see the guide.
 
 **R13.51** — **Option 4: own runners first, a fallback after a wait.** The config for an OS holds `ci.fallback`: the fallback kind (`cloud` or `github-hosted`; for Windows only `github-hosted`), `after_min` (X, the minutes a shard may wait for the main runners; the setup shows 10 as an example and has no default), and optional caps `max_shards_per_day`, `max_minutes_per_month` (hosted) and `only_for`. Every run may use the fallback; `only_for` narrows it (owner answer 6). Hosted Windows runs only the Windows-only set, on ready pull requests to the default branch, within the caps if set (owner answer 7).
@@ -511,6 +513,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.26.1 | 2026-11-11 | RELEASE-98 | The installer's state files (.delivery/ci-install-state.json and .delivery/ci-install-base/) are exempt from secret scans, a script variable no longer ends in _key, and branch_gate ignores untracked docs/work/ files. | DL204 |
 | 0.26.0 | 2026-11-11 | RELEASE-96 | update 3-way merges a plugin-owned file the project changed (base kept in .delivery/ci-install-base/), writes <file>.new with conflict markers when it cannot, and ends with a summary line; hashes stay in .delivery/ci-install-state.json. | DL201 |
 | 0.25.1 | 2026-11-11 | RELEASE-95 | The join's docs strip restores the base's docs/work/ and removes only what the joined branches added (R5.46). | DL197 |
 | 0.25.0 | 2026-11-11 | RELEASE-94 | Rust templates: PATH export in the toolchain step, codegen and contract run only when the target exists, package copies the binaries smoke.json names, and a Windows-deferred option (R5.54, R13.91).<br>The rust deny step runs cargo-deny 0.20.2 with the top-level --offline flag before check. The old --disable-fetch flag is gone in that version. | DL192, DL193 |
