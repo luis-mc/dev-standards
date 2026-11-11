@@ -127,6 +127,7 @@ jobs:
       DELIVERY_SHARD: plan
     permissions:
       contents: read
+      statuses: write # DL183: the pending `rerun-first/held` status, set only when jobs are held
     outputs:
       # DL181: a job held back for the second run reads as a planned skip ('false'), so the job conditions and
       # the `e2e` aggregator need no new clause.
@@ -165,6 +166,8 @@ jobs:
               || echo "::warning::runner plan failed; every job runs"
           fi
 
+      # DL183: when jobs are held, the script sets the commit status `rerun-first/held` (pending) at once, here, before
+      # any held job would start, so the PR is never green without it. If it cannot be set, nothing is held.
       # DL181, opt in with "rerun_first": true in scripts/delivery/ci-areas.json. A new push runs first the jobs
       # that did not pass on the previous head; the ones that passed are held back and a second run does them
       # (the last step of `e2e`). Any doubt or error leaves `held` empty: every job runs, as before. Not for fork PRs.
@@ -177,6 +180,7 @@ jobs:
           ONLY: ${{ inputs.only }}
           HEAD_REF: ${{ github.head_ref }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           SELECTED_INTEGRATION: ${{ steps.areas.outputs.integration }}
           SELECTED_E2E: ${{ steps.areas.outputs.e2e }}
         run: |
@@ -188,6 +192,7 @@ jobs:
             [ "$SELECTED_E2E" != false ] && selected="${selected:+$selected,}e2e-shard"
             python3 scripts/delivery/ci_rerun_first.py --repo "$GITHUB_REPOSITORY" --workflow ci.yml \
               --branch "$HEAD_REF" --sha "$HEAD_SHA" --selected "$selected" \
+              --hold-status --target-url "$RUN_URL" \
               || echo "::warning::rerun-first failed; every job runs"
           fi
 
@@ -521,6 +526,7 @@ jobs:
     permissions:
       contents: read
       actions: write
+      statuses: write # DL183: closes the `rerun-first/held` status (only a rerun-first run ever sets one)
     steps:
       - name: Every shard passed
         env:
@@ -548,6 +554,48 @@ jobs:
         run: |
           gh workflow run ci.yml --repo "$GITHUB_REPOSITORY" --ref "$BRANCH" -f only="$HELD"
           echo "Second run dispatched on $BRANCH for: $HELD. Wait for it before merging." | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # DL183: closes the `rerun-first/held` status (pending since the plan held jobs). Runs only for a rerun-first
+      # run: the first run that held jobs (plan.rerun) and the dispatched second run (`only` set). Others: no status.
+      #   first run:  the first set failed or this run was cancelled -> failure ('held jobs not run') / error;
+      #               it passed -> nothing here, the status stays pending until the second run ends.
+      #   second run: held jobs passed -> success; one failed -> failure; cancelled -> error.
+      # always() so it runs after a failed step or a cancel. (A run cancelled before this job starts leaves the
+      # status pending, which keeps the merge blocked.)
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ always() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
+      - name: Close the rerun-first/held status
+        if: ${{ always() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          STATUS_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          JOB_STATUS: ${{ job.status }}
+          RESULTS: ${{ needs.verify.result }} ${{ needs.integration.result }} ${{ needs.e2e-shard.result }}
+        run: |
+          state=success
+          [ "$JOB_STATUS" = success ] || state=failure
+          for r in $RESULTS; do
+            case "$r" in
+              success|skipped) ;;
+              cancelled) [ "$state" = failure ] || state=error ;;
+              *) state=failure ;;
+            esac
+          done
+          [ "$JOB_STATUS" = cancelled ] && state=error
+          if [ "$EVENT" = pull_request ]; then
+            [ "$state" = success ] && { echo "First set passed; the second run closes the status."; exit 0; }
+            desc="first set failed; held jobs not run"
+          else
+            case "$state" in
+              success) desc="held jobs passed" ;;
+              failure) desc="a held job failed" ;;
+              *) desc="held jobs run cancelled" ;;
+            esac
+          fi
+          python3 scripts/delivery/ci_rerun_first.py --repo "$GITHUB_REPOSITORY" --sha "$STATUS_SHA" \
+            --set-status "$state" --description "$desc" --target-url "$RUN_URL"
 
       # Opt in with the repository variable CI_RUN_TIMES=true (DL-82). The report is the LAST STEP of the last job, not
       # a job of its own: a job of its own waits for a runner and pays its start-up for a few seconds of work (DL16).

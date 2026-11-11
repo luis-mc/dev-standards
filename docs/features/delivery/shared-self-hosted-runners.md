@@ -187,6 +187,7 @@ One Docker container with one CPU and memory cap. Inside it, one runner agent pe
 | Restart | `restart: unless-stopped`, a stop grace period of a few minutes. |
 | Files | `C:\ProgramData\luismc-delivery\pools\<name>\`: `compose.yaml`, `agents.json`, `.env` with the cap only (D42): `POOL_CPUS`, `POOL_MEM`, `POOL_CPUSET`, `POOL_CPUS_INT`, plus the name, folder, runner version and browser settings. |
 | Labels | Each agent: `self-hosted`, `linux`, `x64`, `pool-<name>`, `repo-<slug>`. A project's `CI_RUNS_ON` is `["self-hosted","linux","pool-<name>"]`. |
+| Plugin version | `pool-version.json` holds the plugin version that last wrote the pool files. |
 
 **Database in a job (D104).** Each agent's `db.env` (mode `0600`, owned by the job user) holds `DATABASE_URL`, `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD` and `PGDATABASE`. A job does not load it by itself. Add one step before the steps that need the database: `- run: pool-db-env`. It masks the password and the URL in the log and appends the values to `$GITHUB_ENV`, then later steps use `PGHOST`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` or `DATABASE_URL`. Outside the pool there is no `db.env`, and the step does nothing. The default is one database per repository, and a login can connect only to its own database. A repository whose CI creates and drops its own databases needs the login to have `CREATEDB`: add the agent with `pool-add-agent <slug> <repo> --db-createdb`. That is an owner decision, because it widens what that login can do. A rerun with the flag adds `CREATEDB`; a rerun without it does not remove it. Any rerun of `pool-add-agent` for an existing agent refreshes its database settings: `db.env` gets every key, the database gets the connect isolation, and the login keeps its password, so running jobs are not cut off. Agents added before this change get the new keys this way.
 
@@ -286,13 +287,20 @@ A step that needs an elevated shell (a Windows service, removing a Windows servi
 - Pool cap = the smaller of the room and Docker's ceiling, minus the sidecar and 1 GB for the VM.
 - The setup refuses a cap below the largest Linux shard's `memory_gib`, and says what to change.
 
+**One source of truth (DL184).** `pool-run`, `apply` and the doctor take these rules from `delivery_runner_pool.py` and never copy them:
+
+- **Agent name.** An agent registers as `<pool>-<slug>` (`pool_agent_name`). When a machine in `apply` is a pool (a pool folder of that name exists), the doctor looks for that repository's agent by this name, not for the machine name. The by-hand list does not ask the owner to install a runner; it points to `pool-run`.
+- **`CI_RUNS_ON`.** `expected_runs_on` gives the value: the runner's labels, plus `pool-<name>` when the machine is a pool. `pool-run`, `apply`, the by-hand list and the doctor use it. For a pool, a value that holds those labels and more is correct. A machine that is not a pool still expects exactly its own labels.
+- **Template version.** `pool-version.json` records the plugin version that wrote the files. A pool written by a newer plugin than the doctor's is never reported as needing `pool-refresh`: the doctor says to update the plugin on that project, and `pool-refresh` from the older plugin writes no template files. Same version with edited files is drift (warn). A pool with no `pool-version.json` is compared by its files.
+- **Layer image.** The layer check reads the image of the running container (`docker inspect -f '{{.Image}}'`), and the tag only when no container runs.
+
 ## 7. Doctor: the `machine` check
 
 - The machine config exists and runners can read it. A difference with the old file is a warning.
 - Every runner on the machine (services, folders, the pool) has both hooks. A Windows `.ps1` hook passes the execution policy check of DL-79.
 - Slots: none is stale. The queue has no ticket older than `slot_stale_min`.
 - The host load file is under 60 seconds old.
-- The pool: running, plugin image label, cap inside the machine and WSL ceilings, one user per agent, no Docker socket, every agent's repository private.
+- The pool: running, plugin image label, template files current (or written by a newer plugin), layers present in the running container's image, cap inside the machine and WSL ceilings, one user per agent, no Docker socket, every agent's repository private.
 - An Option 1 project with `CI_RUNS_ON` unset **fails** (D45). It would run on hosted runners and may bill minutes.
 - **Disk** (D31): each runner's `_work` size. When the total is large, the doctor offers to clean old work folders. It cleans only after a yes, and only folders of runners with no job running.
 

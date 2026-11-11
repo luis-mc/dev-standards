@@ -1057,7 +1057,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
             s['state'] = 'already'
         steps.append(s)
     for repo in keep_l:
-        value = json.dumps(['self-hosted', 'linux', 'pool-%s' % pool])
+        value = json.dumps(expected_runs_on(['self-hosted', 'linux'], pool))  # DL184: the shared rule
         steps.append(_step('var:CI_RUNS_ON:%s' % repo, 'Set CI_RUNS_ON for %s' % repo, 'set-variable', repo=repo,
                            name='CI_RUNS_ON', value=value, repo_path=repo_path))
         if serial is not None:
@@ -1252,7 +1252,109 @@ def copy_pool_templates(dest, copy_from=None, only=None):
         os.makedirs(os.path.dirname(target), exist_ok=True)
         copy_lf(src, target)
         done.append(rel)
+    write_pool_version(dest)
     return done
+
+
+# --- shared rules (DL184): pool-run, apply and the doctor all read these ---------------------------------------------
+
+POOL_VERSION_FILE = 'pool-version.json'
+
+
+def plugin_version():
+    """The version of the plugin this script belongs to, from its plugin.json ('' when unreadable)."""
+    try:
+        with open(os.path.join(os.path.dirname(HERE), '.claude-plugin', 'plugin.json'), encoding='utf-8') as f:
+            return str(json.load(f).get('version') or '')
+    except (OSError, ValueError, AttributeError):
+        return ''
+
+
+def version_tuple(text):
+    """'1.24.0' -> (1, 24, 0); () when it is not a dotted number."""
+    try:
+        return tuple(int(x) for x in str(text).strip().split('.'))
+    except ValueError:
+        return ()
+
+
+def read_pool_version(dest):
+    """The plugin version recorded in the pool folder by the last write of the files ('' when none)."""
+    try:
+        with open(os.path.join(dest, POOL_VERSION_FILE), encoding='utf-8') as f:
+            return str(json.load(f).get('version') or '')
+    except (OSError, ValueError, AttributeError):
+        return ''
+
+
+def write_pool_version(dest):
+    """Record which plugin version wrote the pool files (LF endings)."""
+    ver = plugin_version()
+    if ver:
+        with open(os.path.join(dest, POOL_VERSION_FILE), 'w', encoding='utf-8', newline='\n') as f:
+            json.dump({'version': ver}, f)
+            f.write('\n')
+
+
+def pool_files_state(dest):
+    """(kind, detail) for the pool files against this plugin's templates. kind: ok, newer (the pool was written by a newer
+    plugin than this one: never a reason to refresh), drift (files differ: refresh)."""
+    diff = pool_template_diffs(dest)
+    mine, theirs = plugin_version(), read_pool_version(dest)
+    if not diff:
+        return 'ok', 'pool files match the installed plugin'
+    if mine and theirs and version_tuple(theirs) > version_tuple(mine) > ():
+        return 'newer', ('pool files were written by plugin %s, newer than this project\'s %s: update the plugin here '
+                         '(do not refresh the pool from the older one). Differing: %s' % (theirs, mine, ', '.join(diff)))
+    return 'drift', ('pool file(s) differ from the installed plugin\'s template: %s. Run `delivery_ci_setup.py pool-refresh --yes` '
+                     '(old copies go to bak-<time>/).' % ', '.join(diff))
+
+
+def pool_agent_name(pool, repo):
+    """The name a pool agent registers under for a repository (OWNER/NAME): `<pool>-<slug>`."""
+    return '%s-%s' % (pool, slug_of(repo))
+
+
+def pool_exists(name, root=None):
+    """True when `name` is a pool folder on this machine (it has a compose.yaml)."""
+    try:
+        return os.path.isfile(os.path.join(_pools_dir(root), str(name), 'compose.yaml'))
+    except (OSError, TypeError, ValueError):
+        return False
+
+
+def expected_runs_on(base_labels, pool=None):
+    """The expected CI_RUNS_ON labels: the runner's own labels, plus the pool's label when the machine is a pool."""
+    labels = [x for x in base_labels if isinstance(x, str)]
+    if pool and 'pool-%s' % pool not in labels:
+        labels.append('pool-%s' % pool)
+    return labels
+
+
+def runs_on_satisfied(actual, expected, pool=None):
+    """True when the CI_RUNS_ON text `actual` is right. A pool machine accepts a superset of the expected labels."""
+    try:
+        got = json.loads(actual) if isinstance(actual, str) else actual
+    except ValueError:
+        return False
+    if isinstance(got, str):
+        got = [got]
+    if not isinstance(got, list) or not isinstance(expected, list):
+        return False
+    have, want = {str(x).lower() for x in got}, {str(x).lower() for x in expected}
+    return have >= want if pool else have == want
+
+
+def container_image(probe, pool):
+    """The image the running pool container uses (`docker inspect -f '{{.Image}}'`), else the pool's tag, else None.
+    The label-filtered `docker ps` shows an old image id after a rebuild, so it is not used for this."""
+    r = probe.sh(['docker', 'inspect', '-f', '{{.Image}}', 'pool-%s-pool-1' % pool])
+    if r is not None and r[0] == 0 and (r[1] or '').strip():
+        return r[1].strip()
+    r = probe.sh(['docker', 'image', 'inspect', '-f', '{{.Id}}', 'luismc-runner-pool:%s' % pool])
+    if r is not None and r[0] == 0 and (r[1] or '').strip():
+        return r[1].strip()
+    return None
 
 
 def write_pool_files(pool, cap, dest=None, copy_from=None, runner_version=None, browsers='none',
@@ -1374,6 +1476,9 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
         want['PLAYWRIGHT_VERSION'] = pw
     changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT', 'POOL_LAYER_SOURCES') else None)) != v}
     files = pool_template_diffs(pool_dir(pool))
+    if files and pool_files_state(pool_dir(pool))[0] == 'newer':  # DL184: never write an older template over a newer pool
+        notes.append(pool_files_state(pool_dir(pool))[1])
+        files = []
     out = {'pool': pool, 'path': path, 'changes': changes, 'files': files, 'sha_reason': sha_reason if 'RUNNER_SHA256' in changes else '', 'why': why, 'playwright_source': pw_source if pw else None,
            'layers': [(x, sources.get(x)) for x in layers], 'notes': notes}
     if not sha:
@@ -1896,12 +2001,7 @@ def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
         add('layers-config', 'warn', 'the repo config asks for layers [%s] but the pool .env has [%s]. Run `delivery_ci_setup.py pool-refresh --yes`.'
             % (', '.join(want), ', '.join(layers)))
     if layers:
-        r = probe.sh(['docker', 'ps', '--filter', 'label=' + LABEL, '--format', '{{.Names}} {{.Image}}'])
-        image = None
-        for line in ((r[1] if r and r[0] == 0 else '') or '').splitlines():
-            name, _, img = line.partition(' ')
-            if name in (pool, 'pool-%s' % pool, 'pool-%s-pool-1' % pool) and img.strip():
-                image = img.strip()
+        image = container_image(probe, pool)  # DL184: the running container's image, the tag only when none runs
         for layer in layers:
             tools = LAYER_TOOLS.get(layer, ())
             if image is None:

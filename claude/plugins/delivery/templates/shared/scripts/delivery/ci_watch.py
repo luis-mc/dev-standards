@@ -672,6 +672,33 @@ def list_statuses(sha: str, repo: str | None) -> dict:
             if isinstance(st, dict) and isinstance(st.get("context"), str)}
 
 
+HELD_CONTEXT = "rerun-first/held"  # DL183: same name as STATUS_CONTEXT in ci_rerun_first.py
+
+
+def rerun_first_on() -> bool:
+    """True only when the project's scripts/delivery/ci-areas.json has "rerun_first": true. Anything else
+    (no file, bad JSON, key off) is False, so a project that did not opt in costs no extra gh call."""
+    try:
+        with open(config_root() / "scripts" / "delivery" / "ci-areas.json", encoding="utf-8") as fh:
+            return json.load(fh).get("rerun_first") is True
+    except (OSError, ValueError, AttributeError):
+        return False
+
+
+def waiting_for_held_jobs(sha: str, runs: list[dict], repo: str | None) -> bool:
+    """DL183: true while the head's `rerun-first/held` status is pending and the dispatched run (event
+    workflow_dispatch) has not completed. Without the status (no rerun_first) this is false and nothing
+    changes. A status that cannot be read counts as not waiting."""
+    if not rerun_first_on():
+        return False
+    try:
+        if list_statuses(sha, repo).get(HELD_CONTEXT) != "pending":
+            return False
+    except GhError:
+        return False
+    return not any(r.get("event") == "workflow_dispatch" and r.get("status") == "completed" for r in runs)
+
+
 def watch_statuses(sha: str, args: argparse.Namespace) -> int:
     """Wait for the commit statuses of the cloud shards (option c). Reads results the way the watcher does."""
     deadline = time.monotonic() + args.timeout
@@ -805,6 +832,9 @@ def main(argv: list[str] | None = None) -> int:
                 decided = not pending or bool(bad)
                 if pending and not bad:
                     state = f"{len(pending)} of {len(runs)} run(s) not completed (other workflows)"
+                elif not pending and not bad and waiting_for_held_jobs(sha, runs, args.repo):
+                    state = "waiting for held jobs (run 2)"
+                    decided = False
             if decided and not pending:
                 try:
                     idle = [r for r in runs if r not in bad and not executed_jobs(r, args.repo)]
