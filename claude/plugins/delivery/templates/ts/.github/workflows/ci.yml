@@ -350,11 +350,13 @@ jobs:
   # database — those hide exactly the migration, index, transaction, and
   # constraint bugs this job exists to catch.
   # ---------------------------------------------------------------------------
+  # DL190: a hosted runner has Docker, so this twin has the postgres service. The pool twin
+  # `integration-pool` has the same check name and runs instead on a pool runner; one of them is skipped.
   integration:
     name: integration tests (ephemeral Postgres)
     needs: [decide, plan]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !contains(vars.CI_RUNS_ON || '', 'pool-') }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
@@ -376,6 +378,62 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      # corepack before setup-node — see the verify job for why.
+      - run: corepack enable
+
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      # turbo result cache — see the verify job for why it is sound.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: .turbo
+          key: turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}-
+            turbo-${{ runner.os }}-
+
+      - name: Migrate (seed through the migration chain)
+        run: pnpm turbo migrate
+
+      - name: Integration tests
+        run: pnpm vitest run --project integration
+
+      # §11.1: the route-authorization coverage test MUST fail the build when
+      # any route ships without an explicit authorization declaration. It needs
+      # the registered routes, so it runs here rather than in the static job.
+      - name: Route authorization coverage
+        run: pnpm vitest run --project authz
+
+  # DL190: the pool twin of `integration`. GitHub needs Docker for any job with a `services:` block, even
+  # an empty image, so this job has none. Same `name:` as the hosted twin; exactly one of the two runs.
+  integration-pool:
+    name: integration tests (ephemeral Postgres)
+    needs: [decide, plan]
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && contains(vars.CI_RUNS_ON || '', 'pool-') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: integration-pool
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # DL187/DL190: load this agent's own database (DATABASE_URL and friends) into $GITHUB_ENV.
+      - name: Load the pool database env
+        run: |
+          if command -v pool-db-env >/dev/null 2>&1; then
+            pool-db-env
+          elif [ -f "$HOME/db.env" ]; then
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$HOME/db.env" >> "$GITHUB_ENV"
+          else
+            echo "::error::pool runner without pool-db-env or $HOME/db.env; the pool database is missing"
+            exit 1
+          fi
 
       # corepack before setup-node — see the verify job for why.
       - run: corepack enable
@@ -515,11 +573,13 @@ jobs:
 
   # The required check. Its name stays 'web E2E (§11.2)' whatever the shard
   # count, so branch protection never needs editing when shards are added.
+  # DL190: `integration` and `integration-pool` share one check name; one is skipped. A skipped job is not a
+  # failure here: the dispatch step and the status step accept success or skipped from both.
   e2e:
     name: web E2E (§11.2)
-    needs: [decide, plan, verify, integration, e2e-shard]
+    needs: [decide, plan, verify, integration, integration-pool, e2e-shard]
     # DL147: this job judges the results itself, so any result but cancelled lets it run.
-    if: ${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && needs.integration-pool.result != 'cancelled' && needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: e2e
@@ -546,7 +606,7 @@ jobs:
       # that passed on the previous head. If the dispatch fails this step fails, so a held job is never forgotten.
       # Until that run ends the held jobs read as skipped here: do not merge before it finishes.
       - name: Dispatch the second run (jobs held back by rerun-first)
-        if: ${{ needs.plan.outputs.rerun == 'true' && needs.verify.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.integration.result) }}
+        if: ${{ needs.plan.outputs.rerun == 'true' && needs.verify.result == 'success' && contains(fromJSON('["success","skipped"]'), needs.integration.result) && contains(fromJSON('["success","skipped"]'), needs.integration-pool.result) }}
         env:
           GH_TOKEN: ${{ github.token }}
           HELD: ${{ needs.plan.outputs.held }}
@@ -572,7 +632,7 @@ jobs:
           STATUS_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           JOB_STATUS: ${{ job.status }}
-          RESULTS: ${{ needs.verify.result }} ${{ needs.integration.result }} ${{ needs.e2e-shard.result }}
+          RESULTS: ${{ needs.verify.result }} ${{ needs.integration.result }} ${{ needs.integration-pool.result }} ${{ needs.e2e-shard.result }}
         run: |
           state=success
           [ "$JOB_STATUS" = success ] || state=failure

@@ -1290,15 +1290,18 @@ PLAN_CLAUSE = re.compile(
 E2E_AGGREGATE_COND = (
     "${{ !cancelled() && needs.decide.result != 'cancelled' && needs.plan.result != 'cancelled' && "
     "needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && "
-    "needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && "
+    "needs.integration-pool.result != 'cancelled' && needs.e2e-shard.result != 'cancelled' && needs.decide.outputs.skip != 'true' && "
     "(github.event_name != 'pull_request' || !github.event.pull_request.draft) }}")
 # The opt-in run-times job (DS26, DL-82) adds the repository-variable clause.
 RUN_TIMES_CLAUSE = re.compile(r" && vars\.CI_RUN_TIMES == 'true'")
+# DL190: the integration pair adds the pool test: the hosted job runs when it is false, the pool job when true.
+POOL_TEST = "contains(vars.CI_RUNS_ON || '', 'pool-')"
+POOL_CLAUSE = re.compile(r" && (?:!)?" + re.escape(POOL_TEST) + r"(?= \}\}$)")
 
 
 def if_cond_ok(block: str) -> bool:
     for m in re.finditer(r"^    if: (.*)$", block, re.M):
-        if m.group(1) in (IF_COND, E2E_AGGREGATE_COND) or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", m.group(1))) == IF_COND:
+        if m.group(1) in (IF_COND, E2E_AGGREGATE_COND) or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", POOL_CLAUSE.sub("", m.group(1)))) == IF_COND:
             return True
     return False
 
@@ -1431,6 +1434,7 @@ def check_workflow(track: str, text: str) -> list[str]:
         problems.append("push/pull_request triggers changed")
 
     problems += check_job_shape(track, jobs)
+    problems += check_pool_pair(jobs)
     problems += check_verify_order(jobs.get("verify", ""))
     if track == "ts":
         problems += check_ts_e2e(text, jobs)
@@ -1439,7 +1443,9 @@ def check_workflow(track: str, text: str) -> list[str]:
 
 # DL18 (CIR10 L1, L2, L6). The jobs a Linux workflow may have: one per suite family, never one per tool.
 # A job that no other job needs must be a required check (it judges); anything else only reports.
-FAMILY_JOBS = {"decide", "plan", "verify", "integration", "e2e-shard", "e2e"}
+# DL190: `integration-pool` is the pool twin of `integration` (same check name, no services block); the
+# pair is allowed only with the pool condition, see POOL_COND and check_pool_pair.
+FAMILY_JOBS = {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e"}
 
 
 def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
@@ -1459,6 +1465,27 @@ def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
         if not job_name or job_name.group(1) not in required:
             problems.append(f"job {name}: report-only job (no job needs it and it is not a required check); "
                             "make it the last step of the last job, continue-on-error")
+    return problems
+
+
+def check_pool_pair(jobs: dict[str, str]) -> list[str]:
+    """DL190: `integration` and `integration-pool` come as a pair with one check name. The hosted one has
+    services and the negated pool test; the pool one has no services and the pool test."""
+    if "integration-pool" not in jobs:
+        return []
+    problems = []
+    host, pool = jobs.get("integration", ""), jobs["integration-pool"]
+    nm = lambda b: (re.search(r"^    name: (.+)$", b, re.M) or [None, None])[1]
+    if not nm(host) or nm(host) != nm(pool):
+        problems.append("job name: integration-pool must have the same name as integration")
+    if not re.search(r"^    services:", host, re.M):
+        problems.append("integration (hosted) must have a services: block")
+    if re.search(r"services:", pool):
+        problems.append("integration-pool must have no services: block")
+    if not re.search(r"^    if: .* && !" + re.escape(POOL_TEST) + r" \}\}$", host, re.M):
+        problems.append("integration must skip on a pool runner")
+    if not re.search(r"^    if: .* && " + re.escape(POOL_TEST) + r" \}\}$", pool, re.M):
+        problems.append("integration-pool must run only on a pool runner")
     return problems
 
 
@@ -1511,7 +1538,7 @@ def check_ts_e2e(text: str, jobs: dict[str, str]) -> list[str]:
         return ["ts: e2e-shard job missing (the browser suite must run as shards)"]
     if not re.search(r"^    name: web E2E \(§11\.2\)\s*$", e, re.M):
         problems.append("ts: e2e job must be named 'web E2E (§11.2)'")
-    if not re.search(r"^    needs: \[decide, plan, verify, integration, e2e-shard\]\s*$", e, re.M):
+    if not re.search(r"^    needs: \[decide, plan, verify, integration, integration-pool, e2e-shard\]\s*$", e, re.M):
         problems.append("ts: e2e (the required check) must need e2e-shard")
     for name, block in (("e2e", e), ("e2e-shard", sh)):
         if re.search(r"^    continue-on-error:", block, re.M):
@@ -1734,7 +1761,7 @@ def workflow_checker_detects_each_defect():
          lambda t: mutate(t, "needs.plan.outputs.e2e != 'false'", "needs.plan.outputs.e2e == 'true'")),
         ("ts", ts, "must accept a planned skip", lambda t: mutate(t, 'if [ "$PLANNED" = "false" ]', 'if false')),
         ("ts", ts, "must need e2e-shard",
-         lambda t: mutate(t, "needs: [decide, plan, verify, integration, e2e-shard]", "needs: decide")),
+         lambda t: mutate(t, "needs: [decide, plan, verify, integration, integration-pool, e2e-shard]", "needs: decide")),
         ("ts", ts, "report-only job", lambda t: t + REPORT_JOB),
         ("go", go, "report-only job", lambda t: t + REPORT_JOB.replace(", e2e]", "]")),
         ("rust", read(TEMPLATES / "rust/.github/workflows/ci.yml"), "report-only job", lambda t: t + REPORT_JOB.replace(", e2e]", "]")),
