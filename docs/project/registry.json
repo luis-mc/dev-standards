@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T14:13+00:00",
+  "updated": "2026-11-11T14:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3830,12 +3830,11 @@
       "id": "DL214",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: Node and corepack in the pool image",
       "detail": "Ships DL214. Join, fold, CI, merge on green, plugin updates in both scopes, then pool refresh when idle, smoke a ts job.",
-      "expected": "11 Nov ~14:43",
-      "changed": "2026-11-11T14:06+00:00",
-      "expected_basis": "agent from 14:07; join, CI, merge; pool refresh after",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:19+00:00",
       "release": 101,
       "phases": [
         {
@@ -3865,14 +3864,25 @@
       "id": "DL215",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool image keeps Node LTS with corepack on PATH",
       "detail": "ts workflows run corepack enable before setup-node; GitHub-hosted runners have Node and corepack, the pool image deletes the Node it uses to install Playwright deps, so every ts job fails (D214). Keep Node LTS with corepack on PATH in the runner-pool image; doctor layer check and test.",
-      "expected": "11 Nov ~14:30",
-      "changed": "2026-11-11T14:06+00:00",
-      "expected_basis": "cloud agent from 14:07, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:19+00:00",
       "rides": "DL214",
       "started": "2026-11-11T14:06+00:00"
+    },
+    {
+      "id": "DL216",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "Refresh the shared CI pool with the Node image (DL215)",
+      "detail": "Rebuild pool main from delivery 1.28.4 when no job runs and memory <70%, CPU <30%. Check node and corepack in the container, then tell the peer projects to rerun.",
+      "expected": "11 Nov ~15:30; waits for an idle pool",
+      "changed": "2026-11-11T14:19+00:00",
+      "expected_basis": "idle pool + PC room, rebuild ~5 min",
+      "no_release": "operations on the local pool"
     },
     {
       "id": "DS1",
