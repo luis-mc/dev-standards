@@ -183,7 +183,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D205 | Old failed ledger row DS218 leftover cleanup? | Look, then close (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D206 | DL201 again: installer update meets a project-changed plugin file? | 3-way merge, ask on conflict | decided | 2026-11-11 |
 | delivery-speed | D207 | Lower the WSL and pool memory limits now, or measure first? | Measure first | decided | 2026-11-11 |
+| delivery-speed | D208 | Update comics-organizer's project scope to delivery 1.28.1 now? | Leave it to CO1002 | decided | 2026-11-11 |
+| delivery-speed | D209 | Add 'installer runs on the owner's PC, not a cloud agent' to the update guide? | Add it (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D21 | Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)? | 2 slots | decided | 2026-11-04 |
+| delivery-speed | D210 | Fix the design-system keypad stylesheet the pre-commit pattern flags? | Fix it (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
 | delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |
