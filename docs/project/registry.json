@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:24+00:00",
+  "updated": "2026-11-11T00:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3411,6 +3411,45 @@
       "changed": "2026-11-11T00:24+00:00",
       "no_release": "pool maintenance, ships nothing",
       "started": "2026-11-11T00:12+00:00"
+    },
+    {
+      "id": "DL186",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Ship .gitleaks.toml with CI setup; rules skip Rust declarations and empty values",
+      "detail": "Peer report: CI secret-scan needs .gitleaks.toml but neither the delivery installer nor tech-stack-setup Phase 7 installs it. Two shared rules flag Rust fn and field declarations and empty database URL keys in .env.example (10 false positives in a fresh skeleton).",
+      "expected": "11 Nov ~01:18",
+      "changed": "2026-11-11T00:42+00:00",
+      "expected_basis": "cloud agent ~30 min, then RELEASE-93",
+      "rides": "DS228",
+      "started": "2026-11-11T00:40+00:00"
+    },
+    {
+      "id": "DL187",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "CI templates on the pool: DB without Docker, rust targets from layout",
+      "detail": "Peer report: rust ci.yml integration job uses services: postgres:17, which needs Docker the pool lacks (also ts template); pool gives db.env/pool-db-env. Rust ci.yml hard-codes sqlx migrate at repo root and --test integration/route_coverage that a fresh workspace lacks; drive them from gate.json/layout.",
+      "expected": "11 Nov ~01:18",
+      "changed": "2026-11-11T00:40+00:00",
+      "expected_basis": "cloud agent ~30 min, then RELEASE-93",
+      "rides": "DS228",
+      "started": "2026-11-11T00:40+00:00"
+    },
+    {
+      "id": "DL188",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Doctor: tool cache scan, platform pins, fix text, script age, wait_min",
+      "detail": "Peer report: doctor finds Zig/LLVM only on PATH (Windows tool cache unpacks deeper); reads flat sha256 though tools.json 1.24.0 uses platforms; fix text names ci_tool.py ensure zig (does not exist; tool zig does); installed delivery scripts older than templates go unnoticed; ci line says 10 min though ci.wait_min is 30.",
+      "expected": "11 Nov ~01:18",
+      "changed": "2026-11-11T00:40+00:00",
+      "expected_basis": "cloud agent ~30 min, then RELEASE-93",
+      "rides": "DS228",
+      "started": "2026-11-11T00:40+00:00"
     },
     {
       "id": "DS1",
@@ -7031,6 +7070,41 @@
         }
       ],
       "started": "2026-11-10T23:51+00:00"
+    },
+    {
+      "id": "DS228",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-93: rust track on the pool (DL186, DL187, DL188)",
+      "detail": "Join DL186 (CI templates on the pool), DL187 (gitleaks config shipped + rules), DL188 (doctor tool and wait fixes); CI; merge; plugin update.",
+      "expected": "11 Nov ~01:28",
+      "changed": "2026-11-11T00:42+00:00",
+      "expected_basis": "3 cloud agents ~30 min from 00:42, CI ~5 min",
+      "release": 93,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T00:42+00:00",
+          "end": "2026-11-11T01:12+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T01:12+00:00",
+          "end": "2026-11-11T01:20+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T01:20+00:00",
+          "end": "2026-11-11T01:25+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T01:25+00:00",
+          "end": "2026-11-11T01:28+00:00"
+        }
+      ],
+      "started": "2026-11-11T00:40+00:00"
     },
     {
       "id": "DU1",
