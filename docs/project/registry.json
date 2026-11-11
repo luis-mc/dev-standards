@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:02+00:00",
+  "updated": "2026-11-11T00:06+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3380,12 +3380,11 @@
       "id": "DL183",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "rerun_first: PR stays pending until run 2 ends",
       "detail": "DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.",
-      "expected": "11 Nov ~00:37",
-      "changed": "2026-11-10T23:55+00:00",
-      "expected_basis": "cloud agent ~30 min from ~23:59, then RELEASE-92",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:06+00:00",
       "rides": "DS227",
       "started": "2026-11-10T23:55+00:00"
     },
