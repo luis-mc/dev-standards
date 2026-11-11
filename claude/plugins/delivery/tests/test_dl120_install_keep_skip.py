@@ -53,11 +53,13 @@ class KeepSkip(unittest.TestCase):
         self.assertIn("kept %s: the plugin's version differs; diff it with " % WATCH, out)
         self.assertIn("fold your change into the plugin or drop it", out)
 
-    def test_without_keep_the_file_is_overwritten(self):
+    def test_without_keep_an_edited_file_is_kept_with_a_new_file(self):
         run("install", "--track", "ts", "--root", self.tmp)
+        shutil.rmtree(os.path.join(self.tmp, ".delivery", "ci-install-base"))   # no base: kept with a .new
         self.write(WATCH, "# my fix\n")
         run("update", "--track", "ts", "--root", self.tmp)
-        self.assertNotEqual(self.read(WATCH), "# my fix\n")
+        self.assertEqual(self.read(WATCH), "# my fix\n")        # DL201: kept, not overwritten
+        self.assertNotEqual(self.read(WATCH + ".new"), "# my fix\n")
 
     def test_skipped_workflow_not_written(self):
         sources = {rel for rel, _s, _a in INS.plan("ts", self.tmp, "install")}

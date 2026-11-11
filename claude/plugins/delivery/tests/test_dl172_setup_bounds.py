@@ -67,7 +67,9 @@ class Bounds(unittest.TestCase):
         (self.root / ".delivery/config.json").write_text('{"tz": "Europe/Lisbon"}', encoding="utf-8")
         code, _ = run("update", "--track", "ts", "--root", str(self.root))
         self.assertEqual(code, 0)
-        hook = (self.root / ".githooks/pre-push").read_text(encoding="utf-8")
+        # DL201: no install record, so the old copy is kept and the new hook lands in .new
+        self.assertIn("old copy", (self.root / ".githooks/pre-push").read_text(encoding="utf-8"))
+        hook = (self.root / ".githooks/pre-push.new").read_text(encoding="utf-8")
         self.assertIn("train_freeze.py", hook)
         self.assertEqual(json.loads((self.root / ".delivery/config.json").read_text(encoding="utf-8")), {"tz": "Europe/Lisbon"})
         self.assertTrue((self.root / ".githooks/commit-msg").exists())
