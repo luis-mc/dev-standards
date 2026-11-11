@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-11T08:38+00:00",
+ "updated": "2026-11-11T08:44+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4434,6 +4434,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-11T06:26+00:00",
    "rides": "DS230",
    "started": "2026-11-11T06:16+00:00"
+  },
+  {
+   "id": "DL198",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "Restart the CI pool after Docker Desktop stopped",
+   "detail": "Docker Desktop and WSL were found stopped at 08:39 (PC hit 98% memory ~08:30). Owner chose to start it (08:41). Wait for the pool container and runners, run the doctor, tell comics-organizer.",
+   "expected": "11 Nov ~08:46",
+   "changed": "2026-11-11T08:44+00:00",
+   "expected_basis": "Docker start ~2-4 min from 08:41",
+   "no_release": "pool upkeep; ships nothing",
+   "started": "2026-11-11T08:44+00:00"
   },
   {
    "id": "DS1",
@@ -8781,13 +8794,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T08:38+00:00">11 Nov 08:38</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T08:44+00:00">11 Nov 08:44</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
+<li data-glance-task="DL198"><span class="task-id">DL198</span>Restart the CI pool after Docker Desktop stopped <span class="glance-expected">11 Nov ~08:46</span><span class="glance-basis">Docker start ~2-4 min from 08:41</span></li>
 <li data-glance-task="DS231"><span class="task-id">DS231</span><span class="release-name">RELEASE-96</span>ci_tool tests pass on Windows <span class="glance-expected">11 Nov ~08:47</span><span class="glance-basis">PR 197 CI started 08:39, ~5 min</span></li>
 </ul>
 </details>
@@ -8810,11 +8824,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">530</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">530</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS231 (ci_tool tests pass on Windows) expected live about 08:47." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">08:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">09:00</text></g>
+<figcaption>Next releases (~08:46 · Docker start ~2-4 min from 08:41)</figcaption>
+<div class="timeline-scroll"><svg viewBox="0 0 960 260" role="img" aria-label="Next releases: DS231 (ci_tool tests pass on Windows) expected live about 08:47. Other work (no release): DL198 (Restart the CI pool after Docker Desktop stopped) Running, expected about 08:46." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="236"/><text x="200" y="28">08:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="236"/><text x="720" y="28">09:00</text></g>
 <text class="rt-name" x="0" y="60"><title>RELEASE-96 · ci_tool tests pass on Windows</title>RELEASE-96 · ci_tool test…</text>
 <text class="rt-sub" x="0" y="77"><title>DL195</title>DL195</text>
 <rect class="rt-bar join" x="200" y="52" width="156" height="22"><title>join 08:30-08:39</title></rect>
@@ -8822,14 +8836,23 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <rect class="rt-bar merge" x="442.7" y="52" width="52" height="22"><title>merge + cleanup 08:44-08:47</title></rect>
 <polygon class="rt-expected" points="494.7,50 502.7,63 494.7,76 486.7,63"/>
 <text class="rt-live-label" x="494.7" y="92">live ~08:47</text>
-<line class="rt-now" x1="338.7" y1="36" x2="338.7" y2="148"/><text class="rt-now-label" x="338.7" y="161">now 08:38</text>
+<text class="rt-strip-title" x="0" y="122">Other work (no release)</text>
+<text class="rt-name" x="0" y="156"><title>DL198 · Restart the CI pool after Docker Desktop stopped</title>DL198 · Restart the CI po…</text>
+<rect class="rt-other status-running" x="442.7" y="151" width="34.7" height="16"><title>Running 08:44-08:46</title></rect>
+<text class="rt-other-label" x="442.7" y="184">~08:46 · Docker start ~2-4 min from 08:41</text>
+<line class="rt-now" x1="442.7" y1="36" x2="442.7" y2="244"/><text class="rt-now-label" x="442.7" y="257">now 08:44</text>
 </svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
+<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
 </figure>
 <details class="status-fold release-group" data-group="release-96" open><summary><strong>RELEASE-96 · live ~08:47</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS231"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS231</span><span class="release-name">RELEASE-96</span>ci_tool tests pass on Windows</td><td data-label="App / service"></td><td data-label="Detail">DL195 (test-only fix). PR, CI, merge on green.</td><td data-label="Expected">11 Nov ~08:47<span class="expected-basis">PR 197 CI started 08:39, ~5 min</span></td></tr>
 <tr data-task="DL195"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)</a></td><td data-label="App / service"></td><td data-label="Detail">test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.</td><td data-label="Expected">11 Nov</td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL198"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL198</span>Restart the CI pool after Docker Desktop stopped</a><span class="no-release-line">ships nothing: pool upkeep; ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">Docker Desktop and WSL were found stopped at 08:39 (PC hit 98% memory ~08:30). Owner chose to start it (08:41). Wait for the pool container and runners, run the doctor, tell comics-organizer.</td><td data-label="Expected">11 Nov ~08:46<span class="expected-basis">Docker start ~2-4 min from 08:41</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">540 tasks</span></summary>
@@ -9384,7 +9407,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906438"><time datetime="2026-11-11T08:38+00:00">11 Nov 08:38</time></td><td data-label="Tasks">DL1 to DL197</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906444"><time datetime="2026-11-11T08:44+00:00">11 Nov 08:44</time></td><td data-label="Tasks">DL1 to DL198</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T08:38+00:00",
+  "updated": "2026-11-11T08:44+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3554,6 +3554,19 @@
       "changed": "2026-11-11T06:26+00:00",
       "rides": "DS230",
       "started": "2026-11-11T06:16+00:00"
+    },
+    {
+      "id": "DL198",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Restart the CI pool after Docker Desktop stopped",
+      "detail": "Docker Desktop and WSL were found stopped at 08:39 (PC hit 98% memory ~08:30). Owner chose to start it (08:41). Wait for the pool container and runners, run the doctor, tell comics-organizer.",
+      "expected": "11 Nov ~08:46",
+      "changed": "2026-11-11T08:44+00:00",
+      "expected_basis": "Docker start ~2-4 min from 08:41",
+      "no_release": "pool upkeep; ships nothing",
+      "started": "2026-11-11T08:44+00:00"
     },
     {
       "id": "DS1",
