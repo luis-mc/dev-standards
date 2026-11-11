@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-11T01:21+00:00",
+ "updated": "2026-11-11T01:25+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4379,12 +4379,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL193",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts",
    "detail": "cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.",
-   "expected": "11 Nov ~01:40",
-   "changed": "2026-11-11T01:12+00:00",
-   "expected_basis": "cloud agent ~24 min",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T01:25+00:00",
    "rides": "DS229",
    "started": "2026-11-11T01:16+00:00"
   },
@@ -8684,20 +8683,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T01:21+00:00">11 Nov 01:21</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T01:25+00:00">11 Nov 01:25</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DL193"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts <span class="glance-expected">11 Nov ~01:40</span><span class="glance-basis">cloud agent ~24 min</span></li>
 <li data-glance-task="DL194"><span class="task-id">DL194</span>Pool tool cache writable by every agent user <span class="glance-expected">11 Nov ~01:45</span><span class="glance-basis">cloud agent ~28 min</span></li>
 <li data-glance-task="DS229"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch <span class="glance-expected">11 Nov ~02:02</span><span class="glance-basis">agents ~30 min, join 8, CI 5, merge 4</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
 <ul>
+<li data-glance-task="DL193"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</li>
 <li data-glance-task="DL192"><span class="task-id">DL192</span>Rust templates: cargo on PATH, real targets, Windows-deferred track</li>
 </ul>
 </details>
@@ -8715,7 +8714,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">523</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">523</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -8728,16 +8727,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <rect class="rt-bar merge" x="535.1" y="52" width="23.1" height="22"><title>merge + cleanup 01:58-02:02</title></rect>
 <polygon class="rt-expected" points="558.2,50 566.2,63 558.2,76 550.2,63"/>
 <text class="rt-live-label" x="558.2" y="92">live ~02:02</text>
-<line class="rt-now" x1="321.3" y1="36" x2="321.3" y2="148"/><text class="rt-now-label" x="321.3" y="161">now 01:21</text>
+<line class="rt-now" x1="344.4" y1="36" x2="344.4" y2="148"/><text class="rt-now-label" x="344.4" y="161">now 01:25</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <details class="status-fold release-group" data-group="release-94" open><summary><strong>RELEASE-94 · live ~02:02</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS229"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch</td><td data-label="App / service"></td><td data-label="Detail">Join DL192-DL194 (peer report from RELEASE-1 CI of a rust-track project), CI, merge on green, plugin update, pool refresh when idle.</td><td data-label="Expected">11 Nov ~02:02<span class="expected-basis">agents ~30 min, join 8, CI 5, merge 4</span></td></tr>
-<tr data-task="DL193"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</a></td><td data-label="App / service"></td><td data-label="Detail">cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.</td><td data-label="Expected">11 Nov ~01:40<span class="expected-basis">cloud agent ~24 min</span></td></tr>
 <tr data-task="DL194"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL194</span>Pool tool cache writable by every agent user</a></td><td data-label="App / service"></td><td data-label="Detail">On the pool, ci_tool.py tool cargo-xwin failed with Permission denied on /ci-tools/&lt;tool&gt;/&lt;ver&gt;/*.partial: folders made by one agent user are not writable by another. Make the shared cache work for every agent user.</td><td data-label="Expected">11 Nov ~01:45<span class="expected-basis">cloud agent ~28 min</span></td></tr>
 <tr data-task="DL192"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL192</span>Rust templates: cargo on PATH, real targets, Windows-deferred track</a></td><td data-label="App / service"></td><td data-label="Detail">Toolchain step exports cargo bin to PATH in the same step (ci.yml x3, package.yml); drop steps for targets a generated workspace lacks; package.yml copies smoke.json binaries; a track option that defers Windows (no msi check, no package-windows, no xwin).</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL193"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</a></td><td data-label="App / service"></td><td data-label="Detail">cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.</td><td data-label="Expected">11 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">533 tasks</span></summary>
@@ -9285,7 +9284,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906001"><time datetime="2026-11-11T01:21+00:00">11 Nov 01:21</time></td><td data-label="Tasks">DL1 to DL194</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">2 Running</span><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906005"><time datetime="2026-11-11T01:25+00:00">11 Nov 01:25</time></td><td data-label="Tasks">DL1 to DL194</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">2 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>

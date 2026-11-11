@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T01:21+00:00",
+  "updated": "2026-11-11T01:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3499,12 +3499,11 @@
       "id": "DL193",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts",
       "detail": "cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.",
-      "expected": "11 Nov ~01:40",
-      "changed": "2026-11-11T01:12+00:00",
-      "expected_basis": "cloud agent ~24 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T01:25+00:00",
       "rides": "DS229",
       "started": "2026-11-11T01:16+00:00"
     },
