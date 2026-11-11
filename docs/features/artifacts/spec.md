@@ -201,6 +201,8 @@ flowchart TB
 | claude.ai daily limit | Defer. Do not block. | The owner cannot fix it. It resets. |
 | Time zone data missing (Windows) | Fall back to local time, with a warning | The page still renders. |
 | A change that adds a finding | Fail closed: write nothing | A record that was valid stays valid. |
+| Content or a task that is invalid | The error names the field and its limit, or the entry and the rule (`item is 93 characters; the limit is 80`). | The caller can fix it without running `check`. |
+| `edit-content` of a `decisions.json` | Prints `run docs_index.py build: docs/architecture/decisions.md is now stale`. | The script does not run `docs_index.py`; the generated index is rebuilt there. |
 
 ## 9. How it is proven
 
