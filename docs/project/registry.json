@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T15:27+00:00",
+  "updated": "2026-11-11T15:38+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3888,12 +3888,11 @@
       "id": "DL217",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: installer Prettier ignore + docs freshness CI/local match",
       "detail": "Join DL218 and DL219, fold, CI, merge on green, plugin updates, smoke, cleanup.",
-      "expected": "11 Nov ~16:07",
-      "changed": "2026-11-11T15:27+00:00",
-      "expected_basis": "agents ~18 min + join/CI/merge ~17 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T15:38+00:00",
       "release": 102,
       "phases": [
         {
@@ -3923,38 +3922,47 @@
       "id": "DL218",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Installer adds its copies to .prettierignore",
       "detail": "When a project uses Prettier, the delivery installer adds .delivery/ci-install-base/ and its *.example.json copies to .prettierignore (idempotent), so installed files never fail the project's format check.",
-      "expected": "11 Nov ~15:48",
-      "changed": "2026-11-11T15:27+00:00",
-      "expected_basis": "cloud agent from 15:25, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T15:38+00:00",
       "rides": "DL217"
     },
     {
       "id": "DL219",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Docs freshness check (T2) gives the same result in CI and locally",
       "detail": "docs_check T2 warned in a project's CI (code changed after the doc's date) but passed locally. Find the cause (shallow checkout, merge commit dates, UTC vs local date) and make both agree.",
-      "expected": "11 Nov ~15:48",
-      "changed": "2026-11-11T15:27+00:00",
-      "expected_basis": "cloud agent from 15:25, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T15:38+00:00",
       "rides": "DL217"
     },
     {
       "id": "DL220",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool image pre-enables corepack so runner users need no write to /opt/node/bin",
       "detail": "After DL215, a job's corepack enable fails as the runner user: EACCES symlink into root-owned /opt/node/bin. Run corepack enable as root at build (shims only, no pinned pnpm) so the job's own enable is a no-op; prove it as a non-root user.",
-      "expected": "11 Nov ~15:50",
-      "changed": "2026-11-11T15:27+00:00",
-      "expected_basis": "cloud agent from 15:27, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T15:38+00:00",
       "rides": "DL217",
       "started": "2026-11-11T15:26+00:00"
+    },
+    {
+      "id": "DL221",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "Refresh the shared CI pool with the corepack shims (DL220)",
+      "detail": "Rebuild pool main from delivery 1.29.0 when no job runs, memory <70% and CPU <30%. Check the pnpm shim, then rerun a peer's failed ts CI run.",
+      "expected": "11 Nov ~16:30",
+      "changed": "2026-11-11T15:38+00:00",
+      "expected_basis": "waits for idle pool + memory <70% (93% at 15:36), rebuild ~5 min",
+      "no_release": "operations on the local pool"
     },
     {
       "id": "DS1",
