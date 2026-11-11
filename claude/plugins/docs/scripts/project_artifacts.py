@@ -954,9 +954,6 @@ def validate_structure(rec):
             own_css = read_html(rec.dir / 'design.css') or ''
             for prob in R.check_tokens(own_css):
                 f('R5.11', 'design.css', prob)
-            ign = R.ignored_tokens(own_css)
-            if ign:
-                warn('design.css sets %s; page, surface and ink tokens are ignored (accents only)' % ', '.join(ign))
         except Exception as ex:
             f('R5.11', 'design.css', 'cannot be checked: %s' % ex)
     if isinstance(m.get('updated'), str) and m['updated'] and parse_iso(m['updated']) is None:
@@ -2737,6 +2734,14 @@ def retired_notes(rec):
             % '; '.join('%s %s' % (e.get('key'), e.get('url')) for e in entries)]
 
 
+def design_warnings(rec):
+    """DL239: a project design.css may change accents only; say which of its tokens are ignored."""
+    if rec.manifest.get('design') != 'design.css' or not getattr(R, 'ignored_tokens', None):
+        return []
+    ign = R.ignored_tokens(read_html(rec.dir / 'design.css') or '')
+    return [('design.css', 'sets %s; page, surface and ink tokens are ignored (accents only)' % ', '.join(ign))] if ign else []
+
+
 def cmd_check(args):
     if R is None:
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
@@ -2756,7 +2761,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
     warnings += [('.delivery', m) for m in schema_warnings(session_root(str(rec.dir)))]
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],

@@ -192,6 +192,7 @@ class RecordPages(unittest.TestCase):
             self.assertEqual(R.check_tokens(block), [])
         code, o, e = self.run_cmd("check")
         self.assertEqual(code, 0, o + e)
+        self.assertIn("ignored", o + e)
 
     def test_latest_flag_does_not_make_pages_stale(self):
         base = Path(self.tmp.name) / "mk"
