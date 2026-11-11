@@ -16,5 +16,9 @@ Base: origin/main 85c5d72 (LAYER_TOOLS present).
 ## Follow-ups
 - G1: docs/architecture/decisions.md stale; generated, the release fold rebuilds it. Not committed.
 - W1: this report is under docs/work/; strip before the join (expected).
-- M1: delivery spec mapped to the pool script; no change needed there, the commit now says `Docs: none`.
+- M1: delivery spec mapped to the pool script; the report commit says `Docs: none`. Second spec-lint run 42994765588: every job success or skipped except `docs check`, which fails only on G1 and W1 (M1 gone).
 - `sh` returns no stderr, so the warn names the docker exit code, not the docker message.
+
+Branch head: a7dbc8d (before this report line)
+
+READY
