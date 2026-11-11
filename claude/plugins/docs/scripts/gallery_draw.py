@@ -364,7 +364,7 @@ def d_picture_card(d):
 
 def d_chart(d):
     bars = "".join(f'<rect x="{10 + i * 40}" y="{80 - h}" width="28" height="{h}" fill="{d.col("color-primary")}"></rect>'
-                   f'<text x="{24 + i * 40}" y="96" text-anchor="middle" font-size="10" fill="{d.col("color-text")}">{n}</text>' for i, (n, h) in enumerate((("Mon", 30), ("Tue", 55), ("Wed", 40), ("Thu", 70))))
+                   f'<text x="{24 + i * 40}" y="96" text-anchor="middle" font-size="9" fill="{d.col("color-text")}">{n}</text>' for i, (n, h) in enumerate((("Mon", 30), ("Tue", 55), ("Wed", 40), ("Thu", 70))))
     return (f'<svg viewBox="0 0 180 100" width="180" role="img" aria-label="Files per day: Mon 30, Tue 55, Wed 40, Thu 70" style="max-width:100%">{bars}</svg>'
             f'<table style="border-collapse:collapse"><tr><td>Mon 30 · Tue 55 · Wed 40 · Thu 70</td></tr></table>' + d.mark("color-primary", "color-page", 3.0, "chart bars (UI part)"))
 
