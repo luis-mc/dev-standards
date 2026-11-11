@@ -23,17 +23,39 @@ import runner_job_done as RJD
 import runner_load_gate as R
 
 
+REAL_PID = os.getpid()      # taken at import, before any test can leave os.getpid patched (see test_dl194)
+
+
+class _Machine:
+    """The environment patch plus the real os.getpid, so a pid left patched by another test cannot make this
+    process's own tickets look dead."""
+
+    def __init__(self, env):
+        self.env = env
+        self.pid = mock.patch.object(os, "getpid", return_value=REAL_PID)
+
+    def __enter__(self):
+        self.pid.start()
+        self.env.start()
+        return self
+
+    def __exit__(self, *exc):
+        self.env.stop()
+        self.pid.stop()
+        return False
+
+
 def machine(**kw):
     """A fresh machine folder in the environment; returns the patcher (use as a context manager)."""
     d = tempfile.mkdtemp(prefix="mach-")
     base = {"DELIVERY_MACHINE_DIR": d, "DELIVERY_LOCAL_HEAVY_DIR": os.path.join(d, "heavy"),
             "DELIVERY_MACHINE_CONFIG": os.path.join(d, "old.json"), "DELIVERY_LOAD_CACHE": os.path.join(d, "c.json"),
-            "DELIVERY_IN_CONTAINER": "0", "DELIVERY_HOLDER_PID": str(os.getpid())}
+            "DELIVERY_IN_CONTAINER": "0", "DELIVERY_HOLDER_PID": str(REAL_PID)}
     base.update(kw)
     for k in ("GITHUB_EVENT_PATH", "GITHUB_REF", "GITHUB_REPOSITORY", "GITHUB_RUN_ID", "GITHUB_JOB", "DELIVERY_SHARD",
               "GITHUB_WORKSPACE", "GITHUB_SHA", "DELIVERY_LOAD"):
         base.setdefault(k, "")
-    return mock.patch.dict(os.environ, base)
+    return _Machine(mock.patch.dict(os.environ, base))
 
 
 def ident(job="unit", run=1, repo="owner/example-app", **kw):

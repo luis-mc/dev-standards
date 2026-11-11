@@ -38,6 +38,17 @@ class VanishedTicket(unittest.TestCase):
             self.assertLessEqual(len(sleeps), 2)
             self.assertEqual(real(), [])
 
+    def test_a_leaked_getpid_patch_does_not_hide_the_gate_ticket(self):
+        # test_dl194 can leave os.getpid patched; machine() must still give the gate its real pid.
+        marker = mock.Mock()
+        marker.claim_lost.return_value = False
+        with mock.patch.object(os, "getpid", return_value=2 ** 22 + 5), machine():
+            MS.write_machine_config({})
+            code, lock = R.queue_wait(self.LIM, self.CFG, ident("unit"), sample=lambda: {"memory_pct": 1, "cpu_pct": 1},
+                                      sleep=lambda s: None, clock=lambda: 0.0, log=lambda l: None, marker=marker, priority=1)
+        self.assertEqual(code, 0)
+        self.assertIsNotNone(lock)
+
 
 if __name__ == "__main__":
     unittest.main()
