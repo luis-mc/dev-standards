@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T01:19+00:00",
+  "updated": "2026-11-11T01:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3487,12 +3487,11 @@
       "id": "DL192",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Rust templates: cargo on PATH, real targets, Windows-deferred track",
       "detail": "Toolchain step exports cargo bin to PATH in the same step (ci.yml x3, package.yml); drop steps for targets a generated workspace lacks; package.yml copies smoke.json binaries; a track option that defers Windows (no msi check, no package-windows, no xwin).",
-      "expected": "11 Nov ~01:50",
-      "changed": "2026-11-11T01:12+00:00",
-      "expected_basis": "cloud agent ~35 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T01:21+00:00",
       "rides": "DS229",
       "started": "2026-11-11T01:16+00:00"
     },
