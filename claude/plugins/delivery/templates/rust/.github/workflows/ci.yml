@@ -200,7 +200,10 @@ jobs:
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
-        image: postgres:17
+        # DL187: a pool runner has no Docker, so it gets no service container; an empty
+        # `image:` skips it. The pool gives each agent its own database (step below).
+        # (`a && '' || b` always yields b, so the test is written the other way.)
+        image: ${{ !contains(vars.CI_RUNS_ON || '', 'pool-') && 'postgres:17' || '' }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -215,9 +218,22 @@ jobs:
       DELIVERY_SHARD: integration
       # Throwaway service-container credentials, not a secret. The shared
       # gitleaks config allowlists this exact DSN shape.
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+      # On a pool runner this is empty and the pool step below sets the real one.
+      DATABASE_URL: ${{ !contains(vars.CI_RUNS_ON || '', 'pool-') && 'postgres://postgres:postgres@localhost:5432/app_test' || '' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # DL187: on a pool runner, load this agent's own database into the job env.
+      - name: Load the pool database env
+        if: ${{ contains(vars.CI_RUNS_ON || '', 'pool-') }}
+        run: |
+          if command -v pool-db-env >/dev/null 2>&1; then
+            pool-db-env
+          elif [ -f "$HOME/db.env" ]; then
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$HOME/db.env" >> "$GITHUB_ENV"
+          else
+            echo "::error::pool runner without pool-db-env or $HOME/db.env; the pool database is missing"
+            exit 1
+          fi
       # D141: the exact channel from rust-toolchain.toml, installed with the
       # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
       - name: Install the pinned Rust toolchain
@@ -239,15 +255,41 @@ jobs:
       # §5.4: migrations applied in order by a dedicated runner. This must run
       # before any sqlx compile step, because the macros check against the live
       # schema — an unmigrated database fails the build with a confusing error.
+      # DL187: driven from the project, not hard-coded. A fresh workspace keeps its
+      # migrations in apps/<svc>/migrations (embedded with sqlx::migrate!) and has no
+      # root folder, so this finds every `migrations` folder (root, apps/*, crates/*)
+      # and runs each one. With none, it does nothing.
       - name: Migrate (seed through the migration chain)
         run: |
+          dirs=$(for d in migrations apps/*/migrations crates/*/migrations; do [ -d "$d" ] && echo "$d"; done)
+          if [ -z "$dirs" ]; then
+            echo "No migrations folder; nothing to migrate."
+            exit 0
+          fi
           cargo install --locked sqlx-cli --no-default-features --features postgres
-          sqlx migrate run
+          for d in $dirs; do
+            echo "Migrating from $d"
+            sqlx migrate run --source "$d"
+          done
+
+      # DL187: named test targets run only when the workspace has them (cargo metadata).
+      - name: Find the integration test targets
+        id: targets
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, subprocess
+          meta = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"]))
+          names = {t["name"] for p in meta["packages"] for t in p["targets"] if "test" in t["kind"]}
+          for n in ("integration", "route_coverage"):
+              print("%s=%s" % (n, "true" if n in names else "false"))
+          PY
 
       - name: Integration tests
+        if: ${{ steps.targets.outputs.integration == 'true' }}
         run: cargo test --locked --test integration
 
       # §11.1: route coverage — authorization declarations AND rate-limit
       # buckets (§4.6). Needs the registered routes, so it runs here.
       - name: Route coverage (authorization + rate limits)
+        if: ${{ steps.targets.outputs.route_coverage == 'true' }}
         run: cargo test --locked --test route_coverage

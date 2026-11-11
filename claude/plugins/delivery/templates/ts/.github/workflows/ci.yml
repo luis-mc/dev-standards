@@ -358,7 +358,10 @@ jobs:
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
-        image: postgres:17
+        # DL187: a pool runner has no Docker, so it gets no service container; an empty
+        # `image:` skips it. The pool gives each agent its own database (step below).
+        # (`a && '' || b` always yields b, so the test is written the other way.)
+        image: ${{ !contains(vars.CI_RUNS_ON || '', 'pool-') && 'postgres:17' || '' }}
         env:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
@@ -373,9 +376,22 @@ jobs:
       DELIVERY_SHARD: integration
       # Throwaway service-container credentials, not a secret. The gitleaks
       # config allowlists this exact DSN shape so it does not trip the scan.
-      DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
+      # On a pool runner this is empty and the pool step below sets the real one.
+      DATABASE_URL: ${{ !contains(vars.CI_RUNS_ON || '', 'pool-') && 'postgres://postgres:postgres@localhost:5432/app_test' || '' }}
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # DL187: on a pool runner, load this agent's own database into the job env.
+      - name: Load the pool database env
+        if: ${{ contains(vars.CI_RUNS_ON || '', 'pool-') }}
+        run: |
+          if command -v pool-db-env >/dev/null 2>&1; then
+            pool-db-env
+          elif [ -f "$HOME/db.env" ]; then
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$HOME/db.env" >> "$GITHUB_ENV"
+          else
+            echo "::error::pool runner without pool-db-env or $HOME/db.env; the pool database is missing"
+            exit 1
+          fi
 
       # corepack before setup-node — see the verify job for why.
       - run: corepack enable
