@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:12+00:00",
+  "updated": "2026-11-11T00:24+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3404,12 +3404,11 @@
       "id": "DL185",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Refresh the main pool to luismc-delivery 1.25.0",
       "detail": "D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.",
-      "expected": "11 Nov ~00:45",
-      "changed": "2026-11-11T00:12+00:00",
-      "expected_basis": "waits for the running pool job, then ~5 min rebuild",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:24+00:00",
       "no_release": "pool maintenance, ships nothing",
       "started": "2026-11-11T00:12+00:00"
     },

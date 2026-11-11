@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-11T00:12+00:00",
+ "updated": "2026-11-11T00:24+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4284,12 +4284,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL185",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "Refresh the main pool to luismc-delivery 1.25.0",
    "detail": "D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.",
-   "expected": "11 Nov ~00:45",
-   "changed": "2026-11-11T00:12+00:00",
-   "expected_basis": "waits for the running pool job, then ~5 min rebuild",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T00:24+00:00",
    "no_release": "pool maintenance, ships nothing",
    "started": "2026-11-11T00:12+00:00"
   },
@@ -8507,18 +8506,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T00:12+00:00">11 Nov 00:12</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T00:24+00:00">11 Nov 00:24</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">39 tasks</span></summary>
 <ul>
-<li data-glance-task="DL185"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0 <span class="glance-expected">11 Nov ~00:45</span><span class="glance-basis">waits for the running pool job, then ~5 min rebuild</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">38 tasks</span></summary>
-<ul>
+<li data-glance-task="DL185"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0</li>
 <li data-glance-task="DL183"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends</li>
 <li data-glance-task="DL184"><span class="task-id">DL184</span>Pool setup, apply and doctor agree (image, template, runner names, labels)</li>
 <li data-glance-task="DS227"><span class="task-id">DS227</span><span class="release-name">RELEASE-92</span>DL184 pool setup, apply and doctor agree</li>
@@ -8526,31 +8521,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DS226"><span class="task-id">DS226</span><span class="release-name">RELEASE-91</span>DL181 CI rerun runs not-yet-passed jobs first</li>
 <li data-glance-task="DL182"><span class="task-id">DL182</span>Wine wrapper self-check: hash -r before command -v</li>
 <li data-glance-task="DS225"><span class="task-id">DS225</span><span class="release-name">RELEASE-90</span>DL182 Wine wrapper self-check fix</li>
-<li data-glance-task="DL179"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</li>
-<li class="glance-more">and 30 more</li>
+<li class="glance-more">and 31 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">515</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">516</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (~00:45 · waits for the running pool job, then ~5 min rebuild)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 198" role="img" aria-label="Other work (no release): DL185 (Refresh the main pool to luismc-delivery 1.25.0) Running, expected about 00:45." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="174"/><text x="200" y="28">11 Nov 00:00</text><line class="rt-grid" x1="460" y1="36" x2="460" y2="174"/><text x="460" y="28">11 Nov 00:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="174"/><text x="720" y="28">01:00</text></g>
-<text class="rt-strip-title" x="0" y="60">Other work (no release)</text>
-<text class="rt-name" x="0" y="94"><title>DL185 · Refresh the main pool to luismc-delivery 1.25.0</title>DL185 · Refresh the main…</text>
-<rect class="rt-other status-running" x="304" y="89" width="286" height="16"><title>Running 00:12-00:45</title></rect>
-<text class="rt-other-label" x="304" y="122">~00:45 · waits for the running pool job, then ~5 min rebuild</text>
-<line class="rt-now" x1="304" y1="36" x2="304" y2="182"/><text class="rt-now-label" x="304" y="195">now 00:12</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days. Under Other work (no release), a bar runs from the start to its Expected, coloured by status; a red outline means it is past its Expected.</p>
-</figure>
-<details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">526 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL185"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0</a><span class="no-release-line">ships nothing: pool maintenance, ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.</td><td data-label="Expected">11 Nov ~00:45<span class="expected-basis">waits for the running pool job, then ~5 min rebuild</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">525 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL185"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0</a><span class="no-release-line">ships nothing: pool maintenance, ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL183"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends</a><span class="release-line"><span class="release-name">RELEASE-92</span></span></td><td data-label="App / service"></td><td data-label="Detail">DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL184"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL184</span>Pool setup, apply and doctor agree (image, template, runner names, labels)</a><span class="release-line"><span class="release-name">RELEASE-92</span></span></td><td data-label="App / service"></td><td data-label="Detail">Owner ask via a peer session: right after pool-run + apply, the doctor reported 4 false findings: stale image ID for the layer check, template drift, runner &#x27;main&#x27; missing (pool agents are main-&lt;repo&gt;), CI_RUNS_ON pool-main label &#x27;wrong&#x27;. One source of truth; doctor clean right after setup.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DS227"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS227</span><span class="release-name">RELEASE-92</span>DL184 pool setup, apply and doctor agree</td><td data-label="App / service"></td><td data-label="Detail">Join DL184, CI, merge, plugin update.</td><td data-label="Expected">11 Nov</td></tr>
@@ -9084,13 +9063,12 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
-<div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905932"><time datetime="2026-11-11T00:12+00:00">11 Nov 00:12</time></td><td data-label="Tasks">DL1 to DL185</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
-</tbody></table></div>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (0)</strong><span class="fold-count">0 feature artifacts</span></summary>
+<p class="feature-none">No feature artifacts in progress.</p>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (8)</strong><span class="fold-count">8 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29905944"><time datetime="2026-11-11T00:24+00:00">11 Nov 00:24</time></td><td data-label="Tasks">DL1 to DL185</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904292"><time datetime="2026-11-09T20:52+00:00">09 Nov 20:52</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>

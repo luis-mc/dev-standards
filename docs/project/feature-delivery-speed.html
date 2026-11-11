@@ -888,20 +888,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T00:12+00:00">11 Nov 00:12</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 00:08</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T00:24+00:00">11 Nov 00:24</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 00:13</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">22 tasks</span></summary>
 <ul>
-<li data-glance-task="DL185"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0 <span class="glance-expected">11 Nov ~00:45</span><span class="glance-basis">waits for the running pool job, then ~5 min rebuild</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">21 tasks</span></summary>
-<ul>
+<li data-glance-task="DL185"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0</li>
 <li data-glance-task="DL183"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends</li>
 <li data-glance-task="DL184"><span class="task-id">DL184</span>Pool setup, apply and doctor agree (image, template, runner names, labels)</li>
 <li data-glance-task="DL181"><span class="task-id">DL181</span>CI rerun runs not-yet-passed jobs first</li>
@@ -909,20 +905,15 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL179"><span class="task-id">DL179</span>Pool sets up a Wine prefix at container start</li>
 <li data-glance-task="DL180"><span class="task-id">DL180</span>Pool Wine drops TMPDIR (wrappers in windows-packaging layer)</li>
 <li data-glance-task="DL177"><span class="task-id">DL177</span>Pool sizing: VM measured by its working set; docker read fails</li>
-<li data-glance-task="DL178"><span class="task-id">DL178</span>Pool resize to 10 GiB / 7 CPUs</li>
-<li class="glance-more">and 13 more</li>
+<li class="glance-more">and 14 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">178</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">179</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">185 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL185"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0<span class="no-release-line">ships nothing: pool maintenance, ships nothing</span></td><td data-label="Detail">D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.</td><td data-label="Expected">11 Nov ~00:45<span class="expected-basis">waits for the running pool job, then ~5 min rebuild</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">184 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL185"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0<span class="no-release-line">ships nothing: pool maintenance, ships nothing</span></td><td data-label="Detail">D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL183"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL183</span>rerun_first: PR stays pending until run 2 ends<span class="release-line"><span class="release-name">RELEASE-92</span></span></td><td data-label="Detail">DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL184"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL184</span>Pool setup, apply and doctor agree (image, template, runner names, labels)<span class="release-line"><span class="release-name">RELEASE-92</span></span></td><td data-label="Detail">Owner ask via a peer session: right after pool-run + apply, the doctor reported 4 false findings: stale image ID for the layer check, template drift, runner &#x27;main&#x27; missing (pool agents are main-&lt;repo&gt;), CI_RUNS_ON pool-main label &#x27;wrong&#x27;. One source of truth; doctor clean right after setup.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL181"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DL181</span>CI rerun runs not-yet-passed jobs first<span class="release-line"><span class="release-name">RELEASE-91</span></span></td><td data-label="Detail">Owner rule 21:15 UTC (relayed by a peer session): on a re-push, the CI plan runs first the jobs that failed or never passed on the previous head, then the rest, so new failures show sooner. Belongs in luismc-delivery ci_scope / CI plan.</td><td data-label="Expected">10 Nov</td></tr>
