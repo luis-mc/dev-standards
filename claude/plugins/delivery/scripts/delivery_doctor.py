@@ -899,6 +899,8 @@ def scripts_items(root):
     if track not in ("ts", "go", "rust", "dotnet"):
         track = "rust" if os.path.exists(os.path.join(root, "scripts", "delivery", "rust_ci.py")) else "shared"
     keep, skip = INST.load_config(root)
+    if track in INST.PACKAGE_TRACKS and not INST.has_packaged_program(root):
+        skip = set(skip) | set(INST.PACKAGE_FILES)   # DL236: the installer skips these too (DL229), so they are not missing
     stale, missing, kept, changed = [], [], [], []
     for rel, _src, action in INST.plan(track, root, "update", keep, skip):
         if not rel.startswith("scripts/delivery/"):
