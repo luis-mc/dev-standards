@@ -5592,6 +5592,98 @@
       "chosen": "Links that work (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "Links that work (Recommended)"
+    },
+    {
+      "id": "D247",
+      "question": "Overnight 11-12 Nov: same unattended rules as 5 Nov?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Same rules (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Merge nothing",
+          "summary": "offered"
+        },
+        {
+          "label": "Stop after RELEASE-110",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Same rules (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Same rules (Recommended)"
+    },
+    {
+      "id": "D248",
+      "question": "Overnight peer requests: what to build?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Fix everything (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Bugs only",
+          "summary": "offered"
+        },
+        {
+          "label": "Record only",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Fix everything (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Fix everything (Recommended)"
+    },
+    {
+      "id": "D249",
+      "question": "Follow-ups to build tonight (prune list merge, multi-track setup, Windows join tests, held-run brief note)",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "All four follow-ups",
+          "summary": "offered"
+        },
+        {
+          "label": "Some of them",
+          "summary": "offered"
+        },
+        {
+          "label": "None tonight",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "All four follow-ups",
+      "decided": "2026-11-11",
+      "owner_words": "All four follow-ups"
+    },
+    {
+      "id": "D250",
+      "question": "21:12 screen recording: what to do once a slot is free?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Find and fix (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Diagnose only",
+          "summary": "offered"
+        },
+        {
+          "label": "Leave it",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Find and fix (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Find and fix (Recommended)"
     }
   ]
 }

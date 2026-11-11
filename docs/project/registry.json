@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T21:58+00:00",
+  "updated": "2026-11-11T22:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4488,33 +4488,32 @@
       "id": "DL252",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: local-heavy slots freed when the call ended",
       "detail": "Next release after RELEASE-109: DL253 (DL-91 slot entries held up to 120 min after the command ended).",
-      "expected": "11 Nov ~22:36",
-      "changed": "2026-11-11T21:53+00:00",
-      "expected_basis": "cloud agent ~25 min from 21:57",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T22:22+00:00",
       "release": 110,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-11T21:57+00:00",
-          "end": "2026-11-11T22:22+00:00"
+          "start": "2026-11-11T21:53+00:00",
+          "end": "2026-11-11T22:15+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T22:22+00:00",
-          "end": "2026-11-11T22:28+00:00"
+          "start": "2026-11-11T22:15+00:00",
+          "end": "2026-11-11T22:17+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T22:28+00:00",
-          "end": "2026-11-11T22:33+00:00"
+          "start": "2026-11-11T22:17+00:00",
+          "end": "2026-11-11T22:22+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T22:33+00:00",
-          "end": "2026-11-11T22:36+00:00"
+          "start": "2026-11-11T22:22+00:00",
+          "end": "2026-11-11T22:25+00:00"
         }
       ],
       "risk": {
@@ -4527,12 +4526,11 @@
       "id": "DL253",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "DL253 free a local-heavy slot when its call has ended",
       "detail": "DL-91 entries have no pid and are freed only by PostToolUse or after 120 min. An interrupted, timed-out or backgrounded call leaks its slot (peer waited ~1 h; ffmpeg held here). Free entries whose call has ended.",
-      "expected": "11 Nov ~22:22",
-      "changed": "2026-11-11T21:53+00:00",
-      "expected_basis": "cloud agent ~25 min from 21:57",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T22:22+00:00",
       "rides": "DL252",
       "started": "2026-11-11T21:53+00:00"
     },

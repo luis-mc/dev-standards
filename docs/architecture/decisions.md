@@ -227,7 +227,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D244 | Build multi-track CI install (rust + ts in one repo)? | Build it now (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D245 | Where does every project's local Full Progress page go? | Machine work root (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D246 | Local Full Progress page: row links to feature pages? | Links that work (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D247 | Overnight 11-12 Nov: same unattended rules as 5 Nov? | Same rules (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D248 | Overnight peer requests: what to build? | Fix everything (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D249 | Follow-ups to build tonight (prune list merge, multi-track setup, Windows join tests, held-run brief note) | All four follow-ups | decided | 2026-11-11 |
 | delivery-speed | D25 | Machine-wide CI load control: when a crashed job keeps its slot, free it after how long? | 2 hours | decided | 2026-11-04 |
+| delivery-speed | D250 | 21:12 screen recording: what to do once a slot is free? | Find and fix (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D26 | Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config? | Run it with permission | decided | 2026-11-04 |
 | delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |
