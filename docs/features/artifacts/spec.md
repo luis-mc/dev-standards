@@ -158,6 +158,8 @@ flowchart LR
 
 **R5.16** — The `task-status-update` skill lists `--phase NAME=HH:MM-HH:MM` with the names `agents`, `join`, `ci` and `merge`. (AR68)
 
+**R5.17** — The Full Progress and feature pages show the generator badge in the header (`luismc-docs X.Y.Z` and its latest flag) and use the plugin's default page colours and 0.9x font sizes; a project's `design.css` changes accents only (see [Documentation standard plugin](../docs/spec.md) R5.16 to R5.18). The latest flag does not make a page stale: INV-3 compares pages without it. (DL239)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -211,6 +213,7 @@ flowchart TB
 | R5.1 | `test_one_full_progress`, `test_feature_new_runs_init_first` in `tools/test_project_artifacts.py` |
 | R5.2 | `test_mark_published_leaves_registry_byte_identical`, `test_non_task_commands_leave_registry_alone` in `tools/test_project_artifacts.py` |
 | R5.3 | `test_set_task_status`, `test_set_task_status_only_touches_its_artifacts` in `tools/test_project_artifacts.py` |
+| R5.17 | `test_badge_in_both_pages`, `test_project_design_changes_accent_not_page_colour`, `test_latest_flag_does_not_make_pages_stale` in `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.4 | `test_status_nearest` in `tools/test_project_artifacts.py` |
 | R5.5 | `test_determinism` in `tools/test_project_artifacts.py` |
 | R5.6 | `test_earlier_findings_do_not_block_a_change`, `test_a_new_finding_is_refused_beside_earlier_ones` in `tools/test_project_artifacts.py` |

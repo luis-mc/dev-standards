@@ -46,6 +46,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import docs_lib as D  # noqa: E402
 import gallery_draw as G  # noqa: E402
 import gallery_tokens as GT  # noqa: E402
+import gen_badge as B  # noqa: E402
 
 PLUGIN = Path(__file__).resolve().parent.parent
 TEMPLATES = PLUGIN / "templates" / "design-system"
@@ -228,9 +229,9 @@ def md_to_html(text: str) -> str:
 
 GALLERY_SCRIPT_VERSION = 2  # bump whenever the drawing changes (R15.2); an older stamp makes next-version's gallery stale (DS4)
 GALLERY_CSS = (
-    ":root{--bg:#fff;--fg:#1b1f24;--mute:#59636e;--line:#d0d7de;--code:#f2f4f6}"
-    "@media(prefers-color-scheme:dark){:root{--bg:#14171a;--fg:#e6e9ec;--mute:#9aa4af;--line:#363c43;--code:#1f2429}}"
-    "body{margin:0;font:16px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}"
+    ":root{--bg:#F5F6F8;--fg:#141A23;--mute:#556070;--line:#D5DAE1;--code:#ECEEF2}"
+    "@media(prefers-color-scheme:dark){:root{--bg:#0F141B;--fg:#E7EBF0;--mute:#9AA5B4;--line:#2A3442;--code:#1E2733}}"
+    "body{margin:0;font:14.4px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}"
     "nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;z-index:10}"
     "nav a{color:var(--fg)}main{max-width:960px;margin:0 auto;padding:0 16px 48px}"
     "table{border-collapse:collapse;width:100%;margin:12px 0;display:block;overflow-x:auto}"
@@ -240,11 +241,12 @@ GALLERY_CSS = (
     "section{border-top:1px solid var(--line);margin-top:24px}.meta{color:var(--mute);margin:4px 0}"
     ".pair{display:flex;flex-wrap:wrap;gap:12px;margin:8px 0}.theme{flex:1 1 280px;min-width:0}"
     ".canvas{border:1px solid var(--line);border-radius:6px;overflow-x:auto}.canvas p{margin:8px 0}"
-    ".cr{display:inline-block;font:600 12px/1.4 system-ui,sans-serif;padding:0 6px;border:1px solid currentColor;border-radius:4px;margin:0 4px 0 2px}"
+    ".cr{display:inline-block;font:600 10.8px/1.4 system-ui,sans-serif;padding:0 6px;border:1px solid currentColor;border-radius:4px;margin:0 4px 0 2px}"
     ".cr.fail{text-decoration:underline wavy}.gap{color:#8a5300;font-weight:600;margin:2px 0}"
     ".swb{display:inline-block;width:56px;height:28px;border:1px solid var(--line);vertical-align:middle;margin-right:6px}"
     ".demo{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap}.demo div{background:#7a8590;color:#fff;padding:4px 8px}"
-)
+    "nav .gen-badge{margin-left:auto}"
+) + B.BADGE_CSS
 SECTIONS = (("README.md", "Version"), ("CHANGES.md", "Changes"), ("ux-rules.md", "Rules"), ("components.md", "Components"),
             ("tokens.md", "Tokens"), ("content.md", "Words"))
 
@@ -397,7 +399,7 @@ def build_visuals(folder: Path, title: str = "Design system") -> Path:
     page = (f'<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             f"<title>{html.escape(title)} {html.escape(folder.name)}</title><style>{GALLERY_CSS}</style></head><body>"
             f"<!-- source-digest: {sources_digest(folder)} -->\n<!-- gallery-script: {GALLERY_SCRIPT_VERSION} -->\n"
-            f"<nav>{drawn_nav}{''.join(nav)}</nav><main>{drawn}{''.join(parts)}</main></body></html>\n")
+            f"<nav>{drawn_nav}{''.join(nav)}{B.badge_html()}</nav><main>{drawn}{''.join(parts)}</main></body></html>\n")
     out = folder / "review-visuals" / "index.html"
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(page, encoding="utf-8")

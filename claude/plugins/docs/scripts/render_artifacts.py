@@ -23,12 +23,15 @@ import html as _html
 import json
 import os
 import re
+import sys
 import unicodedata
 from datetime import date, datetime, timedelta, timezone
 from html.parser import HTMLParser
 
 SPEC = 'ARTIFACTSPEC 1.0.0'
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gen_badge as BADGE  # noqa: E402
 
 STATUSES = ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed', 'Dropped')
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')  # R6.6
@@ -182,19 +185,45 @@ def structure_css(plugin_dir: str = PLUGIN_DIR) -> str:
     return _read(os.path.join(plugin_dir, 'templates', 'project-artifact.css'))
 
 
+# DL239: a project's design file may change accents only. These tokens are the page, surface and ink colours;
+# the default wins for them, in light and dark. Size tokens are ignored too (the docs pages are scaled as a whole).
+NEUTRAL_TOKENS = ('--paper', '--surface', '--surface-2', '--ink', '--ink-muted', '--rule', '--rule-strong')
+_IGNORED_DECL_RE = re.compile(r'(?<![\w-])(?:%s|--font-size[\w-]*|--size[\w-]*)\s*:[^;}]*;?' % '|'.join(re.escape(t) for t in NEUTRAL_TOKENS))
+
+
+def ignored_tokens(css: str) -> list:
+    """The tokens a project design file sets that the plugin ignores (DL239), sorted and without repeats."""
+    found = {m.group(0).split(':')[0].strip() for m in _IGNORED_DECL_RE.finditer(_strip_comments(css))}
+    return sorted(found)
+
+
+def own_design_problems(manifest: dict, record_dir: str = '') -> list:
+    """R5.11 on the project's own design.css (DL239): the drawn block always holds every token, because the default
+    fills what the project leaves out, so a project file that lost a token is checked on its own."""
+    if manifest.get('design') != 'design.css':
+        return []
+    try:
+        return check_tokens(_read(os.path.join(record_dir, 'design.css')))
+    except OSError:
+        return []
+
+
 def design_css(manifest: dict, plugin_dir: str = PLUGIN_DIR, record_dir: str = '') -> str:
-    """The token block: the project's design.css when the manifest says so, else the plugin default (R5.10)."""
+    """The token block: the plugin default, plus the project's design.css accents when the manifest says so (R5.10, DL239)."""
     choice = manifest.get('design', 'default')
-    if choice == 'default':
-        path = os.path.join(plugin_dir, 'design', 'default-design.css')
-    elif choice == 'design.css':
-        path = os.path.join(record_dir, 'design.css')
-    else:
+    default_path = os.path.join(plugin_dir, 'design', 'default-design.css')
+    if choice not in ('default', 'design.css'):
         raise ContentError('manifest design is %r; it must be "default" or "design.css"' % (choice,))
     try:
-        return _read(path)
+        base = _read(default_path)
+        if choice == 'default':
+            return base
+        own = _read(os.path.join(record_dir, 'design.css'))
     except OSError as exc:
         raise ContentError('design file not readable: %s' % exc) from exc
+    kept = re.sub(r'^[ \t]*\n', '', _IGNORED_DECL_RE.sub('', own), flags=re.M)
+    base = re.sub(r'\A\s*/\*.*?\*/\s*', '', base, count=1, flags=re.S)   # the fonts link comes from the project file
+    return base.rstrip('\n') + '\n\n/* project design.css: accents only; page, surface and ink tokens are ignored */\n' + kept.lstrip('\n')
 
 
 def _template(plugin_dir: str, kind: str) -> str:
@@ -2014,7 +2043,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         problems += exc.problems if isinstance(exc, ContentError) else [str(exc)]
         design = structure = template = ''
     else:
-        problems += ['design: ' + p for p in check_tokens(design)]
+        problems += ['design: ' + p for p in check_tokens(design) + own_design_problems(manifest, record_dir)]
         for name, css in (('design', design), ('structure', structure)):
             if re.search(r'</style', css, re.I):
                 problems.append('%s stylesheet contains </style' % name)
@@ -2055,6 +2084,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'title': esc(title),
         'fonts_link': _fonts_link(design),
         'design_css': design,
+        'badge': BADGE.badge_html(BADGE.status(plugin_dir)),
         'structure_css': structure,
         'extra_css': meta['extra_css'],
         'kind_label': KIND_LABEL[kind],
@@ -2799,7 +2829,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if want_design is not None and have_design != want_design:
             add('R5.10', 'the token block differs from %s' % ('design.css in the record folder' if manifest.get('design') == 'design.css'
                                                              else 'design/default-design.css'))
-        for problem in check_tokens(have_design):
+        for problem in check_tokens(have_design) + own_design_problems(manifest, record_dir):
             add('R5.11', problem)
 
     # R4.11 extra_css
