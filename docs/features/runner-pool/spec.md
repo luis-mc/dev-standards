@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.6.0
+version: 0.6.1
 owner: agents
 type: reference
 code:
@@ -48,7 +48,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.1** (was delivery R13.60) — **One machine config** (D21, D22, G2). Every runner account on a machine reads one file: `machine.json` in the machine folder (`C:\ProgramData\luismc-delivery\` on Windows, `/etc/luismc-delivery/` elsewhere, `/machine` in the pool; `DELIVERY_MACHINE_DIR` overrides it for tests). It holds `load_limits`, `ci_slots` (2), `local_heavy` (2), `cloud_ci_sessions` (10), `slot_stale_min` (120), `runner_gate` and `runner_dirs`. Setup code writes it only through `machine_slots.write_machine_config`. `load.py` reads it first and the old `~/.claude/luismc-delivery-machine.json` only when the new file has no `load_limits`. A project's `.delivery/config.json` may lower a machine limit for its own work and never raises it. The doctor warns when the two files differ.
 
-**R5.2** (was delivery R13.61) — **CI slots and one queue** (D21, D30). The job-started hook `runner_load_gate` takes a ticket in `queue/`, waits until its ticket is first, a slot is free and the load is under the limits, then takes the slot by creating `slots/slot-N.lock` (create-new, so two hooks never take one slot) and removes its ticket. A ready pull request's run and a run on the default branch go first (read from `GITHUB_EVENT_PATH`); inside a group it is first come, first served. After `runner_gate.max_wait_min` (30) the job fails with a log line (or `on_timeout: run` lets it go without a slot). Without a machine folder the hook is the plain load gate of DL-79.
+**R5.2** (was delivery R13.61) — **CI slots and one queue** (D21, D30). The job-started hook `runner_load_gate` takes a ticket in `queue/`, waits until its ticket is first, a slot is free and the load is under the limits, then takes the slot by creating `slots/slot-N.lock` (create-new, so two hooks never take one slot) and removes its ticket. If its own ticket is missing from the queue, the hook logs `own ticket was gone; queued again` and writes it again with the same queue time. It never waits on an empty queue. A ready pull request's run and a run on the default branch go first (read from `GITHUB_EVENT_PATH`); inside a group it is first come, first served. After `runner_gate.max_wait_min` (30) the job fails with a log line (or `on_timeout: run` lets it go without a slot). Without a machine folder the hook is the plain load gate of DL-79.
 
 **R5.3** (was delivery R13.62) — **Free the slot** (D25). The job-completed hook `runner_job_done` (`ACTIONS_RUNNER_HOOK_JOB_COMPLETED`) frees the job's slot, writes the released line of the slot log and empties the job's work folder (only inside a `_work` folder). A slot whose holder process is gone (same host) is freed at once. Any slot older than `slot_stale_min` is freed. Each freed slot is logged with what held it. The slot log `slot-log.jsonl` has one JSON line per take and per free (repository, run, attempt, job, shard, queue time, slot time, release time, slot, runner, outcome `ran`, `claim-lost` or `stale-freed`) and keeps the last 5,000 lines. `delivery_ci.py slots` prints the holders, the queue and each wait.
 
@@ -90,7 +90,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 ### 5.3 Pool doctor checks and setup
 
-**R5.17** (was delivery R13.70) — **Doctor pool checks** (DL149). `pool.<name>.layer-windows-packaging`: with the layer on, `wine`, `xvfb-run` and `dotnet` exist in the pool image (a warning when Docker cannot be read). `pool.<name>.layers-config`: the project config and the pool `.env` agree. `pool.<name>.stray-dockerfile`: a Dockerfile under a `runners` or `runner` folder of the project is flagged, because the pool never uses it; the fix is `.delivery/pool.apt` or a layer. `pool.<name>.tool-cache`: `compose.yaml` mounts a named volume at `/ci-tools` and it is writable.
+**R5.17** (was delivery R13.70) — **Doctor pool checks** (DL149). `pool.<name>.layer-windows-packaging`: with the layer on, `wine`, `xvfb-run` and `dotnet` exist in the pool. When the pool container runs, each tool is probed with `docker exec` in it (DL199); only when none runs, with `docker run` on the image tag. A tool the probe ran and did not find is a fail. A docker error (exit 125, 126 or 127, or a timeout) is a warning, `cannot probe`, never a fail. A warning also shows when Docker cannot be read. `pool.<name>.layers-config`: the project config and the pool `.env` agree. `pool.<name>.stray-dockerfile`: a Dockerfile under a `runners` or `runner` folder of the project is flagged, because the pool never uses it; the fix is `.delivery/pool.apt` or a layer. `pool.<name>.tool-cache`: `compose.yaml` mounts a named volume at `/ci-tools` and it is writable.
 
 **R5.18** (was delivery R13.71) — **Setup asks about Windows installers** (DL149). `/delivery-ci-setup` asks whether the project builds Windows installers on Linux and suggests yes when the repository has `*.wxs` files. Yes adds `windows-packaging` to `pool.layers`. It also names `.delivery/pool.apt`.
 
@@ -137,6 +137,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.1 | 2026-11-11 | RELEASE-96 | The doctor's layer check probes tools with docker exec in the running pool container, and reports a docker error as a warning, not as a missing tool (R5.17).<br>The runner gate queues its own ticket again when it vanished from the queue, so it never waits on an empty queue. | DL199, DL200 |
 | 0.6.0 | 2026-11-11 | RELEASE-94 | The shared tool cache works for every agent user: shared-mode folders and a per-user fallback (R5.25). | DL194 |
 | 0.5.2 | 2026-11-11 | RELEASE-92 | The pool folder records the writing plugin version in pool-version.json; the pool code holds the shared agent-name, CI_RUNS_ON and image rules the doctor uses. Contract text is in the delivery feature spec. | DL184 |
 | 0.5.1 | 2026-11-10 | RELEASE-90 | R5.19: the image build clears the shell's command hash before checking that wine on PATH is the wrapper. | DL182 |

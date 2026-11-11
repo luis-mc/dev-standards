@@ -122,8 +122,11 @@ def main():
             errors.append(f"SKILL.md lacks {need}")
     for rule in (SKILL / "assets/.claude/rules/clarifying-questions.md",
                  ROOT / "claude/plugins/delivery/rules/clarifying-questions.md"):
-        if "questions_stop.py" not in rule.read_text():
-            errors.append(f"{rule.name} does not point Q-1/Q-2 at the hook")
+        # SO7: a rule tag names a rule ID, never the hook path; DELIVERYSPEC Q-1/Q-2 name the hook.
+        text = rule.read_text()
+        for tag in ("<!-- check: Q-1 -->", "<!-- check: Q-2 -->"):
+            if tag not in text:
+                errors.append(f"{rule.name} lacks the tag {tag}")
 
     for e in errors:
         print("FAIL:", e)

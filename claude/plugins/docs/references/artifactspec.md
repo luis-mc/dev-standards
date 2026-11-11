@@ -795,9 +795,14 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 - **R5.8a** — A tile's label names what it counts: `tasks <status in lower
   case>`. For example, `123` over `tasks live`; in the singular, `1` over
   `task running`. Verified by `tiles_say_tasks`.
-- **R5.9** — The full-progress artifact embeds the registry as
-  `<script type="application/json" id="task-registry">`, the only JSON
-  script it contains. The only other script allowed in any artifact is the
+- **R5.9** — The full-progress artifact embeds a window of the registry, not the
+  whole registry, as `<script type="application/json" id="task-registry">`, the
+  only JSON script it contains. The window holds every task whose status is not
+  `Live` or `Dropped`, and the `Live` and `Dropped` tasks whose `changed` is within
+  14 days of the page stamp (`EARLIER_DAYS`). It keeps every other top-level key of
+  the registry, adds `"omitted"` (how many tasks it left out) and `"full_registry"`
+  (the repository path of the whole `registry.json`), and is written without
+  indentation. The checker compares the embedded JSON with this window. The only other script allowed in any artifact is the
   template's own theme-toggle and contents script, byte-identical to the
   template.
 
@@ -1341,9 +1346,13 @@ double-click.
   An empty group is omitted. The full-progress artifact groups by release
   instead (R5.46); these groups still order the rows inside it.
 - **R6.3** — In the full-progress artifact, `Live` rows whose `changed` is more
-  than 14 days old fold into a closed `<details>` titled `Earlier`. `Built` rows
-  never fold, however old: unreleased work must not be hidden. Verified by
-  `earlier_fold_older_than_14_days` and `built_rows_never_fold`.
+  than 14 days old are not drawn. The `Live or built` group holds one line,
+  `<p class="earlier-note">`, in their place: `N earlier Live tasks (over 14 days
+  old) are not shown; the full list is in <path to registry.json>`. The group's
+  count says how many rows are shown and how many are earlier (`1 built, 8 live,
+  270 earlier`). There is no `Earlier` fold. A feature artifact has no such line.
+  `Built` rows never drop out, however old: unreleased work must not be hidden.
+  Verified by `earlier_fold_older_than_14_days` and `built_rows_never_fold`.
 
 ### 6.3 Columns
 
@@ -1410,7 +1419,7 @@ double-click.
   `span.fold-count`), followed by the group's `table.status-checklist`; there is
   no group heading row and no script. The group `built` (`Live or built`) is
   rendered closed, without the `open` attribute, every time; every other group
-  is rendered `open`. The `Earlier` fold of R6.3 stays closed and sits inside
+  is rendered `open`. The earlier-rows line of R6.3 sits inside
   the `built` group, after its table. A closed `Live or built` summary shows how
   many `Built` (unreleased) and `Live` rows it holds, so collapsing it does not
   hide unreleased work (R6.3). The structure stylesheet gives the summary a

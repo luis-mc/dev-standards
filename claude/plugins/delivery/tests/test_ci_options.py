@@ -128,13 +128,15 @@ class InstallTests(unittest.TestCase):
         cli(INS.main, "install", "--track", "go", "--root", root)
         script = os.path.join(root, "scripts/delivery/join.py")
         gate = os.path.join(root, "scripts/delivery/gate.json")
+        shutil.rmtree(os.path.join(root, ".delivery", "ci-install-base"))   # no base: kept with a .new
         open(script, "w").write("old\n")
         open(gate, "w").write("{}\n")
         code, out, _ = cli(INS.main, "update", "--track", "go", "--root", root)
         self.assertEqual(code, 0)
-        self.assertIn("overwritten scripts/delivery/join.py", out)
+        self.assertIn("kept (project changes) scripts/delivery/join.py", out)   # DL201
         self.assertIn("differs     scripts/delivery/gate.json", out)
-        self.assertNotEqual(open(script).read(), "old\n")
+        self.assertEqual(open(script).read(), "old\n")
+        self.assertTrue(os.path.exists(script + ".new"))
         self.assertEqual(open(gate).read(), "{}\n")
 
     def test_dry_run_writes_nothing_and_bad_track_is_1(self):

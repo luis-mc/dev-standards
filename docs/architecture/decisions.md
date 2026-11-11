@@ -45,6 +45,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | artifacts | D22 | B10: --expected "DD Mon HH:MM" without ~ is refused (R6.6). What should happen? | Accept, store with ~ | decided | 2026-11-07 |
 | artifacts | D23 | B12: task-add needs --expected even for a To do task with no schedule. What should change? | To do may omit Expected | decided | 2026-11-07 |
 | artifacts | D24 | AR60: when the stop state write still fails after its retries, what should the hook do? | Warn and go on | decided | 2026-11-07 |
+| artifacts | D25 | Full Progress size (1.84 MB, slow on phones): slim the embedded registry? | Build it (Recommended) | decided | 2026-11-11 |
+| artifacts | D26 | Full Progress size: stop rendering Live rows older than 14 days? | Build it (Recommended) | decided | 2026-11-11 |
+| artifacts | D27 | Full Progress size: drop the per-cell data-label attribute? | Build it (Recommended) | decided | 2026-11-11 |
+| artifacts | D28 | Full Progress size: load one web font family instead of three? | Skip | decided | 2026-11-11 |
+| artifacts | D29 | How should Live rows older than 14 days appear on Full Progress? | Count only (Recommended) | decided | 2026-11-11 |
 | artifacts | D3 | How do changes made outside a session reach the artifacts? | Next session start | decided | 2026-10-10 |
 | artifacts | D4 | What look do artifacts get? | Each project’s own design, else a default | decided | 2026-10-10 |
 | artifacts | D5 | An App / service column on the full-progress artifact? | Yes, full-progress only | decided | 2026-10-10 |
@@ -170,6 +175,13 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D199 | Send the morning summary to the project sessions too? | Yes, short notes (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
 | delivery-speed | D20 | How does a finished cloud agent row become done in the ledger? | Both | decided | 2026-11-02 |
+| delivery-speed | D200 | Ship RELEASE-96 and RELEASE-97 separately or together? | Merge 96 and 97 | decided | 2026-11-11 |
+| delivery-speed | D201 | DL201: what should delivery_ci_install.py update do with an installed file the project changed? | Keep and report (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D202 | RELEASE-96 with six tasks: ship the ready ones or wait for all? | Wait for all six | decided | 2026-11-11 |
+| delivery-speed | D203 | Pool memory after the 98% spike at 08:30? | Investigate first (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D204 | Switch the pool to the 01:58 image? | Switch now | decided | 2026-11-11 |
+| delivery-speed | D205 | Old failed ledger row DS218 leftover cleanup? | Look, then close (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D206 | DL201 again: installer update meets a project-changed plugin file? | 3-way merge, ask on conflict | decided | 2026-11-11 |
 | delivery-speed | D21 | Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)? | 2 slots | decided | 2026-11-04 |
 | delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
