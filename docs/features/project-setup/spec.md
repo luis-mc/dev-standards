@@ -90,6 +90,8 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 
 **R5.14** — The `questions_stop.py` hook counts an agent as running when its state is queued or running, or when it has an `eta`, no `done_at` and a state that is not done, empty, failed or stopped. When the parked-question check finds a running agent due within 60 minutes, the hook allows the stop and prints `Questions wait for the report of agent <task> (due within 60 minutes); do not ask now.` Plain-text questions (Q-2) still block. A missing or bad ledger adds no agents and the check carries on. (DL124)
 
+The hook reads only the current turn from the end of the transcript, in 1 MiB blocks. A turn larger than 32 MiB is not read and the stop is allowed. The delivery `hook_stop.py` reads the transcript the same way. (DL208)
+
 **R5.15** — Both copies of `clarifying-questions.md` carry one rule line, in the same words: the hook can see an open question, and a `RemoteTrigger` `create` or `update` due in under 2 hours then draws a warning, never a block. (DL136)
 
 **R5.16** — The pre-push hook exits 1 with `pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here.` when `package.json` and `pnpm-lock.yaml` exist, `scripts/delivery/gate.json` has a command that starts with `pnpm `, and `node_modules` does not exist. The check runs after the `scripts/delivery` check and before the Python and guard steps. (DL130)
