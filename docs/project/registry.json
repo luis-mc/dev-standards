@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:07+00:00",
+  "updated": "2026-11-11T00:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3380,11 +3380,11 @@
       "id": "DL183",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "rerun_first: PR stays pending until run 2 ends",
       "detail": "DL181 follow-up: with rerun_first on, held jobs read as skipped in run 1, so a PR looks green until the dispatched run 2 ends. Add a pending commit status set by run 1 and cleared by run 2, and make ci_watch wait for the dispatched run. Also: rust/go/dotnet templates, CONTRACT.md row.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T00:06+00:00",
+      "changed": "2026-11-11T00:12+00:00",
       "rides": "DS227",
       "started": "2026-11-10T23:55+00:00"
     },
@@ -3392,13 +3392,26 @@
       "id": "DL184",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool setup, apply and doctor agree (image, template, runner names, labels)",
       "detail": "Owner ask via a peer session: right after pool-run + apply, the doctor reported 4 false findings: stale image ID for the layer check, template drift, runner 'main' missing (pool agents are main-<repo>), CI_RUNS_ON pool-main label 'wrong'. One source of truth; doctor clean right after setup.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T00:02+00:00",
+      "changed": "2026-11-11T00:12+00:00",
       "rides": "DS227",
       "started": "2026-11-10T23:52+00:00"
+    },
+    {
+      "id": "DL185",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Refresh the main pool to luismc-delivery 1.25.0",
+      "detail": "D196: pool-refresh once no CI job runs; writes the 1.25.0 Dockerfile (drops the duplicated comment) and pool-version.json, rebuilds the image.",
+      "expected": "11 Nov ~00:45",
+      "changed": "2026-11-11T00:12+00:00",
+      "expected_basis": "waits for the running pool job, then ~5 min rebuild",
+      "no_release": "pool maintenance, ships nothing",
+      "started": "2026-11-11T00:12+00:00"
     },
     {
       "id": "DS1",
@@ -6990,12 +7003,11 @@
       "id": "DS227",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-92: DL184 pool setup, apply and doctor agree",
       "detail": "Join DL184, CI, merge, plugin update.",
-      "expected": "11 Nov ~00:16",
-      "changed": "2026-11-11T00:07+00:00",
-      "expected_basis": "PR #193 CI started 00:07, ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:12+00:00",
       "release": 92,
       "phases": [
         {
