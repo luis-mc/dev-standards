@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T15:41+00:00",
+  "updated": "2026-11-11T16:44+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3956,13 +3956,59 @@
       "id": "DL221",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Refresh the shared CI pool with the corepack shims (DL220)",
       "detail": "Rebuild pool main from delivery 1.29.0 when no job runs, memory <70% and CPU <30%. Check the pnpm shim, then rerun a peer's failed ts CI run.",
-      "expected": "11 Nov ~16:00",
-      "changed": "2026-11-11T15:41+00:00",
-      "expected_basis": "comics-organizer job from 15:28 (Rust ~25 min) + rebuild ~5 min",
-      "no_release": "operations on the local pool"
+      "expected": "11 Nov",
+      "changed": "2026-11-11T16:44+00:00",
+      "no_release": "operations on the local pool",
+      "started": "2026-11-11T16:29+00:00"
+    },
+    {
+      "id": "DL222",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE: pool image build fix (Node on PATH before corepack enable)",
+      "detail": "Branch DL223, fold, CI, merge on green, plugin updates, then the pool refresh.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T16:40+00:00",
+      "release": 103,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T16:35+00:00",
+          "end": "2026-11-11T16:43+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T16:43+00:00",
+          "end": "2026-11-11T16:45+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T16:45+00:00",
+          "end": "2026-11-11T16:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T16:50+00:00",
+          "end": "2026-11-11T16:55+00:00"
+        }
+      ],
+      "started": "2026-11-11T16:31+00:00"
+    },
+    {
+      "id": "DL223",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Pool image sets PATH to /opt/node/bin before corepack enable",
+      "detail": "1.29.0 pool build fails with exit 127: corepack's #!/usr/bin/env node shebang finds no node because ENV PATH comes after the RUN that calls corepack enable. Move ENV PATH above that RUN; test pins the order.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T16:40+00:00",
+      "rides": "DL222",
+      "started": "2026-11-11T16:31+00:00"
     },
     {
       "id": "DS1",
