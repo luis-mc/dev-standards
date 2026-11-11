@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T09:26+00:00",
+  "updated": "2026-11-11T09:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3583,12 +3583,11 @@
       "id": "DL199",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Doctor layer check probes the running container, not its image ID",
       "detail": "After a Docker restart the running container's image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.",
-      "expected": "11 Nov ~09:40",
-      "changed": "2026-11-11T09:12+00:00",
-      "expected_basis": "cloud agent ~25 min from 09:14",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:27+00:00",
       "rides": "DS231",
       "started": "2026-11-11T09:12+00:00"
     },
