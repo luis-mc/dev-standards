@@ -2188,8 +2188,10 @@ def sc_join_clean(t: T, shared: Path) -> None:
     t.eq("... and nothing is pushed", box.g("rev-parse", "origin/integ"), before)
 
     # preconditions
-    r = join(box, "--into", "no-such-integration", "feat/a")
-    t.eq("unknown integration branch: exit 2", r.code, 2)
+    # DL225: a wholly new integration branch is created; one that is only local still needs --create
+    box.g("branch", "local-only-integration", "origin/feat/a")
+    r = join(box, "--into", "local-only-integration", "feat/a")
+    t.eq("local-only integration branch: exit 2", r.code, 2)
     box.write("docs/dirty.txt", "d\n")
     r = join(box, "--into", "integ", "feat/a")
     t.eq("dirty working tree: exit 2", r.code, 2)
