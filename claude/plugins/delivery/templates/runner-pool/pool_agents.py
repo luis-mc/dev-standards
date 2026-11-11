@@ -19,6 +19,7 @@ import subprocess
 import sys
 
 SLUG = re.compile(r'^[a-z0-9][a-z0-9-]{0,30}$')
+ROLE = re.compile(r'^[a-z][a-z0-9_]{0,62}$')
 REPO = re.compile(r'^[^/\s]+/[^/\s]+$')
 RUNNER_SRC = '/opt/runner'  # pristine copy, read-only; each agent gets its own copy
 HOOK_STARTED = '/opt/delivery/hooks/job-started.sh'
@@ -110,7 +111,44 @@ def sh(argv, **kw):
     return subprocess.run(argv, capture_output=True, text=True, **kw)
 
 
-def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base='/agents', run=sh, createdb=False):
+def check_db_roles(slug, roles, agents):
+    """DL231: names of the NOLOGIN roles a repository declares. Roles are server-wide, so a name must be
+    free of every pool login user, every database login, and every role another repository declares."""
+    out = []
+    for r in roles:
+        if not isinstance(r, str) or not ROLE.match(r):
+            raise PoolError('bad db role %r (lowercase letters, digits, underscore, 63 characters at most)' % (r,))
+        if r in ('postgres', 'public') or r.startswith('pg_'):
+            raise PoolError('db role %r is reserved' % r)
+        if r not in out:
+            out.append(r)
+    for a in agents:
+        other = a.get('slug')
+        if other == slug:
+            continue
+        for r in out:
+            if r == 'u_%s' % other.replace('-', '_') or r == 'db_%s' % other.replace('-', '_'):
+                raise PoolError('db role %r of %s collides with the login or database of %s' % (r, slug, other))
+            if r in (a.get('db_roles') or []):
+                raise PoolError('db role %r is declared by both %s and %s' % (r, slug, other))
+    mine = 'u_%s' % slug.replace('-', '_')
+    if mine in out or 'db_%s' % slug.replace('-', '_') in out:
+        raise PoolError('db role collides with the login or database of %s' % slug)
+    return out
+
+
+def role_sql(login, roles):
+    """Admin SQL, safe to run again: make each declared NOLOGIN role if missing, then let the login use it.
+    WITH ADMIN OPTION lets the project user GRANT on its own objects to the role and, with the PG16 default
+    SET TRUE, SET ROLE to it. The names were validated, so they need no quoting."""
+    sql = ''
+    for r in roles:
+        sql += ("DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '%s') THEN "
+                "CREATE ROLE %s NOLOGIN; END IF; END $$;\nGRANT %s TO %s WITH ADMIN OPTION;\n" % (r, r, r, login))
+    return sql
+
+
+def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base='/agents', run=sh, createdb=False, db_roles=()):
     if not SLUG.match(slug):
         raise PoolError('bad slug %r (lowercase letters, digits, dash)' % slug)
     if not REPO.match(repo):
@@ -119,6 +157,7 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         raise PoolError('refused: %s is not asserted private. A self-hosted runner for a public repository is not allowed.' % repo)
     user, folder = 'r-%s' % slug, os.path.join(base, slug)
     data = load(agents_file)
+    db_roles = check_db_roles(slug, db_roles, data['agents'])
     have = [a for a in data['agents'] if a.get('slug') == slug]
     if have:
         folder_have = os.path.join(base, slug)
@@ -128,7 +167,11 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         # isolation, and the login keeps its password so running jobs are not cut off. The flag only widens.
         widen = createdb and not have[0].get('createdb')
         ensure_agent_tmp(folder_have, have[0].get('user', user), run)
-        create_db(slug, folder_have, have[0].get('user', user), run, createdb or bool(have[0].get('createdb')))
+        roles = check_db_roles(slug, list(have[0].get('db_roles') or []) + db_roles, data['agents'])
+        create_db(slug, folder_have, have[0].get('user', user), run, createdb or bool(have[0].get('createdb')), roles)
+        if roles != (have[0].get('db_roles') or []):
+            have[0]['db_roles'] = roles
+            save(agents_file, data)
         if widen:
             have[0]['createdb'] = True
             save(agents_file, data)
@@ -153,10 +196,12 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         f.write('ACTIONS_RUNNER_HOOK_JOB_STARTED=%s\nACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s\nDELIVERY_MACHINE_DIR=/machine\n'
                 % (HOOK_STARTED, HOOK_DONE))
     ensure_agent_tmp(folder, user, run)
-    create_db(slug, folder, user, run, createdb)
+    create_db(slug, folder, user, run, createdb, db_roles)
     entry = {'slug': slug, 'user': user, 'repo': repo, 'private': True, 'labels': labels}
     if createdb:
         entry['createdb'] = True
+    if db_roles:
+        entry['db_roles'] = db_roles
     data['agents'].append(entry)
     save(agents_file, data)
     return 'added: %s (%s) as %s' % (slug, repo, user)
@@ -195,7 +240,7 @@ def new_db_login(slug):
     return 'db_%s' % slug.replace('-', '_'), 'u_%s' % slug.replace('-', '_'), secrets.token_urlsafe(24)
 
 
-def create_db(slug, folder, user, run, createdb=False):
+def create_db(slug, folder, user, run, createdb=False, db_roles=()):
     """One database and one login for this repository on the shared sidecar (D40). The password goes only to a 0600 file."""
     db, login, password = new_db_login(slug)
     password = _kept_password(os.path.join(folder, 'db.env'), login) or password
@@ -206,14 +251,16 @@ def create_db(slug, folder, user, run, createdb=False):
     # Each skips what exists; a role that exists gets the new password, so db.env stays right on a rerun.
     # CREATEDB is an owner opt-in (D104). Without it a rerun leaves an existing CREATEDB alone.
     alter_opt, create_opt = ('LOGIN CREATEDB', 'LOGIN CREATEDB') if createdb else ('LOGIN', 'LOGIN')
-    role_sql = ("DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '%s') THEN "
+    login_sql = ("DO $$ BEGIN IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '%s') THEN "
                 "ALTER ROLE %s %s PASSWORD '%s'; ELSE CREATE ROLE %s %s PASSWORD '%s'; END IF; END $$;"
                 % (login, login, alter_opt, password, login, create_opt, password))
     db_sql = ("SELECT 'CREATE DATABASE %s OWNER %s' WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = '%s')\\gexec\n"
               % (db, login, db))
     # Only this login may connect to this database (idempotent).
     db_sql += 'REVOKE CONNECT ON DATABASE %s FROM PUBLIC;\nGRANT CONNECT ON DATABASE %s TO %s;\n' % (db, db, login)
-    for what, sql in (('login', role_sql), ('database', db_sql)):
+    for what, sql in (('login', login_sql), ('declared roles', role_sql(login, db_roles)), ('database', db_sql)):
+        if not sql:
+            continue
         r = run(psql, env=env, input=sql)
         if r.returncode != 0:
             raise PoolError('database setup (%s) failed: %s' % (what, redact((r.stderr or '').strip(), password)))
@@ -255,6 +302,7 @@ def main(argv=None, stdin=None):
     if not removing:
         ap.add_argument('repo')
         ap.add_argument('--private', action='store_true', help='assert the repository is private')
+        ap.add_argument('--db-role', action='append', default=[], help='a NOLOGIN role the pool creates for this repository (repeatable)')
         ap.add_argument('--db-createdb', action='store_true', help='give the database login CREATEDB (owner decision)')
     else:
         ap.add_argument('--delete-files', action='store_true')
@@ -268,7 +316,7 @@ def main(argv=None, stdin=None):
         if removing:
             print(remove_agent(args.slug, token, args.agents, args.base, delete_files=args.delete_files))
         else:
-            print(add_agent(args.slug, args.repo, token, args.pool, args.private, args.agents, args.base, createdb=args.db_createdb))
+            print(add_agent(args.slug, args.repo, token, args.pool, args.private, args.agents, args.base, createdb=args.db_createdb, db_roles=args.db_role))
     except PoolError as exc:
         print('pool: %s' % redact(str(exc), token), file=sys.stderr)
         return 1
