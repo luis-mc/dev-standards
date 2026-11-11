@@ -198,6 +198,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.58** — Join conflicts and held runs (DL249). (a) The conflict line `join: B conflicts with X in:` always lists the conflicting files, the same list the `skipped` line uses; a list that is truly unknown prints `(files unknown)`. (b) A conflict only in files `docs_index.py build` generates (`docs/index.html`, `docs/llms.txt`, `docs/features/index.md`, `docs/architecture/decisions.md`, `docs/docs-map.json`, `docs/_site/**`, `docs/reference/**`) takes the integration version, runs the docs index build, commits and goes on, and prints `join: B conflicts only in generated docs (...); took X's version and rebuilt them with docs index build`. A conflict that also touches another file stays a normal conflict. (c) The watcher records a run it holds (R5.8) with `state: held`, prints `delivery_watch: HELD run <id> on <branch> ... not a failure`, and prints a line when it re-runs it. No code in this plugin writes `CI_RUNS_ON` as anything but JSON.
 
+**R5.59** — Held runs in the agent brief (DL258). The brief template says a cancelled or `held` branch run while a release PR's CI runs is not a failure. The agent checks `gh run view <id> --json conclusion` and the run list for a re-run, waits about 10 minutes and dispatches once more if none appeared, and after two held or cancelled runs writes READY when every local test passed and says in the report that CI was held. A docs check W1 on docs/work is expected on a branch and is never a reason for NOT READY. `test_brief_template.py` pins the phrases.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
