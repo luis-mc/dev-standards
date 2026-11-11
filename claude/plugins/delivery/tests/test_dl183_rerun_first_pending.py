@@ -67,7 +67,7 @@ class WorkflowText(unittest.TestCase):
 
     def test_job_graph_has_no_new_job(self):
         jobs = set(re.findall(r"^  ([a-z][a-z0-9-]*):\n", TEXT.split("\njobs:\n")[1], re.M))
-        self.assertEqual(jobs, {"decide", "plan", "verify", "integration", "e2e-shard", "e2e"})
+        self.assertEqual(jobs, {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e"})  # DL190
 
     def test_status_step_runs_only_for_rerun_first(self):
         cond = re.search(r"if: (.*)", step()).group(1)

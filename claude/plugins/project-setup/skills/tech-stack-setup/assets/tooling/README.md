@@ -18,7 +18,6 @@ track's jobs.
 ```
 tooling/
 ├── shared/     copied for every product, whatever the track
-│   ├── .gitleaks.toml
 │   ├── .githooks/          pre-commit, pre-push, commit-msg
 │   └── .gitattributes
 ├── ts/         TypeScript / Node
@@ -27,9 +26,9 @@ tooling/
 └── dotnet/     .NET
 ```
 
-`shared/` is separate because gitleaks does not care what language the secret
-was committed in. Duplicating it four times would mean four places to add an
-allowlist entry and three of them going stale.
+`shared/` is separate because the hooks do not care what language the code is in.
+The gitleaks config is not here: `.gitleaks.toml` lives once in `luismc-delivery`
+(`templates/shared/.gitleaks.toml`) and `delivery_ci_install.py` writes it (DL186).
 
 ## The twelve gates, per track
 

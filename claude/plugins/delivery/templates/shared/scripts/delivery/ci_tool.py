@@ -198,9 +198,9 @@ def gitleaks(plat: str) -> Path:
     return binary
 
 
-def _pin(name: str, plat: str) -> tuple[dict, dict]:
+def _pin(name: str, plat: str, pin_path=None) -> tuple[dict, dict]:
     """Return (tool pin, platform entry) from tools.json, or raise ToolError."""
-    pin_file = Path(os.environ.get("CI_TOOLS_JSON") or Path(__file__).resolve().parent / "tools.json")
+    pin_file = Path(pin_path or os.environ.get("CI_TOOLS_JSON") or Path(__file__).resolve().parent / "tools.json")
     try:
         data = json.loads(pin_file.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
@@ -278,8 +278,10 @@ def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
     archive = fetch(entry["url"], entry["sha256"], f"{name}/{version}/{fname}")
     base = archive.parent
     if kind == "file":
-        out = base / f"{plat}-{_exe(entry.get('bin') or name, plat)}"
+        # Keep the exact file name: some tools (rustup-init) read argv[0].
+        out = base / plat / _exe(entry.get("bin") or name, plat)
         if not out.is_file():
+            out.parent.mkdir(parents=True, exist_ok=True)
             tmp = out.with_name(f"{out.name}.{os.getpid()}.partial")
             try:
                 shutil.copyfile(archive, tmp)
@@ -329,6 +331,26 @@ def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
         bin_dir = root / "root" / "bin" if (root / "root").is_dir() else root / "bin"
         return bin_dir, bin_dir / _exe(entry.get("bin") or name, plat), entry
     raise ToolError(f"{name} has unknown kind {kind!r}")
+
+
+def cached_tool(name: str, plat: str, exe: str | None = None, pin_path=None) -> Path | None:
+    """Where `tool` puts a tool's file, if it is already in the cache. Downloads nothing. None when it is not there (DL188)."""
+    try:
+        tool_pin, entry = _pin(name, plat, pin_path)
+    except ToolError:
+        return None
+    base = cache_dir() / name / str(tool_pin["version"])
+    kind = entry.get("kind") or tool_pin.get("kind") or "archive"
+    if kind == "file":
+        path = base / f"{plat}-{_exe(entry.get('bin') or name, plat)}"
+    elif kind in ("archive", "wheel"):
+        bin_dir = base / f"unpacked-{plat}" / entry.get("bin_dir", ".")
+        path = bin_dir / _exe(exe or Path(entry.get("bin") or name).name, plat)
+    else:
+        root = base / f"root-{plat}"
+        bin_dir = root / "root" / "bin" if (root / "root").is_dir() else root / "bin"
+        path = bin_dir / _exe(exe or entry.get("bin") or name, plat)
+    return path if path.exists() else None
 
 
 def tool(name: str, plat: str, exe: str | None = None) -> Path:

@@ -192,11 +192,13 @@ jobs:
   # sqlx additionally needs a live schema at COMPILE time for its query macros,
   # so this job builds as well as runs — the compile itself is part of the check.
   # ---------------------------------------------------------------------------
+  # DL190: a hosted runner has Docker, so this twin has the postgres service. The pool twin
+  # `integration-pool` has the same check name and runs instead on a pool runner; one of them is skipped.
   integration:
     name: integration tests (ephemeral database)
     needs: decide
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !contains(vars.CI_RUNS_ON || '', 'pool-') }}
     runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     services:
       postgres:
@@ -239,15 +241,124 @@ jobs:
       # §5.4: migrations applied in order by a dedicated runner. This must run
       # before any sqlx compile step, because the macros check against the live
       # schema — an unmigrated database fails the build with a confusing error.
+      # DL187: driven from the project, not hard-coded. A fresh workspace keeps its
+      # migrations in apps/<svc>/migrations (embedded with sqlx::migrate!) and has no
+      # root folder, so this finds every `migrations` folder (root, apps/*, crates/*)
+      # and runs each one. With none, it does nothing.
       - name: Migrate (seed through the migration chain)
         run: |
+          dirs=$(for d in migrations apps/*/migrations crates/*/migrations; do [ -d "$d" ] && echo "$d"; done)
+          if [ -z "$dirs" ]; then
+            echo "No migrations folder; nothing to migrate."
+            exit 0
+          fi
           cargo install --locked sqlx-cli --no-default-features --features postgres
-          sqlx migrate run
+          for d in $dirs; do
+            echo "Migrating from $d"
+            sqlx migrate run --source "$d"
+          done
+
+      # DL187: named test targets run only when the workspace has them (cargo metadata).
+      - name: Find the integration test targets
+        id: targets
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, subprocess
+          meta = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"]))
+          names = {t["name"] for p in meta["packages"] for t in p["targets"] if "test" in t["kind"]}
+          for n in ("integration", "route_coverage"):
+              print("%s=%s" % (n, "true" if n in names else "false"))
+          PY
 
       - name: Integration tests
+        if: ${{ steps.targets.outputs.integration == 'true' }}
         run: cargo test --locked --test integration
 
       # §11.1: route coverage — authorization declarations AND rate-limit
       # buckets (§4.6). Needs the registered routes, so it runs here.
       - name: Route coverage (authorization + rate limits)
+        if: ${{ steps.targets.outputs.route_coverage == 'true' }}
+        run: cargo test --locked --test route_coverage
+
+  # DL190: the pool twin of `integration`. GitHub needs Docker for any job with a `services:` block, even
+  # an empty image, so this job has none. Same `name:` as the hosted twin; exactly one of the two runs.
+  integration-pool:
+    name: integration tests (ephemeral database)
+    needs: decide
+    # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && contains(vars.CI_RUNS_ON || '', 'pool-') }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    env:
+      DELIVERY_SHARD: integration-pool
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # DL187/DL190: load this agent's own database (DATABASE_URL and friends) into $GITHUB_ENV.
+      - name: Load the pool database env
+        run: |
+          if command -v pool-db-env >/dev/null 2>&1; then
+            pool-db-env
+          elif [ -f "$HOME/db.env" ]; then
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' "$HOME/db.env" >> "$GITHUB_ENV"
+          else
+            echo "::error::pool runner without pool-db-env or $HOME/db.env; the pool database is missing"
+            exit 1
+          fi
+      # D141: the exact channel from rust-toolchain.toml, installed with the
+      # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
+      - name: Install the pinned Rust toolchain
+        run: |
+          python3 scripts/delivery/rust_ci.py toolchain
+          echo "$HOME/.cargo/bin" >> "$GITHUB_PATH"
+          python3 scripts/delivery/ci_tool.py tool cargo-deny --dir >> "$GITHUB_PATH"
+
+      # D140: pinned linker environment for every later step.
+      - name: Apply the linker environment
+        run: |
+          python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
+
+      # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
+      # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
+      - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
+        if: ${{ runner.environment == 'github-hosted' }}
+
+      # §5.4: migrations applied in order by a dedicated runner. This must run
+      # before any sqlx compile step, because the macros check against the live
+      # schema — an unmigrated database fails the build with a confusing error.
+      # DL187: driven from the project, not hard-coded. A fresh workspace keeps its
+      # migrations in apps/<svc>/migrations (embedded with sqlx::migrate!) and has no
+      # root folder, so this finds every `migrations` folder (root, apps/*, crates/*)
+      # and runs each one. With none, it does nothing.
+      - name: Migrate (seed through the migration chain)
+        run: |
+          dirs=$(for d in migrations apps/*/migrations crates/*/migrations; do [ -d "$d" ] && echo "$d"; done)
+          if [ -z "$dirs" ]; then
+            echo "No migrations folder; nothing to migrate."
+            exit 0
+          fi
+          cargo install --locked sqlx-cli --no-default-features --features postgres
+          for d in $dirs; do
+            echo "Migrating from $d"
+            sqlx migrate run --source "$d"
+          done
+
+      # DL187: named test targets run only when the workspace has them (cargo metadata).
+      - name: Find the integration test targets
+        id: targets
+        run: |
+          python3 - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, subprocess
+          meta = json.loads(subprocess.check_output(["cargo", "metadata", "--no-deps", "--format-version", "1", "--locked"]))
+          names = {t["name"] for p in meta["packages"] for t in p["targets"] if "test" in t["kind"]}
+          for n in ("integration", "route_coverage"):
+              print("%s=%s" % (n, "true" if n in names else "false"))
+          PY
+
+      - name: Integration tests
+        if: ${{ steps.targets.outputs.integration == 'true' }}
+        run: cargo test --locked --test integration
+
+      # §11.1: route coverage — authorization declarations AND rate-limit
+      # buckets (§4.6). Needs the registered routes, so it runs here.
+      - name: Route coverage (authorization + rate limits)
+        if: ${{ steps.targets.outputs.route_coverage == 'true' }}
         run: cargo test --locked --test route_coverage

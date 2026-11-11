@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.10.0
+version: 0.11.0
 owner: agents
 type: reference
 code:
@@ -64,7 +64,7 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 
 **R5.1** — `tech-stack-setup` offers only technologies compatible with the choices already made, and `check_stack.py --selection` verifies a selection against the catalog.
 
-**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows. They live in `luismc-delivery` (`templates/`), and `tech-stack-setup` calls the delivery installer at the end of its setup (see [delivery](../delivery/spec.md), R13.3).
+**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows. They live in `luismc-delivery` (`templates/`), and `tech-stack-setup` calls the delivery installer at the end of its setup (see [delivery](../delivery/spec.md), R13.3). That includes `.gitleaks.toml`, which the CI secret scan reads: the installer writes it when the project has none, and `tech-stack-setup` keeps no copy of it (DL186).
 
 **R5.3** — `tech-stack-setup` writes a Stack Profile that records the STACKSPEC version claimed and the vendor choices. It does not copy either spec into the project.
 
@@ -199,6 +199,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.0 | 2026-11-11 | RELEASE-93 | The delivery installer writes .gitleaks.toml when the project has none (one source, in luismc-delivery), and the shared secret rules skip type annotations, struct fields and empty values. | DL186 |
 | 0.10.0 | 2026-11-10 | RELEASE-86 | claude-setup enables six plugins and removes the keys of the two merged ones; its CI template names the luismc-docs spec-check script. | DS219 |
 | 0.9.0 | 2026-11-10 | RELEASE-84 | The delivery installer writes the pre-push and commit-msg hooks, .delivery/config.json and the session_guard settings entry; project-setup only calls it. | DL172 |
 | 0.8.0 | 2026-11-09 | RELEASE-71 | Stop hook counts agents with an ETA and no agent-done; says questions wait when one is due within 60 minutes. Clarifying-questions rule: a routine held for an owner answer is paused, never postponed by minutes.<br>DS196: Rust as a component role beside any API language; parts cli, host-service, library-napi, library-wasm; check_stack.py warnings. Spec text follows in DS203.<br>tech-stack-setup wizard text: machine-side question, native_components binding with written reason, napi build matrix, cross-compile licence and Windows build option, Rust workspace layout, Rust audit wording.<br>Adds R5.14 to R5.22: stop hook ETA parking, pre-push fixes, Rust as a component in the catalog, the wizard and the tooling assets. | DL124, DS196, DS197, DS203 |
