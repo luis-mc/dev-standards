@@ -308,6 +308,65 @@ def merge3(base: str, project: str, template: str):
     return "".join(out), conflicts
 
 
+PRUNE_LINE_RE = re.compile(r"^(?P<indent>[ \t]*)workflows:[ \t]*\[(?P<body>[^\]\r\n]*)\][ \t]*(?:#[^\r\n]*)?(?=\r?$)", re.MULTILINE)
+PRUNE_PLAN = {}
+
+
+def prune_names(text):
+    """DL255: the names of the one-line `workflows: [...]` list in `text`, or None."""
+    m = PRUNE_LINE_RE.search(text or "")
+    if not m:
+        return None
+    try:
+        names = json.loads("[" + m.group("body") + "]")
+    except ValueError:
+        return None
+    return names if all(isinstance(n, str) for n in names) else None
+
+
+def prune_set(text, names):
+    """DL255: `text` with its list line set to `names` (text unchanged without such a line)."""
+    line = json.dumps(names)
+    return PRUNE_LINE_RE.sub(lambda m: "%sworkflows: %s" % (m.group("indent"), line), text, count=1)
+
+
+def prune_rule(proj, base, tpl):
+    """DL255: the project's list wins; names the template added since the base are appended once; names the
+    project removed stay removed. Returns (names, added) or None when the project file has no list."""
+    p = prune_names(proj)
+    if p is None:
+        return None
+    b, t = prune_names(base), prune_names(tpl) or []
+    added = [n for n in t if b is not None and n not in b and n not in p]
+    return p + added, added
+
+
+def plan_prune_list(items: list, root: str) -> None:
+    """DL255: before `update` writes anything, work out the list the prune workflow must end with."""
+    PRUNE_PLAN.clear()
+    for rel, src, action in items:
+        if rel != PRUNE_WORKFLOW or action not in ("overwritten", CHANGED):
+            continue
+        dst = os.path.join(root, rel.replace("/", os.sep))
+        bp = base_path(root, rel)
+        proj, _c = _text(dst)
+        tpl, _c = _text(src)
+        base = _text(bp)[0] if os.path.exists(bp) else None
+        if proj is None or tpl is None:
+            continue
+        res = prune_rule(proj, base, tpl)
+        if res:
+            PRUNE_PLAN[rel] = (res[0], res[1], prune_names(proj))
+
+
+def report_prune_list() -> None:
+    plan = PRUNE_PLAN.get(PRUNE_WORKFLOW)
+    if plan:
+        names, added, old = plan
+        print("artifact-prune list: kept %d project name(s)%s" % (
+            len(old or []), ", added from template: " + ", ".join(added) if added else ", nothing added"))
+
+
 def merge_changed(items: list, root: str) -> list:
     """Turn each CHANGED item that has a stored base into merged or conflict (DL201). Does not write the project file."""
     MERGES.clear()
@@ -320,7 +379,15 @@ def merge_changed(items: list, root: str) -> list:
             proj, crlf = _text(dst)
             tpl, _c = _text(src)
             if None not in (base, proj, tpl):
-                text, n = merge3(base, proj, tpl)
+                plan = PRUNE_PLAN.get(rel)
+                if plan:
+                    # DL255: merge everything but the list line, then set the list by the project's rule.
+                    p_line = PRUNE_LINE_RE.search(proj).group(0)
+                    flat = lambda x: PRUNE_LINE_RE.sub(lambda m: p_line, x, count=1)
+                    text, n = merge3(flat(base), proj, flat(tpl))
+                    text = prune_set(text, plan[0])
+                else:
+                    text, n = merge3(base, proj, tpl)
                 if not n and text == proj and proj != tpl:
                     # DL236: nothing of the template reached the file (the base is the template, as after a
                     # base-less step-1 run). It is not a merge: keep it, write the template as <file>.new.
@@ -916,6 +983,12 @@ def apply(items: list, root: str) -> None:
         if action == CHANGED:
             shutil.copyfile(src, dst + ".new")
             continue
+        if action == "overwritten" and rel in PRUNE_PLAN:
+            _t, crlf = _text(src)
+            text = prune_set(_t, PRUNE_PLAN[rel][0])
+            with open(dst, "wb") as f:
+                f.write((text.replace("\n", "\r\n") if crlf else text).encode("utf-8"))
+            continue
         if action in (MERGED, CONFLICT):
             text, _n, crlf = MERGES[rel]
             data = text.replace("\n", "\r\n") if crlf else text
@@ -1316,6 +1389,7 @@ def main(argv=None) -> int:
     if no_package:
         items = [(r, sr, NOPKG if r in PACKAGE_FILES and a == SKIPPED and r not in (user_skip) else a) for r, sr, a in items]
     if args.action == "update":
+        plan_prune_list(items, root)
         items = merge_changed(items, root)
     managed = {rel for rel, _s, _a in items}
     for rel in sorted((keep | skip) - managed):
@@ -1328,6 +1402,8 @@ def main(argv=None) -> int:
     pi = prettierignore(items, root, args.dry_run)
     gi = gitignore(root, args.dry_run)
     if not args.dry_run and args.action == "update":
+        if any(r == PRUNE_WORKFLOW and a in ("overwritten", MERGED) for r, _s, a in items):
+            report_prune_list()
         if not sync_prune_workflow(items, root):
             items = [(r, sr, SYNC_FAILED if r == PRUNE_WORKFLOW and a == MERGED else a) for r, sr, a in items]
     if not args.dry_run:
