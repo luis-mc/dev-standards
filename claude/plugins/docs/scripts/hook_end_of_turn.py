@@ -316,7 +316,10 @@ def tell_retired_once(root, sid, retired):
 def deferred_message(deferred):
     return ("luismc-docs: the Full Progress publish is deferred (claude.ai's daily limit): %s. Not asking for it "
             "before then; the end of the turn does not block on it."
-            % '; '.join(str(e.get('reason') or 'deferred') for e in deferred))
+            % '; '.join(str(e.get('reason') or 'deferred') for e in deferred)
+            + ''.join('\nFull Progress is deferred until %s; local copy: %s'
+                      % (str(e.get('reason') or '').replace('deferred until ', ''), e['local_path'])
+                      for e in deferred if e.get('local_path')))
 
 
 def tell_deferred_once(root, sid, deferred):
