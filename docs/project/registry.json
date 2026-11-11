@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T08:36+00:00",
+  "updated": "2026-11-11T08:38+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3523,12 +3523,11 @@
       "id": "DL195",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)",
       "detail": "test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.",
-      "expected": "11 Nov ~08:48",
-      "changed": "2026-11-11T08:36+00:00",
-      "expected_basis": "edit ~5 min, CI started ~08:40 ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T08:38+00:00",
       "rides": "DS231",
       "started": "2026-11-11T08:36+00:00"
     },
@@ -7285,25 +7284,25 @@
       "status": "Running",
       "item": "RELEASE-96: ci_tool tests pass on Windows",
       "detail": "DL195 (test-only fix). PR, CI, merge on green.",
-      "expected": "11 Nov ~08:48",
-      "changed": "2026-11-11T08:36+00:00",
-      "expected_basis": "small edit, CI ~5 min",
+      "expected": "11 Nov ~08:47",
+      "changed": "2026-11-11T08:38+00:00",
+      "expected_basis": "PR 197 CI started 08:39, ~5 min",
       "release": 96,
       "phases": [
         {
           "name": "join",
-          "start": "2026-11-11T08:35+00:00",
-          "end": "2026-11-11T08:40+00:00"
+          "start": "2026-11-11T08:30+00:00",
+          "end": "2026-11-11T08:39+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T08:40+00:00",
-          "end": "2026-11-11T08:45+00:00"
+          "start": "2026-11-11T08:39+00:00",
+          "end": "2026-11-11T08:44+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T08:45+00:00",
-          "end": "2026-11-11T08:48+00:00"
+          "start": "2026-11-11T08:44+00:00",
+          "end": "2026-11-11T08:47+00:00"
         }
       ],
       "started": "2026-11-11T08:30+00:00"
