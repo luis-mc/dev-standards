@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.23.0
+version: 0.24.0
 owner: agents
 type: reference
 code:
@@ -503,6 +503,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.24.0 | 2026-11-11 | RELEASE-93 | The delivery installer writes .gitleaks.toml when the project has none (one source, in luismc-delivery), and the shared secret rules skip type annotations, struct fields and empty values.<br>CI templates work on a pool runner: no postgres service, pool database env, and rust migrations and test targets run only when present (R5.53).<br>The doctor finds Zig and LLVM in the ci_tool cache where ci_tool.py puts them, accepts flat and per-platform tools.json pins (and names a missing platform), names only real ci_tool.py commands in fix text, warns when scripts/delivery is older than the plugin templates (new item ci.scripts-current), and shows the configured ci.wait_min.<br>A tool pinned as kind file is saved under its exact name in a per-platform folder, so tools that read argv[0] (rustup-init) work. Old cache files are ignored.<br>The integration job is a hosted/pool pair with one check name; the pool job has no services block (R5.53).<br>windows-msi-check.yml installs Wine and xvfb only when wine or xvfb-run is missing, so it runs on pool runners without sudo. | DL186, DL187, DL188, DL189, DL190, DL191 |
 | 0.23.0 | 2026-11-11 | RELEASE-92 | The first run of a rerun-first push sets the commit status rerun-first/held to pending; the second run closes it; ci_watch waits for the second run.<br>The pool doctor checks agree with pool-run and apply: the agent is found as <pool>-<repo>, CI_RUNS_ON carries the pool label, a pool written by a newer plugin is not reported as drift, and the layer check reads the running container's image. The pool folder records the writing plugin version in pool-version.json. | DL183, DL184 |
 | 0.22.0 | 2026-11-10 | RELEASE-91 | A repeat CI run starts with the jobs that have not passed yet: ci_rerun_first.py, opt in with rerun_first in ci-areas.json (ts template). | DL181 |
 | 0.21.1 | 2026-11-10 | RELEASE-86 | plugin-compat.json names luismc-docs (2.0.0 or later) in place of luismc-artifacts; the artifacts plugin merged into luismc-docs. | DS219 |
