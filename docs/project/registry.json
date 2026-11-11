@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:52+00:00",
+  "updated": "2026-11-11T01:09+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3464,12 +3464,11 @@
       "id": "DL190",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool DB: separate integration jobs, no services block on pool runners",
       "detail": "Peer finding: any services: block needs Docker even with an empty image, so the empty-image trick fails on the pool. If DL187 used it, switch to two integration jobs (hosted with services, pool without) under one check name, on top of DL187 before the RELEASE-93 join.",
-      "expected": "11 Nov ~01:50",
-      "changed": "2026-11-11T00:48+00:00",
-      "expected_basis": "cloud agent from 00:48, ~28 min, then RELEASE-93",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T01:09+00:00",
       "rides": "DS228",
       "started": "2026-11-11T00:48+00:00"
     },
