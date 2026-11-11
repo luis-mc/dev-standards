@@ -16,3 +16,6 @@ Base check: origin/main fetched; docs_fold.py exists; DELIVERYSPEC has a `**Vers
 - G1: decisions.md is stale on main; regenerate with docs_index.py build at the release.
 - W1: strip docs/work before the join.
 
+Branch head before this commit: 45d6ea10efb0957a67c4bc7540d97c19a3798e43
+
+READY
