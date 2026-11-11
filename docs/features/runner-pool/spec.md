@@ -106,7 +106,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.24** — **Sizing does not hang on one moment** (DL177). "Fits" is judged against the larger of the 5-sample median (R5.20) and the host-load file's last sample (memory % of the total, minus the VM). A missing or stale file (over 60 s old) is ignored and the samples alone decide. The `Sizing inputs` line says which decided. A refusal for memory per CPU names the nearest sizes that pass, for example "10 GiB fits 6 CPUs; 7 CPUs needs 10.5 GiB".
 
-**R5.26** — **The pool image carries Node LTS with corepack** (DL215). Like GitHub-hosted runners, the image keeps the official Node LTS tarball (SHA-256 checked) at `/opt/node`, with its `bin` first on `PATH` for every user and the runner. It does not depend on `POOL_BROWSERS`. Node 22 bundles corepack; a newer Node without it gets corepack from npm at a pinned version. The image runs `corepack enable` once as root at build time, so the pnpm and yarn shims exist in `/opt/node/bin` and an unprivileged job's own `corepack enable` needs no write access (DL220). The shims pin no version; they read `packageManager` from each project. `actions/setup-node` still puts the project's own Node first. A build-time check runs `node --version && corepack --version` and checks the pnpm shim exists. Playwright `install-deps` (R5.15) uses this Node.
+**R5.26** — **The pool image carries Node LTS with corepack** (DL215). Like GitHub-hosted runners, the image keeps the official Node LTS tarball (SHA-256 checked) at `/opt/node`, with its `bin` first on `PATH` for every user and the runner. `PATH` is set before the build step that installs Node, because corepack and npm start with `#!/usr/bin/env node` (DL223). It does not depend on `POOL_BROWSERS`. Node 22 bundles corepack; a newer Node without it gets corepack from npm at a pinned version. The image runs `corepack enable` once as root at build time, so the pnpm and yarn shims exist in `/opt/node/bin` and an unprivileged job's own `corepack enable` needs no write access (DL220). The shims pin no version; they read `packageManager` from each project. `actions/setup-node` still puts the project's own Node first. A build-time check runs `node --version && corepack --version` and checks the pnpm shim exists. Playwright `install-deps` (R5.15) uses this Node.
 
 ## 8. Failure modes
 
@@ -126,7 +126,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.17, R5.18 | `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R5.19 to R5.21 | `claude/plugins/delivery/tests/test_dl176_pool_resize.py`, `claude/plugins/delivery/tests/test_dl103_pool_keep_cap.py` |
 | R5.22 to R5.24 | `claude/plugins/delivery/tests/test_dl177_pool_measure.py` |
-| R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py` |
+| R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py`, `claude/plugins/delivery/tests/test_dl223_pool_path_order.py` |
 
 ## 12. Code map
 
