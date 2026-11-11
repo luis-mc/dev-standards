@@ -1,4 +1,4 @@
-# DL201 report: install keep and report
+# DL201 report: install keep and report (in progress, step 2: 3-way merge)
 
 Base check: fetched origin main (3c34540), branch reset onto it, `delivery_ci_install.py` exists.
 
@@ -21,4 +21,8 @@ Base check: fetched origin main (3c34540), branch reset onto it, `delivery_ci_in
 
 Branch head SHA: see `git rev-parse origin/DL201-install-keep-and-report` (report commit follows this text).
 
-READY
+
+## Step 2 (in progress)
+Base check: branch fetched, installer writes ci-install-state.json and has "kept (project changes)".
+
+NOT READY
