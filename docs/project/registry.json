@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-10T23:55+00:00",
+  "updated": "2026-11-11T00:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3393,12 +3393,11 @@
       "id": "DL184",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool setup, apply and doctor agree (image, template, runner names, labels)",
       "detail": "Owner ask via a peer session: right after pool-run + apply, the doctor reported 4 false findings: stale image ID for the layer check, template drift, runner 'main' missing (pool agents are main-<repo>), CI_RUNS_ON pool-main label 'wrong'. One source of truth; doctor clean right after setup.",
-      "expected": "11 Nov ~00:37",
-      "changed": "2026-11-10T23:53+00:00",
-      "expected_basis": "cloud agent ~30 min, then RELEASE-92",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:02+00:00",
       "rides": "DS227",
       "started": "2026-11-10T23:52+00:00"
     },
