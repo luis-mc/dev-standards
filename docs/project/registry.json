@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:48+00:00",
+  "updated": "2026-11-11T00:49+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3416,12 +3416,11 @@
       "id": "DL186",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Ship .gitleaks.toml with CI setup; rules skip Rust declarations and empty values",
       "detail": "Peer report: CI secret-scan needs .gitleaks.toml but neither the delivery installer nor tech-stack-setup Phase 7 installs it. Two shared rules flag Rust fn and field declarations and empty database URL keys in .env.example (10 false positives in a fresh skeleton).",
-      "expected": "11 Nov ~01:18",
-      "changed": "2026-11-11T00:42+00:00",
-      "expected_basis": "cloud agent ~30 min, then RELEASE-93",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:49+00:00",
       "rides": "DS228",
       "started": "2026-11-11T00:40+00:00"
     },
