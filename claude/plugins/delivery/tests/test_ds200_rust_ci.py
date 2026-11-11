@@ -186,7 +186,7 @@ class RustCi(unittest.TestCase):
         self.assertIn("yanked", gen)
         calls = self.log.read_text()
         self.assertIn("fetch", calls)
-        self.assertIn("check --disable-fetch", calls)
+        self.assertIn("--offline check", calls)
 
     def test_deny_fetch_fails_fresh_cache_warns_to_summary(self):
         self.deny_setup(age_days=2)

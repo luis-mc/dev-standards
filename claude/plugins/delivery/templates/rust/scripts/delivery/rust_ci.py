@@ -313,7 +313,9 @@ def cmd_deny(root: Path) -> int:
             age, ADVISORY_WARN_DAYS)
         print("rust_ci: warning: " + msg, file=sys.stderr)
         summary("**cargo-deny warning:** " + msg + ".")
-    return subprocess.run([cargo, "deny", "--config", str(cfg), "check", "--disable-fetch"], cwd=root).returncode
+    # cargo-deny 0.20.2 has no check-only fetch flag. `--offline` is a top-level flag and must come
+    # before the subcommand; it stops the check from fetching the advisory database.
+    return subprocess.run([cargo, "deny", "--config", str(cfg), "--offline", "check"], cwd=root).returncode
 
 
 # --------------------------------------------------------------------------
