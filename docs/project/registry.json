@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T15:25+00:00",
+  "updated": "2026-11-11T15:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3891,30 +3891,30 @@
       "status": "Running",
       "item": "RELEASE: installer Prettier ignore + docs freshness CI/local match",
       "detail": "Join DL218 and DL219, fold, CI, merge on green, plugin updates, smoke, cleanup.",
-      "expected": "11 Nov ~16:05",
-      "changed": "2026-11-11T15:25+00:00",
+      "expected": "11 Nov ~16:07",
+      "changed": "2026-11-11T15:27+00:00",
       "expected_basis": "agents ~18 min + join/CI/merge ~17 min",
       "release": 102,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T15:25+00:00",
-          "end": "2026-11-11T15:48+00:00"
+          "end": "2026-11-11T15:50+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T15:48+00:00",
-          "end": "2026-11-11T15:53+00:00"
+          "start": "2026-11-11T15:50+00:00",
+          "end": "2026-11-11T15:55+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T15:53+00:00",
-          "end": "2026-11-11T16:00+00:00"
+          "start": "2026-11-11T15:55+00:00",
+          "end": "2026-11-11T16:02+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T16:00+00:00",
-          "end": "2026-11-11T16:05+00:00"
+          "start": "2026-11-11T16:02+00:00",
+          "end": "2026-11-11T16:07+00:00"
         }
       ],
       "started": "2026-11-11T15:23+00:00"
@@ -3942,6 +3942,19 @@
       "changed": "2026-11-11T15:23+00:00",
       "expected_basis": "cloud agent ~18 min",
       "rides": "DL217"
+    },
+    {
+      "id": "DL220",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool image pre-enables corepack so runner users need no write to /opt/node/bin",
+      "detail": "After DL215, a job's corepack enable fails as the runner user: EACCES symlink into root-owned /opt/node/bin. Run corepack enable as root at build (shims only, no pinned pnpm) so the job's own enable is a no-op; prove it as a non-root user.",
+      "expected": "11 Nov ~15:55",
+      "changed": "2026-11-11T15:26+00:00",
+      "expected_basis": "cloud agent ~23 min",
+      "rides": "DL217",
+      "started": "2026-11-11T15:26+00:00"
     },
     {
       "id": "DS1",
