@@ -65,7 +65,8 @@ class ToolFetch(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(Path(out).read_bytes(), b"binary")
         self.assertTrue(Path(out).is_relative_to(self.cache.resolve()))
-        self.assertTrue(os.stat(out).st_mode & stat.S_IXUSR)
+        if os.name != "nt":  # DL195: Windows has no exec bit
+            self.assertTrue(os.stat(out).st_mode & stat.S_IXUSR)
 
     def test_archive_kind_and_exe(self):
         arc = self.make_tar()
@@ -142,9 +143,13 @@ class ToolFetch(unittest.TestCase):
             "root = pathlib.Path(a[a.index('--root') + 1]) / 'bin'\n"
             "root.mkdir(parents=True)\n"
             "(root / 'demo').write_text('x')\n")
-        wrapper = self.tmp / "cargo"
-        wrapper.write_text(f"#!/bin/sh\nexec {sys.executable} {fake} \"$@\"\n")
-        wrapper.chmod(0o755)
+        if os.name == "nt":  # DL195: Windows cannot run a #!/bin/sh script
+            wrapper = self.tmp / "cargo.cmd"
+            wrapper.write_text(f'@"{sys.executable}" "{fake}" %*\n')
+        else:
+            wrapper = self.tmp / "cargo"
+            wrapper.write_text(f"#!/bin/sh\nexec {sys.executable} {fake} \"$@\"\n")
+            wrapper.chmod(0o755)
         os.environ["CI_TOOL_CARGO"] = str(wrapper)
         self.pins({"demo": {"version": "1.0.0", "platforms": {"linux_x64": {
             "kind": "crate", "url": arc.as_uri(), "sha256": sha(arc), "bin": "demo"}}}})

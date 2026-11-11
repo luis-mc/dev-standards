@@ -47,7 +47,8 @@ class FileName(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(path.name, "fake-tool-init")
         self.assertEqual(path.parent.name, "linux_x64")
-        self.assertTrue(os.stat(path).st_mode & stat.S_IXUSR)
+        if os.name != "nt":  # DL195: Windows has no exec bit
+            self.assertTrue(os.stat(path).st_mode & stat.S_IXUSR)
         self.assertEqual(path.read_bytes(), b"binary")
 
     def test_windows_gets_exe(self):
