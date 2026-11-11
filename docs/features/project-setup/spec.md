@@ -64,7 +64,7 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 
 **R5.1** — `tech-stack-setup` offers only technologies compatible with the choices already made, and `check_stack.py --selection` verifies a selection against the catalog.
 
-**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows. They live in `luismc-delivery` (`templates/`), and `tech-stack-setup` calls the delivery installer at the end of its setup (see [delivery](../delivery/spec.md), R13.3).
+**R5.2** — `tech-stack-setup` generates for four tracks: TypeScript, Go, Rust and .NET. Each track has its own `gate.json`, `smoke.json` and CI workflows. They live in `luismc-delivery` (`templates/`), and `tech-stack-setup` calls the delivery installer at the end of its setup (see [delivery](../delivery/spec.md), R13.3). That includes `.gitleaks.toml`, which the CI secret scan reads: the installer writes it when the project has none, and `tech-stack-setup` keeps no copy of it (DL186).
 
 **R5.3** — `tech-stack-setup` writes a Stack Profile that records the STACKSPEC version claimed and the vendor choices. It does not copy either spec into the project.
 

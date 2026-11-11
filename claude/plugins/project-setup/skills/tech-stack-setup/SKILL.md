@@ -335,7 +335,7 @@ Build in dependency order. Each step is a precondition of the next: Print one li
 ### Step 1 in detail — what is copied where
 
 Paths and owners are fixed by `CONTRACT.md` in `luismc-delivery` (`templates/shared/scripts/delivery/CONTRACT.md`).
-This skill carries no CI logic. It picks technologies and copies the linters, guards and the `pre-commit` hook below. At the end of step 1 it calls the delivery installer, which writes the delivery scripts, the workflow files, the per-track `gate.json` and `smoke.json`, the `pre-push` and `commit-msg` hooks, `.delivery/config.json` and the `session_guard` entry in `.claude/settings.json` (DL172):
+This skill carries no CI logic. It picks technologies and copies the linters, guards and the `pre-commit` hook below. At the end of step 1 it calls the delivery installer, which writes the delivery scripts, the workflow files, the per-track `gate.json` and `smoke.json`, the `.gitleaks.toml` the CI secret scan reads (written only when the project has none; this skill carries no copy, DL186), the `pre-push` and `commit-msg` hooks, `.delivery/config.json` and the `session_guard` entry in `.claude/settings.json` (DL172):
 
 `python3 <luismc-delivery>/scripts/delivery_ci_install.py install --track <track> --root .`
 
@@ -343,7 +343,7 @@ Do it in the first commit, so the first branch is already gated:
 
 | Into the repository | From `assets/tooling/` | Clause |
 |---|---|---|
-| `scripts/delivery/*`, `.github/workflows/*`, `scripts/delivery/gate.json`, `smoke.json` | the delivery installer (`luismc-delivery`, `templates/`). Afterwards set `default_branch` in `gate.json` to the repo's own and `ui_paths` to the apps that exist. `CONTRACT.md` is not copied. | `§13.5`, `§13.6`, `§13.1`, `§11.2` |
+| `scripts/delivery/*`, `.github/workflows/*`, `scripts/delivery/gate.json`, `smoke.json`, `.gitleaks.toml` | the delivery installer (`luismc-delivery`, `templates/`). Afterwards set `default_branch` in `gate.json` to the repo's own and `ui_paths` to the apps that exist. `CONTRACT.md` is not copied. | `§13.5`, `§13.6`, `§13.1`, `§11.2` |
 | `e2e/quarantine.json` (TypeScript track only) | `ts/e2e/quarantine.json` | `§11.2` |
 | `.githooks/pre-push` | the delivery installer (`templates/shared/.githooks/pre-push`), beside `pre-commit`; an existing different hook becomes `pre-push.local` | `§13.5` |
 | `.githooks/commit-msg` | the delivery installer (`templates/shared/.githooks/commit-msg`); does nothing unless `.delivery/config.json` sets `no_attribution: true` (DL-74). `pre-commit` also refuses staged conflict markers (DL-24) | DELIVERYSPEC |
