@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:42+00:00",
+  "updated": "2026-11-11T00:44+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3450,6 +3450,30 @@
       "expected_basis": "cloud agent ~30 min, then RELEASE-93",
       "rides": "DS228",
       "started": "2026-11-11T00:40+00:00"
+    },
+    {
+      "id": "DL189",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "ci_tool.py keeps a file tool's exact name (rustup-init argv[0])",
+      "detail": "Peer report: tool_dir() saves a kind-file tool as <plat>-<exe>, so rustup-init sees argv[0] linux_x64-rustup-init and fails with unknown proxy name. Keep the exact file name in a per-platform folder.",
+      "expected": "11 Nov ~01:28",
+      "changed": "2026-11-11T00:43+00:00",
+      "expected_basis": "cloud agent ~25 min, then RELEASE-93",
+      "rides": "DS228",
+      "started": "2026-11-11T00:43+00:00"
+    },
+    {
+      "id": "DL190",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pool DB: separate integration jobs, no services block on pool runners",
+      "detail": "Peer finding: any services: block needs Docker even with an empty image, so the empty-image trick fails on the pool. If DL187 used it, switch to two integration jobs (hosted with services, pool without) under one check name, on top of DL187 before the RELEASE-93 join.",
+      "expected": "11 Nov ~01:40",
+      "changed": "2026-11-11T00:44+00:00",
+      "expected_basis": "starts after DL187 reports ~01:12, ~25 min"
     },
     {
       "id": "DS1",
