@@ -4937,6 +4937,30 @@
       "chosen": "I rerun it with gh (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "I rerun it with gh (Recommended)"
+    },
+    {
+      "id": "D218",
+      "question": "Tell open peer sessions to update to delivery 1.29.0 / docs 2.1.1?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL221",
+      "options": [
+        {
+          "label": "Send after pool refresh (Recommended)",
+          "summary": "one note once the pool runs the DL220 image"
+        },
+        {
+          "label": "Send now",
+          "summary": "note now, refresh separately"
+        },
+        {
+          "label": "Don't send",
+          "summary": "owner tells them"
+        }
+      ],
+      "chosen": "Send after pool refresh (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Send after pool refresh (Recommended)"
     }
   ]
 }

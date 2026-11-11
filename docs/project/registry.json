@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T15:38+00:00",
+  "updated": "2026-11-11T15:41+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3959,9 +3959,9 @@
       "status": "Waiting",
       "item": "Refresh the shared CI pool with the corepack shims (DL220)",
       "detail": "Rebuild pool main from delivery 1.29.0 when no job runs, memory <70% and CPU <30%. Check the pnpm shim, then rerun a peer's failed ts CI run.",
-      "expected": "11 Nov ~16:30",
-      "changed": "2026-11-11T15:38+00:00",
-      "expected_basis": "waits for idle pool + memory <70% (93% at 15:36), rebuild ~5 min",
+      "expected": "11 Nov ~16:00",
+      "changed": "2026-11-11T15:41+00:00",
+      "expected_basis": "comics-organizer job from 15:28 (Rust ~25 min) + rebuild ~5 min",
       "no_release": "operations on the local pool"
     },
     {
