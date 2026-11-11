@@ -46,7 +46,9 @@ be dynamic. The list is project-owned instead, in the same section:
 
 Default when unset: `["CI", "Package"]`, the template's own list. `--print-workflows` prints the list, one name
 per line. `--sync-workflow [FILE]` (default `.github/workflows/artifact-prune.yml`) rewrites the `workflows:`
-line of that file to the list and prints `synced` or `unchanged`; `--check-workflow [FILE]` changes nothing and
+line of that file and prints the source of the list (`config`, `existing file` or `default`), then `synced` or
+`unchanged`. With no `artifact_prune.workflows` in the config, the file's own list stays; the default is written
+only when the file is new or has no list; `--check-workflow [FILE]` changes nothing and
 exits 1 when the line differs. Run `--sync-workflow` after `delivery_ci_install update`, which restores the
 template's line. The daily sweep prunes any workflow's artifacts meanwhile. The config file is in
 `.delivery/`, which a project tracks like its other delivery config; it is the file this script already reads.
@@ -357,6 +359,59 @@ def load_workflows(path: str) -> list[str]:
     return [n.strip() for n in names]
 
 
+def config_workflows(path: str) -> list[str] | None:
+    """The configured `artifact_prune.workflows`, or None when the file, section or key is unset."""
+    try:
+        with open(path, encoding="utf-8") as fh:
+            data = json.loads(fh.read())
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError):
+        return load_workflows(path)
+    section = data.get("artifact_prune") if isinstance(data, dict) else None
+    if not isinstance(section, dict) or section.get("workflows") is None:
+        return None
+    return load_workflows(path)
+
+
+def file_workflows(path: str) -> list[str] | None:
+    """The names in the one-line `workflows: [...]` list of the workflow file, or None (no file or no list)."""
+    try:
+        with open(path, encoding="utf-8", newline="") as fh:
+            text = fh.read()
+    except OSError:
+        return None
+    m = WORKFLOWS_LINE_RE.search(text)
+    if not m:
+        return None
+    inner = re.search(r"\[(.*)\]", m.group(0)).group(1)
+    names = [n.strip().strip("\"'").strip() for n in inner.split(",")]
+    names = [n for n in names if n]
+    return names or None
+
+
+def template_workflow_text() -> str | None:
+    """The shipped prune workflow, when this script runs from the plugin; None in a project."""
+    tpl = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", ".github", "workflows",
+                       os.path.basename(DEFAULT_WORKFLOW_FILE))
+    try:
+        with open(tpl, encoding="utf-8", newline="") as fh:
+            return fh.read()
+    except OSError:
+        return None
+
+
+def pick_sync_names(config: str, wf_path: str) -> tuple[list[str], str]:
+    """The list to sync and its source: config, existing file or default."""
+    names = config_workflows(config)
+    if names is not None:
+        return names, "config"
+    names = file_workflows(wf_path)
+    if names is not None:
+        return names, "existing file"
+    return list(DEFAULT_WORKFLOWS), "default"
+
+
 def render_workflows_text(text: str, names: list[str]) -> str:
     """`text` with the `workflows: [...]` line set to `names`. GhError when the file has no such line."""
     line = "[" + ", ".join(json.dumps(n) for n in names) + "]"
@@ -574,7 +629,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--print-workflows", action="store_true",
                     help="print the artifact_prune.workflows list of the config and exit")
     ap.add_argument("--sync-workflow", nargs="?", const=DEFAULT_WORKFLOW_FILE, metavar="FILE",
-                    help="set the `workflows:` line of FILE to that list and exit")
+                    help="set the `workflows:` line of FILE and exit (config list, else the file's own list, else the default)")
     ap.add_argument("--check-workflow", nargs="?", const=DEFAULT_WORKFLOW_FILE, metavar="FILE",
                     help="exit 1 when the `workflows:` line of FILE differs from that list")
     ap.add_argument("--dry-run", action="store_true", help="delete nothing, print the plan")
@@ -588,6 +643,15 @@ def main(argv: list[str] | None = None) -> int:
             if args.print_workflows:
                 print("\n".join(names))
             if args.sync_workflow:
+                names, source = pick_sync_names(args.config, args.sync_workflow)
+                print(f"workflow list from: {source}")
+                if not os.path.exists(args.sync_workflow):
+                    tpl = template_workflow_text()
+                    if tpl is None:
+                        raise GhError(f"{args.sync_workflow} does not exist and the template is not at hand")
+                    os.makedirs(os.path.dirname(os.path.abspath(args.sync_workflow)), exist_ok=True)
+                    with open(args.sync_workflow, "w", encoding="utf-8", newline="") as fh:
+                        fh.write(tpl)
                 same = sync_workflow(args.sync_workflow, names, write=True)
                 print("unchanged" if same else "synced")
             if args.check_workflow:
