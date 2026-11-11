@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.28.0
+version: 0.28.1
 owner: agents
 type: reference
 code:
@@ -519,6 +519,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.28.1 | 2026-11-11 | RELEASE-105 | The ts installer skips package.yml and smoke.json when the project has no Dockerfile and no packaged-program setting; the package job skips on the placeholder (R13.94).<br>The ts template installs Playwright with --with-deps only on GitHub-hosted runners; self-hosted pool runners run playwright install chromium without it (D226). | DL229, DL230 |
 | 0.28.0 | 2026-11-11 | RELEASE-104 | join.py: a new --into branch is created and pushed; origin/X means X; --into defaults to <first task id>-integration; a Cargo.lock conflict is resolved with cargo fetch and verified with --locked; the ready-PR guard names the <task>-integration convention.<br>agent_ci.py reads the agent report at docs/work/<TASK>/REPORT.md first, then docs/work/reports/<TASK>.md. ci_watch.py waits until every run of the commit has completed before it reports a failure, and never labels an in-progress job as failed.<br>Installer: no compiled Python copied, a .gitignore block for it, tracked .pyc reported, the prune workflow list accepts indent and CRLF, ignored files are not listed as not in git yet. | DL225, DL226, DL227 |
 | 0.27.0 | 2026-11-11 | RELEASE-102 | The installer adds its own copies to a marked block in .prettierignore when the project uses Prettier (R13.92). | DL218 |
 | 0.26.3 | 2026-11-11 | RELEASE-100 | Every ci.yml template has a workflow_dispatch trigger, so agent_ci.py and gh workflow run ci.yml work for rust, go and dotnet.<br>The CI secret scan uses --log-opts=HEAD, and the project-named-secret allowlist skips public_key names, NULL/None/nil values, SQL placeholders, wrapped identifiers and env reads.<br>The doctor check ci.scripts-current treats a file equal to the template as ok, whatever the install record says; update refreshes that record.<br>delivery_ci_install.py update reads the track from the project when --track is not given, and the install record stores the track. | DL210, DL211, DL212, DL213 |
