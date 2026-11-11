@@ -103,8 +103,8 @@ def validate(a) -> list:
             chosen[o] = option_of(v)
     if "cloud" in chosen.values() and any(o != "linux" and v == "cloud" for o, v in chosen.items()):
         errors.append("options: Option 3 (cloud sessions) runs on Linux only; pick Option 1 or 2 for the other OS")
-    if a.get("track") is not None and a["track"] not in INS.TRACKS:
-        errors.append("track: must be one of %s" % ", ".join(INS.TRACKS))
+    if a.get("track") is not None:
+        errors += track_errors(a["track"])
     if "self-hosted" in chosen.values():
         sh = a.get("self_hosted") if isinstance(a.get("self_hosted"), dict) else {}
         machines = sh.get("machines")
@@ -534,6 +534,33 @@ def check_by_hand(root, cfg) -> tuple:
 
 # --- printing and commands -----------------------------------------------------------------------------------------
 
+def answer_tracks(value) -> list:
+    """The tracks an answer names: a string ("rust" or "rust,ts") or a list (DL256). Names are not checked here."""
+    if isinstance(value, (str, list)):
+        return INS.parse_tracks(value)
+    return []
+
+
+def track_errors(value) -> list:
+    """Why a `track` answer is not valid; [] when it is a known track or a non-empty list of known tracks."""
+    if not isinstance(value, (str, list)) or (isinstance(value, list) and not all(isinstance(t, str) for t in value)):
+        return ["track: must be one of %s, or a list of them" % ", ".join(INS.TRACKS)]
+    names = answer_tracks(value)
+    bad = [t for t in names if t not in INS.TRACKS]
+    if not names or bad:
+        return ["track: %s must be one of %s" % (", ".join(map(repr, bad)) if bad else "an empty answer", ", ".join(INS.TRACKS))]
+    return []
+
+
+def detect_tracks(root) -> list:
+    """Every track the project's files show, in a stable order: ts, go, rust, dotnet (DL256)."""
+    out = [t for name, t in (("package.json", "ts"), ("go.mod", "go"), ("Cargo.toml", "rust"))
+           if os.path.exists(os.path.join(root, name))]
+    if any(n.endswith((".sln", ".csproj")) for n in os.listdir(root)):
+        out.append("dotnet")
+    return out
+
+
 def format_checklist(items) -> list:
     if not items:
         return ["By hand: nothing."]
@@ -546,15 +573,9 @@ def format_checklist(items) -> list:
 
 def facts(root) -> dict:
     cfg = H.load_config(root)
-    track = None
-    for name, t in (("package.json", "ts"), ("go.mod", "go"), ("Cargo.toml", "rust")):
-        if os.path.exists(os.path.join(root, name)):
-            track = t
-            break
-    if track is None and any(n.endswith((".sln", ".csproj")) for n in os.listdir(root)):
-        track = "dotnet"
+    tracks = detect_tracks(root)
     shards, err = C.load_shards(root, cfg)
-    return {"track": track, "shard_table": os.path.exists(C.shard_table_path(root, cfg)), "shard_table_error": err,
+    return {"track": INS.track_value(tracks) if tracks else None, "tracks": tracks, "shard_table": os.path.exists(C.shard_table_path(root, cfg)), "shard_table_error": err,
             "shard_oses": sorted({s["os"] for s in shards}), "installer_workflow": os.path.exists(
                 os.path.join(root, ".github", "workflows", "package.yml")),
             "options": CI.describe(cfg), "guided": bool((cfg.get("ci") or {}).get("guided"))}
@@ -577,8 +598,8 @@ def cmd_apply(args, root, path) -> int:
         print("delivery_ci_setup: the answers are not JSON (%s)" % exc, file=sys.stderr)
         return 1
     errors = validate(answers)
-    if not args.no_install and not (isinstance(answers, dict) and answers.get("track") in INS.TRACKS):
-        errors.append("track: not answered (ts, go, rust or dotnet), or use --no-install")
+    if not args.no_install and isinstance(answers, dict) and answers.get("track") is None:
+        errors.append("track: not answered (one or more of ts, go, rust, dotnet), or use --no-install")
     if errors:
         print("delivery_ci_setup: no default is used. Missing or bad answers:", file=sys.stderr)
         for e in errors:
@@ -588,7 +609,9 @@ def cmd_apply(args, root, path) -> int:
     CI.write_config(path, cfg)
     lines = ["Config written: %s" % os.path.relpath(path, root)]
     if not args.no_install:
-        items = INS.plan(answers["track"], root, "install")
+        tracks = answer_tracks(answers["track"])
+        lines.append("Tracks: %s" % ", ".join(tracks))
+        items = INS.plan(INS.track_value(tracks), root, "install")
         INS.apply(items, root)
         counts = {}
         for _r, _s, a in items:
@@ -604,7 +627,8 @@ def cmd_apply(args, root, path) -> int:
     lines += format_checklist(items)
     lines.append(CHANGE_LATER)
     if args.json:
-        print(json.dumps({"config": os.path.relpath(path, root), "doctor": results, "by_hand": items}))
+        print(json.dumps({"config": os.path.relpath(path, root), "tracks": answer_tracks(answers.get("track")),
+                         "doctor": results, "by_hand": items}))
     else:
         print("\n".join(lines))
     return 0
