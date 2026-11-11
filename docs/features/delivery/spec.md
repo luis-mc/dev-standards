@@ -96,6 +96,8 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 
 **R5.14** — A branch that changes UI code or e2e specs runs the e2e specs of the screens it changed before it is done (DL-86). `branch_gate.py` records them in `gate-result.json` (`e2e`), `branch_gate.py --e2e-only` does it alone for an agent on the CI-gate path, `gate_verify.py` and `agent_ci.py` refuse a UI branch without a passing record for the head (DL-87), `e2e_push_check.py` in the pre-push hook refuses a push of changed e2e specs that were not run and passed (DL-88), and the launch check requires the brief to say so (DL-89).
 
+The template's `playwright install` step picks by runner (DL230). On GitHub-hosted runners (`RUNNER_ENVIRONMENT=github-hosted`) it runs `playwright install --with-deps chromium`. On self-hosted pool runners, which have no sudo, it runs `playwright install chromium` and prints that the system libraries come from the pool's `POOL_BROWSERS=chromium` layer. Both `ci.yml` and `nightly-full.yml` do this.
+
 The TS template's e2e step downloads Chromium unless `E2E_CHROMIUM_PATH` points at an existing executable (DL89). `agent_setup.sh` sets it for the session when a sandbox has a Chromium preinstalled under `/opt/pw-browsers`. A project that wants this sets the path in `playwright.config`:
 
 ```ts
