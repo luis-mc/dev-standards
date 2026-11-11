@@ -80,15 +80,11 @@ def _pool_files_items(POOL, root):
         return out
     for n in names:
         try:
-            diff = POOL.pool_template_diffs(os.path.join(pools, n))
+            kind, detail = POOL.pool_files_state(os.path.join(pools, n))
         except (OSError, TypeError, AttributeError) as exc:
             out.append(_item("pool.%s.files-current" % n, "warn", "could not compare the pool files: %s" % exc))
             continue
-        if diff:
-            out.append(_item("pool.%s.files-current" % n, "warn", "pool file(s) differ from the installed plugin's template: %s. "
-                             "Run `delivery_ci_setup.py pool-refresh --yes` (old copies go to bak-<time>/)." % ", ".join(diff)))
-        else:
-            out.append(_item("pool.%s.files-current" % n, "ok", "pool files match the installed plugin"))
+        out.append(_item("pool.%s.files-current" % n, "ok" if kind == "ok" else "warn", detail))
     return out
 
 
@@ -605,7 +601,8 @@ def machine_items(root, cfg):
         elif not any(isinstance(v, dict) and v.get("name") == "CI_RUNS_ON" and str(v.get("value") or "").strip() for v in data):
             items.append(_item("machine.runs_on", "fail", "an OS is Option 1 but the repository variable CI_RUNS_ON is unset: jobs "
                                                           "would run on GitHub-hosted runners and may bill minutes. Run "
-                                                          "/delivery-ci-setup, or `gh variable set CI_RUNS_ON --body '[\"self-hosted\",\"linux\"]'`."))
+                                                          "/delivery-ci-setup, or `gh variable set CI_RUNS_ON --body '%s'`."
+                                                          % json.dumps(SETUP.expected_runs_on(cfg)[0] or ["self-hosted", "linux"])))
         else:
             items.append(_item("machine.runs_on", "ok", "CI_RUNS_ON is set"))
     sizes = [(d, _dir_size(os.path.join(d, "_work"))) for d in dirs if os.path.isdir(os.path.join(d, "_work"))]

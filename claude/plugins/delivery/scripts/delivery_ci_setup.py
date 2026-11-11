@@ -268,6 +268,44 @@ RUNNER_STEPS = {
 }
 
 
+def _pool_mod():
+    """The pool module, which holds the shared rules (DL184); None when it cannot be imported."""
+    try:
+        import delivery_runner_pool as P
+        return P
+    except ImportError:
+        return None
+
+
+def _pool_name(name):
+    """The pool this machine name is, or None. A machine is a pool when a pool folder of that name exists."""
+    P = _pool_mod()
+    return name if (P is not None and name and P.pool_exists(name)) else None
+
+
+def _first_runner(cfg):
+    """(labels, machine name) of the first self-hosted runner in OS order; ([], None) when there is none."""
+    opts = C.ci_options(cfg)
+    for o in C.CI_OS:
+        if opts.get(o) == "self-hosted":
+            for r in cfg.get("runners") or []:
+                if isinstance(r, dict) and str(r.get("os", "")).lower() == o and isinstance(r.get("labels"), list):
+                    return [x for x in r["labels"] if isinstance(x, str)], r.get("name")
+    return [], None
+
+
+def expected_runs_on(cfg):
+    """DL184: (list or str, pool name or None) the CI_RUNS_ON value `cfg` expects. The one function apply, the by-hand list
+    and the doctor use. A pool machine adds the pool's label."""
+    first = _first_labels(cfg)
+    if not isinstance(first, list):
+        return first, None
+    labels, name = _first_runner(cfg)
+    pool = _pool_name(name) if labels and labels == first else None
+    P = _pool_mod()
+    return (P.expected_runs_on(first, pool) if P is not None and pool else first), pool
+
+
 def _first_labels(cfg):
     ci = cfg.get("ci") or {}
     opts = C.ci_options(cfg)
@@ -301,9 +339,15 @@ def by_hand_items(cfg) -> list:
                 sub = {"name": r["name"], "labels": ",".join(labels)}
                 steps = [s % sub for s in RUNNER_STEPS[o]]
                 lim = (ci.get("load_limits") or {}).get(r["name"]) or {}
-                out.append({"id": "runner:%s" % r["name"], "option": 1, "check": "runner", "labels": labels,
-                            "title": "Install the GitHub runner on %s (%s) with the labels %s" % (r["name"], o, ", ".join(labels)),
-                            "steps": steps})
+                pool = _pool_name(r["name"])
+                if pool:  # DL184: the pool's agents are named <pool>-<repo>; the pool setup installs them
+                    out.append({"id": "runner:%s" % r["name"], "option": 1, "check": "runner", "labels": labels, "pool": pool,
+                                "title": "Add the pool agent for this repository to pool %s (labels %s)" % (pool, ", ".join(labels)),
+                                "steps": ["python3 scripts/delivery_ci_setup.py pool-run --pool %s --repos OWNER/NAME --yes" % pool]})
+                else:
+                    out.append({"id": "runner:%s" % r["name"], "option": 1, "check": "runner", "labels": labels,
+                                "title": "Install the GitHub runner on %s (%s) with the labels %s" % (r["name"], o, ", ".join(labels)),
+                                "steps": steps})
                 out.append({"id": "load-gate:%s" % r["name"], "option": 1, "check": "confirm",
                             "title": "On %s set the load ceilings and the runner hook" % r["name"],
                             "steps": ["In ~/.claude/luismc-delivery-machine.json on %s set \"load_limits\": {\"memory_pct\": %s, \"cpu_pct\": %s}."
@@ -338,13 +382,15 @@ def by_hand_items(cfg) -> list:
                     "steps": ["GitHub Settings > Billing and plans > Budgets and alerts: set a limit for Actions. This is the hard stop on cost; the fallback caps are only the second brake, and they are optional.",
                               "The doctor cannot read billing. Run `delivery_ci_setup.py confirm spending-limit` when it is set."
                               + (" (Your minutes cap is %s a month.)" % cap if cap else " (You set no minutes cap.)")]})
-    first = _first_labels(cfg)
+    first, pool = expected_runs_on(cfg)
     if first and ({"self-hosted", "github-hosted"} & set(opts.values())):
-        value = json.dumps(first if isinstance(first, list) else first)
+        value = json.dumps(first)
         out.append({"id": "var:CI_RUNS_ON", "option": 1 if "self-hosted" in opts.values() else 2, "check": "var",
                     "name": "CI_RUNS_ON", "value": value,
                     "title": "Set the repository variable CI_RUNS_ON to %s" % value,
                     "steps": ["gh variable set CI_RUNS_ON --body '%s'" % value]})
+        if pool:
+            out[-1]["pool"] = pool
     if "cloud" in opts.values():
         cl = C.ci_cloud(cfg)
         env = cl["status_token_env"] or "TOKEN_VARIABLE"
@@ -374,6 +420,12 @@ def _gh_json(root, args):
         return None, "gh returned invalid JSON"
 
 
+def _repo_name(root):
+    """OWNER/NAME of the repository in `root`, from gh; '' when it cannot be read."""
+    r = H.gh(root, ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"])
+    return r[1].strip() if r is not None and r[0] == 0 else ""
+
+
 def check_item(root, cfg, item) -> tuple:
     """(state, detail). state: ok (verified), confirmed (the owner said so), open (checked, not done),
     unknown (cannot be checked here; close it with `confirm`)."""
@@ -388,9 +440,17 @@ def check_item(root, cfg, item) -> tuple:
             state, detail = "unknown", "cannot list runners (%s)" % (why or "no runner list")
         else:
             name = item["id"].split(":", 1)[1]
+            repo = _repo_name(root) if item.get("pool") else ""
+            P = _pool_mod() if item.get("pool") else None
+            if item.get("pool") and (not repo or P is None):
+                name = None  # DL184: a pool agent is named <pool>-<repo>; without the repository it cannot be looked up
+            elif item.get("pool"):
+                name = P.pool_agent_name(item["pool"], repo)
             mine = [r for r in data["runners"] if isinstance(r, dict) and r.get("name") == name]
             have = {str(l.get("name")).lower() for r in mine for l in r.get("labels", []) if isinstance(l, dict)}  # GitHub labels are case-insensitive
-            if not mine:
+            if name is None:
+                state, detail = "unknown", "cannot tell this repository's name, so its pool agent cannot be looked up"
+            elif not mine:
                 state, detail = "open", "no runner named %s is registered" % name
             elif not any(r.get("status") == "online" for r in mine):
                 state, detail = "open", "runner %s is registered but offline" % name
@@ -404,7 +464,9 @@ def check_item(root, cfg, item) -> tuple:
             state, detail = "unknown", "gh cannot run"
         elif r[0] != 0:
             state, detail = "open", "%s is not set" % item["name"]
-        elif r[1].strip().lower() == item["value"].lower():  # label case does not matter to GitHub
+        elif r[1].strip().lower() == item["value"].lower() or (
+                item["name"] == "CI_RUNS_ON" and item.get("pool") and _pool_mod() is not None
+                and _pool_mod().runs_on_satisfied(r[1].strip(), json.loads(item["value"]), item["pool"])):  # label case does not matter to GitHub
             state, detail = "ok", "%s is set" % item["name"]
         else:
             state, detail = "open", "%s is %s, expected %s" % (item["name"], r[1].strip(), item["value"])

@@ -120,8 +120,8 @@ class DoctorTests(unittest.TestCase):
 
     def test_layer_tools_missing(self):
         def sh(argv, input=None, timeout=60):
-            if argv[:2] == ["docker", "ps"]:
-                return 0, "pool-main-pool-1 img1\n"
+            if argv[:2] == ["docker", "inspect"]:  # DL184: the running container's image
+                return 0, "sha256:img1\n"
             if "command -v wine" in " ".join(argv):
                 return 1, ""
             return 0, ""
