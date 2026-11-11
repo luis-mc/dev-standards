@@ -6,8 +6,13 @@ luismc-docs' `templates/feature-spec.md` (front matter of R4.2; sections mapped 
 import difflib
 import html
 import json
+import os
 import re
+import sys
 from html.parser import HTMLParser
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import gen_badge as B  # noqa: E402
 
 TITLE_RE = re.compile(r'^\s*<!--\s*title:\s*(.*?)\s*-->[ \t]*\n?', re.S)
 SECTION_RE = re.compile(r'^\d+-.*\.html$')
@@ -237,7 +242,7 @@ def _piece_text(pieces):
 def _front_matter(fid, title, apps, artifact_file, topics):
     return ['---', 'id: %s' % fid, 'title: %s' % title, 'apps: [%s]' % ', '.join(apps), 'topics: [%s]' % ', '.join(topics),
             'status: proposed', 'version: 0.1.0', 'owner: owner', 'type: explanation', 'code: []',
-            'artifact: %s' % artifact_file, '---']
+            'artifact: %s' % artifact_file, 'generator: %s' % B.generator_value(), '---']
 
 
 NEW_NOTE = ('<!-- Promoted from the feature artifact by project_artifacts.py promote-to-spec; sections are placed by '

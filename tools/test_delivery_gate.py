@@ -2266,7 +2266,8 @@ def sc_join_same_tree(t: T, shared: Path) -> None:
     box = integ_box(shared)
     box.gated("feat/a", {"apps/web/a.txt": "a\n"}, base_ref="origin/main", frm="integ", fail="unit")
     r = join(box, "--into", "integ", "feat/a")
-    t.eq("a failing result: join refuses, nothing skipped", (r.code, "skipped" in r.out), (1, False))
+    # DL241: the refused branch now prints a `skipped <branch>: <reason>` line; the gate itself is never skipped
+    t.eq("a failing result: join refuses, nothing skipped", (r.code, "gate on the joined head skipped" in r.out), (1, False))
 
 
 def sc_join_untrusted(t: T, shared: Path) -> None:

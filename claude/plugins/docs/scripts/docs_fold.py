@@ -128,6 +128,31 @@ def add_row(text: str, row: str) -> str:
     return "\n".join(lines) + "\n"
 
 
+VLINE = re.compile(r"^\*\*Version:\*\*[ \t]*(\d+\.\d+\.\d+)[ \t]*$", re.M)
+HIST = re.compile(r"^##\s+(Versions|Change log|Changelog)\s*$", re.I)
+
+
+def body_version_line(text: str):
+    """The `**Version:** X.Y.Z` match in the doc body (outside front matter), or None."""
+    _fm, body, _ok = D.parse_front_matter(text)
+    return VLINE.search(body)
+
+
+def add_row_if_table(text: str, row: str) -> str:
+    """Insert `row` under an existing history table. Without one, change nothing."""
+    lines = text.rstrip("\n").split("\n")
+    idx = next((i for i, l in enumerate(lines) if HIST.match(l)), None)
+    if idx is None:
+        return text
+    for j in range(idx + 1, len(lines)):
+        if re.match(r"^\|?\s*:?-{2,}", lines[j]):
+            lines.insert(j + 1, row)
+            return "\n".join(lines) + "\n"
+        if lines[j].startswith("## "):
+            break
+    return text
+
+
 def plan_fold(root: Path, release: str, date: str) -> list[dict]:
     plan = []
     for doc, files in sorted(find_notes(root).items()):
@@ -138,11 +163,16 @@ def plan_fold(root: Path, release: str, date: str) -> list[dict]:
         notes = [read_note(p) for p in files]
         kind = max((n["kind"] for n in notes), key=lambda k: RANK[k])
         fm, _b, _ok = D.parse_front_matter(D.read(f))
-        old = str(fm.get("version") or "0.0.0")
+        text = D.read(f)
+        vm = body_version_line(text)
+        if vm and fm.get("version"):
+            plan.append({"doc": doc, "error": "has both a `version:` front matter key and a `**Version:**` line; keep one", "files": files})
+            continue
+        old = vm.group(1) if vm else str(fm.get("version") or "0.0.0")
         new = bump(old, kind)
         what = "<br>".join(n["text"].replace("|", "\\|") for n in notes if n["text"])
         tasks = ", ".join(sorted({n["task"] for n in notes}))
-        plan.append({"doc": doc, "kind": kind, "old": old, "new": new, "row": f"| {new} | {date} | {release} | {what} | {tasks} |", "files": files})
+        plan.append({"doc": doc, "kind": kind, "old": old, "new": new, "inline": bool(vm), "row": f"| {new} | {date} | {release} | {what} | {tasks} |", "files": files})
     return plan
 
 
@@ -155,8 +185,14 @@ def fold(root: Path, release: str, date: str, dry: bool) -> list[dict]:
             continue
         f = root / p["doc"]
         text = D.read(f)
-        text = D.set_front_matter(text, {"version": p["new"]})
-        text = add_row(text, p["row"])
+        if p.get("inline"):
+            fm, body, ok = D.parse_front_matter(text)
+            head = text[: len(text) - len(body)] if ok else ""
+            body = VLINE.sub(f"**Version:** {p['new']}", body, count=1)
+            text = add_row_if_table(head + body, p["row"])
+        else:
+            text = D.set_front_matter(text, {"version": p["new"]})
+            text = add_row(text, p["row"])
         f.write_text(text, encoding="utf-8")
         for n in p["files"]:
             rel = D.posix(n.relative_to(root))

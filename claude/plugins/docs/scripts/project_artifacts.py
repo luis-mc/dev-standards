@@ -34,6 +34,8 @@ PLUGIN_DIR = HERE.parent
 if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
+import gen_badge as GB  # noqa: E402
+
 try:
     import artifact_queue
 except ImportError as _e:  # pragma: no cover - broken install
@@ -949,7 +951,8 @@ def validate_structure(rec):
         f('R5.10', 'manifest.json', 'design is "design.css" but design.css is missing from the record folder')
     elif m.get('design') == 'design.css' and getattr(R, 'check_tokens', None):
         try:
-            for prob in R.check_tokens(read_html(rec.dir / 'design.css') or ''):
+            own_css = read_html(rec.dir / 'design.css') or ''
+            for prob in R.check_tokens(own_css):
                 f('R5.11', 'design.css', prob)
         except Exception as ex:
             f('R5.11', 'design.css', 'cannot be checked: %s' % ex)
@@ -1202,6 +1205,12 @@ def check_html_findings(rec, key, html=None):
     return out
 
 
+def same_page(fresh, old):
+    """INV-3 comparison: equal after line endings, ignoring the badge's latest-state flag (DL239). The flag depends
+    on a local marketplace clone that CI does not have, so it must not make a page look stale."""
+    return GB.strip_flag_html(fresh.replace('\r\n', '\n')) == GB.strip_flag_html(old)
+
+
 def fresh_render_findings(rec, key):
     """INV-3: the file equals what rendering the record produces now."""
     e = rec.entry(key)
@@ -1215,7 +1224,7 @@ def fresh_render_findings(rec, key):
         fresh = render_one(rec, key, stamp_text_from_iso(st), st)
     except Fail as fl:
         return fl.findings or [('INV-3', e['file'], fl.msg)]
-    if fresh.replace('\r\n', '\n') != old:
+    if not same_page(fresh, old):
         return [('INV-3', e['file'], 'rendered HTML differs from a fresh render of the record; run render')]
     return []
 
@@ -1430,7 +1439,7 @@ def refresh_stale(rec):
             continue
         old = read_html(rec.dir / e['file'])
         st = existing_stamp(old) if old is not None else None
-        if st is None or render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
+        if st is None or not same_page(render_one(rec, key, stamp_text_from_iso(st), st), old):
             rec.render_keys[key] = 'new'
 
 
@@ -2309,6 +2318,9 @@ def cmd_design(args):
         css = f.read_bytes().decode('utf-8-sig').replace('\r\n', '\n')
         check = getattr(R, 'check_tokens', None)
         problems = check(css) if check else []
+        ign = R.ignored_tokens(css)
+        if ign:
+            warn('%s sets %s; page, surface and ink tokens are ignored (accents only)' % (f.name, ', '.join(ign)))
         if problems:
             raise Fail(1, '%s does not satisfy the token contract; nothing written' % f,
                        [('R5.11', f.name, p) for p in problems])
@@ -2353,7 +2365,7 @@ def render_changed(ctx, render_all=False):
                 rec.render_keys[key] = 'new'
                 continue
             st = existing_stamp(old)
-            if st is None or render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
+            if st is None or not same_page(render_one(rec, key, stamp_text_from_iso(st), st), old):
                 rec.render_keys[key] = 'new'
         rec.message = ctx.rel + ': render'
         rec.noop = not rec.render_keys
@@ -2479,7 +2491,7 @@ def cmd_mark_published(args):
         st = existing_stamp(old)
         if old is None or st is None:
             raise Fail(1, '%s has not been rendered; run render first' % e['file'])
-        if render_one(rec, key, stamp_text_from_iso(st), st).replace('\r\n', '\n') != old:
+        if not same_page(render_one(rec, key, stamp_text_from_iso(st), st), old):
             raise Fail(1, '%s differs from a fresh render; run `render` (or `pending --json --refresh`, which renders first), then publish the new copy and run mark-published again' % e['file'])
         stale = stale_copy_reason(ctx, rec, e)
         if stale:
@@ -2722,6 +2734,14 @@ def retired_notes(rec):
             % '; '.join('%s %s' % (e.get('key'), e.get('url')) for e in entries)]
 
 
+def design_warnings(rec):
+    """DL239: a project design.css may change accents only; say which of its tokens are ignored."""
+    if rec.manifest.get('design') != 'design.css' or not getattr(R, 'ignored_tokens', None):
+        return []
+    ign = R.ignored_tokens(read_html(rec.dir / 'design.css') or '')
+    return [('design.css', 'sets %s; page, surface and ink tokens are ignored (accents only)' % ', '.join(ign))] if ign else []
+
+
 def cmd_check(args):
     if R is None:
         raise Fail(2, 'render_artifacts.py cannot be imported: %s' % _RENDER_ERROR)
@@ -2741,7 +2761,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
     warnings += [('.delivery', m) for m in schema_warnings(session_root(str(rec.dir)))]
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],

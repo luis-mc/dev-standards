@@ -11,6 +11,7 @@ code: []                          # globs of the code this spec describes
 design_system: []                 # cited, never copied, e.g. [components 15, rules 4]
 last_verified:                    # YYYY-MM-DD, set when someone re-read the spec against the code
 artifact:                         # file name in the artifacts record, if any
+generator: luismc-docs <version>  # the plugin version that made this spec, from its plugin.json; never rewritten later
 ---
 # <Feature title>
 
