@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T08:55+00:00",
+  "updated": "2026-11-11T09:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -724,6 +724,19 @@
       "changed": "2026-11-09T20:52+00:00",
       "rides": "DS194",
       "started": "2026-11-09T16:22+00:00"
+    },
+    {
+      "id": "AR69",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Lighter Full Progress page (slim registry, no old Live rows, lean rows)",
+      "detail": "D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.",
+      "expected": "11 Nov ~09:35",
+      "changed": "2026-11-11T09:02+00:00",
+      "expected_basis": "cloud agent ~28 min from 09:07",
+      "rides": "DS232",
+      "started": "2026-11-11T09:07+00:00"
     },
     {
       "id": "DL1",
@@ -3589,6 +3602,16 @@
       "expected_basis": "cloud agent ~24 min from 09:01",
       "rides": "DS231",
       "started": "2026-11-11T08:55+00:00"
+    },
+    {
+      "id": "DL201",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "delivery_ci_install update: diff or merge files with project changes",
+      "detail": "Peer report: the 1.27.1 update overwrote project fixes (tools.json pins, train-cleanup.yml, artifact_prune.py). Needs an owner choice: keep-and-report, 3-way merge, or diff prompt.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:02+00:00"
     },
     {
       "id": "DS1",
@@ -7348,6 +7371,41 @@
       "started": "2026-11-11T08:30+00:00"
     },
     {
+      "id": "DS232",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-97: lighter Full Progress page",
+      "detail": "AR task (D25, D26): slim embedded registry, no old Live rows, lighter rows. Join, CI, merge on green, plugin update.",
+      "expected": "11 Nov ~09:55",
+      "changed": "2026-11-11T09:02+00:00",
+      "expected_basis": "agent ~28 min, after RELEASE-96 merges",
+      "release": 97,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T09:05+00:00",
+          "end": "2026-11-11T09:33+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T09:40+00:00",
+          "end": "2026-11-11T09:46+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T09:46+00:00",
+          "end": "2026-11-11T09:51+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T09:51+00:00",
+          "end": "2026-11-11T09:55+00:00"
+        }
+      ],
+      "started": "2026-11-11T09:05+00:00"
+    },
+    {
       "id": "DU1",
       "owner": "design-field-updates",
       "app": "luismc-docs",
@@ -7682,6 +7740,26 @@
       "changed": "2026-11-04T20:51+00:00",
       "rides": "DL37",
       "started": "2026-11-04T19:52+00:00"
+    },
+    {
+      "id": "SO7",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "To do",
+      "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
+      "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:02+00:00"
+    },
+    {
+      "id": "SO8",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "To do",
+      "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
+      "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:03+00:00"
     },
     {
       "id": "ST1",

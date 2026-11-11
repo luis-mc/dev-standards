@@ -888,22 +888,26 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-09T20:52+00:00">09 Nov 20:52</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 08:49</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T09:02+00:00">11 Nov 09:02</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 08:56</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="AR67"><span class="task-id">AR67</span>mark-published after pending --refresh needs no extra render</li>
-<li data-glance-task="AR68"><span class="task-id">AR68</span>task-status-update skill lists the four --phase names</li>
+<li data-glance-task="AR69"><span class="task-id">AR69</span>Lighter Full Progress page (slim registry, no old Live rows, lean rows) <span class="glance-expected">11 Nov ~09:35</span><span class="glance-basis">cloud agent ~28 min from 09:07</span></li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">66</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">66</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="AR69"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">AR69</span>Lighter Full Progress page (slim registry, no old Live rows, lean rows)<span class="release-line"><span class="release-name">RELEASE-97</span></span></td><td data-label="Detail">D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.</td><td data-label="Expected">11 Nov ~09:35<span class="expected-basis">cloud agent ~28 min from 09:07</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">66 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="AR67"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">AR67</span>mark-published after pending --refresh needs no extra render<span class="release-line"><span class="release-name">RELEASE-71</span></span></td><td data-label="Detail">mark-published can refuse with &#x27;differs from a fresh render; run render first&#x27; right after pending --refresh and a publish. pending --refresh should render first, or the error names the exact command.</td><td data-label="Expected">09 Nov</td></tr>
@@ -1141,6 +1145,85 @@ tools/test_project_artifacts_hooks.py   sample events in, queue and exit codes o
 </section>
 <section id="s7"><h2><span class="section-number">&sect; 7</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D29">
+<h3 class="decision-head"><span class="decision-id">D29</span> <span class="decision-question">How should Live rows older than 14 days appear on Full Progress?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS232</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Count only (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">One line with the count and where the full list is</p>
+<blockquote class="decision-words">&ldquo;Count only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Compact list</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One short line each, ID and item</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep as today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Earlier fold unchanged</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D28">
+<h3 class="decision-head"><span class="decision-id">D28</span> <span class="decision-question">Full Progress size: load one web font family instead of three?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS232</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One Google family, system fonts for the rest</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Skip</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">Leave as today</p>
+<blockquote class="decision-words">&ldquo;multi-select: Slim embedded data, No old Live rows, Lighter rows (fonts not chosen)&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D27">
+<h3 class="decision-head"><span class="decision-id">D27</span> <span class="decision-question">Full Progress size: drop the per-cell data-label attribute?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS232</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Build it (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">CSS supplies phone labels by column</p>
+<blockquote class="decision-words">&ldquo;multi-select: Slim embedded data, No old Live rows, Lighter rows (fonts not chosen)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave as today</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D26">
+<h3 class="decision-head"><span class="decision-id">D26</span> <span class="decision-question">Full Progress size: stop rendering Live rows older than 14 days?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS232</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Build it (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">Earlier fold not rendered (R6.3)</p>
+<blockquote class="decision-words">&ldquo;multi-select: Slim embedded data, No old Live rows, Lighter rows (fonts not chosen)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave as today</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D25">
+<h3 class="decision-head"><span class="decision-id">D25</span> <span class="decision-question">Full Progress size (1.84 MB, slow on phones): slim the embedded registry?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS232</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Build it (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">Embed open tasks plus Live/Dropped of the last 14 days, minified; full history stays in the repo (R5.9)</p>
+<blockquote class="decision-words">&ldquo;multi-select: Slim embedded data, No old Live rows, Lighter rows (fonts not chosen)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Skip</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Leave as today</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D24">
 <h3 class="decision-head"><span class="decision-id">D24</span> <span class="decision-question">AR60: when the stop state write still fails after its retries, what should the hook do?</span></h3>
 <p class="decision-meta">Asked 07 Nov · Decided 07 Nov</p>
