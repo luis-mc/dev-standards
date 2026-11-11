@@ -4873,6 +4873,70 @@
       "chosen": "Pool image (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "option 1 tell dev-standards to do it"
+    },
+    {
+      "id": "D215",
+      "question": "Installer copies fail a project's Prettier check: fix where?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL218",
+      "options": [
+        {
+          "label": "Installer adds ignore (Recommended)",
+          "summary": "installer adds its copies to .prettierignore"
+        },
+        {
+          "label": "Format the templates",
+          "summary": "Prettier defaults on shipped templates"
+        },
+        {
+          "label": "Leave it to projects",
+          "summary": "no change"
+        }
+      ],
+      "chosen": "Installer adds ignore (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Installer adds ignore (Recommended)"
+    },
+    {
+      "id": "D216",
+      "question": "docs_check passes locally but warns in CI: investigate?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL219",
+      "options": [
+        {
+          "label": "Investigate and fix (Recommended)",
+          "summary": "cloud agent finds and fixes the mismatch"
+        },
+        {
+          "label": "Leave it",
+          "summary": "warnings only"
+        }
+      ],
+      "chosen": "Investigate and fix (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Investigate and fix (Recommended)"
+    },
+    {
+      "id": "D217",
+      "question": "How should a peer project's failed CI run be rerun after the pool refresh?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL216",
+      "options": [
+        {
+          "label": "I rerun it with gh (Recommended)",
+          "summary": "session reruns failed jobs"
+        },
+        {
+          "label": "I'll tell it myself",
+          "summary": "owner passes it on"
+        }
+      ],
+      "chosen": "I rerun it with gh (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "I rerun it with gh (Recommended)"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T14:19+00:00",
+  "updated": "2026-11-11T15:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3876,13 +3876,72 @@
       "id": "DL216",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Refresh the shared CI pool with the Node image (DL215)",
       "detail": "Rebuild pool main from delivery 1.28.4 when no job runs and memory <70%, CPU <30%. Check node and corepack in the container, then tell the peer projects to rerun.",
-      "expected": "11 Nov ~15:30; waits for an idle pool",
-      "changed": "2026-11-11T14:19+00:00",
-      "expected_basis": "idle pool + PC room, rebuild ~5 min",
-      "no_release": "operations on the local pool"
+      "expected": "11 Nov",
+      "changed": "2026-11-11T14:40+00:00",
+      "no_release": "operations on the local pool",
+      "started": "2026-11-11T14:35+00:00"
+    },
+    {
+      "id": "DL217",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: installer Prettier ignore + docs freshness CI/local match",
+      "detail": "Join DL218 and DL219, fold, CI, merge on green, plugin updates, smoke, cleanup.",
+      "expected": "11 Nov ~16:05",
+      "changed": "2026-11-11T15:25+00:00",
+      "expected_basis": "agents ~18 min + join/CI/merge ~17 min",
+      "release": 102,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T15:25+00:00",
+          "end": "2026-11-11T15:48+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T15:48+00:00",
+          "end": "2026-11-11T15:53+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T15:53+00:00",
+          "end": "2026-11-11T16:00+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T16:00+00:00",
+          "end": "2026-11-11T16:05+00:00"
+        }
+      ],
+      "started": "2026-11-11T15:23+00:00"
+    },
+    {
+      "id": "DL218",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Installer adds its copies to .prettierignore",
+      "detail": "When a project uses Prettier, the delivery installer adds .delivery/ci-install-base/ and its *.example.json copies to .prettierignore (idempotent), so installed files never fail the project's format check.",
+      "expected": "11 Nov ~15:10",
+      "changed": "2026-11-11T15:23+00:00",
+      "expected_basis": "cloud agent ~18 min",
+      "rides": "DL217"
+    },
+    {
+      "id": "DL219",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Docs freshness check (T2) gives the same result in CI and locally",
+      "detail": "docs_check T2 warned in a project's CI (code changed after the doc's date) but passed locally. Find the cause (shallow checkout, merge commit dates, UTC vs local date) and make both agree.",
+      "expected": "11 Nov ~15:10",
+      "changed": "2026-11-11T15:23+00:00",
+      "expected_basis": "cloud agent ~18 min",
+      "rides": "DL217"
     },
     {
       "id": "DS1",
