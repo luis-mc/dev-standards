@@ -899,7 +899,7 @@ def scripts_items(root):
     if track not in ("ts", "go", "rust", "dotnet"):
         track = "rust" if os.path.exists(os.path.join(root, "scripts", "delivery", "rust_ci.py")) else "shared"
     keep, skip = INST.load_config(root)
-    stale, missing, kept = [], [], []
+    stale, missing, kept, changed = [], [], [], []
     for rel, _src, action in INST.plan(track, root, "update", keep, skip):
         if not rel.startswith("scripts/delivery/"):
             continue
@@ -909,12 +909,17 @@ def scripts_items(root):
             missing.append(rel)
         elif action == INST.KEPT:
             kept.append(rel)
-    if not stale and not missing:
+        elif action == INST.CHANGED:
+            changed.append(rel)
+    if not stale and not missing and not changed:
         return [_item("ci.scripts-current", "ok", "scripts/delivery matches the plugin templates%s"
                       % (" (kept on purpose: %s)" % ", ".join(kept) if kept else ""))]
     parts = []
     if stale:
         parts.append("older than the plugin templates: %s" % ", ".join(stale))
+    if changed:
+        parts.append("changed by the project (an update keeps them and writes <file>.new; merge by hand): %s"
+                     % ", ".join(changed))
     if missing:
         parts.append("missing: %s" % ", ".join(missing))
     return [_item("ci.scripts-current", "warn", "%s. Refresh: python3 <plugin>/scripts/delivery_ci_install.py update "

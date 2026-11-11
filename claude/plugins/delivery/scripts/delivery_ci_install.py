@@ -39,6 +39,12 @@ keep  `update` never overwrites these. When the template differs, the file is li
       "kept <path>: the plugin's version differs; diff it with <template path> and fold your change into the
       plugin or drop it". A kept file that is missing is still written.
 skip  `install` and `update` never write these, even when missing. They are listed as "skipped (ci-install.json)".
+Keep and report (DL201). The installer records a sha256 of every file it writes in `.delivery/ci-install-state.json`.
+`update` overwrites a plugin-owned file only when it still matches that record. When the project changed it, the
+file is kept, the new template goes next to it as `<file>.new`, and the run prints "kept (project changes)" with a
+`git diff --no-index` command. With no record, a file that differs from the template counts as changed.
+Merge by hand, then delete the .new file. A later update replaces an old .new. The plugin never commits it.
+
 A path in either list that the plugin does not manage prints a "warning:" line; it is not an error. A file that
 is not valid JSON (or whose lists are not lists of strings) prints one line naming the file and exits 2. With
 no ci-install.json the run is as before. The import check treats a skipped or kept file like any file on disk.
@@ -74,6 +80,7 @@ from __future__ import annotations
 
 import argparse
 import ast
+import hashlib
 import json
 import os
 import shutil
@@ -120,6 +127,49 @@ def same(a: str, b: str) -> bool:
 CONFIG = "scripts/delivery/ci-install.json"
 SKIPPED = "skipped (ci-install.json)"
 KEPT = "kept (ci-install.json)"
+CHANGED = "kept (project changes)"
+STATE = ".delivery/ci-install-state.json"
+
+
+def digest(path: str) -> str:
+    """sha256 of a file with CRLF read as LF, so the hash is the same on Windows and Linux."""
+    with open(path, "rb") as f:
+        return hashlib.sha256(f.read().replace(b"\r\n", b"\n")).hexdigest()
+
+
+def load_state(root: str):
+    """(path -> sha256 of what the installer last wrote, state file exists). A bad file counts as absent."""
+    path = os.path.join(root, STATE.replace("/", os.sep))
+    try:
+        with open(path, "rb") as f:
+            files = json.loads(f.read().decode("utf-8-sig")).get("files", {})
+    except (OSError, ValueError, AttributeError):
+        return {}, False
+    if not isinstance(files, dict):
+        return {}, False
+    return {k: v for k, v in files.items() if isinstance(v, str)}, True
+
+
+def plugin_version() -> str:
+    try:
+        with open(os.path.join(PLUGIN, ".claude-plugin", "plugin.json"), "rb") as f:
+            return str(json.loads(f.read().decode("utf-8-sig")).get("version", ""))
+    except (OSError, ValueError):
+        return ""
+
+
+def save_state(items: list, root: str, old: dict) -> None:
+    """Record the hash of every file the run wrote or found equal to the template (DL201)."""
+    files = dict(old)
+    for rel, src, action in items:
+        if action in ("written", "overwritten", "same") and rel not in PROJECT_OWNED_PATHS:
+            files[rel] = digest(src)
+            if rel == PRUNE_WORKFLOW and action != "same":
+                files[rel] = digest(os.path.join(root, rel.replace("/", os.sep)))   # the sync edits it on purpose
+    path = os.path.join(root, STATE.replace("/", os.sep))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps({"plugin_version": plugin_version(), "files": dict(sorted(files.items()))}, indent=2) + "\n")
 
 
 def load_config(root: str):
@@ -146,6 +196,7 @@ def load_config(root: str):
 def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
     """[(relative path, source, action)] with action written | overwritten | kept | differs | same | skipped | kept (ci-install.json)."""
     out, sources = [], {}
+    recorded = load_state(root)[0] if mode == "update" else {}
     for part in ("shared", track):
         base = os.path.join(TEMPLATES, part)
         for rel in files_of(base):
@@ -164,6 +215,8 @@ def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
             action = SKIPPED
         elif rel in keep and action == "overwritten":
             action = KEPT
+        if action == "overwritten" and digest(dst) != recorded.get(rel):
+            action = CHANGED                              # DL201: the project changed it since the last write
         out.append((rel, src, action))
     return out
 
@@ -196,9 +249,12 @@ def write_config(src: str, dst: str) -> None:
 
 def apply(items: list, root: str) -> None:
     for rel, src, action in items:
+        dst = os.path.join(root, rel.replace("/", os.sep))
+        if action == CHANGED:
+            shutil.copyfile(src, dst + ".new")
+            continue
         if action not in ("written", "overwritten"):
             continue
-        dst = os.path.join(root, rel.replace("/", os.sep))
         os.makedirs(os.path.dirname(dst), exist_ok=True)
         if rel in PROJECT_OWNED_PATHS:
             if not os.path.exists(dst):
@@ -443,6 +499,7 @@ def main(argv=None) -> int:
         skip = set(skip) | set(WINDOWS_FILES)
         print("Windows is deferred (no ci.options.windows in .delivery/config.json): the Windows workflows are not installed. "
               "Choose it with `delivery_ci.py set`, then run install again.")
+    old_state, had_state = load_state(root)
     items = plan(args.track, root, args.action, keep, skip)
     managed = {rel for rel, _s, _a in items}
     for rel in sorted((keep | skip) - managed):
@@ -454,6 +511,8 @@ def main(argv=None) -> int:
         print("settings    %s: %s" % (SETTINGS, merge_session_guard(root)))
     if not args.dry_run and args.action == "update":
         sync_prune_workflow(items, root)
+    if not args.dry_run:
+        save_state(items, root, old_state)
     if not args.dry_run:
         ensure_tzdata(root)
     for rel, _src, action in items:
@@ -467,6 +526,15 @@ def main(argv=None) -> int:
         if action == KEPT:
             print("kept %s: the plugin's version differs; diff it with %s and fold your change into the plugin or drop it"
                   % (rel, os.path.relpath(src, PLUGIN).replace(os.sep, "/")))
+    changed = [rel for rel, _s, a in items if a == CHANGED]
+    for rel in changed:
+        print("kept (project changes): %s; new template in %s.new; compare with: git diff --no-index %s %s.new"
+              % (rel, rel, rel, rel))
+    if changed:
+        print("Merge by hand, then delete the .new files. The plugin never commits them.")
+        if not args.dry_run and not had_state:
+            print("No install record was found, so this first update after DL201 is careful: every file that "
+                  "differs from the template was kept.")
     loose = untracked(items, root)
     if loose:
         print("not in git yet (commit them):")

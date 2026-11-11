@@ -1,4 +1,5 @@
 """DL150: `update` syncs artifact_prune.workflows after it rewrites artifact-prune.yml."""
+import json
 import os
 import tempfile
 import unittest
@@ -19,6 +20,15 @@ def run(*argv):
     return code, out.getvalue()
 
 
+def as_installed(root, rel, text):
+    """Write TEXT as if an older install had written it: the record holds its hash."""
+    (root / rel).write_text(text)
+    state = root / ".delivery" / "ci-install-state.json"
+    data = json.loads(state.read_text())
+    data["files"][rel] = INS.digest(str(root / rel))
+    state.write_text(json.dumps(data))
+
+
 class Sync(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -29,7 +39,7 @@ class Sync(unittest.TestCase):
     def test_update_applies_project_list(self):
         (self.root / ".delivery").mkdir(exist_ok=True)
         (self.root / ".delivery" / "config.json").write_text('{"artifact_prune": {"workflows": ["CI", "Installers"]}}')
-        (self.root / WF).write_text("old\n")
+        as_installed(self.root, WF, "old\n")
         code, out = run("update", "--track", "ts", "--root", str(self.root))
         self.assertEqual(code, 0)
         self.assertIn("Installers", (self.root / WF).read_text())
@@ -38,7 +48,7 @@ class Sync(unittest.TestCase):
     def test_failed_sync_keeps_update(self):
         (self.root / ".delivery").mkdir(exist_ok=True)
         (self.root / ".delivery" / "config.json").write_text("{not json")
-        (self.root / WF).write_text("old\n")
+        as_installed(self.root, WF, "old\n")
         code, out = run("update", "--track", "ts", "--root", str(self.root))
         self.assertEqual(code, 0)
         self.assertIn("could not sync", out)
