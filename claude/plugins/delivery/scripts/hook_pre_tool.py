@@ -146,6 +146,24 @@ def check_unfrozen(seg, command, cfg):
                  'lockfile is regenerated and committed, never installed around; an install killed for memory (exit 137) needs a larger pool cap.')
 
 
+def check_run_watch(seg):
+    """DL-95: `gh run watch` polls every 3 s by default and drains the shared GitHub quota."""
+    toks = H.strip_prefix(seg)
+    interval = None
+    for i, t in enumerate(toks):
+        if t in ('--interval', '-i') and i + 1 < len(toks):
+            interval = toks[i + 1]
+        elif t.startswith('--interval='):
+            interval = t.split('=', 1)[1]
+    try:
+        ok = interval is not None and float(interval) >= 60
+    except ValueError:
+        ok = False
+    if not ok:
+        deny('DL-95 never gh run watch without --interval 60 or more (the default 3 s drains the GitHub quota '
+             'for every session). Watch CI with ci_watch.py, one watcher for many runs.')
+
+
 def check_kill(seg, command):
     t = [x.lower() for x in H.strip_prefix(seg)]
     prog = t[0] if t else ''
@@ -298,6 +316,8 @@ def check_bash(root, cfg, ledger, data, at):
             check_merge(root, seg, ledger)
         if H.starts_with(seg, ['gh', 'pr', 'checks']) and flag(seg, '--watch') and H.check_on(cfg, 'DL-07'):
             deny('DL-07 do not watch the PR check list. Watch the workflow runs of the head commit: ci_watch.py <sha>.')
+        if H.starts_with(seg, ['gh', 'run', 'watch']) and H.check_on(cfg, 'DL-95'):
+            check_run_watch(seg)
         if H.starts_with(seg, ['vercel', 'env', 'rm']) and H.check_on(cfg, 'DL-20'):
             deny('DL-20 never vercel env rm to narrow targets (it deletes every target). Use vercel env update or '
                  'rm and re-add with all needed targets, then re-list Production.')

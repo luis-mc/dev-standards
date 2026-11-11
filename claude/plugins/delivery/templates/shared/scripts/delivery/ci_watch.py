@@ -740,65 +740,68 @@ def watch_statuses(sha: str, args: argparse.Namespace) -> int:
         time.sleep(min(args.interval, remaining))
 
 
-def main(argv: list[str] | None = None) -> int:
-    ap = argparse.ArgumentParser(
-        description="Wait for the CI workflow runs of a commit (never reads PR checks).")
-    ap.add_argument("sha", help="commit sha whose runs to watch")
-    ap.add_argument("--workflow", default="ci.yml",
-                    help="workflow file name or name (default ci.yml); a workflow that "
-                         "does not exist exits 2 at once and lists the repository's workflows")
-    ap.add_argument("--only-workflow", action="store_true",
-                    help="watch only the --workflow runs; by default every workflow run for the commit is "
-                         "watched and any failure fails the watch")
-    ap.add_argument("--timeout", type=float, default=3600,
-                    help="seconds to wait before giving up with exit 4 (default 3600)")
-    ap.add_argument("--interval", type=float, default=30,
-                    help="seconds between polls (default 30)")
-    ap.add_argument("--queue-warn-seconds", type=float, default=QUEUE_WARN_SECONDS,
-                    help="warn about a job queued this long with no runner for its labels "
-                         "(default 600)")
-    ap.add_argument("--context", action="append", default=[],
-                    help="CI option c (cloud sessions): watch this commit status context instead of a "
-                         "workflow; repeat it for several. Same exit codes: 0 all success, 1 one failed, "
-                         "4 timed out")
-    ap.add_argument("--repo", help="OWNER/NAME (default: the current repository)")
-    ap.add_argument("--config", help="project config with ci_watch.post_run "
-                                     "(default: .delivery/config.json in the repository root)")
-    ap.add_argument("--no-fallback", action="store_true",
-                    help="do not start the Option 4 fallback for shards that wait too long (ci.fallback)")
-    ap.add_argument("--no-trim", action="store_true",
-                    help="do not trim Docker Desktop's data disk after the runs complete "
-                         "(runs only on Windows, and only when .delivery/config.json has ci.docker_trim: true)")
-    ap.add_argument("--no-post-run", action="store_true",
-                    help="do not run the ci_watch.post_run hooks of the project config")
-    args = ap.parse_args(argv)
+MIN_INTERVAL = 30.0          # DL235: seconds; the default is 60
+DEFAULT_INTERVAL = 60.0
+DEFAULT_MAX_INTERVAL = 120.0
+DEFAULT_MIN_REMAINING = 200  # below this many REST calls left, wait for the reset instead of polling
 
-    if not re.fullmatch(r"[0-9a-fA-F]{7,40}", args.sha):
-        print(f"ci_watch: {args.sha!r} is not a commit sha", file=sys.stderr)
-        return 2
-    if args.timeout <= 0 or args.interval < 0:
-        print("ci_watch: --timeout must be positive and --interval not negative",
-              file=sys.stderr)
-        return 2
-    if shutil.which("gh") is None:
-        print("ci_watch: the GitHub CLI (gh) is not installed or not on PATH",
-              file=sys.stderr)
-        return 2
 
-    sha = resolve_sha(args.sha.lower(), args.repo)
-    if sha is None:
-        print(f"ci_watch: could not resolve {args.sha} to a full commit sha "
-              "(`gh run list --commit` matches full shas only); pass all 40 characters",
-              file=sys.stderr)
-        return 2
-    if args.context:
-        return watch_statuses(sha, args)
-    deadline = time.monotonic() + args.timeout
-    errors = 0
-    last_state = ""
-    warned: set = set()
-    fallback_state: dict = {}
-    while True:
+def effective_interval(value: float) -> float:
+    """DL235: 0 means no wait (tests); anything else is at least MIN_INTERVAL."""
+    return 0.0 if value == 0 else max(value, MIN_INTERVAL)
+
+
+def next_delay(base: float, current: float, queued_only: bool, cap: float) -> float:
+    """DL235: back off (x1.5, up to cap) while every watched run is still queued; else the base interval."""
+    if not queued_only or base == 0:
+        return base
+    return min(max(cap, base), current * 1.5)
+
+
+def read_rate_limit(repo: str | None = None) -> tuple[int, float] | None:
+    """(core.remaining, core.reset epoch) from `gh api rate_limit` (free), None when unreadable."""
+    try:
+        data = gh_json(["api", "rate_limit"])
+        core = data["resources"]["core"]
+        return int(core["remaining"]), float(core["reset"])
+    except (GhError, KeyError, TypeError, ValueError):
+        return None
+
+
+def quota_guard(repo: str | None, min_remaining: int, sleep=None, now=None, read=None) -> float:
+    """DL235: before a poll cycle, sleep until the quota resets when it is low.
+    Returns the seconds slept (the caller adds them to the deadline). Never fails."""
+    sleep = sleep or time.sleep
+    now = now or time.time
+    got = (read or read_rate_limit)(repo)
+    if got is None or got[0] >= min_remaining:
+        return 0.0
+    wait = max(0.0, got[1] - now()) + 1.0
+    clock = time.strftime("%H:%M:%S", time.localtime(got[1]))
+    print(f"ci_watch: GitHub quota low ({got[0]} calls left); waiting until it resets at {clock}", flush=True)
+    sleep(wait)
+    return wait
+
+
+def run_commit(run_id: str, repo: str | None) -> str | None:
+    """DL235: the head commit of a workflow run (one call), None when it cannot be read."""
+    try:
+        data = gh_json(["run", "view", run_id, "--json", "headSha", *repo_args(repo)])
+    except GhError:
+        return None
+    sha = data.get("headSha") if isinstance(data, dict) else None
+    return sha if isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{40}", sha) else None
+
+
+def poll_commit(sha: str, args: argparse.Namespace, st: dict) -> int | None:
+    """DL235: one poll of one commit. Returns the exit code once decided, None while it waits.
+    `st` carries errors, warned, fallback_state, state and queued_only between polls."""
+    errors = st["errors"]
+    warned = st["warned"]
+    fallback_state = st["fallback_state"]
+    state = ""
+    st["queued_only"] = False
+    try:
         state = ""
         decided = False
         try:
@@ -817,6 +820,7 @@ def main(argv: list[str] | None = None) -> int:
             runs = None
         if runs is not None:
             pending = [r for r in runs if r.get("status") != "completed"]
+            st["queued_only"] = not runs or all(r.get("status") == "queued" for r in pending) and bool(pending)
             if not runs:
                 state = f"no {args.workflow} run for {sha[:10]} yet"
             elif pending:
@@ -867,14 +871,120 @@ def main(argv: list[str] | None = None) -> int:
                 print_slowest_job_summary(runs, args.repo)
                 ledger_ci(sha, "failure", args.repo)
                 return finish(1, runs, sha, args)
-        if state != last_state:
-            print(f"ci_watch: waiting, {state}", flush=True)
-            last_state = state
+        return None
+    finally:
+        st["errors"] = errors
+        st["state"] = state
+
+
+def main(argv: list[str] | None = None) -> int:
+    ap = argparse.ArgumentParser(
+        description="Wait for the CI workflow runs of a commit (never reads PR checks).")
+    ap.add_argument("sha", nargs="*", help="commit sha(s) whose runs to watch; one process watches them all")
+    ap.add_argument("--run", action="append", default=[], metavar="RUN_ID",
+                    help="workflow run id to watch (its commit is watched); repeat it for several")
+    ap.add_argument("--workflow", default="ci.yml",
+                    help="workflow file name or name (default ci.yml); a workflow that "
+                         "does not exist exits 2 at once and lists the repository's workflows")
+    ap.add_argument("--only-workflow", action="store_true",
+                    help="watch only the --workflow runs; by default every workflow run for the commit is "
+                         "watched and any failure fails the watch")
+    ap.add_argument("--timeout", type=float, default=3600,
+                    help="seconds to wait before giving up with exit 4 (default 3600)")
+    ap.add_argument("--interval", type=float, default=DEFAULT_INTERVAL,
+                    help="seconds between polls (default 60, minimum 30; 0 polls without waiting)")
+    ap.add_argument("--max-interval", type=float, default=DEFAULT_MAX_INTERVAL,
+                    help="the poll interval grows up to this while every run is still queued (default 120)")
+    ap.add_argument("--min-remaining", type=int, default=DEFAULT_MIN_REMAINING,
+                    help="below this many GitHub REST calls left, wait for the quota reset (default 200)")
+    ap.add_argument("--queue-warn-seconds", type=float, default=QUEUE_WARN_SECONDS,
+                    help="warn about a job queued this long with no runner for its labels "
+                         "(default 600)")
+    ap.add_argument("--context", action="append", default=[],
+                    help="CI option c (cloud sessions): watch this commit status context instead of a "
+                         "workflow; repeat it for several. Same exit codes: 0 all success, 1 one failed, "
+                         "4 timed out")
+    ap.add_argument("--repo", help="OWNER/NAME (default: the current repository)")
+    ap.add_argument("--config", help="project config with ci_watch.post_run "
+                                     "(default: .delivery/config.json in the repository root)")
+    ap.add_argument("--no-fallback", action="store_true",
+                    help="do not start the Option 4 fallback for shards that wait too long (ci.fallback)")
+    ap.add_argument("--no-trim", action="store_true",
+                    help="do not trim Docker Desktop's data disk after the runs complete "
+                         "(runs only on Windows, and only when .delivery/config.json has ci.docker_trim: true)")
+    ap.add_argument("--no-post-run", action="store_true",
+                    help="do not run the ci_watch.post_run hooks of the project config")
+    args = ap.parse_args(argv)
+
+    if not args.sha and not args.run:
+        print("ci_watch: give a commit sha or --run RUN_ID", file=sys.stderr)
+        return 2
+    for item in args.sha:
+        if not re.fullmatch(r"[0-9a-fA-F]{7,40}", item):
+            print(f"ci_watch: {item!r} is not a commit sha", file=sys.stderr)
+            return 2
+    for item in args.run:
+        if not item.isdigit():
+            print(f"ci_watch: {item!r} is not a run id", file=sys.stderr)
+            return 2
+    if args.timeout <= 0 or args.interval < 0:
+        print("ci_watch: --timeout must be positive and --interval not negative",
+              file=sys.stderr)
+        return 2
+    if shutil.which("gh") is None:
+        print("ci_watch: the GitHub CLI (gh) is not installed or not on PATH",
+              file=sys.stderr)
+        return 2
+
+    shas: list[str] = []
+    for item in args.sha:
+        full = resolve_sha(item.lower(), args.repo)
+        if full is None:
+            print(f"ci_watch: could not resolve {item} to a full commit sha "
+                  "(`gh run list --commit` matches full shas only); pass all 40 characters",
+                  file=sys.stderr)
+            return 2
+        shas.append(full)
+    for item in args.run:
+        full = run_commit(item, args.repo)
+        if full is None:
+            print(f"ci_watch: could not read the commit of run {item}", file=sys.stderr)
+            return 2
+        shas.append(full)
+    shas = list(dict.fromkeys(shas))
+    sha = shas[0]
+    if args.context:
+        codes = [watch_statuses(item, args) for item in shas]
+        return max(codes)
+    watches = []
+    for sha in shas:
+        watches.append((sha, {"errors": 0, "warned": set(), "fallback_state": {}, "state": "",
+                              "queued_only": False, "last_state": ""}))
+    deadline = time.monotonic() + args.timeout
+    base = effective_interval(args.interval)
+    delay = base
+    codes = []
+    while True:
+        deadline += quota_guard(args.repo, args.min_remaining)
+        for sha, st in list(watches):
+            code = poll_commit(sha, args, st)
+            if code is not None:
+                watches.remove((sha, st))
+                codes.append(code)
+                continue
+            if st["state"] != st["last_state"]:
+                prefix = f"{sha[:10]}: " if len(shas) > 1 else ""
+                print(f"ci_watch: waiting, {prefix}{st['state']}", flush=True)
+                st["last_state"] = st["state"]
+        if not watches:
+            return max(codes)
+        delay = next_delay(base, delay, all(st["queued_only"] for _, st in watches), args.max_interval)
         remaining = deadline - time.monotonic()
         if remaining <= 0:
-            print(f"ci_watch: timed out after {args.timeout:g}s, {state}", file=sys.stderr)
+            for sha, st in watches:
+                print(f"ci_watch: timed out after {args.timeout:g}s, {sha[:10]}: {st['state']}", file=sys.stderr)
             return 4
-        time.sleep(min(args.interval, remaining))
+        time.sleep(min(delay, remaining))
 
 
 if __name__ == "__main__":
