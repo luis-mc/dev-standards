@@ -5684,6 +5684,30 @@
       "chosen": "Find and fix (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "Find and fix (Recommended)"
+    },
+    {
+      "id": "D251",
+      "question": "Generated docs built by a newer docs plugin fail CI G1 against an older pinned dev-standards ref: how to fix? (peer report, overnight: my pick per D248)",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL263",
+      "options": [
+        {
+          "label": "Flag and bump the pin (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "G1 ignores generator version",
+          "summary": "offered"
+        },
+        {
+          "label": "Both",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Flag and bump the pin (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "overnight rule D248: my recommended pick, for morning review"
     }
   ]
 }

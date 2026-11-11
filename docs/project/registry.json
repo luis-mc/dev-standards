@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T22:22+00:00",
+  "updated": "2026-11-11T23:10+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4533,6 +4533,207 @@
       "changed": "2026-11-11T22:22+00:00",
       "rides": "DL252",
       "started": "2026-11-11T21:53+00:00"
+    },
+    {
+      "id": "DL254",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Release: prune merge, multi-track setup, Windows join tests, held-run brief note",
+      "detail": "Overnight follow-ups D249: DL255 prune-list 3-way merge, DL256 multi-track ci setup and gate kind per track, DL257 Windows-only join test failures, DL258 brief note on held dispatches.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:09+00:00",
+      "release": 111,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T22:24+00:00",
+          "end": "2026-11-11T22:52+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T22:52+00:00",
+          "end": "2026-11-11T22:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T22:55+00:00",
+          "end": "2026-11-11T23:09+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T23:09+00:00",
+          "end": "2026-11-11T23:12+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-11T22:23+00:00"
+    },
+    {
+      "id": "DL255",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL255 Installer keeps the project's artifact-prune workflow list",
+      "detail": "DL242 follow-up: the installer's 3-way merge of artifact-prune.yml may still take the template's keep list over the project's own edits.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:10+00:00",
+      "rides": "DL254",
+      "started": "2026-11-11T22:23+00:00"
+    },
+    {
+      "id": "DL256",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL256 Multi-track CI setup and gate kind per track",
+      "detail": "delivery_ci_setup.py apply still takes one track; the gate's packages.kind must be per track (rust + ts in one repo).",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:10+00:00",
+      "rides": "DL254",
+      "started": "2026-11-11T22:23+00:00"
+    },
+    {
+      "id": "DL257",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "DL257 Fix the Windows-only join test failures",
+      "detail": "Five join tests fail on Windows only (local runs on main); make them pass on Windows and Linux.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T22:54+00:00",
+      "rides": "DL261",
+      "started": "2026-11-11T22:23+00:00"
+    },
+    {
+      "id": "DL258",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL258 Agent brief warns that branch runs are held during release CI",
+      "detail": "The brief template tells agents a cancelled branch dispatch during a release PR's CI is a hold, not a failure, and what to do.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:10+00:00",
+      "rides": "DL254",
+      "started": "2026-11-11T22:23+00:00"
+    },
+    {
+      "id": "DL259",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL259 design set accepts an accents-only design.css",
+      "detail": "check warns that page/surface/ink tokens in design.css are ignored (DL239), but design set (check_tokens, R5.11) still requires them, so the warning cannot be cleared. design set must accept an accents-only file.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:10+00:00",
+      "rides": "DL254",
+      "started": "2026-11-11T22:24+00:00"
+    },
+    {
+      "id": "DL260",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "DL260 Full Progress page declares UTF-8",
+      "detail": "The Full Progress template has no meta charset; opened as a local file, browsers guess the encoding and show mojibake (· as 路, … as 鈥�; seen in the owner's 21:12 recording). Every generated HTML page declares UTF-8.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:10+00:00",
+      "rides": "DL254",
+      "started": "2026-11-11T22:25+00:00"
+    },
+    {
+      "id": "DL261",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release: Windows join tests",
+      "detail": "Next release after RELEASE-111: DL257 (local agent, Windows-only join test failures).",
+      "expected": "11 Nov ~23:24",
+      "changed": "2026-11-11T23:00+00:00",
+      "expected_basis": "joins after RELEASE-111 merges ~23:12",
+      "release": 112,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T22:27+00:00",
+          "end": "2026-11-11T22:54+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T23:12+00:00",
+          "end": "2026-11-11T23:16+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T23:16+00:00",
+          "end": "2026-11-11T23:21+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T23:21+00:00",
+          "end": "2026-11-11T23:24+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-11T22:54+00:00"
+    },
+    {
+      "id": "DL262",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release: stale dev-standards pin flagged and bumped",
+      "detail": "RELEASE after RELEASE-112: DL262 (peer report: CI pin older than installed docs plugin makes G1 fail).",
+      "expected": "11 Nov ~23:49",
+      "changed": "2026-11-11T23:10+00:00",
+      "expected_basis": "cloud agent ~25 min from 23:10",
+      "release": 113,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T23:10+00:00",
+          "end": "2026-11-11T23:35+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T23:35+00:00",
+          "end": "2026-11-11T23:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T23:40+00:00",
+          "end": "2026-11-11T23:46+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T23:46+00:00",
+          "end": "2026-11-11T23:49+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-11T23:10+00:00"
+    },
+    {
+      "id": "DL263",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL263 flag and bump a stale dev-standards CI pin",
+      "detail": "A project's dev-standards.yml pins the dev-standards ref by hand; generated docs built by a newer installed docs plugin then fail CI G1 against the older pinned scripts. Status/doctor flags a pin older than the installed plugins and a command bumps it. D251 (my pick, for review).",
+      "expected": "11 Nov ~23:35",
+      "changed": "2026-11-11T23:10+00:00",
+      "expected_basis": "cloud agent from 23:10, ~25 min",
+      "rides": "DL262",
+      "started": "2026-11-11T23:10+00:00"
     },
     {
       "id": "DS1",
