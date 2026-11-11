@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-11T08:36+00:00",
+ "updated": "2026-11-11T09:34+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -1604,6 +1604,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-09T20:52+00:00",
    "rides": "DS194",
    "started": "2026-11-09T16:22+00:00"
+  },
+  {
+   "id": "AR69",
+   "owner": "artifacts",
+   "app": "luismc-artifacts",
+   "status": "Built",
+   "item": "Lighter Full Progress page (slim registry, no old Live rows, lean rows)",
+   "detail": "D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T09:26+00:00",
+   "rides": "DS231",
+   "started": "2026-11-11T09:07+00:00"
   },
   {
    "id": "DL1",
@@ -4403,12 +4415,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL195",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)",
    "detail": "test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.",
-   "expected": "11 Nov ~08:48",
-   "changed": "2026-11-11T08:36+00:00",
-   "expected_basis": "edit ~5 min, CI started ~08:40 ~5 min",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T08:38+00:00",
    "rides": "DS231",
    "started": "2026-11-11T08:36+00:00"
   },
@@ -4435,6 +4446,55 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "changed": "2026-11-11T06:26+00:00",
    "rides": "DS230",
    "started": "2026-11-11T06:16+00:00"
+  },
+  {
+   "id": "DL198",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Live",
+   "item": "Restart the CI pool after Docker Desktop stopped",
+   "detail": "Docker Desktop started 08:41 (owner's choice); pool container up 08:44:40, runner online 08:44:58; comics-organizer's waiting job started. Container still on the 22:11 image; recreate onto the 01:58 image when idle.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T08:46+00:00",
+   "no_release": "pool upkeep; ships nothing",
+   "started": "2026-11-11T08:44+00:00"
+  },
+  {
+   "id": "DL199",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Built",
+   "item": "Doctor layer check probes the running container, not its image ID",
+   "detail": "After a Docker restart the running container's image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T09:27+00:00",
+   "rides": "DS231",
+   "started": "2026-11-11T09:12+00:00"
+  },
+  {
+   "id": "DL200",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Built",
+   "item": "spec-lint ledger/watcher/hooks job hangs on hosted runners",
+   "detail": "Hang found: test_machine.py test_main_with_the_layer_takes_a_slot_and_job_done_frees_it runs R.main([]) (real 15 s poll, 30 min wait); its own queue ticket is missing from queue_list, so the gate holds on '0 ahead in the queue'. Fix the gate (re-enqueue a vanished ticket) and bound the test.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T09:25+00:00",
+   "rides": "DS231",
+   "started": "2026-11-11T08:55+00:00"
+  },
+  {
+   "id": "DL201",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Running",
+   "item": "delivery_ci_install update: diff or merge files with project changes",
+   "detail": "Installer update meets a project-changed plugin file: 3-way merge with the last installed template as base; clean merges applied, conflicts listed for yes/no or an agent (D206 replaces D201). Step 1 (state file, .new) running; step 2 (3-way merge) follows on the same branch.",
+   "expected": "11 Nov ~09:57",
+   "changed": "2026-11-11T09:34+00:00",
+   "expected_basis": "step 2 agent started 09:34, ~23 min",
+   "rides": "DS231",
+   "started": "2026-11-11T09:12+00:00"
   },
   {
    "id": "DS1",
@@ -8163,30 +8223,71 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "owner": "project",
    "app": "",
    "status": "Running",
-   "item": "RELEASE-96: ci_tool tests pass on Windows",
+   "item": "RELEASE-96: ci_tool Windows tests, CI hang fix, lighter Full Progress",
    "detail": "DL195 (test-only fix). PR, CI, merge on green.",
-   "expected": "11 Nov ~08:48",
-   "changed": "2026-11-11T08:36+00:00",
-   "expected_basis": "small edit, CI ~5 min",
+   "expected": "11 Nov ~09:55",
+   "changed": "2026-11-11T09:12+00:00",
+   "expected_basis": "waits for DL200, AR69, DL199, DL201, SO7, then join and CI",
    "release": 96,
    "phases": [
     {
+     "name": "agents",
+     "start": "2026-11-11T08:55+00:00",
+     "end": "2026-11-11T09:40+00:00"
+    },
+    {
      "name": "join",
-     "start": "2026-11-11T08:35+00:00",
-     "end": "2026-11-11T08:40+00:00"
+     "start": "2026-11-11T09:40+00:00",
+     "end": "2026-11-11T09:46+00:00"
     },
     {
      "name": "ci",
-     "start": "2026-11-11T08:40+00:00",
-     "end": "2026-11-11T08:45+00:00"
+     "start": "2026-11-11T09:46+00:00",
+     "end": "2026-11-11T09:51+00:00"
     },
     {
      "name": "merge",
-     "start": "2026-11-11T08:45+00:00",
-     "end": "2026-11-11T08:48+00:00"
+     "start": "2026-11-11T09:51+00:00",
+     "end": "2026-11-11T09:55+00:00"
     }
    ],
    "started": "2026-11-11T08:30+00:00"
+  },
+  {
+   "id": "DS232",
+   "owner": "project",
+   "app": "",
+   "status": "Dropped",
+   "item": "RELEASE-97: lighter Full Progress page",
+   "detail": "AR task (D25, D26): slim embedded registry, no old Live rows, lighter rows. Join, CI, merge on green, plugin update.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T09:11+00:00",
+   "release": 97,
+   "phases": [
+    {
+     "name": "agents",
+     "start": "2026-11-11T09:05+00:00",
+     "end": "2026-11-11T09:33+00:00"
+    },
+    {
+     "name": "join",
+     "start": "2026-11-11T09:40+00:00",
+     "end": "2026-11-11T09:46+00:00"
+    },
+    {
+     "name": "ci",
+     "start": "2026-11-11T09:46+00:00",
+     "end": "2026-11-11T09:51+00:00"
+    },
+    {
+     "name": "merge",
+     "start": "2026-11-11T09:51+00:00",
+     "end": "2026-11-11T09:55+00:00"
+    }
+   ],
+   "started": "2026-11-11T09:05+00:00",
+   "dropped_into": "DS231",
+   "dropped_reason": "owner: merge 96 and 97 into one release"
   },
   {
    "id": "DU1",
@@ -8525,6 +8626,30 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "started": "2026-11-04T19:52+00:00"
   },
   {
+   "id": "SO7",
+   "owner": "setup-offers",
+   "app": "",
+   "status": "Built",
+   "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
+   "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T09:25+00:00",
+   "rides": "DS231",
+   "started": "2026-11-11T09:12+00:00"
+  },
+  {
+   "id": "SO8",
+   "owner": "setup-offers",
+   "app": "",
+   "status": "Dropped",
+   "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
+   "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T09:12+00:00",
+   "dropped_into": "SO7",
+   "dropped_reason": "duplicate of SO7"
+  },
+  {
    "id": "ST1",
    "owner": "design-starter",
    "app": "luismc-docs",
@@ -8782,19 +8907,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T08:36+00:00">11 Nov 08:36</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T09:34+00:00">11 Nov 09:34</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DL195"><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds) <span class="glance-expected">11 Nov ~08:48</span><span class="glance-basis">edit ~5 min, CI started ~08:40 ~5 min</span></li>
-<li data-glance-task="DS231"><span class="task-id">DS231</span><span class="release-name">RELEASE-96</span>ci_tool tests pass on Windows <span class="glance-expected">11 Nov ~08:48</span><span class="glance-basis">small edit, CI ~5 min</span></li>
+<li data-glance-task="DS231"><span class="task-id">DS231</span><span class="release-name">RELEASE-96</span>ci_tool Windows tests, CI hang fix, lighter Full Progress <span class="glance-expected">11 Nov ~09:55</span><span class="glance-basis">waits for DL200, AR69, DL199, DL201, SO7, then join and CI</span></li>
+<li data-glance-task="DL201"><span class="task-id">DL201</span>delivery_ci_install update: diff or merge files with project changes <span class="glance-expected">11 Nov ~09:57</span><span class="glance-basis">step 2 agent started 09:34, ~23 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">49 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">5 tasks</span></summary>
 <ul>
+<li data-glance-task="DL199"><span class="task-id">DL199</span>Doctor layer check probes the running container, not its image ID</li>
+<li data-glance-task="AR69"><span class="task-id">AR69</span>Lighter Full Progress page (slim registry, no old Live rows, lean rows)</li>
+<li data-glance-task="DL200"><span class="task-id">DL200</span>spec-lint ledger/watcher/hooks job hangs on hosted runners</li>
+<li data-glance-task="SO7"><span class="task-id">SO7</span>claude-setup rule template: Q ids back in clarifying-questions check tags</li>
+<li data-glance-task="DL195"><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">50 tasks</span></summary>
+<ul>
+<li data-glance-task="DL198"><span class="task-id">DL198</span>Restart the CI pool after Docker Desktop stopped</li>
 <li data-glance-task="DL197"><span class="task-id">DL197</span>join.py strips only docs/work files the joined branches add or change</li>
 <li data-glance-task="DS230"><span class="task-id">DS230</span><span class="release-name">RELEASE-95</span>join keeps the default branch&#x27;s docs/work</li>
 <li data-glance-task="DL196"><span class="task-id">DL196</span>Pool refresh after RELEASE-94 (pool files to 1.27.0)</li>
@@ -8802,35 +8937,43 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL193"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</li>
 <li data-glance-task="DL194"><span class="task-id">DL194</span>Pool tool cache writable by every agent user</li>
 <li data-glance-task="DS229"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch</li>
-<li data-glance-task="DL186"><span class="task-id">DL186</span>Ship .gitleaks.toml with CI setup; rules skip Rust declarations and empty values</li>
-<li class="glance-more">and 41 more</li>
+<li class="glance-more">and 42 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">530</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">531</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">5</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">12</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS231 (ci_tool tests pass on Windows) expected live about 08:48." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">08:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">09:00</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-96 · ci_tool tests pass on Windows</title>RELEASE-96 · ci_tool test…</text>
-<text class="rt-sub" x="0" y="77"><title>DL195</title>DL195</text>
-<rect class="rt-bar join" x="286.7" y="52" width="86.7" height="22"><title>join 08:35-08:40</title></rect>
-<rect class="rt-bar ci" x="373.3" y="52" width="86.7" height="22"><title>PR CI 08:40-08:45</title></rect>
-<rect class="rt-bar merge" x="460" y="52" width="52" height="22"><title>merge + cleanup 08:45-08:48</title></rect>
-<polygon class="rt-expected" points="512,50 520,63 512,76 504,63"/>
-<text class="rt-live-label" x="512" y="92">live ~08:48</text>
-<line class="rt-now" x1="304" y1="36" x2="304" y2="148"/><text class="rt-now-label" x="304" y="161">now 08:36</text>
+<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS231 (ci_tool Windows tests, CI hang fix, lighter Full Progress) expected live about 09:55." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">08:30</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">09:00</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">09:30</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">10:00</text></g>
+<text class="rt-name" x="0" y="60"><title>RELEASE-96 · ci_tool Windows tests, CI hang fix, lighter Full Progress</title>RELEASE-96 · ci_tool Wind…</text>
+<text class="rt-sub" x="0" y="77"><title>AR69, DL195, DL199, DL200, DL201, SO7</title>AR69, DL195, DL199, DL200, DL201,…</text>
+<rect class="rt-bar agents" x="344.4" y="52" width="260" height="22"><title>agents 08:55-09:40</title></rect>
+<rect class="rt-bar join" x="604.4" y="52" width="34.7" height="22"><title>join 09:40-09:46</title></rect>
+<rect class="rt-bar ci" x="639.1" y="52" width="28.9" height="22"><title>PR CI 09:46-09:51</title></rect>
+<rect class="rt-bar merge" x="668" y="52" width="23.1" height="22"><title>merge + cleanup 09:51-09:55</title></rect>
+<polygon class="rt-expected" points="691.1,50 699.1,63 691.1,76 683.1,63"/>
+<text class="rt-live-label" x="691.1" y="92">live ~09:55</text>
+<line class="rt-now" x1="569.8" y1="36" x2="569.8" y2="148"/><text class="rt-now-label" x="569.8" y="161">now 09:34</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
-<details class="status-fold release-group" data-group="release-96" open><summary><strong>RELEASE-96 · live ~08:48</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold release-group" data-group="release-96" open><summary><strong>RELEASE-96 · live ~09:55</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS231"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS231</span><span class="release-name">RELEASE-96</span>ci_tool tests pass on Windows</td><td data-label="App / service"></td><td data-label="Detail">DL195 (test-only fix). PR, CI, merge on green.</td><td data-label="Expected">11 Nov ~08:48<span class="expected-basis">small edit, CI ~5 min</span></td></tr>
-<tr data-task="DL195"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)</a></td><td data-label="App / service"></td><td data-label="Detail">test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.</td><td data-label="Expected">11 Nov ~08:48<span class="expected-basis">edit ~5 min, CI started ~08:40 ~5 min</span></td></tr>
+<tr data-task="DS231"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS231</span><span class="release-name">RELEASE-96</span>ci_tool Windows tests, CI hang fix, lighter Full Progress</td><td data-label="App / service"></td><td data-label="Detail">DL195 (test-only fix). PR, CI, merge on green.</td><td data-label="Expected">11 Nov ~09:55<span class="expected-basis">waits for DL200, AR69, DL199, DL201, SO7, then join and CI</span></td></tr>
+<tr data-task="DL201"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL201</span>delivery_ci_install update: diff or merge files with project changes</a></td><td data-label="App / service"></td><td data-label="Detail">Installer update meets a project-changed plugin file: 3-way merge with the last installed template as base; clean merges applied, conflicts listed for yes/no or an agent (D206 replaces D201). Step 1 (state file, .new) running; step 2 (3-way merge) follows on the same branch.</td><td data-label="Expected">11 Nov ~09:57<span class="expected-basis">step 2 agent started 09:34, ~23 min</span></td></tr>
+<tr data-task="AR69"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-project-artifacts-standard.html"><span class="task-id">AR69</span>Lighter Full Progress page (slim registry, no old Live rows, lean rows)</a></td><td data-label="App / service"><code>luismc-artifacts</code></td><td data-label="Detail">D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL195"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)</a></td><td data-label="App / service"></td><td data-label="Detail">test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL199"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL199</span>Doctor layer check probes the running container, not its image ID</a></td><td data-label="App / service"></td><td data-label="Detail">After a Docker restart the running container&#x27;s image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL200"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL200</span>spec-lint ledger/watcher/hooks job hangs on hosted runners</a></td><td data-label="App / service"></td><td data-label="Detail">Hang found: test_machine.py test_main_with_the_layer_takes_a_slot_and_job_done_frees_it runs R.main([]) (real 15 s poll, 30 min wait); its own queue ticket is missing from queue_list, so the gate holds on &#x27;0 ahead in the queue&#x27;. Fix the gate (re-enqueue a vanished ticket) and bound the test.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="SO7"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO7</span>claude-setup rule template: Q ids back in clarifying-questions check tags</a></td><td data-label="App / service"></td><td data-label="Detail">Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.</td><td data-label="Expected">11 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">540 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">543 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="SO8"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><a href="feature-claude-setup-offers-and-enforcement.html"><span class="task-id">SO8</span>claude-setup rule template: Q ids back in clarifying-questions check tags</a><span class="dropped-line">dropped: folded into SO7: duplicate of SO7</span></td><td data-label="App / service"></td><td data-label="Detail">Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DS232"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><span class="task-id">DS232</span><span class="release-name">RELEASE-97</span>lighter Full Progress page<span class="dropped-line">dropped: folded into RELEASE-96: owner: merge 96 and 97 into one release</span></td><td data-label="App / service"></td><td data-label="Detail">AR task (D25, D26): slim embedded registry, no old Live rows, lighter rows. Join, CI, merge on green, plugin update.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL198"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL198</span>Restart the CI pool after Docker Desktop stopped</a><span class="no-release-line">ships nothing: pool upkeep; ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">Docker Desktop started 08:41 (owner&#x27;s choice); pool container up 08:44:40, runner online 08:44:58; comics-organizer&#x27;s waiting job started. Container still on the 22:11 image; recreate onto the 01:58 image when idle.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL197"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL197</span>join.py strips only docs/work files the joined branches add or change</a><span class="release-line"><span class="release-name">RELEASE-95</span></span></td><td data-label="App / service"></td><td data-label="Detail">The join&#x27;s docs/work strip deletes every file under docs/work on the integration branch, including files the default branch already has, which a project&#x27;s CI may read. Strip only paths that differ from the base; keep the base&#x27;s files.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DS230"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS230</span><span class="release-name">RELEASE-95</span>join keeps the default branch&#x27;s docs/work</td><td data-label="App / service"></td><td data-label="Detail">DL197 (peer report). Join, CI, merge on green, plugin update in both scopes.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL196"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL196</span>Pool refresh after RELEASE-94 (pool files to 1.27.0)</a><span class="no-release-line">ships nothing: pool upkeep; ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">Pool files refreshed to 1.27.0 at 01:58 and image rebuilt. Container not recreated (the refresh could not rule out a running job); the change is a comment only, so the running container needs nothing.</td><td data-label="Expected">11 Nov</td></tr>
@@ -9379,16 +9522,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 </section>
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
-<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
+<details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (3)</strong><span class="fold-count">3 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906436"><time datetime="2026-11-11T08:36+00:00">11 Nov 08:36</time></td><td data-label="Tasks">DL1 to DL197</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906494"><time datetime="2026-11-11T09:34+00:00">11 Nov 09:34</time></td><td data-label="Tasks">DL1 to DL201</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-built">3 Built</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29906486"><time datetime="2026-11-11T09:26+00:00">11 Nov 09:26</time></td><td data-label="Tasks">AR2 to AR69</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29906485"><time datetime="2026-11-11T09:25+00:00">11 Nov 09:25</time></td><td data-label="Tasks">SO1 to SO8</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
+<details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (5)</strong><span class="fold-count">5 feature artifacts</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: project artifacts standard"><a href="feature-project-artifacts-standard.html">Feature: Project artifacts standard</a></td><td data-label="Last updated" data-value="29904292"><time datetime="2026-11-09T20:52+00:00">09 Nov 20:52</time></td><td data-label="Tasks">AR2 to AR68</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system updates from real projects"><a href="feature-design-system-updates-from-real-projects.html">Feature: Design-system updates from real projects</a></td><td data-label="Last updated" data-value="29898412"><time datetime="2026-11-05T18:52+00:00">05 Nov 18:52</time></td><td data-label="Tasks">DU1 to DU12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">Decided on 5 Nov: all 35 proposals go in; the owner chose every recommended option (D1-D6).</td></tr>
-<tr><td data-label="Feature artifact" data-value="feature: claude-setup offers and enforcement"><a href="feature-claude-setup-offers-and-enforcement.html">Feature: claude-setup offers and enforcement</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">SO1 to SO6</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: design-system starter"><a href="feature-design-system-starter.html">Feature: Design-system starter</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">ST1 to ST5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page.</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: model and effort profiles"><a href="feature-model-and-effort-profiles.html">Feature: Model and effort profiles</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">MP1 to MP7, DS2 to DS5</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</td></tr>
 <tr><td data-label="Feature artifact" data-value="feature: test and validation cost"><a href="feature-test-and-validation-cost.html">Feature: Test and validation cost</a></td><td data-label="Last updated" data-value="29898046"><time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time></td><td data-label="Tasks">TC1 to TC12</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-live">Complete</span></span></td><td data-label="Where it stands">All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.</td></tr>

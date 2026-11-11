@@ -1,5 +1,9 @@
 [
   {
+    "date": "11 Nov 09:12",
+    "change": "dropped: folded into SO7: duplicate of SO7"
+  },
+  {
     "date": "02 Nov 15:59",
     "change": "RELEASE-31 live 15:59, CI green on f703a0d"
   },

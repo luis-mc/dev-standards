@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T08:36+00:00",
+  "updated": "2026-11-11T09:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -724,6 +724,18 @@
       "changed": "2026-11-09T20:52+00:00",
       "rides": "DS194",
       "started": "2026-11-09T16:22+00:00"
+    },
+    {
+      "id": "AR69",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Built",
+      "item": "Lighter Full Progress page (slim registry, no old Live rows, lean rows)",
+      "detail": "D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:26+00:00",
+      "rides": "DS231",
+      "started": "2026-11-11T09:07+00:00"
     },
     {
       "id": "DL1",
@@ -3523,12 +3535,11 @@
       "id": "DL195",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)",
       "detail": "test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.",
-      "expected": "11 Nov ~08:48",
-      "changed": "2026-11-11T08:36+00:00",
-      "expected_basis": "edit ~5 min, CI started ~08:40 ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T08:38+00:00",
       "rides": "DS231",
       "started": "2026-11-11T08:36+00:00"
     },
@@ -3555,6 +3566,55 @@
       "changed": "2026-11-11T06:26+00:00",
       "rides": "DS230",
       "started": "2026-11-11T06:16+00:00"
+    },
+    {
+      "id": "DL198",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Restart the CI pool after Docker Desktop stopped",
+      "detail": "Docker Desktop started 08:41 (owner's choice); pool container up 08:44:40, runner online 08:44:58; comics-organizer's waiting job started. Container still on the 22:11 image; recreate onto the 01:58 image when idle.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T08:46+00:00",
+      "no_release": "pool upkeep; ships nothing",
+      "started": "2026-11-11T08:44+00:00"
+    },
+    {
+      "id": "DL199",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Doctor layer check probes the running container, not its image ID",
+      "detail": "After a Docker restart the running container's image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:27+00:00",
+      "rides": "DS231",
+      "started": "2026-11-11T09:12+00:00"
+    },
+    {
+      "id": "DL200",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "spec-lint ledger/watcher/hooks job hangs on hosted runners",
+      "detail": "Hang found: test_machine.py test_main_with_the_layer_takes_a_slot_and_job_done_frees_it runs R.main([]) (real 15 s poll, 30 min wait); its own queue ticket is missing from queue_list, so the gate holds on '0 ahead in the queue'. Fix the gate (re-enqueue a vanished ticket) and bound the test.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:25+00:00",
+      "rides": "DS231",
+      "started": "2026-11-11T08:55+00:00"
+    },
+    {
+      "id": "DL201",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "delivery_ci_install update: diff or merge files with project changes",
+      "detail": "Installer update meets a project-changed plugin file: 3-way merge with the last installed template as base; clean merges applied, conflicts listed for yes/no or an agent (D206 replaces D201). Step 1 (state file, .new) running; step 2 (3-way merge) follows on the same branch.",
+      "expected": "11 Nov ~09:57",
+      "changed": "2026-11-11T09:34+00:00",
+      "expected_basis": "step 2 agent started 09:34, ~23 min",
+      "rides": "DS231",
+      "started": "2026-11-11T09:12+00:00"
     },
     {
       "id": "DS1",
@@ -7283,30 +7343,71 @@
       "owner": "project",
       "app": "",
       "status": "Running",
-      "item": "RELEASE-96: ci_tool tests pass on Windows",
+      "item": "RELEASE-96: ci_tool Windows tests, CI hang fix, lighter Full Progress",
       "detail": "DL195 (test-only fix). PR, CI, merge on green.",
-      "expected": "11 Nov ~08:48",
-      "changed": "2026-11-11T08:36+00:00",
-      "expected_basis": "small edit, CI ~5 min",
+      "expected": "11 Nov ~09:55",
+      "changed": "2026-11-11T09:12+00:00",
+      "expected_basis": "waits for DL200, AR69, DL199, DL201, SO7, then join and CI",
       "release": 96,
       "phases": [
         {
+          "name": "agents",
+          "start": "2026-11-11T08:55+00:00",
+          "end": "2026-11-11T09:40+00:00"
+        },
+        {
           "name": "join",
-          "start": "2026-11-11T08:35+00:00",
-          "end": "2026-11-11T08:40+00:00"
+          "start": "2026-11-11T09:40+00:00",
+          "end": "2026-11-11T09:46+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T08:40+00:00",
-          "end": "2026-11-11T08:45+00:00"
+          "start": "2026-11-11T09:46+00:00",
+          "end": "2026-11-11T09:51+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T08:45+00:00",
-          "end": "2026-11-11T08:48+00:00"
+          "start": "2026-11-11T09:51+00:00",
+          "end": "2026-11-11T09:55+00:00"
         }
       ],
       "started": "2026-11-11T08:30+00:00"
+    },
+    {
+      "id": "DS232",
+      "owner": "project",
+      "app": "",
+      "status": "Dropped",
+      "item": "RELEASE-97: lighter Full Progress page",
+      "detail": "AR task (D25, D26): slim embedded registry, no old Live rows, lighter rows. Join, CI, merge on green, plugin update.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:11+00:00",
+      "release": 97,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T09:05+00:00",
+          "end": "2026-11-11T09:33+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T09:40+00:00",
+          "end": "2026-11-11T09:46+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T09:46+00:00",
+          "end": "2026-11-11T09:51+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T09:51+00:00",
+          "end": "2026-11-11T09:55+00:00"
+        }
+      ],
+      "started": "2026-11-11T09:05+00:00",
+      "dropped_into": "DS231",
+      "dropped_reason": "owner: merge 96 and 97 into one release"
     },
     {
       "id": "DU1",
@@ -7643,6 +7744,30 @@
       "changed": "2026-11-04T20:51+00:00",
       "rides": "DL37",
       "started": "2026-11-04T19:52+00:00"
+    },
+    {
+      "id": "SO7",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "Built",
+      "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
+      "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:25+00:00",
+      "rides": "DS231",
+      "started": "2026-11-11T09:12+00:00"
+    },
+    {
+      "id": "SO8",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "Dropped",
+      "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
+      "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:12+00:00",
+      "dropped_into": "SO7",
+      "dropped_reason": "duplicate of SO7"
     },
     {
       "id": "ST1",
