@@ -69,28 +69,62 @@ def strip_noise(text):
     return "\n".join(ln for ln in text.splitlines() if not ln.lstrip().startswith(">"))
 
 
-def read_turn(path):
-    """(assistant text, asked) for the turn after the last real user message."""
-    entries = []
-    for line in Path(path).read_text(encoding="utf-8", errors="replace").splitlines():
+BLOCK = 1 << 20          # read the transcript from the end in 1 MiB blocks
+TURN_CAP = 32 << 20      # a turn larger than this is not read: the hook allows the stop
+
+
+def tail_lines(path, block=BLOCK):
+    """Yield the lines of a file as bytes, last line first, reading blocks from the end."""
+    with open(path, "rb") as f:
+        pos = f.seek(0, 2)
+        rest = b""
+        while pos > 0:
+            step = min(block, pos)
+            pos -= step
+            f.seek(pos)
+            parts = (f.read(step) + rest).split(b"\n")
+            rest = parts[0]
+            for ln in reversed(parts[1:]):
+                yield ln
+        yield rest
+
+
+def is_real_user(e):
+    msg = e.get("message") if isinstance(e, dict) else None
+    if e.get("type") != "user" or not isinstance(msg, dict):
+        return False
+    content = msg.get("content")
+    if isinstance(content, str):
+        return bool(content.strip())
+    return isinstance(content, list) and any(
+        isinstance(c, dict) and c.get("type") == "text" for c in content)
+
+
+def read_turn(path, cap=TURN_CAP, block=BLOCK):
+    """(assistant text, asked) for the turn after the last real user message.
+
+    Reads from the end of the file and stops at that message. A turn larger than `cap`
+    bytes fails open: ("", True), so the stop is allowed."""
+    entries, size = [], 0
+    for raw in tail_lines(path, block):
+        size += len(raw) + 1
+        if size > cap:
+            return "", True
+        if not raw.strip():
+            continue
         try:
-            entries.append(json.loads(line))
+            e = json.loads(raw.decode("utf-8", errors="replace"))
         except ValueError:
             continue
-    start = 0
-    for i, e in enumerate(entries):
-        msg = e.get("message") if isinstance(e, dict) else None
-        if e.get("type") != "user" or not isinstance(msg, dict):
+        if not isinstance(e, dict):
             continue
-        content = msg.get("content")
-        if isinstance(content, str) and content.strip():
-            start = i + 1
-        elif isinstance(content, list) and any(
-                isinstance(c, dict) and c.get("type") == "text" for c in content):
-            start = i + 1
+        if is_real_user(e):
+            break
+        entries.append(e)
+    entries.reverse()
     texts, asked = [], False
-    for e in entries[start:]:
-        msg = e.get("message") if isinstance(e, dict) else None
+    for e in entries:
+        msg = e.get("message")
         if e.get("type") != "assistant" or not isinstance(msg, dict):
             continue
         content = msg.get("content")

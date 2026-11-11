@@ -62,6 +62,22 @@ LIST_ITEM_RE = re.compile(r'^\s*(?:\d+[.)]|[-*•])\s+(.*\S)\s*$')
 
 # --- the last assistant text -------------------------------------------------------------
 
+def tail_lines(path, block=1 << 20):
+    """Yield the lines of a file as bytes, last line first, reading blocks from the end."""
+    with open(path, 'rb') as f:
+        pos = f.seek(0, 2)
+        rest = b''
+        while pos > 0:
+            step = min(block, pos)
+            pos -= step
+            f.seek(pos)
+            parts = (f.read(step) + rest).split(b'\n')
+            rest = parts[0]
+            for ln in reversed(parts[1:]):
+                yield ln
+        yield rest
+
+
 def last_assistant_text(data):
     msg = data.get('last_assistant_message')
     if isinstance(msg, str) and msg.strip():
@@ -69,30 +85,30 @@ def last_assistant_text(data):
     path = data.get('transcript_path')
     if not isinstance(path, str):
         return ''
-    text = ''
     try:
-        with open(path, encoding='utf-8', errors='replace') as f:
-            for line in f:
-                try:
-                    e = json.loads(line)
-                except ValueError:
-                    continue
-                m = e.get('message') if isinstance(e, dict) else None
-                if not isinstance(m, dict) or m.get('role') != 'assistant' and e.get('type') != 'assistant':
-                    continue
-                c = m.get('content')
-                if isinstance(c, str):
-                    parts = [c]
-                elif isinstance(c, list):
-                    parts = [b.get('text', '') for b in c if isinstance(b, dict) and b.get('type') == 'text']
-                else:
-                    parts = []
-                joined = '\n'.join(p for p in parts if p).strip()
-                if joined:
-                    text = joined
+        for raw in tail_lines(path):
+            if not raw.strip():
+                continue
+            try:
+                e = json.loads(raw.decode('utf-8', errors='replace'))
+            except ValueError:
+                continue
+            m = e.get('message') if isinstance(e, dict) else None
+            if not isinstance(m, dict) or m.get('role') != 'assistant' and e.get('type') != 'assistant':
+                continue
+            c = m.get('content')
+            if isinstance(c, str):
+                parts = [c]
+            elif isinstance(c, list):
+                parts = [b.get('text', '') for b in c if isinstance(b, dict) and b.get('type') == 'text']
+            else:
+                parts = []
+            joined = '\n'.join(p for p in parts if p).strip()
+            if joined:
+                return joined
     except OSError:
         return ''
-    return text
+    return ''
 
 
 def prose(text):
