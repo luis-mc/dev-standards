@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T06:22+00:00",
+  "updated": "2026-11-11T06:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3545,11 +3545,11 @@
       "id": "DL197",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "join.py strips only docs/work files the joined branches add or change",
       "detail": "The join's docs/work strip deletes every file under docs/work on the integration branch, including files the default branch already has, which a project's CI may read. Strip only paths that differ from the base; keep the base's files.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T06:21+00:00",
+      "changed": "2026-11-11T06:26+00:00",
       "rides": "DS230",
       "started": "2026-11-11T06:16+00:00"
     },
@@ -7245,12 +7245,11 @@
       "id": "DS230",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-95: join keeps the default branch's docs/work",
       "detail": "DL197 (peer report). Join, CI, merge on green, plugin update in both scopes.",
-      "expected": "11 Nov ~06:32",
-      "changed": "2026-11-11T06:22+00:00",
-      "expected_basis": "PR 196 CI started 06:23, ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T06:26+00:00",
       "release": 95,
       "phases": [
         {
