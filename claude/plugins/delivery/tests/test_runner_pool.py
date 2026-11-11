@@ -1180,7 +1180,7 @@ class BrowsersTests(unittest.TestCase):
         self.assertGreaterEqual(major, 20)
         self.assertRegex(df, r"ARG NODE_SHA256=[0-9a-f]{64}")
         self.assertIn('echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c -', df)
-        self.assertIn("rm -rf /opt/node-build", df)
+        self.assertNotIn("rm -rf /opt/node", df)
 
     def test_warning_lists_workflows_that_need_root(self):
         with tempfile.TemporaryDirectory() as d:

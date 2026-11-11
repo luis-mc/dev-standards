@@ -46,19 +46,26 @@ RUN test -n "$RUNNER_SHA256" \
  && echo "${RUNNER_SHA256}  /tmp/runner.tgz" | sha256sum -c - \
  && mkdir -p /opt/runner && tar -xzf /tmp/runner.tgz -C /opt/runner && rm /tmp/runner.tgz \
  && /opt/runner/bin/installdependencies.sh
-# Opt-in (POOL_BROWSERS=chromium): the Chromium system libraries, installed here as root because job users have no sudo.
-# The browser itself stays per job: `playwright install chromium` without --with-deps.
-# Playwright needs Node 20 or newer and Ubuntu 24.04 ships Node 18, so this step uses the official Node LTS tarball,
-# checked by SHA-256 like the runner, only to run install-deps, and removes it afterwards (DL76).
+# DL215: the image carries the official Node LTS tarball (checked by SHA-256 like the runner) at /opt/node, on PATH for every user.
+# GitHub-hosted runners ship Node with corepack and the ts CI templates run `corepack enable` first, so the pool needs both.
+# actions/setup-node puts the project's own Node first on PATH; this one is the fallback. No `corepack enable` here: workflows run it.
+# Node 22 bundles corepack. Node 25 and newer do not, so then corepack is installed with npm at a pinned version.
 ARG NODE_VERSION=22.23.4
 ARG NODE_SHA256=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
+ARG COREPACK_VERSION=0.34.0
+RUN curl -fsSL -o /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
+ && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
+ && mkdir -p /opt/node && tar -xJf /tmp/node.tar.xz -C /opt/node --strip-components=1 && rm /tmp/node.tar.xz \
+ && { [ -x /opt/node/bin/corepack ] || /opt/node/bin/npm install -g "corepack@${COREPACK_VERSION}"; } \
+ && rm -rf /root/.npm
+ENV PATH="/opt/node/bin:${PATH}"
+RUN node --version && corepack --version
+# Opt-in (POOL_BROWSERS=chromium): the Chromium system libraries, installed here as root because job users have no sudo.
+# The browser itself stays per job: `playwright install chromium` without --with-deps. Playwright needs Node 20 or newer (DL76).
 RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
-      curl -fsSL -o /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
-      && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
-      && mkdir -p /opt/node-build && tar -xJf /tmp/node.tar.xz -C /opt/node-build --strip-components=1 && rm /tmp/node.tar.xz \
-      && apt-get update \
-      && PATH="/opt/node-build/bin:$PATH" npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
-      && rm -rf /opt/node-build /var/lib/apt/lists/* /root/.npm; \
+      apt-get update \
+      && npx -y playwright@${PLAYWRIGHT_VERSION} install-deps chromium \
+      && rm -rf /var/lib/apt/lists/* /root/.npm; \
     fi
 # DL149: opt-in apt layers and the project fragment. Off by default (windows-packaging adds about 1 GB).
 # Ubuntu 24.04 ships dotnet-sdk-8.0 and wine64 itself, so no Microsoft feed and no i386 architecture are added (64-bit Wine only).
