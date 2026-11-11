@@ -13,7 +13,7 @@ Base check: `pool_agents.py` on origin/main contains `CREATE DATABASE`. OK.
 - `python -m unittest discover -p "test_*pool*.py"`: 365 ok.
 - `python3 tools/test_delivery_ci.py --no-mutants`: 78 passed, 0 failed.
 - `docs_check.py`: only W1 (reports on the branch, stripped at the join) and M1 on the delivery spec, cleared by `Docs: none` in the latest commit message.
-- spec-lint (areas=delivery), run 43070141124: all delivery jobs success; "docs check" failed on M1 and W1 as above; the rest skipped. A new run follows the final push.
+- spec-lint (areas=delivery), final run 43070718908: every delivery job success; "docs check" fails only on W1 (the report, stripped at the join). Earlier run 43070141124 also failed on M1, now fixed.
 
 ## Follow-ups
 - A project migration that runs `CREATE ROLE` must check `pg_roles` first. No project migration was changed.
