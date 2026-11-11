@@ -952,7 +952,7 @@ def validate_structure(rec):
     elif m.get('design') == 'design.css' and getattr(R, 'check_tokens', None):
         try:
             own_css = read_html(rec.dir / 'design.css') or ''
-            for prob in R.check_tokens(own_css):
+            for prob in R.check_tokens(own_css, accents_only=True):
                 f('R5.11', 'design.css', prob)
         except Exception as ex:
             f('R5.11', 'design.css', 'cannot be checked: %s' % ex)
@@ -2411,7 +2411,7 @@ def cmd_design(args):
             raise Fail(1, 'design file %s does not exist' % f)
         css = f.read_bytes().decode('utf-8-sig').replace('\r\n', '\n')
         check = getattr(R, 'check_tokens', None)
-        problems = check(css) if check else []
+        problems = check(css, accents_only=True) if check else []
         ign = R.ignored_tokens(css)
         if ign:
             warn('%s sets %s; page, surface and ink tokens are ignored (accents only)' % (f.name, ', '.join(ign)))

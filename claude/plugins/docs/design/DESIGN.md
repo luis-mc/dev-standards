@@ -29,6 +29,8 @@ Any project design must supply these token names, with its own values. A project
 - Accent: `--signal`, `--on-signal`, `--focus`
 - Status colours: `--live`, `--on-live`, `--done-bg`, `--running-bg`, `--running-mark`, `--waiting-bg`, `--failed`, `--on-failed`
 
+The plugin's default design holds every token above. A project's `design.css` sets accents only: it must supply the fonts, accent and status tokens, and may leave out the surface, text and line tokens (the default wins for those). Size tokens are ignored.
+
 ## The structure stylesheet
 
 `../templates/project-artifact.css` is the fixed structure. It uses the tokens above and never holds a colour. Every project's artifacts use it unchanged, so only the tokens differ between projects.

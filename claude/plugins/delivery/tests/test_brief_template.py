@@ -49,6 +49,17 @@ class E2eLineTests(unittest.TestCase):
         self.assertIn("at most 2 workers", self.text)
 
 
+class HeldRunTests(unittest.TestCase):
+    """DL258: a held or cancelled branch run is not a failure."""
+
+    def test_paragraph_pins_its_key_phrases(self):
+        text = TEMPLATE.read_text(encoding="utf-8")
+        for phrase in ("`held`", "not a failure", "W1 on docs/work",
+                       "gh run view <id> --json conclusion", "about 10 minutes",
+                       "say in the report that CI was held"):
+            self.assertIn(phrase, text)
+
+
 class TemplateEtaTests(unittest.TestCase):
     def test_example_block_parses_to_a_breakdown_when_filled(self):
         import hook_post_tool as H

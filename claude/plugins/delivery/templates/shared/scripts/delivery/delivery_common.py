@@ -318,6 +318,13 @@ def load_gate(root: Path) -> dict:
         raise DeliveryError(
             "%s: packages.kind must be one of %s" % (where, ", ".join(PACKAGE_KINDS))
         )
+    by_track = cfg.get("packages_by_track")  # several tracks in one repo (DL245, DL256)
+    if by_track is not None:
+        if not isinstance(by_track, dict):
+            raise DeliveryError("%s: 'packages_by_track' must map a track to its packages" % where)
+        for t, v in by_track.items():
+            if v is not None and (not isinstance(v, dict) or v.get("kind") not in PACKAGE_KINDS):
+                raise DeliveryError("%s: packages_by_track.%s.kind must be one of %s" % (where, t, ", ".join(PACKAGE_KINDS)))
     steps = cfg.get("steps")
     if not isinstance(steps, list) or not steps:
         raise DeliveryError("%s: 'steps' must be a non-empty list" % where)
@@ -492,15 +499,55 @@ def _dotnet_packages(root: Path) -> list[str]:
     return sorted(dirs)
 
 
+_KIND_FINDERS = {
+    "pnpm-workspace": _pnpm_packages,
+    "cargo-workspace": _cargo_packages,
+    "go-modules": _go_packages,
+    "dotnet-sln": _dotnet_packages,
+}
+_KIND_MANIFESTS = {  # the file in a package folder that says which kind owns it (DL256)
+    "pnpm-workspace": ("package.json",),
+    "cargo-workspace": ("Cargo.toml",),
+    "go-modules": ("go.mod",),
+    "dotnet-sln": ("*.csproj", "*.fsproj", "*.vbproj"),
+}
+
+
 def discover_packages(root: Path, packages_cfg: dict) -> list[str]:
     """Package directories, POSIX, relative to the root ('.' for the root)."""
-    kind = packages_cfg["kind"]
-    return {
-        "pnpm-workspace": _pnpm_packages,
-        "cargo-workspace": _cargo_packages,
-        "go-modules": _go_packages,
-        "dotnet-sln": _dotnet_packages,
-    }[kind](root)
+    return _KIND_FINDERS[packages_cfg["kind"]](root)
+
+
+TRACK_KIND = {"ts": "pnpm-workspace", "rust": "cargo-workspace", "go": "go-modules", "dotnet": "dotnet-sln"}
+
+
+def _owns(root: Path, folder: str, kind: str) -> bool:
+    base = root / folder
+    return any(any(base.glob(m)) if "*" in m else (base / m).is_file() for m in _KIND_MANIFESTS[kind])
+
+
+def package_kinds(root: Path, cfg: dict) -> dict[str, str]:
+    """{package directory: its kind} (DL256). With one repo-wide `packages.kind` every package has that kind (the
+    old form, unchanged). With `packages_by_track` (several tracks, DL245) each track's packages get that track's
+    kind; a track whose manifest is missing adds none. A folder two kinds list goes to the kind whose manifest sits
+    in it, else to the first track."""
+    by_track = cfg.get("packages_by_track")
+    entries = [v["kind"] for v in by_track.values() if isinstance(v, dict)] if isinstance(by_track, dict) else []
+    if len(set(entries)) < 2:
+        kind = cfg["packages"]["kind"]
+        return {d: kind for d in discover_packages(root, {"kind": kind})}
+    out: dict[str, str] = {}
+    for kind in dict.fromkeys(entries):
+        try:
+            found = _KIND_FINDERS[kind](root)
+        except DeliveryError:
+            continue
+        for d in found:
+            if d not in out or (not _owns(root, d, out[d]) and _owns(root, d, kind)):
+                out[d] = kind
+    if not out:
+        raise DeliveryError("no package was found for the kinds: %s" % ", ".join(dict.fromkeys(entries)))
+    return dict(sorted(out.items()))
 
 
 # --------------------------------------------------------------------------
@@ -731,6 +778,7 @@ class Context:
     widen_reasons: list[str] = field(default_factory=list)
     base_fetched: bool = False
     lock_dirs: list[str] = field(default_factory=list)  # packages a lockfile change touches
+    package_kinds: dict = field(default_factory=dict)  # package directory -> its kind (DL256)
 
 
 def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = False) -> Context:
@@ -750,7 +798,8 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
         raise DeliveryError("HEAD and '%s' have no common ancestor" % base_ref)
     base = mb.stdout.strip()
     files = changed_files(base, root)
-    packages = discover_packages(root, cfg["packages"])
+    kinds = package_kinds(root, cfg)
+    packages = list(kinds)
     reasons = widening_files(files, cfg["widen_on"])
     lock_dirs, lock_reasons = lockfile_effect(root, cfg, base, files, packages)
     reasons += lock_reasons
@@ -771,6 +820,7 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
         widen_reasons=reasons,
         base_fetched=fetched,
         lock_dirs=lock_dirs,
+        package_kinds=kinds,
     )
 
 
@@ -948,6 +998,15 @@ def scope_skip(step: dict, ctx: Context) -> str | None:
     return None
 
 
+def step_dirs(step: dict, ctx: Context, dirs: list[str]) -> list[str]:
+    """A step tagged with a track gets only the packages of that track's kind (DL256). Other steps get all."""
+    kind = TRACK_KIND.get(step.get("track"))
+    kinds = getattr(ctx, "package_kinds", None) or {}
+    if not kind or len(set(kinds.values())) < 2:
+        return list(dirs)
+    return [d for d in dirs if kinds.get(d) == kind]
+
+
 def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     """Decide one step: (run?, command with placeholders filled, reason)."""
     skip = scope_skip(step, ctx)
@@ -981,11 +1040,12 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             selection, specs = e2e_selection(ctx)  # no map: from the dependency graph
             if selection == "affected":
                 cmd, why, e2e_specs = step["run"], "affected specs (dependency graph)", " ".join(specs)
+    mine = lambda dirs: step_dirs(step, ctx, dirs)  # noqa: E731
     cmd = (
         cmd.replace("{e2e_specs}", e2e_specs)
         .replace("{base}", ctx.base)
-        .replace("{changed_dirs}", " ".join(ctx.packages if wide else ctx.changed_dirs))
-        .replace("{affected_dirs}", " ".join(ctx.packages if wide else ctx.affected_dirs))
+        .replace("{changed_dirs}", " ".join(mine(ctx.packages if wide else ctx.changed_dirs)))
+        .replace("{affected_dirs}", " ".join(mine(ctx.packages if wide else ctx.affected_dirs)))
     )
     return True, cmd, why
 

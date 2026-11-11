@@ -207,7 +207,7 @@ def render_is_deterministic(fx):
 def full_progress_is_a_fragment_beginning_with_title(fx):
     """R5.29: the Artifact tool takes a fragment."""
     out = fx.render('full-progress')
-    assert out.startswith('<title>'), out[:40]
+    assert out.startswith('<meta charset="utf-8">\n<title>'), out[:60]
     for tag in ('<!doctype', '<html', '<head>', '<body', '{{', '}}'):
         assert tag not in out, tag
     assert out.endswith('\n')
@@ -1340,7 +1340,7 @@ def templates_hold_only_known_placeholders(fx):
             assert text.startswith('<!doctype html>\n<html lang="en">'), text[:40]   # a complete document (R5.27)
             assert text.rstrip().endswith('</body>\n</html>')
         else:
-            assert text.startswith('<title>{{title}}</title>')                      # a fragment (R5.29)
+            assert text.startswith('<meta charset="utf-8">\n<title>{{title}}</title>')                      # a fragment (R5.29)
         assert ('{{registry}}' in text) == (name.startswith('full-progress'))
         assert text.count('<script') == 1 or (name.startswith('full') and text.count('<script') == 1)
 

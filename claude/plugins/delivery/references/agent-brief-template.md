@@ -26,6 +26,8 @@ A. Branch gate (default): run ONE affected gate at the end, one affected gate = 
 
 B. CI gate (a project with `scripts/delivery/agent_ci.py`): CI is the gate. Run only the tests of what you touch and the fast guards (`scripts/delivery/fast_guards.py`), never the full local gate, no mutation pass, no Docker. Push, then write a line `CODE DONE` in your report (`docs/work/reports/<task-id>.md`, DOCSPEC R10.1) and push it. While a project migrates, `agent_ci.py` still reads the old `docs/work/agents/reports/` and `docs/agents/reports/`. The branch CI run that `agent_ci.py` starts for that head is your gate. The orchestrator reads its result.
 
+Held CI is not a failure. The delivery watcher holds branch runs while a release PR's CI runs: it cancels them and re-runs them when that CI ends. A cancelled or `held` branch run in that time is not a failure. Check `gh run view <id> --json conclusion` and the run list for a re-run. If none appeared, wait about 10 minutes and dispatch once more. If it is held or cancelled twice, write READY when every local test passed, and say in the report that CI was held. A docs check W1 on docs/work (your own report) is expected on a branch and is never a reason for NOT READY.
+
 Report: what changed, what you ran, the branch head, last line READY or NOT READY: <why>.
 ````
 

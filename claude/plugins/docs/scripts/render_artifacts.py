@@ -199,11 +199,12 @@ def ignored_tokens(css: str) -> list:
 
 def own_design_problems(manifest: dict, record_dir: str = '') -> list:
     """R5.11 on the project's own design.css (DL239): the drawn block always holds every token, because the default
-    fills what the project leaves out, so a project file that lost a token is checked on its own."""
+    fills what the project leaves out, so a project file that lost an accent token is checked on its own (DL259:
+    accents only; the neutral tokens are optional there)."""
     if manifest.get('design') != 'design.css':
         return []
     try:
-        return check_tokens(_read(os.path.join(record_dir, 'design.css')))
+        return check_tokens(_read(os.path.join(record_dir, 'design.css')), accents_only=True)
     except OSError:
         return []
 
@@ -306,8 +307,16 @@ def _selectors(css: str) -> set:
     return found
 
 
-def check_tokens(css: str) -> list:
-    """R5.11: problems of a token block against the contract in design/DESIGN.md; [] when complete."""
+def accent_tokens() -> tuple:
+    """DL259: the tokens a project design file must set: the contract minus the neutral and size tokens."""
+    return tuple(t for t in REQUIRED_TOKENS if t not in NEUTRAL_TOKENS and not re.match(r'--(font-size|size)', t))
+
+
+def check_tokens(css: str, accents_only: bool = False) -> list:
+    """R5.11: problems of a token block against the contract in design/DESIGN.md; [] when complete.
+    With accents_only (a project design file, DL259) the neutral and size tokens are not required."""
+    required = accent_tokens() if accents_only else REQUIRED_TOKENS
+    dark_required = tuple(t for t in required if not t.startswith('--font'))
     rules = _parse_rules(_strip_comments(css))
     problems = []
     dark_media = re.compile(r'\(\s*prefers-color-scheme\s*:\s*dark\s*\)')
@@ -322,10 +331,10 @@ def check_tokens(css: str) -> list:
     light = defined(lambda c, s: c == '' and ':root' in s)
     dark_media_set = defined(lambda c, s: bool(dark_media.search(c)) and ':root:not([data-theme="light"])' in s)
     dark_attr = defined(lambda c, s: c == '' and ':root[data-theme="dark"]' in s)
-    for name in REQUIRED_TOKENS:
+    for name in required:
         if name not in light:
             problems.append('token %s is not defined on :root' % name)
-    for name in DARK_TOKENS:
+    for name in dark_required:
         if name not in dark_media_set:
             problems.append('token %s has no dark value under @media (prefers-color-scheme: dark) :root:not([data-theme="light"])' % name)
         if name not in dark_attr:
@@ -2244,8 +2253,8 @@ def _check_document(html: str, root, kind: str, add) -> None:
     if kind == 'full-progress':
         if re.match(r'\s*<!doctype', text, re.I) or any(find(root, tag) is not None for tag in ('html', 'head', 'body')):
             add('R5.29', 'the full-progress artifact is a fragment: no doctype, <html>, <head> or <body>')
-        if not text.startswith('<title>'):
-            add('R5.29', 'the full-progress artifact must begin with <title>')
+        if not re.match(r'<meta charset="utf-8">\s*<title>', text):
+            add('R5.29', 'the full-progress artifact must begin with <meta charset="utf-8"> and then <title>')
         return
     if not re.match(r'\s*<!doctype html>', text, re.I):
         add('R5.27', 'a feature artifact must begin with <!doctype html>')
