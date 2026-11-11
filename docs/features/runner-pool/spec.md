@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.6.2
+version: 0.6.3
 owner: agents
 type: reference
 code:
@@ -140,6 +140,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.3 | 2026-11-11 | RELEASE-102 | The pool image runs corepack enable as root at build time, so an unprivileged job's corepack enable needs no write access (R5.26). | DL220 |
 | 0.6.2 | 2026-11-11 | RELEASE-101 | The pool image carries Node LTS with corepack on PATH, like GitHub-hosted runners (R5.26). | DL215 |
 | 0.6.1 | 2026-11-11 | RELEASE-96 | The doctor's layer check probes tools with docker exec in the running pool container, and reports a docker error as a warning, not as a missing tool (R5.17).<br>The runner gate queues its own ticket again when it vanished from the queue, so it never waits on an empty queue. | DL199, DL200 |
 | 0.6.0 | 2026-11-11 | RELEASE-94 | The shared tool cache works for every agent user: shared-mode folders and a per-user fallback (R5.25). | DL194 |

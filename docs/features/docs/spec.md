@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.1.0
+version: 1.1.1
 owner: agents
 type: reference
 code:
@@ -170,6 +170,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.1.1 | 2026-11-11 | RELEASE-102 | T2 compares UTC dates of non-merge commits, so CI and local runs agree; T2 is skipped with an info line on a shallow clone. | DL219 |
 | 1.1.0 | 2026-11-11 | RELEASE-96 | Full Progress page is lighter: a windowed embedded registry, one line for older Live rows, no per-cell data-label (ARTIFACTSPEC R5.9, R6.3). | AR69 |
 | 1.0.0 | 2026-11-10 | RELEASE-86 | luismc-docs now holds the project record, artifacts and the spec skills; luismc-artifacts and luismc-specs leave the marketplace (D182, D185, D186). | DS219 |
 | 0.10.1 | 2026-11-09 | RELEASE-71 | docs_work.py strip --apply commits the docs/work/ removal, or exits 1 and says what is left staged. | DS193 |
