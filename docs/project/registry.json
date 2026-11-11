@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T08:44+00:00",
+  "updated": "2026-11-11T08:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3559,14 +3559,23 @@
       "id": "DL198",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Restart the CI pool after Docker Desktop stopped",
-      "detail": "Docker Desktop and WSL were found stopped at 08:39 (PC hit 98% memory ~08:30). Owner chose to start it (08:41). Wait for the pool container and runners, run the doctor, tell comics-organizer.",
-      "expected": "11 Nov ~08:46",
-      "changed": "2026-11-11T08:44+00:00",
-      "expected_basis": "Docker start ~2-4 min from 08:41",
+      "detail": "Docker Desktop started 08:41 (owner's choice); pool container up 08:44:40, runner online 08:44:58; comics-organizer's waiting job started. Container still on the 22:11 image; recreate onto the 01:58 image when idle.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T08:46+00:00",
       "no_release": "pool upkeep; ships nothing",
       "started": "2026-11-11T08:44+00:00"
+    },
+    {
+      "id": "DL199",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Doctor layer check probes the running container, not its image ID",
+      "detail": "After a Docker restart the running container's image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T08:46+00:00"
     },
     {
       "id": "DS1",
