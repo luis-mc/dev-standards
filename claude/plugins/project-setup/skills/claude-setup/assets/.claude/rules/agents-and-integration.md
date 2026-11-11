@@ -27,6 +27,7 @@
 - CI scope (`scripts/delivery/ci_scope.py`, patterns in `scripts/delivery/ci-scope.json`): a release PR runs the full suite; a change of CI files only runs the CI tests and the named smoke set; root configuration or the lockfile runs the full suite; everything else runs what it affects. Each run reports its time as the artifact `ci-run-times`. <!-- check: DL-80, DL-82 -->
 - Open one ready PR when the join is pushed; its CI is the only full suite. Merge on green, never auto-merge. <!-- check: DL-05, DL-06, DL-08 -->
 - Watch CI by the workflow runs for the head commit (`scripts/delivery/ci_watch.py`), never by the PR check list. <!-- check: DL-07 -->
+- Never `gh run watch` without `--interval 60` or more: the default 3 s drains the GitHub quota every session shares. Watch CI with `ci_watch.py`, one watcher for many runs (`ci_watch.py SHA1 SHA2 --run ID`). <!-- check: DL-95 -->
 - A train leaves when its cargo is green; late branches ride the next train. <!-- check: DL-01, DL-16 -->
 - One deploy per merge; smoke-test production; fix forward on a new branch. <!-- check: DL-18 -->
 - No preview deploys for agent branches. Never merge mid-round to "see it deployed". <!-- check: DL-19 -->
