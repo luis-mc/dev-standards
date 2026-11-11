@@ -194,6 +194,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D215 | Installer copies fail a project's Prettier check: fix where? | Installer adds ignore (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D216 | docs_check passes locally but warns in CI: investigate? | Investigate and fix (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D217 | How should a peer project's failed CI run be rerun after the pool refresh? | I rerun it with gh (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D218 | Tell open peer sessions to update to delivery 1.29.0 / docs 2.1.1? | Send after pool refresh (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
 | delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |

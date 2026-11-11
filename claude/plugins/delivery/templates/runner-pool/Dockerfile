@@ -54,13 +54,14 @@ RUN test -n "$RUNNER_SHA256" \
 ARG NODE_VERSION=22.23.4
 ARG NODE_SHA256=1805bcd35e6815559bd2eb97db438d3fdb0eb3a5e6a977b7c1badca76337e9ce
 ARG COREPACK_VERSION=0.34.0
+# DL223: PATH first, so corepack and npm (both `#!/usr/bin/env node`) find node during this build step.
+ENV PATH="/opt/node/bin:${PATH}"
 RUN curl -fsSL -o /tmp/node.tar.xz "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" \
  && echo "${NODE_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
  && mkdir -p /opt/node && tar -xJf /tmp/node.tar.xz -C /opt/node --strip-components=1 && rm /tmp/node.tar.xz \
  && { [ -x /opt/node/bin/corepack ] || /opt/node/bin/npm install -g "corepack@${COREPACK_VERSION}"; } \
  && /opt/node/bin/corepack enable \
  && rm -rf /root/.npm
-ENV PATH="/opt/node/bin:${PATH}"
 RUN node --version && corepack --version && test -L /opt/node/bin/pnpm
 # Opt-in (POOL_BROWSERS=chromium): the Chromium system libraries, installed here as root because job users have no sudo.
 # The browser itself stays per job: `playwright install chromium` without --with-deps. Playwright needs Node 20 or newer (DL76).
