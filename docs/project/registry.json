@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T12:51+00:00",
+  "updated": "2026-11-11T12:54+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3621,9 +3621,9 @@
       "app": "",
       "status": "Running",
       "item": "Measure PC memory per process through busy CI before setting pool limits",
-      "detail": "08:30 spike hit 98%. Log total memory, CPU, the WSL VM, pool containers, running CI jobs and the top processes every minute for 24 h, then propose WSL and pool limits from the data (D207).",
+      "detail": "Measuring memory per process. Found: the Stop hook questions_stop.py reads a 2.4 GB session transcript whole and uses ~20.9 GB (spikes 10:47, 11:07, 12:31, 12:39). Fix is DL208. Limits proposal still from the 24 h log.",
       "expected": "12 Nov ~10:45",
-      "changed": "2026-11-11T10:41+00:00",
+      "changed": "2026-11-11T12:54+00:00",
       "expected_basis": "24 h logging from 10:40, then ~5 min analysis",
       "no_release": "study: measurement only",
       "started": "2026-11-11T10:41+00:00"
@@ -3682,28 +3682,28 @@
       "item": "RELEASE: update-guide note and keypad template vs secret scan",
       "detail": "Ships DL205 and DL206. Join, fold, CI, merge on green, plugin updates in both scopes, smoke.",
       "expected": "11 Nov ~13:30",
-      "changed": "2026-11-11T12:50+00:00",
-      "expected_basis": "agent 12:55-13:18, join 4, CI 5, merge 3",
+      "changed": "2026-11-11T12:54+00:00",
+      "expected_basis": "DL208 agent from 12:54, ~23 min; then join, CI, merge",
       "release": 99,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-11T12:55+00:00",
-          "end": "2026-11-11T13:18+00:00"
+          "start": "2026-11-11T12:51+00:00",
+          "end": "2026-11-11T13:17+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T13:18+00:00",
-          "end": "2026-11-11T13:22+00:00"
+          "start": "2026-11-11T13:17+00:00",
+          "end": "2026-11-11T13:21+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T13:22+00:00",
-          "end": "2026-11-11T13:27+00:00"
+          "start": "2026-11-11T13:21+00:00",
+          "end": "2026-11-11T13:26+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T13:27+00:00",
+          "start": "2026-11-11T13:26+00:00",
           "end": "2026-11-11T13:30+00:00"
         }
       ],
@@ -3734,6 +3734,19 @@
       "expected_basis": "cloud agent from 12:55, ~23 min",
       "rides": "DL205",
       "started": "2026-11-11T12:51+00:00"
+    },
+    {
+      "id": "DL208",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Stop hooks read only the transcript tail (20.9 GB memory spikes)",
+      "detail": "questions_stop.py reads the whole transcript into memory. A 2.4 GB session transcript made it use ~20.9 GB, pushing the PC to 100% (10:47, 11:07, 12:31, 12:39, DL202 log). Read only the tail, scanning back to the last real user message; check every shipped hook that reads a transcript.",
+      "expected": "11 Nov ~13:20",
+      "changed": "2026-11-11T12:53+00:00",
+      "expected_basis": "cloud agent from 12:58, ~22 min",
+      "rides": "DL205",
+      "started": "2026-11-11T12:53+00:00"
     },
     {
       "id": "DS1",
