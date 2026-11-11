@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T01:52+00:00",
+  "updated": "2026-11-11T01:58+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3487,11 +3487,11 @@
       "id": "DL192",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Rust templates: cargo on PATH, real targets, Windows-deferred track",
       "detail": "Toolchain step exports cargo bin to PATH in the same step (ci.yml x3, package.yml); drop steps for targets a generated workspace lacks; package.yml copies smoke.json binaries; a track option that defers Windows (no msi check, no package-windows, no xwin).",
       "expected": "11 Nov",
-      "changed": "2026-11-11T01:21+00:00",
+      "changed": "2026-11-11T01:56+00:00",
       "rides": "DS229",
       "started": "2026-11-11T01:16+00:00"
     },
@@ -3499,11 +3499,11 @@
       "id": "DL193",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts",
       "detail": "cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T01:25+00:00",
+      "changed": "2026-11-11T01:56+00:00",
       "rides": "DS229",
       "started": "2026-11-11T01:16+00:00"
     },
@@ -3511,11 +3511,11 @@
       "id": "DL194",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool tool cache writable by every agent user",
       "detail": "On the pool, ci_tool.py tool cargo-xwin failed with Permission denied on /ci-tools/<tool>/<ver>/*.partial: folders made by one agent user are not writable by another. Make the shared cache work for every agent user.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T01:49+00:00",
+      "changed": "2026-11-11T01:56+00:00",
       "rides": "DS229",
       "started": "2026-11-11T01:16+00:00"
     },
@@ -3528,6 +3528,18 @@
       "detail": "test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.",
       "expected": "11 Nov",
       "changed": "2026-11-11T01:52+00:00"
+    },
+    {
+      "id": "DL196",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Pool refresh after RELEASE-94 (pool files to 1.27.0)",
+      "detail": "Pool files refreshed to 1.27.0 at 01:58 and image rebuilt. Container not recreated (the refresh could not rule out a running job); the change is a comment only, so the running container needs nothing.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T01:58+00:00",
+      "no_release": "pool upkeep; ships nothing",
+      "started": "2026-11-11T01:57+00:00"
     },
     {
       "id": "DS1",
@@ -7187,12 +7199,11 @@
       "id": "DS229",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-94: rust-track template gaps, second batch",
       "detail": "Joined DL192-DL194 into PR 195 (luismc-delivery 1.27.0). DL194 tightened by the session before the join: sticky 1777 folders, 0755 install folders.",
-      "expected": "11 Nov ~02:02",
-      "changed": "2026-11-11T01:52+00:00",
-      "expected_basis": "PR 195 CI started 01:52, ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T01:56+00:00",
       "release": 94,
       "phases": [
         {

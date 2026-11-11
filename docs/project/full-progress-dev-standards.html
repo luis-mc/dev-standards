@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-11T01:52+00:00",
+ "updated": "2026-11-11T01:58+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4367,11 +4367,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL192",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Rust templates: cargo on PATH, real targets, Windows-deferred track",
    "detail": "Toolchain step exports cargo bin to PATH in the same step (ci.yml x3, package.yml); drop steps for targets a generated workspace lacks; package.yml copies smoke.json binaries; a track option that defers Windows (no msi check, no package-windows, no xwin).",
    "expected": "11 Nov",
-   "changed": "2026-11-11T01:21+00:00",
+   "changed": "2026-11-11T01:56+00:00",
    "rides": "DS229",
    "started": "2026-11-11T01:16+00:00"
   },
@@ -4379,11 +4379,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL193",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts",
    "detail": "cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.",
    "expected": "11 Nov",
-   "changed": "2026-11-11T01:25+00:00",
+   "changed": "2026-11-11T01:56+00:00",
    "rides": "DS229",
    "started": "2026-11-11T01:16+00:00"
   },
@@ -4391,11 +4391,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL194",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Built",
+   "status": "Live",
    "item": "Pool tool cache writable by every agent user",
    "detail": "On the pool, ci_tool.py tool cargo-xwin failed with Permission denied on /ci-tools/<tool>/<ver>/*.partial: folders made by one agent user are not writable by another. Make the shared cache work for every agent user.",
    "expected": "11 Nov",
-   "changed": "2026-11-11T01:49+00:00",
+   "changed": "2026-11-11T01:56+00:00",
    "rides": "DS229",
    "started": "2026-11-11T01:16+00:00"
   },
@@ -4408,6 +4408,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "detail": "test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.",
    "expected": "11 Nov",
    "changed": "2026-11-11T01:52+00:00"
+  },
+  {
+   "id": "DL196",
+   "owner": "delivery-speed",
+   "app": "",
+   "status": "Live",
+   "item": "Pool refresh after RELEASE-94 (pool files to 1.27.0)",
+   "detail": "Pool files refreshed to 1.27.0 at 01:58 and image rebuilt. Container not recreated (the refresh could not rule out a running job); the change is a comment only, so the running container needs nothing.",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T01:58+00:00",
+   "no_release": "pool upkeep; ships nothing",
+   "started": "2026-11-11T01:57+00:00"
   },
   {
    "id": "DS1",
@@ -8067,12 +8079,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DS229",
    "owner": "project",
    "app": "",
-   "status": "Running",
+   "status": "Live",
    "item": "RELEASE-94: rust-track template gaps, second batch",
    "detail": "Joined DL192-DL194 into PR 195 (luismc-delivery 1.27.0). DL194 tightened by the session before the join: sticky 1777 folders, 0755 install folders.",
-   "expected": "11 Nov ~02:02",
-   "changed": "2026-11-11T01:52+00:00",
-   "expected_basis": "PR 195 CI started 01:52, ~5 min",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T01:56+00:00",
    "release": 94,
    "phases": [
     {
@@ -8692,69 +8703,39 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T01:52+00:00">11 Nov 01:52</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T01:58+00:00">11 Nov 01:58</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">51 tasks</span></summary>
 <ul>
-<li data-glance-task="DS229"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch <span class="glance-expected">11 Nov ~02:02</span><span class="glance-basis">PR 195 CI started 01:52, ~5 min</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">3 tasks</span></summary>
-<ul>
-<li data-glance-task="DL194"><span class="task-id">DL194</span>Pool tool cache writable by every agent user</li>
-<li data-glance-task="DL193"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</li>
+<li data-glance-task="DL196"><span class="task-id">DL196</span>Pool refresh after RELEASE-94 (pool files to 1.27.0)</li>
 <li data-glance-task="DL192"><span class="task-id">DL192</span>Rust templates: cargo on PATH, real targets, Windows-deferred track</li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">46 tasks</span></summary>
-<ul>
+<li data-glance-task="DL193"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</li>
+<li data-glance-task="DL194"><span class="task-id">DL194</span>Pool tool cache writable by every agent user</li>
+<li data-glance-task="DS229"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch</li>
 <li data-glance-task="DL186"><span class="task-id">DL186</span>Ship .gitleaks.toml with CI setup; rules skip Rust declarations and empty values</li>
 <li data-glance-task="DL187"><span class="task-id">DL187</span>CI templates on the pool: DB without Docker, rust targets from layout</li>
 <li data-glance-task="DL188"><span class="task-id">DL188</span>Doctor: tool cache scan, platform pins, fix text, script age, wait_min</li>
-<li data-glance-task="DL189"><span class="task-id">DL189</span>ci_tool.py keeps a file tool&#x27;s exact name (rustup-init argv[0])</li>
-<li data-glance-task="DL190"><span class="task-id">DL190</span>Pool DB: separate integration jobs, no services block on pool runners</li>
-<li data-glance-task="DL191"><span class="task-id">DL191</span>windows-msi-check installs Wine only when missing (pool: no sudo)</li>
-<li data-glance-task="DS228"><span class="task-id">DS228</span><span class="release-name">RELEASE-93</span>rust track on the pool (DL186, DL187, DL188)</li>
-<li data-glance-task="DL185"><span class="task-id">DL185</span>Refresh the main pool to luismc-delivery 1.25.0</li>
-<li class="glance-more">and 38 more</li>
+<li class="glance-more">and 43 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">523</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">528</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<figure class="release-timeline">
-<figcaption>Next releases (Lisbon)</figcaption>
-<div class="timeline-scroll"><svg viewBox="0 0 960 164" role="img" aria-label="Next releases: DS229 (rust-track template gaps, second batch) expected live about 02:02." style="min-width:683px;max-width:960px"><g class="rt-axis"><line class="rt-grid" x1="200" y1="36" x2="200" y2="140"/><text x="200" y="28">01:00</text><line class="rt-grid" x1="373.3" y1="36" x2="373.3" y2="140"/><text x="373.3" y="28">01:30</text><line class="rt-grid" x1="546.7" y1="36" x2="546.7" y2="140"/><text x="546.7" y="28">02:00</text><line class="rt-grid" x1="720" y1="36" x2="720" y2="140"/><text x="720" y="28">02:30</text></g>
-<text class="rt-name" x="0" y="60"><title>RELEASE-94 · rust-track template gaps, second batch</title>RELEASE-94 · rust-track t…</text>
-<text class="rt-sub" x="0" y="77"><title>DL192, DL193, DL194</title>DL192, DL193, DL194</text>
-<rect class="rt-bar agents" x="286.7" y="52" width="196.4" height="22"><title>agents 01:15-01:49</title></rect>
-<rect class="rt-bar join" x="483.1" y="52" width="17.3" height="22"><title>join 01:49-01:52</title></rect>
-<rect class="rt-bar ci" x="500.4" y="52" width="34.7" height="22"><title>PR CI 01:52-01:58</title></rect>
-<rect class="rt-bar merge" x="535.1" y="52" width="23.1" height="22"><title>merge + cleanup 01:58-02:02</title></rect>
-<polygon class="rt-expected" points="558.2,50 566.2,63 558.2,76 550.2,63"/>
-<text class="rt-live-label" x="558.2" y="92">live ~02:02</text>
-<line class="rt-now" x1="500.4" y1="36" x2="500.4" y2="148"/><text class="rt-now-label" x="500.4" y="161">now 01:52</text>
-</svg></div>
-<p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
-</figure>
-<details class="status-fold release-group" data-group="release-94" open><summary><strong>RELEASE-94 · live ~02:02</strong><span class="fold-count">4 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DS229"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch</td><td data-label="App / service"></td><td data-label="Detail">Joined DL192-DL194 into PR 195 (luismc-delivery 1.27.0). DL194 tightened by the session before the join: sticky 1777 folders, 0755 install folders.</td><td data-label="Expected">11 Nov ~02:02<span class="expected-basis">PR 195 CI started 01:52, ~5 min</span></td></tr>
-<tr data-task="DL192"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL192</span>Rust templates: cargo on PATH, real targets, Windows-deferred track</a></td><td data-label="App / service"></td><td data-label="Detail">Toolchain step exports cargo bin to PATH in the same step (ci.yml x3, package.yml); drop steps for targets a generated workspace lacks; package.yml copies smoke.json binaries; a track option that defers Windows (no msi check, no package-windows, no xwin).</td><td data-label="Expected">11 Nov</td></tr>
-<tr data-task="DL193"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</a></td><td data-label="App / service"></td><td data-label="Detail">cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.</td><td data-label="Expected">11 Nov</td></tr>
-<tr data-task="DL194"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL194</span>Pool tool cache writable by every agent user</a></td><td data-label="App / service"></td><td data-label="Detail">On the pool, ci_tool.py tool cargo-xwin failed with Permission denied on /ci-tools/&lt;tool&gt;/&lt;ver&gt;/*.partial: folders made by one agent user are not writable by another. Make the shared cache work for every agent user.</td><td data-label="Expected">11 Nov</td></tr>
-</tbody></table></div>
-</details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL195"><td data-label="Status"><span class="status-chip status-to-do">To do</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)</a></td><td data-label="App / service"></td><td data-label="Detail">test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.</td><td data-label="Expected">11 Nov</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">533 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">538 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL196"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL196</span>Pool refresh after RELEASE-94 (pool files to 1.27.0)</a><span class="no-release-line">ships nothing: pool upkeep; ships nothing</span></td><td data-label="App / service"></td><td data-label="Detail">Pool files refreshed to 1.27.0 at 01:58 and image rebuilt. Container not recreated (the refresh could not rule out a running job); the change is a comment only, so the running container needs nothing.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL192"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL192</span>Rust templates: cargo on PATH, real targets, Windows-deferred track</a><span class="release-line"><span class="release-name">RELEASE-94</span></span></td><td data-label="App / service"></td><td data-label="Detail">Toolchain step exports cargo bin to PATH in the same step (ci.yml x3, package.yml); drop steps for targets a generated workspace lacks; package.yml copies smoke.json binaries; a track option that defers Windows (no msi check, no package-windows, no xwin).</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL193"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL193</span>rust_ci.py deny: flags that pinned cargo-deny 0.20.2 accepts</a><span class="release-line"><span class="release-name">RELEASE-94</span></span></td><td data-label="App / service"></td><td data-label="Detail">cmd_deny passes check --disable-fetch, which cargo-deny 0.20.2 rejects (unexpected argument). Use the flag that version takes.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DL194"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL194</span>Pool tool cache writable by every agent user</a><span class="release-line"><span class="release-name">RELEASE-94</span></span></td><td data-label="App / service"></td><td data-label="Detail">On the pool, ci_tool.py tool cargo-xwin failed with Permission denied on /ci-tools/&lt;tool&gt;/&lt;ver&gt;/*.partial: folders made by one agent user are not writable by another. Make the shared cache work for every agent user.</td><td data-label="Expected">11 Nov</td></tr>
+<tr data-task="DS229"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">DS229</span><span class="release-name">RELEASE-94</span>rust-track template gaps, second batch</td><td data-label="App / service"></td><td data-label="Detail">Joined DL192-DL194 into PR 195 (luismc-delivery 1.27.0). DL194 tightened by the session before the join: sticky 1777 folders, 0755 install folders.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL186"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL186</span>Ship .gitleaks.toml with CI setup; rules skip Rust declarations and empty values</a><span class="release-line"><span class="release-name">RELEASE-93</span></span></td><td data-label="App / service"></td><td data-label="Detail">Peer report: CI secret-scan needs .gitleaks.toml but neither the delivery installer nor tech-stack-setup Phase 7 installs it. Two shared rules flag Rust fn and field declarations and empty database URL keys in .env.example (10 false positives in a fresh skeleton).</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL187"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL187</span>CI templates on the pool: DB without Docker, rust targets from layout</a><span class="release-line"><span class="release-name">RELEASE-93</span></span></td><td data-label="App / service"></td><td data-label="Detail">Peer report: rust ci.yml integration job uses services: postgres:17, which needs Docker the pool lacks (also ts template); pool gives db.env/pool-db-env. Rust ci.yml hard-codes sqlx migrate at repo root and --test integration/route_coverage that a fresh workspace lacks; drive them from gate.json/layout.</td><td data-label="Expected">11 Nov</td></tr>
 <tr data-task="DL188"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL188</span>Doctor: tool cache scan, platform pins, fix text, script age, wait_min</a><span class="release-line"><span class="release-name">RELEASE-93</span></span></td><td data-label="App / service"></td><td data-label="Detail">Peer report: doctor finds Zig/LLVM only on PATH (Windows tool cache unpacks deeper); reads flat sha256 though tools.json 1.24.0 uses platforms; fix text names ci_tool.py ensure zig (does not exist; tool zig does); installed delivery scripts older than templates go unnoticed; ci line says 10 min though ci.wait_min is 30.</td><td data-label="Expected">11 Nov</td></tr>
@@ -9298,7 +9279,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906032"><time datetime="2026-11-11T01:52+00:00">11 Nov 01:52</time></td><td data-label="Tasks">DL1 to DL195</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">3 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906038"><time datetime="2026-11-11T01:58+00:00">11 Nov 01:58</time></td><td data-label="Tasks">DL1 to DL196</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
