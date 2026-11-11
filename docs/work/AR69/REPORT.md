@@ -40,4 +40,6 @@ Base check: `origin/main` renderer has `EARLIER_DAYS` (14). Branch `AR69-lighter
 - Old Dropped rows older than 14 days are drawn but not in the embedded window. Say if Dropped should fold too.
 - The docs-plugin `tests/` rule on `docs/project/` was kept: nothing under `docs/project/` or generated files committed.
 
-Branch head SHA: see `git rev-parse` below.
+Branch head SHA: the commit that adds this report (code head before it: dc06411).
+
+READY
