@@ -75,6 +75,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.9** — `docs_fold.py fold` bumps each doc's version once per release, using the highest change. It writes one version row and deletes the folded notes. `--dry-run` changes nothing (DOCSPEC R7.3, R7.4).
 
+**R5.9a** — A doc with a `**Version:** X.Y.Z` line and no `version:` front matter is folded in place. The fold bumps that line, adds a row only to an existing `## Versions` or `## Change log` table, and adds no front matter. A doc with both a front matter `version:` and a `**Version:**` line is refused. Test: `claude/plugins/docs/tests/test_dl243_version_line.py`.
+
 **R5.10** — `docs_check.py` reports layout, front matter, link, image, `Source:`, test-path, version-table, generated-file, map and `docs/work/` findings. It exits 1 on any error (DOCSPEC R8.1).
 
 **R5.11** — `docs_check.py` warns on stale or missing `last_verified`, code newer than its doc, and a spec with no diagram. `--strict` turns warnings into failures (DOCSPEC R8.2).
