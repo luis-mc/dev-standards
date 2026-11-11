@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T09:25+00:00",
+  "updated": "2026-11-11T09:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -729,12 +729,11 @@
       "id": "AR69",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Built",
       "item": "Lighter Full Progress page (slim registry, no old Live rows, lean rows)",
       "detail": "D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.",
-      "expected": "11 Nov ~09:35",
-      "changed": "2026-11-11T09:10+00:00",
-      "expected_basis": "cloud agent ~28 min from 09:07",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:26+00:00",
       "rides": "DS231",
       "started": "2026-11-11T09:07+00:00"
     },
