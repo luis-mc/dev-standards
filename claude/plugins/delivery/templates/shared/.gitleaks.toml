@@ -72,6 +72,12 @@ regexes = [
   '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*(\$[0-9]+|\?|:[a-z_][a-z0-9_]*)[ \t]*[,;)]*[ \t]*$''',
   '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*[a-z_][a-z0-9_.:]*\([ \t]*[&*]?[a-z_][a-z0-9_.:]*(\(\))?[ \t]*\)''',
   '''(?i)_(token|secret|pass|key)[ \t]*=[ \t]*(os\.environ\[|os\.getenv\(|process\.env\.|(std::)?env::var\()''',
+  # DL237: two more shapes. Each pins the whole line, so a quote, a second assignment or a bare token
+  # on the line leaves it scanned. (1) A SQL placeholder bound to a name that ends in _key, _token,
+  # _secret or _pass, with more SQL after it. (2) A nested call (Some(Arc::new(x))) whose first
+  # argument is an identifier path, not a literal. RE2: no lookahead.
+  '''(?i)^([^'"=]|=[ \t]*(\$[0-9]{1,2}|\?|:[a-z_][a-z0-9_]*)([ \t,;)]|$))*['"`]?([^'"=]|=[ \t]*(\$[0-9]{1,2}|\?|:[a-z_][a-z0-9_]*)([ \t,;)]|$))*_(token|secret|pass|key)[ \t]*=[ \t]*(\$[0-9]{1,2}|\?|:[a-z_][a-z0-9_]*)([ \t]*[,)]|[ \t]*['"`]|[ \t]+(AND|OR|LIMIT|RETURNING|ORDER|GROUP|OFFSET)\b)([^'"=]|=[ \t]*(\$[0-9]{1,2}|\?|:[a-z_][a-z0-9_]*)([ \t,;)]|$))*['"`]?$''',
+  '''(?i)^[^'"=]*_(token|secret|pass|key)[ \t]*[=:][ \t]*[a-z_][a-z0-9_.:]*\([ \t]*[&*]?[a-z_][a-z0-9_.:]*\([^'"=]*$''',
   '''postgres://postgres:postgres@localhost:5432/[a-z0-9_]+''',
   '''\$\{\{\s*(secrets\.[A-Za-z0-9_]+|github\.token)\s*\}\}''',
   '''[:=]\s*\.\.\.''',
