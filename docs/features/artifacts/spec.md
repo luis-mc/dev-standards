@@ -150,6 +150,8 @@ flowchart LR
 
 **R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
 
+**R5.11d** — A project's `design.css` is checked against the accents contract: the token contract minus the page, surface and ink tokens (`--paper`, `--surface`, `--surface-2`, `--ink`, `--ink-muted`, `--rule`, `--rule-strong`) and the size tokens. `design set` and `check` accept a file without them; a file that sets them is accepted with the ignored-tokens warning; a missing accent token, or its dark value, is refused and named. The plugin's own default design keeps the full contract. (DL259)
+
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
 **R5.13** — `promote-to-spec` writes a feature artifact's content to a feature spec in the luismc-docs template.
