@@ -89,6 +89,8 @@ def env_with(extra: dict | None = None) -> dict:
         PYTHONIOENCODING="utf-8",
         NO_PROXY="127.0.0.1,localhost",
         no_proxy="127.0.0.1,localhost",
+        # join.py looks for the docs plugin in the machine's plugin cache; a machine that has it would add commits
+        LUISMC_DOCS_WORK=str(_GITCONFIG.parent / "no-docs-plugin" / "docs_work.py"),
     )
     if extra:
         env.update(extra)
