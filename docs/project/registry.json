@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T09:03+00:00",
+  "updated": "2026-11-11T09:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -733,9 +733,9 @@
       "item": "Lighter Full Progress page (slim registry, no old Live rows, lean rows)",
       "detail": "D25-D27, D29: embed only open tasks plus Live/Dropped of the last 14 days (minified); Live rows older than 14 days shown as a count line pointing to the repo registry; drop per-cell data-label (CSS labels by column). Goal: 1.84 MB page to ~0.5 MB.",
       "expected": "11 Nov ~09:35",
-      "changed": "2026-11-11T09:02+00:00",
+      "changed": "2026-11-11T09:10+00:00",
       "expected_basis": "cloud agent ~28 min from 09:07",
-      "rides": "DS232",
+      "rides": "DS231",
       "started": "2026-11-11T09:07+00:00"
     },
     {
@@ -3584,11 +3584,14 @@
       "id": "DL199",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Doctor layer check probes the running container, not its image ID",
       "detail": "After a Docker restart the running container's image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.",
-      "expected": "11 Nov",
-      "changed": "2026-11-11T08:46+00:00"
+      "expected": "11 Nov ~09:40",
+      "changed": "2026-11-11T09:12+00:00",
+      "expected_basis": "cloud agent ~25 min from 09:14",
+      "rides": "DS231",
+      "started": "2026-11-11T09:12+00:00"
     },
     {
       "id": "DL200",
@@ -3607,11 +3610,14 @@
       "id": "DL201",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "delivery_ci_install update: diff or merge files with project changes",
       "detail": "Peer report: the 1.27.1 update overwrote project fixes (tools.json pins, train-cleanup.yml, artifact_prune.py). Needs an owner choice: keep-and-report, 3-way merge, or diff prompt.",
-      "expected": "11 Nov",
-      "changed": "2026-11-11T09:02+00:00"
+      "expected": "11 Nov ~09:40",
+      "changed": "2026-11-11T09:12+00:00",
+      "expected_basis": "cloud agent ~25 min from 09:14",
+      "rides": "DS231",
+      "started": "2026-11-11T09:12+00:00"
     },
     {
       "id": "DS1",
@@ -7340,32 +7346,32 @@
       "owner": "project",
       "app": "",
       "status": "Running",
-      "item": "RELEASE-96: ci_tool tests pass on Windows",
+      "item": "RELEASE-96: ci_tool Windows tests, CI hang fix, lighter Full Progress",
       "detail": "DL195 (test-only fix). PR, CI, merge on green.",
-      "expected": "11 Nov ~09:38",
-      "changed": "2026-11-11T08:55+00:00",
-      "expected_basis": "DL200 agent ~24 min, then join and CI",
+      "expected": "11 Nov ~09:55",
+      "changed": "2026-11-11T09:12+00:00",
+      "expected_basis": "waits for DL200, AR69, DL199, DL201, SO7, then join and CI",
       "release": 96,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-11T09:01+00:00",
-          "end": "2026-11-11T09:25+00:00"
+          "start": "2026-11-11T08:55+00:00",
+          "end": "2026-11-11T09:40+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T09:25+00:00",
-          "end": "2026-11-11T09:30+00:00"
+          "start": "2026-11-11T09:40+00:00",
+          "end": "2026-11-11T09:46+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T09:30+00:00",
-          "end": "2026-11-11T09:35+00:00"
+          "start": "2026-11-11T09:46+00:00",
+          "end": "2026-11-11T09:51+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T09:35+00:00",
-          "end": "2026-11-11T09:38+00:00"
+          "start": "2026-11-11T09:51+00:00",
+          "end": "2026-11-11T09:55+00:00"
         }
       ],
       "started": "2026-11-11T08:30+00:00"
@@ -7374,12 +7380,11 @@
       "id": "DS232",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Dropped",
       "item": "RELEASE-97: lighter Full Progress page",
       "detail": "AR task (D25, D26): slim embedded registry, no old Live rows, lighter rows. Join, CI, merge on green, plugin update.",
-      "expected": "11 Nov ~09:55",
-      "changed": "2026-11-11T09:02+00:00",
-      "expected_basis": "agent ~28 min, after RELEASE-96 merges",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:11+00:00",
       "release": 97,
       "phases": [
         {
@@ -7403,7 +7408,9 @@
           "end": "2026-11-11T09:55+00:00"
         }
       ],
-      "started": "2026-11-11T09:05+00:00"
+      "started": "2026-11-11T09:05+00:00",
+      "dropped_into": "DS231",
+      "dropped_reason": "owner: merge 96 and 97 into one release"
     },
     {
       "id": "DU1",
@@ -7745,21 +7752,26 @@
       "id": "SO7",
       "owner": "setup-offers",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
       "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
-      "expected": "11 Nov",
-      "changed": "2026-11-11T09:02+00:00"
+      "expected": "11 Nov ~09:40",
+      "changed": "2026-11-11T09:12+00:00",
+      "expected_basis": "cloud agent ~25 min from 09:14",
+      "rides": "DS231",
+      "started": "2026-11-11T09:12+00:00"
     },
     {
       "id": "SO8",
       "owner": "setup-offers",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
       "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T09:03+00:00"
+      "changed": "2026-11-11T09:12+00:00",
+      "dropped_into": "SO7",
+      "dropped_reason": "duplicate of SO7"
     },
     {
       "id": "ST1",

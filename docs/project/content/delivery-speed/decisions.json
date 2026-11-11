@@ -4529,6 +4529,50 @@
    "chosen": "Yes, short notes (Recommended)",
    "decided": "2026-11-11",
    "owner_words": "Yes, short notes (Recommended)"
+  },
+  {
+   "id": "D200",
+   "question": "Ship RELEASE-96 and RELEASE-97 separately or together?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DS231",
+   "options": [
+    {
+     "label": "Separately",
+     "summary": "96 then 97, two PRs"
+    },
+    {
+     "label": "Merge 96 and 97",
+     "summary": "One release, one PR (#197)"
+    }
+   ],
+   "chosen": "Merge 96 and 97",
+   "decided": "2026-11-11",
+   "owner_words": "merge 96 and 97"
+  },
+  {
+   "id": "D201",
+   "question": "DL201: what should delivery_ci_install.py update do with an installed file the project changed?",
+   "asked": "2026-11-11",
+   "status": "decided",
+   "task": "DL201",
+   "options": [
+    {
+     "label": "Keep and report (Recommended)",
+     "summary": "Leave the file, write <file>.new, list a diff command"
+    },
+    {
+     "label": "3-way merge",
+     "summary": "Merge with a saved base copy; conflict markers listed"
+    },
+    {
+     "label": "Ask per file",
+     "summary": "Interactive overwrite/keep/merge per file"
+    }
+   ],
+   "chosen": "Keep and report (Recommended)",
+   "decided": "2026-11-11",
+   "owner_words": "Keep and report (Recommended)"
   }
  ]
 }
