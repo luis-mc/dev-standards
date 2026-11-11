@@ -70,6 +70,7 @@ class Interval(unittest.TestCase):
     def test_minimum_is_30(self):
         self.assertEqual(cw.effective_interval(5), 30.0)
         self.assertEqual(cw.effective_interval(45), 45)
+        self.assertEqual(cw.effective_interval(0.1), 0.1)
 
     def test_backoff_while_queued_then_reset(self):
         q = [run(1, A, "queued")]

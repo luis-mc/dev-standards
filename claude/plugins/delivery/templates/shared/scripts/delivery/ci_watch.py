@@ -747,8 +747,8 @@ DEFAULT_MIN_REMAINING = 200  # below this many REST calls left, wait for the res
 
 
 def effective_interval(value: float) -> float:
-    """DL235: 0 means no wait (tests); anything else is at least MIN_INTERVAL."""
-    return 0.0 if value == 0 else max(value, MIN_INTERVAL)
+    """DL235: a value under 1 s is for tests (no floor, no quota read); anything else is at least MIN_INTERVAL."""
+    return value if value < 1 else max(value, MIN_INTERVAL)
 
 
 def next_delay(base: float, current: float, queued_only: bool, cap: float) -> float:
@@ -892,7 +892,7 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--timeout", type=float, default=3600,
                     help="seconds to wait before giving up with exit 4 (default 3600)")
     ap.add_argument("--interval", type=float, default=DEFAULT_INTERVAL,
-                    help="seconds between polls (default 60, minimum 30; 0 polls without waiting)")
+                    help="seconds between polls (default 60, minimum 30; under 1 polls at once, for tests)")
     ap.add_argument("--max-interval", type=float, default=DEFAULT_MAX_INTERVAL,
                     help="the poll interval grows up to this while every run is still queued (default 120)")
     ap.add_argument("--min-remaining", type=int, default=DEFAULT_MIN_REMAINING,
@@ -965,7 +965,8 @@ def main(argv: list[str] | None = None) -> int:
     delay = base
     codes = []
     while True:
-        deadline += quota_guard(args.repo, args.min_remaining)
+        if base >= 1:
+            deadline += quota_guard(args.repo, args.min_remaining)
         for sha, st in list(watches):
             code = poll_commit(sha, args, st)
             if code is not None:
