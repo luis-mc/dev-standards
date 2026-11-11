@@ -40,6 +40,9 @@ def join(w, *args):
 class JoinFixes(unittest.TestCase):
     def test_missing_integration_needs_create(self):
         w = repo()
+        git(w, "checkout", "-q", "-b", "nope")
+        commit(w, "n.txt", "n\n", "n")
+        git(w, "checkout", "-q", "main")  # DL225: a branch that is only local still needs --create
         p = join(w, "--into", "nope", "x")
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("--create", p.stderr)

@@ -48,6 +48,12 @@ the specs with T2 findings; a missing script is skipped with a note. DL145: when
 origin/INTEGRATION the join builds on it; it refuses when local has commits that are not descendants of
 origin/INTEGRATION (they would be lost). Conflicts under docs/work/ resolve by taking either side.
 
+DL225: a branch argument `origin/X` (any configured remote) means X. `--into` may be left out: the
+integration branch is then `<first task id>-integration`, the head the ready-PR guard accepts. A new
+INTEGRATION (neither local nor remote) is created from origin/<default> and pushed, with or without
+--create. A Cargo.lock conflict takes INTEGRATION's lock, runs `cargo fetch` (then `cargo update -w` if
+needed) and verifies with `cargo fetch --locked`; without cargo it stops and names the file.
+
 Exit: 0 joined, 1 a result is not trusted or the gate/push failed, 2 usage or
 configuration error (or no result), 3 stopped at a conflict.
 """
@@ -56,6 +62,8 @@ from __future__ import annotations
 import argparse
 import glob
 import os
+import re
+import shutil
 import subprocess
 import sys
 import time
@@ -264,21 +272,69 @@ def unmerged(root: Path) -> list[str]:
     return sorted(p for p in out.split("\0") if p)
 
 
-def resolve_lockfiles(root: Path, cfg: dict, branch: str, lock: list[str]) -> str | None:
-    """Take INTEGRATION's lockfiles and re-run setup. Returns None on success,
-    else why it could not."""
+def is_cargo_lock(path: str) -> bool:
+    return path.replace("\\", "/").rsplit("/", 1)[-1] == "Cargo.lock"
+
+
+def resolve_cargo_lock(root: Path, path: str, run=None, which=None) -> str | None:
+    """DL225: Cargo.lock already holds INTEGRATION's version. `cargo fetch` (not --locked) adds the
+    branch's crates to it, then `cargo fetch --locked` proves the lock is complete. When fetch leaves
+    the lock short, `cargo update -w` is tried once. Returns None on success, else why not."""
+    run = run or dc.run_command
+    which = which or shutil.which
+    if which("cargo") is None:
+        return "cargo is not installed, so %s cannot be updated for the branch's crates" % path
+    print("==> cargo fetch (adds the branch's crates to %s)" % path, flush=True)
+    if run("cargo fetch", root)[0] != 0:
+        return "cargo fetch failed, so %s was not updated" % path
+    if run("cargo fetch --locked", root)[0] != 0:
+        print("==> cargo update -w (fetch left %s short)" % path, flush=True)
+        if run("cargo update -w", root)[0] != 0 or run("cargo fetch --locked", root)[0] != 0:
+            return "%s is still not complete after cargo fetch and cargo update -w" % path
+    return None
+
+
+def resolve_lockfiles(root: Path, cfg: dict, branch: str, lock: list[str], run=None, which=None) -> str | None:
+    """Take INTEGRATION's lockfiles and re-run setup. Cargo.lock is updated by cargo instead
+    (DL225). Returns None on success, else why it could not."""
+    run = run or dc.run_command
     for path in lock:
         if dc.run_git(["checkout", "--ours", "--", path], cwd=root, check=False).returncode != 0:
             return "no integration version of %s to take" % path
         dc.run_git(["add", "--", path], cwd=root)
-    for cmd in cfg["setup"]:
-        print("==> setup after lockfile resolution\n    $ %s" % cmd, flush=True)
-        code, _ = dc.run_command(cmd, root)
-        if code != 0:
-            return "setup failed (exit %d): %s" % (code, cmd)
-    for path in lock:  # setup may have regenerated the lockfile
+    cargo = [p for p in lock if is_cargo_lock(p)]
+    for path in cargo:
+        problem = resolve_cargo_lock(root, path, run, which)
+        if problem is not None:
+            return problem
+    others = [p for p in lock if not is_cargo_lock(p)]
+    if others or not cargo:
+        for cmd in cfg["setup"]:
+            if cargo and "cargo" in cmd:
+                continue  # cargo was handled above, without --locked
+            print("==> setup after lockfile resolution\n    $ %s" % cmd, flush=True)
+            code, _ = run(cmd, root)
+            if code != 0:
+                return "setup failed (exit %d): %s" % (code, cmd)
+    for path in lock:  # setup or cargo may have regenerated the lockfile
         dc.run_git(["add", "--", path], cwd=root)
     return None
+
+
+def strip_remote(name: str, remotes: list[str]) -> str:
+    """DL225: `origin/X` names the branch X. Strips one leading `<remote>/` of a configured remote."""
+    for r in sorted(remotes, key=len, reverse=True):
+        if name.startswith(r + "/") and len(name) > len(r) + 1:
+            return name[len(r) + 1:]
+    return name
+
+
+def default_integration(branches: list[str]) -> str:
+    """DL225: `<first task id>-integration`, the name the ready-PR guard accepts."""
+    first = branches[0]
+    m = re.match(r"^[A-Za-z]+[0-9]+[a-z]?(?=-|$)", first)
+    tid = m.group(0) if m else first.split("-")[0].split("/")[-1]
+    return "%s-integration" % tid
 
 
 def trusted_same_tree(root: Path, remote: str, base_ref: str, joined: list[str]) -> str | None:
@@ -400,7 +456,8 @@ def finish_partial(root: Path, args, into: str, joined: list[str], conflicting: 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="join.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("--into", required=True, metavar="INTEGRATION", help="integration branch")
+    ap.add_argument("--into", default=None, metavar="INTEGRATION",
+                    help="integration branch; default <first task id>-integration (DL225)")
     ap.add_argument("branches", nargs="+", metavar="BRANCH", help="branches to join, in order")
     ap.add_argument("--no-gate", action="store_true", help="skip the light check on the joined head")
     ap.add_argument("--ci-gate", action="store_true",
@@ -426,7 +483,12 @@ def main(argv: list[str] | None = None) -> int:
     if merge_in_progress(root):
         raise dc.DeliveryError("a merge is already in progress; finish or abort it first")
 
-    remote, into = args.remote, args.into
+    remote = args.remote
+    remotes = dc.run_git(["remote"], cwd=root, check=False).stdout.split()
+    args.branches = [strip_remote(b, remotes) for b in args.branches]
+    into = strip_remote(args.into, remotes) if args.into else default_integration(args.branches)
+    if not args.into:
+        print("join: no --into; using %s" % into, flush=True)
     started = int(time.time())  # branches born after this are left alone by the cleanup (DL99)
     # Worktrees of trains already merged go first. Best effort: it never stops a join.
     try:
@@ -444,11 +506,13 @@ def main(argv: list[str] | None = None) -> int:
     if dc.rev(integ_ref, root) is None:
         default_ref = "%s/%s" % (remote, cfg["default_branch"])
         create_cmd = "git push %s %s:refs/heads/%s" % (remote, default_ref, into)
-        if not args.create:
+        if not args.create and dc.rev("refs/heads/%s" % into, root) is not None:
             raise dc.DeliveryError("integration branch '%s' not found on remote '%s'; run again with --create, or create it: %s"
                                    % (into, remote, create_cmd))
         if dc.rev(default_ref, root) is None:
             raise dc.DeliveryError("cannot create '%s': %s not found" % (into, default_ref))
+        if not args.create:
+            print("join: %s is new (not local, not on %s); creating it (DL225)" % (into, remote), flush=True)
         made = dc.run_git(["push", "--quiet", "--no-verify", remote, "%s:refs/heads/%s" % (default_ref, into)], cwd=root, check=False)
         if made.returncode != 0:
             raise dc.DeliveryError("could not create '%s' on '%s': %s; create it yourself: %s"
