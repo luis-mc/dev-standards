@@ -2543,7 +2543,8 @@ def cmd_mark_deferred(args):
         if deferral(rec, e) is None:
             e.pop('local_opened', None)             # a new deferral may open the page once more
         e['deferred_until'] = until.isoformat(timespec='minutes')
-        target = local_work_dir(ctx, getattr(args, 'local', None)) / 'full-progress' / project_slug(ctx) / str(e.get('file', ''))
+        folder = local_page_dir(ctx, local_work_dir(ctx, getattr(args, 'local', None)))
+        target = folder / str(e.get('file', ''))
         e['local_path'] = str(target)
         rec.message = ctx.rel + ': %s publish deferred' % args.key
         opens = not getattr(args, 'no_open', False) and not e.get('local_opened')
@@ -2554,7 +2555,8 @@ def cmd_mark_deferred(args):
 
     res = run_change(ctx, apply)
     emit(args, res, ['recorded %s deferred until %s (%s)' % (args.key, res['until'], short(res)),
-                     'local copy: %s' % res['local_path']])
+                     'local copy: %s' % res['local_path'],
+                     'local folder: %s' % os.path.dirname(res['local_path'])])
     if res.get('open'):
         open_local(res['local_path'])
     return 0
@@ -3083,6 +3085,21 @@ def local_work_dir(ctx, local=None):
              'to keep it out of the repository folder' % PUBLISH_REL.replace(os.sep, '/'))
         return ctx.root / PUBLISH_REL
     return (ctx.root / base) if not os.path.isabs(base) else Path(base)
+
+
+def local_page_dir(ctx, base):
+    """DL264: the folder for the local Full Progress page. `base` may be the work root, the
+    `full-progress` folder, or the `full-progress/<project>` folder; all give <root>/full-progress/<project>.
+    Names are compared case-insensitively on Windows. Never nests full-progress inside full-progress."""
+    base = Path(base)
+    slug = project_slug(ctx)
+    fold = (lambda x: x.lower()) if os.name == 'nt' else (lambda x: x)
+    parts = base.parts
+    if len(parts) >= 2 and fold(parts[-2]) == FP_NAME and fold(parts[-1]) == fold(slug):
+        return base
+    if parts and fold(parts[-1]) == FP_NAME:
+        return base / slug
+    return base / FP_NAME / slug
 
 
 LOCAL_REFRESH_TAG = '<meta http-equiv="refresh" content="60">'

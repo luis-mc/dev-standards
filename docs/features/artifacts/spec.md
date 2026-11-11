@@ -138,7 +138,7 @@ flowchart LR
 
 **R5.9** — When claude.ai refuses a publish for its daily limit, the publish is deferred until the reset, and the end-of-turn hook does not block on it.
 
-**R5.9a** — While the publish is deferred, `mark-deferred` writes a local copy of Full Progress: the repo copy, with every `feature-*.html` beside it so each row link opens offline. The folder is `<work root>/full-progress/<project slug>/`. The work root is `--local DIR`, else `work_root` in the project's `.delivery/config.json`, else `work_root` in `machine.json` of the delivery machine folder, else the publish-copy folder with a warning. Each local page has a 60-second auto-refresh tag; the repo and publish copies do not. The page opens in the browser once per deferral, recorded as `local_opened` on the entry. Every writing command refreshes the copies until the reset. (DL246, D245, D246; ARTIFACTSPEC R9.7)
+**R5.9a** — While the publish is deferred, `mark-deferred` writes a local copy of Full Progress: the repo copy, with every `feature-*.html` beside it so each row link opens offline. The folder is `<work root>/full-progress/<project slug>/`. `--local DIR` may also name the `full-progress` folder or the full `full-progress/<project slug>` folder; all three give the same folder, and a nested `full-progress/full-progress` is never made. The command prints the folder used. The work root is `--local DIR`, else `work_root` in the project's `.delivery/config.json`, else `work_root` in `machine.json` of the delivery machine folder, else the publish-copy folder with a warning. Each local page has a 60-second auto-refresh tag; the repo and publish copies do not. The page opens in the browser once per deferral, recorded as `local_opened` on the entry. Every writing command refreshes the copies until the reset. (DL246, DL264, D245, D246; ARTIFACTSPEC R9.7)
 
 **R5.10** — Full Progress is published at least every 60 minutes while work is open (a task is Running, Waiting or Needs you).
 
@@ -224,7 +224,7 @@ flowchart TB
 | R5.3 | `test_set_task_status`, `test_set_task_status_only_touches_its_artifacts` in `tools/test_project_artifacts.py` |
 | R5.17 | `test_badge_in_both_pages`, `test_project_design_changes_accent_not_page_colour`, `test_latest_flag_does_not_make_pages_stale` in `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.4 | `test_status_nearest` in `tools/test_project_artifacts.py` |
-| R5.9a | `tools/test_artifacts_dl246.py` |
+| R5.9a | `tools/test_artifacts_dl246.py`, `tools/test_artifacts_dl264.py` |
 | R5.5 | `test_determinism` in `tools/test_project_artifacts.py` |
 | R5.6 | `test_earlier_findings_do_not_block_a_change`, `test_a_new_finding_is_refused_beside_earlier_ones` in `tools/test_project_artifacts.py` |
 | R5.7 | `test_mark_published_refuses_a_feature_artifact`, `test_pending_never_lists_a_feature_artifact` in `tools/test_project_artifacts.py` |
