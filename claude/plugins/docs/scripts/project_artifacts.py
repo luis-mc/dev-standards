@@ -2378,6 +2378,13 @@ def cmd_render(args):
     ctx = make_ctx(args)
     res = render_changed(ctx, args.all)
     emit(args, res, ['rendered: ' + (', '.join(res['rendered']) or 'nothing to do')])
+    if not getattr(args, 'json_out', False):
+        try:
+            _ctx, rec = load_for_read(args)
+            for f, m in stale_lede_warnings(rec):
+                print('note: %s: %s' % (f, m))
+        except Exception:
+            pass
     return 0
 
 
@@ -2761,7 +2768,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec) + stale_lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
     warnings += [('.delivery', m) for m in schema_warnings(session_root(str(rec.dir)))]
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -2793,6 +2800,28 @@ def lede_warnings(rec):
         return []
     contents, _findings = load_contents(rec)
     return [('content/%s/meta.json' % key, m) for key, content in sorted(contents.items()) for m in warn_of(content)]
+
+
+STALE_LEDE_RE = re.compile(r'RELEASE-(\d+)(?![\d\w])')
+
+
+def stale_lede_warnings(rec):
+    """R5.37a: the Full Progress lede names a RELEASE-n lower than the newest Live release. [(file, message)]
+    Only the release-number test; the record keeps no reliable change times for content."""
+    fp = rec.manifest.get('full_progress_artifact') if isinstance(rec.manifest, dict) else None
+    key = (fp or {}).get('key', FP_NAME)
+    contents, _findings = load_contents(rec)
+    content = contents.get(key)
+    lede = ((content or {}).get('meta') or {}).get('lede')
+    if not isinstance(lede, str):
+        return []
+    named = [int(n) for n in STALE_LEDE_RE.findall(lede)]
+    live = [release_number(t) for t in rec.tasks() if isinstance(t, dict) and t.get('status') == 'Live']
+    live = [n for n in live if n is not None]
+    if not named or not live or max(named) >= max(live):
+        return []
+    return [('content/%s/meta.json' % key, 'the lede names RELEASE-%d but RELEASE-%d is live; update it with edit-content'
+             % (max(named), max(live)))]
 
 
 def decision_warnings(rec):
