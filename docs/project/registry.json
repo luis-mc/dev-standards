@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T19:45+00:00",
+  "updated": "2026-11-11T20:15+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4264,12 +4264,11 @@
       "id": "DL239",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Plugin name and version badge on every docs-plugin page",
       "detail": "Owner ask 11 Nov: every document the docs plugin generates shows the plugin name and the version that generated it at the top right of its header, with a flag next to the version saying whether that is the latest version of the plugin. Design questions go to the owner when the DL235-DL238 wave reports.",
-      "expected": "11 Nov ~19:55",
-      "changed": "2026-11-11T19:44+00:00",
-      "expected_basis": "cloud agent from 19:16, past its 28 min; report pending",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T20:14+00:00",
       "rides": "DL240",
       "started": "2026-11-11T19:12+00:00"
     },
@@ -4277,45 +4276,49 @@
       "id": "DL240",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: version badge, page colour, 90% fonts, join.py fixes",
       "detail": "Next RELEASE after DL234: DL239 (docs plugin name and version badge with latest flag, one page colour everywhere, fonts at 90%) and DL240 (join.py: no empty stacked report for sibling branches, a skipped line per branch, no quiet partial join).",
-      "expected": "11 Nov ~20:10",
-      "changed": "2026-11-11T19:44+00:00",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T20:14+00:00",
       "release": 107,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T19:16+00:00",
-          "end": "2026-11-11T19:55+00:00"
+          "end": "2026-11-11T19:45+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T19:55+00:00",
-          "end": "2026-11-11T20:00+00:00"
+          "start": "2026-11-11T19:45+00:00",
+          "end": "2026-11-11T19:48+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T20:00+00:00",
-          "end": "2026-11-11T20:08+00:00"
+          "start": "2026-11-11T19:48+00:00",
+          "end": "2026-11-11T20:18+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T20:08+00:00",
-          "end": "2026-11-11T20:10+00:00"
+          "start": "2026-11-11T20:18+00:00",
+          "end": "2026-11-11T20:20+00:00"
         }
       ],
-      "started": "2026-11-11T19:12+00:00"
+      "started": "2026-11-11T19:12+00:00",
+      "risk": {
+        "label": "CI rerun after a test fix",
+        "minutes": 20
+      }
     },
     {
       "id": "DL241",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "join.py: sibling-branch stacked report, skipped lines, no quiet partial join",
       "detail": "Peer finding, owner chose fix: join.py reports stacked conflicts with an empty file list for sibling branches cut from one contract branch; --push prints no per-branch skipped line; a partial join is quiet. Fix all three before the peer's next multi-branch join.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T19:22+00:00",
+      "changed": "2026-11-11T20:14+00:00",
       "rides": "DL240",
       "started": "2026-11-11T19:12+00:00"
     },
@@ -4323,11 +4326,11 @@
       "id": "DL242",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "artifact_prune --sync-workflow keeps the workflow list when config has none",
       "detail": "Peer finding: with no artifact_prune section in .delivery/config.json (a gitignored config in a fresh worktree), --sync-workflow rewrote the project's artifact-prune.yml workflow list to the default [CI, Package]. Keep the file's current list when the config has no section; write the default only on a fresh install.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T19:29+00:00",
+      "changed": "2026-11-11T20:14+00:00",
       "rides": "DL240",
       "started": "2026-11-11T19:18+00:00"
     },
@@ -4335,11 +4338,11 @@
       "id": "DL243",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "docs_fold: architecture spec with a Version line gets no front matter",
       "detail": "Found at the RELEASE-106 join: docs_fold note+fold on architecture/DELIVERYSPEC added YAML front matter (version 0.1.0) and a Versions table, although the spec keeps its own **Version:** line (1.7.0). Fold must bump the existing Version line (or refuse with a clear message), never add a second version scheme.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T19:29+00:00",
+      "changed": "2026-11-11T20:15+00:00",
       "rides": "DL240",
       "started": "2026-11-11T19:22+00:00"
     },
@@ -4350,29 +4353,29 @@
       "status": "Running",
       "item": "Release: multi-track CI install (rust + ts in one repo)",
       "detail": "Release after DL240: DL245 lets delivery_ci_install.py install several tracks into one repo (one ci.yml with both job sets, gate.json with both, CI scope by path).",
-      "expected": "11 Nov ~20:28",
-      "changed": "2026-11-11T19:45+00:00",
+      "expected": "11 Nov ~20:40",
+      "changed": "2026-11-11T20:09+00:00",
       "release": 108,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T19:39+00:00",
-          "end": "2026-11-11T20:12+00:00"
+          "end": "2026-11-11T20:16+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T20:12+00:00",
-          "end": "2026-11-11T20:17+00:00"
-        },
-        {
-          "name": "ci",
-          "start": "2026-11-11T20:17+00:00",
+          "start": "2026-11-11T20:20+00:00",
           "end": "2026-11-11T20:25+00:00"
         },
         {
-          "name": "merge",
+          "name": "ci",
           "start": "2026-11-11T20:25+00:00",
-          "end": "2026-11-11T20:28+00:00"
+          "end": "2026-11-11T20:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T20:35+00:00",
+          "end": "2026-11-11T20:40+00:00"
         }
       ],
       "started": "2026-11-11T19:38+00:00"
@@ -4381,12 +4384,11 @@
       "id": "DL245",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Multi-track CI install: --track rust,ts in one repo",
       "detail": "Owner chose (D244) to build it now: delivery_ci_install.py install/update accept several tracks; one ci.yml with every track's job set, gate.json with every track's commands, CI scope by path per track; doctor checks each track.",
-      "expected": "11 Nov ~20:07",
-      "changed": "2026-11-11T19:38+00:00",
-      "expected_basis": "cloud agent from 19:39, setup 3 + work 20 + CI 7",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T20:09+00:00",
       "rides": "DL244",
       "started": "2026-11-11T19:38+00:00"
     },
@@ -4394,14 +4396,25 @@
       "id": "DL246",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Local Full Progress: machine work root, working feature links",
       "detail": "Owner chose (D245, D246): the local page goes to <machine work root>/full-progress/<project>/ from the machine folder's machine.json (a project's work_root overrides; .claude fallback warns), and it is the repo copy with feature pages copied beside it so row links open offline.",
-      "expected": "11 Nov ~20:12",
-      "changed": "2026-11-11T19:43+00:00",
-      "expected_basis": "cloud agent from 19:47, setup 3 + work 15 + CI 7",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T20:08+00:00",
       "rides": "DL244",
       "started": "2026-11-11T19:43+00:00"
+    },
+    {
+      "id": "DL247",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "ci_watch exits non-zero when it gives up; pins the repo at start",
+      "detail": "Peer bug: when the working tree was removed mid-watch, every gh call failed, ci_watch printed giving up after 5 failures but exited 0, so callers read success. Exit non-zero on give-up; resolve the repo once at start and pass --repo to every gh call.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T20:14+00:00",
+      "rides": "DL244",
+      "started": "2026-11-11T19:53+00:00"
     },
     {
       "id": "DS1",

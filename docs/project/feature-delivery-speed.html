@@ -106,7 +106,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 16px;
+  font-size: 14.4px;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -184,11 +184,17 @@ h1 {
   font-family: var(--font-display);
   font-stretch: var(--font-display-stretch);
   font-weight: 800;
-  font-size: clamp(2rem, 5vw, 3rem);
+  font-size: clamp(2rem, 4.5vw, 3rem);
   line-height: 1.05;
   text-wrap: balance;
   margin: .2em 0 .4em;
 }
+header.artifact-header { position: relative; }
+.gen-badge { position: absolute; top: .7rem; right: 0; display: inline-flex; align-items: center; gap: .4em; font-family: var(--font-mono); font-size: .72rem; white-space: nowrap; color: var(--ink-muted); }
+.gen-flag { display: inline-block; padding: 0 .5em; border: 1px solid currentColor; line-height: 1.5; }
+.gen-latest { color: var(--live); }
+.gen-update { color: var(--running-mark); }
+.gen-unknown { color: var(--ink-muted); }
 header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
 .artifact-meta {
   font-family: var(--font-mono);
@@ -849,11 +855,11 @@ details.status-fold > summary strong { min-width: 0; }
 }
 .timeline-scroll { overflow-x: auto; }
 .release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
-.release-timeline .rt-axis { font-size: 11px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-axis { font-size: 9.9px; fill: var(--ink-muted); text-anchor: middle; }
 .release-timeline .rt-grid { stroke: var(--rule); }
 .release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
-.release-timeline .rt-name { font-size: 13px; font-weight: 600; fill: var(--ink); }
-.release-timeline .rt-sub { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-name { font-size: 11.7px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 9.9px; fill: var(--ink-muted); }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
@@ -862,13 +868,13 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
 .release-timeline .rt-expected { fill: var(--ink); }
 .release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.release-timeline .rt-day-label { font-size: 12px; fill: var(--ink); }
-.release-timeline .rt-live-label { font-size: 12px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
-.release-timeline .rt-risk-label { font-size: 10.5px; fill: var(--ink-muted); }
+.release-timeline .rt-day-label { font-size: 10.8px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 10.8px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 9.45px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
-.release-timeline .rt-now-label { font-size: 11px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
-.release-timeline .rt-strip-title { font-size: 12px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
-.release-timeline .rt-other-label { font-size: 11px; fill: var(--ink-muted); }
+.release-timeline .rt-now-label { font-size: 9.9px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 10.8px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 9.9px; fill: var(--ink-muted); }
 .release-timeline .rt-other.status-running { fill: var(--running-mark); }
 .release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
 .release-timeline .rt-other.status-needs-you { fill: var(--signal); }
@@ -894,68 +900,65 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.3.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T19:45+00:00">11 Nov 19:45</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T20:15+00:00">11 Nov 20:15</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 18:40</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">6 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DL239"><span class="task-id">DL239</span>Plugin name and version badge on every docs-plugin page <span class="glance-expected">11 Nov ~19:55</span><span class="glance-basis">cloud agent from 19:16, past its 28 min; report pending</span></li>
-<li data-glance-task="DL245"><span class="task-id">DL245</span>Multi-track CI install: --track rust,ts in one repo <span class="glance-expected">11 Nov ~20:07</span><span class="glance-basis">cloud agent from 19:39, setup 3 + work 20 + CI 7</span></li>
-<li data-glance-task="DL240"><span class="task-id">DL240</span><span class="release-name">RELEASE-107</span>Release: version badge, page colour, 90% fonts, join.py fixes <span class="glance-expected">11 Nov ~20:10</span></li>
-<li data-glance-task="DL246"><span class="task-id">DL246</span>Local Full Progress: machine work root, working feature links <span class="glance-expected">11 Nov ~20:12</span><span class="glance-basis">cloud agent from 19:47, setup 3 + work 15 + CI 7</span></li>
-<li data-glance-task="DL244"><span class="task-id">DL244</span><span class="release-name">RELEASE-108</span>Release: multi-track CI install (rust + ts in one repo) <span class="glance-expected">11 Nov ~20:28</span></li>
+<li data-glance-task="DL244"><span class="task-id">DL244</span><span class="release-name">RELEASE-108</span>Release: multi-track CI install (rust + ts in one repo) <span class="glance-expected">11 Nov ~20:40</span></li>
 <li data-glance-task="DL202"><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits <span class="glance-expected">12 Nov ~10:45</span><span class="glance-basis">24 h logging from 10:40, then ~5 min analysis</span></li>
 </ul>
 </details>
 <details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">3 tasks</span></summary>
 <ul>
-<li data-glance-task="DL242"><span class="task-id">DL242</span>artifact_prune --sync-workflow keeps the workflow list when config has none</li>
-<li data-glance-task="DL243"><span class="task-id">DL243</span>docs_fold: architecture spec with a Version line gets no front matter</li>
-<li data-glance-task="DL241"><span class="task-id">DL241</span>join.py: sibling-branch stacked report, skipped lines, no quiet partial join</li>
+<li data-glance-task="DL247"><span class="task-id">DL247</span>ci_watch exits non-zero when it gives up; pins the repo at start</li>
+<li data-glance-task="DL245"><span class="task-id">DL245</span>Multi-track CI install: --track rust,ts in one repo</li>
+<li data-glance-task="DL246"><span class="task-id">DL246</span>Local Full Progress: machine work root, working feature links</li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">62 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">67 tasks</span></summary>
 <ul>
+<li data-glance-task="DL243"><span class="task-id">DL243</span>docs_fold: architecture spec with a Version line gets no front matter</li>
+<li data-glance-task="DL239"><span class="task-id">DL239</span>Plugin name and version badge on every docs-plugin page</li>
+<li data-glance-task="DL240"><span class="task-id">DL240</span><span class="release-name">RELEASE-107</span>Release: version badge, page colour, 90% fonts, join.py fixes</li>
+<li data-glance-task="DL241"><span class="task-id">DL241</span>join.py: sibling-branch stacked report, skipped lines, no quiet partial join</li>
+<li data-glance-task="DL242"><span class="task-id">DL242</span>artifact_prune --sync-workflow keeps the workflow list when config has none</li>
 <li data-glance-task="DL234"><span class="task-id">DL234</span><span class="release-name">RELEASE-106</span>RELEASE: API-quota-safe CI watching, doctor fix, secret-scan shapes</li>
 <li data-glance-task="DL235"><span class="task-id">DL235</span>ci_watch: backoff, rate-limit check, many runs; rule against fast run watch</li>
 <li data-glance-task="DL236"><span class="task-id">DL236</span>Doctor: no scripts-current warning on files the installer just wrote</li>
-<li data-glance-task="DL237"><span class="task-id">DL237</span>Secret scan: narrow shapes for mid-line SQL placeholders and nested calls</li>
-<li data-glance-task="DL238"><span class="task-id">DL238</span>Full Progress local page when the publish limit is hit</li>
-<li data-glance-task="DL233"><span class="task-id">DL233</span>Refresh pool to 1.31.0 and declare a peer&#x27;s database roles</li>
-<li data-glance-task="DL229"><span class="task-id">DL229</span>Installer skips package.yml when nothing is packaged</li>
-<li data-glance-task="DL230"><span class="task-id">DL230</span>CI template: Playwright without --with-deps on pool runners</li>
-<li class="glance-more">and 54 more</li>
+<li class="glance-more">and 59 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">231</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">236</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">6 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL239"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL239</span>Plugin name and version badge on every docs-plugin page<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Owner ask 11 Nov: every document the docs plugin generates shows the plugin name and the version that generated it at the top right of its header, with a flag next to the version saying whether that is the latest version of the plugin. Design questions go to the owner when the DL235-DL238 wave reports.</td><td>11 Nov ~19:55<span class="expected-basis">cloud agent from 19:16, past its 28 min; report pending</span></td></tr>
-<tr data-task="DL245"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL245</span>Multi-track CI install: --track rust,ts in one repo<span class="release-line"><span class="release-name">RELEASE-108</span></span></td><td>Owner chose (D244) to build it now: delivery_ci_install.py install/update accept several tracks; one ci.yml with every track&#x27;s job set, gate.json with every track&#x27;s commands, CI scope by path per track; doctor checks each track.</td><td>11 Nov ~20:07<span class="expected-basis">cloud agent from 19:39, setup 3 + work 20 + CI 7</span></td></tr>
-<tr data-task="DL240"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL240</span><span class="release-name">RELEASE-107</span>Release: version badge, page colour, 90% fonts, join.py fixes</td><td>Next RELEASE after DL234: DL239 (docs plugin name and version badge with latest flag, one page colour everywhere, fonts at 90%) and DL240 (join.py: no empty stacked report for sibling branches, a skipped line per branch, no quiet partial join).</td><td>11 Nov ~20:10</td></tr>
-<tr data-task="DL246"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL246</span>Local Full Progress: machine work root, working feature links<span class="release-line"><span class="release-name">RELEASE-108</span></span></td><td>Owner chose (D245, D246): the local page goes to &lt;machine work root&gt;/full-progress/&lt;project&gt;/ from the machine folder&#x27;s machine.json (a project&#x27;s work_root overrides; .claude fallback warns), and it is the repo copy with feature pages copied beside it so row links open offline.</td><td>11 Nov ~20:12<span class="expected-basis">cloud agent from 19:47, setup 3 + work 15 + CI 7</span></td></tr>
-<tr data-task="DL244"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL244</span><span class="release-name">RELEASE-108</span>Release: multi-track CI install (rust + ts in one repo)</td><td>Release after DL240: DL245 lets delivery_ci_install.py install several tracks into one repo (one ci.yml with both job sets, gate.json with both, CI scope by path).</td><td>11 Nov ~20:28</td></tr>
+<tr data-task="DL244"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL244</span><span class="release-name">RELEASE-108</span>Release: multi-track CI install (rust + ts in one repo)</td><td>Release after DL240: DL245 lets delivery_ci_install.py install several tracks into one repo (one ci.yml with both job sets, gate.json with both, CI scope by path).</td><td>11 Nov ~20:40</td></tr>
 <tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>Memory log runs to 12 Nov 10:41. Root cause of the spikes (questions_stop.py reading a 2.4 GB transcript) fixed by DL208. Pool refresh waits for an idle pool and room on the PC (D212).</td><td>12 Nov ~10:45<span class="expected-basis">24 h logging from 10:40, then ~5 min analysis</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">3 built, 237 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">3 built, 242 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL243"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL243</span>docs_fold: architecture spec with a Version line gets no front matter<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Found at the RELEASE-106 join: docs_fold note+fold on architecture/DELIVERYSPEC added YAML front matter (version 0.1.0) and a Versions table, although the spec keeps its own **Version:** line (1.7.0). Fold must bump the existing Version line (or refuse with a clear message), never add a second version scheme.</td><td>11 Nov</td></tr>
+<tr data-task="DL239"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL239</span>Plugin name and version badge on every docs-plugin page<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Owner ask 11 Nov: every document the docs plugin generates shows the plugin name and the version that generated it at the top right of its header, with a flag next to the version saying whether that is the latest version of the plugin. Design questions go to the owner when the DL235-DL238 wave reports.</td><td>11 Nov</td></tr>
+<tr data-task="DL240"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL240</span><span class="release-name">RELEASE-107</span>Release: version badge, page colour, 90% fonts, join.py fixes</td><td>Next RELEASE after DL234: DL239 (docs plugin name and version badge with latest flag, one page colour everywhere, fonts at 90%) and DL240 (join.py: no empty stacked report for sibling branches, a skipped line per branch, no quiet partial join).</td><td>11 Nov</td></tr>
+<tr data-task="DL241"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL241</span>join.py: sibling-branch stacked report, skipped lines, no quiet partial join<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Peer finding, owner chose fix: join.py reports stacked conflicts with an empty file list for sibling branches cut from one contract branch; --push prints no per-branch skipped line; a partial join is quiet. Fix all three before the peer&#x27;s next multi-branch join.</td><td>11 Nov</td></tr>
+<tr data-task="DL242"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL242</span>artifact_prune --sync-workflow keeps the workflow list when config has none<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Peer finding: with no artifact_prune section in .delivery/config.json (a gitignored config in a fresh worktree), --sync-workflow rewrote the project&#x27;s artifact-prune.yml workflow list to the default [CI, Package]. Keep the file&#x27;s current list when the config has no section; write the default only on a fresh install.</td><td>11 Nov</td></tr>
+<tr data-task="DL247"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL247</span>ci_watch exits non-zero when it gives up; pins the repo at start<span class="release-line"><span class="release-name">RELEASE-108</span></span></td><td>Peer bug: when the working tree was removed mid-watch, every gh call failed, ci_watch printed giving up after 5 failures but exited 0, so callers read success. Exit non-zero on give-up; resolve the repo once at start and pass --repo to every gh call.</td><td>11 Nov</td></tr>
+<tr data-task="DL245"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL245</span>Multi-track CI install: --track rust,ts in one repo<span class="release-line"><span class="release-name">RELEASE-108</span></span></td><td>Owner chose (D244) to build it now: delivery_ci_install.py install/update accept several tracks; one ci.yml with every track&#x27;s job set, gate.json with every track&#x27;s commands, CI scope by path per track; doctor checks each track.</td><td>11 Nov</td></tr>
+<tr data-task="DL246"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL246</span>Local Full Progress: machine work root, working feature links<span class="release-line"><span class="release-name">RELEASE-108</span></span></td><td>Owner chose (D245, D246): the local page goes to &lt;machine work root&gt;/full-progress/&lt;project&gt;/ from the machine folder&#x27;s machine.json (a project&#x27;s work_root overrides; .claude fallback warns), and it is the repo copy with feature pages copied beside it so row links open offline.</td><td>11 Nov</td></tr>
 <tr data-task="DL234"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL234</span><span class="release-name">RELEASE-106</span>RELEASE: API-quota-safe CI watching, doctor fix, secret-scan shapes</td><td>Join the three agent branches, fold, CI, merge on green, plugin updates, peer note.</td><td>11 Nov</td></tr>
 <tr data-task="DL235"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL235</span>ci_watch: backoff, rate-limit check, many runs; rule against fast run watch<span class="release-line"><span class="release-name">RELEASE-106</span></span></td><td>D228: ci_watch.py polls 60-120 s with backoff while runs are queued, checks gh api rate_limit first, watches several run IDs in one process; a delivery rule says never gh run watch under --interval 60.</td><td>11 Nov</td></tr>
 <tr data-task="DL236"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL236</span>Doctor: no scripts-current warning on files the installer just wrote<span class="release-line"><span class="release-name">RELEASE-106</span></span></td><td>D230 (b): the doctor&#x27;s ci.scripts-current check warned on branch_gate.py and ci_rerun_first.py right after the installer overwrote them; find the cause and fix.</td><td>11 Nov</td></tr>
 <tr data-task="DL237"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL237</span>Secret scan: narrow shapes for mid-line SQL placeholders and nested calls<span class="release-line"><span class="release-name">RELEASE-106</span></span></td><td>D230 (a): the template gitleaks allowlist also covers a key column bound to a SQL placeholder with more SQL after it, and an assignment to a nested constructor call; keep shapes narrow and tested.</td><td>11 Nov</td></tr>
 <tr data-task="DL238"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL238</span>Full Progress local page when the publish limit is hit<span class="release-line"><span class="release-name">RELEASE-106</span></span></td><td>Owner rule 11 Nov: when claude.ai refuses the Full Progress publish for its daily limit, show Full Progress as a local page in the work directory. mark-deferred writes and opens a local copy under the work root; every record change while deferred refreshes it; pending and the end-of-turn hook print its path.</td><td>11 Nov</td></tr>
-<tr data-task="DL242"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL242</span>artifact_prune --sync-workflow keeps the workflow list when config has none<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Peer finding: with no artifact_prune section in .delivery/config.json (a gitignored config in a fresh worktree), --sync-workflow rewrote the project&#x27;s artifact-prune.yml workflow list to the default [CI, Package]. Keep the file&#x27;s current list when the config has no section; write the default only on a fresh install.</td><td>11 Nov</td></tr>
-<tr data-task="DL243"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL243</span>docs_fold: architecture spec with a Version line gets no front matter<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Found at the RELEASE-106 join: docs_fold note+fold on architecture/DELIVERYSPEC added YAML front matter (version 0.1.0) and a Versions table, although the spec keeps its own **Version:** line (1.7.0). Fold must bump the existing Version line (or refuse with a clear message), never add a second version scheme.</td><td>11 Nov</td></tr>
-<tr data-task="DL241"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL241</span>join.py: sibling-branch stacked report, skipped lines, no quiet partial join<span class="release-line"><span class="release-name">RELEASE-107</span></span></td><td>Peer finding, owner chose fix: join.py reports stacked conflicts with an empty file list for sibling branches cut from one contract branch; --push prints no per-branch skipped line; a partial join is quiet. Fix all three before the peer&#x27;s next multi-branch join.</td><td>11 Nov</td></tr>
 <tr data-task="DL233"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL233</span>Refresh pool to 1.31.0 and declare a peer&#x27;s database roles<span class="no-release-line">ships nothing: operations on the local pool</span></td><td>Rebuild pool main from delivery 1.31.0 when idle and memory &lt;85%, then pool-add-agent --db-role for the peer&#x27;s two NOLOGIN roles (D227); tell it to rerun.</td><td>11 Nov</td></tr>
 <tr data-task="DL229"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL229</span>Installer skips package.yml when nothing is packaged<span class="release-line"><span class="release-name">RELEASE-105</span></span></td><td>D225: no package.yml or docker build smoke default when the project has no Dockerfile and no packaged-program setting; the job skips cleanly.</td><td>11 Nov</td></tr>
 <tr data-task="DL230"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL230</span>CI template: Playwright without --with-deps on pool runners<span class="release-line"><span class="release-name">RELEASE-105</span></span></td><td>D226: pool runners have no sudo; the template runs playwright install chromium without --with-deps on self-hosted pool runners (libs from POOL_BROWSERS=chromium) and keeps --with-deps on GitHub-hosted.</td><td>11 Nov</td></tr>
