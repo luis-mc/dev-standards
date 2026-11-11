@@ -106,7 +106,10 @@ EOF_FILES
 #     shape is how .gitleaks.toml itself ended up blocked by this hook while
 #     gitleaks reported it clean, and how a contributor learns to reach for
 #     --no-verify.
-pattern='(DATABASE_URL|[A-Za-z0-9_]*_(TOKEN|SECRET|PASS|KEY))[[:space:]]*[:=]'
+# A `:` counts only with a value after it: a space then a value that is not `{`,
+# or a quote or sign right after it. So a CSS selector such as `.a__key:active {`
+# (a letter right after the colon) is not an assignment and does not match.
+pattern='(DATABASE_URL|[A-Za-z0-9_]*_(TOKEN|SECRET|PASS|KEY))[[:space:]]*(=|:[[:space:]]+[^ {]|:[^a-zA-Z0-9 {:])'
 # Matched lines are piped through `grep -n` first (for the "file:line" output
 # below), so this must allow for the "<lineno>:" prefix grep -n adds.
 comment_line='^[0-9]+:[[:space:]]*(//|#|\*)'
