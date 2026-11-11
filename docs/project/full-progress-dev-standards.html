@@ -880,7 +880,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <style id="extra-css"></style>
 <script type="application/json" id="task-registry">{
  "spec": "ARTIFACTSPEC 1.0.0",
- "updated": "2026-11-11T06:14+00:00",
+ "updated": "2026-11-11T06:21+00:00",
  "tasks": [
   {
    "id": "AR2",
@@ -4425,12 +4425,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
    "id": "DL197",
    "owner": "delivery-speed",
    "app": "",
-   "status": "Running",
+   "status": "Built",
    "item": "join.py strips only docs/work files the joined branches add or change",
    "detail": "The join's docs/work strip deletes every file under docs/work on the integration branch, including files the default branch already has, which a project's CI may read. Strip only paths that differ from the base; keep the base's files.",
-   "expected": "11 Nov ~06:40",
-   "changed": "2026-11-11T06:14+00:00",
-   "expected_basis": "cloud agent ~24 min",
+   "expected": "11 Nov",
+   "changed": "2026-11-11T06:21+00:00",
    "rides": "DS230",
    "started": "2026-11-11T06:16+00:00"
   },
@@ -8751,15 +8750,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>Feature artifacts</a><a href="#s2"><b>2</b>How it stays current</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Full-progress artifact &middot; dev-standards</div><h1>Full Progress: dev-standards</h1><p>All ongoing work in dev-standards, across every plugin: every feature task, linked to its feature artifact, and every project task. Check here first for what is live, what is running and what needs you.</p><div class="artifact-meta">dev-standards &middot; full progress, every part of the project</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T06:14+00:00">11 Nov 06:14</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T06:21+00:00">11 Nov 06:21</time> (Lisbon)</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL197"><span class="task-id">DL197</span>join.py strips only docs/work files the joined branches add or change <span class="glance-expected">11 Nov ~06:40</span><span class="glance-basis">cloud agent ~24 min</span></li>
 <li data-glance-task="DS230"><span class="task-id">DS230</span><span class="release-name">RELEASE-95</span>join keeps the default branch&#x27;s docs/work <span class="glance-expected">11 Nov ~06:55</span><span class="glance-basis">agent ~24 min, join 6, CI 5, merge 4</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL197"><span class="task-id">DL197</span>join.py strips only docs/work files the joined branches add or change</li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">51 tasks</span></summary>
@@ -8776,7 +8779,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">528</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">528</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">10</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <figure class="release-timeline">
 <figcaption>Next releases (Lisbon)</figcaption>
@@ -8789,14 +8792,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <rect class="rt-bar merge" x="642" y="52" width="34.7" height="22"><title>merge + cleanup 06:51-06:55</title></rect>
 <polygon class="rt-expected" points="676.7,50 684.7,63 676.7,76 668.7,63"/>
 <text class="rt-live-label" x="676.7" y="92">live ~06:55</text>
-<line class="rt-now" x1="321.3" y1="36" x2="321.3" y2="148"/><text class="rt-now-label" x="321.3" y="161">now 06:14</text>
+<line class="rt-now" x1="382" y1="36" x2="382" y2="148"/><text class="rt-now-label" x="382" y="161">now 06:21</text>
 </svg></div>
 <p class="timeline-legend">Bars: <span class="rt-swatch agents"></span>agents, <span class="rt-swatch join"></span>join, <span class="rt-swatch ci"></span>PR CI and <span class="rt-swatch merge"></span>merge + cleanup; Expected (filled diamond) is the sum of the phases. The thin grey extension is a named risk from the estimate's basis, ending at the outlined worst case. An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>
 </figure>
 <details class="status-fold release-group" data-group="release-95" open><summary><strong>RELEASE-95 · live ~06:55</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-app"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>App / service</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DS230"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DS230</span><span class="release-name">RELEASE-95</span>join keeps the default branch&#x27;s docs/work</td><td data-label="App / service"></td><td data-label="Detail">DL197 (peer report). Join, CI, merge on green, plugin update in both scopes.</td><td data-label="Expected">11 Nov ~06:55<span class="expected-basis">agent ~24 min, join 6, CI 5, merge 4</span></td></tr>
-<tr data-task="DL197"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL197</span>join.py strips only docs/work files the joined branches add or change</a></td><td data-label="App / service"></td><td data-label="Detail">The join&#x27;s docs/work strip deletes every file under docs/work on the integration branch, including files the default branch already has, which a project&#x27;s CI may read. Strip only paths that differ from the base; keep the base&#x27;s files.</td><td data-label="Expected">11 Nov ~06:40<span class="expected-basis">cloud agent ~24 min</span></td></tr>
+<tr data-task="DL197"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><a href="feature-delivery-speed.html"><span class="task-id">DL197</span>join.py strips only docs/work files the joined branches add or change</a></td><td data-label="App / service"></td><td data-label="Detail">The join&#x27;s docs/work strip deletes every file under docs/work on the integration branch, including files the default branch already has, which a project&#x27;s CI may read. Strip only paths that differ from the base; keep the base&#x27;s files.</td><td data-label="Expected">11 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="now" open><summary><strong>Not in a release yet</strong><span class="fold-count">1 task</span></summary>
@@ -9354,7 +9357,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <section id="s1"><h2><span class="section-number">&sect; 1</span>Feature artifacts</h2>
 <details class="status-fold feature-group" data-group="features-progress" open><summary><strong>Feature artifacts in progress (1)</strong><span class="fold-count">1 feature artifact</span></summary>
 <div class="table-scroll"><table class="feature-list"><thead><tr><th scope="col"><button type="button" class="sort-header" data-sort="name">Feature artifact <span class="sort-arrow" aria-hidden="true"></span></button></th><th scope="col" aria-sort="descending"><button type="button" class="sort-header" data-sort="updated">Last updated <span class="sort-arrow" aria-hidden="true">&darr;</span></button></th><th>Tasks</th><th data-col="state">State</th><th>Where it stands</th></tr></thead><tbody>
-<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906294"><time datetime="2026-11-11T06:14+00:00">11 Nov 06:14</time></td><td data-label="Tasks">DL1 to DL197</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-running">1 Running</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
+<tr><td data-label="Feature artifact" data-value="feature: delivery speed"><a href="feature-delivery-speed.html">Feature: Delivery speed</a></td><td data-label="Last updated" data-value="29906301"><time datetime="2026-11-11T06:21+00:00">11 Nov 06:21</time></td><td data-label="Tasks">DL1 to DL197</td><td data-col="state" data-label="State"><span class="state-chips"><span class="status-chip status-built">1 Built</span><span class="status-chip status-to-do">1 To do</span></span></td><td data-label="Where it stands">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold feature-group" data-group="features-complete"><summary><strong>Complete feature artifacts (7)</strong><span class="fold-count">7 feature artifacts</span></summary>
