@@ -42,6 +42,11 @@ Rules:
     (unique per process), is verified, then renamed with os.replace, so a job
     racing on the same runner never sees a half file. HTTPS_PROXY is honoured
     as urllib does.
+  - Shared cache (DL194): when the cache root is world-writable (the pool's
+    /ci-tools), each folder made here is set to 0777 and every download goes
+    to a per-process .partial, so any agent user can add a tool and a race
+    ends with one good file. If a folder made earlier by another user is not
+    writable, one warning goes to stderr and ~/.cache/ci-tools is used.
   - The `.partial` file never remains, also after an error.
 
 Exit: 0 the path was printed, 1 a download, checksum or extract failure (one
@@ -76,7 +81,49 @@ class ToolError(Exception):
     pass
 
 
+_FALLBACK: Path | None = None  # per-user cache, set when a shared folder is not writable (DL194)
+
+
+def _home_cache() -> Path:
+    return Path.home() / ".cache" / "ci-tools"
+
+
+def _use_fallback(why: Path) -> None:
+    global _FALLBACK
+    _FALLBACK = _home_cache()
+    print(f"ci_tool: {why} is not writable; using the per-user cache {_FALLBACK}", file=sys.stderr)
+
+
+def _is_shared(path: Path) -> bool:
+    """True for a world-writable cache root (the pool's /ci-tools). Never on Windows (DL194)."""
+    if os.name == "nt":
+        return False
+    try:
+        return bool(path.stat().st_mode & 0o002)
+    except OSError:
+        return False
+
+
+def _mkdirs(path: Path, root: Path) -> None:
+    """Make path and its parents. In a shared cache each new folder is 1777 (sticky): any agent user can add to it,
+    but no user can replace or delete another user's file or folder (DL194)."""
+    path.mkdir(parents=True, exist_ok=True)
+    if not _is_shared(root):
+        return
+    p = path
+    while p != root and root in p.parents:
+        try:
+            if p.stat().st_uid == os.getuid() and p.stat().st_mode & 0o1777 != 0o1777:
+                os.chmod(p, 0o1777)
+        except OSError:
+            pass
+        p = p.parent
+
+
 def cache_dir() -> Path:
+    if _FALLBACK is not None:
+        _FALLBACK.mkdir(parents=True, exist_ok=True)
+        return _FALLBACK
     env = os.environ.get("CI_TOOLS_DIR")
     default = Path("C:/ci-tools") if os.name == "nt" else Path.home() / ".cache" / "ci-tools"
     if env:
@@ -124,8 +171,23 @@ def fetch(url: str, sha256: str, name: str) -> Path:
     if target.is_file():
         if sha256_of(target) == sha256:
             return target.resolve()
-        target.unlink()
-    target.parent.mkdir(parents=True, exist_ok=True)
+        try:
+            target.unlink()
+        except OSError:
+            # A bad file another user owns in a sticky folder: use a per-user cache (DL194).
+            _use_fallback(target.parent)
+            target = cache_dir().joinpath(*parts)
+            if target.is_file() and sha256_of(target) == sha256:
+                return target.resolve()
+    root = cache_dir()
+    _mkdirs(target.parent, root)
+    if not os.access(target.parent, os.W_OK | os.X_OK):
+        # A folder made by another user before DL194 (0755): use a per-user cache.
+        _use_fallback(target.parent)
+        target = cache_dir().joinpath(*parts)
+        if target.is_file() and sha256_of(target) == sha256:
+            return target.resolve()
+        _mkdirs(target.parent, cache_dir())
     partial = target.with_name(f"{target.name}.{os.getpid()}.partial")
     last = "no attempt"
     for attempt in range(1, ATTEMPTS + 1):
@@ -134,7 +196,12 @@ def fetch(url: str, sha256: str, name: str) -> Path:
             got = sha256_of(partial)
             if got != sha256:
                 raise ToolError(f"checksum mismatch: expected {sha256}, got {got}")
-            os.replace(partial, target)
+            try:
+                os.replace(partial, target)
+            except OSError:
+                # Another user won the race in a sticky folder; their file is fine if it verifies (DL194).
+                if not (target.is_file() and sha256_of(target) == sha256):
+                    raise
             return target.resolve()
         except Exception as exc:  # any error is retried, 5xx included
             last = f"{type(exc).__name__}: {exc}"
@@ -175,6 +242,12 @@ def gitleaks(plat: str) -> Path:
     binary = archive.parent / f"{plat}-{exe}"
     if binary.is_file():
         return binary
+    if _FALLBACK is None and not os.access(archive.parent, os.W_OK | os.X_OK):
+        _use_fallback(archive.parent)
+        archive = fetch(url, sha, f"gitleaks/{version}/{archive_name}")
+        binary = archive.parent / f"{plat}-{exe}"
+        if binary.is_file():
+            return binary
     tmp = binary.with_name(f"{binary.name}.{os.getpid()}.partial")
     try:
         if ext == "zip":
@@ -255,6 +328,7 @@ def _install_dir(final: Path, build) -> Path:
     tmp = _fresh_dir(final)
     try:
         build(tmp)
+        os.chmod(tmp, 0o755)  # mkdtemp makes 0700; others read it, only its maker can change it (DL194)
         try:
             os.replace(tmp, final)
         except OSError:
@@ -269,6 +343,13 @@ def _exe(base: str, plat: str) -> str:
     return base + ".exe" if plat.startswith("windows") and not base.endswith(".exe") else base
 
 
+def _prepared(base: Path, plat: str, kind: str, entry: dict, name: str) -> bool:
+    """True when the tool's prepared output already exists under base."""
+    if kind == "file":
+        return (base / plat / _exe(entry.get("bin") or name, plat)).is_file()
+    return (base / (f"unpacked-{plat}" if kind in ("archive", "wheel") else f"root-{plat}")).is_dir()
+
+
 def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
     """Fetch and prepare a pinned tool. Return (bin folder, default bin file, entry)."""
     tool_pin, entry = _pin(name, plat)
@@ -277,11 +358,15 @@ def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
     fname = entry.get("file") or entry["url"].rsplit("/", 1)[-1]
     archive = fetch(entry["url"], entry["sha256"], f"{name}/{version}/{fname}")
     base = archive.parent
+    if _FALLBACK is None and not os.access(base, os.W_OK | os.X_OK) and not _prepared(base, plat, kind, entry, name):
+        _use_fallback(base)
+        archive = fetch(entry["url"], entry["sha256"], f"{name}/{version}/{fname}")
+        base = archive.parent
     if kind == "file":
         # Keep the exact file name: some tools (rustup-init) read argv[0].
         out = base / plat / _exe(entry.get("bin") or name, plat)
         if not out.is_file():
-            out.parent.mkdir(parents=True, exist_ok=True)
+            _mkdirs(out.parent, cache_dir())
             tmp = out.with_name(f"{out.name}.{os.getpid()}.partial")
             try:
                 shutil.copyfile(archive, tmp)

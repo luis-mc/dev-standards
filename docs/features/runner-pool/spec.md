@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.5.2
+version: 0.6.0
 owner: agents
 type: reference
 code:
@@ -86,6 +86,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.19** — **Wine runs without `TMPDIR`** (DL180). Wine aborts with `free(): invalid pointer` when `TMPDIR` is set, to any value. With the `windows-packaging` layer the image wraps each Wine entry tool (`wine`, `wine64`, `wine-stable`, `wineboot`, `wineserver`, `winecfg`, `msiexec`) in `/usr/local/bin` with a script that unsets `TMPDIR` and runs the real tool from `/usr/bin`. The pool still sets `TMPDIR` for every other tool. The image build fails if `wine` on PATH is not the wrapper.
 
+**R5.25** — **The shared tool cache works for every agent user** (DL194). Each agent runs as its own Unix user, and `/ci-tools` is shared. When the cache root is world-writable, `ci_tool.py` makes each folder it creates `1777` (sticky: no user can replace or delete another user's file), keeps each finished install folder `0755`, and downloads to a per-process `.partial` that is renamed into place, so any agent user can add a tool and two racing fetches end with one good file. A file already present with the right SHA-256 is used as is. If a version folder made earlier by another user is not writable, `ci_tool.py` warns once on stderr and uses `~/.cache/ci-tools` for that job. Outside the pool (a root that is not world-writable, or Windows) nothing changes.
+
 ### 5.3 Pool doctor checks and setup
 
 **R5.17** (was delivery R13.70) — **Doctor pool checks** (DL149). `pool.<name>.layer-windows-packaging`: with the layer on, `wine`, `xvfb-run` and `dotnet` exist in the pool image (a warning when Docker cannot be read). `pool.<name>.layers-config`: the project config and the pool `.env` agree. `pool.<name>.stray-dockerfile`: a Dockerfile under a `runners` or `runner` folder of the project is flagged, because the pool never uses it; the fix is `.delivery/pool.apt` or a layer. `pool.<name>.tool-cache`: `compose.yaml` mounts a named volume at `/ci-tools` and it is writable.
@@ -135,6 +137,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.6.0 | 2026-11-11 | RELEASE-94 | The shared tool cache works for every agent user: shared-mode folders and a per-user fallback (R5.25). | DL194 |
 | 0.5.2 | 2026-11-11 | RELEASE-92 | The pool folder records the writing plugin version in pool-version.json; the pool code holds the shared agent-name, CI_RUNS_ON and image rules the doctor uses. Contract text is in the delivery feature spec. | DL184 |
 | 0.5.1 | 2026-11-10 | RELEASE-90 | R5.19: the image build clears the shell's command hash before checking that wine on PATH is the wrapper. | DL182 |
 | 0.5.0 | 2026-11-10 | RELEASE-89 | Wine prefix prepared per agent at container start and exported as POOL_WINE_PREFIX (R5.17, R5.18).<br>Wine entry tools in the pool image run through wrappers that unset TMPDIR, because Wine aborts with free(): invalid pointer when it is set. | DL179, DL180 |
