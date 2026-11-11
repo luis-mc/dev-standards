@@ -1763,7 +1763,16 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   `pending` lists Full Progress as `deferred until HH:MM (<timezone_label>)` and
   exits 0, and the end-of-turn hook does not block on it: it prints one line
   saying the publish is deferred and when. After that time both behave as
-  before. Any later `mark-published` clears the deferral. Verified by
+  before. `mark-deferred` also writes a local copy of the current Full
+  Progress page (the same bytes as the publish copy) to
+  `<dir>/full-progress/<project slug>/<file name>` and opens it once in the
+  default browser (not with `--no-open`, with `CI` set, or with no display).
+  `<dir>` is `--local DIR`, else `work_root` of `.delivery/config.json`, else
+  the publish-copy folder. The path is recorded as `local_path` on the entry.
+  While the deferral is active, every writing command refreshes that copy;
+  after the until time it is left as it is, never deleted. `pending` shows the
+  path (`local_path` in `--json`) and the hook line reads `Full Progress is
+  deferred until HH:MM; local copy: <path>`. Any later `mark-published` clears the deferral. Verified by
   `test_deferred_publish_does_not_block_until_the_reset` and
   `end_of_turn_reminds_once_while_deferred`.
 - **R9.8** — Full Progress is published at least every 60 minutes while

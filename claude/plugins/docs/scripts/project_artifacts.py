@@ -1414,6 +1414,7 @@ def finish_change(ctx, rec, result):
         raise Fail(1, with_details('the change would make the record invalid; nothing written', added), added)
     result['rendered'] = sorted(rec.rendered)
     result['stamp'] = now.iso
+    refresh_local_copies(ctx, rec)
     return add_notes(result, remaining, sorted(set(rec.skipped)))
 
 
@@ -2427,12 +2428,38 @@ def cmd_mark_deferred(args):
             raise Fail(1, '%s is a feature artifact: feature artifacts are never published; only the full-progress '
                           'artifact is (R9.5)' % args.key)
         e['deferred_until'] = until.isoformat(timespec='minutes')
+        target = local_work_dir(ctx, getattr(args, 'local', None)) / 'full-progress' / project_slug(ctx) / str(e.get('file', ''))
+        e['local_path'] = str(target)
         rec.message = ctx.rel + ': %s publish deferred' % args.key
-        return {'command': 'mark-deferred', 'key': args.key, 'until': e['deferred_until']}
+        return {'command': 'mark-deferred', 'key': args.key, 'until': e['deferred_until'],
+                'local_path': e['local_path']}
 
     res = run_change(ctx, apply)
-    emit(args, res, 'recorded %s deferred until %s (%s)' % (args.key, res['until'], short(res)))
+    emit(args, res, ['recorded %s deferred until %s (%s)' % (args.key, res['until'], short(res)),
+                     'local copy: %s' % res['local_path']])
+    if not getattr(args, 'no_open', False):
+        open_local(res['local_path'])
     return 0
+
+
+def open_local(path):
+    """DL238: opens the local page once in the default browser; skipped with no display or when CI is set."""
+    if os.environ.get('CI'):
+        return False
+    if sys.platform.startswith('linux') and not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
+        return False
+    if not os.path.isfile(path):
+        return False
+    try:
+        if sys.platform.startswith('win'):
+            os.startfile(path)
+        else:
+            subprocess.Popen(['open' if sys.platform == 'darwin' else 'xdg-open', path],
+                             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    except (OSError, AttributeError) as ex:
+        warn('could not open %s (%s)' % (path, ex))
+        return False
+    return True
 
 
 def cmd_mark_published(args):
@@ -2846,17 +2873,59 @@ def stale_copy_reason(ctx, rec, e):
     return None
 
 
-def write_publish_copy(ctx, rec, key, e):
-    """R5.31: render Full Progress, from the committed render's stamp, with absolute links to the feature
-    files, to .claude/artifacts-publish/<file> (git-ignored). Returns its path, or None when it cannot be made."""
+def publish_html(ctx, rec, key, e):
+    """The text of the publish copy of Full Progress, or None when it cannot be made."""
     old = read_html(rec.dir / e['file'])
     st = existing_stamp(old)
     if st is None:
         return None
     try:
-        html = render_one(rec, key, stamp_text_from_iso(st), st, links=feature_link_map(ctx.root, rec), root=ctx.root)
+        return render_one(rec, key, stamp_text_from_iso(st), st, links=feature_link_map(ctx.root, rec), root=ctx.root)
     except Fail as fl:
         warn('the publish copy of %s was not written (%s); publish the committed file as it is' % (key, fl.msg))
+        return None
+
+
+def project_slug(ctx):
+    slug = re.sub(r'[^A-Za-z0-9._-]+', '-', ctx.root.name).strip('-.')
+    return slug or 'project'
+
+
+def local_work_dir(ctx, local=None):
+    """DL238: the work directory for the local Full Progress page: --local, else work_root of
+    .delivery/config.json, else the publish-copy folder."""
+    base = local
+    if not base:
+        try:
+            cfg = json.loads((ctx.root / '.delivery' / 'config.json').read_text(encoding='utf-8'))
+            base = cfg.get('work_root') if isinstance(cfg, dict) else None
+        except (OSError, ValueError):
+            base = None
+    if not isinstance(base, str) or not base.strip():
+        return ctx.root / PUBLISH_REL
+    return (ctx.root / base) if not os.path.isabs(base) else Path(base)
+
+
+def refresh_local_copies(ctx, rec):
+    """DL238: while a deferral is active, overwrite the local copy of Full Progress (same bytes as the publish
+    copy). After the until time the copy is left as it is."""
+    for key, kind, e in rec.artifacts():
+        lp = e.get('local_path')
+        if kind != 'full-progress' or not isinstance(lp, str) or not lp or deferral(rec, e) is None:
+            continue
+        try:
+            html = publish_html(ctx, rec, key, e)
+            if html is not None:
+                write_text(Path(lp), html)
+        except (OSError, Fail) as ex:
+            warn('the local copy %s was not refreshed (%s)' % (lp, ex))
+
+
+def write_publish_copy(ctx, rec, key, e):
+    """R5.31: render Full Progress, from the committed render's stamp, with absolute links to the feature
+    files, to .claude/artifacts-publish/<file> (git-ignored). Returns its path, or None when it cannot be made."""
+    html = publish_html(ctx, rec, key, e)
+    if html is None:
         return None
     dest = ctx.root / PUBLISH_REL / e['file']
     write_text(dest, html)
@@ -2908,6 +2977,8 @@ def cmd_pending(args):
                     deferred.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
                                      'until': wait[0].isoformat(timespec='minutes'),
                                      'reason': 'deferred until %s' % wait[1]})
+                    if e.get('local_path'):
+                        deferred[-1]['local_path'] = e['local_path']
                     continue
                 copy_path = write_publish_copy(ctx, rec, key, e)
             item = {'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
@@ -2935,7 +3006,8 @@ def cmd_pending(args):
         for ev in queue:
             print('queued %s -> %s (%s)' % (ev.get('id'), ev.get('suggested_status'), ev.get('event')))
         for d in deferred:
-            print('deferred %s (%s): %s' % (d['key'], d['file'], d['reason']))
+            print('deferred %s (%s): %s%s' % (d['key'], d['file'], d['reason'],
+                                              '; local copy: %s' % d['local_path'] if d.get('local_path') else ''))
         if not arts and not queue and not deferred:
             print('nothing pending')
         for m in schema_warns:
@@ -3246,6 +3318,8 @@ def build_parser():
     s = sub.add_parser('mark-deferred', parents=[w], help='record that claude.ai refused the publish for its daily limit; pending stops asking until then')
     s.add_argument('key')
     s.add_argument('--until', required=True, metavar='ISO', help='when the limit resets, an ISO time with an offset')
+    s.add_argument('--local', metavar='DIR', help='the work directory for the local copy of Full Progress (default: work_root of .delivery/config.json, else the publish-copy folder)')
+    s.add_argument('--no-open', action='store_true', help='write the local copy but do not open it')
     s.set_defaults(func=cmd_mark_deferred)
 
     s = sub.add_parser('retire', parents=[w], help='remove a finished feature artifact and its content, keeping its tasks and decisions (R4.31 to R4.36)')
