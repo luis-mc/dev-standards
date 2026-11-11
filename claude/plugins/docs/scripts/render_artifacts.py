@@ -46,6 +46,7 @@ KIND_PREFIX = {'feature': 'Feature: ', 'full-progress': 'Full Progress: '}
 KIND_LABEL = {'feature': 'Feature artifact', 'full-progress': 'Full-progress artifact'}
 FULL_PROGRESS_NAME = 'full-progress'
 EARLIER_DAYS = 14  # R6.3; may only be lengthened (section 12)
+DEFAULT_REGISTRY_PATH = 'docs/project/registry.json'
 MONTHS = ('Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec')
 
 GROUPS = (
@@ -870,7 +871,7 @@ def release_groups(tasks: list, ref: datetime) -> list:
                   key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)
     cutoff = ref - timedelta(days=EARLIER_DAYS)
     folded = [t for t in done if t['status'] == 'Live' and (_parse_iso(t.get('changed')) or ref) < cutoff]
-    done = [t for t in done if t not in folded]
+    done = [t for t in done if t not in folded]     # AR69: the folded rows are counted, not drawn
     for gkey, title, shown, old in (('now', NOT_IN_RELEASE, now, []), ('you', GROUPS[1][1], you, []),
                                     ('built', GROUPS[2][1], done, folded)):
         if shown or old:
@@ -1156,11 +1157,11 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
         item += '<span class="no-release-line">%s</span>' % esc(NO_RELEASE_LINE % no_release_reason(task))
     if task['status'] == 'Dropped':      # R5.49: why a dropped row was closed, in a muted line under the Item
         item += '<span class="dropped-line">%s</span>' % esc(dropped_line(task, by_id))
-    app = '<td data-label="App / service">%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
+    app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task.get('expected') or NOT_SCHEDULED)     # R6.6: an empty Expected on To do / On hold
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
         expected += '<span class="expected-basis">%s</span>' % esc(task['expected_basis'])
-    return '<tr data-task="%s"><td data-label="Status">%s</td><td data-label="Item">%s</td>%s<td data-label="Detail">%s</td><td data-label="Expected">%s</td></tr>' % (
+    return '<tr data-task="%s"><td>%s</td><td>%s</td>%s<td>%s</td><td>%s</td></tr>' % (
         esc(task['id']), _chip(task['status']), item, app, esc(task['detail']), expected)
 
 
@@ -1171,8 +1172,8 @@ def _table(body_rows: list, kind: str, label: str) -> str:
     cols = _columns(kind, label)
     head = ''.join('<th>%s</th>' % esc(c) for c in cols)
     group = '<colgroup>%s</colgroup>' % ''.join('<col class="%s">' % COLUMN_CLASSES.get(c, 'col-expected') for c in cols)
-    return ('<div class="table-scroll"><table class="status-checklist">%s<thead><tr>%s</tr></thead><tbody>\n%s\n</tbody></table></div>'
-            % (group, head, '\n'.join(body_rows)))
+    return ('<div class="table-scroll"><table class="status-checklist%s">%s<thead><tr>%s</tr></thead><tbody>\n%s\n</tbody></table></div>'
+            % (' with-app' if 'App / service' in cols else '', group, head, '\n'.join(body_rows)))
 
 
 def wants_release_line(kind: str, gkey: str) -> bool:
@@ -1185,17 +1186,31 @@ def group_open(gkey: str) -> bool:
     return gkey != 'built'
 
 
-def _count_label(gkey: str, rows: list) -> str:
-    """The closed Live or built heading still says how much unreleased work it holds: `2 built, 31 live`."""
+EARLIER_LINE = '%d earlier Live task%s (over %d days old) %s not shown; the full list is in %s'
+
+
+def earlier_line(count: int, path: str) -> str:
+    """R6.3: the one line that stands for the Live rows older than EARLIER_DAYS."""
+    return '<p class="earlier-note">%s</p>' % esc(EARLIER_LINE % (count, '' if count == 1 else 's', EARLIER_DAYS,
+                                                                  'is' if count == 1 else 'are', path))
+
+
+def _count_label(gkey: str, rows: list, earlier: int = 0) -> str:
+    """The closed Live or built heading still says how much unreleased work it holds: `2 built, 31 live`.
+    With older Live rows left out (R6.3) it says how many are shown and how many are earlier."""
+    tail = ', %d earlier' % earlier if earlier else ''
     if gkey == 'built' and any(t['status'] == 'Built' for t in rows):
         built = sum(1 for t in rows if t['status'] == 'Built')
-        return '%d built, %d live' % (built, len(rows) - built)
+        return '%d built, %d live%s' % (built, len(rows) - built, tail)
+    if earlier:
+        return '%d shown%s' % (len(rows), tail)
     return '%d task%s' % (len(rows), '' if len(rows) == 1 else 's')
 
 
-def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links: dict, all_tasks=None) -> str:
+def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links: dict, all_tasks=None,
+               full_registry_path: str = DEFAULT_REGISTRY_PATH) -> str:
     """R6.12: one `<details class="status-fold">` per group, its heading in the `<summary>`, a table of its rows
-    inside; Live or built closed, the rest open. The Earlier fold sits inside Live or built (R6.3)."""
+    inside; Live or built closed, the rest open. Older Live rows are one count line inside Live or built (R6.3)."""
     groups = group_tasks(tasks, ref, kind)
     by_id = {t['id']: t for t in (tasks if all_tasks is None else all_tasks) if 'id' in t}
     out = []
@@ -1207,12 +1222,11 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links:
             body += _table([_row(t, kind, feature_links, by_id, wants_release_line(kind, gkey)) for t in shown],
                            kind, label)
         if old:
-            body += ('\n<details class="earlier"><summary>Earlier</summary>\n%s\n</details>'
-                     % _table([_row(t, kind, feature_links, by_id, True) for t in old], kind, label))
+            body += '\n' + earlier_line(len(old), full_registry_path)
         out.append('<details class="status-fold%s" data-group="%s"%s><summary><strong>%s</strong>'
                    '<span class="fold-count">%s</span></summary>\n%s\n</details>'
                    % (' release-group' if gkey.startswith('release-') else '', gkey,
-                      ' open' if group_open(gkey) else '', esc(title), _count_label(gkey, shown + old), body))
+                      ' open' if group_open(gkey) else '', esc(title), _count_label(gkey, shown, len(old)), body))
     return '\n'.join(out) if out else _table([], kind, label)
 
 
@@ -1484,7 +1498,7 @@ def state_chips(tasks: list, decisions=()) -> list:
 
 def _state_cell(tasks: list, decisions=()) -> str:
     chips = ''.join('<span class="status-chip %s">%s</span>' % (c, esc(t)) for c, t in state_chips(tasks, decisions))
-    return '<td data-col="state" data-label="State"><span class="state-chips">%s</span></td>' % chips
+    return '<td data-col="state"><span class="state-chips">%s</span></td>' % chips
 
 
 def tile_label(status: str, count: int) -> str:
@@ -1870,7 +1884,7 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
         when = ('<time datetime="%s">%s</time>' % (esc(iso), esc(_fmt_stamp(datetime.fromisoformat(iso)))) if iso else '')
         done = state_chips([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')) == COMPLETE_CHIPS
         rows.append((not iso, -_utc_minutes(iso) if iso else 0, str(entry['title']).lower(),
-                     '<tr><td data-label="Feature artifact" data-value="%s">%s</td><td data-label="Last updated" data-value="%d">%s</td><td data-label="Tasks">%s</td>%s<td data-label="Where it stands">%s</td></tr>' % (
+                     '<tr><td data-value="%s">%s</td><td data-value="%d">%s</td><td>%s</td>%s<td>%s</td></tr>' % (
                          esc(str(entry['title']).lower()), link, _utc_minutes(iso) if iso else 0, when,
                          esc(_id_ranges(entry['key'], entry.get('prefix', ''), tasks)),
                          _state_cell([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')),
@@ -1906,8 +1920,31 @@ def _published_line(manifest: dict, label: str) -> str:
             % (esc(url), esc(_fmt_stamp(datetime.fromisoformat(at))), esc(label)))
 
 
-def _registry_script(registry: dict) -> str:
-    text = json.dumps(registry, ensure_ascii=False, indent=1).replace('</', '<\\/').replace('<!--', '\\u003c!--')
+def registry_path_of(record_dir: str) -> str:
+    """The repository path of the full registry, as the page names it: docs/<record folder>/registry.json."""
+    parts = os.path.normpath(str(record_dir or '')).replace('\\', '/').split('/')
+    if len(parts) >= 2 and parts[-2] == 'docs' and parts[-1] in ('project', 'artifacts'):
+        return 'docs/%s/registry.json' % parts[-1]
+    return DEFAULT_REGISTRY_PATH
+
+
+def registry_window(registry: dict, ref: datetime) -> dict:
+    """R5.9: the registry the page embeds. Every task but Live and Dropped, plus Live and Dropped tasks whose
+    `changed` is within EARLIER_DAYS of `ref`. A task with no readable `changed` stays (as in R6.3).
+    Other top-level keys stay; `omitted` counts the tasks left out."""
+    cutoff = ref - timedelta(days=EARLIER_DAYS)
+    tasks = list(registry.get('tasks') or [])
+    keep = [t for t in tasks if t.get('status') not in ('Live', 'Dropped') or (_parse_iso(t.get('changed')) or ref) >= cutoff]
+    out = dict(registry)
+    out['tasks'] = keep
+    out['omitted'] = len(tasks) - len(keep)
+    return out
+
+
+def _registry_script(registry: dict, ref: datetime, path: str = DEFAULT_REGISTRY_PATH) -> str:
+    window = registry_window(registry, ref)
+    window['full_registry'] = path
+    text = json.dumps(window, ensure_ascii=False, separators=(',', ':')).replace('</', '<\\/').replace('<!--', '\\u003c!--')
     return '<script type="application/json" id="task-registry">%s</script>\n' % text
 
 
@@ -2031,9 +2068,9 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'tiles': _tiles(mine),
         'key': _key(label),
         'timeline': ('\n' + timeline.rstrip('\n')) if timeline else '',
-        'checklist': _checklist(mine, kind, label, ref, feature_links, tasks),
+        'checklist': _checklist(mine, kind, label, ref, feature_links, tasks, registry_path_of(record_dir)),
         'sections': body,
-        'registry': _registry_script(registry) if kind == 'full-progress' else '',
+        'registry': _registry_script(registry, moment, registry_path_of(record_dir)) if kind == 'full-progress' else '',
     }
     out = _fill(template, values)
     return out if out.endswith('\n') else out + '\n'
@@ -2540,7 +2577,6 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             add(greq, 'rows under group %r are in the order %s; they must be %s' % (gkey, have, [i for i in want if i in have]))
     # R5.45, R5.46 the release name of a release row, and the release line of a row that rode one
     shown_line = {t['id'] for gkey, _, shown, old in expected_groups for t in shown if wants_release_line(kind, gkey)}
-    shown_line |= {t['id'] for _, _, _, old in expected_groups for t in old}
     for row in rows:
         task = by_id.get(row['id'])
         if task is None:
@@ -2562,21 +2598,32 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if row['dropped_line'] != want_dl:
             add('R5.49', 'task %s must show the line %r under its Item; it shows %r'
                 % (row['id'], want_dl, row['dropped_line']))
-    details = find_all(root, 'details', 'earlier')
-    folded_wanted = {t['id'] for _, _, _, old in expected_groups for t in old}
-    folded_found = {r['id'] for r in rows if r['folded']}
-    if kind == 'feature' and details:
-        add('R6.3', 'only the full-progress artifact has an Earlier fold')
-    if kind == 'full-progress':
-        if folded_found != folded_wanted:
-            add('R6.3', 'Live rows older than %d days (and only Live rows) belong in Earlier: expected %s, found %s'
-                % (EARLIER_DAYS, sorted(folded_wanted), sorted(folded_found)))
-        for node in details:
-            summary = find(node, 'summary')
-            if 'open' in node.attrs or summary is None or text_of(summary) != 'Earlier':
-                add('R6.3', 'the Earlier fold must be a closed <details> titled "Earlier"')
-            if not has_ancestor(node, lambda n: n.tag == 'details' and has_class(n, 'status-fold') and n.attrs.get('data-group') == 'built'):
-                add('R6.3', 'the Earlier fold must sit inside the Live or built group (R6.12)')
+    # R6.3 older Live rows are one count line, never rows and never a fold
+    if find_all(root, 'details', 'earlier'):
+        add('R6.3', 'there is no Earlier fold; older Live rows are one count line in the Live or built group')
+    notes = find_all(root, 'p', 'earlier-note')
+    if kind == 'feature':
+        if notes:
+            add('R6.3', 'only the full-progress artifact has the earlier-rows line')
+    else:
+        want_notes = [(g, len(old)) for g, _, _, old in expected_groups if old]
+        folded_ids = {t['id'] for _, _, _, old in expected_groups for t in old}
+        for row in rows:
+            if row['id'] in folded_ids:
+                add('R6.3', 'Live row %s is older than %d days; it is counted in the earlier line, not drawn' % (row['id'], EARLIER_DAYS))
+        if not want_notes:
+            if notes:
+                add('R6.3', 'the earlier-rows line belongs only when Live rows are older than %d days' % EARLIER_DAYS)
+        else:
+            count = want_notes[0][1]
+            want_text = EARLIER_LINE % (count, '' if count == 1 else 's', EARLIER_DAYS, 'is' if count == 1 else 'are',
+                                        registry_path_of(record_dir))
+            inside = [n for n in notes if has_ancestor(n, lambda a: a.tag == 'details' and has_class(a, 'status-fold')
+                                                       and a.attrs.get('data-group') == 'built')]
+            if len(notes) != 1 or len(inside) != 1:
+                add('R6.3', 'the Live or built group needs exactly one earlier-rows line, and no other group may have one')
+            elif _norm(text_of(notes[0])) != _norm(want_text):
+                add('R6.3', 'the earlier-rows line must read %r; it reads %r' % (want_text, text_of(notes[0])))
 
     # R6.6 Expected on open rows
     for row in rows:
@@ -2596,6 +2643,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             add('INV-1', 'task %s appears in %d rows' % (tid, len(same)))
     for task in mine:
         tid = task.get('id')
+        if tid not in seen and tid in {t['id'] for _, _, _, old in expected_groups for t in old}:
+            continue                       # R6.3: an older Live row is counted, not drawn
         if tid not in seen:
             add('INV-1', 'task %s is in the registry but not in the checklist' % tid)
             continue
@@ -2630,11 +2679,14 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
 
     # R6.5 and R5.30 full-progress links: relative, to the feature file
     if kind == 'full-progress':
+        counted_ids = {t['id'] for _, _, _, old in expected_groups for t in old}     # R6.3
         for task in mine:
             owner = task.get('owner')
             if owner == 'project' or owner not in feature_files:
                 continue
             row = seen.get(task.get('id'), [None])[0]
+            if row is None and task.get('id') in counted_ids:
+                continue
             if row is None:
                 add('R6.5', 'feature task %s is missing from the full-progress artifact' % task.get('id'))
             elif row['href'] is None:
@@ -2711,8 +2763,13 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             except ValueError as exc:
                 add('R5.9', 'the embedded registry does not parse: %s' % exc)
             else:
-                if embedded != registry:
-                    add('R5.9', 'the embedded registry differs from the task registry')
+                want = registry_window(registry, ref)
+                path = embedded.pop('full_registry', None) if isinstance(embedded, dict) else None
+                if not (isinstance(path, str) and path.endswith('registry.json')):
+                    add('R5.9', 'the embedded registry must name the full registry in "full_registry"')
+                if embedded != want:
+                    add('R5.9', 'the embedded registry differs from the registry window (open tasks, and Live or Dropped '
+                                'tasks changed within %d days of the stamp, with "omitted")' % EARLIER_DAYS)
     elif registry_scripts:
         add('R5.9', 'a feature artifact embeds no registry')
     styles = find_all(root, 'style')
