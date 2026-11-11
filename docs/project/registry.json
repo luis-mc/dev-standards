@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T09:19+00:00",
+  "updated": "2026-11-11T09:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3597,12 +3597,11 @@
       "id": "DL200",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "spec-lint ledger/watcher/hooks job hangs on hosted runners",
       "detail": "Hang found: test_machine.py test_main_with_the_layer_takes_a_slot_and_job_done_frees_it runs R.main([]) (real 15 s poll, 30 min wait); its own queue ticket is missing from queue_list, so the gate holds on '0 ahead in the queue'. Fix the gate (re-enqueue a vanished ticket) and bound the test.",
-      "expected": "11 Nov ~09:25",
-      "changed": "2026-11-11T08:55+00:00",
-      "expected_basis": "cloud agent ~24 min from 09:01",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:25+00:00",
       "rides": "DS231",
       "started": "2026-11-11T08:55+00:00"
     },
@@ -7752,12 +7751,11 @@
       "id": "SO7",
       "owner": "setup-offers",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "claude-setup rule template: Q ids back in clarifying-questions check tags",
       "detail": "Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.",
-      "expected": "11 Nov ~09:40",
-      "changed": "2026-11-11T09:12+00:00",
-      "expected_basis": "cloud agent ~25 min from 09:14",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T09:25+00:00",
       "rides": "DS231",
       "started": "2026-11-11T09:12+00:00"
     },
