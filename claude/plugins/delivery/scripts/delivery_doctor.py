@@ -671,10 +671,17 @@ def _read_json(path):
         return {}
 
 
+def _gate_tracks(root):
+    """The tracks gate.json names (DL245): a string for one track, a list for several. [] when it says none."""
+    val = _read_json(os.path.join(root, "scripts", "delivery", "gate.json")).get("track")
+    names = val.split(",") if isinstance(val, str) else val if isinstance(val, list) else []
+    return [n.strip() for n in names if isinstance(n, str) and n.strip() in ("ts", "go", "rust", "dotnet")]
+
+
 def _rust_track(root):
     """True when the project is on the rust track: gate.json says so, or rust_ci.py exists."""
     d = os.path.join(root, "scripts", "delivery")
-    return _read_json(os.path.join(d, "gate.json")).get("track") == "rust" or os.path.exists(os.path.join(d, "rust_ci.py"))
+    return "rust" in _gate_tracks(root) or os.path.exists(os.path.join(d, "rust_ci.py"))
 
 
 def _toolchain(root):
@@ -895,14 +902,23 @@ def compat_items(installed=None, compat_path=None):
 def scripts_items(root):
     """`ci.scripts-current`: the project's scripts/delivery files against the plugin's templates (DL188). Never fails."""
     import delivery_ci_install as INST
-    track = _read_json(os.path.join(root, "scripts", "delivery", "gate.json")).get("track")
-    if track not in ("ts", "go", "rust", "dotnet"):
-        track = "rust" if os.path.exists(os.path.join(root, "scripts", "delivery", "rust_ci.py")) else "shared"
+    tracks = _gate_tracks(root)
+    if not tracks:
+        tracks = ["rust"] if os.path.exists(os.path.join(root, "scripts", "delivery", "rust_ci.py")) else []
+    track = ",".join(tracks) if tracks else "shared"
     keep, skip = INST.load_config(root)
-    if track in INST.PACKAGE_TRACKS and not INST.has_packaged_program(root):
-        skip = set(skip) | set(INST.PACKAGE_FILES)   # DL236: the installer skips these too (DL229), so they are not missing
+    omit = set()
+    if any(t in INST.PACKAGE_TRACKS for t in tracks) and not INST.has_packaged_program(root):
+        # DL236: the installer skips these too (DL229), so they are not missing. DL245: with another track that
+        # ships them, only the ts copy is left out and the other track's copy is checked.
+        if len(tracks) > 1:
+            omit = {(t, f) for t in tracks if t in INST.PACKAGE_TRACKS for f in INST.PACKAGE_FILES}
+        if not any(os.path.isfile(os.path.join(INST.TEMPLATES, t, f.replace("/", os.sep)))
+                   for t in tracks if t not in INST.PACKAGE_TRACKS for f in INST.PACKAGE_FILES):
+            skip = set(skip) | set(INST.PACKAGE_FILES)
     stale, missing, kept, changed = [], [], [], []
-    for rel, _src, action in INST.plan(track, root, "update", keep, skip):
+    plan_items = INST.plan(tracks or ["shared"], root, "update", keep, skip, omit)
+    for rel, _src, action in plan_items:
         if not rel.startswith("scripts/delivery/"):
             continue
         if action == "overwritten":
@@ -913,14 +929,15 @@ def scripts_items(root):
             kept.append(rel)
         elif action == INST.CHANGED:
             changed.append(rel)
-    for rel, _src, _a in INST.plan(track, root, "update", keep, skip):
+    for rel, _src, _a in plan_items:
         if _a == "same":
             continue   # DL212: identical to the template is ok, whatever the record or a stale .new says
         if rel.startswith("scripts/delivery/") and rel not in changed and os.path.exists(os.path.join(root, rel.replace("/", os.sep) + ".new")):
             changed.append(rel)   # DL201: a conflict or a kept file waits for a hand merge
     if not stale and not missing and not changed:
-        return [_item("ci.scripts-current", "ok", "scripts/delivery matches the plugin templates%s"
-                      % (" (kept on purpose: %s)" % ", ".join(kept) if kept else ""))]
+        return [_item("ci.scripts-current", "ok", "scripts/delivery matches the plugin templates%s%s"
+                      % (" for tracks %s" % ", ".join(tracks) if len(tracks) > 1 else "",
+                         " (kept on purpose: %s)" % ", ".join(kept) if kept else ""))]
     parts = []
     if stale:
         parts.append("older than the plugin templates: %s" % ", ".join(stale))

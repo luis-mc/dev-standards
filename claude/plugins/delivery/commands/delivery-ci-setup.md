@@ -11,7 +11,7 @@ Set up where CI runs, one OS at a time. You are the guide; the engine is `script
 
 ## 1. Read the project
 
-Run `python3 <plugin>/scripts/delivery_ci_setup.py facts` (the plugin folder is next to this file). It lists the track, whether a shard table and an installer workflow exist, which OS the shards use, and the options already chosen. Say what you found in two lines. Ask for the track (`ts`, `go`, `rust`, `dotnet`) if it is null.
+Run `python3 <plugin>/scripts/delivery_ci_setup.py facts` (the plugin folder is next to this file). It lists the track, whether a shard table and an installer workflow exist, which OS the shards use, and the options already chosen. Say what you found in two lines. Ask for the track if it is null. It is a multi-select: one or more of `ts`, `go`, `rust`, `dotnet`. A project with a Rust workspace and a pnpm workspace picks `rust` and `ts`. With several tracks the installer takes them comma-separated (`--track rust,ts`) and writes one `ci.yml`, one `gate.json` and one `ci-scope.json` that cover all of them. Run it yourself with `--track` and pass `--no-install` to `delivery_ci_setup.py` apply, because that script still takes a single track.
 
 ## 2. Show the table, then ask per OS
 
