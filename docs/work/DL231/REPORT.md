@@ -18,3 +18,7 @@ Base check: `pool_agents.py` on origin/main contains `CREATE DATABASE`. OK.
 ## Follow-ups
 - A project migration that runs `CREATE ROLE` must check `pg_roles` first. No project migration was changed.
 - Removing a repo does not drop its roles (they are server-wide).
+
+Branch head before this line: 687241e4fc58e7608973bb4e39ee8602b5134aba
+
+READY
