@@ -4961,6 +4961,70 @@
       "chosen": "Send after pool refresh (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "Send after pool refresh (Recommended)"
+    },
+    {
+      "id": "D219",
+      "question": "lan-link plugin update to 1.29.1/2.1.1?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL221",
+      "options": [
+        {
+          "label": "tell lan-link again",
+          "summary": "owner's answer"
+        }
+      ],
+      "chosen": "tell lan-link again",
+      "decided": "2026-11-11",
+      "owner_words": "tell lan-link again"
+    },
+    {
+      "id": "D220",
+      "question": "home-automation update during its no-new-work hold?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL221",
+      "options": [
+        {
+          "label": "Tell it to update",
+          "summary": "owner's answer"
+        }
+      ],
+      "chosen": "Tell it to update",
+      "decided": "2026-11-11",
+      "owner_words": "Tell it to update"
+    },
+    {
+      "id": "D221",
+      "question": "When should comics-organizer take CO1002 (update)?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL221",
+      "options": [
+        {
+          "label": "Now",
+          "summary": "owner's answer"
+        }
+      ],
+      "chosen": "Now",
+      "decided": "2026-11-11",
+      "owner_words": "Now"
+    },
+    {
+      "id": "D222",
+      "question": "moobable installer-rerun RELEASE approval?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL221",
+      "options": [
+        {
+          "label": "Tell it: approved",
+          "summary": "owner's answer"
+        }
+      ],
+      "chosen": "Tell it: approved",
+      "decided": "2026-11-11",
+      "owner_words": "Tell it: approved"
     }
   ]
 }
