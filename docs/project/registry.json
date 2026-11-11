@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T09:12+00:00",
+  "updated": "2026-11-11T09:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3612,10 +3612,10 @@
       "app": "",
       "status": "Running",
       "item": "delivery_ci_install update: diff or merge files with project changes",
-      "detail": "Peer report: the 1.27.1 update overwrote project fixes (tools.json pins, train-cleanup.yml, artifact_prune.py). Needs an owner choice: keep-and-report, 3-way merge, or diff prompt.",
-      "expected": "11 Nov ~09:40",
-      "changed": "2026-11-11T09:12+00:00",
-      "expected_basis": "cloud agent ~25 min from 09:14",
+      "detail": "Installer update meets a project-changed plugin file: 3-way merge with the last installed template as base; clean merges applied, conflicts listed for yes/no or an agent (D206 replaces D201). Step 1 (state file, .new) running; step 2 (3-way merge) follows on the same branch.",
+      "expected": "11 Nov ~10:15",
+      "changed": "2026-11-11T09:19+00:00",
+      "expected_basis": "keep+report agent ~09:44, then 3-way merge agent ~25 min",
       "rides": "DS231",
       "started": "2026-11-11T09:12+00:00"
     },

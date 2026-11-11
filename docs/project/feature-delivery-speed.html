@@ -888,7 +888,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T09:12+00:00">11 Nov 09:12</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T09:19+00:00">11 Nov 09:19</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 09:04</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -899,7 +899,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <ul>
 <li data-glance-task="DL200"><span class="task-id">DL200</span>spec-lint ledger/watcher/hooks job hangs on hosted runners <span class="glance-expected">11 Nov ~09:25</span><span class="glance-basis">cloud agent ~24 min from 09:01</span></li>
 <li data-glance-task="DL199"><span class="task-id">DL199</span>Doctor layer check probes the running container, not its image ID <span class="glance-expected">11 Nov ~09:40</span><span class="glance-basis">cloud agent ~25 min from 09:14</span></li>
-<li data-glance-task="DL201"><span class="task-id">DL201</span>delivery_ci_install update: diff or merge files with project changes <span class="glance-expected">11 Nov ~09:40</span><span class="glance-basis">cloud agent ~25 min from 09:14</span></li>
+<li data-glance-task="DL201"><span class="task-id">DL201</span>delivery_ci_install update: diff or merge files with project changes <span class="glance-expected">11 Nov ~10:15</span><span class="glance-basis">keep+report agent ~09:44, then 3-way merge agent ~25 min</span></li>
 </ul>
 </details>
 <details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
@@ -927,7 +927,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL200"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL200</span>spec-lint ledger/watcher/hooks job hangs on hosted runners<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td data-label="Detail">Hang found: test_machine.py test_main_with_the_layer_takes_a_slot_and_job_done_frees_it runs R.main([]) (real 15 s poll, 30 min wait); its own queue ticket is missing from queue_list, so the gate holds on &#x27;0 ahead in the queue&#x27;. Fix the gate (re-enqueue a vanished ticket) and bound the test.</td><td data-label="Expected">11 Nov ~09:25<span class="expected-basis">cloud agent ~24 min from 09:01</span></td></tr>
 <tr data-task="DL199"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL199</span>Doctor layer check probes the running container, not its image ID<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td data-label="Detail">After a Docker restart the running container&#x27;s image ID could not be run (No such image), so pool.main.layer-windows-packaging failed though wine, xvfb-run and dotnet are in the container. Probe with docker exec into the running container; fall back to the tag.</td><td data-label="Expected">11 Nov ~09:40<span class="expected-basis">cloud agent ~25 min from 09:14</span></td></tr>
-<tr data-task="DL201"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL201</span>delivery_ci_install update: diff or merge files with project changes<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td data-label="Detail">Peer report: the 1.27.1 update overwrote project fixes (tools.json pins, train-cleanup.yml, artifact_prune.py). Needs an owner choice: keep-and-report, 3-way merge, or diff prompt.</td><td data-label="Expected">11 Nov ~09:40<span class="expected-basis">cloud agent ~25 min from 09:14</span></td></tr>
+<tr data-task="DL201"><td data-label="Status"><span class="status-chip status-running">Running</span></td><td data-label="Item"><span class="task-id">DL201</span>delivery_ci_install update: diff or merge files with project changes<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td data-label="Detail">Installer update meets a project-changed plugin file: 3-way merge with the last installed template as base; clean merges applied, conflicts listed for yes/no or an agent (D206 replaces D201). Step 1 (state file, .new) running; step 2 (3-way merge) follows on the same branch.</td><td data-label="Expected">11 Nov ~10:15<span class="expected-basis">keep+report agent ~09:44, then 3-way merge agent ~25 min</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 197 live</span></summary>
@@ -1165,6 +1165,139 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D206">
+<h3 class="decision-head"><span class="decision-id">D206</span> <span class="decision-question">DL201 again: installer update meets a project-changed plugin file?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL201</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">3-way merge, ask on conflict</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">merge template change into project file with last installed template as base; list conflicts</p>
+<blockquote class="decision-words">&ldquo;3-way merge, ask on conflict (replaces D201)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep and report</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">keep file, write &lt;file&gt;.new, print diff command (D201)</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep now, merge later</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">ship keep-and-report now, 3-way merge as next task</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D205">
+<h3 class="decision-head"><span class="decision-id">D205</span> <span class="decision-question">Old failed ledger row DS218 leftover cleanup?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS218</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Look, then close (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">do what is still needed, close</p>
+<blockquote class="decision-words">&ldquo;Look, then close (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Close it as failed</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">no follow-up</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Retry it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">relaunch</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D204">
+<h3 class="decision-head"><span class="decision-id">D204</span> <span class="decision-question">Switch the pool to the 01:58 image?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL198</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Switch when idle (Recommended)</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">next idle moment</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for the DL199 release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">after RELEASE-96</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Don&#x27;t switch</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">keep 22:11 image</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Switch now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">owner&#x27;s own answer</p>
+<blockquote class="decision-words">&ldquo;switch now&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D203">
+<h3 class="decision-head"><span class="decision-id">D203</span> <span class="decision-question">Pool memory after the 98% spike at 08:30?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL198</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Investigate first (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">find what used memory, then propose</p>
+<blockquote class="decision-words">&ldquo;Investigate first (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">3 agents, same 10 GB</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">3.3 GiB each</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Lower POOL_MEM to 8 GB</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">2 GiB each</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">accept the warning</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D202">
+<h3 class="decision-head"><span class="decision-id">D202</span> <span class="decision-question">RELEASE-96 with six tasks: ship the ready ones or wait for all?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS231</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ship the ready ones (Recommended)</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">late ones ride the next release</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Wait for all six</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">one retry each, then ask</p>
+<blockquote class="decision-words">&ldquo;Wait for all six&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D201">
+<h3 class="decision-head"><span class="decision-id">D201</span> <span class="decision-question">DL201: what should delivery_ci_install.py update do with an installed file the project changed?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL201</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep and report (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">Leave the file, write &lt;file&gt;.new, list a diff command</p>
+<blockquote class="decision-words">&ldquo;Keep and report (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">3-way merge</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Merge with a saved base copy; conflict markers listed</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask per file</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Interactive overwrite/keep/merge per file</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D200">
+<h3 class="decision-head"><span class="decision-id">D200</span> <span class="decision-question">Ship RELEASE-96 and RELEASE-97 separately or together?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS231</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Separately</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">96 then 97, two PRs</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Merge 96 and 97</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">One release, one PR (#197)</p>
+<blockquote class="decision-words">&ldquo;merge 96 and 97&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D199">
 <h3 class="decision-head"><span class="decision-id">D199</span> <span class="decision-question">Send the morning summary to the project sessions too?</span></h3>
 <p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DS227</p>
