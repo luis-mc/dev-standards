@@ -23,6 +23,7 @@
     {"name": "artifacts-dl251", "full": "python tools/test_artifacts_dl251.py", "cases": ""},
     {"name": "artifacts-dl259", "full": "python tools/test_artifacts_dl259.py", "cases": ""},
     {"name": "artifacts-dl260", "full": "python tools/test_artifacts_dl260.py", "cases": ""},
+    {"name": "artifacts-dl264", "full": "python tools/test_artifacts_dl264.py", "cases": ""},
     {"name": "artifacts-ar67", "full": "python tools/test_artifacts_ar67.py", "cases": ""},
     {"name": "artifacts-ds219", "full": "python tools/test_artifacts_ds219.py", "cases": ""},
     {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": ""},
@@ -48,6 +49,7 @@
     {"name": "smoke-packaged", "full": "python tools/test_smoke_packaged.py", "full_args": ["--no-mutants"], "cases": "python tools/test_smoke_packaged.py --no-mutants -k {cases}"},
     {"name": "ds-guard-templates", "full": "python tools/test_ds_guard_templates.py", "cases": "", "measure": false},
     {"name": "ds-enforcement", "full": "python tools/test_ds_enforcement.py", "cases": ""},
-    {"name": "spec-check", "full": "python tools/test_spec_check.py", "cases": ""}
+    {"name": "spec-check", "full": "python tools/test_spec_check.py", "cases": ""},
+    {"name": "project-setup-dl263", "full": "python tools/test_dl263_ci_pin.py", "cases": ""}
   ]
 }

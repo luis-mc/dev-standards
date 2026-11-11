@@ -127,8 +127,21 @@ def check_merge(root, seg, ledger):
     ok = [t for t in trains if (t.get('ci') or {}).get('state') == 'success'
           and (head is None or (t.get('ci') or {}).get('head_sha') == head)]
     if not ok:
+        n = pr_no if pr_no is not None else arg or 'N'
+        if not trains:
+            branch = '<head branch>'
+            rb = H.gh(root, ['pr', 'view'] + ref + ['--json', 'headRefName'])
+            if rb and rb[0] == 0:
+                try:
+                    branch = json.loads(rb[1]).get('headRefName') or branch
+                except ValueError:
+                    pass
+            deny('DL-06 PR %s is not linked to a train in the ledger, so no CI result can be recorded for it. '
+                 'Link it, then watch its head: python <plugin>/scripts/delivery_ledger.py link --pr %s --sha %s '
+                 '--branch %s ; then ci_watch.py %s ; then merge.'
+                 % (n, n, head or '<head sha>', branch, head or '<head sha>'))
         deny('DL-06 no ledger CI success for the current head of PR %s. Run ci_watch.py for the head commit '
-             '(delivery_ledger records it), then merge.' % (pr_no if pr_no is not None else arg or 'N'))
+             '(delivery_ledger records it), then merge.' % n)
 
 
 def check_unfrozen(seg, command, cfg):

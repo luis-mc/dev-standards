@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.32.0
+version: 0.32.1
 owner: agents
 type: reference
 code:
@@ -150,7 +150,7 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.37** — `ci_watch.py` finds the ledger in the main checkout when run from a worktree: `git rev-parse --git-common-dir` names a `.git` whose parent holds `.delivery/`. Otherwise it uses the repo root as before. (DL132)
 
-**R5.38** — `ci_watch.py` records a CI result against a train in this order: train, PR, branch, head sha. The branch is the local or remote branch at the commit, never `main` or `master`. With no match and a branch, it creates the train in state `ci` (as `delivery_ledger.py plan --branch`). With no branch, it records `ci.unmatched` and prints `delivery_ledger.py plan --branch <branch>` to stderr. `plan --branch` returns the open train of that branch instead of a second one. (DL138)
+**R5.38** — `ci_watch.py` records a CI result against a train in this order: train, PR, branch, head sha. The branch is the local or remote branch at the commit, never `main` or `master`. With no match and a branch, it creates the train in state `ci` (as `delivery_ledger.py plan --branch`). With no branch, it records `ci.unmatched` and prints `delivery_ledger.py plan --branch <branch>` to stderr. `plan --branch` returns the open train of that branch instead of a second one. (DL138) When no train links the commit afterwards, it prints one line to stderr: `ci_watch: no train in the ledger links <sha>; the result was not recorded; link it with delivery_ledger.py link --pr N --sha <sha> --branch <branch>, then run ci_watch again`. It never links on its own. When the merge hook (DL-06) refuses `gh pr merge N` and no ledger train carries that PR, its message says the PR is not linked and prints the fix: `delivery_ledger.py link --pr N --sha <head sha> --branch <head branch>`, then `ci_watch.py <head sha>`. A linked PR without a green CI record keeps the short message. (DL265)
 
 **R5.39** — When the runs of the named workflow are complete, `ci_watch.py` makes one unfiltered `gh run list --commit <sha>` and adds the runs of every other workflow. A run that is queued or in progress keeps the watch waiting, and is never reported as failed; a job that is not completed is never printed as `FAILED job`. A failed run makes it exit 1 only after every run of the commit has completed, and all failures are reported together. (DL226) `--only-workflow` keeps the old watch. If the unfiltered read fails, it prints one warning and the named runs decide. (DL139)
 
@@ -529,6 +529,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.32.1 | 2026-11-11 | RELEASE-113 | The DL-06 merge refusal names the delivery_ledger.py link command when the PR has no linked train; ci_watch.py prints one line when no train links the commit and never links on its own (R5.38). | DL265 |
 | 0.32.0 | 2026-11-11 | RELEASE-111 | update keeps the project's artifact-prune workflow list on overwrite, merge and conflict; template additions are appended once; removed names stay removed.<br>Guided setup takes several tracks: the answers file accepts a track list, facts lists every detected track, apply passes them all to the installer. The gate gives each package the kind of the track that owns it (R13.95).<br>The agent brief template says a held or cancelled branch run is not a failure (R5.59). | DL255, DL256, DL258 |
 | 0.31.2 | 2026-11-11 | RELEASE-110 | The local heavy limit (DL-91) frees an entry as soon as its call has ended: a result in the session transcript, a foreground call past its timeout plus 2 minutes, or a gone or idle transcript. Backgrounded calls count for 30 minutes. The refusal shows age and session. | DL253 |
 | 0.31.1 | 2026-11-11 | RELEASE-109 | join lists conflicting files, rebuilds generated-docs-only conflicts; watcher records held runs as held | DL249 |
