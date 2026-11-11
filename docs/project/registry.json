@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T19:16+00:00",
+  "updated": "2026-11-11T19:18+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4316,6 +4316,19 @@
       "expected_basis": "cloud agent from 19:16, setup 3 + work 15 + CI 7",
       "rides": "DL240",
       "started": "2026-11-11T19:12+00:00"
+    },
+    {
+      "id": "DL242",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "artifact_prune --sync-workflow keeps the workflow list when config has none",
+      "detail": "Peer finding: with no artifact_prune section in .delivery/config.json (a gitignored config in a fresh worktree), --sync-workflow rewrote the project's artifact-prune.yml workflow list to the default [CI, Package]. Keep the file's current list when the config has no section; write the default only on a fresh install.",
+      "expected": "11 Nov ~19:45",
+      "changed": "2026-11-11T19:18+00:00",
+      "expected_basis": "cloud agent from 19:20, setup 3 + work 12 + CI 7",
+      "rides": "DL240",
+      "started": "2026-11-11T19:18+00:00"
     },
     {
       "id": "DS1",
