@@ -1,4 +1,4 @@
-# DL200 report (in progress)
+# DL200 report
 
 Base: origin/main 8915572; `queue_wait` present.
 
@@ -20,3 +20,13 @@ Base: origin/main 8915572; `queue_wait` present.
 ## Follow-ups
 - Fix `test_dl194_pool_tool_cache.py` (not mine to edit): patch `os.getpid` once with a per-thread `side_effect`, not from two threads. Until then other tests that use `os.getpid` can be hit.
 - docs_check W1 (work report on branch) is expected until the strip before the join.
+
+## CI (spec-lint, areas=delivery,docs, run 42993102814, head 8c3de64)
+Run ended: failure, only the `docs check` job (0 s: the W1 rule, a work report on the branch; expected, see Follow-ups). Every other job passed or was skipped.
+- delivery - plugin ledger, recorder, watcher and hooks: success, 52 s (the job that hung before).
+- delivery - CI scripts and workflow templates: success, 78 s. packaged-program smoke test: success, 74 s. train cleanup: success, 35 s. change notes enforced and folded: success, 17 s. runner plan: success, 10 s. area mapping: success, 7 s. setup preflight: success, 5 s. branch gate and trust rule: success. artifact pruning: success.
+- docs plugin: success, 46 s. which areas: success. docs check: failure (W1 only). change notes, change notes folded, specs/templates, artifact renderer, shard job, model profiles, transcript folds: skipped.
+
+Branch head: see the git log (this report is committed after the run).
+
+READY
