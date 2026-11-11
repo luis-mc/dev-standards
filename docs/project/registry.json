@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:44+00:00",
+  "updated": "2026-11-11T00:47+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3474,6 +3474,17 @@
       "expected": "11 Nov ~01:40",
       "changed": "2026-11-11T00:44+00:00",
       "expected_basis": "starts after DL187 reports ~01:12, ~25 min"
+    },
+    {
+      "id": "DL191",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "windows-msi-check installs Wine only when missing (pool: no sudo)",
+      "detail": "Peer report: windows-msi-check.yml runs sudo apt-get install wine xvfb, which fails on pool runners (no sudo); the pool image already has both. Install only when wine or xvfb-run is missing. Branch DL191-msi-wine-installed, test test_dl191_msi_wine_installed (3 OK).",
+      "expected": "11 Nov ~01:50",
+      "changed": "2026-11-11T00:47+00:00",
+      "rides": "DS228"
     },
     {
       "id": "DS1",
