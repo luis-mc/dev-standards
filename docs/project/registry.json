@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T18:39+00:00",
+  "updated": "2026-11-11T19:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4181,44 +4181,47 @@
       "status": "Running",
       "item": "RELEASE: API-quota-safe CI watching, doctor fix, secret-scan shapes",
       "detail": "Join the three agent branches, fold, CI, merge on green, plugin updates, peer note.",
-      "expected": "11 Nov ~19:12",
-      "changed": "2026-11-11T18:25+00:00",
+      "expected": "11 Nov ~19:31",
+      "changed": "2026-11-11T19:22+00:00",
       "expected_basis": "agents ~25 min + join/CI/merge ~15 min",
       "release": 106,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-11T18:30+00:00",
-          "end": "2026-11-11T18:55+00:00"
+          "start": "2026-11-11T18:28+00:00",
+          "end": "2026-11-11T19:12+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T18:55+00:00",
-          "end": "2026-11-11T19:00+00:00"
+          "start": "2026-11-11T19:12+00:00",
+          "end": "2026-11-11T19:15+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T19:00+00:00",
-          "end": "2026-11-11T19:06+00:00"
+          "start": "2026-11-11T19:15+00:00",
+          "end": "2026-11-11T19:28+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T19:06+00:00",
-          "end": "2026-11-11T19:12+00:00"
+          "start": "2026-11-11T19:28+00:00",
+          "end": "2026-11-11T19:31+00:00"
         }
       ],
-      "started": "2026-11-11T18:25+00:00"
+      "started": "2026-11-11T18:25+00:00",
+      "risk": {
+        "label": "CI rerun after a missing spec row",
+        "minutes": 7
+      }
     },
     {
       "id": "DL235",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "ci_watch: backoff, rate-limit check, many runs; rule against fast run watch",
       "detail": "D228: ci_watch.py polls 60-120 s with backoff while runs are queued, checks gh api rate_limit first, watches several run IDs in one process; a delivery rule says never gh run watch under --interval 60.",
-      "expected": "11 Nov ~18:55",
-      "changed": "2026-11-11T18:25+00:00",
-      "expected_basis": "cloud agent from ~18:30, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T19:16+00:00",
       "rides": "DL234",
       "started": "2026-11-11T18:25+00:00"
     },
@@ -4226,12 +4229,11 @@
       "id": "DL236",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Doctor: no scripts-current warning on files the installer just wrote",
       "detail": "D230 (b): the doctor's ci.scripts-current check warned on branch_gate.py and ci_rerun_first.py right after the installer overwrote them; find the cause and fix.",
-      "expected": "11 Nov ~18:55",
-      "changed": "2026-11-11T18:25+00:00",
-      "expected_basis": "cloud agent from ~18:30, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T19:16+00:00",
       "rides": "DL234",
       "started": "2026-11-11T18:25+00:00"
     },
@@ -4239,12 +4241,11 @@
       "id": "DL237",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Secret scan: narrow shapes for mid-line SQL placeholders and nested calls",
       "detail": "D230 (a): the template gitleaks allowlist also covers a key column bound to a SQL placeholder with more SQL after it, and an assignment to a nested constructor call; keep shapes narrow and tested.",
-      "expected": "11 Nov ~18:55",
-      "changed": "2026-11-11T18:25+00:00",
-      "expected_basis": "cloud agent from ~18:30, ~25 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T19:16+00:00",
       "rides": "DL234",
       "started": "2026-11-11T18:25+00:00"
     },
@@ -4252,14 +4253,98 @@
       "id": "DL238",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Full Progress local page when the publish limit is hit",
       "detail": "Owner rule 11 Nov: when claude.ai refuses the Full Progress publish for its daily limit, show Full Progress as a local page in the work directory. mark-deferred writes and opens a local copy under the work root; every record change while deferred refreshes it; pending and the end-of-turn hook print its path.",
-      "expected": "11 Nov ~19:05",
-      "changed": "2026-11-11T18:39+00:00",
-      "expected_basis": "cloud agent from 18:41, setup 3 + work 15 + CI 7",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T19:16+00:00",
       "rides": "DL234",
       "started": "2026-11-11T18:39+00:00"
+    },
+    {
+      "id": "DL239",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Plugin name and version badge on every docs-plugin page",
+      "detail": "Owner ask 11 Nov: every document the docs plugin generates shows the plugin name and the version that generated it at the top right of its header, with a flag next to the version saying whether that is the latest version of the plugin. Design questions go to the owner when the DL235-DL238 wave reports.",
+      "expected": "11 Nov ~19:41",
+      "changed": "2026-11-11T19:12+00:00",
+      "expected_basis": "cloud agent from 19:16, setup 3 + work 15 + CI 7",
+      "rides": "DL240",
+      "started": "2026-11-11T19:12+00:00"
+    },
+    {
+      "id": "DL240",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release: version badge, page colour, 90% fonts, join.py fixes",
+      "detail": "Next RELEASE after DL234: DL239 (docs plugin name and version badge with latest flag, one page colour everywhere, fonts at 90%) and DL240 (join.py: no empty stacked report for sibling branches, a skipped line per branch, no quiet partial join).",
+      "expected": "11 Nov ~19:55",
+      "changed": "2026-11-11T19:12+00:00",
+      "release": 107,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T19:16+00:00",
+          "end": "2026-11-11T19:41+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T19:41+00:00",
+          "end": "2026-11-11T19:46+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T19:46+00:00",
+          "end": "2026-11-11T19:52+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T19:52+00:00",
+          "end": "2026-11-11T19:55+00:00"
+        }
+      ],
+      "started": "2026-11-11T19:12+00:00"
+    },
+    {
+      "id": "DL241",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "join.py: sibling-branch stacked report, skipped lines, no quiet partial join",
+      "detail": "Peer finding, owner chose fix: join.py reports stacked conflicts with an empty file list for sibling branches cut from one contract branch; --push prints no per-branch skipped line; a partial join is quiet. Fix all three before the peer's next multi-branch join.",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T19:22+00:00",
+      "rides": "DL240",
+      "started": "2026-11-11T19:12+00:00"
+    },
+    {
+      "id": "DL242",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "artifact_prune --sync-workflow keeps the workflow list when config has none",
+      "detail": "Peer finding: with no artifact_prune section in .delivery/config.json (a gitignored config in a fresh worktree), --sync-workflow rewrote the project's artifact-prune.yml workflow list to the default [CI, Package]. Keep the file's current list when the config has no section; write the default only on a fresh install.",
+      "expected": "11 Nov ~19:45",
+      "changed": "2026-11-11T19:18+00:00",
+      "expected_basis": "cloud agent from 19:20, setup 3 + work 12 + CI 7",
+      "rides": "DL240",
+      "started": "2026-11-11T19:18+00:00"
+    },
+    {
+      "id": "DL243",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "docs_fold: architecture spec with a Version line gets no front matter",
+      "detail": "Found at the RELEASE-106 join: docs_fold note+fold on architecture/DELIVERYSPEC added YAML front matter (version 0.1.0) and a Versions table, although the spec keeps its own **Version:** line (1.7.0). Fold must bump the existing Version line (or refuse with a clear message), never add a second version scheme.",
+      "expected": "11 Nov ~19:45",
+      "changed": "2026-11-11T19:22+00:00",
+      "expected_basis": "cloud agent from 19:23, setup 3 + work 12 + CI 7",
+      "rides": "DL240",
+      "started": "2026-11-11T19:22+00:00"
     },
     {
       "id": "DS1",

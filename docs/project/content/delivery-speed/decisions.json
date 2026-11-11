@@ -5261,6 +5261,269 @@
       "chosen": "Nothing, tell it 1.31.0 (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "Nothing, tell it 1.31.0 (Recommended)"
+    },
+    {
+      "id": "D232",
+      "question": "Which generated documents get the plugin name and version badge?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "Full Progress + feature pages",
+          "summary": "offered"
+        },
+        {
+          "label": "Docs site",
+          "summary": "offered"
+        },
+        {
+          "label": "Design-system gallery",
+          "summary": "offered"
+        },
+        {
+          "label": "Generated Markdown/text",
+          "summary": "offered"
+        },
+        {
+          "label": "All four",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "All four",
+      "decided": "2026-11-11",
+      "owner_words": "Full Progress + feature pages, Docs site, Generated Markdown/text, Design-system gallery"
+    },
+    {
+      "id": "D233",
+      "question": "Badge: judge 'latest' when?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "At build time (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Live when viewed",
+          "summary": "offered"
+        },
+        {
+          "label": "Both",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "At build time (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "At build time (Recommended)"
+    },
+    {
+      "id": "D234",
+      "question": "Badge: what does the flag next to the version show?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "latest / update X.Y.Z (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "latest / not latest",
+          "summary": "offered"
+        },
+        {
+          "label": "Only when behind",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "latest / update X.Y.Z (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "latest / update X.Y.Z (Recommended)"
+    },
+    {
+      "id": "D235",
+      "question": "Do feature specs get a generator line?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "No (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Yes, front matter",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Yes, front matter",
+      "decided": "2026-11-11",
+      "owner_words": "Yes, front matter"
+    },
+    {
+      "id": "D236",
+      "question": "Page background differs between projects: what to do?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "Same page colour everywhere",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep project designs",
+          "summary": "offered"
+        },
+        {
+          "label": "Move that project to default",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Same page colour everywhere",
+      "decided": "2026-11-11",
+      "owner_words": "Same page colour everywhere"
+    },
+    {
+      "id": "D237",
+      "question": "Fonts at 90%: which pages?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "All docs-plugin pages (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Record pages only",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "All docs-plugin pages (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "All docs-plugin pages (Recommended)"
+    },
+    {
+      "id": "D238",
+      "question": "Fonts at 90%: how applied?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL239",
+      "options": [
+        {
+          "label": "Every size x0.9 (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Base size only",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Every size x0.9 (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Every size x0.9 (Recommended)"
+    },
+    {
+      "id": "D239",
+      "question": "When do the badge, colour and font changes ship?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL240",
+      "options": [
+        {
+          "label": "Next release (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Hold current release",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Next release (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Next release (Recommended)"
+    },
+    {
+      "id": "D240",
+      "question": "join.py false stacked report for sibling branches: fix?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL241",
+      "options": [
+        {
+          "label": "Fix it (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "No",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Fix it (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Fix it (Recommended)"
+    },
+    {
+      "id": "D241",
+      "question": "join.py --push: a skipped line per branch?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL241",
+      "options": [
+        {
+          "label": "Add it (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "No",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Add it (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "Add it (Recommended)"
+    },
+    {
+      "id": "D242",
+      "question": "Move gitleaks to its own CI job?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "options": [
+        {
+          "label": "Separate job (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep in main job",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Keep in main job",
+      "decided": "2026-11-11",
+      "owner_words": "Keep in main job"
+    },
+    {
+      "id": "D243",
+      "question": "Write the local Full Progress page on any failed publish?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL238",
+      "options": [
+        {
+          "label": "Daily limit only",
+          "summary": "offered"
+        },
+        {
+          "label": "Any failed publish",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Daily limit only",
+      "decided": "2026-11-11",
+      "owner_words": "Daily limit only"
     }
   ]
 }
