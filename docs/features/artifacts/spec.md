@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.11.0
+version: 0.11.1
 owner: agents
 type: reference
 code:
@@ -162,6 +162,8 @@ flowchart LR
 
 **R5.17** — The Full Progress and feature pages show the generator badge in the header (`luismc-docs X.Y.Z` and its latest flag) and use the plugin's default page colours and 0.9x font sizes; a project's `design.css` changes accents only (see [Documentation standard plugin](../docs/spec.md) R5.16 to R5.18). The latest flag does not make a page stale: INV-3 compares pages without it. (DL239)
 
+**R5.37a** — `check` warns (never an error) when the Full Progress lede names `RELEASE-n` and a higher-numbered release is Live. The text is `content/full-progress/meta.json: the lede names RELEASE-14 but RELEASE-35 is live; update it with edit-content`. `render` prints the same line as a note. Only the release-number test exists; the record keeps no content change times. (DL251, ARTIFACTSPEC R5.37)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -206,6 +208,7 @@ flowchart TB
 | Time zone data missing (Windows) | Fall back to local time, with a warning | The page still renders. |
 | A change that adds a finding | Fail closed: write nothing | A record that was valid stays valid. |
 | Content or a task that is invalid | The error names the field and its limit, or the entry and the rule (`item is 93 characters; the limit is 80`). | The caller can fix it without running `check`. |
+| `edit-content` replaces a content folder | The replace is atomic. The script writes a staging folder, swaps it in, then removes the old one. If the folder is locked it replaces the files in place, or stops with `content/<key> is in use ...; nothing changed`. Invalid content restores the old folder. On any failure the old content stays complete. `retire` sets the folder aside the same way. | A locked folder on Windows must never leave a half-deleted folder that a later commit records as deleted. |
 | `edit-content` of a `decisions.json` | Prints `run docs_index.py build: docs/architecture/decisions.md is now stale`. | The script does not run `docs_index.py`; the generated index is rebuilt there. |
 
 ## 9. How it is proven
@@ -288,6 +291,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.1 | 2026-11-11 | RELEASE-109 | edit-content replaces the content folder atomically; on failure (a locked folder, invalid content) the old content stays complete.<br>Full Progress: check warns and render notes when the lede names an older RELEASE-n than the newest Live release (R5.37a). | DL250, DL251 |
 | 0.11.0 | 2026-11-11 | RELEASE-108 | Local Full Progress copy is the repo copy with feature pages beside it, uses a machine-wide work root, auto-refreshes, and opens once per deferral. | DL246 |
 | 0.10.0 | 2026-11-11 | RELEASE-107 | Full Progress and feature pages show the generator badge, use the default page colours and 0.9x fonts; the latest flag never makes a page stale (R5.17). | DL239 |
 | 0.9.0 | 2026-11-11 | RELEASE-106 | mark-deferred writes and opens a local Full Progress page in the work directory; pending shows local_path. | DL238 |

@@ -1181,7 +1181,7 @@ def validate_structure(rec):
     cdir = rec.dir / 'content'
     if cdir.is_dir():
         for p in sorted(cdir.iterdir()):
-            if p.is_dir() and p.name not in known:
+            if p.is_dir() and not p.name.startswith('.') and p.name not in known:
                 f('R4.1', 'content/%s' % p.name, 'content folder has no artifact in the manifest')
     return sorted(set(F))
 
@@ -2263,6 +2263,100 @@ def cmd_export_content(args):
     return 0
 
 
+def _write_files(d, files):
+    for name, data in files.items():
+        (d / name).parent.mkdir(parents=True, exist_ok=True)
+        (d / name).write_bytes(data)
+
+
+def _drop_dir(old):
+    """Remove a folder this module swapped out. A failure is only a warning; the next run cleans it up."""
+    try:
+        shutil.rmtree(str(old))
+    except FileNotFoundError:
+        pass
+    except OSError as ex:
+        warn('could not remove %s (%s); it is left for the next run to clean up' % (old, ex))
+
+
+def clean_leftover_dirs(parent, key):
+    """Remove dot-folders an earlier run left next to content/<key>: .<key>.new-*, .<key>.old-*."""
+    if parent.is_dir():
+        for p in parent.iterdir():
+            if p.is_dir() and (p.name.startswith('.%s.new-' % key) or p.name.startswith('.%s.old-' % key)):
+                _drop_dir(p)
+
+
+def _put_back_in_place(d, old_files, new):
+    for name, data in old_files.items():
+        try:
+            f = d / name
+            if not f.is_file() or f.read_bytes() != data:
+                f.parent.mkdir(parents=True, exist_ok=True)
+                f.write_bytes(data)
+        except OSError:
+            pass
+    for name in new:
+        if name not in old_files:
+            try:
+                (d / name).unlink()
+            except OSError:
+                pass
+
+
+def replace_content_dir(d, new, old_files):
+    """Put the files `new` ({name: bytes}) in folder d without ever leaving it half-deleted (DL250).
+    Writes a staging folder next to d, renames d aside, renames the staging folder into place. If d cannot
+    be renamed (locked), replaces the files in place instead. Returns (undo, commit): undo() puts the old
+    content back; commit() removes the old folder (a failure there is only a warning)."""
+    pid = os.getpid()
+    stage = d.parent / ('.%s.new-%d' % (d.name, pid))
+    aside = d.parent / ('.%s.old-%d' % (d.name, pid))
+    clean_leftover_dirs(d.parent, d.name)
+    try:
+        stage.mkdir(parents=True)
+        _write_files(stage, new)
+    except OSError as ex:
+        _drop_dir(stage)
+        raise Fail(1, 'content/%s cannot be written (%s); nothing changed' % (d.name, ex)) from ex
+    except BaseException:
+        _drop_dir(stage)
+        raise
+    if d.exists():
+        try:
+            os.rename(str(d), str(aside))
+        except OSError:
+            _drop_dir(stage)
+            try:
+                _write_files(d, new)
+                for name in old_files:
+                    if name not in new:
+                        (d / name).unlink()
+            except OSError as ex:
+                _put_back_in_place(d, old_files, new)
+                raise Fail(1, 'content/%s is in use (a shell or editor has it open); nothing changed (%s)'
+                           % (d.name, ex)) from ex
+            return (lambda: _put_back_in_place(d, old_files, new)), (lambda: None)
+    try:
+        os.rename(str(stage), str(d))
+    except OSError:
+        if aside.exists():
+            os.rename(str(aside), str(d))
+        _drop_dir(stage)
+        raise
+
+    def undo():
+        if aside.exists():
+            _drop_dir(d)
+            if d.exists():                    # could not clear it: write the old files back over it
+                _put_back_in_place(d, old_files, new)
+            else:
+                os.rename(str(aside), str(d))
+        else:
+            _drop_dir(d)
+    return undo, (lambda: _drop_dir(aside))
+
+
 def cmd_edit_content(args):
     ctx = make_ctx(args)
     key = args.key
@@ -2283,15 +2377,15 @@ def cmd_edit_content(args):
             if bad:
                 fnd = [('R5.15', 'content/%s/decisions.json' % key, b) for b in bad]
                 raise Fail(1, with_details('content is invalid; nothing written', fnd), fnd)
-        if d.exists():
-            shutil.rmtree(str(d))
-        d.mkdir(parents=True)
-        for name, data in new.items():
-            (d / name).parent.mkdir(parents=True, exist_ok=True)
-            (d / name).write_bytes(data)
+        old_files = content_files(d) if d.is_dir() else {}
+        undo, commit = replace_content_dir(d, new, old_files)
         rec.invalidate()
         if key in rec.broken():              # validates what the session supplied; other artifacts may stay as they are
-            raise Fail(1, with_details('content is invalid; nothing written', rec.broken()[key]), rec.broken()[key])
+            bad = rec.broken()[key]
+            undo()                           # so that "nothing written" is true
+            rec.invalidate()
+            raise Fail(1, with_details('content is invalid; nothing written', bad), bad)
+        commit()
         rec.render_keys[key] = 'new'
         if key != FP_NAME:
             rec.render_keys[FP_NAME] = 'new'   # section 1 quotes each lede
@@ -2378,6 +2472,13 @@ def cmd_render(args):
     ctx = make_ctx(args)
     res = render_changed(ctx, args.all)
     emit(args, res, ['rendered: ' + (', '.join(res['rendered']) or 'nothing to do')])
+    if not getattr(args, 'json_out', False):
+        try:
+            _ctx, rec = load_for_read(args)
+            for f, m in stale_lede_warnings(rec):
+                print('note: %s: %s' % (f, m))
+        except Exception:
+            pass
     return 0
 
 
@@ -2623,10 +2724,19 @@ def cmd_retire(args):
             dest = rec.dir / plan['archive']
             dest.parent.mkdir(parents=True, exist_ok=True)
             dest.write_bytes((rec.dir / 'content' / key / 'decisions.json').read_bytes())
+        cdir = rec.dir / 'content' / key
+        if cdir.exists():                    # DL250: set the folder aside first; a lock stops the retire with nothing changed
+            clean_leftover_dirs(cdir.parent, key)
+            aside = cdir.parent / ('.%s.old-%d' % (key, os.getpid()))
+            try:
+                os.rename(str(cdir), str(aside))
+            except OSError as ex:
+                raise Fail(1, 'content/%s is in use (a shell or editor has it open); nothing changed (%s)'
+                           % (key, ex)) from ex
+            _drop_dir(aside)
         page = rec.dir / entry['file']
         if page.is_file():
             page.unlink()
-        shutil.rmtree(str(rec.dir / 'content' / key), ignore_errors=True)
         rec.invalidate()
         rec.render_keys[FP_NAME] = 'new'
         rec.message = ctx.rel + ': retire feature %s' % key
@@ -2766,7 +2876,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec) + lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec) + stale_lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
     warnings += [('.delivery', m) for m in schema_warnings(session_root(str(rec.dir)))]
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -2798,6 +2908,28 @@ def lede_warnings(rec):
         return []
     contents, _findings = load_contents(rec)
     return [('content/%s/meta.json' % key, m) for key, content in sorted(contents.items()) for m in warn_of(content)]
+
+
+STALE_LEDE_RE = re.compile(r'RELEASE-(\d+)(?![\d\w])')
+
+
+def stale_lede_warnings(rec):
+    """R5.37a: the Full Progress lede names a RELEASE-n lower than the newest Live release. [(file, message)]
+    Only the release-number test; the record keeps no reliable change times for content."""
+    fp = rec.manifest.get('full_progress_artifact') if isinstance(rec.manifest, dict) else None
+    key = (fp or {}).get('key', FP_NAME)
+    contents, _findings = load_contents(rec)
+    content = contents.get(key)
+    lede = ((content or {}).get('meta') or {}).get('lede')
+    if not isinstance(lede, str):
+        return []
+    named = [int(n) for n in STALE_LEDE_RE.findall(lede)]
+    live = [release_number(t) for t in rec.tasks() if isinstance(t, dict) and t.get('status') == 'Live']
+    live = [n for n in live if n is not None]
+    if not named or not live or max(named) >= max(live):
+        return []
+    return [('content/%s/meta.json' % key, 'the lede names RELEASE-%d but RELEASE-%d is live; update it with edit-content'
+             % (max(named), max(live)))]
 
 
 def decision_warnings(rec):
