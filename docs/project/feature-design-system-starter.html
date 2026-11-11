@@ -418,6 +418,7 @@ table.history-table td:first-child { font-family: var(--font-mono); white-space:
 
 /* Earlier fold: Live rows older than the fold age, closed by default */
 details.earlier { margin: .9em 0; }
+p.earlier-note { margin: .6em .8em; color: var(--ink-muted); font-size: .9em; }
 details.earlier > summary {
   cursor: pointer;
   font-family: var(--font-mono);
@@ -734,7 +735,6 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
   table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
   table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
-    content: attr(data-label);
     display: block;
     font-family: var(--font-mono);
     font-size: .68rem;
@@ -742,6 +742,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
     letter-spacing: .06em;
     color: var(--ink-muted);
   }
+  /* AR69: the cell labels come from the column, not from an attribute on every cell */
+  table.status-checklist.with-app td:nth-child(3)::before { content: "App / service"; }
+  table.status-checklist.with-app td:nth-child(4)::before, table.status-checklist:not(.with-app) td:nth-child(3)::before { content: "Detail"; }
+  table.status-checklist.with-app td:nth-child(5)::before, table.status-checklist:not(.with-app) td:nth-child(4)::before { content: "Expected"; }
+  table.feature-list td:nth-child(2)::before { content: "Last updated"; }
+  table.feature-list td:nth-child(3)::before { content: "Tasks"; }
+  table.feature-list td:nth-child(4)::before { content: "State"; }
+  table.feature-list td:nth-child(5)::before { content: "Where it stands"; }
   table.status-checklist .release-line::before { content: "Rides "; }
   table.feature-list td:nth-child(1) { font-weight: 600; }
   table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
@@ -888,8 +896,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>What the starter holds</a><a href="#s3"><b>3</b>Left out of the starter, and how to bring it in</a><a href="#s4"><b>4</b>Decisions</a><a href="#s5"><b>5</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Design-system starter</h1><p>A neutral, full starter design system that design-system-setup writes on init, filled from the project's own styles when the owner agrees.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-05T12:46+00:00">05 Nov 12:46</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 09:34</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T09:59+00:00">11 Nov 09:59</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 09:54</a> (Lisbon)</p>
 <p class="lede">The shipped template has 4 example rules, 2 components and 9 tokens, so a new project starts from a blank page. The owner chose a full, project-neutral starter written from scratch, close in scope to a mature design system the owner already uses, without its product rules.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -900,11 +908,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="ST5"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">ST5</span>Docs hooks rebuild a stale next-version gallery<span class="release-line"><span class="release-name">RELEASE-33</span></span></td><td data-label="Detail">D14 Both: SessionStart and Stop hooks rebuild docs/design-system/next-version/review-visuals when its source or script stamp is stale; never a numbered version; write only, fail open.</td><td data-label="Expected">02 Nov</td></tr>
-<tr data-task="ST4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">ST4</span>Gallery draws swatches, samples and every starter component<span class="release-line"><span class="release-name">RELEASE-32</span></span></td><td data-label="Detail">D8-D13: colour swatches with WCAG AA marks, type/spacing/radius samples, every starter component drawn from tokens in light and dark, marked fallbacks, DS4 stale on an older script; plus the printf test fix.</td><td data-label="Expected">02 Nov</td></tr>
-<tr data-task="ST3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">ST3</span>Bring the reference&#x27;s newer and generic parts into the starter<span class="release-line"><span class="release-name">RELEASE-29</span></span></td><td data-label="Detail">Wizard end (Review, the work, Done), retired Check, generic versions of components left out in ST2</td><td data-label="Expected">01 Nov ~17:55</td></tr>
-<tr data-task="ST2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="Detail">Per D1-D7; replaces templates/design-system/next-version.</td><td data-label="Expected">01 Nov</td></tr>
-<tr data-task="ST1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">ST1</span>Owner decides D1-D7 of the design-system starter<span class="no-release-line">ships nothing: owner decisions only</span></td><td data-label="Detail">Decided 01 Nov.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="ST5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">ST5</span>Docs hooks rebuild a stale next-version gallery<span class="release-line"><span class="release-name">RELEASE-33</span></span></td><td>D14 Both: SessionStart and Stop hooks rebuild docs/design-system/next-version/review-visuals when its source or script stamp is stale; never a numbered version; write only, fail open.</td><td>02 Nov</td></tr>
+<tr data-task="ST4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">ST4</span>Gallery draws swatches, samples and every starter component<span class="release-line"><span class="release-name">RELEASE-32</span></span></td><td>D8-D13: colour swatches with WCAG AA marks, type/spacing/radius samples, every starter component drawn from tokens in light and dark, marked fallbacks, DS4 stale on an older script; plus the printf test fix.</td><td>02 Nov</td></tr>
+<tr data-task="ST3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">ST3</span>Bring the reference&#x27;s newer and generic parts into the starter<span class="release-line"><span class="release-name">RELEASE-29</span></span></td><td>Wizard end (Review, the work, Done), retired Check, generic versions of components left out in ST2</td><td>01 Nov ~17:55</td></tr>
+<tr data-task="ST2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">ST2</span>Neutral starter template, style reading, DOCSPEC R15.6 note<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td>Per D1-D7; replaces templates/design-system/next-version.</td><td>01 Nov</td></tr>
+<tr data-task="ST1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">ST1</span>Owner decides D1-D7 of the design-system starter<span class="no-release-line">ships nothing: owner decisions only</span></td><td>Decided 01 Nov.</td><td>01 Nov</td></tr>
 </tbody></table></div>
 </details>
 </section>

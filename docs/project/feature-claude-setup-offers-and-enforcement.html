@@ -418,6 +418,7 @@ table.history-table td:first-child { font-family: var(--font-mono); white-space:
 
 /* Earlier fold: Live rows older than the fold age, closed by default */
 details.earlier { margin: .9em 0; }
+p.earlier-note { margin: .6em .8em; color: var(--ink-muted); font-size: .9em; }
 details.earlier > summary {
   cursor: pointer;
   font-family: var(--font-mono);
@@ -734,7 +735,6 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
   table.status-checklist td:nth-child(2) { grid-column: 2; font-weight: 600; }
   table.status-checklist td code { white-space: normal; overflow-wrap: anywhere; }
   table.status-checklist td:nth-child(n+3)::before, table.feature-list td:nth-child(n+2)::before {
-    content: attr(data-label);
     display: block;
     font-family: var(--font-mono);
     font-size: .68rem;
@@ -742,6 +742,14 @@ details.decision-replaced[open] > summary { margin-bottom: .6em; }
     letter-spacing: .06em;
     color: var(--ink-muted);
   }
+  /* AR69: the cell labels come from the column, not from an attribute on every cell */
+  table.status-checklist.with-app td:nth-child(3)::before { content: "App / service"; }
+  table.status-checklist.with-app td:nth-child(4)::before, table.status-checklist:not(.with-app) td:nth-child(3)::before { content: "Detail"; }
+  table.status-checklist.with-app td:nth-child(5)::before, table.status-checklist:not(.with-app) td:nth-child(4)::before { content: "Expected"; }
+  table.feature-list td:nth-child(2)::before { content: "Last updated"; }
+  table.feature-list td:nth-child(3)::before { content: "Tasks"; }
+  table.feature-list td:nth-child(4)::before { content: "State"; }
+  table.feature-list td:nth-child(5)::before { content: "Where it stands"; }
   table.status-checklist .release-line::before { content: "Rides "; }
   table.feature-list td:nth-child(1) { font-weight: 600; }
   table.feature-list thead { display: block; background: var(--surface-2); border-bottom: 1px solid var(--rule); }
@@ -888,31 +896,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>What claude-setup can offer</a><a href="#s3"><b>3</b>How each offer is enforced</a><a href="#s4"><b>4</b>How the owner sees it</a><a href="#s5"><b>5</b>Gaps, why they exist, and what would help</a><a href="#s6"><b>6</b>Decisions</a><a href="#s7"><b>7</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: claude-setup offers and enforcement</h1><p>claude-setup walks through every dev-standards plugin and setup, asks which to enforce, and reports what each one now enforces.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T09:25+00:00">11 Nov 09:25</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 09:34</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T10:00+00:00">11 Nov 10:00</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 09:54</a> (Lisbon)</p>
 <p class="lede">claude-setup turns plugins on, but most stay silent until a config file exists and some only warn. This page lists what claude-setup can offer, how each offer is enforced and shown, and the gaps.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
 <ul>
 <li data-glance-task="SO7"><span class="task-id">SO7</span>claude-setup rule template: Q ids back in clarifying-questions check tags</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">6</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">7</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">1</div><div class="label">task dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 7 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">8 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="SO7"><td data-label="Status"><span class="status-chip status-built">Built</span></td><td data-label="Item"><span class="task-id">SO7</span>claude-setup rule template: Q ids back in clarifying-questions check tags<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td data-label="Detail">Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.</td><td data-label="Expected">11 Nov</td></tr>
-<tr data-task="SO8"><td data-label="Status"><span class="status-chip status-dropped">Dropped</span></td><td data-label="Item"><span class="task-id">SO8</span>claude-setup rule template: Q ids back in clarifying-questions check tags<span class="dropped-line">dropped: folded into SO7: duplicate of SO7</span></td><td data-label="Detail">Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.</td><td data-label="Expected">11 Nov</td></tr>
-<tr data-task="SO6"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)<span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td data-label="Detail">RELEASE-38 merged 20:24 UTC (PR #142)</td><td data-label="Expected">04 Nov</td></tr>
-<tr data-task="SO5"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps<span class="release-line"><span class="release-name">RELEASE-31</span></span></td><td data-label="Detail">D9-D12 plus the owner&#x27;s 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.</td><td data-label="Expected">02 Nov</td></tr>
-<tr data-task="SO4"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)<span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td data-label="Detail">README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td data-label="Expected">01 Nov ~17:00</td></tr>
-<tr data-task="SO2"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="Detail">Built after D1-D4 are decided</td><td data-label="Expected">01 Nov</td></tr>
-<tr data-task="SO3"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td data-label="Detail">Wording of spec-new, feature-spec-new and promote-to-spec descriptions</td><td data-label="Expected">01 Nov</td></tr>
-<tr data-task="SO1"><td data-label="Status"><span class="status-chip status-live">Live</span></td><td data-label="Item"><span class="task-id">SO1</span>Owner decides D1-D4 on the setup-offers page<span class="no-release-line">ships nothing: owner decisions only</span></td><td data-label="Detail">Owner chose the recommended option for D1-D5 on 01 Nov.</td><td data-label="Expected">01 Nov</td></tr>
+<tr data-task="SO7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO7</span>claude-setup rule template: Q ids back in clarifying-questions check tags<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td>Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.</td><td>11 Nov</td></tr>
+<tr data-task="SO8"><td><span class="status-chip status-dropped">Dropped</span></td><td><span class="task-id">SO8</span>claude-setup rule template: Q ids back in clarifying-questions check tags<span class="dropped-line">dropped: folded into SO7: duplicate of SO7</span></td><td>Peer report: claude-setup 1.9.0 assets/.claude/rules/clarifying-questions.md lines 2-4 tag a hook path instead of Q-1, Q-1, Q-2; tools/test_rule_tags.py should catch it.</td><td>11 Nov</td></tr>
+<tr data-task="SO6"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO6</span>Stop hook: ask every open question at once, only with AskUserQuestion (Q-1, Q-2)<span class="release-line"><span class="release-name">RELEASE-38</span></span></td><td>RELEASE-38 merged 20:24 UTC (PR #142)</td><td>04 Nov</td></tr>
+<tr data-task="SO5"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO5</span>claude-setup runs the setups the owner picks and lists only the owner&#x27;s steps<span class="release-line"><span class="release-name">RELEASE-31</span></span></td><td>D9-D12 plus the owner&#x27;s 2 Nov instruction: guide every setup (docs, design system, delivery, record, CI, gates, auth, audits, protection) with clear steps and run each one after a yes; one numbered Left for you list.</td><td>02 Nov</td></tr>
+<tr data-task="SO4"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO4</span>Project level by default for every dev-standards install (D6-D8)<span class="release-line"><span class="release-name">RELEASE-28</span></span></td><td>README and claude-setup install with --scope project; transcript-folds per project; config files to project .claude/ by default; marketplace registered per project</td><td>01 Nov ~17:00</td></tr>
+<tr data-task="SO2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO2</span>claude-setup: scan, enforce questions, offers, enforcement report<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td>Built after D1-D4 are decided</td><td>01 Nov</td></tr>
+<tr data-task="SO3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO3</span>Split spec-writing skills by kind (after D5)<span class="release-line"><span class="release-name">RELEASE-25</span></span></td><td>Wording of spec-new, feature-spec-new and promote-to-spec descriptions</td><td>01 Nov</td></tr>
+<tr data-task="SO1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">SO1</span>Owner decides D1-D4 on the setup-offers page<span class="no-release-line">ships nothing: owner decisions only</span></td><td>Owner chose the recommended option for D1-D5 on 01 Nov.</td><td>01 Nov</td></tr>
 </tbody></table></div>
 </details>
 </section>

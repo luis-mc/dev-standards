@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "0db3d42640163e59c673b1dab627ced857b7253e3deb84959203ee8a9dc236ae",
-    "published_at": "2026-11-11T09:34+00:00",
-    "published_fingerprint": "c76368f01885dab9ab7169ec8f75784ee8d9869356e98aa0032bff16d3de962c"
+    "published_sha256": "d4043494e6ef7b1bb160e415570bbb1d856e2f375d48b30d593f06a11f1c119c",
+    "published_at": "2026-11-11T09:54+00:00",
+    "published_fingerprint": "b4b5a4328ed98a227c1771bb8493b6e2339b1494e4d241a5428bf284b969dd22"
   },
   "feature_artifacts": [
     {
@@ -25,7 +25,7 @@
       "apps": [
         "luismc-artifacts"
       ],
-      "updated": "2026-11-11T09:26+00:00"
+      "updated": "2026-11-11T10:00+00:00"
     },
     {
       "key": "models",
@@ -35,7 +35,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-11-05T12:46+00:00"
+      "updated": "2026-11-11T09:59+00:00"
     },
     {
       "key": "test-cost",
@@ -47,7 +47,7 @@
         "delivery scripts",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-05T12:46+00:00"
+      "updated": "2026-11-11T09:59+00:00"
     },
     {
       "key": "delivery-speed",
@@ -59,7 +59,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-11T09:53+00:00"
+      "updated": "2026-11-11T10:00+00:00"
     },
     {
       "key": "transcript-folds",
@@ -70,7 +70,7 @@
         "luismc-transcript-folds",
         "luismc-project-setup"
       ],
-      "updated": "2026-11-05T12:46+00:00"
+      "updated": "2026-11-11T09:59+00:00"
     },
     {
       "key": "setup-offers",
@@ -83,7 +83,7 @@
         "luismc-delivery",
         "luismc-artifacts"
       ],
-      "updated": "2026-11-11T09:25+00:00"
+      "updated": "2026-11-11T10:00+00:00"
     },
     {
       "key": "design-starter",
@@ -93,7 +93,7 @@
       "apps": [
         "luismc-docs"
       ],
-      "updated": "2026-11-05T12:46+00:00"
+      "updated": "2026-11-11T09:59+00:00"
     },
     {
       "key": "design-field-updates",
@@ -103,13 +103,13 @@
       "apps": [
         "luismc-docs"
       ],
-      "updated": "2026-11-05T18:52+00:00"
+      "updated": "2026-11-11T09:59+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-11T09:53+00:00",
+  "updated": "2026-11-11T10:00+00:00",
   "retired": [],
   "deleted": [
     {
