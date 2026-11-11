@@ -4697,6 +4697,26 @@
       "chosen": "3-way merge, ask on conflict",
       "decided": "2026-11-11",
       "owner_words": "3-way merge, ask on conflict (replaces D201)"
+    },
+    {
+      "id": "D207",
+      "question": "Lower the WSL and pool memory limits now, or measure first?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL202",
+      "options": [
+        {
+          "label": "Measure first",
+          "summary": "log memory per minute through busy CI, then set limits from data"
+        },
+        {
+          "label": "Lower limits now",
+          "summary": "WSL 12->8 GB, pool 10->6 GB while idle"
+        }
+      ],
+      "chosen": "Measure first",
+      "decided": "2026-11-11",
+      "owner_words": "measure first"
     }
   ]
 }

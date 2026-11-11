@@ -896,12 +896,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T10:00+00:00">11 Nov 10:00</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T10:41+00:00">11 Nov 10:41</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 10:00</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL202"><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits <span class="glance-expected">12 Nov ~10:45</span><span class="glance-basis">24 h logging from 10:40, then ~5 min analysis</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">35 tasks</span></summary>
 <ul>
@@ -917,8 +922,13 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">195</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">195</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>08:30 spike hit 98%. Log total memory, CPU, the WSL VM, pool containers, running CI jobs and the top processes every minute for 24 h, then propose WSL and pool limits from the data (D207).</td><td>12 Nov ~10:45<span class="expected-basis">24 h logging from 10:40, then ~5 min analysis</span></td></tr>
+</tbody></table></div>
+</details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">201 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL195"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL195</span>ci_tool tests fail on Windows (DL189, DS199 file and crate kinds)<span class="release-line"><span class="release-name">RELEASE-96</span></span></td><td>test_dl189 exact_name_in_platform_folder and test_ds199 file_kind and crate_kind fail on Windows; they pass on Linux CI. Found while checking DL194 locally.</td><td>11 Nov</td></tr>
@@ -1157,6 +1167,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D207">
+<h3 class="decision-head"><span class="decision-id">D207</span> <span class="decision-question">Lower the WSL and pool memory limits now, or measure first?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL202</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Measure first</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">log memory per minute through busy CI, then set limits from data</p>
+<blockquote class="decision-words">&ldquo;measure first&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Lower limits now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">WSL 12-&gt;8 GB, pool 10-&gt;6 GB while idle</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D206">
 <h3 class="decision-head"><span class="decision-id">D206</span> <span class="decision-question">DL201 again: installer update meets a project-changed plugin file?</span></h3>
 <p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL201</p>

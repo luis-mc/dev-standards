@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T10:00+00:00",
+  "updated": "2026-11-11T10:41+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3614,6 +3614,19 @@
       "changed": "2026-11-11T10:00+00:00",
       "rides": "DS231",
       "started": "2026-11-11T09:12+00:00"
+    },
+    {
+      "id": "DL202",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Measure PC memory per process through busy CI before setting pool limits",
+      "detail": "08:30 spike hit 98%. Log total memory, CPU, the WSL VM, pool containers, running CI jobs and the top processes every minute for 24 h, then propose WSL and pool limits from the data (D207).",
+      "expected": "12 Nov ~10:45",
+      "changed": "2026-11-11T10:41+00:00",
+      "expected_basis": "24 h logging from 10:40, then ~5 min analysis",
+      "no_release": "study: measurement only",
+      "started": "2026-11-11T10:41+00:00"
     },
     {
       "id": "DS1",
