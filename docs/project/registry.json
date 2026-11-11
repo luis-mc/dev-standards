@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T19:35+00:00",
+  "updated": "2026-11-11T19:43+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4342,6 +4342,66 @@
       "changed": "2026-11-11T19:29+00:00",
       "rides": "DL240",
       "started": "2026-11-11T19:22+00:00"
+    },
+    {
+      "id": "DL244",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release: multi-track CI install (rust + ts in one repo)",
+      "detail": "Release after DL240: DL245 lets delivery_ci_install.py install several tracks into one repo (one ci.yml with both job sets, gate.json with both, CI scope by path).",
+      "expected": "11 Nov ~20:25",
+      "changed": "2026-11-11T19:38+00:00",
+      "release": 108,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T19:37+00:00",
+          "end": "2026-11-11T20:07+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T20:07+00:00",
+          "end": "2026-11-11T20:12+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T20:12+00:00",
+          "end": "2026-11-11T20:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T20:20+00:00",
+          "end": "2026-11-11T20:25+00:00"
+        }
+      ],
+      "started": "2026-11-11T19:38+00:00"
+    },
+    {
+      "id": "DL245",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Multi-track CI install: --track rust,ts in one repo",
+      "detail": "Owner chose (D244) to build it now: delivery_ci_install.py install/update accept several tracks; one ci.yml with every track's job set, gate.json with every track's commands, CI scope by path per track; doctor checks each track.",
+      "expected": "11 Nov ~20:07",
+      "changed": "2026-11-11T19:38+00:00",
+      "expected_basis": "cloud agent from 19:39, setup 3 + work 20 + CI 7",
+      "rides": "DL244",
+      "started": "2026-11-11T19:38+00:00"
+    },
+    {
+      "id": "DL246",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Local Full Progress: machine work root, working feature links",
+      "detail": "Owner chose (D245, D246): the local page goes to <machine work root>/full-progress/<project>/ from the machine folder's machine.json (a project's work_root overrides; .claude fallback warns), and it is the repo copy with feature pages copied beside it so row links open offline.",
+      "expected": "11 Nov ~20:12",
+      "changed": "2026-11-11T19:43+00:00",
+      "expected_basis": "cloud agent from 19:47, setup 3 + work 15 + CI 7",
+      "rides": "DL244",
+      "started": "2026-11-11T19:43+00:00"
     },
     {
       "id": "DS1",
