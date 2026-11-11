@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T18:28+00:00",
+  "updated": "2026-11-11T18:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4247,6 +4247,19 @@
       "expected_basis": "cloud agent from ~18:30, ~25 min",
       "rides": "DL234",
       "started": "2026-11-11T18:25+00:00"
+    },
+    {
+      "id": "DL238",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Full Progress local page when the publish limit is hit",
+      "detail": "Owner rule 11 Nov: when claude.ai refuses the Full Progress publish for its daily limit, show Full Progress as a local page in the work directory. mark-deferred writes and opens a local copy under the work root; every record change while deferred refreshes it; pending and the end-of-turn hook print its path.",
+      "expected": "11 Nov ~19:05",
+      "changed": "2026-11-11T18:39+00:00",
+      "expected_basis": "cloud agent from 18:41, setup 3 + work 15 + CI 7",
+      "rides": "DL234",
+      "started": "2026-11-11T18:39+00:00"
     },
     {
       "id": "DS1",
