@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.31.2
+version: 0.32.0
 owner: agents
 type: reference
 code:
@@ -529,6 +529,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.32.0 | 2026-11-11 | RELEASE-111 | update keeps the project's artifact-prune workflow list on overwrite, merge and conflict; template additions are appended once; removed names stay removed.<br>Guided setup takes several tracks: the answers file accepts a track list, facts lists every detected track, apply passes them all to the installer. The gate gives each package the kind of the track that owns it (R13.95).<br>The agent brief template says a held or cancelled branch run is not a failure (R5.59). | DL255, DL256, DL258 |
 | 0.31.2 | 2026-11-11 | RELEASE-110 | The local heavy limit (DL-91) frees an entry as soon as its call has ended: a result in the session transcript, a foreground call past its timeout plus 2 minutes, or a gone or idle transcript. Backgrounded calls count for 30 minutes. The refusal shows age and session. | DL253 |
 | 0.31.1 | 2026-11-11 | RELEASE-109 | join lists conflicting files, rebuilds generated-docs-only conflicts; watcher records held runs as held | DL249 |
 | 0.31.0 | 2026-11-11 | RELEASE-108 | delivery_ci_install.py install --track rust,ts installs several tracks at once: one merged ci.yml with a tracks job, one gate.json with every track's steps, and ci-scope.json with each track's patterns (R13.95). The doctor checks each track.<br>ci_watch.py exits 5 when gh fails five times in a row and pins the repository at start (R5.56). | DL245, DL247 |
