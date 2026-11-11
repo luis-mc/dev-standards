@@ -1,8 +1,16 @@
 #!/usr/bin/env python3
 """Write the CI and delivery files into a project, or update them (DL15).
 
-    delivery_ci_install.py install --track ts|go|rust|dotnet [--root DIR] [--dry-run]
-    delivery_ci_install.py update  [--track ts|go|rust|dotnet] [--root DIR] [--dry-run]
+    delivery_ci_install.py install --track ts|go|rust|dotnet[,...] [--root DIR] [--dry-run]
+    delivery_ci_install.py update  [--track ts|go|rust|dotnet[,...]] [--root DIR] [--dry-run]
+
+Several tracks (DL245). `--track rust,ts` installs the shared files once and each track's files. Files two tracks ship
+at one path are merged: `ci.yml` (one workflow; the ts jobs keep their ids, the other tracks' jobs end in `-<track>`;
+a `tracks` job switches each track on or off from the changed files; the aggregate job waits for every track),
+`gate.json` (every track's steps, tagged with `"track"`, a name both use becomes `<name>-<track>`) and `ci-scope.json`
+(`tracks` and `shared` path lists). For any other shared path the first track's copy is installed and a `note:` line
+names the file and the skipped track. State, `gate.json` and config keep a string for one track and a list for several.
+A single track is installed exactly as before.
 
 The sources are `templates/shared/` and `templates/<track>/` next to this plugin. They land at the same
 relative path in the project (`scripts/delivery/`, `.github/workflows/`). tech-stack-setup calls `install` at
@@ -100,6 +108,7 @@ import ast
 import hashlib
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -190,26 +199,36 @@ def _json_of(path: str):
 
 
 def known_track(root: str):
+    """The track, or the tracks as "a,b" when the project uses several (DL245). None when nothing says."""
+    found = known_tracks(root)
+    return ",".join(found) if found else None
+
+
+def _valid(val) -> list:
+    names = parse_tracks(val) if isinstance(val, (str, list)) else []
+    return names if names and all(n in TRACKS for n in names) else []
+
+
+def known_tracks(root: str) -> list:
     """The track the project already uses (DL213): .delivery/config.json, then the install record, then the
     gate.json the installer wrote, then the project's own files. None when nothing says."""
     cfg = _json_of(os.path.join(root, ".delivery", "config.json"))
     for val in (cfg.get("track"), cfg.get("stack"), (cfg.get("ci") or {}).get("track") if isinstance(cfg.get("ci"), dict) else None,
                 _json_of(os.path.join(root, STATE.replace("/", os.sep))).get("track"),
                 _json_of(os.path.join(root, "scripts", "delivery", "gate.json")).get("track")):
-        if val in TRACKS:
-            return val
-    for name, t in (("package.json", "ts"), ("go.mod", "go"), ("Cargo.toml", "rust")):
-        if os.path.exists(os.path.join(root, name)):
-            return t
+        if _valid(val):
+            return _valid(val)
+    found = [t for name, t in (("package.json", "ts"), ("go.mod", "go"), ("Cargo.toml", "rust"))
+             if os.path.exists(os.path.join(root, name))]   # files alone name one track: the first, as before
     try:
         if any(n.endswith((".sln", ".csproj")) for n in os.listdir(root)):
-            return "dotnet"
+            found.append("dotnet")
     except OSError:
         pass
-    return None
+    return found[:1]
 
 
-def save_state(items: list, root: str, old: dict, track: str = "") -> None:
+def save_state(items: list, root: str, old: dict, track="") -> None:
     """Record the hash of every file the run wrote or found equal to the template, and the track (DL201, DL213)."""
     files = dict(old)
     for rel, src, action in items:
@@ -350,14 +369,475 @@ def load_config(root: str):
     return lists[0], lists[1]
 
 
-def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
-    """[(relative path, source, action)] with action written | overwritten | kept | differs | same | skipped | kept (ci-install.json)."""
-    out, sources = [], {}
-    recorded = load_state(root)[0] if mode == "update" else {}
-    for part in ("shared", track):
-        base = os.path.join(TEMPLATES, part)
+# ---- several tracks in one project (DL245) ----------------------------------------------------------------------
+# `--track rust,ts` installs the shared files once and each track's files. A file two tracks ship at the same path is
+# merged when it has a clear structure (ci.yml, gate.json, ci-scope.json); for any other file the first track's copy
+# is installed and `TRACK_NOTES` names the file and the track that was skipped. The merge is a pure function of the
+# template texts, so `update` rebuilds the same merged base and its 3-way merge keeps the project's edits.
+TRACK_NOTES = []          # lines to print: files two tracks ship that could not be merged; set by track_sources
+MERGE_FILES = (".github/workflows/ci.yml", "scripts/delivery/gate.json", "scripts/delivery/ci-scope.json")
+CI_YML = ".github/workflows/ci.yml"
+GATE_JSON = "scripts/delivery/gate.json"
+SCOPE_JSON = "scripts/delivery/ci-scope.json"
+JOB_ID_RE = re.compile(r"^  ([A-Za-z0-9_-]+):\s*$")
+# Patterns for tracks whose templates do not list them. Rust and ts patterns are read from the templates.
+FALLBACK_PATHS = {"go": ["**/*.go", "go.mod", "go.sum", "cmd/**", "internal/**", "pkg/**"],
+                  "dotnet": ["**/*.cs", "**/*.csproj", "**/*.sln", "**/*.props", "**/*.targets", "global.json"],
+                  "ts": ["packages/**", "apps/**", "**/*.ts", "**/*.tsx", "**/*.js", "**/*.jsx", "**/*.mjs",
+                         "tsconfig*.json", "eslint.config.mjs"]}
+SHARED_PATHS = [".github/**", "scripts/delivery/**", ".delivery/**", ".githooks/**", ".gitleaks.toml", "tools.json"]
+_MERGE_DIR = []
+
+
+def parse_tracks(track) -> list:
+    """A track name, "rust,ts" or a list -> the list of names, in order, without repeats."""
+    if track is None:
+        return []
+    names = track.split(",") if isinstance(track, str) else list(track)
+    out = []
+    for n in names:
+        n = str(n).strip()
+        if n and n not in out:
+            out.append(n)
+    return out
+
+
+def track_value(tracks):
+    """What state and gate.json record: a string for one track, a list for several."""
+    return tracks[0] if len(tracks) == 1 else list(tracks)
+
+
+def _tpl(track: str, rel: str):
+    path = os.path.join(TEMPLATES, track, rel.replace("/", os.sep))
+    if not os.path.isfile(path):
+        return None
+    with open(path, "rb") as f:
+        return f.read().decode("utf-8-sig").replace("\r\n", "\n")
+
+
+def track_paths(track: str) -> list:
+    """The paths a track owns, read from its templates (Rust: gate.json scope_map and the ci.yml path filter)."""
+    out = []
+    gate = _tpl(track, GATE_JSON)
+    if gate:
+        smap = json.loads(gate).get("scope_map") or {}
+        out += [e for e in smap.get(track, []) if isinstance(e, str)]
+    ci = _tpl(track, CI_YML)
+    if ci:
+        out += [e for e in workflow_path_list(ci, "paths") if not e.startswith((".github/", "tools.json"))]
+    if track == "rust":
+        out += ["**/*.rs", "**/Cargo.toml", "rustfmt.toml"]
+    scope = _tpl(track, SCOPE_JSON)
+    if scope:
+        out += [e for e in json.loads(scope).get("full_files", []) if not e.startswith(("!", ".github", ".nvmrc"))]
+    out += FALLBACK_PATHS.get(track, [])
+    seen = []
+    for e in out:
+        e = e.rstrip("/") + "/**" if e.endswith("/") else e
+        if e not in seen:
+            seen.append(e)
+    return seen
+
+
+def workflow_path_list(text: str, key: str) -> list:
+    """Entries of the first `<key>:` list under `on: pull_request:` (key paths or paths-ignore)."""
+    out, on = [], False
+    for line in text.split("\n"):
+        if line.startswith("  pull_request:"):
+            on = True
+        elif on and re.match(r"^  \S", line):
+            break
+        elif on and line.strip() == key + ":":
+            on = "list"
+        elif on == "list":
+            m = re.match(r"^\s+- '?([^'#]+?)'?\s*(#.*)?$", line)
+            if not m:
+                break
+            out.append(m.group(1))
+    return out
+
+
+def merge_scope(texts: dict, tracks: list) -> str:
+    """ci-scope.json for several tracks: the one template that ships it, plus `tracks` (patterns per track) and `shared`."""
+    first = next(t for t in tracks if t in texts)
+    data = json.loads(texts[first])
+    data["tracks"] = {t: track_paths(t) for t in tracks}
+    data["shared"] = list(SHARED_PATHS)
+    return json.dumps(data, indent=2) + "\n"
+
+
+def merge_gate(texts: dict, tracks: list) -> str:
+    """One gate.json with every track's steps. A step both tracks have, word for word, is kept once. A name both use
+    with different commands becomes `<name>-<track>`. Every other step carries `"track"`."""
+    gates = {t: json.loads(texts[t]) for t in tracks}
+    out = dict(gates[tracks[0]])
+    out["track"] = list(tracks)
+    out["setup"] = _union(g.get("setup", []) for g in gates.values())
+    out["timeout_minutes"] = max(g.get("timeout_minutes", 0) for g in gates.values())
+    for key in ("widen_on", "inert_paths", "ui_paths"):
+        out[key] = _union(g.get(key, []) for g in gates.values())
+    pk = [t for t in tracks if (gates[t].get("packages") or {}).get("kind") == "pnpm-workspace"]
+    main = pk[0] if pk else tracks[0]
+    out["packages"] = gates[main].get("packages")
+    out["packages_by_track"] = {t: gates[t].get("packages") for t in tracks}
+    out["lockfile_scope"] = gates[main].get("lockfile_scope", "widen")
+    out["toolchain-isolated"] = any(g.get("toolchain-isolated") for g in gates.values())
+    names = {}
+    for t in tracks:
+        for st in gates[t].get("steps", []):
+            names.setdefault(st["name"], []).append((t, st))
+    steps, order = [], {}
+    for t in tracks:
+        for st in gates[t].get("steps", []):
+            same_everywhere = len(names[st["name"]]) == len(tracks) and all(s == st for _t, s in names[st["name"]])
+            new = dict(st)
+            if same_everywhere:
+                if st["name"] in order:
+                    continue
+                order[st["name"]] = st["name"]
+            else:
+                if len(names[st["name"]]) > 1:
+                    new["name"] = "%s-%s" % (st["name"], t)
+                new["track"] = t
+                if "paths" not in new:
+                    new["paths"] = t
+                order[st["name"] + "/" + t] = new["name"]
+            steps.append(new)
+    rank = lambda s_: 0 if s_["scope"] == "always" else 1 if s_["name"].split("-")[0] in ("lint", "typecheck") else 2  # noqa: E731
+    steps = [s_ for _i, s_ in sorted(enumerate(steps), key=lambda p: (rank(p[1]), p[0]))]
+    out["steps"] = steps
+    out["fail_fast_order"] = [s_["name"] for s_ in steps]
+    out["required_steps"] = [s_["name"] for s_ in steps if s_["name"].split("-")[0] in ("lint", "typecheck")]
+    smap = {}
+    for t in tracks:
+        smap.update({k: v for k, v in (gates[t].get("scope_map") or {}).items() if isinstance(v, list)})
+        smap.setdefault(t, track_paths(t))
+    smap["note"] = "A change under one track's paths selects that track's steps only; a file under no track runs all."
+    out["scope_map"] = smap
+    return json.dumps(out, indent=2) + "\n"
+
+
+def _union(lists) -> list:
+    out = []
+    for lst in lists:
+        for e in lst:
+            if e not in out:
+                out.append(e)
+    return out
+
+
+def split_jobs(text: str):
+    """(header lines before `jobs:`, [(job id, block lines)]). A job's block starts at the comments above its key."""
+    lines = text.split("\n")
+    at = lines.index("jobs:")
+    body = lines[at + 1:]
+    keys = [i for i, l in enumerate(body) if JOB_ID_RE.match(l)]
+    starts = []
+    for k in keys:
+        s_ = k
+        while s_ > 0 and (body[s_ - 1].startswith("  #") or body[s_ - 1] == "") and (not starts or s_ - 1 >= starts[-1] + 1):
+            s_ -= 1
+        starts.append(s_)
+    blocks = []
+    for n, k in enumerate(keys):
+        end = starts[n + 1] if n + 1 < len(starts) else len(body)
+        blocks.append((JOB_ID_RE.match(body[k]).group(1), body[starts[n]:end]))
+    return lines[:at + 1], blocks
+
+
+def _needs_of(line: str) -> list:
+    m = re.match(r"^    needs:\s*(.*)$", line)
+    val = m.group(1).strip()
+    return [x.strip() for x in val.strip("[]").split(",") if x.strip()]
+
+
+def rename_job(block: list, ids: set, suffix: str, other_env: list) -> list:
+    """Suffix the job id, its `needs`, every `needs.<id>` and DELIVERY_SHARD, and the display name."""
+    ordered = sorted(ids, key=len, reverse=True)
+    pat = re.compile(r"(?<![A-Za-z0-9_-])needs\.(%s)(?![A-Za-z0-9_-])" % "|".join(re.escape(i) for i in ordered)) if ordered else None
+    out = []
+    for line in block:
+        m = JOB_ID_RE.match(line)
+        if m and m.group(1) in ids:
+            line = "  %s%s:" % (m.group(1), suffix)
+        elif re.match(r"^    needs:", line):
+            names = [(n + suffix if n in ids else n) for n in _needs_of(line)]
+            line = "    needs: [%s]" % ", ".join(names)
+        elif re.match(r"^    name:", line):
+            val = line.split(":", 1)[1].strip()
+            if len(val) >= 2 and val[0] == val[-1] == "'":
+                val = val[1:-1].replace("''", "'")
+            elif len(val) >= 2 and val[0] == val[-1] == '"':
+                val = val[1:-1]
+            line = "    name: '%s (%s)'" % (val.replace("'", "''"), suffix.lstrip("-"))
+        elif re.match(r"^      DELIVERY_SHARD: ", line):
+            line = line + suffix
+        if pat:
+            line = pat.sub(lambda mm: "needs.%s%s" % (mm.group(1), suffix), line)
+        out.append(line)
+        if re.match(r"^    env:\s*$", line) and other_env:
+            out += other_env
+    return out
+
+
+def gate_if(block: list, track: str) -> list:
+    """Add `tracks` to `needs` and the track switch to the job's `if`."""
+    out, done = [], False
+    for line in block:
+        if re.match(r"^    needs:", line):
+            names = _needs_of(line)
+            if "tracks" not in names:
+                names.append("tracks")
+            line = "    needs: [%s]" % ", ".join(names)
+        elif re.match(r"^    if: \$\{\{ .* \}\}\s*$", line) and not done and track:
+            inner = re.match(r"^    if: \$\{\{ (.*) \}\}\s*$", line).group(1)
+            line = "    if: ${{ %s && needs.tracks.outputs.%s != 'false' }}" % (inner, track.replace("-", "_"))
+            done = True
+        out.append(line)
+    return out
+
+
+TRACKS_JOB = """  # ---------------------------------------------------------------------------
+  # DL245: which tracks this change touches. scripts/delivery/ci-scope.json lists each track's paths under
+  # `tracks` and the paths every track reads under `shared`. A push, a manual run, a file under `shared` or
+  # under no track runs every track. The jobs of a track whose output is 'false' are skipped.
+  # ---------------------------------------------------------------------------
+  tracks:
+    name: 'tracks: which languages this change touches'
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    permissions:
+      contents: read
+    outputs:
+__OUTPUTS__
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Pick the tracks
+        id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        run: |
+          python3 - <<'PY'
+          import fnmatch, json, os, re, subprocess
+          def rx(glob):
+              out, i = "", 0
+              while i < len(glob):
+                  if glob.startswith("**/", i): out += "(?:.*/)?"; i += 3
+                  elif glob.startswith("**", i): out += ".*"; i += 2
+                  elif glob[i] == "*": out += "[^/]*"; i += 1
+                  elif glob[i] == "?": out += "[^/]"; i += 1
+                  else: out += re.escape(glob[i]); i += 1
+              return re.compile("^" + out + "$")
+          def hit(path, globs):
+              return any(rx(g).match(path) for g in globs)
+          try:
+              cfg = json.load(open("scripts/delivery/ci-scope.json"))
+              tracks, shared = cfg["tracks"], cfg.get("shared", [])
+          except Exception:
+              tracks, shared = None, []
+          on = {t: True for t in __TRACKS__}
+          if tracks and os.environ["EVENT"] == "pull_request":
+              try:
+                  files = subprocess.run(["git", "diff", "--name-only", os.environ["BASE_SHA"] + "...HEAD"],
+                                         capture_output=True, text=True, check=True).stdout.split()
+              except Exception:
+                  files = []
+              if files:
+                  on = {t: False for t in on}
+                  for f in files:
+                      mine = [t for t in on if t in tracks and hit(f, tracks[t])]
+                      for t in (mine or list(on)):
+                          on[t] = True
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              for t, v in on.items():
+                  out.write("%s=%s\\n" % (t.replace("-", "_"), "true" if v else "false"))
+                  print(t, v)
+          PY
+"""
+
+
+def merge_ci(texts: dict, tracks: list) -> str:
+    """One ci.yml. The track that owns the held-job protocol (ts, else the first) keeps its job ids. Every other track's
+    jobs get the suffix `-<track>`. `decide` is written once; a `tracks` job switches each track's jobs on or off."""
+    base = "ts" if "ts" in tracks else tracks[0]
+    parts = {t: split_jobs(texts[t]) for t in tracks}
+    header = list(parts[base][0])
+    # the other tracks' path filters (`paths:`) are no longer ignored
+    drop = set()
+    for t in tracks:
+        if t != base:
+            drop.update(workflow_path_list(texts[t], "paths"))
+    drop -= {".github/workflows/ci.yml", "tools.json"}
+    header = [l for l in header if not (re.match(r"^\s+- '?([^'#]+?)'?\s*$", l) and re.match(r"^\s+- '?([^'#]+?)'?\s*$", l).group(1) in drop)]
+    header.insert(1, "\n# DL245: one workflow for the tracks %s. Jobs of %s keep their ids; the jobs of the other tracks end in\n"
+                  "# `-<track>`. The `tracks` job reads scripts/delivery/ci-scope.json and switches each track on or off."
+                  % (", ".join(tracks), base))
+    header = "\n".join(header).split("\n")
+    jobs = []
+    decide = next(b for i, b in parts[base][1] if i == "decide")
+    jobs += decide
+    outputs = "\n".join("      %s: ${{ steps.pick.outputs.%s }}" % (t.replace("-", "_"), t.replace("-", "_")) for t in tracks)
+    jobs += (TRACKS_JOB.replace("__OUTPUTS__", outputs).replace("__TRACKS__", repr(list(tracks))).split("\n"))[:-1]
+    jobs.append("")
+    other_ids = []
+    for t in [base] + [x for x in tracks if x != base]:
+        ids = {i for i, _b in parts[t][1] if i != "decide"}
+        suffix = "" if t == base else "-" + t
+        env_lines = _top_env(texts[t]) if t != base else []
+        for i, block in parts[t][1]:
+            if i == "decide":
+                continue
+            agg = _is_aggregate(block, ids - {i})
+            blk = rename_job(block, ids, suffix, env_lines) if suffix else block
+            if suffix:
+                blk = _only_guard(blk)
+            blk = gate_if(blk, "" if agg else t)
+            if t != base:
+                other_ids.append(i + suffix)
+            jobs += blk
+    while jobs and jobs[-1] == "":
+        jobs.pop()
+    text = "\n".join(header + jobs) + "\n"
+    return _extend_aggregate(text, other_ids)
+
+
+def _top_env(text: str) -> list:
+    """Workflow-level `env:` entries (indented for a job's env block)."""
+    out, on = [], False
+    for line in text.split("\n"):
+        if line == "env:":
+            on = True
+        elif on and line.startswith("  ") and line.strip():
+            out.append("    " + line)
+        elif on and line.strip() and not line.startswith(" "):
+            break
+    return out
+
+
+def _only_guard(block: list) -> list:
+    """A manual run with `only` set (the ts held-job second run) runs no job of another track."""
+    out, done = [], False
+    for line in block:
+        m = re.match(r"^    if: \$\{\{ (.*) \}\}\s*$", line)
+        if m and not done:
+            line = "    if: ${{ %s && (inputs.only || '') == '' }}" % m.group(1)
+            done = True
+        out.append(line)
+    return out
+
+
+def _is_aggregate(block: list, others: set) -> bool:
+    for line in block:
+        if re.match(r"^    needs:", line):
+            return bool(others) and others <= set(_needs_of(line))
+    return False
+
+
+def _extend_aggregate(text: str, other_ids: list) -> str:
+    """The aggregate job (it waits for every job of its track) also waits for every other track's jobs and fails when
+    one of them failed."""
+    if not other_ids:
+        return text
+    lines = text.split("\n")
+    jobs_at = lines.index("jobs:")
+    keys = [i for i, l in enumerate(lines) if i > jobs_at and JOB_ID_RE.match(l)]
+    for n, k in enumerate(keys):
+        end = keys[n + 1] if n + 1 < len(keys) else len(lines)
+        ids_here = {JOB_ID_RE.match(lines[j]).group(1) for j in keys}
+        block = lines[k:end]
+        base_ids = ids_here - set(other_ids) - {"decide", "tracks", JOB_ID_RE.match(lines[k]).group(1)}
+        if not any(re.match(r"^    needs:", l) for l in block) or not base_ids <= set(
+                _needs_of(next(l for l in block if re.match(r"^    needs:", l)))):
+            continue
+        if any(re.match(r"^    needs:", l) and "tracks" in _needs_of(l) and set(other_ids) & set(_needs_of(l)) for l in block):
+            continue
+        new, res = [], " ".join("${{ needs.%s.result }}" % i for i in other_ids)
+        for line in block:
+            if re.match(r"^    needs:", line):
+                line = "    needs: [%s]" % ", ".join(_needs_of(line) + other_ids)
+            elif re.match(r"^    if: \$\{\{ .*needs\.decide\.outputs\.skip != 'true'", line):
+                extra = " && ".join("needs.%s.result != 'cancelled'" % i for i in other_ids)
+                line = line.replace(" && needs.decide.outputs.skip", " && %s && needs.decide.outputs.skip" % extra, 1)
+            if line.startswith("      - name: Every shard passed"):
+                new += ["      - name: Every job of the other tracks passed",
+                        "        env:", "          RESULTS: " + res,
+                        "        run: |", "          for r in $RESULTS; do",
+                        "            case \"$r\" in success|skipped) ;; *) echo \"a job of another track ended: $r\"; exit 1 ;; esac",
+                        "          done", ""]
+                new.append(line)
+                new.append("        if: ${{ needs.tracks.outputs.ts != 'false' }}")
+                continue
+            new.append(line)
+        return "\n".join(lines[:k] + new + lines[end:])
+    print("warning: the merged ci.yml has no aggregate job to extend; add the other tracks' jobs to its needs by hand")
+    return text
+
+
+def track_sources(tracks: list, omit=()) -> dict:
+    """{relative path: template file}: shared files, then each track's. A single track is exactly the old behaviour.
+    Several tracks merge ci.yml, gate.json and ci-scope.json; for any other shared path the first track's copy wins."""
+    TRACK_NOTES.clear()
+    sources, owners = {}, {}
+    base = os.path.join(TEMPLATES, "shared")
+    for rel in files_of(base):
+        sources[rel] = os.path.join(base, rel.replace("/", os.sep))
+    for t in tracks:
+        base = os.path.join(TEMPLATES, t)
         for rel in files_of(base):
-            sources[rel] = os.path.join(base, rel.replace("/", os.sep))
+            if (t, rel) in omit:
+                continue
+            owners.setdefault(rel, []).append(t)
+            if len(owners[rel]) == 1 or len(tracks) == 1:
+                sources[rel] = os.path.join(base, rel.replace("/", os.sep))
+    if len(tracks) == 1:
+        return sources
+    for rel, who in sorted(owners.items()):
+        texts = {t: _tpl(t, rel) for t in who}
+        if rel in (CI_YML, GATE_JSON) and len(who) == len(tracks):
+            text = {CI_YML: merge_ci, GATE_JSON: merge_gate}[rel](texts, tracks)
+        elif rel == SCOPE_JSON:
+            text = merge_scope(texts, tracks)
+        elif len(who) > 1:
+            for t in who[1:]:
+                TRACK_NOTES.append("track %s: %s is also shipped by track %s; the %s copy is installed, the %s copy is not"
+                                   % (t, rel, who[0], who[0], t))
+            continue
+        elif rel in (CI_YML, GATE_JSON):
+            TRACK_NOTES.append("track %s: %s is shipped by track %s only; installed as it is" % (who[0], rel, who[0]))
+            continue
+        else:
+            continue
+        sources[rel] = _merged_path(rel, text)
+    return sources
+
+
+def _merged_path(rel: str, text: str) -> str:
+    if not _MERGE_DIR:
+        import tempfile
+        import atexit
+        d = tempfile.mkdtemp(prefix="delivery-merge-")
+        atexit.register(shutil.rmtree, d, True)
+        _MERGE_DIR.append(d)
+    path = os.path.join(_MERGE_DIR[0], rel.replace("/", os.sep))
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\n") as f:
+        f.write(text)
+    return path
+
+
+def plan(track, root: str, mode: str, keep=(), skip=(), omit=()) -> list:
+    """[(relative path, source, action)] with action written | overwritten | kept | differs | same | skipped | kept (ci-install.json).
+
+    `track` is one track name, "rust,ts" or a list (DL245). Several tracks merge the files they both ship
+    (see `track_sources`). `omit` is a set of (track, path) pairs whose template copy is left out."""
+    out = []
+    tracks = parse_tracks(track)
+    recorded = load_state(root)[0] if mode == "update" else {}
+    sources = track_sources(tracks, omit)
     for rel in sorted(sources):
         src, dst = sources[rel], os.path.join(root, rel.replace("/", os.sep))
         if not os.path.exists(dst):
@@ -801,11 +1281,13 @@ def main(argv=None) -> int:
         args.track = known_track(os.path.abspath(args.root))   # DL213
         if args.track is not None:
             print("delivery_ci_install: using track %s from the project" % args.track)
-    if args.track not in TRACKS:
-        print("delivery_ci_install: --track must be one of %s (the project does not say which it uses)" % ", ".join(TRACKS), file=sys.stderr)
+    tracks = parse_tracks(args.track)
+    if not tracks or not all(t in TRACKS for t in tracks):
+        print("delivery_ci_install: --track must be one of %s (several: comma-separated, e.g. rust,ts; the project does not say which it uses)" % ", ".join(TRACKS), file=sys.stderr)
         return 1
-    if not os.path.isdir(os.path.join(TEMPLATES, "shared")) or not os.path.isdir(os.path.join(TEMPLATES, args.track)):
-        print("delivery_ci_install: no templates for %r under %s" % (args.track, TEMPLATES), file=sys.stderr)
+    missing_tpl = [t for t in ["shared"] + tracks if not os.path.isdir(os.path.join(TEMPLATES, t))]
+    if missing_tpl:
+        print("delivery_ci_install: no templates for %r under %s" % (missing_tpl[-1] if missing_tpl[-1] != "shared" else args.track, TEMPLATES), file=sys.stderr)
         return 2
     root = os.path.abspath(args.root)
     try:
@@ -813,16 +1295,24 @@ def main(argv=None) -> int:
     except ValueError as e:
         print("delivery_ci_install: %s" % e, file=sys.stderr)
         return 2
-    if args.track in WINDOWS_TRACKS and windows_deferred(root):
+    if any(t in WINDOWS_TRACKS for t in tracks) and windows_deferred(root):
         skip = set(skip) | set(WINDOWS_FILES)
         print("Windows is deferred (no ci.options.windows in .delivery/config.json): the Windows workflows are not installed. "
               "Choose it with `delivery_ci.py set`, then run install again.")
-    no_package = args.track in PACKAGE_TRACKS and not has_packaged_program(root)
+    no_package = any(t in PACKAGE_TRACKS for t in tracks) and not has_packaged_program(root)
+    omit = set()
+    if no_package and len(tracks) > 1:
+        # DL245: with another track the package files come from that track; only the ts copy is left out.
+        omit = {(t, f) for t in tracks if t in PACKAGE_TRACKS for f in PACKAGE_FILES}
+        no_package = not any(f for t in tracks if t not in PACKAGE_TRACKS
+                             for f in PACKAGE_FILES if os.path.isfile(os.path.join(TEMPLATES, t, f.replace("/", os.sep))))
     user_skip = set(skip)
     if no_package:
         skip = set(skip) | set(PACKAGE_FILES)
     old_state, had_state = load_state(root)
-    items = plan(args.track, root, args.action, keep, skip)
+    items = plan(tracks, root, args.action, keep, skip, omit)
+    for note in TRACK_NOTES:
+        print("note: " + note)
     if no_package:
         items = [(r, sr, NOPKG if r in PACKAGE_FILES and a == SKIPPED and r not in (user_skip) else a) for r, sr, a in items]
     if args.action == "update":
@@ -841,7 +1331,7 @@ def main(argv=None) -> int:
         if not sync_prune_workflow(items, root):
             items = [(r, sr, SYNC_FAILED if r == PRUNE_WORKFLOW and a == MERGED else a) for r, sr, a in items]
     if not args.dry_run:
-        save_state(items, root, old_state, args.track)
+        save_state(items, root, old_state, track_value(tracks))
         record_bases(items, root)
     if not args.dry_run:
         ensure_tzdata(root)
