@@ -4777,6 +4777,78 @@
       "chosen": "Fix it (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "Fix it (Recommended)"
+    },
+    {
+      "id": "D211",
+      "question": "Which template problems from a peer project's alignment report to fix?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL210",
+      "options": [
+        {
+          "label": "A: workflow_dispatch",
+          "summary": "ci.yml templates"
+        },
+        {
+          "label": "B: secret scan scope",
+          "summary": "PR-head history, non-secret shapes"
+        },
+        {
+          "label": "C: doctor stale record",
+          "summary": "identical file reads as same"
+        },
+        {
+          "label": "D: installer track",
+          "summary": "read track from config"
+        }
+      ],
+      "chosen": "A: workflow_dispatch",
+      "decided": "2026-11-11",
+      "owner_words": "A, B, C and D (all four)"
+    },
+    {
+      "id": "D212",
+      "question": "When to refresh the shared pool (runner_load_gate.py differs)?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL202",
+      "options": [
+        {
+          "label": "When idle (Recommended)",
+          "summary": "refresh when no job runs"
+        },
+        {
+          "label": "Now",
+          "summary": "cut a running job"
+        },
+        {
+          "label": "Not today",
+          "summary": "leave it"
+        }
+      ],
+      "chosen": "When idle (Recommended)",
+      "decided": "2026-11-11",
+      "owner_words": "When idle (Recommended)"
+    },
+    {
+      "id": "D213",
+      "question": "Run the project-scope plugin update for the peer project?",
+      "asked": "2026-11-11",
+      "status": "decided",
+      "task": "DL209",
+      "options": [
+        {
+          "label": "Update it (Recommended)",
+          "summary": "two plugin updates"
+        },
+        {
+          "label": "Leave it",
+          "summary": "owner tells its session"
+        }
+      ],
+      "chosen": "Leave it",
+      "decided": "2026-11-11",
+      "owner_words": "Leave it"
     }
   ]
 }

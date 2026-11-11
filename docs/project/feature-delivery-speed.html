@@ -896,19 +896,24 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-11T13:05+00:00">11 Nov 13:05</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-11T13:26+00:00">11 Nov 13:26</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">11 Nov 13:05</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">6 tasks</span></summary>
 <ul>
+<li data-glance-task="DL210"><span class="task-id">DL210</span>ci.yml templates accept workflow_dispatch (gh workflow run gets 422) <span class="glance-expected">11 Nov ~13:51</span><span class="glance-basis">cloud agent from 13:26, ~25 min</span></li>
+<li data-glance-task="DL211"><span class="task-id">DL211</span>Secret scan: PR-head history only; no false hits on public keys and NULL <span class="glance-expected">11 Nov ~13:51</span><span class="glance-basis">cloud agent from 13:26, ~25 min</span></li>
+<li data-glance-task="DL212"><span class="task-id">DL212</span>Doctor: a script identical to the template reads as same, not changed by project <span class="glance-expected">11 Nov ~13:51</span><span class="glance-basis">cloud agent from 13:26, ~25 min</span></li>
+<li data-glance-task="DL213"><span class="task-id">DL213</span>Installer update reads the track from .delivery/config.json <span class="glance-expected">11 Nov ~13:51</span><span class="glance-basis">cloud agent from 13:26, ~25 min</span></li>
+<li data-glance-task="DL209"><span class="task-id">DL209</span><span class="release-name">RELEASE-100</span>RELEASE: CI template and installer fixes from a peer alignment report <span class="glance-expected">11 Nov ~14:04</span><span class="glance-basis">agents from 13:26, ~25 min; join, CI, merge</span></li>
 <li data-glance-task="DL202"><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits <span class="glance-expected">12 Nov ~10:45</span><span class="glance-basis">24 h logging from 10:40, then ~5 min analysis</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">41 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">40 tasks</span></summary>
 <ul>
 <li data-glance-task="DL205"><span class="task-id">DL205</span><span class="release-name">RELEASE-99</span>RELEASE: update-guide note and keypad template vs secret scan</li>
 <li data-glance-task="DL207"><span class="task-id">DL207</span>Design-system keypad template passes the pre-commit secret pattern</li>
@@ -918,15 +923,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL204"><span class="task-id">DL204</span>Installer files pass the secret scans (hook pattern, gitleaks)</li>
 <li data-glance-task="DL85"><span class="task-id">DL85</span><span class="release-name">RELEASE-57</span>pool gh and per-job tmp</li>
 <li data-glance-task="DL88"><span class="task-id">DL88</span><span class="release-name">RELEASE-58</span>e2e gate uses a preinstalled Chromium</li>
-<li class="glance-more">and 33 more</li>
+<li class="glance-more">and 32 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">201</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">201</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">6 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>Measuring memory per process. Found: the Stop hook questions_stop.py reads a 2.4 GB session transcript whole and uses ~20.9 GB (spikes 10:47, 11:07, 12:31, 12:39). Fix is DL208. Limits proposal still from the 24 h log.</td><td>12 Nov ~10:45<span class="expected-basis">24 h logging from 10:40, then ~5 min analysis</span></td></tr>
+<tr data-task="DL210"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL210</span>ci.yml templates accept workflow_dispatch (gh workflow run gets 422)<span class="release-line"><span class="release-name">RELEASE-100</span></span></td><td>A peer project found agent_ci.py and gh workflow run get HTTP 422: only the ts ci.yml template has workflow_dispatch. Add it to every ci.yml template, with a test.</td><td>11 Nov ~13:51<span class="expected-basis">cloud agent from 13:26, ~25 min</span></td></tr>
+<tr data-task="DL211"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL211</span>Secret scan: PR-head history only; no false hits on public keys and NULL<span class="release-line"><span class="release-name">RELEASE-100</span></span></td><td>The full-history gitleaks step fetches every remote branch, so an unrelated open branch fails a release PR. The named-secret rule also flags non-secrets (public keys, NULL, SQL placeholders, Some(...)). Scan only the PR head history; exempt those shapes; tests.</td><td>11 Nov ~13:51<span class="expected-basis">cloud agent from 13:26, ~25 min</span></td></tr>
+<tr data-task="DL212"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL212</span>Doctor: a script identical to the template reads as same, not changed by project<span class="release-line"><span class="release-name">RELEASE-100</span></span></td><td>ci.scripts-current reports changed by project for scripts identical to the template (stale install record). Compare content first and refresh the record.</td><td>11 Nov ~13:51<span class="expected-basis">cloud agent from 13:26, ~25 min</span></td></tr>
+<tr data-task="DL213"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL213</span>Installer update reads the track from .delivery/config.json<span class="release-line"><span class="release-name">RELEASE-100</span></span></td><td>delivery_ci_install.py update fails unless --track is given. Read the track from .delivery/config.json; error only when none is set.</td><td>11 Nov ~13:51<span class="expected-basis">cloud agent from 13:26, ~25 min</span></td></tr>
+<tr data-task="DL209"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL209</span><span class="release-name">RELEASE-100</span>RELEASE: CI template and installer fixes from a peer alignment report</td><td>Ships DL210-DL213. Join, fold, CI, merge on green, plugin updates in both scopes, smoke, tell the peer projects.</td><td>11 Nov ~14:04<span class="expected-basis">agents from 13:26, ~25 min; join, CI, merge</span></td></tr>
+<tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>Memory log runs to 12 Nov 10:41. Root cause of the spikes (questions_stop.py reading a 2.4 GB transcript) fixed by DL208. Pool refresh waits for an idle pool and room on the PC (D212).</td><td>12 Nov ~10:45<span class="expected-basis">24 h logging from 10:40, then ~5 min analysis</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">207 tasks</span></summary>
@@ -1173,6 +1183,63 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D213">
+<h3 class="decision-head"><span class="decision-id">D213</span> <span class="decision-question">Run the project-scope plugin update for the peer project?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL209</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Update it (Recommended)</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">two plugin updates</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">owner tells its session</p>
+<blockquote class="decision-words">&ldquo;Leave it&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D212">
+<h3 class="decision-head"><span class="decision-id">D212</span> <span class="decision-question">When to refresh the shared pool (runner_load_gate.py differs)?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL202</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">When idle (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">refresh when no job runs</p>
+<blockquote class="decision-words">&ldquo;When idle (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">cut a running job</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">leave it</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D211">
+<h3 class="decision-head"><span class="decision-id">D211</span> <span class="decision-question">Which template problems from a peer project&#x27;s alignment report to fix?</span></h3>
+<p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL210</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">A: workflow_dispatch</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
+<p class="decision-summary">ci.yml templates</p>
+<blockquote class="decision-words">&ldquo;A, B, C and D (all four)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">B: secret scan scope</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">PR-head history, non-secret shapes</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">C: doctor stale record</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">identical file reads as same</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">D: installer track</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">read track from config</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D210">
 <h3 class="decision-head"><span class="decision-id">D210</span> <span class="decision-question">Fix the design-system keypad stylesheet the pre-commit pattern flags?</span></h3>
 <p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL207</p>

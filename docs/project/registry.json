@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T13:05+00:00",
+  "updated": "2026-11-11T13:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3621,9 +3621,9 @@
       "app": "",
       "status": "Running",
       "item": "Measure PC memory per process through busy CI before setting pool limits",
-      "detail": "Measuring memory per process. Found: the Stop hook questions_stop.py reads a 2.4 GB session transcript whole and uses ~20.9 GB (spikes 10:47, 11:07, 12:31, 12:39). Fix is DL208. Limits proposal still from the 24 h log.",
+      "detail": "Memory log runs to 12 Nov 10:41. Root cause of the spikes (questions_stop.py reading a 2.4 GB transcript) fixed by DL208. Pool refresh waits for an idle pool and room on the PC (D212).",
       "expected": "12 Nov ~10:45",
-      "changed": "2026-11-11T12:54+00:00",
+      "changed": "2026-11-11T13:26+00:00",
       "expected_basis": "24 h logging from 10:40, then ~5 min analysis",
       "no_release": "study: measurement only",
       "started": "2026-11-11T10:41+00:00"
@@ -3743,6 +3743,93 @@
       "changed": "2026-11-11T13:05+00:00",
       "rides": "DL205",
       "started": "2026-11-11T12:53+00:00"
+    },
+    {
+      "id": "DL209",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: CI template and installer fixes from a peer alignment report",
+      "detail": "Ships DL210-DL213. Join, fold, CI, merge on green, plugin updates in both scopes, smoke, tell the peer projects.",
+      "expected": "11 Nov ~14:04",
+      "changed": "2026-11-11T13:26+00:00",
+      "expected_basis": "agents from 13:26, ~25 min; join, CI, merge",
+      "release": 100,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T13:26+00:00",
+          "end": "2026-11-11T13:51+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T13:51+00:00",
+          "end": "2026-11-11T13:55+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T13:55+00:00",
+          "end": "2026-11-11T14:00+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T14:00+00:00",
+          "end": "2026-11-11T14:04+00:00"
+        }
+      ],
+      "started": "2026-11-11T13:25+00:00"
+    },
+    {
+      "id": "DL210",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "ci.yml templates accept workflow_dispatch (gh workflow run gets 422)",
+      "detail": "A peer project found agent_ci.py and gh workflow run get HTTP 422: only the ts ci.yml template has workflow_dispatch. Add it to every ci.yml template, with a test.",
+      "expected": "11 Nov ~13:51",
+      "changed": "2026-11-11T13:26+00:00",
+      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "rides": "DL209",
+      "started": "2026-11-11T13:25+00:00"
+    },
+    {
+      "id": "DL211",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Secret scan: PR-head history only; no false hits on public keys and NULL",
+      "detail": "The full-history gitleaks step fetches every remote branch, so an unrelated open branch fails a release PR. The named-secret rule also flags non-secrets (public keys, NULL, SQL placeholders, Some(...)). Scan only the PR head history; exempt those shapes; tests.",
+      "expected": "11 Nov ~13:51",
+      "changed": "2026-11-11T13:26+00:00",
+      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "rides": "DL209",
+      "started": "2026-11-11T13:25+00:00"
+    },
+    {
+      "id": "DL212",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Doctor: a script identical to the template reads as same, not changed by project",
+      "detail": "ci.scripts-current reports changed by project for scripts identical to the template (stale install record). Compare content first and refresh the record.",
+      "expected": "11 Nov ~13:51",
+      "changed": "2026-11-11T13:26+00:00",
+      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "rides": "DL209",
+      "started": "2026-11-11T13:25+00:00"
+    },
+    {
+      "id": "DL213",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Installer update reads the track from .delivery/config.json",
+      "detail": "delivery_ci_install.py update fails unless --track is given. Read the track from .delivery/config.json; error only when none is set.",
+      "expected": "11 Nov ~13:51",
+      "changed": "2026-11-11T13:26+00:00",
+      "expected_basis": "cloud agent from 13:26, ~25 min",
+      "rides": "DL209",
+      "started": "2026-11-11T13:25+00:00"
     },
     {
       "id": "DS1",
