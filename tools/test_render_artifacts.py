@@ -578,7 +578,7 @@ def project_design_replaces_the_default(fx):
     manifest = copy.deepcopy(fx.manifest)
     manifest['design'] = 'design.css'
     out = fx.render('artifacts', manifest=manifest)
-    assert '#0B7285' in out and '#2D46C8' not in out and 'family=Rubik' in out
+    assert '#0B7285' in out and 'family=Rubik' in out and '--signal: #0B7285' in out.split('project design.css')[1]
     assert fx.check(out, 'artifacts', manifest=manifest) == []
     # the same HTML does not satisfy a manifest that says "default"
     assert 'R5.10' in reqs(fx.check(out, 'artifacts'))
@@ -1033,7 +1033,7 @@ def check_r510_structure_stylesheet_byte_identical(fx):
     out = fx.render('artifacts')
     css = R.structure_css(PLUGIN)
     expect(fx, sub1(out, '<style id="structure-css">' + css, '<style id="structure-css">' + css + 'a{color:red}'), 'artifacts', ['R5.10'])
-    expect(fx, sub1(out, 'font-size: 16px;', 'font-size: 17px;'), 'artifacts', ['R5.10'])
+    expect(fx, sub1(out, 'font-size: 14.4px;', 'font-size: 17px;'), 'artifacts', ['R5.10'])
     expect(fx, sub1(out, '<style id="structure-css">', '<style id="structure">'), 'artifacts', ['R4.10', 'R5.10'])
     # the token block must be the one the manifest names
     other = sub1(out, '--paper: #F5F6F8;', '--paper: #FAFAFA;')
@@ -1055,13 +1055,13 @@ def check_r511_token_block_complete(fx):
         (default.replace('@media (prefers-color-scheme: dark)', '@media print'), 'dark media block missing'),
     ):
         write(os.path.join(fx.record, 'design.css'), broken)
-        html = sub1(out, default, broken)
+        html = sub1(out, default, R.design_css(manifest, PLUGIN, fx.record))
         got = fx.check(html, 'artifacts', manifest=manifest)
         assert reqs(got) == ['R5.11'], (label, got)
     assert R.check_tokens(default) == []
     # light value missing is reported for exactly that token
     write(os.path.join(fx.record, 'design.css'), default.replace('  --focus: #2D46C8;\n', '', 1))
-    problems = R.check_tokens(R.design_css(manifest, PLUGIN, fx.record))
+    problems = R.own_design_problems(manifest, fx.record)
     assert problems == ['token --focus is not defined on :root'], problems
 
 
@@ -1330,7 +1330,7 @@ def the_structure_stylesheet_holds_no_literal_colour():
 @with_fixture
 def templates_hold_only_known_placeholders(fx):
     import re
-    known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents', 'glance',
+    known = {'title', 'fonts_link', 'design_css', 'structure_css', 'extra_css', 'kind_label', 'project', 'hero', 'contents', 'glance', 'badge',
              'sections', 'stamp', 'published', 'lede', 'tiles', 'key', 'timeline', 'checklist', 'registry'}
     for name in ('feature-artifact.html', 'full-progress-artifact.html'):
         text = open(os.path.join(PLUGIN, 'templates', name), encoding='utf-8').read()

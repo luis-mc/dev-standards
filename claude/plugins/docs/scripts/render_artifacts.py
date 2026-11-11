@@ -197,6 +197,17 @@ def ignored_tokens(css: str) -> list:
     return sorted(found)
 
 
+def own_design_problems(manifest: dict, record_dir: str = '') -> list:
+    """R5.11 on the project's own design.css (DL239): the drawn block always holds every token, because the default
+    fills what the project leaves out, so a project file that lost a token is checked on its own."""
+    if manifest.get('design') != 'design.css':
+        return []
+    try:
+        return check_tokens(_read(os.path.join(record_dir, 'design.css')))
+    except OSError:
+        return []
+
+
 def design_css(manifest: dict, plugin_dir: str = PLUGIN_DIR, record_dir: str = '') -> str:
     """The token block: the plugin default, plus the project's design.css accents when the manifest says so (R5.10, DL239)."""
     choice = manifest.get('design', 'default')
@@ -211,6 +222,7 @@ def design_css(manifest: dict, plugin_dir: str = PLUGIN_DIR, record_dir: str = '
     except OSError as exc:
         raise ContentError('design file not readable: %s' % exc) from exc
     kept = re.sub(r'^[ \t]*\n', '', _IGNORED_DECL_RE.sub('', own), flags=re.M)
+    base = re.sub(r'\A\s*/\*.*?\*/\s*', '', base, count=1, flags=re.S)   # the fonts link comes from the project file
     return base.rstrip('\n') + '\n\n/* project design.css: accents only; page, surface and ink tokens are ignored */\n' + kept.lstrip('\n')
 
 
@@ -2031,7 +2043,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         problems += exc.problems if isinstance(exc, ContentError) else [str(exc)]
         design = structure = template = ''
     else:
-        problems += ['design: ' + p for p in check_tokens(design)]
+        problems += ['design: ' + p for p in check_tokens(design) + own_design_problems(manifest, record_dir)]
         for name, css in (('design', design), ('structure', structure)):
             if re.search(r'</style', css, re.I):
                 problems.append('%s stylesheet contains </style' % name)
@@ -2817,7 +2829,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         if want_design is not None and have_design != want_design:
             add('R5.10', 'the token block differs from %s' % ('design.css in the record folder' if manifest.get('design') == 'design.css'
                                                              else 'design/default-design.css'))
-        for problem in check_tokens(have_design):
+        for problem in check_tokens(have_design) + own_design_problems(manifest, record_dir):
             add('R5.11', problem)
 
     # R4.11 extra_css
