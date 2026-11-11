@@ -1,4 +1,4 @@
-DL190 report (in progress)
+DL190 report
 
 Base check: `git fetch origin DL187-ci-templates-pool && git checkout -B DL190-pool-integration-job origin/DL187-ci-templates-pool`; test_dl187_ci_templates_pool.py exists.
 
@@ -18,7 +18,7 @@ Base check: `git fetch origin DL187-ci-templates-pool && git checkout -B DL190-p
 - unittest discover over claude/plugins/delivery/tests: 1240 OK (1 skipped).
 - tools/test_delivery_ci.py --no-mutants: 78 passed, 0 failed.
 - docs_check.py: W1 (docs/work, expected) and T2 warnings; M1 for delivery-speed handled by the commit trailer below.
-- spec-lint run 42935857453 (areas=delivery,docs): all delivery jobs success (area mapping, branch gate, setup preflight, train cleanup, runner plan, ledger/watcher/hooks, change notes, packaged-program smoke, CI scripts and workflow templates, artifact pruning, scripts/templates/cleanup/prune), docs plugin success, areas success; docs check failed on M1 and W1 only. A rerun follows this commit.
+- spec-lint run 42935857453 (areas=delivery,docs): all delivery jobs success (area mapping, branch gate, setup preflight, train cleanup, runner plan, ledger/watcher/hooks, change notes, packaged-program smoke, CI scripts and workflow templates, artifact pruning, scripts/templates/cleanup/prune), docs plugin success, areas success; docs check failed on M1 and W1 only. 
 - Coverage: spec-lint's delivery job discovers tests/; no ci_areas.py or suites.json change needed. No mutation passes, no Docker.
 
 ## Follow-ups
@@ -27,3 +27,7 @@ Base check: `git fetch origin DL187-ci-templates-pool && git checkout -B DL190-p
 - The ts `pnpm turbo migrate` step is unchanged.
 
 Head before this commit: e9e0273
+
+Rerun after the Docs trailer: run 42936337767, every delivery job success, docs plugin success, areas success; docs check failed only on W1 (docs/work reports, expected).
+
+READY
