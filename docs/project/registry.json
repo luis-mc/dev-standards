@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T08:48+00:00",
+  "updated": "2026-11-11T08:55+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3581,11 +3581,14 @@
       "id": "DL200",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "spec-lint ledger/watcher/hooks job hangs on hosted runners",
-      "detail": "The delivery 'plugin ledger, recorder, watcher and hooks' job normally takes ~1 min; it hung 28 min on the DL194 branch (11 Nov 01:17) and 8+ min on PR 197 (08:39). Both cancelled and rerun. Find the test that blocks and add a timeout.",
-      "expected": "11 Nov",
-      "changed": "2026-11-11T08:48+00:00"
+      "detail": "Hang found: test_machine.py test_main_with_the_layer_takes_a_slot_and_job_done_frees_it runs R.main([]) (real 15 s poll, 30 min wait); its own queue ticket is missing from queue_list, so the gate holds on '0 ahead in the queue'. Fix the gate (re-enqueue a vanished ticket) and bound the test.",
+      "expected": "11 Nov ~09:25",
+      "changed": "2026-11-11T08:55+00:00",
+      "expected_basis": "cloud agent ~24 min from 09:01",
+      "rides": "DS231",
+      "started": "2026-11-11T08:55+00:00"
     },
     {
       "id": "DS1",
@@ -7316,25 +7319,30 @@
       "status": "Running",
       "item": "RELEASE-96: ci_tool tests pass on Windows",
       "detail": "DL195 (test-only fix). PR, CI, merge on green.",
-      "expected": "11 Nov ~08:56",
-      "changed": "2026-11-11T08:48+00:00",
-      "expected_basis": "CI rerun 08:48 after a hung job, ~5 min",
+      "expected": "11 Nov ~09:38",
+      "changed": "2026-11-11T08:55+00:00",
+      "expected_basis": "DL200 agent ~24 min, then join and CI",
       "release": 96,
       "phases": [
         {
+          "name": "agents",
+          "start": "2026-11-11T09:01+00:00",
+          "end": "2026-11-11T09:25+00:00"
+        },
+        {
           "name": "join",
-          "start": "2026-11-11T08:30+00:00",
-          "end": "2026-11-11T08:39+00:00"
+          "start": "2026-11-11T09:25+00:00",
+          "end": "2026-11-11T09:30+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T08:48+00:00",
-          "end": "2026-11-11T08:53+00:00"
+          "start": "2026-11-11T09:30+00:00",
+          "end": "2026-11-11T09:35+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T08:53+00:00",
-          "end": "2026-11-11T08:56+00:00"
+          "start": "2026-11-11T09:35+00:00",
+          "end": "2026-11-11T09:38+00:00"
         }
       ],
       "started": "2026-11-11T08:30+00:00"
