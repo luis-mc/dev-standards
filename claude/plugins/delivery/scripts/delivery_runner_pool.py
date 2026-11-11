@@ -1993,6 +1993,30 @@ def runners_folder_dockerfiles(repo_path):
     return sorted(found)
 
 
+def pool_container_running(probe, pool):
+    """DL199: True when the pool container is running."""
+    r = probe.sh(['docker', 'inspect', '-f', '{{.State.Running}}', 'pool-%s-pool-1' % pool])
+    return bool(r is not None and r[0] == 0 and (r[1] or '').strip().lower() == 'true')
+
+
+def _probe_layer_tool(probe, pool, image, tool, running):
+    """DL199: 'ok', 'missing' (the probe ran and command -v failed) or a text naming why docker could not probe.
+    A running container is probed with `docker exec`; only without one, `docker run` on the image."""
+    check = 'command -v %s' % tool
+    if running:
+        argv, what = ['docker', 'exec', 'pool-%s-pool-1' % pool, 'sh', '-c', check], 'docker exec'
+    else:
+        argv, what = ['docker', 'run', '--rm', '--entrypoint', 'sh', image, '-c', check], 'docker run on %s' % image
+    rr = probe.sh(argv, timeout=120)
+    if rr is None:
+        return '%s did not finish (timeout or docker cannot run)' % what
+    if rr[0] == 0:
+        return 'ok'
+    if rr[0] == 1:
+        return 'missing'
+    return '%s failed with exit %s' % (what, rr[0])
+
+
 def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
     """DL149: pool doctor checks for the layers, stray runner Dockerfiles and the tool cache."""
     layers = [x for x in (env_vals.get('POOL_LAYERS') or '').strip().split(',') if x]
@@ -2002,19 +2026,25 @@ def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
             % (', '.join(want), ', '.join(layers)))
     if layers:
         image = container_image(probe, pool)  # DL184: the running container's image, the tag only when none runs
+        running = pool_container_running(probe, pool)
         for layer in layers:
             tools = LAYER_TOOLS.get(layer, ())
             if image is None:
                 add('layer-' + layer, 'warn', 'docker cannot be read here, so the %s layer is not checked (needs %s in the image)' % (layer, ', '.join(tools)))
                 continue
-            missing = []
+            missing, errors = [], []
             for tool in tools:
-                rr = probe.sh(['docker', 'run', '--rm', '--entrypoint', 'sh', image, '-c', 'command -v %s' % tool], timeout=120)
-                if rr is None or rr[0] != 0:
+                state = _probe_layer_tool(probe, pool, image, tool, running)
+                if state == 'missing':
                     missing.append(tool)
-            add('layer-' + layer, 'fail' if missing else 'ok',
-                ('the %s layer is on but the image %s lacks %s. Rebuild: delivery_ci_setup.py pool-refresh --yes' % (layer, image, ', '.join(missing)))
-                if missing else 'the image has %s' % ', '.join(tools))
+                elif state != 'ok':
+                    errors.append(state)
+            if missing:
+                add('layer-' + layer, 'fail', 'the %s layer is on but the image %s lacks %s. Rebuild: delivery_ci_setup.py pool-refresh --yes' % (layer, image, ', '.join(missing)))
+            elif errors:  # DL199: the probe did not run; this says nothing about the tools
+                add('layer-' + layer, 'warn', 'cannot probe the %s layer: %s' % (layer, errors[0]))
+            else:
+                add('layer-' + layer, 'ok', 'the image has %s' % ', '.join(tools))
     for path in repo_paths or []:
         for df in runners_folder_dockerfiles(path):
             add('stray-dockerfile', 'fail', '%s is not used by the pool; the pool image is built from the plugin. Move its apt packages to .delivery/pool.apt '
