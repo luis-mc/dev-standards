@@ -110,6 +110,8 @@ if argv[:2] == ["run", "list"]:
     out = [{k: v for k, v in r.items() if k != "_workflow"}
            for r in resp if wf is None or r.get("_workflow", wf) == wf]
     print(json.dumps(out))
+elif argv[:2] == ["repo", "view"]:
+    print(json.dumps({"nameWithOwner": "acme/widget"}))
 elif argv[:2] == ["workflow", "list"]:
     if "workflow_list" not in fx:
         fail("HTTP 500: could not list workflows")
@@ -128,6 +130,7 @@ elif argv[:1] == ["api"]:
         else:
             path = a
             i += 1
+    path = path.replace("repos/acme/widget/", "repos/{owner}/{repo}/")  # DL247: ci_watch pins the repo
     key = path + ("?" + "&".join(f"{k}={v}" for k, v in fields) if fields else "")
     if key not in fx.get("api", {}):
         fail("stub gh: no fixture for " + key)
@@ -167,7 +170,8 @@ class Sandbox:
     def calls(self) -> list[list[str]]:
         if not self.log.exists():
             return []
-        return [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines()]
+        got = [json.loads(line) for line in self.log.read_text(encoding="utf-8").splitlines()]
+        return [c for c in got if c[:2] != ["repo", "view"]]  # DL247: the start-up repo lookup is not a watch call
 
     def env(self, extra: dict | None = None, with_stub: bool = True) -> dict:
         env = {k: v for k, v in os.environ.items()
@@ -471,11 +475,11 @@ def watch_never_calls_pr_checks():
 
 
 @test
-def watch_gh_errors_give_up_with_exit_2():
+def watch_gh_errors_give_up_with_exit_5():
     sb = Sandbox()
     try:
         rc, out, err = watch(sb, {"run_list_error": True})
-        expect_exit(rc, 2, out, err)
+        expect_exit(rc, 5, out, err)
         check("502" in err, f"gh error not reported: {err}")
     finally:
         sb.close()
@@ -520,7 +524,7 @@ def watch_transient_gh_error_is_retried_five_times():
     sb = Sandbox()
     try:
         rc, out, err = watch(sb, {"run_list_error": True}, ["--interval", "0.05"])
-        expect_exit(rc, 2, out, err)
+        expect_exit(rc, 5, out, err)
         check(count_calls(sb, "run", "list") == 5, f"expected 5 tries: {sb.calls()}")
         check(count_calls(sb, "workflow", "list") == 0, "workflows listed for a transient error")
     finally:
