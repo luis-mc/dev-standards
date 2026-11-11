@@ -34,6 +34,12 @@ tags = ["project", "secret"]
 
 [allowlist]
 regexTarget = "line"
+# DL204: the installer's own state. Copies of templates and sha256 hashes next to file names,
+# never secrets. Every other path stays scanned.
+paths = [
+  '''^\.delivery/ci-install-base/''',
+  '''^\.delivery/ci-install-state\.json$''',
+]
 description = """
 Three narrow exemptions. Each is allowlisted by the *shape of the line*, not by
 path, so a real credential committed anywhere — including into these same files

@@ -126,6 +126,9 @@ while IFS= read -r f; do
     # reference secret *names* (e.g. `secrets.GITHUB_TOKEN` in a workflow,
     # or this file's own comments) rather than literal values.
     .githooks/*|*.md|pnpm-lock.yaml|.github/workflows/*) continue ;;
+    # The delivery installer's copies of templates and its file hashes (DL204).
+    # They hold no secrets; .gitleaks.toml exempts the same two paths.
+    .delivery/ci-install-base/*|.delivery/ci-install-state.json) continue ;;
   esac
   # Scan the staged blob (what's about to be committed), not the working
   # tree, so an unstaged local edit can't false-fail the commit.

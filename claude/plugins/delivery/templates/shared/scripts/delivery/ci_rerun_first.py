@@ -110,20 +110,20 @@ def opted_in(config_path):
 
 def not_passed(jobs, selected):
     """Job keys that did not pass: failed-like, or skipped/absent while selected. `selected` None = all HOLDABLE+verify."""
-    by_key = {}
+    by_name = {}
     for job in jobs:
         if not isinstance(job, dict):
             continue
-        by_key.setdefault(job_key(job.get("name")), []).append(job.get("conclusion"))
+        by_name.setdefault(job_key(job.get("name")), []).append(job.get("conclusion"))
     out = []
-    for key in sorted(set(by_key) | set(HOLDABLE)):
-        concl = by_key.get(key, [None])
+    for key in sorted(set(by_name) | set(HOLDABLE)):
+        concl = by_name.get(key, [None])
         if any(c in NOT_PASSED for c in concl):
             out.append(key)
         elif key in HOLDABLE and (selected is None or key in selected) and \
                 (not any(c == "success" for c in concl)):
             out.append(key)
-    return [k for k in out if k in HOLDABLE or k in by_key]
+    return [k for k in out if k in HOLDABLE or k in by_name]
 
 
 def previous_jobs(repo, workflow, branch, sha, event):
