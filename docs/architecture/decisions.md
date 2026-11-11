@@ -191,6 +191,9 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D212 | When to refresh the shared pool (runner_load_gate.py differs)? | When idle (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D213 | Run the project-scope plugin update for the peer project? | Leave it | decided | 2026-11-11 |
 | delivery-speed | D214 | Pool runners have no Node/corepack, so ts CI fails at corepack enable: fix where? | Pool image (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D215 | Installer copies fail a project's Prettier check: fix where? | Installer adds ignore (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D216 | docs_check passes locally but warns in CI: investigate? | Investigate and fix (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D217 | How should a peer project's failed CI run be rerun after the pool refresh? | I rerun it with gh (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D22 | Machine-wide CI load control: how does a runner inside WSL see the Windows host's load? | Host load file | decided | 2026-11-04 |
 | delivery-speed | D23 | Machine-wide CI queue: should LOCAL Claude Code work on this PC (tests, builds, local agents) take the PC's CI slots? | Own limit, not CI slots | decided | 2026-11-04 |
 | delivery-speed | D24 | Machine-wide CI load control: should CI jobs run at below-normal CPU priority? | No, keep the rule | decided | 2026-11-04 |
