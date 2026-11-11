@@ -162,6 +162,8 @@ flowchart LR
 
 **R5.17** — The Full Progress and feature pages show the generator badge in the header (`luismc-docs X.Y.Z` and its latest flag) and use the plugin's default page colours and 0.9x font sizes; a project's `design.css` changes accents only (see [Documentation standard plugin](../docs/spec.md) R5.16 to R5.18). The latest flag does not make a page stale: INV-3 compares pages without it. (DL239)
 
+**R5.17a** — Every HTML page the docs plugin writes declares UTF-8 in its first 1024 bytes, so a page opened as a local file shows `·` and `…` correctly. A feature page has `<meta charset="utf-8">` in its head. The Full Progress fragment begins with `<meta charset="utf-8">`, then `<title>`; the artifact host wraps the fragment and keeps the tag. The local copy is the repo copy, so it carries the tag too. (DL260)
+
 **R5.37a** — `check` warns (never an error) when the Full Progress lede names `RELEASE-n` and a higher-numbered release is Live. The text is `content/full-progress/meta.json: the lede names RELEASE-14 but RELEASE-35 is live; update it with edit-content`. `render` prints the same line as a note. Only the release-number test exists; the record keeps no content change times. (DL251, ARTIFACTSPEC R5.37)
 
 ## 6. Non-functional requirements

@@ -319,7 +319,7 @@ def test_init_creates_record(env):
     assert m['full_progress_artifact']['file'].startswith('full-progress-')
     assert m['default_branch'] == 'main' and m['merged_status'] == 'Live'
     assert m['project_prefixes'] == ['DS'] and m['feature_artifacts'] == []
-    assert p.show('docs/artifacts/' + m['full_progress_artifact']['file']).lstrip().startswith('<title>Full Progress: Demo')
+    assert p.show('docs/artifacts/' + m['full_progress_artifact']['file']).lstrip().startswith('<meta charset="utf-8">\n<title>Full Progress: Demo')
     assert p.reg()['tasks'] == []
     # the plugin writes files and stops: nothing is committed or pushed (AR50)
     assert git(p.clone, 'log', '-1', '--format=%s').stdout.strip() == 'seed'
@@ -1155,7 +1155,7 @@ def test_pending_and_mark_published(env):
     assert 'publish' in p.run('pending').out
     committed = p.show('docs/artifacts/' + a['file'])
     text = copy.read_text(encoding='utf-8')
-    assert text.startswith('<title>') and text != committed, 'the copy differs from the committed render in its links'
+    assert text.startswith('<meta charset="utf-8">') and text != committed, 'the copy differs from the committed render in its links'
     # mark Full Progress published; the copy does not make the record look stale (R5.32)
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     r = p.run('pending', '--json')

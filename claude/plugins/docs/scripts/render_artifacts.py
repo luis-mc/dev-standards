@@ -2244,8 +2244,8 @@ def _check_document(html: str, root, kind: str, add) -> None:
     if kind == 'full-progress':
         if re.match(r'\s*<!doctype', text, re.I) or any(find(root, tag) is not None for tag in ('html', 'head', 'body')):
             add('R5.29', 'the full-progress artifact is a fragment: no doctype, <html>, <head> or <body>')
-        if not text.startswith('<title>'):
-            add('R5.29', 'the full-progress artifact must begin with <title>')
+        if not re.match(r'<meta charset="utf-8">\s*<title>', text):
+            add('R5.29', 'the full-progress artifact must begin with <meta charset="utf-8"> and then <title>')
         return
     if not re.match(r'\s*<!doctype html>', text, re.I):
         add('R5.27', 'a feature artifact must begin with <!doctype html>')
