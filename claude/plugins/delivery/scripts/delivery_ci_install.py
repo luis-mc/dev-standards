@@ -18,6 +18,11 @@ It never commits or pushes, and it does not choose the CI option: ask the owner,
 `delivery_ci.py set`. The GitHub workflow files are always written; a project that runs an OS only in cloud
 sessions (option c) deletes the jobs it does not use. `CONTRACT.md` is not installed: it stays with the plugin.
 
+Windows deferred (DL192). On the rust track, `windows-msi-check.yml` and `package-windows.yml` are installed only when
+`ci.options.windows` in `.delivery/config.json` holds a CI option. When it is absent (or `deferred`) they are skipped,
+and `package.yml` runs its Windows steps only when the repository variable `CI_WINDOWS` is `on`. Choose Windows and run
+`install` again to get the files.
+
 After the run (also with --dry-run) it checks the imports (DL112). For every .py it manages under
 `scripts/delivery/` it reads the `import x` and `from x import y` lines (top level and inside functions) with
 `ast`. A sibling module that is not in the project is listed under "missing imports:". In a git repo, managed
@@ -161,6 +166,22 @@ def plan(track: str, root: str, mode: str, keep=(), skip=()) -> list:
             action = KEPT
         out.append((rel, src, action))
     return out
+
+
+# DL192: the rust track installs the Windows workflows only when `ci.options.windows` in .delivery/config.json
+# holds a CI option (self-hosted, github-hosted, cloud). Absent, or `deferred`, means Windows is deferred.
+WINDOWS_FILES = (".github/workflows/windows-msi-check.yml", ".github/workflows/package-windows.yml")
+WINDOWS_TRACKS = ("rust",)
+
+
+def windows_deferred(root: str) -> bool:
+    try:
+        with open(os.path.join(root, ".delivery", "config.json"), "rb") as f:
+            cfg = json.loads(f.read().decode("utf-8-sig"))
+        val = cfg["ci"]["options"]["windows"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return True
+    return val not in ("self-hosted", "github-hosted", "cloud")
 
 
 def write_config(src: str, dst: str) -> None:
@@ -418,6 +439,10 @@ def main(argv=None) -> int:
     except ValueError as e:
         print("delivery_ci_install: %s" % e, file=sys.stderr)
         return 2
+    if args.track in WINDOWS_TRACKS and windows_deferred(root):
+        skip = set(skip) | set(WINDOWS_FILES)
+        print("Windows is deferred (no ci.options.windows in .delivery/config.json): the Windows workflows are not installed. "
+              "Choose it with `delivery_ci.py set`, then run install again.")
     items = plan(args.track, root, args.action, keep, skip)
     managed = {rel for rel, _s, _a in items}
     for rel in sorted((keep | skip) - managed):
