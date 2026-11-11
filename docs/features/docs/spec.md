@@ -79,6 +79,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.11** — `docs_check.py` warns on stale or missing `last_verified`, code newer than its doc, and a spec with no diagram. `--strict` turns warnings into failures (DOCSPEC R8.2).
 
+**R5.11a** — The "code newer than its doc" warning (T2) gives the same result on a developer machine, in CI and on a pull request merge ref. It compares UTC dates of the last non-merge commit for the code and for the doc, so a commit's time zone and a merge commit dated "now" change nothing. On a shallow clone the dates are wrong, so T2 is skipped and one info line goes to stderr; fetch full history to run it.
+
 **R5.12** — `docs_work.py guard` exits 1 when a branch adds files under `docs/work/`. `strip` and `summaries` serve the join step (DOCSPEC R10.2, R10.3).
 
 **R5.13** — The Stop hook prints a warning, never a block, when mapped code changed without docs. The SessionStart hook adds the docs rule. Both do nothing without `docs/docs.json`. Both fail open on error (DOCSPEC R8.7).

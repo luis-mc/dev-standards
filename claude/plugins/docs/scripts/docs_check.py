@@ -28,6 +28,7 @@ Exit 0 when no errors (warnings allowed unless --strict), 1 on errors, 2 on a us
 from __future__ import annotations
 
 import argparse
+import datetime
 import json
 import os
 import re
@@ -298,8 +299,14 @@ def check_work_guard(root: Path, base: str | None) -> list[Finding]:
     return [f(ERR, "W1", bad[0], f"{len(bad)} file(s) under docs/work/ are added on this branch; briefs and reports never reach the default branch (D9). Run docs_work.py strip before the join.")]
 
 
+def is_shallow(root: Path) -> bool:
+    r = D.git(root, "rev-parse", "--is-shallow-repository")
+    return r.stdout.strip() == "true"
+
+
 def check_freshness(root: Path, cfg: dict) -> list[Finding]:
     out = []
+    shallow_noted = False
     for fd in D.feature_dirs(root):
         spec = fd / "spec.md"
         if not spec.is_file():
@@ -313,6 +320,11 @@ def check_freshness(root: Path, cfg: dict) -> list[Finding]:
             out.append(f(WARN, "T1", rel, "last_verified is " + (f"{lv}, older than {cfg['stale_days']} days" if lv else "missing")))
         codes = fm.get("code") if isinstance(fm.get("code"), list) else []
         if codes and D.is_git(root):
+            if is_shallow(root):
+                if not shallow_noted:
+                    print("docs_check: info: shallow git clone, so the code-versus-doc date check (T2) was skipped. Fetch full history (fetch-depth: 0) to run it.", file=sys.stderr)
+                    shallow_noted = True
+                continue
             cdate = last_commit_date(root, codes)
             ddate = max(filter(None, [D.parse_date(lv), D.parse_date(last_commit_date(root, [rel]) or "")]), default=None)
             cd = D.parse_date(cdate or "")
@@ -323,9 +335,14 @@ def check_freshness(root: Path, cfg: dict) -> list[Finding]:
 
 def last_commit_date(root: Path, paths: list[str]) -> str | None:
     specs = [p if "*" not in p and "?" not in p else f":(glob){p}" for p in paths]
-    r = D.git(root, "log", "-1", "--format=%cs", "--", *specs)
+    # Merge commits are skipped (a CI merge ref adds one dated "now"), and the
+    # commit time becomes a UTC date, so a commit's own time zone cannot move
+    # it across midnight.
+    r = D.git(root, "log", "--no-merges", "-1", "--format=%ct", "--", *specs)
     s = r.stdout.strip()
-    return s or None
+    if not s.isdigit():
+        return None
+    return datetime.datetime.fromtimestamp(int(s), datetime.timezone.utc).date().isoformat()
 
 
 def run_checks(root: Path, base: str | None, reference: bool = True) -> list[Finding]:
