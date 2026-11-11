@@ -302,6 +302,11 @@ def merge_changed(items: list, root: str) -> list:
             tpl, _c = _text(src)
             if None not in (base, proj, tpl):
                 text, n = merge3(base, proj, tpl)
+                if not n and text == proj and proj != tpl:
+                    # DL236: nothing of the template reached the file (the base is the template, as after a
+                    # base-less step-1 run). It is not a merge: keep it, write the template as <file>.new.
+                    out.append((rel, src, action))
+                    continue
                 MERGES[rel] = (text, n, crlf)
                 action = CONFLICT if n else MERGED
         out.append((rel, src, action))
