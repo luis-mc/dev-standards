@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T12:36+00:00",
+  "updated": "2026-11-11T12:43+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3632,12 +3632,11 @@
       "id": "DL203",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: installer files pass the secret scans",
       "detail": "Ships DL204 (and the DL203 test fixture note). Join, fold, CI, merge on green, plugin updates in both scopes, smoke, tell the peer project.",
-      "expected": "11 Nov ~12:55",
-      "changed": "2026-11-11T12:36+00:00",
-      "expected_basis": "CI run from 12:36, then ignore-file push and its CI ~5 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T12:43+00:00",
       "release": 98,
       "phases": [
         {
@@ -3667,11 +3666,11 @@
       "id": "DL204",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Installer files pass the secret scans (hook pattern, gitleaks)",
       "detail": "A peer project's pre-commit blocked files the installer writes: a variable name in ci_rerun_first.py matches the hook's name pattern, and a hash line in the install state file trips a gitleaks rule. Fix: rename such variables in shipped scripts, add a guard test; hook skip and gitleaks allowlist for the install base folder and state file; the gate ignores untracked docs/work/.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T12:36+00:00",
+      "changed": "2026-11-11T12:43+00:00",
       "rides": "DL203",
       "started": "2026-11-11T12:19+00:00"
     },
