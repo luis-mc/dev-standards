@@ -278,8 +278,10 @@ def tool_dir(name: str, plat: str) -> tuple[Path, Path, dict]:
     archive = fetch(entry["url"], entry["sha256"], f"{name}/{version}/{fname}")
     base = archive.parent
     if kind == "file":
-        out = base / f"{plat}-{_exe(entry.get('bin') or name, plat)}"
+        # Keep the exact file name: some tools (rustup-init) read argv[0].
+        out = base / plat / _exe(entry.get("bin") or name, plat)
         if not out.is_file():
+            out.parent.mkdir(parents=True, exist_ok=True)
             tmp = out.with_name(f"{out.name}.{os.getpid()}.partial")
             try:
                 shutil.copyfile(archive, tmp)
