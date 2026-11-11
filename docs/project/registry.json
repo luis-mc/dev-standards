@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T17:36+00:00",
+  "updated": "2026-11-11T17:53+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4096,12 +4096,11 @@
       "id": "DL229",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Installer skips package.yml when nothing is packaged",
       "detail": "D225: no package.yml or docker build smoke default when the project has no Dockerfile and no packaged-program setting; the job skips cleanly.",
-      "expected": "11 Nov ~18:00",
-      "changed": "2026-11-11T17:35+00:00",
-      "expected_basis": "cloud agent from ~17:37, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:52+00:00",
       "rides": "DL232",
       "started": "2026-11-11T17:35+00:00"
     },
@@ -4109,12 +4108,11 @@
       "id": "DL230",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "CI template: Playwright without --with-deps on pool runners",
       "detail": "D226: pool runners have no sudo; the template runs playwright install chromium without --with-deps on self-hosted pool runners (libs from POOL_BROWSERS=chromium) and keeps --with-deps on GitHub-hosted.",
-      "expected": "11 Nov ~18:00",
-      "changed": "2026-11-11T17:35+00:00",
-      "expected_basis": "cloud agent from ~17:37, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:52+00:00",
       "rides": "DL232",
       "started": "2026-11-11T17:35+00:00"
     },
@@ -4122,12 +4120,11 @@
       "id": "DL231",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool pre-creates declared NOLOGIN database roles",
       "detail": "D227: the pool reads each project's declared NOLOGIN roles, creates them once as admin and grants them to the project's user; no CREATEROLE for project users.",
-      "expected": "11 Nov ~18:00",
-      "changed": "2026-11-11T17:35+00:00",
-      "expected_basis": "cloud agent from ~17:37, ~23 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:52+00:00",
       "rides": "DL232",
       "started": "2026-11-11T17:35+00:00"
     },
@@ -4135,12 +4132,11 @@
       "id": "DL232",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: package.yml skip, Playwright on pool, pool DB roles",
       "detail": "Join DL229-DL231, fold, CI, merge on green, plugin updates, pool refresh when idle, tell home-automation.",
-      "expected": "11 Nov ~18:16",
-      "changed": "2026-11-11T17:36+00:00",
-      "expected_basis": "agents ~23 min + join/CI/merge ~15 min",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T17:52+00:00",
       "release": 105,
       "phases": [
         {
@@ -4165,6 +4161,18 @@
         }
       ],
       "started": "2026-11-11T17:35+00:00"
+    },
+    {
+      "id": "DL233",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "Refresh pool to 1.31.0 and declare a peer's database roles",
+      "detail": "Rebuild pool main from delivery 1.31.0 when idle and memory <85%, then pool-add-agent --db-role for the peer's two NOLOGIN roles (D227); tell it to rerun.",
+      "expected": "11 Nov ~18:30",
+      "changed": "2026-11-11T17:53+00:00",
+      "expected_basis": "3 pool jobs at 17:52 (~25 min) + rebuild ~5 min",
+      "no_release": "operations on the local pool"
     },
     {
       "id": "DS1",
