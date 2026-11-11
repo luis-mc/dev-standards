@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.25.0
+version: 0.25.1
 owner: agents
 type: reference
 code:
@@ -161,6 +161,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.43** — After the light check and before the runner check and the push, `join.py` runs `pre_pr_docs`: `design_system.py visuals --apply` (only when `docs/design-system/next-version` exists), `docs_index.py build` (docs changes are committed as `Rebuild generated docs`) and `docs_check.py --strict`. It lists specs with T2 findings under `specs with T2 findings, verify before push:`. A missing script prints `luismc-docs X not found; ... not run`. The result goes to `pre_pr_docs` in `join-result.json`. This step never changes the exit code. (DL140)
 
 **R5.44** — When the local integration branch is ahead of `origin/X`, `join.py` builds on it and prints `join: local X is ahead of origin/X; building on the local branch`. When the local branch holds commits that origin does not, and origin is not built on them, it exits 2 with `... joining would lose them. Push or rebase local X first.` A conflict under `docs/work/` takes the branch's side and says so. (DL145)
+
+**R5.46** — The join's "Strip temporary agent docs" step removes only the `docs/work/` paths the joined branches added or changed compared with `origin/<default>`. After `docs_work.py strip --apply`, `join.py` restores `docs/work` from that base (`git checkout <base> -- docs/work`) and makes one commit. A file the base has keeps the base's content; a path the branches added is deleted. When the base has no `docs/work/`, the whole folder is stripped as before. Report summaries are collected before the strip. (DL197)
 
 **R5.45** — After its steps, `branch_gate.py` restores `docs/work` only (`git restore --staged --worktree`, then `git clean -fd`), so the next push or gate run sees a clean tree. The gate sets `PYTHONIOENCODING=utf-8`, `PYTHONUTF8=1`, `FORCE_COLOR=0` and `NO_COLOR=1`, and reconfigures stdout and stderr to UTF-8 with `errors=replace`. After the run it rewrites each step log as UTF-8 (UTF-8 bytes, else cp1252 with replace), removes ANSI sequences and turns CRLF into LF. (DL131, DL134)
 
@@ -507,6 +509,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.25.1 | 2026-11-11 | RELEASE-95 | The join's docs strip restores the base's docs/work/ and removes only what the joined branches added (R5.46). | DL197 |
 | 0.25.0 | 2026-11-11 | RELEASE-94 | Rust templates: PATH export in the toolchain step, codegen and contract run only when the target exists, package copies the binaries smoke.json names, and a Windows-deferred option (R5.54, R13.91).<br>The rust deny step runs cargo-deny 0.20.2 with the top-level --offline flag before check. The old --disable-fetch flag is gone in that version. | DL192, DL193 |
 | 0.24.0 | 2026-11-11 | RELEASE-93 | The delivery installer writes .gitleaks.toml when the project has none (one source, in luismc-delivery), and the shared secret rules skip type annotations, struct fields and empty values.<br>CI templates work on a pool runner: no postgres service, pool database env, and rust migrations and test targets run only when present (R5.53).<br>The doctor finds Zig and LLVM in the ci_tool cache where ci_tool.py puts them, accepts flat and per-platform tools.json pins (and names a missing platform), names only real ci_tool.py commands in fix text, warns when scripts/delivery is older than the plugin templates (new item ci.scripts-current), and shows the configured ci.wait_min.<br>A tool pinned as kind file is saved under its exact name in a per-platform folder, so tools that read argv[0] (rustup-init) work. Old cache files are ignored.<br>The integration job is a hosted/pool pair with one check name; the pool job has no services block (R5.53).<br>windows-msi-check.yml installs Wine and xvfb only when wine or xvfb-run is missing, so it runs on pool runners without sudo. | DL186, DL187, DL188, DL189, DL190, DL191 |
 | 0.23.0 | 2026-11-11 | RELEASE-92 | The first run of a rerun-first push sets the commit status rerun-first/held to pending; the second run closes it; ci_watch waits for the second run.<br>The pool doctor checks agree with pool-run and apply: the agent is found as <pool>-<repo>, CI_RUNS_ON carries the pool label, a pool written by a newer plugin is not reported as drift, and the layer check reads the running container's image. The pool folder records the writing plugin version in pool-version.json. | DL183, DL184 |
