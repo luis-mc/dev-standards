@@ -57,6 +57,10 @@ and `.delivery/config.json` (project-owned: written when absent, never overwritt
 is already there is not added twice, and a settings file that is not valid JSON is left alone with a warning.
 `--only config,settings` (no --track needed) does just those two steps and leaves the template files alone.
 
+Secret scan config (DL186). The CI secret-scan step runs `gitleaks git --config .gitleaks.toml`, so the installer
+writes `.gitleaks.toml` (from `templates/shared/.gitleaks.toml`, the only copy; tech-stack-setup carries none) when the
+project has none. The project owns it after that: `install` keeps a different one and `update` lists it as "differs".
+
 Exit 0 done, 1 a bad track, 2 a missing template folder or a bad ci-install.json, 3 a managed script imports a sibling module that is
 not in the project (the files were still written). Untracked files do not change the exit code.
 Standard library only.
@@ -79,7 +83,7 @@ TRACKS = ("ts", "go", "rust", "dotnet")
 # Project-edited: `update` never overwrites these (the project owns them after the first install).
 PROJECT_OWNED_NAMES = {"gate.json", "smoke.json", "ci-areas.json", "ci-timings.json", "ci-scope.json",
                        "quarantine.json", "ci-shards.json", "ci-shards.example.json", "ci.yml", "package.yml", "nightly-full.yml",
-                       "ci-install.json"}
+                       "ci-install.json", ".gitleaks.toml"}
 # Project-owned by relative path (the name `config.json` is too common to own by name).
 PROJECT_OWNED_PATHS = {".delivery/config.json"}
 HOOKS_DIR = ".githooks"

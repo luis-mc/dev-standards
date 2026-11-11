@@ -1,7 +1,11 @@
+# Shipped by luismc-delivery: delivery_ci_install.py writes this file to the project root when
+# the project has none, and never overwrites a project's own. It is the only copy; tech-stack-setup
+# does not carry one (DL186).
+#
 # Implements STACKSPEC §12's secret-scanning requirement, which mandates
 # gitleaks (or equivalent) as a pre-commit hook *and* a CI gate. The same config
 # serves both: .githooks/pre-commit reads it locally, .github/workflows/ci.yml
-# passes it via GITLEAKS_CONFIG.
+# passes it with --config.
 #
 # Extends gitleaks' built-in rules (private keys, provider-specific token
 # formats, high-entropy generic secrets) with explicit rules for this project's
@@ -13,13 +17,19 @@ useDefault = true
 [[rules]]
 id = "project-database-url"
 description = "DATABASE_URL assignment"
-regex = '''(?i)DATABASE_URL\s*[:=]\s*['"]?[^\s'"]+'''
+# One line only ([ \t], never \s, so an empty `DATABASE_URL=` cannot reach the next line).
+# `=` takes a value that is not empty, not a comment, not `=`. `:` takes a quoted value or a
+# URL, so a type annotation (`database_url: &str`) or a field declaration does not match.
+regex = '''(?i)DATABASE_URL[ \t]*(=[ \t]*['"]?[^\s'"#=][^\s'"]*|:[ \t]*(['"][^\s'"][^\s'"]*|[a-z][a-z0-9+.-]*://[^\s'"]+))'''
 tags = ["project", "database"]
 
 [[rules]]
 id = "project-named-secret"
 description = "Assignment to a var ending in _TOKEN, _SECRET, _PASS, or _KEY"
-regex = '''(?i)[A-Z0-9_]*_(TOKEN|SECRET|PASS|KEY)\s*[:=]\s*['"]?[^\s'"]+'''
+# One line only. `=` takes a value that is not empty, not a comment, not `=`. `:` takes only a
+# quoted value, so `_token: &Token`, `_secret: String` and `_key: string` (types and field
+# declarations) do not match while `my_token: "literal"` does.
+regex = '''(?i)[A-Z0-9_]*_(TOKEN|SECRET|PASS|KEY)[ \t]*(=[ \t]*['"]?[^\s'"#=][^\s'"]*|:[ \t]*['"][^\s'"][^\s'"]*)'''
 tags = ["project", "secret"]
 
 [allowlist]
