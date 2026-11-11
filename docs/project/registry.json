@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T23:10+00:00",
+  "updated": "2026-11-11T23:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4600,11 +4600,11 @@
       "id": "DL257",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "DL257 Fix the Windows-only join test failures",
       "detail": "Five join tests fail on Windows only (local runs on main); make them pass on Windows and Linux.",
       "expected": "11 Nov",
-      "changed": "2026-11-11T22:54+00:00",
+      "changed": "2026-11-11T23:17+00:00",
       "rides": "DL261",
       "started": "2026-11-11T22:23+00:00"
     },
@@ -4648,12 +4648,11 @@
       "id": "DL261",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: Windows join tests",
       "detail": "Next release after RELEASE-111: DL257 (local agent, Windows-only join test failures).",
-      "expected": "11 Nov ~23:24",
-      "changed": "2026-11-11T23:00+00:00",
-      "expected_basis": "joins after RELEASE-111 merges ~23:12",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T23:17+00:00",
       "release": 112,
       "phases": [
         {
@@ -4663,18 +4662,18 @@
         },
         {
           "name": "join",
-          "start": "2026-11-11T23:12+00:00",
-          "end": "2026-11-11T23:16+00:00"
+          "start": "2026-11-11T23:10+00:00",
+          "end": "2026-11-11T23:12+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T23:16+00:00",
-          "end": "2026-11-11T23:21+00:00"
+          "start": "2026-11-11T23:12+00:00",
+          "end": "2026-11-11T23:18+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T23:21+00:00",
-          "end": "2026-11-11T23:24+00:00"
+          "start": "2026-11-11T23:18+00:00",
+          "end": "2026-11-11T23:21+00:00"
         }
       ],
       "risk": {
