@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T11:45+00:00",
+  "updated": "2026-11-11T12:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3627,6 +3627,54 @@
       "expected_basis": "24 h logging from 10:40, then ~5 min analysis",
       "no_release": "study: measurement only",
       "started": "2026-11-11T10:41+00:00"
+    },
+    {
+      "id": "DL203",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: installer files pass the secret scans",
+      "detail": "Ships DL204 (and the DL203 test fixture note). Join, fold, CI, merge on green, plugin updates in both scopes, smoke, tell the peer project.",
+      "expected": "11 Nov ~12:50",
+      "changed": "2026-11-11T12:19+00:00",
+      "expected_basis": "agent ~12:15-12:40, join 5, CI 5",
+      "release": 98,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T12:15+00:00",
+          "end": "2026-11-11T12:40+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T12:40+00:00",
+          "end": "2026-11-11T12:44+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T12:44+00:00",
+          "end": "2026-11-11T12:49+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T12:49+00:00",
+          "end": "2026-11-11T12:50+00:00"
+        }
+      ],
+      "started": "2026-11-11T12:19+00:00"
+    },
+    {
+      "id": "DL204",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Installer files pass the secret scans (hook pattern, gitleaks)",
+      "detail": "A peer project's pre-commit blocked files the installer writes: a variable name in ci_rerun_first.py matches the hook's name pattern, and a hash line in the install state file trips a gitleaks rule. Fix: rename such variables in shipped scripts, add a guard test; hook skip and gitleaks allowlist for the install base folder and state file; the gate ignores untracked docs/work/.",
+      "expected": "11 Nov ~12:44",
+      "changed": "2026-11-11T12:20+00:00",
+      "expected_basis": "cloud agent from 12:21, ~23 min",
+      "rides": "DL203",
+      "started": "2026-11-11T12:19+00:00"
     },
     {
       "id": "DS1",
