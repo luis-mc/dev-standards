@@ -134,10 +134,12 @@ exits 0:
   `deferred until HH:MM (<zone>)` and exits 0, and the end-of-turn hook does
   not block; it prints one line. After that time `pending` lists it again. A
   later `mark-published` clears the deferral.
-- `mark-deferred` also writes the current Full Progress page to the work
-  directory (`--local DIR`, else `work_root`, else the publish-copy folder) and
-  opens it once; `--no-open` skips the opening. Give the owner the local path
-  it prints. Until the reset, each record change refreshes that page.
+- `mark-deferred` also writes the Full Progress page and its feature pages to
+  the work directory (`--local DIR`, else `work_root` of the project, else
+  `work_root` of `machine.json`, else the publish-copy folder) and opens it
+  once per deferral; `--no-open` skips the opening. Give the owner the local
+  path it prints. Until the reset, each record change refreshes those pages,
+  and an open tab reloads itself every 60 seconds.
 
 ## Old claude.ai pages
 

@@ -1764,15 +1764,23 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   exits 0, and the end-of-turn hook does not block on it: it prints one line
   saying the publish is deferred and when. After that time both behave as
   before. `mark-deferred` also writes a local copy of the current Full
-  Progress page (the same bytes as the publish copy) to
-  `<dir>/full-progress/<project slug>/<file name>` and opens it once in the
-  default browser (not with `--no-open`, with `CI` set, or with no display).
-  `<dir>` is `--local DIR`, else `work_root` of `.delivery/config.json`, else
-  the publish-copy folder. The path is recorded as `local_path` on the entry.
-  While the deferral is active, every writing command refreshes that copy;
-  after the until time it is left as it is, never deleted. `pending` shows the
-  path (`local_path` in `--json`) and the hook line reads `Full Progress is
-  deferred until HH:MM; local copy: <path>`. Any later `mark-published` clears the deferral. Verified by
+  Progress page to
+  `<dir>/full-progress/<project slug>/<file name>`. The page is the repo copy
+  (the one that links each row to its feature page), and every `feature-*.html`
+  beside it is copied into the same folder, so each link opens offline. Each
+  local page has `<meta http-equiv="refresh" content="60">` in its head; the
+  repo copy and the publish copy do not. The page opens once in the default
+  browser per deferral (not with `--no-open`, with `CI` set, or with no
+  display); `local_opened` on the entry records it, and a second
+  `mark-deferred` in the same deferral does not open it again. `<dir>` is
+  `--local DIR`, else `work_root` of `.delivery/config.json`, else `work_root`
+  of `machine.json` in the delivery machine folder, else the publish-copy
+  folder (with a warning that names `machine.json`). The path is recorded as
+  `local_path` on the entry. While the deferral is active, every writing
+  command refreshes the copies; after the until time they are left as they
+  are, never deleted. `pending` shows the path (`local_path` in `--json`) and
+  the hook line reads `Full Progress is deferred until HH:MM; local copy:
+  <path>`. Any later `mark-published` clears the deferral. Verified by
   `test_deferred_publish_does_not_block_until_the_reset` and
   `end_of_turn_reminds_once_while_deferred`.
 - **R9.8** — Full Progress is published at least every 60 minutes while
