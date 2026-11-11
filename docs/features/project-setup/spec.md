@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.11.0
+version: 0.11.1
 owner: agents
 type: reference
 code:
@@ -199,6 +199,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.1 | 2026-11-11 | RELEASE-98 | Secret scans skip the delivery installer's state files; shipped scripts avoid secret-shaped variable names; the branch gate ignores untracked docs/work/ files. | DL204 |
 | 0.11.0 | 2026-11-11 | RELEASE-93 | The delivery installer writes .gitleaks.toml when the project has none (one source, in luismc-delivery), and the shared secret rules skip type annotations, struct fields and empty values. | DL186 |
 | 0.10.0 | 2026-11-10 | RELEASE-86 | claude-setup enables six plugins and removes the keys of the two merged ones; its CI template names the luismc-docs spec-check script. | DS219 |
 | 0.9.0 | 2026-11-10 | RELEASE-84 | The delivery installer writes the pre-push and commit-msg hooks, .delivery/config.json and the session_guard settings entry; project-setup only calls it. | DL172 |

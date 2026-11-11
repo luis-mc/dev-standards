@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.26.0
+version: 0.26.1
 owner: agents
 type: reference
 code:
@@ -513,6 +513,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.26.1 | 2026-11-11 | RELEASE-98 | The installer's state files (.delivery/ci-install-state.json and .delivery/ci-install-base/) are exempt from secret scans, a script variable no longer ends in _key, and branch_gate ignores untracked docs/work/ files. | DL204 |
 | 0.26.0 | 2026-11-11 | RELEASE-96 | update 3-way merges a plugin-owned file the project changed (base kept in .delivery/ci-install-base/), writes <file>.new with conflict markers when it cannot, and ends with a summary line; hashes stay in .delivery/ci-install-state.json. | DL201 |
 | 0.25.1 | 2026-11-11 | RELEASE-95 | The join's docs strip restores the base's docs/work/ and removes only what the joined branches added (R5.46). | DL197 |
 | 0.25.0 | 2026-11-11 | RELEASE-94 | Rust templates: PATH export in the toolchain step, codegen and contract run only when the target exists, package copies the binaries smoke.json names, and a Windows-deferred option (R5.54, R13.91).<br>The rust deny step runs cargo-deny 0.20.2 with the top-level --offline flag before check. The old --disable-fetch flag is gone in that version. | DL192, DL193 |
