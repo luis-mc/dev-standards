@@ -200,12 +200,98 @@ def _heavy_key(data):
     return hashlib.sha1(text.encode('utf-8', 'replace')).hexdigest()[:20]
 
 
+# DL253: an entry is freed as soon as its call has ended. Signals, each safe on its own:
+#  (a) the session transcript (bounded tail) holds a tool_result for the call: it returned;
+#  (b) a foreground call is older than its own timeout + 2 min: a foreground call cannot outlive its timeout;
+#  (c) the transcript file is gone, or has not changed for 30 min: the session ended.
+# A call that returned because it moved to the background (or was launched with run_in_background) cannot be tied to
+# its task end reliably, so it counts for BG_CAP_MIN minutes after it started, then is freed. slot_stale_min stays the
+# last cap for every entry.
+TAIL_BYTES = 4 * 1024 * 1024
+TIMEOUT_GRACE_S = 120
+DEFAULT_TIMEOUT_MS = 120000
+MAX_TIMEOUT_MS = 600000
+TRANSCRIPT_IDLE_S = 30 * 60
+BG_CAP_S = 30 * 60
+FREED = []          # (label, why) freed by the last heavy_running call
+
+
+def _tail(path, size=TAIL_BYTES):
+    """The last `size` bytes of a file as text (a cut first line is dropped). Never reads more than `size`."""
+    with open(path, 'rb') as f:
+        end = f.seek(0, os.SEEK_END)
+        start = max(0, end - size)
+        f.seek(start)
+        raw = f.read(size)
+    text = raw.decode('utf-8', 'replace')
+    if start > 0:
+        text = text.split('\n', 1)[-1]
+    return text
+
+
+def _call_result(path, tool_use_id):
+    """None when the transcript tail has no tool_result for the call, else {'background': bool}."""
+    text = _tail(path)
+    if tool_use_id not in text:
+        return None
+    for line in text.splitlines():
+        if tool_use_id not in line or 'tool_result' not in line:
+            continue
+        try:
+            obj = json.loads(line)
+        except ValueError:
+            continue
+        msg = obj.get('message') if isinstance(obj, dict) else None
+        content = msg.get('content') if isinstance(msg, dict) else None
+        if not isinstance(content, list):
+            continue
+        for item in content:
+            if isinstance(item, dict) and item.get('type') == 'tool_result' and item.get('tool_use_id') == tool_use_id:
+                body = json.dumps(item.get('content'))
+                bg = bool(re.search(r'background', body, re.I)) or bool(
+                    isinstance(obj.get('toolUseResult'), dict) and obj['toolUseResult'].get('backgroundTaskId'))
+                return {'background': bg}
+    return None
+
+
+def _ended(rec, key, now):
+    """Why this entry's call has ended, or None when it may still run (never a guess)."""
+    ts = rec.get('ts') or now
+    age = now - ts
+    tp = rec.get('transcript_path')
+    bg = rec.get('background') is True
+    if isinstance(tp, str) and tp:
+        try:
+            mtime = os.path.getmtime(tp)
+        except OSError:
+            return 'its session transcript is gone'
+        if now - mtime > TRANSCRIPT_IDLE_S:
+            return 'its session transcript has been idle over 30 min'
+        try:
+            res = _call_result(tp, rec.get('tool_use_id') or key)
+        except OSError:
+            res = None
+        if res is not None:
+            if not res['background']:
+                return 'its call returned'
+            bg = True
+    if bg:
+        if age > BG_CAP_S:
+            return 'a background call over 30 min old'
+        return None
+    if isinstance(rec.get('timeout_ms'), int) and age > rec['timeout_ms'] / 1000.0 + TIMEOUT_GRACE_S:
+        return 'older than its own timeout'
+    return None
+
+
 def heavy_running(cfg=None, now=None):
-    """The foreground heavy calls in flight: [{'key', 'label', 'at'}]. An entry whose process is gone (same host), or
-    older than slot_stale_min, is dropped (a record with no pid, as heavy_begin writes, is kept until heavy_end or then)."""
+    """The heavy calls in flight: [{'key', 'label', 'at', 'session'}]. An entry is dropped when its process is gone
+    (same host), its call has ended (DL253, see _ended), or it is older than slot_stale_min. What was freed as ended is
+    in FREED. A record with no pid, as heavy_begin writes, is kept until one of these."""
     now = time.time() if now is None else now
     stale = MS.machine_config()['slot_stale_min'] * 60
     out = []
+    del FREED[:]
     folder = heavy_dir()
     try:
         names = sorted(os.listdir(folder))
@@ -218,19 +304,31 @@ def heavy_running(cfg=None, now=None):
         rec = MS._read_json(path)
         if rec is None:
             continue
+        why = None
         if MS._holder_gone(rec) or now - (rec.get('ts') or now) > stale:
+            why = 'stale'
+        else:
+            try:
+                why = _ended(rec, name[:-5], now)
+            except Exception:  # noqa: BLE001 - on doubt keep the entry
+                why = None
+        if why:
+            if why != 'stale':
+                FREED.append((rec.get('label') or '?', why))
             try:
                 os.unlink(path)
             except OSError:
                 pass
             continue
-        out.append({'key': name[:-5], 'label': rec.get('label') or '?', 'at': rec.get('ts')})
+        out.append({'key': name[:-5], 'label': rec.get('label') or '?', 'at': rec.get('ts'),
+                    'session': rec.get('session')})
     return out
 
 
 def heavy_begin(data, cfg=None):
     """Count this call as heavy work in flight (PreToolUse, after the call is allowed). No-op for a light call. Never
-    raises."""
+    raises. A run_in_background launch counts (it starts real work) and is freed by the 30 min background cap or by the
+    session signals in _ended."""
     try:
         tool = data.get('tool_name')
         if tool not in TRACKED_TOOLS or not H.check_on(cfg or {}, LOCAL_CHECK_ID):
@@ -240,9 +338,21 @@ def heavy_begin(data, cfg=None):
             return False
         folder = heavy_dir()
         MS._mkdir(folder)
+        ti = data.get('tool_input') if isinstance(data.get('tool_input'), dict) else {}
+        timeout = ti.get('timeout')
+        if not isinstance(timeout, int) or isinstance(timeout, bool) or timeout <= 0:
+            timeout = DEFAULT_TIMEOUT_MS
+        timeout = min(timeout, MAX_TIMEOUT_MS)
         # DL54 F7: no pid and no host. The parent is the short-lived shell of this hook, gone before the next hook
-        # runs, so a pid would drop a live call at once. heavy_end or slot_stale_min removes the record.
+        # runs, so a pid would drop a live call at once. heavy_end, DL253 (_ended) or slot_stale_min removes the record.
         rec = {'label': label, 'ts': time.time(), 'session': data.get('session_id')}
+        if tool in SHELL_TOOLS:               # only a shell call has a timeout; a Workflow has none we know
+            rec['timeout_ms'] = timeout
+            rec['background'] = ti.get('run_in_background') is True or label == 'a background job'
+        if isinstance(data.get('tool_use_id'), str):
+            rec['tool_use_id'] = data['tool_use_id']
+        if isinstance(data.get('transcript_path'), str):
+            rec['transcript_path'] = data['transcript_path']
         path = os.path.join(folder, _heavy_key(data) + '.json')
         tmp = MS._write_tmp(folder, rec, '.new-')
         os.replace(tmp, path)
@@ -276,7 +386,12 @@ def local_heavy_limit(cfg=None):
 
 def local_running(cfg=None, ledger=None):
     """[(kind, label)] of the heavy local work now: foreground calls and, from the ledger, local agents."""
-    out = [('command', h['label']) for h in heavy_running(cfg)]
+    now = time.time()
+    out = []
+    for h in heavy_running(cfg, now):
+        age = max(0, int((now - (h.get('at') or now)) / 60))
+        sess = str(h.get('session') or '')[:8]
+        out.append(('command', '%s (%d min%s)' % (h['label'], age, ', session ' + sess if sess else '')))
     if isinstance(ledger, dict):
         for a in H.running_agents(ledger, 'local'):
             out.append(('agent', str(a.get('task') or a.get('id') or 'agent')))
@@ -288,7 +403,8 @@ def local_refusal(running, limit, label):
     return ('DL-91 local heavy work is at its limit (%d of %d running: %s), so new heavy work is held: not starting %s. '
             'What to do: wait for one to finish, or launch it in the cloud; nothing is killed or slowed. Limit: '
             'local_heavy in the machine config (%s) or .delivery/config.json (a project can only lower it).'
-            % (len(running), limit, names or 'unknown', label, MS.config_path()))
+            % (len(running), limit, names or 'unknown', label, MS.config_path())
+            + ('' if not FREED else ' Freed just now as ended: %s.' % '; '.join('%s (%s)' % f for f in FREED)))
 
 
 def project_cfg(root):
