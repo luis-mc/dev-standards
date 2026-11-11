@@ -86,7 +86,8 @@ COPY hooks/ /opt/delivery/hooks/
 # The setup copies the machine-layer scripts (runner_load_gate.py, runner_job_done.py, load.py, machine_slots.py) here.
 COPY delivery/ /opt/delivery/
 RUN chmod +x /usr/local/bin/pool-add-agent /usr/local/bin/pool-remove-agent /usr/local/bin/pool-db-env /opt/delivery/hooks/*.sh
-# DL115: the per-runner tool cache (CI_TOOLS_DIR); every agent user writes it, the sticky bit keeps files apart.
+# DL115: the per-runner tool cache (CI_TOOLS_DIR); every agent user writes it.
+# DL194: ci_tool.py makes its own folders 0777, so any agent user can add tools.
 RUN mkdir -p /ci-tools && chmod 1777 /ci-tools
 VOLUME ["/agents"]
 STOPSIGNAL SIGTERM
