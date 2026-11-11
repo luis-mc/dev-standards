@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.29.0
+version: 0.30.0
 owner: agents
 type: reference
 code:
@@ -523,6 +523,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.30.0 | 2026-11-11 | RELEASE-107 | join.py: sibling branches off one contract branch are not reported as stacked; a stacked stop lists its files; every skipped branch prints a skipped line; a partial join prints a joined N of M summary and exits non-zero unless --allow-partial (R5.57).<br>R5.33: artifact_prune.py --sync-workflow keeps the workflow file's own list when the config sets no artifact_prune.workflows; the default is written only for a new file or a file with no list; one line names the source. | DL241, DL242 |
 | 0.29.0 | 2026-11-11 | RELEASE-106 | ci_watch.py: 60 s default poll, backoff while queued, quota guard, many commits or runs in one process; rule DL-95 (R5.56).<br>update keeps a file the template did not reach (kept, with .new) instead of reporting merged; ci.scripts-current skips the package files the installer skips (R13.92).<br>The shipped .gitleaks.toml allowlist skips a SQL placeholder bound to a _key/_token/_secret/_pass name with more SQL after it, and a nested call such as Some(Arc::new(signer)). Quotes, bare tokens and second assignments stay scanned. | DL235, DL236, DL237 |
 | 0.28.1 | 2026-11-11 | RELEASE-105 | The ts installer skips package.yml and smoke.json when the project has no Dockerfile and no packaged-program setting; the package job skips on the placeholder (R13.94).<br>The ts template installs Playwright with --with-deps only on GitHub-hosted runners; self-hosted pool runners run playwright install chromium without it (D226). | DL229, DL230 |
 | 0.28.0 | 2026-11-11 | RELEASE-104 | join.py: a new --into branch is created and pushed; origin/X means X; --into defaults to <first task id>-integration; a Cargo.lock conflict is resolved with cargo fetch and verified with --locked; the ready-PR guard names the <task>-integration convention.<br>agent_ci.py reads the agent report at docs/work/<TASK>/REPORT.md first, then docs/work/reports/<TASK>.md. ci_watch.py waits until every run of the commit has completed before it reports a failure, and never labels an in-progress job as failed.<br>Installer: no compiled Python copied, a .gitignore block for it, tracked .pyc reported, the prune workflow list accepts indent and CRLF, ignored files are not listed as not in git yet. | DL225, DL226, DL227 |

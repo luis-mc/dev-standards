@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.2.0
+version: 1.3.0
 owner: agents
 type: reference
 code:
@@ -179,6 +179,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.3.0 | 2026-11-11 | RELEASE-107 | Every generated page shows the luismc-docs version and a latest or update flag; generated Markdown and llms.txt get a header line; all pages use the default page colours (a project design.css changes accents only); fonts are 0.9x (R5.16 to R5.18).<br>Fold bumps a spec's own **Version:** line in place and refuses a doc with both forms. | DL239, DL243 |
 | 1.2.0 | 2026-11-11 | RELEASE-106 | mark-deferred writes and opens a local Full Progress page; the end-of-turn hook prints its path while deferred. | DL238 |
 | 1.1.1 | 2026-11-11 | RELEASE-102 | T2 compares UTC dates of non-merge commits, so CI and local runs agree; T2 is skipped with an info line on a shallow clone. | DL219 |
 | 1.1.0 | 2026-11-11 | RELEASE-96 | Full Progress page is lighter: a windowed embedded registry, one line for older Live rows, no per-cell data-label (ARTIFACTSPEC R5.9, R6.3). | AR69 |
