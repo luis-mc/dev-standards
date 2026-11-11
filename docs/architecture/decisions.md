@@ -162,6 +162,12 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D191 | Which size should the pool keep after it was set to 10 GiB / 6 CPUs? | Keep 10 GiB / 6 CPUs (Recommended) | decided | 2026-11-10 |
 | delivery-speed | D192 | Should the pool set up the Wine prefix when the container starts? | Add it now | decided | 2026-11-10 |
 | delivery-speed | D193 | When should the pool be rebuilt and recreated to get the RELEASE-89 Wine fixes? | Right after merge, if idle (Recommended) | decided | 2026-11-10 |
+| delivery-speed | D194 | Merge RELEASE-92 unattended if CI is green? | Merge on green (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D195 | When should DL183 (rerun_first pending status) run? | merge into release 92 | decided | 2026-11-11 |
+| delivery-speed | D196 | May the pool be refreshed tonight if DL184 needs it? | Yes, only when idle (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D197 | What to do with new requests from other project sessions overnight? | Fix everything | decided | 2026-11-11 |
+| delivery-speed | D198 | If one RELEASE-92 agent is late or NOT READY, ship the other alone? | Wait for both | decided | 2026-11-11 |
+| delivery-speed | D199 | Send the morning summary to the project sessions too? | Yes, short notes (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D2 | Point 7, a smoke test of the packaged program: MUST or SHOULD? | MUST, STACKSPEC 8.0.0 | decided | 2026-10-11 |
 | delivery-speed | D20 | How does a finished cloud agent row become done in the ledger? | Both | decided | 2026-11-02 |
 | delivery-speed | D21 | Machine-wide CI load control: how many CI jobs may run on this PC at once, across all repos (ci_slots)? | 2 slots | decided | 2026-11-04 |
