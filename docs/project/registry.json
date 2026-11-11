@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T01:58+00:00",
+  "updated": "2026-11-11T06:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3540,6 +3540,19 @@
       "changed": "2026-11-11T01:58+00:00",
       "no_release": "pool upkeep; ships nothing",
       "started": "2026-11-11T01:57+00:00"
+    },
+    {
+      "id": "DL197",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "join.py strips only docs/work files the joined branches add or change",
+      "detail": "The join's docs/work strip deletes every file under docs/work on the integration branch, including files the default branch already has, which a project's CI may read. Strip only paths that differ from the base; keep the base's files.",
+      "expected": "11 Nov ~06:40",
+      "changed": "2026-11-11T06:14+00:00",
+      "expected_basis": "cloud agent ~24 min",
+      "rides": "DS230",
+      "started": "2026-11-11T06:16+00:00"
     },
     {
       "id": "DS1",
@@ -7228,6 +7241,41 @@
         }
       ],
       "started": "2026-11-11T01:15+00:00"
+    },
+    {
+      "id": "DS230",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-95: join keeps the default branch's docs/work",
+      "detail": "DL197 (peer report). Join, CI, merge on green, plugin update in both scopes.",
+      "expected": "11 Nov ~06:55",
+      "changed": "2026-11-11T06:14+00:00",
+      "expected_basis": "agent ~24 min, join 6, CI 5, merge 4",
+      "release": 95,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-11T06:16+00:00",
+          "end": "2026-11-11T06:40+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-11T06:40+00:00",
+          "end": "2026-11-11T06:46+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-11T06:46+00:00",
+          "end": "2026-11-11T06:51+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-11T06:51+00:00",
+          "end": "2026-11-11T06:55+00:00"
+        }
+      ],
+      "started": "2026-11-11T06:16+00:00"
     },
     {
       "id": "DU1",
