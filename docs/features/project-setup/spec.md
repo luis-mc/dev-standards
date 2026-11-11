@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.11.1
+version: 0.11.2
 owner: agents
 type: reference
 code:
@@ -89,6 +89,8 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 **R5.13** — At user level, `claude-setup` installs `~/.claude/hooks/questions_stop.py` and adds it to `hooks.Stop` in `~/.claude/settings.json`, without removing another hook. The hook blocks a stop when the final reply asks the owner a question in plain text, lists options to pick, or says questions are parked, and the turn made no AskUserQuestion call. It enforces Q-1 and Q-2.
 
 **R5.14** — The `questions_stop.py` hook counts an agent as running when its state is queued or running, or when it has an `eta`, no `done_at` and a state that is not done, empty, failed or stopped. When the parked-question check finds a running agent due within 60 minutes, the hook allows the stop and prints `Questions wait for the report of agent <task> (due within 60 minutes); do not ask now.` Plain-text questions (Q-2) still block. A missing or bad ledger adds no agents and the check carries on. (DL124)
+
+The hook reads only the current turn from the end of the transcript, in 1 MiB blocks. A turn larger than 32 MiB is not read and the stop is allowed. The delivery `hook_stop.py` reads the transcript the same way. (DL208)
 
 **R5.15** — Both copies of `clarifying-questions.md` carry one rule line, in the same words: the hook can see an open question, and a `RemoteTrigger` `create` or `update` due in under 2 hours then draws a warning, never a block. (DL136)
 
@@ -199,6 +201,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.2 | 2026-11-11 | RELEASE-99 | The pre-commit secret pattern no longer matches a CSS selector such as a pseudo-class on a class ending in key.<br>questions_stop.py reads only the current turn from the end of the transcript (bounded memory). | DL207, DL208 |
 | 0.11.1 | 2026-11-11 | RELEASE-98 | Secret scans skip the delivery installer's state files; shipped scripts avoid secret-shaped variable names; the branch gate ignores untracked docs/work/ files. | DL204 |
 | 0.11.0 | 2026-11-11 | RELEASE-93 | The delivery installer writes .gitleaks.toml when the project has none (one source, in luismc-delivery), and the shared secret rules skip type annotations, struct fields and empty values. | DL186 |
 | 0.10.0 | 2026-11-10 | RELEASE-86 | claude-setup enables six plugins and removes the keys of the two merged ones; its CI template names the luismc-docs spec-check script. | DS219 |

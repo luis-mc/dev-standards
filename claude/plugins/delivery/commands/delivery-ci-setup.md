@@ -57,6 +57,8 @@ Write the answers as JSON in the shape documented in the engine's header, to a s
 
 Add `--set-variables` only if the owner says yes to running `gh variable set` for them. If the engine refuses, it lists the missing answers: ask them, do not fill them in. The engine writes `.delivery/config.json`, runs `delivery_ci_install.py install`, runs the doctor and prints the numbered by-hand list.
 
+Run the installer (install and update) on the owner's PC, from the installed plugin, not inside a cloud agent: a cloud sandbox refuses to run it from a cloned checkout. A cloud agent can then merge any `.new` files and commit.
+
 ## 5. Hand over
 
 Show the numbered by-hand list as printed. Say that some doctor lines fail until the list is done, and that `delivery_doctor.py` re-checks every item. For an item the doctor cannot read (billing, a remote machine, the cloud environment), tell the owner to run `delivery_ci_setup.py confirm <item>` after doing it. Say how to change the choice later: run `/delivery-ci-setup` again; it asks everything again and prints what the new choice still needs. Nothing is removed from machines or GitHub.
