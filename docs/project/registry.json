@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T00:47+00:00",
+  "updated": "2026-11-11T00:48+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3429,12 +3429,11 @@
       "id": "DL187",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "CI templates on the pool: DB without Docker, rust targets from layout",
       "detail": "Peer report: rust ci.yml integration job uses services: postgres:17, which needs Docker the pool lacks (also ts template); pool gives db.env/pool-db-env. Rust ci.yml hard-codes sqlx migrate at repo root and --test integration/route_coverage that a fresh workspace lacks; drive them from gate.json/layout.",
-      "expected": "11 Nov ~01:18",
-      "changed": "2026-11-11T00:40+00:00",
-      "expected_basis": "cloud agent ~30 min, then RELEASE-93",
+      "expected": "11 Nov",
+      "changed": "2026-11-11T00:48+00:00",
       "rides": "DS228",
       "started": "2026-11-11T00:40+00:00"
     },
@@ -3468,12 +3467,14 @@
       "id": "DL190",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Pool DB: separate integration jobs, no services block on pool runners",
       "detail": "Peer finding: any services: block needs Docker even with an empty image, so the empty-image trick fails on the pool. If DL187 used it, switch to two integration jobs (hosted with services, pool without) under one check name, on top of DL187 before the RELEASE-93 join.",
-      "expected": "11 Nov ~01:40",
-      "changed": "2026-11-11T00:44+00:00",
-      "expected_basis": "starts after DL187 reports ~01:12, ~25 min"
+      "expected": "11 Nov ~01:50",
+      "changed": "2026-11-11T00:48+00:00",
+      "expected_basis": "cloud agent from 00:48, ~28 min, then RELEASE-93",
+      "rides": "DS228",
+      "started": "2026-11-11T00:48+00:00"
     },
     {
       "id": "DL191",
@@ -7113,30 +7114,30 @@
       "status": "Running",
       "item": "RELEASE-93: rust track on the pool (DL186, DL187, DL188)",
       "detail": "Join DL186 (CI templates on the pool), DL187 (gitleaks config shipped + rules), DL188 (doctor tool and wait fixes); CI; merge; plugin update.",
-      "expected": "11 Nov ~01:28",
-      "changed": "2026-11-11T00:42+00:00",
-      "expected_basis": "3 cloud agents ~30 min from 00:42, CI ~5 min",
+      "expected": "11 Nov ~01:33",
+      "changed": "2026-11-11T00:48+00:00",
+      "expected_basis": "last agent DL190 due 01:16, CI ~5 min",
       "release": 93,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-11T00:42+00:00",
-          "end": "2026-11-11T01:12+00:00"
+          "end": "2026-11-11T01:16+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-11T01:12+00:00",
-          "end": "2026-11-11T01:20+00:00"
+          "start": "2026-11-11T01:16+00:00",
+          "end": "2026-11-11T01:24+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-11T01:20+00:00",
-          "end": "2026-11-11T01:25+00:00"
+          "start": "2026-11-11T01:24+00:00",
+          "end": "2026-11-11T01:29+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-11T01:25+00:00",
-          "end": "2026-11-11T01:28+00:00"
+          "start": "2026-11-11T01:29+00:00",
+          "end": "2026-11-11T01:33+00:00"
         }
       ],
       "started": "2026-11-11T00:40+00:00"
