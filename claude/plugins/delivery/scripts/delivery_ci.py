@@ -116,6 +116,14 @@ def print_slots(as_json: bool) -> int:
                 s["slot"], s.get("repo"), s.get("run_id"), s.get("job"),
                 " (%s)" % s["shard"] if s.get("shard") else "", s.get("runner"), _mins(s["age_s"]),
                 "  STALE" if s.get("stale") else ""))
+    for s in st.get("light_slots", []):
+        if s["free"]:
+            print("light %d  free" % s["slot"])
+        else:
+            print("light %d  %s run %s job %s%s  runner %s  held %s%s" % (
+                s["slot"], s.get("repo"), s.get("run_id"), s.get("job"),
+                " (%s)" % s["shard"] if s.get("shard") else "", s.get("runner"), _mins(s["age_s"]),
+                "  STALE" if s.get("stale") else ""))
     if not st["queue"]:
         print("queue   empty")
     for i, t in enumerate(st["queue"], 1):
