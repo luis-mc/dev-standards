@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T23:00+00:00",
+  "updated": "2026-11-12T23:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5004,6 +5004,18 @@
       "expected_basis": "throwaway tests tonight, report when the owner is back",
       "no_release": "study only, report to the owner",
       "started": "2026-11-12T22:58+00:00"
+    },
+    {
+      "id": "DL279",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Prove SELinux enforcing boot in a KVM VM on the pool",
+      "detail": "Owner 12 Nov 23:0x: after the KVM pool is live, boot a Fedora cloud image with qemu+KVM inside the pool and check getenforce = Enforcing. If it works: build a template helper for VM boot checks (DL280), release, update the pool, tell the peer its SELinux task can go on.",
+      "expected": "13 Nov ~00:15",
+      "changed": "2026-11-12T23:03+00:00",
+      "expected_basis": "after the pool rebuild ~23:55, test ~20 min",
+      "no_release": "a test on this PC's pool"
     },
     {
       "id": "DS1",
