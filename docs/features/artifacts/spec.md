@@ -174,7 +174,7 @@ flowchart LR
 
 **R6.2** — The scripts use the Python standard library only.
 
-**R6.3** — The after-command hook finishes in under two seconds. Every hook does nothing in a project without a manifest.
+**R6.3** — The after-command hook takes the task of a `ci_watch.py` or `gh run watch` result from the watched head, not from the checkout: the branch whose head is the watched sha, and no event when that head is on no task branch or its task is already Live. It finishes in under two seconds. Every hook does nothing in a project without a manifest.
 
 **R6.4** — Hooks fail open on an internal error. They exit 0 and print one line on stderr. A turn is released after three unchanged blocks.
 
