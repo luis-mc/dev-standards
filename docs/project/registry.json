@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T00:28+00:00",
+  "updated": "2026-11-12T00:37+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4755,6 +4755,58 @@
       "changed": "2026-11-11T23:35+00:00",
       "rides": "DL262",
       "started": "2026-11-11T23:19+00:00"
+    },
+    {
+      "id": "DL266",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: light-job CI slot",
+      "detail": "Join, CI and merge of the light-job slot fix (peer report: a production smoke waited 17 min in the runner gate behind long builds).",
+      "expected": "12 Nov ~01:30",
+      "changed": "2026-11-12T00:37+00:00",
+      "expected_basis": "agent ~25 min, join 7, CI ~8",
+      "release": 114,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-12T00:40+00:00",
+          "end": "2026-11-12T01:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-12T01:05+00:00",
+          "end": "2026-11-12T01:12+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-12T01:12+00:00",
+          "end": "2026-11-12T01:25+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-12T01:25+00:00",
+          "end": "2026-11-12T01:30+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 20
+      },
+      "started": "2026-11-12T00:37+00:00"
+    },
+    {
+      "id": "DL267",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Light jobs get their own runner slot",
+      "detail": "Runner gate: jobs named as light in machine.json (smoke, prune, cleanup, decide and similar) take a separate light slot (default 1) instead of a CI slot, so a seconds-long job never waits behind a 30-minute build. Load limits still apply. Peer report: a smoke waited 16 min 47 s in the job-start hook.",
+      "expected": "12 Nov ~01:05",
+      "changed": "2026-11-12T00:37+00:00",
+      "expected_basis": "cloud agent ~25 min",
+      "rides": "DL266",
+      "started": "2026-11-12T00:37+00:00"
     },
     {
       "id": "DS1",

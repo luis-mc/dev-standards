@@ -233,6 +233,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D25 | Machine-wide CI load control: when a crashed job keeps its slot, free it after how long? | 2 hours | decided | 2026-11-04 |
 | delivery-speed | D250 | 21:12 screen recording: what to do once a slot is free? | Find and fix (Recommended) | decided | 2026-11-11 |
 | delivery-speed | D251 | Generated docs built by a newer docs plugin fail CI G1 against an older pinned dev-standards ref: how to fix? (peer report, overnight: my pick per D248) | Flag and bump the pin (Recommended) | decided | 2026-11-11 |
+| delivery-speed | D252 | Short CI jobs (smoke, prune, cleanup) wait behind long builds for the 2 machine CI slots: how should the runner gate treat them? (peer report, overnight: my pick per D248) | Own light slot (Recommended) | decided | 2026-11-12 |
 | delivery-speed | D26 | Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config? | Run it with permission | decided | 2026-11-04 |
 | delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |

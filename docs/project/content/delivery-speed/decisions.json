@@ -5708,6 +5708,30 @@
       "chosen": "Flag and bump the pin (Recommended)",
       "decided": "2026-11-11",
       "owner_words": "overnight rule D248: my recommended pick, for morning review"
+    },
+    {
+      "id": "D252",
+      "question": "Short CI jobs (smoke, prune, cleanup) wait behind long builds for the 2 machine CI slots: how should the runner gate treat them? (peer report, overnight: my pick per D248)",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL267",
+      "options": [
+        {
+          "label": "Own light slot (Recommended)",
+          "summary": "offered: light jobs take a separate light slot, default 1; load limits still apply"
+        },
+        {
+          "label": "Light jobs skip the slot",
+          "summary": "offered: no slot at all, only the load check"
+        },
+        {
+          "label": "Light jobs jump the queue",
+          "summary": "offered: first in line for the next CI slot, still wait for one"
+        }
+      ],
+      "chosen": "Own light slot (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "overnight rule D248: my recommended pick, for morning review"
     }
   ]
 }
