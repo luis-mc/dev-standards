@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-11T23:35+00:00",
+  "updated": "2026-11-12T00:28+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4638,9 +4638,9 @@
       "app": "",
       "status": "Live",
       "item": "DL260 Full Progress page declares UTF-8",
-      "detail": "The Full Progress template has no meta charset; opened as a local file, browsers guess the encoding and show mojibake (· as 路, … as 鈥�; seen in the owner's 21:12 recording). Every generated HTML page declares UTF-8.",
-      "expected": "11 Nov",
-      "changed": "2026-11-11T23:10+00:00",
+      "detail": "The Full Progress template has no meta charset; opened as a local file, browsers guess the encoding and show mojibake (a middle dot and an ellipsis turn into CJK characters; seen in the owner's 21:12 recording). Every generated HTML page declares UTF-8.",
+      "expected": "12 Nov",
+      "changed": "2026-11-12T00:28+00:00",
       "rides": "DL254",
       "started": "2026-11-11T22:25+00:00"
     },
