@@ -3,7 +3,7 @@ FROM ubuntu:24.04
 ARG RUNNER_VERSION=2.338.2
 ARG RUNNER_SHA256
 ARG POOL_BROWSERS=none
-# DL149: POOL_LAYERS is a comma list (only `windows-packaging` exists); POOL_APT is a space list from .delivery/pool.apt. Both are checked by the setup.
+# DL149: POOL_LAYERS is a comma list (`windows-packaging`, `linux-packaging` and `kvm` exist); POOL_APT is a space list from .delivery/pool.apt. Both are checked by the setup.
 ARG POOL_LAYERS=
 ARG POOL_APT=
 # The one place the Playwright version for the system libraries is pinned (DL67).
@@ -74,6 +74,9 @@ RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
 # Ubuntu 24.04 ships dotnet-sdk-8.0 and wine64 itself, so no Microsoft feed and no i386 architecture are added (64-bit Wine only).
 RUN pk=""; \
     case ",$POOL_LAYERS," in *,windows-packaging,*) pk="dotnet-sdk-8.0 wine wine64 xvfb xauth msitools";; esac; \
+    case ",$POOL_LAYERS," in *,linux-packaging,*) pk="$pk dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils"; \
+      apt-get update >/dev/null 2>&1; if apt-cache show policycoreutils-python-utils >/dev/null 2>&1; then pk="$pk policycoreutils-python-utils"; fi;; esac; \
+    case ",$POOL_LAYERS," in *,kvm,*) pk="$pk qemu-system-x86 qemu-utils cloud-image-utils";; esac; \
     pk="$pk $POOL_APT"; \
     if [ -n "$(echo $pk)" ]; then \
       apt-get update && apt-get install -y --no-install-recommends $pk && rm -rf /var/lib/apt/lists/*; \

@@ -1,0 +1,8 @@
+# DL274: optional KVM for the pool. Used only when .env has POOL_KVM=1 (the setup then writes COMPOSE_FILE).
+# It passes the /dev/kvm device. It never sets privileged. The supervisor adds the runner users to the device's group at start.
+services:
+  pool:
+    devices:
+      - /dev/kvm:/dev/kvm
+    environment:
+      POOL_KVM: "1"

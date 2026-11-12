@@ -157,7 +157,7 @@ class DoctorTests(unittest.TestCase):
         by, probe = self.run_doctor({"package.json": PLAIN}, env_browsers="none")
         self.assertNotIn("browsers", by)
         self.assertNotIn("browser-libs", by)
-        self.assertFalse([c for c in probe.calls if c[1] == "run"])
+        self.assertFalse([c for c in probe.calls if c[1] == "run" and "--device" not in c])
 
 
 if __name__ == "__main__":
