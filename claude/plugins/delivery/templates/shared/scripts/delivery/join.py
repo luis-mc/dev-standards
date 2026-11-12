@@ -208,6 +208,13 @@ def stacked_on_older(root: Path, remote: str, branch: str, others: list[str], tr
                      ("refs/remotes/%s/%s" % (remote, o) for o in others) for t in tips if " " in t)
         if shared:
             continue
+        # DL272: mb held by a third joined branch (a sibling of B, or A's own sibling) is shared work, not A's own.
+        holders = [o for o in others if o not in (a, branch)
+                   and dc.rev("refs/remotes/%s/%s" % (remote, o), root) is not None
+                   and dc.run_git(["merge-base", "--is-ancestor", mb, "refs/remotes/%s/%s" % (remote, o)],
+                                  cwd=root, check=False).returncode == 0]
+        if holders:
+            continue
         # B carries A's old work (trunk...mb); A rewrote those files after mb (mb..A).
         files = sorted(_names(root, [trunk + "..." + mb]) & _names(root, [mb, a_ref]))
         if files:
@@ -324,9 +331,9 @@ def resolve_generated_docs(root: Path, files: list[str]) -> str | None:
     return None
 
 
-def conflict_files(files: list[str] | None) -> list[str]:
-    """DL249: the list a conflict line prints; never empty."""
-    return list(files) if files else ["(files unknown)"]
+def conflict_files(files: list[str] | None, reason: str = "files unknown") -> list[str]:
+    """DL249, DL272: the list a conflict line prints; never empty. With no file, it prints the reason."""
+    return list(files) if files else ["(%s)" % reason]
 
 
 def is_cargo_lock(path: str) -> bool:
@@ -631,17 +638,8 @@ def main(argv: list[str] | None = None) -> int:
             skips[branch] = "not ready, no trusted passing gate result: " + stop_reason
             break
 
-        older = stacked_on_older(root, remote, branch, args.branches, join_start)
-        if older is not None:
-            older, st_files = older
-            reason = "%s is stacked on an older %s; prefer %s's side for files %s rewrote" % (branch, older, branch, branch)
-            dc.eprint("join: " + reason)
-            dc.eprint("join: files in both: " + ", ".join(st_files))
-            dc.eprint("join: merge %s alone (it carries %s's older work) or rebase %s on the current %s" % (branch, older, branch, older))
-            conflicting[branch] = st_files
-            skips[branch] = "stacked on an older %s, files: %s" % (older, ", ".join(st_files))
-            stop_reason = reason
-            continue
+        older = stacked_on_older(root, remote, branch, args.branches, join_start)  # DL272: only a hint; the merge decides
+        older_name = older[0] if older is not None else None
 
         print("join: merging %s" % branch, flush=True)
         merge = dc.run_git(
@@ -652,6 +650,8 @@ def main(argv: list[str] | None = None) -> int:
         )
         if merge.returncode == 0:
             print(merge.stdout.strip())
+            if older_name:
+                print("join: %s was cut from an older head of %s; the merge is clean" % (branch, older_name), flush=True)
             joined.append(branch)
             continue
 
@@ -711,6 +711,12 @@ def main(argv: list[str] | None = None) -> int:
 
         abort_merge(root)
         conflicting[branch] = conflicts
+        if older_name:
+            shown = ", ".join(conflict_files(conflicts, "stacked on an older %s; no file conflicts found" % older_name))
+            dc.eprint("join: %s was cut from an older head of %s and both changed: %s. Merge %s alone, or rebase %s on the current %s."
+                      % (branch, older_name, shown, branch, branch, older_name))
+            skips[branch] = "stacked on an older %s, files: %s" % (older_name, shown)
+            stop_reason = "%s is stacked on an older %s" % (branch, older_name)
 
     for b, files in conflicting.items():
         skips.setdefault(b, "conflict with %s in: %s" % (into, ", ".join(conflict_files(files))))

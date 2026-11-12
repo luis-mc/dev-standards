@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.33.1
+version: 0.33.2
 owner: agents
 type: reference
 code:
@@ -154,7 +154,7 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.39** — When the runs of the named workflow are complete, `ci_watch.py` makes one unfiltered `gh run list --commit <sha>` and adds the runs of every other workflow. A run that is queued or in progress keeps the watch waiting, and is never reported as failed; a job that is not completed is never printed as `FAILED job`. A failed run makes it exit 1 only after every run of the commit has completed, and all failures are reported together. (DL226) `--only-workflow` keeps the old watch. If the unfiltered read fails, it prints one warning and the named runs decide. (DL139)
 
-**R5.40** — `join.py` skips a branch B that holds an older head of another branch A of the same call: A's head is not in B and the merge base is on A's side only. It prints `join: B is stacked on an older A; prefer B's side for files B rewrote` and `merge B alone ... or rebase B on the current A`, reports B as conflicting with no files, and exits 3. If B carries A's whole head, it merges normally. (DL128)
+**R5.40** — `join.py` merges a branch B that holds an older head of another branch A of the same call like any other branch. A clean merge goes through with one info line naming A. A real conflict refuses B: it prints `join: B was cut from an older head of A and both changed: <files>. Merge B alone, or rebase B on the current A.`, reports B as conflicting with those files (or the reason when none is left), and exits 3. Siblings cut from one older head of a third branch are not stacked on each other. If B carries A's whole head, it merges normally. (DL128, DL272)
 
 **R5.41** — `join.py --into X` fails with exit 2 when X is not on the remote but a local X exists (DL225: a wholly new X is created instead): `integration branch 'X' not found on remote 'origin'; run again with --create, or create it: git push origin origin/<default>:refs/heads/X`. With `--create` it pushes `origin/<default>` as X, prints `join: created X on origin from origin/<default>` and goes on. (DL129)
 
@@ -529,6 +529,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.33.2 | 2026-11-12 | RELEASE-116 | join.py: a branch cut from an older head is merged as any branch and refused only on a real conflict; siblings of one older head are not stacked; the conflict report never prints an empty file list (R5.40). | DL272 |
 | 0.33.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks (R5.3 of the runner-pool spec). | DL270 |
 | 0.33.0 | 2026-11-12 | RELEASE-114 | Runner gate: short jobs named in runner_gate.light_jobs take their own light slot (light_slots, default 1) instead of waiting for a CI slot. | DL267 |
 | 0.32.1 | 2026-11-11 | RELEASE-113 | The DL-06 merge refusal names the delivery_ledger.py link command when the PR has no linked train; ci_watch.py prints one line when no train links the commit and never links on its own (R5.38). | DL265 |
