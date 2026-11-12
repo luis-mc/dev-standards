@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T01:03+00:00",
+  "updated": "2026-11-12T19:01+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -3622,9 +3622,9 @@
       "status": "Running",
       "item": "Measure PC memory per process through busy CI before setting pool limits",
       "detail": "Memory log runs to 12 Nov 10:41. Root cause of the spikes (questions_stop.py reading a 2.4 GB transcript) fixed by DL208. Pool refresh waits for an idle pool and room on the PC (D212).",
-      "expected": "12 Nov ~10:45",
-      "changed": "2026-11-11T13:26+00:00",
-      "expected_basis": "24 h logging from 10:40, then ~5 min analysis",
+      "expected": "12 Nov ~19:30",
+      "changed": "2026-11-12T19:01+00:00",
+      "expected_basis": "apply D253 limits when no CI job runs, ~20 min",
       "no_release": "study: measurement only",
       "started": "2026-11-11T10:41+00:00"
     },
@@ -4805,6 +4805,68 @@
       "changed": "2026-11-12T01:03+00:00",
       "rides": "DL266",
       "started": "2026-11-12T00:37+00:00"
+    },
+    {
+      "id": "DL268",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: broken-character guard and light-slot listing",
+      "detail": "Join, CI and merge of DL269 (task text refuses U+FFFD) and DL270 (slots listing and doctor show light slots).",
+      "expected": "12 Nov ~19:47",
+      "changed": "2026-11-12T19:01+00:00",
+      "expected_basis": "agents ~25 min from 19:03, join 7, CI ~8",
+      "release": 115,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-12T19:03+00:00",
+          "end": "2026-11-12T19:30+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-12T19:30+00:00",
+          "end": "2026-11-12T19:37+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-12T19:37+00:00",
+          "end": "2026-11-12T19:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-12T19:45+00:00",
+          "end": "2026-11-12T19:47+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 20
+      }
+    },
+    {
+      "id": "DL269",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Task text refuses the replacement character",
+      "detail": "task-add and set-task-status refuse U+FFFD in item, detail, basis and history text, naming the field; render and check also flag it. Today only the claude.ai publish catches it (found 12 Nov 00:27 on DL260's detail).",
+      "expected": "12 Nov ~19:30",
+      "changed": "2026-11-12T19:01+00:00",
+      "expected_basis": "cloud agent ~25 min",
+      "rides": "DL268"
+    },
+    {
+      "id": "DL270",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Slots listing and doctor show light slots",
+      "detail": "delivery_ci.py slots and the doctor stale-slot check list the light slots (light-N) and their holders next to the CI slots; follow-up from DL267.",
+      "expected": "12 Nov ~19:30",
+      "changed": "2026-11-12T19:01+00:00",
+      "expected_basis": "cloud agent ~25 min",
+      "rides": "DL268"
     },
     {
       "id": "DS1",

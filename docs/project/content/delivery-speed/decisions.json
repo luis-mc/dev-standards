@@ -5707,7 +5707,7 @@
       ],
       "chosen": "Flag and bump the pin (Recommended)",
       "decided": "2026-11-11",
-      "owner_words": "overnight rule D248: my recommended pick, for morning review"
+      "owner_words": "overnight rule D248: my recommended pick, for morning review; owner kept it on 12 Nov (\"Keep D251 as shipped\")"
     },
     {
       "id": "D252",
@@ -5731,7 +5731,35 @@
       ],
       "chosen": "Own light slot (Recommended)",
       "decided": "2026-11-12",
-      "owner_words": "overnight rule D248: my recommended pick, for morning review"
+      "owner_words": "overnight rule D248: my recommended pick, for morning review; owner kept it on 12 Nov (\"Keep D252 as shipped\")"
+    },
+    {
+      "id": "D253",
+      "question": "DL202 memory log: memory over 85% for 23% of a day, peaks when the WSL VM grows to ~10 GB during CI jobs; how should the WSL and pool limits change?",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL202",
+      "options": [
+        {
+          "label": "WSL 10GB, pool 8.5g, reclaim (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "WSL 9GB, pool 7.5g, reclaim",
+          "summary": "offered"
+        },
+        {
+          "label": "Only add autoMemoryReclaim",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep as is",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "WSL 10GB, pool 8.5g, reclaim (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "WSL 10GB, pool 8.5g, reclaim (Recommended)"
     }
   ]
 }

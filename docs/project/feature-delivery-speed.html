@@ -902,19 +902,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.4.3 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-12T01:03+00:00">12 Nov 01:03</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-12T19:01+00:00">12 Nov 19:01</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">12 Nov 10:27</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
 <ul>
-<li data-glance-task="DL202"><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits <span class="glance-expected">12 Nov ~10:45</span><span class="glance-basis">24 h logging from 10:40, then ~5 min analysis</span></li>
+<li data-glance-task="DL202"><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits <span class="glance-expected">12 Nov ~19:30</span><span class="glance-basis">apply D253 limits when no CI job runs, ~20 min</span></li>
+<li data-glance-task="DL269"><span class="task-id">DL269</span>Task text refuses the replacement character <span class="glance-expected">12 Nov ~19:30</span><span class="glance-basis">cloud agent ~25 min</span></li>
+<li data-glance-task="DL270"><span class="task-id">DL270</span>Slots listing and doctor show light slots <span class="glance-expected">12 Nov ~19:30</span><span class="glance-basis">cloud agent ~25 min</span></li>
+<li data-glance-task="DL268"><span class="task-id">DL268</span><span class="release-name">RELEASE-115</span>RELEASE: broken-character guard and light-slot listing <span class="glance-expected">12 Nov ~19:47</span><span class="glance-basis">agents ~25 min from 19:03, join 7, CI ~8</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">84 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">34 tasks</span></summary>
 <ul>
 <li data-glance-task="DL266"><span class="task-id">DL266</span><span class="release-name">RELEASE-114</span>RELEASE: light-job CI slot</li>
 <li data-glance-task="DL267"><span class="task-id">DL267</span>Light jobs get their own runner slot</li>
@@ -924,15 +927,18 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL264"><span class="task-id">DL264</span>DL264 mark-deferred --local accepts the full-progress folder too</li>
 <li data-glance-task="DL265"><span class="task-id">DL265</span>DL265 DL-06 merge refusal names the missing ledger link</li>
 <li data-glance-task="DL257"><span class="task-id">DL257</span>DL257 Fix the Windows-only join test failures</li>
-<li class="glance-more">and 76 more</li>
+<li class="glance-more">and 26 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">260</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">260</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>Memory log runs to 12 Nov 10:41. Root cause of the spikes (questions_stop.py reading a 2.4 GB transcript) fixed by DL208. Pool refresh waits for an idle pool and room on the PC (D212).</td><td>12 Nov ~10:45<span class="expected-basis">24 h logging from 10:40, then ~5 min analysis</span></td></tr>
+<tr data-task="DL202"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL202</span>Measure PC memory per process through busy CI before setting pool limits<span class="no-release-line">ships nothing: study: measurement only</span></td><td>Memory log runs to 12 Nov 10:41. Root cause of the spikes (questions_stop.py reading a 2.4 GB transcript) fixed by DL208. Pool refresh waits for an idle pool and room on the PC (D212).</td><td>12 Nov ~19:30<span class="expected-basis">apply D253 limits when no CI job runs, ~20 min</span></td></tr>
+<tr data-task="DL269"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL269</span>Task text refuses the replacement character<span class="release-line"><span class="release-name">RELEASE-115</span></span></td><td>task-add and set-task-status refuse U+FFFD in item, detail, basis and history text, naming the field; render and check also flag it. Today only the claude.ai publish catches it (found 12 Nov 00:27 on DL260&#x27;s detail).</td><td>12 Nov ~19:30<span class="expected-basis">cloud agent ~25 min</span></td></tr>
+<tr data-task="DL270"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL270</span>Slots listing and doctor show light slots<span class="release-line"><span class="release-name">RELEASE-115</span></span></td><td>delivery_ci.py slots and the doctor stale-slot check list the light slots (light-N) and their holders next to the CI slots; follow-up from DL267.</td><td>12 Nov ~19:30<span class="expected-basis">cloud agent ~25 min</span></td></tr>
+<tr data-task="DL268"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL268</span><span class="release-name">RELEASE-115</span>RELEASE: broken-character guard and light-slot listing</td><td>Join, CI and merge of DL269 (task text refuses U+FFFD) and DL270 (slots listing and doctor show light slots).</td><td>12 Nov ~19:47<span class="expected-basis">agents ~25 min from 19:03, join 7, CI ~8</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">266 tasks</span></summary>
@@ -1238,6 +1244,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D253">
+<h3 class="decision-head"><span class="decision-id">D253</span> <span class="decision-question">DL202 memory log: memory over 85% for 23% of a day, peaks when the WSL VM grows to ~10 GB during CI jobs; how should the WSL and pool limits change?</span></h3>
+<p class="decision-meta">Asked 12 Nov · Decided 12 Nov · Task DL202</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">WSL 10GB, pool 8.5g, reclaim (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;WSL 10GB, pool 8.5g, reclaim (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">WSL 9GB, pool 7.5g, reclaim</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only add autoMemoryReclaim</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep as is</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D252">
 <h3 class="decision-head"><span class="decision-id">D252</span> <span class="decision-question">Short CI jobs (smoke, prune, cleanup) wait behind long builds for the 2 machine CI slots: how should the runner gate treat them? (peer report, overnight: my pick per D248)</span></h3>
 <p class="decision-meta">Asked 12 Nov · Decided 12 Nov · Task DL267</p>
@@ -1245,7 +1274,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Own light slot (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Nov</span></div>
 <p class="decision-summary">offered: light jobs take a separate light slot, default 1; load limits still apply</p>
-<blockquote class="decision-words">&ldquo;overnight rule D248: my recommended pick, for morning review&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;overnight rule D248: my recommended pick, for morning review; owner kept it on 12 Nov (&quot;Keep D252 as shipped&quot;)&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">Light jobs skip the slot</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
@@ -1264,7 +1293,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="decision-option decision-chosen">
 <div class="decision-option-head"><span class="decision-label">Flag and bump the pin (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 11 Nov</span></div>
 <p class="decision-summary">offered</p>
-<blockquote class="decision-words">&ldquo;overnight rule D248: my recommended pick, for morning review&rdquo;</blockquote>
+<blockquote class="decision-words">&ldquo;overnight rule D248: my recommended pick, for morning review; owner kept it on 12 Nov (&quot;Keep D251 as shipped&quot;)&rdquo;</blockquote>
 </div>
 <div class="decision-option decision-muted">
 <div class="decision-option-head"><span class="decision-label">G1 ignores generator version</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
