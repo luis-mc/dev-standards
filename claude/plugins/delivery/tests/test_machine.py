@@ -87,7 +87,7 @@ class Config(unittest.TestCase):
             got = MS.machine_config()
             self.assertEqual(got, written)
             self.assertEqual((got["ci_slots"], got["load_limits"], got["runner_dirs"]), (3, {"memory_pct": 85, "cpu_pct": 50}, ["C:/Work/r1"]))
-            self.assertEqual(got["runner_gate"], {"max_wait_min": 5, "poll_sec": 15})
+            self.assertEqual(got["runner_gate"], dict(MS.DEFAULT_CONFIG["runner_gate"], max_wait_min=5))
             self.assertTrue(os.path.isdir(MS.slots_dir()) and os.path.isdir(MS.queue_dir()))
             Path(MS.config_path()).write_text(json.dumps({"ci_slots": 0, "local_heavy": "x", "slot_stale_min": True,
                                                           "load_limits": {"memory_pct": 500}}))
