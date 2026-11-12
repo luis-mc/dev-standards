@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.33.0
+version: 0.33.1
 owner: agents
 type: reference
 code:
@@ -529,6 +529,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.33.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks (R5.3 of the runner-pool spec). | DL270 |
 | 0.33.0 | 2026-11-12 | RELEASE-114 | Runner gate: short jobs named in runner_gate.light_jobs take their own light slot (light_slots, default 1) instead of waiting for a CI slot. | DL267 |
 | 0.32.1 | 2026-11-11 | RELEASE-113 | The DL-06 merge refusal names the delivery_ledger.py link command when the PR has no linked train; ci_watch.py prints one line when no train links the commit and never links on its own (R5.38). | DL265 |
 | 0.32.0 | 2026-11-11 | RELEASE-111 | update keeps the project's artifact-prune workflow list on overwrite, merge and conflict; template additions are appended once; removed names stay removed.<br>Guided setup takes several tracks: the answers file accepts a track list, facts lists every detected track, apply passes them all to the installer. The gate gives each package the kind of the track that owns it (R13.95).<br>The agent brief template says a held or cancelled branch run is not a failure (R5.59). | DL255, DL256, DL258 |

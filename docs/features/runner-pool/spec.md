@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.7.0
+version: 0.7.1
 owner: agents
 type: reference
 code:
@@ -142,6 +142,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks. | DL270 |
 | 0.7.0 | 2026-11-11 | RELEASE-105 | A repository can declare NOLOGIN database roles; the pool creates them and grants them to its login (R5.27). | DL231 |
 | 0.6.4 | 2026-11-11 | RELEASE-103 | The image sets PATH to /opt/node/bin before the step that runs corepack enable, so corepack and npm find node at build time. | DL223 |
 | 0.6.3 | 2026-11-11 | RELEASE-102 | The pool image runs corepack enable as root at build time, so an unprivileged job's corepack enable needs no write access (R5.26). | DL220 |
