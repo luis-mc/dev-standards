@@ -902,7 +902,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.4.3 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-12T00:37+00:00">12 Nov 00:37</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-12T00:38+00:00">12 Nov 00:38</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">12 Nov 00:28</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -1240,6 +1240,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D252">
+<h3 class="decision-head"><span class="decision-id">D252</span> <span class="decision-question">Short CI jobs (smoke, prune, cleanup) wait behind long builds for the 2 machine CI slots: how should the runner gate treat them? (peer report, overnight: my pick per D248)</span></h3>
+<p class="decision-meta">Asked 12 Nov · Decided 12 Nov · Task DL267</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Own light slot (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 12 Nov</span></div>
+<p class="decision-summary">offered: light jobs take a separate light slot, default 1; load limits still apply</p>
+<blockquote class="decision-words">&ldquo;overnight rule D248: my recommended pick, for morning review&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Light jobs skip the slot</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered: no slot at all, only the load check</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Light jobs jump the queue</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered: first in line for the next CI slot, still wait for one</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D251">
 <h3 class="decision-head"><span class="decision-id">D251</span> <span class="decision-question">Generated docs built by a newer docs plugin fail CI G1 against an older pinned dev-standards ref: how to fix? (peer report, overnight: my pick per D248)</span></h3>
 <p class="decision-meta">Asked 11 Nov · Decided 11 Nov · Task DL263</p>
