@@ -5880,6 +5880,30 @@
       "chosen": "Wait for their reference (Recommended)",
       "decided": "2026-11-12",
       "owner_words": "Wait for their reference (Recommended)"
+    },
+    {
+      "id": "D259",
+      "question": "VM test helper: resume from a snapshot saved after boot? Measured on the pool: cold boot 11.6-11.9 s, restore 0.7 s, snapshot ~550 MB per image.",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL281",
+      "options": [
+        {
+          "label": "Opt-in resume, keyed and checked (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Always resume",
+          "summary": "offered"
+        },
+        {
+          "label": "No resume",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Opt-in resume, keyed and checked (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "measure and if worth it, implement it (owner 23:2x); pick made under the overnight rules (D247: my recommended option, recorded)"
     }
   ]
 }
