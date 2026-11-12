@@ -738,6 +738,9 @@ def cmd_pool(args, root) -> int:
                 browsers=getattr(args, "browsers", None), playwright_version=getattr(args, "playwright", None),
                 drop_layers=getattr(args, "drop_layer", None) or (), drop_apt=getattr(args, "drop_apt", None) or ())
     print("\n".join(render_plan(pl, found)))
+    host, why = P.host_kvm(probe, args.pool)  # DL274: KVM is optional and off by default
+    print("KVM on this host: %s (%s). It stays off unless you run pool-refresh --kvm on."
+          % ("yes" if host else "no" if host is False else "unknown", why))
     if args.action == "pool-plan":
         return 0
     if pl.get("blocked"):
@@ -790,7 +793,8 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
         print("delivery_ci_setup: --playwright needs a version like 1.62.1", file=sys.stderr)
         return 2
     rp = P.refresh_plan(probe, args.pool, [root], getattr(args, "browsers", None), getattr(args, "playwright", None),
-                        pool_refresh_source(args, root), getattr(args, "drop_layer", None) or (), getattr(args, "drop_apt", None) or ())
+                        pool_refresh_source(args, root), getattr(args, "drop_layer", None) or (), getattr(args, "drop_apt", None) or (),
+                        getattr(args, "kvm", None))
     if rp.get("error"):
         print("delivery_ci_setup: %s" % rp["error"], file=sys.stderr)
         return 1
@@ -799,7 +803,7 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
         if k == "RUNNER_SHA256" and rp.get("sha_reason"):
             lines.append("  - %s: %s -> %s (%s)" % (k, P.short_sha(old), P.short_sha(new), rp["sha_reason"]))
         else:
-            lines.append("  - %s: %s -> %s" % (k, old or "unset", new))
+            lines.append("  - %s: %s -> %s" % (k, old or "unset", "removed" if new is None else new))
     ver = _plugin_version()
     lines += ["  - %s: differs from luismc-delivery %s" % (f, ver) for f in rp.get("files", [])]
     lines += ["  - layer %s%s" % (n, " (asked by %s)" % who if who else "") for n, who in rp.get("layers", [])]
@@ -843,6 +847,7 @@ def main(argv=None) -> int:
     ap.add_argument("--drop-layer", action="append", metavar="NAME", help="pool-plan/run/refresh: remove this layer from the pool (repeatable)")
     ap.add_argument("--drop-apt", action="append", metavar="NAME", help="pool-plan/run/refresh: remove this apt package from the pool (repeatable)")
     ap.add_argument("--playwright", metavar="X", help="pool-plan/run/refresh: set PLAYWRIGHT_VERSION exactly (may lower it)")
+    ap.add_argument("--kvm", choices=["on", "off"], help="pool-refresh: turn POOL_KVM on or off (on is refused when the host has no usable KVM)")
     ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
