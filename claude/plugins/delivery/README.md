@@ -47,9 +47,11 @@ One folder per machine holds the limits, the CI slots and the queue for every ru
 - **`machine.json`** (written through `machine_slots.write_machine_config`, never by hand from setup code):
 
   ```json
-  {"load_limits": {"memory_pct": 85, "cpu_pct": 60}, "ci_slots": 2, "local_heavy": 2, "cloud_ci_sessions": 10,
-   "slot_stale_min": 120, "runner_gate": {"max_wait_min": 30, "poll_sec": 15}, "runner_dirs": ["C:/Work/runners"]}
+  {"load_limits": {"memory_pct": 85, "cpu_pct": 60}, "ci_slots": 2, "light_slots": 1, "local_heavy": 2, "cloud_ci_sessions": 10,
+   "slot_stale_min": 120, "runner_gate": {"max_wait_min": 30, "poll_sec": 15, "light_jobs": ["smoke", "prune-*"]}, "runner_dirs": ["C:/Work/runners"]}
   ```
+
+  `light_slots` (default 1, 0 turns it off) gives short jobs their own slot (`slots/light-N.lock`), so a smoke test or a prune job does not wait behind two long builds. `runner_gate.light_jobs` lists the job keys or shard names that count as light (exact or glob, matched against `GITHUB_JOB` and `DELIVERY_SHARD`; default `smoke`, `prune`, `prune-*`, `cleanup`, `remove-train`, `decide`, `delete-*`, `runners`). A light job with every light slot busy waits for a CI slot in the normal queue.
 
   A project's `.delivery/config.json` can lower `load_limits`, `local_heavy` and `ci.fallback.cloud_ci_sessions`, never raise them.
 - **Two hooks per runner**, in the runner folder's `.env`:

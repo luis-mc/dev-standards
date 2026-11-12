@@ -61,7 +61,7 @@ def done(env=None, log=print, keep_work=False, outcome='ran'):
     for lock in MS.find_held(ident):
         if MS.free_slot(lock, outcome):
             freed.append(lock['slot'])
-            log('runner job done: freed slot %d of %s run %s job %s' % (lock['slot'], ident['repo'], ident['run_id'],
+            log('runner job done: freed slot %s of %s run %s job %s' % (MS.slot_label(lock), ident['repo'], ident['run_id'],
                                                                         ident['job']))
     if not freed:
         log('runner job done: this job held no slot')
