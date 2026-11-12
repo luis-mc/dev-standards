@@ -65,14 +65,14 @@ class JoinFixes(unittest.TestCase):
         commit(w, "x.txt", "1\n", "a1")
         git(w, "push", "-q", "origin", "A")
         git(w, "checkout", "-q", "-b", "B")
-        commit(w, "y.txt", "1\n", "b1")
+        commit(w, "x.txt", "3\n", "b1")
         git(w, "push", "-q", "origin", "B")
         git(w, "checkout", "-q", "A")
         commit(w, "x.txt", "2\n", "a2")
         git(w, "push", "-q", "origin", "A")
         git(w, "checkout", "-q", "main")
         p = join(w, "--into", "integ", "A", "B")
-        self.assertIn("B is stacked on an older A; prefer B's side for files B rewrote", p.stderr)
+        self.assertIn("B was cut from an older head of A and both changed: x.txt", p.stderr)
         self.assertNotEqual(p.returncode, 0)
 
     def test_local_ahead_is_kept(self):
