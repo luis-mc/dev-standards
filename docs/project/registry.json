@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T19:46+00:00",
+  "updated": "2026-11-12T21:56+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4863,6 +4863,53 @@
       "expected": "12 Nov",
       "changed": "2026-11-12T19:23+00:00",
       "rides": "DL268"
+    },
+    {
+      "id": "DL271",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-116: join stacked-branch fix",
+      "detail": "Join, CI and merge for DL271.",
+      "expected": "12 Nov ~22:50",
+      "changed": "2026-11-12T21:56+00:00",
+      "expected_basis": "agent ~25 min, join ~7 min, CI ~6 min",
+      "release": 116,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-12T22:08+00:00",
+          "end": "2026-11-12T22:33+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-12T22:33+00:00",
+          "end": "2026-11-12T22:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-12T22:40+00:00",
+          "end": "2026-11-12T22:46+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-12T22:46+00:00",
+          "end": "2026-11-12T22:50+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL272",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "join.py: no false stacked-branch conflicts, always name the files",
+      "detail": "Peer report 12 Nov: join refused branches cut from an older head of a sibling branch (and two siblings sharing one parent) with an empty file list, though a plain git merge of each went through clean. Fix: refuse only when the merge really conflicts, never print an empty file list, clearer hint.",
+      "expected": "12 Nov ~22:25",
+      "changed": "2026-11-12T21:56+00:00",
+      "expected_basis": "cloud agent from 21:58, ~25 min",
+      "rides": "DL271",
+      "started": "2026-11-12T21:56+00:00"
     },
     {
       "id": "DS1",
