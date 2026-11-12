@@ -2015,6 +2015,11 @@ def normalise_expected(text):
 
 def cmd_task_add(args):
     ctx = make_ctx(args)
+    refuse_replacement_char(item=args.item, detail=args.detail, expected=args.expected, basis=args.basis,
+                            app=args.app, prefix=args.prefix, no_release=args.no_release, rides=args.rides,
+                            risk=args.risk, owner=args.owner)
+    for ph in args.phase or []:
+        refuse_replacement_char(phase=ph)
     status = require_status(args.status)
     args.expected = normalise_expected(args.expected)
     expected_given = args.expected is not None
@@ -2095,6 +2100,55 @@ def cmd_task_add(args):
     return 0
 
 
+REPLACEMENT_CHAR = '\ufffd'
+
+
+def refuse_replacement_char(**fields):
+    """DL269: refuse U+FFFD (a lost character) in free text; name the option and the position."""
+    for opt, text in fields.items():
+        if isinstance(text, str) and REPLACEMENT_CHAR in text:
+            raise Fail(1, 'project_artifacts: --%s has the replacement character U+FFFD at position %d; '
+                       'replace it with the intended text' % (opt.replace('_', '-'), text.index(REPLACEMENT_CHAR)))
+
+
+def replacement_char_findings(rec):
+    """DL269: U+FFFD already held in task text or in a content file. [(req, file, message)]"""
+    out = []
+    for t in rec.tasks():
+        if not isinstance(t, dict):
+            continue
+        for field, v in sorted(t.items()):
+            if isinstance(v, str) and REPLACEMENT_CHAR in v:
+                out.append(('R4.8', 'registry.json', '%s: field %s has the replacement character U+FFFD at position %d'
+                            % (t.get('id', '?'), field, v.index(REPLACEMENT_CHAR))))
+    cdir = rec.dir / 'content'
+    if cdir.is_dir():
+        for p in sorted(cdir.rglob('*.json')):
+            try:
+                text = p.read_text(encoding='utf-8')
+            except (OSError, ValueError):
+                continue
+            rel = 'content/' + p.relative_to(cdir).as_posix()
+            try:
+                data = json.loads(text)
+            except ValueError:
+                if REPLACEMENT_CHAR in text:
+                    out.append(('R4.8', rel, 'has the replacement character U+FFFD at position %d' % text.index(REPLACEMENT_CHAR)))
+                continue
+            stack = [('', data)]
+            while stack:
+                path, v = stack.pop()
+                if isinstance(v, str):
+                    if REPLACEMENT_CHAR in v:
+                        out.append(('R4.8', rel, 'field %s has the replacement character U+FFFD at position %d'
+                                    % (path or '(root)', v.index(REPLACEMENT_CHAR))))
+                elif isinstance(v, dict):
+                    stack += [('%s.%s' % (path, k) if path else str(k), x) for k, x in v.items()]
+                elif isinstance(v, list):
+                    stack += [('%s[%d]' % (path, i), x) for i, x in enumerate(v)]
+    return out
+
+
 ITEM_MAX = 80
 
 
@@ -2109,6 +2163,11 @@ def clean_item(text):
 
 
 def cmd_set_task_status(args):
+    refuse_replacement_char(item=args.item, detail=args.detail, expected=args.expected, basis=args.basis,
+                            history=args.history, reason=args.reason, into=args.into, no_release=args.no_release,
+                            rides=args.rides, risk=args.risk)
+    for ph in args.phase or []:
+        refuse_replacement_char(phase=ph)
     status = require_status(args.status)
     args.expected = normalise_expected(args.expected)
     new_item = clean_item(args.item) if args.item is not None else None
@@ -2870,7 +2929,7 @@ def cmd_check(args):
         rec = Record.load(d)
     else:
         _ctx, rec = load_for_read(args)
-    findings = validate_structure(rec)
+    findings = validate_structure(rec) + replacement_char_findings(rec)
     for key, _kind, e in rec.artifacts():
         if not isinstance(key, str) or not KEY_RE.match(key) or not isinstance(e.get('file'), str):
             continue

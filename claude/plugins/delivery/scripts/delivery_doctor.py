@@ -558,7 +558,10 @@ def machine_items(root, cfg):
         else:
             items.append(_item("machine.push:" + d, "ok" if probe[0] else "warn", probe[1]))
     now = __import__("time").time()
-    stale = [s for s in MS.status(mcfg, now)["slots"] if not s["free"] and s.get("stale")]
+    st_now = MS.status(mcfg, now)
+    stale = [dict(s, label=str(s["slot"])) for s in st_now["slots"] if not s["free"] and s.get("stale")]
+    stale += [dict(s, label="light-%d" % s["slot"]) for s in st_now.get("light_slots", [])
+              if not s["free"] and s.get("stale")]
     old_tickets = []
     try:
         for n in sorted(os.listdir(MS.queue_dir())):
@@ -569,12 +572,13 @@ def machine_items(root, cfg):
         pass
     if stale or old_tickets:
         items.append(_item("machine.slots", "fail", "; ".join(
-            ["slot %d held by %s run %s for %d min (stale: its process is gone or it is over %d min)"
-             % (s["slot"], s.get("repo"), s.get("run_id"), s["age_s"] // 60, mcfg["slot_stale_min"]) for s in stale]
+            ["slot %s held by %s run %s for %d min (stale: its process is gone or it is over %d min)"
+             % (s["label"], s.get("repo"), s.get("run_id"), s["age_s"] // 60, mcfg["slot_stale_min"]) for s in stale]
             + ["queue ticket %s is older than %d min" % (n, mcfg["slot_stale_min"]) for n in old_tickets])
             + " (the next gate frees them, or run machine_slots.py free-stale)"))
     else:
-        items.append(_item("machine.slots", "ok", "no stale slot, no old ticket"))
+        items.append(_item("machine.slots", "ok", "no stale slot (%d CI, %d light), no old ticket"
+                          % (len(st_now["slots"]), len(st_now.get("light_slots", [])))))
     host, age = L.read_host_load()
     if host is None:
         items.append(_item("machine.hostload", "warn", "no host-load.json in %s: readers in WSL or the pool use their own "

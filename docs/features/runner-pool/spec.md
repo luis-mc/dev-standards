@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.7.0
+version: 0.7.1
 owner: agents
 type: reference
 code:
@@ -50,7 +50,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.2** (was delivery R13.61) — **CI slots and one queue** (D21, D30). The job-started hook `runner_load_gate` takes a ticket in `queue/`, waits until its ticket is first, a slot is free and the load is under the limits, then takes the slot by creating `slots/slot-N.lock` (create-new, so two hooks never take one slot) and removes its ticket. If its own ticket is missing from the queue, the hook logs `own ticket was gone; queued again` and writes it again with the same queue time. It never waits on an empty queue. A ready pull request's run and a run on the default branch go first (read from `GITHUB_EVENT_PATH`); inside a group it is first come, first served. After `runner_gate.max_wait_min` (30) the job fails with a log line (or `on_timeout: run` lets it go without a slot). A light job (see `light_jobs`) takes a light slot, the lock file `slots/light-N.lock` (same create-new and stale rules), with no queue ticket and never a CI slot while a light slot is free. If every light slot is busy it waits for a CI slot in the normal queue order. The load limits hold it like any job, and the log line names the slot (`slot light-1 taken after N s`). With `light_slots` 0 every job takes a CI slot as before. Without a machine folder the hook is the plain load gate of DL-79.
 
-**R5.3** (was delivery R13.62) — **Free the slot** (D25). The job-completed hook `runner_job_done` (`ACTIONS_RUNNER_HOOK_JOB_COMPLETED`) frees the job's slot (CI or light), writes the released line of the slot log and empties the job's work folder (only inside a `_work` folder). A slot whose holder process is gone (same host) is freed at once. Any slot older than `slot_stale_min` is freed. Each freed slot is logged with what held it. The slot log `slot-log.jsonl` has one JSON line per take and per free (repository, run, attempt, job, shard, queue time, slot time, release time, slot, runner, outcome `ran`, `claim-lost` or `stale-freed`) and keeps the last 5,000 lines. The status output of `machine_slots.py status` lists light slots under `light_slots`. `delivery_ci.py slots` prints the holders, the queue and each wait.
+**R5.3** (was delivery R13.62) — **Free the slot** (D25). The job-completed hook `runner_job_done` (`ACTIONS_RUNNER_HOOK_JOB_COMPLETED`) frees the job's slot (CI or light), writes the released line of the slot log and empties the job's work folder (only inside a `_work` folder). A slot whose holder process is gone (same host) is freed at once. Any slot older than `slot_stale_min` is freed. Each freed slot is logged with what held it. The slot log `slot-log.jsonl` has one JSON line per take and per free (repository, run, attempt, job, shard, queue time, slot time, release time, slot, runner, outcome `ran`, `claim-lost` or `stale-freed`) and keeps the last 5,000 lines. The status output of `machine_slots.py status` lists light slots under `light_slots`. `delivery_ci.py slots` prints the holders, then the light slots (`light 1`, free or held, same format), the queue and each wait. The doctor's `machine.slots` check covers light slots too: a stale light lock is reported and freed like a stale CI slot, and its ok line counts both kinds.
 
 **R5.4** (was delivery R13.63) — **Host load file** (D22, G3). A scheduled task on the host runs `load.py --write` every 15 seconds and writes `host-load.json` (memory %, CPU %, time). A reader in WSL or a container uses it when it is under 60 seconds old, and its own figures when it is older. Inside a container the reader also reads the cgroup v2 figures (`memory.current`, `memory.max`, `cpu.stat`) and decides on the worse of host and container.
 
@@ -142,6 +142,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks. | DL270 |
 | 0.7.0 | 2026-11-11 | RELEASE-105 | A repository can declare NOLOGIN database roles; the pool creates them and grants them to its login (R5.27). | DL231 |
 | 0.6.4 | 2026-11-11 | RELEASE-103 | The image sets PATH to /opt/node/bin before the step that runs corepack enable, so corepack and npm find node at build time. | DL223 |
 | 0.6.3 | 2026-11-11 | RELEASE-102 | The pool image runs corepack enable as root at build time, so an unprivileged job's corepack enable needs no write access (R5.26). | DL220 |
