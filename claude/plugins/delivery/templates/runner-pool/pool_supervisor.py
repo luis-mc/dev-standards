@@ -259,7 +259,10 @@ def kvm_gid(stat=os.stat):
         return None
 
 
-def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, log=_log):
+VM_CACHE_ROOT = '/ci-tools/vm-cache'
+
+
+def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, log=_log, isdir=os.path.isdir, vm_cache=False):
     """DL274: with POOL_KVM=1, put the agent user in the group that owns /dev/kvm. The gid is read here, never assumed.
     A group with that gid is reused; else group `kvm` is made with it. Always returns True so the runner starts."""
     env = os.environ if environ is None else environ
@@ -283,6 +286,20 @@ def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, 
         run(['groupadd', '--gid', str(gid), name])
     if gid != 0:
         run(['usermod', '-aG', name, agent['user']])
+    if vm_cache:
+        prepare_vm_cache(name, run, isdir=isdir, log=log)
+    return True
+
+
+def prepare_vm_cache(group, run, root=VM_CACHE_ROOT, isdir=os.path.isdir, log=_log):
+    """DL281: make the shared VM cache folder root:<kvm group> mode 2775, so every runner user can use it.
+    Only when the shared tool volume is mounted; the folder is made again at each start and is safe to repeat."""
+    parent = posixpath.dirname(root)
+    if not isdir(parent):
+        return False
+    run(['install', '-d', '-o', 'root', '-g', group, '-m', '2775', root])
+    run(['chgrp', group, root])
+    run(['chmod', '2775', root])
     return True
 
 
@@ -301,7 +318,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     for agent in load_agents(args.agents):
         ensure_user(agent, args.base)
-    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a))
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a, vm_cache=True))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))
