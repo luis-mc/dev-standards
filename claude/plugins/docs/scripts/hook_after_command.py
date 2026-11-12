@@ -564,6 +564,91 @@ def current_task_id(root):
     return m.group(1) if m else None
 
 
+WATCH_KINDS = ('ci_watch', 'gh run watch')
+REF_RE = re.compile(r'^[0-9A-Za-z][0-9A-Za-z._/-]*$')
+
+
+def watch_args(command):
+    """{'ci_watch': first non-option argument, 'gh run watch': first non-option argument} of a command line."""
+    found = {}
+    for tokens, _op in split_segments(command):
+        tokens = strip_prefix(tokens)
+        if not tokens:
+            continue
+        head = posixpath.basename(tokens[0]).lower()
+        if head == 'ci_watch.py':
+            kind, rest = 'ci_watch', tokens[1:]
+        elif head == 'gh' and tuple(tokens[1:3]) == ('run', 'watch'):
+            kind, rest = 'gh run watch', tokens[3:]
+        else:
+            continue
+        arg = next((t for t in rest if not t.startswith('-')), None)
+        if arg and REF_RE.match(arg) and kind not in found:
+            found[kind] = arg
+    return found
+
+
+def branch_names_at(root, sha):
+    """Remote branch names (without the remote), then local ones, whose head is sha."""
+    names = []
+    for args, remote in ((('branch', '-r'), True), (('branch',), False)):
+        r = git(root, *args, '--points-at', sha, '--format=%(refname:short)')
+        if not r or r[0] != 0:
+            continue
+        for line in r[1].split():
+            name = line.split('/', 1)[1] if remote and '/' in line else line
+            if name and name != 'HEAD' and name not in names:
+                names.append(name)
+    return names
+
+
+def watched_task_id(root, kind, arg):
+    """The task of the head a watch looked at: this checkout's task when the head is its own head, else the
+    task of a branch whose head is it. None when the head maps to no task branch (never the current branch)."""
+    names = []
+    if kind == 'gh run watch':
+        if not arg.isdigit():
+            return None
+        r = run(list(command_for(os.environ.get('CLAUDE_ARTIFACTS_GH') or 'gh')) + [
+            'run', 'view', arg, '--json', 'headBranch,headSha'], root, 20)
+        if not r or r[0] != 0:
+            return None
+        try:
+            info = json.loads(r[1])
+        except ValueError:
+            return None
+        if not isinstance(info, dict) or not isinstance(info.get('headSha'), str):
+            return None
+        sha = info['headSha']
+        if isinstance(info.get('headBranch'), str):
+            names.append(info['headBranch'])
+    else:
+        r = git(root, 'rev-parse', '--verify', '-q', arg + '^{commit}')
+        if not r or r[0] != 0 or not r[1].strip():
+            return None
+        sha = r[1].strip()
+    head = git(root, 'rev-parse', '--verify', '-q', 'HEAD')
+    if head and head[0] == 0 and head[1].strip() == sha:
+        return current_task_id(root)
+    if not re.match(r'^[0-9a-f]{7,64}$', sha):
+        return None
+    for name in names + branch_names_at(root, sha):
+        m = TASK_ID_RE.match(name)
+        if m:
+            return m.group(1)
+    return None
+
+
+def task_status(root, manifest, task_id):
+    """The status of a task in the record, or None when it cannot be read."""
+    text = record_text(root, manifest, 'registry.json')
+    registry = parse_json(text, 'registry.json') if text is not None else None
+    for t in (registry or {}).get('tasks') or []:
+        if isinstance(t, dict) and t.get('id') == task_id:
+            return t.get('status')
+    return None
+
+
 def is_watch_only(command):
     """True for a Bash command that only runs a watch script (R8.8): any path before the
     script name, a python launcher in front, arguments after. One leading `cd <dir> &&` is allowed,
@@ -647,15 +732,23 @@ def queue_events(data):
     root = hook_root(data)
     if not root:
         return 0
-    task_id = current_task_id(root)
-    if not task_id:
-        return 0
     manifest = load_manifest(root)
     if manifest is None:
         return 0
     from artifact_queue import append_event
     merged_status = merged_status_of(manifest)
+    current = current_task_id(root)
+    watches = watch_args(command)
     for status, event in events:
+        kind = next((k for k in WATCH_KINDS if event.startswith(k + ' ')), None)
+        if kind is None:
+            task_id = current
+        else:   # R8.8: a watch speaks for the watched head, never for the checkout it runs in
+            task_id = watched_task_id(root, kind, watches.get(kind)) if watches.get(kind) else None
+            if task_id and task_status(root, manifest, task_id) == 'Live':
+                task_id = None
+        if not task_id:
+            continue
         append_event(root, task_id, merged_status if status is MERGED else status, event, command)
     return 0
 
