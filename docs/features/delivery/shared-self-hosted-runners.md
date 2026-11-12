@@ -106,14 +106,16 @@ One file for the machine, readable by every runner account:
 {
   "load_limits": {"memory_pct": 85, "cpu_pct": 60},
   "ci_slots": 2,
+  "light_slots": 1,
   "local_heavy": 2,
   "cloud_ci_sessions": 10,
   "slot_stale_min": 120,
-  "runner_gate": {"max_wait_min": 30, "poll_sec": 15},
+  "runner_gate": {"max_wait_min": 30, "poll_sec": 15, "light_jobs": ["smoke", "prune", "prune-*", "cleanup", "remove-train", "decide", "delete-*", "runners"]},
   "runner_dirs": ["C:\\actions-runners"]
 }
 ```
 
+- `light_slots` (default 1, minimum 0) is the number of light slots; `runner_gate.light_jobs` names the jobs that use them (job key or shard, exact or glob). A light job never takes a CI slot while a light slot is free.
 - `load.py` reads this file first. The old `~/.claude/luismc-delivery-machine.json` is still read when the new one is missing.
 - When both exist and differ, the doctor warns and names the keys.
 - A project's `.delivery/config.json` can lower a limit for its own work, never raise a machine limit.

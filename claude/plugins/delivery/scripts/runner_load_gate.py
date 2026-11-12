@@ -19,6 +19,11 @@ wait (default 30 min) it exits 1 (`--on-timeout fail`: the job fails with a clea
 lets the job go without a slot). It never kills, suspends or lowers the priority of anything, and it fails open (exit 0,
 logged) when the machine cannot be measured or the machine folder cannot be written.
 
+A light job (its GITHUB_JOB or DELIVERY_SHARD matches `runner_gate.light_jobs`, an exact name or a glob; needs
+`light_slots` > 0) takes a light slot (slots/light-N.lock) at once, with no queue ticket, and never a CI slot while a
+light slot is free. If every light slot is busy it waits in the normal CI queue for a CI slot. The memory and CPU
+limits hold it like any job. The log line names the slot: `slot light-1 taken after N s`.
+
 Settings, first found wins: flag, env (DELIVERY_GATE_MAX_WAIT_MIN, DELIVERY_GATE_POLL_SEC, DELIVERY_GATE_ON_TIMEOUT,
 DELIVERY_GATE_LOG), `runner_gate` {max_wait_min, poll_sec, on_timeout} in machine.json (the old
 ~/.claude/luismc-delivery-machine.json when machine.json has none), defaults. Log: <machine folder>/runner-gate.log
@@ -226,6 +231,28 @@ def _ticket_state(ticket, mcfg):
                                                               time.time() - (rec.get('queued_ts') or 0))
 
 
+def _got(lock, ident, marker, waited_s, log):
+    """A slot was taken: stop the marker, give the slot back when the fallback claimed the shard, else go."""
+    marker.stop()
+    label = MS.slot_label(lock)
+    if marker.claim_lost():
+        MS.free_slot(lock, 'claim-lost')
+        log('runner gate: claim lost: the fallback claimed shard %s while the job was held; '
+            'ending without work, slot %s freed' % (ident['shard'], label))
+        return 3, None
+    log('runner gate: slot %s taken after %.0f s; starting the job' % (label, waited_s))
+    return 0, lock
+
+
+def _timed_out(cfg, text, waited_s, marker, log):
+    marker.stop()
+    log('runner gate: TIMED OUT after %.0f s (%s; top processes %s). %s'
+        % (waited_s, text, L.top_processes(),
+           'Failing the job so it can be re-run when the machine is quiet.' if cfg['on_timeout'] == 'fail'
+           else 'on_timeout=run: starting the job without a slot.'))
+    return (1 if cfg['on_timeout'] == 'fail' else 0), None
+
+
 def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monotonic, log=print, marker=None,
                priority=None):
     """Take a ticket and wait for: first in line, a free slot, load under the limits. Then take the slot. Returns
@@ -235,20 +262,57 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
     mcfg = MS.machine_config()
     started = clock()
     deadline = started + cfg['max_wait_min'] * 60.0
-    ticket = MS.enqueue(ident, priority)
-    queued_ts = ticket['queued_ts']
-    log('runner gate: ticket %s (priority %d) for %s run %s job %s'
-        % (ticket['file'], ticket['priority'], ident['repo'], ident['run_id'], ident['job']))
+    light = MS.is_light_job(ident, mcfg)
+    ticket = None
+    queued_ts = None
+    if light:
+        log('runner gate: light job %s (shard %s): trying a light slot first' % (ident['job'], ident['shard']))
+    else:
+        ticket = MS.enqueue(ident, priority)
+        queued_ts = ticket['queued_ts']
+        log('runner gate: ticket %s (priority %d) for %s run %s job %s'
+            % (ticket['file'], ticket['priority'], ident['repo'], ident['run_id'], ident['job']))
     marker = marker or Marker(log=log)
     waited = False
     last = ''
     try:
         while True:
             for f in MS.free_stale(mcfg):
-                log('runner gate: freed slot %d (%s): held by %s run %s job %s'
-                    % (f['slot'], f['reason'], f['holder'].get('repo'), f['holder'].get('run_id'),
+                log('runner gate: freed slot %s (%s): held by %s run %s job %s'
+                    % (MS.slot_label(dict(f['holder'], slot=f['slot'], kind=f.get('kind'))), f['reason'],
+                       f['holder'].get('repo'), f['holder'].get('run_id'),
                        f['holder'].get('job')))
             why = []
+            if light and MS.free_light_count(mcfg) > 0:
+                # A light job never waits for the CI queue while a light slot is free. The limits still hold it.
+                try:
+                    over = L.over(sample(), lim)
+                except Exception as exc:  # noqa: BLE001
+                    log('runner gate: cannot measure the machine (%s: %s); taking a slot without a load check'
+                        % (type(exc).__name__, exc))
+                    over = []
+                if not over:
+                    lock = MS.take_slot(ident, mcfg, kind='light')
+                    if lock is not None:
+                        return _got(lock, ident, marker, clock() - started, log)
+                    over = ['lost the race for the light slot']
+                text = '; '.join(over)
+                if not waited:
+                    waited = True
+                    marker.start()
+                    log('runner gate: holding the job (%s); polling every %.0f s for up to %.0f min'
+                        % (text, cfg['poll_sec'], cfg['max_wait_min']))
+                elif text != last:
+                    log('runner gate: still holding (%s)' % text)
+                last = text
+                if clock() + cfg['poll_sec'] > deadline:
+                    return _timed_out(cfg, text, clock() - started, marker, log)
+                sleep(cfg['poll_sec'])
+                continue
+            if ticket is None:                      # light job, every light slot busy: wait in the CI queue
+                log('runner gate: every light slot is busy; taking a CI slot in queue order')
+                ticket = MS.enqueue(ident, priority)
+                queued_ts = ticket['queued_ts']
             q = MS.queue_list(mcfg)
             if not any(t.get('file') == ticket['file'] for t in q):
                 # The own ticket vanished (dropped as unreadable or stale, or removed). Never wait on an empty
@@ -278,14 +342,7 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
             if not why:
                 lock = MS.take_slot(ident, mcfg, queued_ts=queued_ts)
                 if lock is not None:
-                    marker.stop()
-                    if marker.claim_lost():
-                        MS.free_slot(lock, 'claim-lost')
-                        log('runner gate: claim lost: the fallback claimed shard %s while the job was held; '
-                            'ending without work, slot %d freed' % (ident['shard'], lock['slot']))
-                        return 3, None
-                    log('runner gate: slot %d taken after %.0f s; starting the job' % (lock['slot'], clock() - started))
-                    return 0, lock
+                    return _got(lock, ident, marker, clock() - started, log)
                 why.append('lost the race for the slot')
             text = '; '.join(why)
             if not waited:
@@ -297,15 +354,11 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
                 log('runner gate: still holding (%s)' % text)
             last = text
             if clock() + cfg['poll_sec'] > deadline:
-                marker.stop()
-                log('runner gate: TIMED OUT after %.0f s (%s; top processes %s). %s'
-                    % (clock() - started, text, L.top_processes(),
-                       'Failing the job so it can be re-run when the machine is quiet.' if cfg['on_timeout'] == 'fail'
-                       else 'on_timeout=run: starting the job without a slot.'))
-                return (1 if cfg['on_timeout'] == 'fail' else 0), None
+                return _timed_out(cfg, text, clock() - started, marker, log)
             sleep(cfg['poll_sec'])
     finally:
-        MS.dequeue(ticket)
+        if ticket is not None:
+            MS.dequeue(ticket)
         marker.stop()
 
 
