@@ -1,4 +1,4 @@
-# DL267 report (in progress)
+# DL267 report
 
 Base check: OK. Both scripts exist; machine_slots.py had `'ci_slots': 2`.
 
@@ -19,6 +19,8 @@ Base check: OK. Both scripts exist; machine_slots.py had `'ci_slots': 2`.
 - `delivery_ci.py slots` listing and the doctor stale-slot check read only CI slots; JSON status has `light_slots`. Not owned here.
 - Files outside the owns list edited for docs: runner-pool spec, README, shared-self-hosted-runners.md.
 
-CI: pending.
+CI: spec-lint run 43129276102 (areas=delivery): every delivery job passed; only `docs check` failed, on the expected W1 (docs/work/ on a branch).
 
-NOT READY
+Branch head SHA: a39eb24 (code; the report commit follows)
+
+READY
