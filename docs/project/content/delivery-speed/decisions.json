@@ -5760,6 +5760,34 @@
       "chosen": "WSL 10GB, pool 8.5g, reclaim (Recommended)",
       "decided": "2026-11-12",
       "owner_words": "WSL 10GB, pool 8.5g, reclaim (Recommended)"
+    },
+    {
+      "id": "D254",
+      "question": "D253 sizes fail the pool sizing rule (WSL = pool + 2 GiB, at least 1.5 GiB per CPU): which sizes to apply, and how?",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL202",
+      "options": [
+        {
+          "label": "Pool 8.5g/5 CPU, WSL 11GB (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Pool 8g/5 CPU, WSL 10GB",
+          "summary": "offered"
+        },
+        {
+          "label": "Pool 8.5g/5 CPU, WSL stays 12GB",
+          "summary": "offered"
+        },
+        {
+          "label": "Hold, change nothing yet",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Pool 8.5g/5 CPU, WSL 11GB (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "Pool 8.5g/5 CPU, WSL 11GB (Recommended); apply: Targeted edit when idle (Recommended)"
     }
   ]
 }
