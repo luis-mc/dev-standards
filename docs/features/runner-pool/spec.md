@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.7.1
+version: 0.8.0
 owner: agents
 type: reference
 code:
@@ -64,7 +64,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 ### 5.2 Pool image and refresh
 
-**R5.9** (was delivery R13.68) — **Pool image layers** (DL149, D146). The pool base image is ubuntu:24.04 and always carries `build-essential` and `pkg-config`. `.delivery/config.json` `pool.layers` may list `windows-packaging`, which adds `dotnet-sdk-8.0 wine wine64 xvfb xauth msitools` (about 1 GB, 64-bit Wine, packages from the distribution, no extra feed); it is off by default. A project file `.delivery/pool.apt` lists extra apt packages, one per line, `#` for comments. A name holds only letters, digits and `+ - .` and does not start with `-`; anything else is refused with the line number and nothing changes. An unknown layer is refused the same way. `pool-refresh` reads both from the project checkout and adds them to what the pool `.env` already holds in `POOL_LAYERS` and `POOL_APT` (R5.11); `compose.yaml` passes them as build args. A missing or empty key changes nothing, and a layer turned off in the repo config alone is not removed from the pool.
+**R5.9** (was delivery R13.68) — **Pool image layers** (DL149, D146). The pool base image is ubuntu:24.04 and always carries `build-essential` and `pkg-config`. `.delivery/config.json` `pool.layers` may list `windows-packaging`, which adds `dotnet-sdk-8.0 wine wine64 xvfb xauth msitools` (about 1 GB, 64-bit Wine, packages from the distribution, no extra feed); `linux-packaging` (DL274), which adds `dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils` and `policycoreutils-python-utils` when the base image's apt has it (the build skips it quietly if not); and `kvm` (DL274), which adds `qemu-system-x86 qemu-utils cloud-image-utils`. All layers are off by default. The doctor checks `dpkg-deb rpmbuild checkmodule semodule_package` for `linux-packaging` and `qemu-system-x86_64 cloud-localds` for `kvm`. A project file `.delivery/pool.apt` lists extra apt packages, one per line, `#` for comments. A name holds only letters, digits and `+ - .` and does not start with `-`; anything else is refused with the line number and nothing changes. An unknown layer is refused the same way. `pool-refresh` reads both from the project checkout and adds them to what the pool `.env` already holds in `POOL_LAYERS` and `POOL_APT` (R5.11); `compose.yaml` passes them as build args. A missing or empty key changes nothing, and a layer turned off in the repo config alone is not removed from the pool.
 
 **R5.10** (was delivery R13.69) — **No rebuild under a running job** (DL149). `pool-refresh --yes` reads `gh api repos/<repo>/actions/runners` for each repository in the pool's `agents.json`. When a pool runner has `busy=true`, or the list cannot be read, it refuses with `refused: pool runner busy: <name> (<repo>). Wait for the job or use --force.` and changes nothing. `--force` rebuilds and prints a warning.
 
@@ -110,6 +110,14 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.27** — **A repository can declare NOLOGIN database roles** (DL231). Roles are server-wide and a project login has no CREATEROLE (D227), so a migration that runs `CREATE ROLE` fails. `pool-add-agent --db-role NAME` (repeatable) stores `db_roles` on the repository's entry in `agents.json`. As admin, the pool then makes each missing role with `CREATE ROLE NAME NOLOGIN` behind an `IF NOT EXISTS` check on `pg_roles`, and runs `GRANT NAME TO <login> WITH ADMIN OPTION`. The pool database is PostgreSQL 16, where the grant defaults to INHERIT and SET true, so the project user can `GRANT` on its own objects to the role and `SET ROLE` to it. A name is lowercase letters, digits and underscore, at most 63. The pool refuses a reserved name (`postgres`, `public`, `pg_*`), a pool login or database name, and a role another repository declares, naming both repositories. A rerun repeats the SQL safely and keeps earlier roles. A project migration must be exists-safe: check `pg_roles` before `CREATE ROLE`, because the role already exists.
 
+**R5.28** — **Optional KVM** (DL274, D255, D257). Off by default; with `POOL_KVM` unset nothing changes. The pool never runs privileged (D256).
+- *Host check.* `delivery_runner_pool.py doctor` and `delivery_ci_setup.py pool-plan` print `KVM on this host: yes|no (reason)`. The check is `docker run --rm --device /dev/kvm --entrypoint test <pool image or alpine> -r /dev/kvm -a -w /dev/kvm`; on Windows Git Bash the call sets `MSYS_NO_PATHCONV=1`. Exit 0 is yes; 1 means the device is there but not usable; anything else means no device in the Docker VM.
+- *Host prerequisites.* Windows: nested virtualization in WSL2, which Docker Desktop then exposes as `/dev/kvm`. Linux: the `kvm` module loaded and `/dev/kvm` open to your user. Memory: each guest VM counts against the pool memory cap (`POOL_MEM`), so size the pool for the guests too.
+- *Setting.* `pool-refresh --kvm on` writes `POOL_KVM=1`, `COMPOSE_FILE=compose.yaml:compose.kvm.yaml` and `COMPOSE_PATH_SEPARATOR=:` to the pool `.env` and rebuilds; `--kvm off` removes the three lines. `compose.kvm.yaml` passes `devices: [/dev/kvm:/dev/kvm]` and `POOL_KVM=1` to the pool service, and nothing else. `compose.yaml` is the same with or without KVM. `pool-refresh` refuses `POOL_KVM=1` (set by the flag or already in `.env`) when the host check does not say yes, and changes nothing.
+- *Group.* At each agent start, `pool_supervisor.py` reads the group id of `/dev/kvm` inside the container (it assumes none), reuses the group with that id or makes group `kvm` with it, and adds the agent user to it.
+- *Label.* `labels_for` adds `kvm` when `POOL_KVM=1` and `/dev/kvm` is readable and writable in the container, so new runners register with it. Existing runners get or lose the label without re-registration through the GitHub API; the doctor prints the exact command (`gh api -X POST repos/OWNER/REPO/actions/runners/ID/labels -f 'labels[]=kvm'`, or `-X DELETE .../labels/kvm` when `POOL_KVM` is off). The supervisor does not call GitHub, because the runner credentials stay on the host.
+- *Doctor checks.* `pool.<name>.kvm-host`, `kvm-compose`, `kvm-container` (`/dev/kvm` usable in the running pool) and `kvm-label`. A host without KVM is a fail only when `POOL_KVM=1`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -142,6 +150,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.8.0 | 2026-11-12 | RELEASE-117 | Pool layers linux-packaging and kvm; optional KVM (POOL_KVM=1, compose.kvm.yaml, host check, kvm label), R5.28. | DL274 |
 | 0.7.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks. | DL270 |
 | 0.7.0 | 2026-11-11 | RELEASE-105 | A repository can declare NOLOGIN database roles; the pool creates them and grants them to its login (R5.27). | DL231 |
 | 0.6.4 | 2026-11-11 | RELEASE-103 | The image sets PATH to /opt/node/bin before the step that runs corepack enable, so corepack and npm find node at build time. | DL223 |

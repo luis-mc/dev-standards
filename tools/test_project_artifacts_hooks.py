@@ -246,8 +246,8 @@ TABLE = [
     ('gh pr create --title "t" --body "b"', None, 'Running'),
     ('gh pr ready', None, 'Waiting'),
     ('gh pr merge 12 --squash', None, 'Live'),
-    ('python scripts/delivery/ci_watch.py 12', FAIL1, 'Failed'),
-    ('python scripts/delivery/ci_watch.py 12', None, 'Waiting'),
+    ('python scripts/delivery/ci_watch.py HEAD', FAIL1, 'Failed'),
+    ('python scripts/delivery/ci_watch.py HEAD', None, 'Waiting'),
     ('gh run watch 99 --exit-status', FAIL1, 'Failed'),
     ('gh run watch 99', None, 'Waiting'),
     ('vercel deploy --prod', None, 'Live'),
@@ -257,10 +257,25 @@ TABLE = [
 ]
 
 
+RUN_STUB = '''import json, sys
+print(json.dumps({"headBranch": "AR5-x", "headSha": open(__file__ + ".sha").read().strip()}))
+'''
+
+
+def run_stub_env(work):
+    """A gh stub whose `run view` answers with the head of `work` (DL275)."""
+    d = os.path.join(os.path.dirname(work), 'runstub')
+    os.makedirs(d, exist_ok=True)
+    write(os.path.join(d, 'gh.py'), RUN_STUB)
+    write(os.path.join(d, 'gh.py.sha'), sh(['rev-parse', 'HEAD'], work))
+    return {'CLAUDE_ARTIFACTS_GH': os.path.join(d, 'gh.py')}
+
+
 def _row(command, error, status):
     def t():
         work = make_repo()
-        rc, _out, err, _ = after(work, command, error)
+        env = run_stub_env(work) if 'run watch' in command else None
+        rc, _out, err, _ = after(work, command, error, env=env)
         assert rc == 0, (rc, err)
         assert statuses(work) == [('AR5', status)], queue_of(work)
         ev = queue_of(work)[0]
@@ -321,7 +336,7 @@ def after_matches_inside_chains_wrappers_and_windows_paths():
     for cmd, status in (('cd sub && gh pr create --title "t"', 'Running'),
                         ('rtk gh pr ready', 'Waiting'),
                         ('CI=1 gh pr merge 3', 'Live'),
-                        ('python3 .\\scripts\\delivery\\ci_watch.py 7', 'Waiting'),
+                        ('python3 .\\scripts\\delivery\\ci_watch.py HEAD', 'Waiting'),
                         ('git push && gh pr create --fill', 'Running')):
         work = make_repo()
         after(work, cmd)

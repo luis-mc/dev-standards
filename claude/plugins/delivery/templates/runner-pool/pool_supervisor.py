@@ -251,6 +251,41 @@ class Supervisor:
                 s['proc'].kill()
 
 
+def kvm_gid(stat=os.stat):
+    """DL274: the group id of /dev/kvm inside this container, or None when there is no device."""
+    try:
+        return stat('/dev/kvm').st_gid
+    except OSError:
+        return None
+
+
+def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, log=_log):
+    """DL274: with POOL_KVM=1, put the agent user in the group that owns /dev/kvm. The gid is read here, never assumed.
+    A group with that gid is reused; else group `kvm` is made with it. Always returns True so the runner starts."""
+    env = os.environ if environ is None else environ
+    if env.get('POOL_KVM') != '1':
+        return True
+    gid = gid_of()
+    if gid is None:
+        log('POOL_KVM=1 but /dev/kvm is missing in the container')
+        return True
+    run = run or (lambda argv: subprocess.run(argv, check=False).returncode)
+    if group_name is None:
+        import grp
+        def group_name(g):
+            try:
+                return grp.getgrgid(g).gr_name
+            except KeyError:
+                return None
+    name = group_name(gid)
+    if name is None:
+        name = 'kvm'
+        run(['groupadd', '--gid', str(gid), name])
+    if gid != 0:
+        run(['usermod', '-aG', name, agent['user']])
+    return True
+
+
 def prepare_wine_ok(agent, base):
     """DL179: run prepare_wine_prefix for a real folder only; always True so the runner starts."""
     if os.path.isdir(posixpath.join(base, agent['slug'])):
@@ -266,7 +301,7 @@ def main(argv=None):
     args = ap.parse_args(argv)
     for agent in load_agents(args.agents):
         ensure_user(agent, args.base)
-    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base))
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))

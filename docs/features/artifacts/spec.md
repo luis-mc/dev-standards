@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.11.4
+version: 0.11.5
 owner: agents
 type: reference
 code:
@@ -174,7 +174,7 @@ flowchart LR
 
 **R6.2** — The scripts use the Python standard library only.
 
-**R6.3** — The after-command hook finishes in under two seconds. Every hook does nothing in a project without a manifest.
+**R6.3** — The after-command hook takes the task of a `ci_watch.py` or `gh run watch` result from the watched head, not from the checkout: the branch whose head is the watched sha, and no event when that head is on no task branch or its task is already Live. It finishes in under two seconds. Every hook does nothing in a project without a manifest.
 
 **R6.4** — Hooks fail open on an internal error. They exit 0 and print one line on stderr. A turn is released after three unchanged blocks.
 
@@ -295,6 +295,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.5 | 2026-11-12 | RELEASE-117 | The after-command hook takes the task of a ci_watch or gh run watch result from the watched head, not from the checkout, and never queues a change for a Live task. | DL275 |
 | 0.11.4 | 2026-11-12 | RELEASE-115 | task-add and set-task-status refuse the replacement character U+FFFD in free text; check reports one already held in a task or content file. | DL269 |
 | 0.11.3 | 2026-11-11 | RELEASE-113 | mark-deferred --local accepts the work root, the full-progress folder, or the full-progress/<project> folder, and prints the folder used (R5.9a). | DL264 |
 | 0.11.2 | 2026-11-11 | RELEASE-111 | A project's design.css is checked against the accents contract; design set accepts a file without the neutral tokens (R5.11d).<br>Full Progress begins with <meta charset="utf-8"> so a local copy shows UTF-8 text correctly (R5.17a). | DL259, DL260 |

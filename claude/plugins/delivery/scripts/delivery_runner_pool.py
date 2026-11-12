@@ -63,8 +63,11 @@ class Probe:
     wslconfig = os.path.join(os.path.expanduser('~'), '.wslconfig')
 
     def sh(self, argv, input=None, timeout=60):
+        env = None
+        if argv and argv[0] == 'docker':  # DL274: Git Bash on Windows would rewrite /dev/kvm into a Windows path
+            env = dict(os.environ, MSYS_NO_PATHCONV='1')
         try:
-            p = subprocess.run(argv, capture_output=True, text=True, input=input, timeout=timeout)
+            p = subprocess.run(argv, capture_output=True, text=True, input=input, timeout=timeout, env=env)
         except (OSError, subprocess.SubprocessError):
             return None
         return p.returncode, p.stdout
@@ -1400,7 +1403,9 @@ def set_env_values(path, values):
             lines = f.read().splitlines()
     except OSError:
         lines = []
-    left = dict(values)
+    left = {k: v for k, v in values.items() if v is not None}
+    gone = {k for k, v in values.items() if v is None}  # DL274: None removes the key
+    lines = [l for l in lines if l.partition('=')[0].strip() not in gone]
     for i, line in enumerate(lines):
         k = line.partition('=')[0].strip()
         if k in left:
@@ -1443,7 +1448,7 @@ def merge_pool_layers(env, layers, apt, source, drop_layers=(), drop_apt=()):
     return cur, cur_apt, sources, notes
 
 
-def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version=None, source=None, drop_layers=(), drop_apt=()):
+def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version=None, source=None, drop_layers=(), drop_apt=(), kvm=None):
     """B14: the narrow pool step. It (re)writes RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env
     and rebuilds; the cap and every other line stay. DL155: layers and apt names already in the .env stay, the caller's
     are added (`source` is the asking repo), --drop-* removes one; PLAYWRIGHT_VERSION is never lowered unless the flag
@@ -1474,6 +1479,17 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
         want['RUNNER_SHA256'] = sha
     if pw:
         want['PLAYWRIGHT_VERSION'] = pw
+    # DL274: KVM is off unless POOL_KVM=1. --kvm on/off sets it; no flag keeps the .env value. Compose files follow the setting.
+    kvm_on = (env.get('POOL_KVM') == '1') if kvm not in ('on', 'off') else kvm == 'on'
+    kvm_error = None
+    if kvm_on:
+        host, khy = host_kvm(probe, pool)
+        if host is not True:
+            kvm_error = 'refused: POOL_KVM=1 but this host has no usable KVM (%s). Nothing was changed.' % khy
+    if kvm_on:
+        want.update({'POOL_KVM': '1', 'COMPOSE_FILE': KVM_COMPOSE, 'COMPOSE_PATH_SEPARATOR': ':'})
+    else:
+        want.update({'POOL_KVM': None, 'COMPOSE_FILE': None, 'COMPOSE_PATH_SEPARATOR': None})
     changes = {k: (env.get(k), v) for k, v in want.items() if (env.get(k) or ('' if k in ('POOL_LAYERS', 'POOL_APT', 'POOL_LAYER_SOURCES') else None)) != v}
     files = pool_template_diffs(pool_dir(pool))
     if files and pool_files_state(pool_dir(pool))[0] == 'newer':  # DL184: never write an older template over a newer pool
@@ -1485,6 +1501,8 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
         out['error'] = 'could not read the SHA-256 of runner %s; nothing was changed' % version
     if lerrs:
         out['error'] = ' '.join(lerrs) + ' Nothing was changed.'
+    if kvm_error:
+        out['error'] = kvm_error
     try:
         out['repos'] = [a['repo'] for a in json.loads(probe.read_text(os.path.join(pool_dir(pool), 'agents.json')) or '{}').get('agents', []) if a.get('repo')]
     except (ValueError, AttributeError, TypeError, KeyError):
@@ -1910,9 +1928,89 @@ def _browser_checks(add, probe, pool, env_vals, agents, repo_paths):
 
 # --- DL149: opt-in image layers and the project apt fragment --------------------------------------------------------
 
-LAYERS = {'windows-packaging': 'dotnet-sdk-8.0 wine wine64 xvfb xauth msitools'}  # the Dockerfile holds the same list
+LAYERS = {'windows-packaging': 'dotnet-sdk-8.0 wine wine64 xvfb xauth msitools',
+          'linux-packaging': 'dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils',  # DL274, plus policycoreutils-python-utils when apt has it
+          'kvm': 'qemu-system-x86 qemu-utils cloud-image-utils'}  # the Dockerfile holds the same lists
 APT_NAME = re.compile(r'^[A-Za-z0-9+.\-]+$')
-LAYER_TOOLS = {'windows-packaging': ('wine', 'xvfb-run', 'dotnet')}
+LAYER_TOOLS = {'windows-packaging': ('wine', 'xvfb-run', 'dotnet'),
+               'linux-packaging': ('dpkg-deb', 'rpmbuild', 'checkmodule', 'semodule_package'),
+               'kvm': ('qemu-system-x86_64', 'cloud-localds')}
+
+
+# --- DL274: optional KVM (off by default) ---------------------------------------------------------------------------
+
+KVM_COMPOSE = 'compose.yaml:compose.kvm.yaml'
+KVM_TEST = ['test', '-r', '/dev/kvm', '-a', '-w', '/dev/kvm']
+
+
+def host_kvm(probe, pool='main'):
+    """DL274: (True|False|None, reason). Is /dev/kvm in the Docker VM and usable? Runs `docker run --device /dev/kvm`
+    on the pool image when it exists, else on alpine. None means docker could not answer."""
+    image = 'luismc-runner-pool:%s' % pool
+    have = probe.sh(['docker', 'image', 'inspect', '--format', '{{.Id}}', image])
+    if have is None:
+        return None, 'docker cannot run here, so KVM was not checked'
+    if have[0] != 0:
+        image = 'alpine'
+    rr = probe.sh(['docker', 'run', '--rm', '--device', '/dev/kvm', '--entrypoint', 'test', image] + KVM_TEST[1:], timeout=180)
+    if rr is None:
+        return None, 'docker did not finish (timeout or docker cannot run), so KVM was not checked'
+    if rr[0] == 0:
+        return True, '/dev/kvm is present in the Docker VM and readable and writable'
+    if rr[0] == 1:
+        return False, '/dev/kvm is in the Docker VM but not readable and writable by the container user'
+    return False, ('/dev/kvm is not in the Docker VM (docker exit %s). Windows: turn on nested virtualization for WSL2. '
+                   'Linux: load the kvm module and give your user access to /dev/kvm.' % rr[0])
+
+
+def kvm_runner_commands(probe, repos, pool, want):
+    """DL274: (commands, error). The exact `gh api` commands that add (want=True) or remove the `kvm` label on this pool's runners."""
+    cmds = []
+    for repo in repos:
+        data, why = probe.gh_json(['api', 'repos/%s/actions/runners' % repo])
+        if not isinstance(data, dict):
+            return cmds, 'could not read the runners of %s (%s)' % (repo, why or 'no answer')
+        for r in data.get('runners') or []:
+            if not str(r.get('name', '')).startswith(pool + '-'):
+                continue
+            has = 'kvm' in {l.get('name') for l in r.get('labels') or []}
+            if want and not has:
+                cmds.append("gh api -X POST repos/%s/actions/runners/%s/labels -f 'labels[]=kvm'" % (repo, r.get('id')))
+            elif has and not want:
+                cmds.append('gh api -X DELETE repos/%s/actions/runners/%s/labels/kvm' % (repo, r.get('id')))
+    return cmds, None
+
+
+def _kvm_checks(add, probe, pool, env_vals, compose_dir, agents):
+    """DL274: pool doctor checks for KVM. Reports the host, then the pool's setting. The label is fixed by printed commands."""
+    on = (env_vals.get('POOL_KVM') or '').strip() == '1'
+    host, why = host_kvm(probe, pool)
+    if host is None:
+        add('kvm-host', 'warn' if on else 'ok', 'KVM on this host: unknown (%s)' % why)
+    else:
+        add('kvm-host', 'ok' if (host or not on) else 'fail', 'KVM on this host: %s (%s)' % ('yes' if host else 'no', why))
+    if on:
+        use = (env_vals.get('COMPOSE_FILE') or '').strip()
+        if 'compose.kvm.yaml' not in use or not probe.isfile(os.path.join(compose_dir, 'compose.kvm.yaml')):
+            add('kvm-compose', 'fail', 'POOL_KVM=1 but .env has no COMPOSE_FILE with compose.kvm.yaml. Run `delivery_ci_setup.py pool-refresh --kvm on --yes`.')
+        else:
+            add('kvm-compose', 'ok', 'compose passes /dev/kvm (compose.kvm.yaml); never privileged')
+        rr = probe.sh(['docker', 'exec', 'pool-%s-pool-1' % pool] + KVM_TEST)
+        if rr is None or rr[0] is None:
+            add('kvm-container', 'warn', 'docker cannot be read here, so /dev/kvm in the running pool is not checked')
+        else:
+            add('kvm-container', 'ok' if rr[0] == 0 else 'fail',
+                '/dev/kvm is usable in the running pool, so new runners get the kvm label' if rr[0] == 0
+                else '/dev/kvm is not usable in the running pool. Recreate it: cd %s && %s' % (compose_dir, recreate_command(pool)))
+    repos = [a.get('repo') for a in (agents or []) if a.get('repo')]
+    if repos:
+        cmds, err = kvm_runner_commands(probe, repos, pool, on)
+        if err:
+            add('kvm-label', 'warn', 'the kvm label was not checked: %s' % err)
+        elif cmds:
+            add('kvm-label', 'warn', 'runner labels differ from POOL_KVM=%s. Run: %s' % ('1' if on else 'unset', ' ; '.join(cmds)))
+        else:
+            add('kvm-label', 'ok', 'runner labels match POOL_KVM (%s)' % ('kvm label on' if on else 'no kvm label'))
 
 
 def parse_pool_apt(text):
@@ -2135,6 +2233,7 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
                 if pub else 'every agent\'s repository is private')
         _browser_checks(add, probe, n, env_vals, agents, repo_paths)
         _layer_checks(add, probe, n, env_vals, compose, repo_paths)
+        _kvm_checks(add, probe, n, {k.strip(): v.strip() for k, v in env_vals.items()}, d, agents)
         live = live_cap(probe, n) if has_cap else None
         if live is not None:
             try:

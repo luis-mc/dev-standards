@@ -236,6 +236,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D252 | Short CI jobs (smoke, prune, cleanup) wait behind long builds for the 2 machine CI slots: how should the runner gate treat them? (peer report, overnight: my pick per D248) | Own light slot (Recommended) | decided | 2026-11-12 |
 | delivery-speed | D253 | DL202 memory log: memory over 85% for 23% of a day, peaks when the WSL VM grows to ~10 GB during CI jobs; how should the WSL and pool limits change? | WSL 10GB, pool 8.5g, reclaim (Recommended) | decided | 2026-11-12 |
 | delivery-speed | D254 | D253 sizes fail the pool sizing rule (WSL = pool + 2 GiB, at least 1.5 GiB per CPU): which sizes to apply, and how? | Pool 8.5g/5 CPU, WSL 11GB (Recommended) | decided | 2026-11-12 |
+| delivery-speed | D255 | Peer request: add a linux-packaging pool image layer (dpkg-dev, rpm, SELinux policy tools)? | Build it (Recommended) | decided | 2026-11-12 |
+| delivery-speed | D256 | Peer request: a privileged pool service for the Linux distro matrix? | Not now | decided | 2026-11-12 |
+| delivery-speed | D257 | Peer request: KVM host check, optional /dev/kvm pool profile, qemu layer and kvm runner label; build and apply here? | Build + apply here (Recommended) | decided | 2026-11-12 |
+| delivery-speed | D258 | Peer request: generic CI rule 'a test's inputs include every program it runs' (programs map in ci-scope.json + guard)? | Wait for their reference (Recommended) | decided | 2026-11-12 |
 | delivery-speed | D26 | Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config? | Run it with permission | decided | 2026-11-04 |
 | delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |

@@ -78,8 +78,17 @@ def save(path, data):
             pass
 
 
-def labels_for(pool, slug):
-    return ['self-hosted', 'linux', 'x64', 'pool-%s' % pool, 'repo-%s' % slug]
+def kvm_usable(environ=None, access=os.access, exists=os.path.exists):
+    """DL274: True when POOL_KVM=1 and /dev/kvm can be read and written in this container."""
+    env = os.environ if environ is None else environ
+    return env.get('POOL_KVM') == '1' and exists('/dev/kvm') and access('/dev/kvm', os.R_OK | os.W_OK)
+
+
+def labels_for(pool, slug, kvm=None):
+    labels = ['self-hosted', 'linux', 'x64', 'pool-%s' % pool, 'repo-%s' % slug]
+    if kvm_usable() if kvm is None else kvm:
+        labels.append('kvm')
+    return labels
 
 TMP_KEYS = ('TMPDIR', 'TMP', 'TEMP')
 
