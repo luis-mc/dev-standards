@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T19:04+00:00",
+  "updated": "2026-11-12T19:23+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4810,33 +4810,32 @@
       "id": "DL268",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: broken-character guard and light-slot listing",
       "detail": "Join, CI and merge of DL269 (task text refuses U+FFFD) and DL270 (slots listing and doctor show light slots).",
-      "expected": "12 Nov ~19:47",
-      "changed": "2026-11-12T19:01+00:00",
-      "expected_basis": "agents ~25 min from 19:03, join 7, CI ~8",
+      "expected": "12 Nov",
+      "changed": "2026-11-12T19:23+00:00",
       "release": 115,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-12T19:03+00:00",
-          "end": "2026-11-12T19:30+00:00"
+          "end": "2026-11-12T19:15+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-12T19:30+00:00",
-          "end": "2026-11-12T19:37+00:00"
+          "start": "2026-11-12T19:15+00:00",
+          "end": "2026-11-12T19:17+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-12T19:37+00:00",
-          "end": "2026-11-12T19:45+00:00"
+          "start": "2026-11-12T19:17+00:00",
+          "end": "2026-11-12T19:30+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-12T19:45+00:00",
-          "end": "2026-11-12T19:47+00:00"
+          "start": "2026-11-12T19:30+00:00",
+          "end": "2026-11-12T19:32+00:00"
         }
       ],
       "risk": {
@@ -4848,24 +4847,22 @@
       "id": "DL269",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Task text refuses the replacement character",
       "detail": "task-add and set-task-status refuse U+FFFD in item, detail, basis and history text, naming the field; render and check also flag it. Today only the claude.ai publish catches it (found 12 Nov 00:27 on DL260's detail).",
-      "expected": "12 Nov ~19:30",
-      "changed": "2026-11-12T19:01+00:00",
-      "expected_basis": "cloud agent ~25 min",
+      "expected": "12 Nov",
+      "changed": "2026-11-12T19:23+00:00",
       "rides": "DL268"
     },
     {
       "id": "DL270",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Slots listing and doctor show light slots",
       "detail": "delivery_ci.py slots and the doctor stale-slot check list the light slots (light-N) and their holders next to the CI slots; follow-up from DL267.",
-      "expected": "12 Nov ~19:30",
-      "changed": "2026-11-12T19:01+00:00",
-      "expected_basis": "cloud agent ~25 min",
+      "expected": "12 Nov",
+      "changed": "2026-11-12T19:23+00:00",
       "rides": "DL268"
     },
     {
