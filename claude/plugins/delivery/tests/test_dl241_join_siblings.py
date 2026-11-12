@@ -64,14 +64,13 @@ class JoinSiblings(unittest.TestCase):
     def test_real_stacked_lists_files(self):
         w = repo()
         branch(w, "A", "origin/main", "x.txt", "1\n")
-        branch(w, "B", "A", "y.txt", "1\n")
+        branch(w, "B", "A", "x.txt", "3\n")
         git(w, "checkout", "-q", "A")
         commit(w, "x.txt", "2\n", "a2")
         git(w, "push", "-q", "origin", "A")
         git(w, "checkout", "-q", "main")
         p = join(w, "--into", "integ", "A", "B")
-        self.assertIn("B is stacked on an older A; prefer B's side for files B rewrote", p.stderr)
-        self.assertIn("files in both: x.txt", p.stderr)
+        self.assertIn("B was cut from an older head of A and both changed: x.txt. Merge B alone, or rebase B on the current A.", p.stderr)
         self.assertIn("skipped B: stacked on an older A, files: x.txt", p.stdout)
         self.assertEqual(p.returncode, 3)
 
