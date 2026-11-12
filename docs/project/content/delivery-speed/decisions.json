@@ -5788,6 +5788,98 @@
       "chosen": "Pool 8.5g/5 CPU, WSL 11GB (Recommended)",
       "decided": "2026-11-12",
       "owner_words": "Pool 8.5g/5 CPU, WSL 11GB (Recommended); apply: Targeted edit when idle (Recommended)"
+    },
+    {
+      "id": "D255",
+      "question": "Peer request: add a linux-packaging pool image layer (dpkg-dev, rpm, SELinux policy tools)?",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL274",
+      "options": [
+        {
+          "label": "Build it (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Not now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Build it (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "Build it (Recommended)"
+    },
+    {
+      "id": "D256",
+      "question": "Peer request: a privileged pool service for the Linux distro matrix?",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL274",
+      "options": [
+        {
+          "label": "GitHub-hosted runners (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Opt-in privileged profile",
+          "summary": "offered"
+        },
+        {
+          "label": "Not now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Not now",
+      "decided": "2026-11-12",
+      "owner_words": "Not now"
+    },
+    {
+      "id": "D257",
+      "question": "Peer request: KVM host check, optional /dev/kvm pool profile, qemu layer and kvm runner label; build and apply here?",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL274",
+      "options": [
+        {
+          "label": "Build + apply here (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Build, don't apply",
+          "summary": "offered"
+        },
+        {
+          "label": "Not now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Build + apply here (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "Build + apply here (Recommended)"
+    },
+    {
+      "id": "D258",
+      "question": "Peer request: generic CI rule 'a test's inputs include every program it runs' (programs map in ci-scope.json + guard)?",
+      "asked": "2026-11-12",
+      "status": "decided",
+      "task": "DL276",
+      "options": [
+        {
+          "label": "Wait for their reference (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Build now",
+          "summary": "offered"
+        },
+        {
+          "label": "Not now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Wait for their reference (Recommended)",
+      "decided": "2026-11-12",
+      "owner_words": "Wait for their reference (Recommended)"
     }
   ]
 }

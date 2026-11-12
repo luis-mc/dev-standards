@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T22:10+00:00",
+  "updated": "2026-11-12T22:52+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4909,6 +4909,89 @@
       "changed": "2026-11-12T22:10+00:00",
       "rides": "DL271",
       "started": "2026-11-12T21:56+00:00"
+    },
+    {
+      "id": "DL273",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-117: pool linux-packaging + KVM, ci_watch task fix",
+      "detail": "Join, CI and merge for DL274 and DL275.",
+      "expected": "12 Nov ~23:42",
+      "changed": "2026-11-12T22:52+00:00",
+      "expected_basis": "agents ~30 min from 22:56, join 7, CI 6",
+      "release": 117,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-12T22:56+00:00",
+          "end": "2026-11-12T23:26+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-12T23:26+00:00",
+          "end": "2026-11-12T23:33+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-12T23:33+00:00",
+          "end": "2026-11-12T23:39+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-12T23:39+00:00",
+          "end": "2026-11-12T23:42+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL274",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool: linux-packaging layer, KVM check, kvm profile and label",
+      "detail": "D255, D257: layer linux-packaging (dpkg-dev, rpm, make, checkpolicy, selinux-policy-dev, policycoreutils); setup/doctor report host KVM; optional profile passes /dev/kvm, adds qemu-system-x86 + cloud-image-utils, runner label kvm.",
+      "expected": "12 Nov ~23:26",
+      "changed": "2026-11-12T22:52+00:00",
+      "expected_basis": "cloud agent from 22:56, ~30 min",
+      "rides": "DL273",
+      "started": "2026-11-12T22:52+00:00"
+    },
+    {
+      "id": "DL275",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Docs hook: CI watch status goes to the watched sha's task",
+      "detail": "Peer report: ci_watch.py/gh run watch set the task of the current checkout's branch (a Live record task) to Waiting/Failed. Map the event from the watched sha's branch; skip when unknown.",
+      "expected": "12 Nov ~23:20",
+      "changed": "2026-11-12T22:52+00:00",
+      "expected_basis": "cloud agent from 22:56, ~24 min",
+      "rides": "DL273",
+      "started": "2026-11-12T22:52+00:00"
+    },
+    {
+      "id": "DL276",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "CI rule: a test's inputs include every program it runs",
+      "detail": "D258: port the peer project's programs map (ci-scope.json programs, ci_scope.py, guard test) once its reference works; add the rule to the shared rules.",
+      "expected": "13 Nov",
+      "changed": "2026-11-12T22:52+00:00",
+      "expected_basis": "waits on the peer's reference version"
+    },
+    {
+      "id": "DL277",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Apply linux-packaging + KVM to this PC's pool",
+      "detail": "D257: after RELEASE-117, pool-refresh with the layer and KVM profile, rebuild when CI is idle, check runners, tell the peer.",
+      "expected": "12 Nov ~23:55",
+      "changed": "2026-11-12T22:52+00:00",
+      "expected_basis": "after RELEASE-117 ~23:42 and idle CI (peer CI until ~23:35)",
+      "no_release": "machine settings only (pool image, compose)"
     },
     {
       "id": "DS1",
