@@ -211,7 +211,7 @@ flowchart TB
 | claude.ai daily limit | Defer. Do not block. | The owner cannot fix it. It resets. |
 | Time zone data missing (Windows) | Fall back to local time, with a warning | The page still renders. |
 | A change that adds a finding | Fail closed: write nothing | A record that was valid stays valid. |
-| Content or a task that is invalid | The error names the field and its limit, or the entry and the rule (`item is 93 characters; the limit is 80`). | The caller can fix it without running `check`. |
+| Content or a task that is invalid | The error names the field and its limit, or the entry and the rule (`item is 93 characters; the limit is 80`). `task-add` and `set-task-status` refuse the replacement character U+FFFD in any free-text option, naming the option and the position; `check` reports one already held in a task or a content file. | The caller can fix it without running `check`. |
 | `edit-content` replaces a content folder | The replace is atomic. The script writes a staging folder, swaps it in, then removes the old one. If the folder is locked it replaces the files in place, or stops with `content/<key> is in use ...; nothing changed`. Invalid content restores the old folder. On any failure the old content stays complete. `retire` sets the folder aside the same way. | A locked folder on Windows must never leave a half-deleted folder that a later commit records as deleted. |
 | `edit-content` of a `decisions.json` | Prints `run docs_index.py build: docs/architecture/decisions.md is now stale`. | The script does not run `docs_index.py`; the generated index is rebuilt there. |
 
