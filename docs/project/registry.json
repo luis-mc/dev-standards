@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T05:02+00:00",
+  "updated": "2026-11-13T05:04+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5224,9 +5224,9 @@
       "status": "Waiting",
       "item": "Pool refresh to install the drain (RELEASE-121)",
       "detail": "Rebuild this PC's pool with delivery 1.39.0 so refreshes drain before recreate. First refresh: old supervisor has no drain mode, so it uses --force after the GitHub busy check, only when all 4 runners are idle and memory is under 85%. Tell comics-organizer the window first.",
-      "expected": "13 Nov ~06:00",
-      "changed": "2026-11-13T05:02+00:00",
-      "expected_basis": "waits for RELEASE-122 (~05:47) and peer CI (~05:10+)",
+      "expected": "13 Nov ~07:15",
+      "changed": "2026-11-13T05:04+00:00",
+      "expected_basis": "peer reruns from ~06:00 end ~07:05 (peer est.), build ~4 min",
       "no_release": "applies a release to this PC's pool"
     },
     {
