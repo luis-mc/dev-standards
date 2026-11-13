@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T01:05+00:00",
+  "updated": "2026-11-13T01:53+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5068,9 +5068,9 @@
       "status": "Waiting",
       "item": "Rebuild this PC's pool with RELEASE-118 (vm cache, ssh, packaging tools)",
       "detail": "pool-refresh --yes once no pool runner is busy; check 4 runners online with kvm, the doctor, /ci-tools/vm-cache; tell the peer.",
-      "expected": "13 Nov ~01:40",
-      "changed": "2026-11-13T01:05+00:00",
-      "expected_basis": "peer CI run from 00:25 ends ~01:30, then rebuild ~8 min",
+      "expected": "13 Nov ~02:03",
+      "changed": "2026-11-13T01:53+00:00",
+      "expected_basis": "peer MSI job from 01:50 ~4 min, then rebuild ~8 min",
       "no_release": "machine settings only (pool image)"
     },
     {
