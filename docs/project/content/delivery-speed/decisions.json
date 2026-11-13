@@ -6284,6 +6284,198 @@
       "chosen": "None at user level",
       "decided": "2026-11-13",
       "owner_words": "None at user level"
+    },
+    {
+      "id": "D277",
+      "question": "When to build DL309 and DL316-DL320?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL316",
+      "options": [
+        {
+          "label": "All now, one release (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Windows ones now, DL309 later",
+          "summary": "offered"
+        },
+        {
+          "label": "Tomorrow",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "All now, one release (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "All now, one release (Recommended)"
+    },
+    {
+      "id": "D278",
+      "question": "How do workflows target the shared Windows runner?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL317",
+      "options": [
+        {
+          "label": "CI_RUNS_ON_WINDOWS (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "One CI_RUNS_ON map per OS",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "CI_RUNS_ON_WINDOWS (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "CI_RUNS_ON_WINDOWS (Recommended)"
+    },
+    {
+      "id": "D279",
+      "question": "Who removes a leftover project label on a shared runner?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL317",
+      "options": [
+        {
+          "label": "Setup removes it, with a yes (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Doctor warns only",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Setup removes it, with a yes (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Setup removes it, with a yes (Recommended)"
+    },
+    {
+      "id": "D280",
+      "question": "How is the Windows-only runner setup started?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL316",
+      "options": [
+        {
+          "label": "--only windows flag (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "New windows-run action",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "--only windows flag (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "--only windows flag (Recommended)"
+    },
+    {
+      "id": "D281",
+      "question": "Which ci-* runner accounts get the symlink right?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL319",
+      "options": [
+        {
+          "label": "Every ci-* account (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Only when asked",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Every ci-* account (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Every ci-* account (Recommended)"
+    },
+    {
+      "id": "D282",
+      "question": "Add a second comics-organizer agent to the Linux pool?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL316",
+      "options": [
+        {
+          "label": "Add a second agent (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep one agent",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Add a second agent (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Add a second agent (Recommended)"
+    },
+    {
+      "id": "D283",
+      "question": "What happens to DL276 (programs CI rule port)?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL276",
+      "options": [
+        {
+          "label": "Ask the peer once more (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Drop DL276",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep waiting quietly",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Ask the peer once more (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Ask the peer once more (Recommended)"
+    },
+    {
+      "id": "D284",
+      "question": "Run tonight's work under the overnight rules?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL316",
+      "options": [
+        {
+          "label": "Yes, overnight rules (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Stop after the release",
+          "summary": "offered"
+        },
+        {
+          "label": "I am staying up",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Yes, overnight rules (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Yes, overnight rules (owner also answered 'still here' for the return time)"
+    },
+    {
+      "id": "D285",
+      "question": "Release the stale RELEASE-41 ledger hold?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL316",
+      "options": [
+        {
+          "label": "Release it (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Leave it",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Release it (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Release it (Recommended)"
     }
   ]
 }
