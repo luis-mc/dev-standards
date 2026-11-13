@@ -1528,6 +1528,20 @@ def compose_required_vars(compose):
     return sorted(set(re.findall(r'\$\{([A-Za-z_][A-Za-z0-9_]*):\?', compose or '')))
 
 
+DRAIN_FILE, DRAINED_FILE, DRAIN_BUSY_FILE = 'drain', 'drained', 'drain-busy'
+DRAIN_TIMEOUT_SEC = 45 * 60
+DRAIN_POLL_SEC = 5
+
+
+def clear_drain(pool):
+    """DL289: remove the drain, drained and busy-list files of a pool (the supervisor then runs its listeners again)."""
+    for name in (DRAIN_FILE, DRAINED_FILE, DRAIN_BUSY_FILE):
+        try:
+            os.remove(os.path.join(pool_dir(pool), name))
+        except OSError:
+            pass
+
+
 class Executor:
     """Real step handlers. Each returns (ok, detail). Tokens go through a pipe and are never printed."""
 
@@ -1661,17 +1675,36 @@ class Executor:
         if os.path.isfile(env_path) and read_pool_env(self.probe, step['pool']).get('RUNNER_SHA256') != sha:
             # B14: a later `docker compose up --no-build` needs it in .env (compose.yaml requires it).
             set_env_values(env_path, {'RUNNER_SHA256': sha})
-        browsers = read_pool_env(self.probe, step['pool']).get('POOL_BROWSERS') or 'none'
-        pw = read_pool_env(self.probe, step['pool']).get('PLAYWRIGHT_VERSION')
-        pw = pw if valid_playwright_version(pw) else PLAYWRIGHT_VERSION
-        pe = read_pool_env(self.probe, step['pool'])
-        env = dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=browsers, PLAYWRIGHT_VERSION=pw,
-                   POOL_LAYERS=pe.get('POOL_LAYERS') or '', POOL_APT=pe.get('POOL_APT') or '')
+        env = self.pool_build_env(step['pool'], version, sha)
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
         return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
 
-    def refresh(self, rp, force=False):
+    def pool_build_env(self, pool, version, sha):
+        """The environment `docker compose` needs to build the pool image."""
+        pe = read_pool_env(self.probe, pool)
+        pw = pe.get('PLAYWRIGHT_VERSION')
+        pw = pw if valid_playwright_version(pw) else PLAYWRIGHT_VERSION
+        return dict(os.environ, RUNNER_SHA256=sha, RUNNER_VERSION=version, POOL_BROWSERS=pe.get('POOL_BROWSERS') or 'none',
+                    PLAYWRIGHT_VERSION=pw, POOL_LAYERS=pe.get('POOL_LAYERS') or '', POOL_APT=pe.get('POOL_APT') or '')
+
+    def build_image(self, pool):
+        """DL289: build the image only (`docker compose build`). The old container keeps serving jobs meanwhile."""
+        pe = read_pool_env(self.probe, pool)
+        version = pe.get('RUNNER_VERSION') or RUNNER_VERSION
+        if below_floor(version):
+            return False, below_floor(version)
+        sha = judge_sha(self.probe, version, pe.get('RUNNER_SHA256'))[0]
+        if not sha:
+            return False, 'could not read the SHA-256 of the runner release; the image is not built without it'
+        env_path = os.path.join(pool_dir(pool), '.env')
+        if os.path.isfile(env_path) and pe.get('RUNNER_SHA256') != sha:
+            set_env_values(env_path, {'RUNNER_SHA256': sha})
+        p = subprocess.run(['docker', 'compose', 'build'], cwd=pool_dir(pool), env=self.pool_build_env(pool, version, sha),
+                           capture_output=True, text=True)
+        return p.returncode == 0, 'image built' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
+
+    def refresh(self, rp, force=False, drain_timeout=DRAIN_TIMEOUT_SEC):
         """B14: apply a refresh_plan: write the changed keys, then rebuild the image when no job runs (else say how). It
         rebuilds with no change too, so an image built before POOL_BROWSERS was set gets the libraries."""
         if rp.get('error'):
@@ -1692,20 +1725,68 @@ class Executor:
             text += ('; ' if text else '') + 'wrote %s in %s' % (', '.join(sorted(rp['changes'])), rp['path'])
         elif not text:
             text = 'nothing to change in %s' % rp['path']
-        # DL149: name the busy runner; --force overrides with a warning.
-        gate_ok, gate_msg = rebuild_gate(self.probe, rp.get('repos') or [], rp['pool'], force)
-        if not gate_ok:
-            return False, text + '. ' + gate_msg
-        if gate_msg:
-            text += '. ' + gate_msg
         if not force and not (rp.get('repos')) and self.runners_busy():
             return True, text + ('. A job may run (or the runners cannot be read), so the pool was not rebuilt. '
-                                 'By hand: cd %s && docker compose up -d --build' % pool_dir(rp['pool']))
+                                 'By hand: cd %s && docker compose build' % pool_dir(rp['pool']))
+        # DL289: build first, while the old container keeps serving jobs.
         before = self.image_ids(rp['pool'])
-        ok, detail = self.do_pool_up({'pool': rp['pool']})
+        ok, detail = self.build_image(rp['pool'])
         if not ok:
             return ok, text + '; the rebuild failed: ' + detail + '. The old container keeps running.'
-        return True, text + '; ' + self.image_state(rp, force, before)
+        cid, run_id, tag_id = self.image_ids(rp['pool'])
+        b_tag = before[2]
+        if not run_id or not tag_id:
+            return True, text + '; build finished; could not compare the image ids, so the container was not touched'
+        changed = bool(rp['changes'] or rp.get('files')) or (b_tag and tag_id != b_tag) or run_id != tag_id
+        if not changed:
+            return True, text + '; image unchanged (cache hit); the container already runs it'
+        what = 'image rebuilt' if b_tag and tag_id != b_tag else 'image unchanged (cache hit)'
+        ok, detail = self.drain_and_recreate(rp, force, drain_timeout, what)
+        return ok, text + '; ' + detail
+
+    def drain_and_recreate(self, rp, force, drain_timeout, what='image rebuilt'):
+        """DL289: drain the pool, check GitHub once more, then stop and recreate the container with no build."""
+        pool = rp['pool']
+        warn = ''
+        if force:
+            busy, err = busy_pool_runners(self.probe, rp.get('repos') or [], pool)
+            if busy:
+                warn = 'warning: --force recreates while %s is busy; its job may fail. ' % ', '.join(busy)
+        else:
+            ok, msg = self.drain(pool, drain_timeout)
+            if not ok:
+                return False, msg
+            gate_ok, gate_msg = rebuild_gate(self.probe, rp.get('repos') or [], pool, False)
+            if not gate_ok:
+                clear_drain(pool)
+                return False, gate_msg + ' The image is built; the container was not recreated.'
+        cmd = recreate_command(pool)
+        if not force:
+            subprocess.run(['docker', 'compose', 'stop', 'pool'], cwd=pool_dir(pool), capture_output=True, text=True)
+        clear_drain(pool)  # the new container starts with no drain file
+        p = subprocess.run(cmd.split(), cwd=pool_dir(pool), capture_output=True, text=True)
+        if p.returncode == 0:
+            return True, warn + what + ', container recreated'
+        return False, warn + what + ', but the recreate failed (%s). By hand: cd %s && %s' % (
+            p.stderr.strip()[-200:] or 'docker compose failed', pool_dir(pool), cmd)
+
+    def drain(self, pool, timeout):
+        """DL289: write the drain file and wait for the supervisor's drained file. On timeout remove the drain file."""
+        d = pool_dir(pool)
+        clear_drain(pool)
+        with open(os.path.join(d, DRAIN_FILE), 'w', encoding='utf-8') as f:
+            f.write('drain\n')
+        waited = 0.0
+        while True:
+            if self.probe.isfile(os.path.join(d, DRAINED_FILE)):
+                return True, ''
+            if waited >= timeout:
+                break
+            self.probe.sleep(DRAIN_POLL_SEC)
+            waited += DRAIN_POLL_SEC
+        busy = [x.strip() for x in (self.probe.read_text(os.path.join(d, DRAIN_BUSY_FILE)) or '').splitlines() if x.strip()]
+        clear_drain(pool)
+        return False, 'refused: drain timed out, busy: %s' % (', '.join(busy) or 'unknown')
 
     def image_ids(self, pool):
         """DL166: (container id, image the container runs, tagged image id); an empty string when one cannot be read."""
@@ -1716,31 +1797,6 @@ class Executor:
         return (one(['docker', 'inspect', '--format', '{{.Id}}', c]),
                 one(['docker', 'inspect', '--format', '{{.Image}}', c]),
                 one(['docker', 'image', 'inspect', '--format', '{{.Id}}', 'luismc-runner-pool:%s' % pool]))
-
-    def image_state(self, rp, force=False, before=None):
-        """DL162/DL166: say what the build really did, from ids read before and after it. The container is recreated
-        here only when it still runs an older image than the tag; never when compose already recreated it."""
-        pool = rp['pool']
-        cid, run_id, tag_id = self.image_ids(pool)
-        b_cid, b_run, b_tag = before or ('', '', '')
-        if not run_id or not tag_id:
-            return 'build finished; could not compare the image ids, so the container was not touched'
-        if b_tag and tag_id != b_tag:
-            if run_id == tag_id:
-                return 'image rebuilt, container recreated by the build' if cid != b_cid else 'image rebuilt; the container runs it'
-        elif run_id == tag_id:
-            if b_cid and cid != b_cid or b_run and run_id != b_run:
-                return 'container recreated (the build replaced it); the image id did not change'
-            return 'image unchanged (cache hit); the container already runs it'
-        cmd = recreate_command(pool)
-        if not force and self.runners_busy():
-            return ('image rebuilt, but a job may run (or the runners cannot be read), so the container was not recreated. '
-                    'By hand: cd %s && %s' % (pool_dir(pool), cmd))
-        p = subprocess.run(cmd.split(), cwd=pool_dir(pool), capture_output=True, text=True)
-        if p.returncode == 0:
-            return 'image rebuilt, container recreated'
-        return 'image rebuilt, but the recreate failed (%s). By hand: cd %s && %s' % (
-            p.stderr.strip()[-200:] or 'docker compose failed', pool_dir(pool), cmd)
 
     def do_add_agent(self, step):
         tok = self.probe.gh(['api', '-X', 'POST', 'repos/%s/actions/runners/registration-token' % step['repo'], '--jq', '.token'])
