@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T14:26+00:00",
+  "updated": "2026-11-13T14:56+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5459,6 +5459,118 @@
       "changed": "2026-11-13T14:26+00:00",
       "rides": "DL300",
       "started": "2026-11-13T14:17+00:00"
+    },
+    {
+      "id": "DL302",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: six peer findings (DL303-DL308)",
+      "detail": "Join DL303-DL308 (owner D265-D268), release PR CI, merge, smoke, cleanup, plugin update, peer announcement.",
+      "expected": "13 Nov ~15:45",
+      "changed": "2026-11-13T14:56+00:00",
+      "expected_basis": "agents 14:56 +25 min, join + CI ~20 min, merge 3",
+      "release": 127,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-13T14:56+00:00",
+          "end": "2026-11-13T15:21+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-13T15:21+00:00",
+          "end": "2026-11-13T15:27+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T15:27+00:00",
+          "end": "2026-11-13T15:42+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T15:42+00:00",
+          "end": "2026-11-13T15:45+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL303",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Ledger: liveness from branch commits; warn on owns: overlap",
+      "detail": "D265 a+b: agent-check uses the branch's last commit time first, last_event_at as fallback. agent-eta/launch warns when a brief's owns: overlaps a running or Built-unjoined agent.",
+      "expected": "13 Nov ~15:22",
+      "changed": "2026-11-13T14:54+00:00",
+      "expected_basis": "cloud agent 15:00 + 22 min",
+      "rides": "DL302",
+      "started": "2026-11-13T14:54+00:00"
+    },
+    {
+      "id": "DL304",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Rust template gate runs cargo deny when Cargo files change",
+      "detail": "D265 c: licence and advisory failures from new crates showed only in release CI. The rust template's branch/agent gate runs cargo deny check when Cargo.toml or Cargo.lock change.",
+      "expected": "13 Nov ~15:20",
+      "changed": "2026-11-13T14:54+00:00",
+      "expected_basis": "cloud agent 15:00 + 20 min",
+      "rides": "DL302",
+      "started": "2026-11-13T14:54+00:00"
+    },
+    {
+      "id": "DL305",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release phases accept a fix phase name",
+      "detail": "D265 d: set-task-status --phase accepts only agents/join/ci/merge; a release fix round has no name. Add fix.",
+      "expected": "13 Nov ~15:15",
+      "changed": "2026-11-13T14:54+00:00",
+      "expected_basis": "cloud agent 15:00 + 15 min",
+      "rides": "DL302",
+      "started": "2026-11-13T14:54+00:00"
+    },
+    {
+      "id": "DL306",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "ci_watch: red release run cancels the rest and lifts the freeze",
+      "detail": "D266: once a required job of the head's run is red, ci_watch cancels the rest of that run and the push freeze lifts so the fix can push at once.",
+      "expected": "13 Nov ~15:25",
+      "changed": "2026-11-13T14:54+00:00",
+      "expected_basis": "cloud agent 15:00 + 25 min",
+      "rides": "DL302",
+      "started": "2026-11-13T14:54+00:00"
+    },
+    {
+      "id": "DL307",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "fast_guards runs always-on guards and boundary check on input change",
+      "detail": "D267: CI-gate agents missed a boundary cycle and two always-on guard tests that only release CI ran. fast_guards runs the project's declared always-on guards and boundary check when their declared inputs change.",
+      "expected": "13 Nov ~15:25",
+      "changed": "2026-11-13T14:54+00:00",
+      "expected_basis": "cloud agent 15:00 + 25 min",
+      "rides": "DL302",
+      "started": "2026-11-13T14:54+00:00"
+    },
+    {
+      "id": "DL308",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Template diff-and-adopt helper",
+      "detail": "D268: a project's copy of a template script drifts (rust_ci.py ~940 lines). A delivery command diffs a project's copies against the plugin templates and adopts template changes without a hand merge.",
+      "expected": "13 Nov ~15:25",
+      "changed": "2026-11-13T14:54+00:00",
+      "expected_basis": "cloud agent 15:00 + 25 min",
+      "rides": "DL302",
+      "started": "2026-11-13T14:54+00:00"
     },
     {
       "id": "DS1",

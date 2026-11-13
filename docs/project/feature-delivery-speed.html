@@ -902,12 +902,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.4.5 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-13T14:26+00:00">13 Nov 14:26</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-13T14:56+00:00">13 Nov 14:56</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Nov 14:26</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">6 tasks</span></summary>
+<ul>
+<li data-glance-task="DL305"><span class="task-id">DL305</span>Release phases accept a fix phase name <span class="glance-expected">13 Nov ~15:15</span><span class="glance-basis">cloud agent 15:00 + 15 min</span></li>
+<li data-glance-task="DL304"><span class="task-id">DL304</span>Rust template gate runs cargo deny when Cargo files change <span class="glance-expected">13 Nov ~15:20</span><span class="glance-basis">cloud agent 15:00 + 20 min</span></li>
+<li data-glance-task="DL303"><span class="task-id">DL303</span>Ledger: liveness from branch commits; warn on owns: overlap <span class="glance-expected">13 Nov ~15:22</span><span class="glance-basis">cloud agent 15:00 + 22 min</span></li>
+<li data-glance-task="DL306"><span class="task-id">DL306</span>ci_watch: red release run cancels the rest and lifts the freeze <span class="glance-expected">13 Nov ~15:25</span><span class="glance-basis">cloud agent 15:00 + 25 min</span></li>
+<li data-glance-task="DL307"><span class="task-id">DL307</span>fast_guards runs always-on guards and boundary check on input change <span class="glance-expected">13 Nov ~15:25</span><span class="glance-basis">cloud agent 15:00 + 25 min</span></li>
+<li data-glance-task="DL308"><span class="task-id">DL308</span>Template diff-and-adopt helper <span class="glance-expected">13 Nov ~15:25</span><span class="glance-basis">cloud agent 15:00 + 25 min</span></li>
+</ul>
 </details>
 <details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
 <ul>
@@ -928,10 +938,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">294</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">294</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">6</div><div class="label">tasks running</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">8 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL305"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL305</span>Release phases accept a fix phase name<span class="release-line"><span class="release-name">RELEASE-127</span></span></td><td>D265 d: set-task-status --phase accepts only agents/join/ci/merge; a release fix round has no name. Add fix.</td><td>13 Nov ~15:15<span class="expected-basis">cloud agent 15:00 + 15 min</span></td></tr>
+<tr data-task="DL304"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL304</span>Rust template gate runs cargo deny when Cargo files change<span class="release-line"><span class="release-name">RELEASE-127</span></span></td><td>D265 c: licence and advisory failures from new crates showed only in release CI. The rust template&#x27;s branch/agent gate runs cargo deny check when Cargo.toml or Cargo.lock change.</td><td>13 Nov ~15:20<span class="expected-basis">cloud agent 15:00 + 20 min</span></td></tr>
+<tr data-task="DL303"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL303</span>Ledger: liveness from branch commits; warn on owns: overlap<span class="release-line"><span class="release-name">RELEASE-127</span></span></td><td>D265 a+b: agent-check uses the branch&#x27;s last commit time first, last_event_at as fallback. agent-eta/launch warns when a brief&#x27;s owns: overlaps a running or Built-unjoined agent.</td><td>13 Nov ~15:22<span class="expected-basis">cloud agent 15:00 + 22 min</span></td></tr>
+<tr data-task="DL306"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL306</span>ci_watch: red release run cancels the rest and lifts the freeze<span class="release-line"><span class="release-name">RELEASE-127</span></span></td><td>D266: once a required job of the head&#x27;s run is red, ci_watch cancels the rest of that run and the push freeze lifts so the fix can push at once.</td><td>13 Nov ~15:25<span class="expected-basis">cloud agent 15:00 + 25 min</span></td></tr>
+<tr data-task="DL307"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL307</span>fast_guards runs always-on guards and boundary check on input change<span class="release-line"><span class="release-name">RELEASE-127</span></span></td><td>D267: CI-gate agents missed a boundary cycle and two always-on guard tests that only release CI ran. fast_guards runs the project&#x27;s declared always-on guards and boundary check when their declared inputs change.</td><td>13 Nov ~15:25<span class="expected-basis">cloud agent 15:00 + 25 min</span></td></tr>
+<tr data-task="DL308"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL308</span>Template diff-and-adopt helper<span class="release-line"><span class="release-name">RELEASE-127</span></span></td><td>D268: a project&#x27;s copy of a template script drifts (rust_ci.py ~940 lines). A delivery command diffs a project&#x27;s copies against the plugin templates and adopts template changes without a hand merge.</td><td>13 Nov ~15:25<span class="expected-basis">cloud agent 15:00 + 25 min</span></td></tr>
+<tr data-task="DL302"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL302</span><span class="release-name">RELEASE-127</span>RELEASE: six peer findings (DL303-DL308)</td><td>Join DL303-DL308 (owner D265-D268), release PR CI, merge, smoke, cleanup, plugin update, peer announcement.</td><td>13 Nov ~15:45<span class="expected-basis">agents 14:56 +25 min, join + CI ~20 min, merge 3</span></td></tr>
 <tr data-task="DL276"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL276</span>CI rule: a test&#x27;s inputs include every program it runs</td><td>D258: port the peer project&#x27;s programs map (ci-scope.json programs, ci_scope.py, guard test) once its reference works; add the rule to the shared rules.</td><td>13 Nov<span class="expected-basis">waits on the peer&#x27;s reference version</span></td></tr>
 </tbody></table></div>
 </details>
@@ -1272,6 +1289,82 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D268">
+<h3 class="decision-head"><span class="decision-id">D268</span> <span class="decision-question">Template drift: build a diff-and-adopt helper?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL308</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for their report (Recommended)</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Build a helper now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Build a helper now (owner 14:5x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Not needed</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D267">
+<h3 class="decision-head"><span class="decision-id">D267</span> <span class="decision-question">How should CI-gate agents catch always-on guard and boundary failures?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL307</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Run guards on input change (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Run guards on input change (Recommended) (owner 14:5x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Always run all guards</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No change</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D266">
+<h3 class="decision-head"><span class="decision-id">D266</span> <span class="decision-question">When a release CI run turns red: cancel the rest and lift the freeze?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL306</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Cancel + lift freeze (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Cancel + lift freeze (Recommended) (owner 14:5x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Lift freeze only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No change</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D265">
+<h3 class="decision-head"><span class="decision-id">D265</span> <span class="decision-question">Peer findings 13 Nov: which clear fixes to build now ((a) liveness from commits, (b) owns: overlap warning, (c) cargo deny in gate, (d) &#x27;fix&#x27; phase name; multi-select)?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL303</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All four: (a), (b), (c), (d)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered as four ticks</p>
+<blockquote class="decision-words">&ldquo;(a) Liveness from commits, (b) owns: overlap warning, (c) cargo deny in gate, (d) &#x27;fix&#x27; phase name (owner 14:5x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Some of them</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">None now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D264">
 <h3 class="decision-head"><span class="decision-id">D264</span> <span class="decision-question">Which CI runs must be green before the delivery watcher merges a release (after RELEASE-123 merged with template-build red)?</span></h3>
 <p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL298</p>
