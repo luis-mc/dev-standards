@@ -313,6 +313,8 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
                 log('runner gate: every light slot is busy; taking a CI slot in queue order')
                 ticket = MS.enqueue(ident, priority)
                 queued_ts = ticket['queued_ts']
+            if ticket is not None:
+                MS.beat(ticket)
             q = MS.queue_list(mcfg)
             if not any(t.get('file') == ticket['file'] for t in q):
                 # The own ticket vanished (dropped as unreadable or stale, or removed). Never wait on an empty
@@ -321,7 +323,8 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
                 MS.dequeue(ticket)
                 try:
                     keep = time.time() - queued_ts < mcfg['slot_stale_min'] * 60
-                    ticket = MS.enqueue(ident, ticket['priority'], now=queued_ts if keep else None)
+                    ticket = MS.enqueue(ident, ticket['priority'], now=queued_ts if keep else None,
+                                       beat_now=time.time())
                     queued_ts = ticket['queued_ts']
                 except OSError as exc:
                     log('runner gate: cannot queue again (%s)' % exc)
