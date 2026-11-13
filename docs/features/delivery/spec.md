@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.35.1
+version: 0.36.0
 owner: agents
 type: reference
 code:
@@ -80,7 +80,7 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 
 **R5.6** — SessionStart prints a short ledger summary and injects the question rules (Q-1 to Q-5). It says when no watcher has a fresh heartbeat.
 
-**R5.7** — The watcher pushes the next joined train, opens its ready PR (or adopts the one open PR of a train pushed by hand), and merges only when the PR head is the commit whose required workflows (`watcher.ci_workflows`) all succeeded. A `hold` stops it.
+**R5.7** — The watcher pushes the next joined train, opens its ready PR (or adopts the one open PR of a train pushed by hand), and merges only when the PR head is the commit whose required workflows (`watcher.ci_workflows`) all succeeded, and every other `pull_request` workflow with a run on that head (not those in `watcher.ignore_workflows`) succeeded too. Runs made while the PR was a draft do not count, and a draft PR is never green. A `hold` stops it.
 
 **R5.8** — When `runner_plan` allows it, the watcher cancels CI runs that a newer push replaced. It also holds non-train CI runs while a train's CI runs.
 
@@ -531,6 +531,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.36.0 | 2026-11-13 | RELEASE-125 | The watcher requires every pull_request workflow that ran on the PR head, counts only runs made after the PR was ready, and never greens a draft PR. New key watcher.ignore_workflows. | DL298 |
 | 0.35.1 | 2026-11-13 | RELEASE-124 | The Rust build cache falls back to target/ when ci_tool.py is missing, so gate commands never crash on it. | DL297 |
 | 0.35.0 | 2026-11-13 | RELEASE-123 | Adds R5.60: the rust-release CI scope for a Rust-only release pull request.<br>Rust CI: rust_scope.py scopes fmt, clippy and test to the touched crates and their dependents (RUST_CRATES), and rust_ci.py keeps a pruned per-runner target cache (CARGO_TARGET_DIR). | DL294, DL295 |
 | 0.34.0 | 2026-11-13 | RELEASE-122 | Queue tickets carry a heartbeat; a ticket with no beat is dropped from any host (see shared-self-hosted-runners 3.2). | DL292 |

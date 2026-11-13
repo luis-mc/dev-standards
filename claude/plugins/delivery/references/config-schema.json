@@ -317,7 +317,15 @@
             "type": "string"
           },
           "minItems": 1,
-          "description": "Workflow files that must all complete with success on the PR head before a train is green (default [\"ci.yml\"]). A completed sibling workflow never counts for another."
+          "description": "Workflow files that must all complete with success on the PR head before a train is green (default [\"ci.yml\"]). A completed sibling workflow never counts for another. Any other workflow with a pull_request run on the head also joins the required set (DL298)."
+        },
+        "ignore_workflows": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Names or files of pull_request workflows that are not CI gates; their runs on the PR head never block a train (DL298)."
         }
       }
     },

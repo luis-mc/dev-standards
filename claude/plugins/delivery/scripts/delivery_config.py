@@ -65,6 +65,12 @@ def ci_workflows(cfg) -> list:
     return ["ci.yml"]
 
 
+def ignore_workflows(cfg) -> list:
+    """watcher.ignore_workflows: names or files of pull_request workflows that are not CI gates (DL298). Default empty."""
+    v = _section(cfg, "watcher").get("ignore_workflows")
+    return [x.strip() for x in v if isinstance(x, str) and x.strip()] if isinstance(v, list) else []
+
+
 def pr_proven_jobs(cfg) -> list:
     """pr_proven_jobs: job names a release PR proves, which must not re-run on the default branch after the merge."""
     v = cfg.get("pr_proven_jobs") if isinstance(cfg, dict) else None
