@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T14:18+00:00",
+  "updated": "2026-11-13T14:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5423,12 +5423,11 @@
       "id": "DL300",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: rust_ci run resolves the program on the job PATH (DL301)",
       "detail": "Join DL301, release PR CI incl. template-build, merge, smoke, cleanup, plugin update, peer announcement.",
-      "expected": "13 Nov ~14:40",
-      "changed": "2026-11-13T14:18+00:00",
-      "expected_basis": "template-build started 14:18 ~3 min, PR CI ~12 min, merge 3",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T14:26+00:00",
       "release": 126,
       "phases": [
         {
@@ -5453,11 +5452,11 @@
       "id": "DL301",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "rust_ci run: resolve the program with the job PATH (WinError 2 on Windows)",
       "detail": "Peer finding: cmd_run passes a changed PATH in env, but on Windows subprocess resolves the program with the parent's PATH, so a tool on the job PATH fails with WinError 2. Resolve with shutil.which(cmd[0], path=env PATH) first.",
       "expected": "13 Nov",
-      "changed": "2026-11-13T14:18+00:00",
+      "changed": "2026-11-13T14:26+00:00",
       "rides": "DL300",
       "started": "2026-11-13T14:17+00:00"
     },
