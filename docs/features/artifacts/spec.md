@@ -160,7 +160,7 @@ flowchart LR
 
 **R5.15** — `pending --refresh` renders first, so the publish copy matches a fresh render and `mark-published` accepts it. The refusal text names `render` or `pending --json --refresh`. (AR67)
 
-**R5.16** — The `task-status-update` skill lists `--phase NAME=HH:MM-HH:MM` with the names `agents`, `join`, `ci` and `merge`. (AR68)
+**R5.16** — The `task-status-update` skill lists `--phase NAME=HH:MM-HH:MM` with the names `agents`, `join`, `ci`, `fix` and `merge`. `ci` and `fix` may repeat. (AR68, DL305)
 
 **R5.17** — The Full Progress and feature pages show the generator badge in the header (`luismc-docs X.Y.Z` and its latest flag) and use the plugin's default page colours and 0.9x font sizes; a project's `design.css` changes accents only (see [Documentation standard plugin](../docs/spec.md) R5.16 to R5.18). The latest flag does not make a page stale: INV-3 compares pages without it. (DL239)
 

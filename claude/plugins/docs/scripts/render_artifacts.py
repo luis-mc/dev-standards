@@ -1269,8 +1269,8 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links:
 
 
 # ------------------------------------------------------------------ release timeline (R5.42, R5.43)
-RELEASE_PHASES = ('agents', 'join', 'ci', 'merge')      # R5.40
-PHASE_LABELS = {'agents': 'agents', 'join': 'join', 'ci': 'PR CI', 'merge': 'merge + cleanup'}
+RELEASE_PHASES = ('agents', 'join', 'ci', 'fix', 'merge')      # R5.40
+PHASE_LABELS = {'agents': 'agents', 'join': 'join', 'ci': 'PR CI', 'fix': 'fix round', 'merge': 'merge + cleanup'}
 TL_X0, TL_X1 = 200, 720          # today's axis, in SVG units
 TL_SLOT0, TL_SLOT_STEP = 820, 90
 TL_ROW, TL_TOP = 62, 52
@@ -1504,7 +1504,7 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
         now = ('<line class="rt-now" x1="%s" y1="36" x2="%s" y2="%d"/><text class="rt-now-label" x="%s" y="%d">now %s</text>'
                % (_n(nx), _n(nx), height - 16, _n(nx), height - 3, _hhmm(now_min)))
     sw = lambda k: '<span class="rt-swatch %s"></span>%s' % (k, PHASE_LABELS[k])
-    legend = ('<p class="timeline-legend">Bars: %s, %s, %s and %s; Expected (filled diamond) is the sum of the phases. '
+    legend = ('<p class="timeline-legend">Bars: %s, %s, %s, %s and %s; Expected (filled diamond) is the sum of the phases. '
               'The thin grey extension is a named risk from the estimate\'s basis, ending at the outlined worst case. '
               'An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>'
               % tuple(sw(k) for k in RELEASE_PHASES))
