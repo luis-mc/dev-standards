@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.9.0
+version: 0.9.1
 owner: agents
 type: reference
 code:
@@ -159,6 +159,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.9.1 | 2026-11-13 | RELEASE-119 | A system user or group that holds an agent's uid or gid is moved to a free id before the agent user is recreated (R5.30). | DL284 |
 | 0.9.0 | 2026-11-13 | RELEASE-118 | VM checks (R5.29): vm_check.py boots throwaway distro VMs on kvm runners with a shared cache, optional resume snapshots and an SELinux check; prepare_kvm makes the shared cache folder. | DL281 |
 | 0.8.0 | 2026-11-12 | RELEASE-117 | Pool layers linux-packaging and kvm; optional KVM (POOL_KVM=1, compose.kvm.yaml, host check, kvm label), R5.28. | DL274 |
 | 0.7.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks. | DL270 |
