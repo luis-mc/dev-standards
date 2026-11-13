@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T04:00+00:00",
+  "updated": "2026-11-13T05:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5224,10 +5224,57 @@
       "status": "Waiting",
       "item": "Pool refresh to install the drain (RELEASE-121)",
       "detail": "Rebuild this PC's pool with delivery 1.39.0 so refreshes drain before recreate. First refresh: old supervisor has no drain mode, so it uses --force after the GitHub busy check, only when all 4 runners are idle and memory is under 85%. Tell comics-organizer the window first.",
-      "expected": "13 Nov ~05:20",
-      "changed": "2026-11-13T04:00+00:00",
-      "expected_basis": "comics round 6 CI ends ~05:10 (peer est.), then build ~4 min",
+      "expected": "13 Nov ~06:00",
+      "changed": "2026-11-13T05:02+00:00",
+      "expected_basis": "waits for RELEASE-122 (~05:47) and peer CI (~05:10+)",
       "no_release": "applies a release to this PC's pool"
+    },
+    {
+      "id": "DL291",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-122: gate ticket heartbeat",
+      "detail": "Join DL292, release on green, update plugins.",
+      "expected": "13 Nov ~05:47",
+      "changed": "2026-11-13T05:01+00:00",
+      "expected_basis": "agent ~15 min from 05:08, join+CI ~10 min",
+      "release": 122,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-13T05:08+00:00",
+          "end": "2026-11-13T05:30+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-13T05:30+00:00",
+          "end": "2026-11-13T05:38+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T05:38+00:00",
+          "end": "2026-11-13T05:44+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T05:44+00:00",
+          "end": "2026-11-13T05:47+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL292",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Gate drops dead queue tickets from another host",
+      "detail": "A Windows job cancelled at 04:14 left its queue ticket; pool gates (other host) cannot check its pid, so it blocked the queue until slot_stale_min (120 min) and a peer's rust job timed out at 30 min. Fix: the waiting gate refreshes its ticket every poll; queue_list drops any ticket whose heartbeat is older than max(4 x poll_sec, 120 s), any host.",
+      "expected": "13 Nov ~05:30",
+      "changed": "2026-11-13T05:01+00:00",
+      "expected_basis": "cloud agent from 05:08: setup 3 + work 8 + tests 4 min",
+      "rides": "DL291",
+      "started": "2026-11-13T05:01+00:00"
     },
     {
       "id": "DS1",
