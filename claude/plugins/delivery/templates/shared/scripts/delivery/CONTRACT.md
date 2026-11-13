@@ -496,6 +496,12 @@ shlex (no shell), then `{run_id}`, `{head}` (full sha), `{conclusion}`, `{workfl
 in each word. A non-zero exit, a timeout, a command that cannot start or a malformed config is
 logged on stderr, the next hook still runs, and the exit code is never changed. `--no-post-run`
 skips them; `--config FILE` names another config. Nothing runs after exit 2 or 4.
+Cancel on red (DL306): when SHA is a train head (branch matching top-level `train_branch_re`, default
+`^release/`) and a job of any run for SHA ends `failure`, `timed_out` or `cancelled`, ci_watch prints the
+job, runs `gh run cancel RUN_ID` for every other run of SHA that is not completed (never other commits or
+branches), logs that the push freeze lifts, and exits 1 without waiting. The freeze is read from the live
+runs, so it ends as the cancelled runs complete. Agent branches are never cancelled. `--no-cancel-on-red`
+or `ci_watch.cancel_on_red: false` keeps the old wait.
 A run that executed no job (conclusion `skipped`, or a push run whose jobs were all skipped, "already
 tested on the pull request") is not a pass when SHA is the head of an open pull request
 (`gh api repos/{owner}/{repo}/commits/SHA/pulls`, read only when such a run is the whole answer): it keeps

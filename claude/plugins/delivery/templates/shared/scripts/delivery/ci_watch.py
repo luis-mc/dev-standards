@@ -73,6 +73,14 @@ runs; hooks never change the exit code and a hook's output is passed through. A 
 its machine-only extras (disk trims, extra reports) in its own hook script instead of a fork of
 this file. --no-post-run skips them; --config names another config file.
 
+Cancel on red (DL306): while the watched head belongs to a train branch (config `train_branch_re`,
+default `^release/`), the first failed job (conclusion failure, timed_out or cancelled) in any run of
+that head ends the wait at once. The watcher names the job, runs `gh run cancel` for every run of
+that head that is still queued or running (never other commits or branches; never an agent branch),
+logs that the push freeze lifts (train_freeze.py reads the live runs, so the freeze ends when they
+complete), and exits 1. The runs it cancelled are not a second failure. --no-cancel-on-red, or
+`ci_watch.cancel_on_red: false` in the project config, keeps the old wait-until-done behaviour.
+
 Memory kills (DL95): a failed step whose log tail has "exit code 137" or "Killed" is reported as
 "killed for memory: the runner's cap is N", N read from the pool container on this machine with
 `docker inspect` ("unknown" when it cannot be read). A job that failed in "Set up runner" / "Set up job"
@@ -821,6 +829,95 @@ def run_commit(run_id: str, repo: str | None) -> str | None:
     return sha if isinstance(sha, str) and re.fullmatch(r"[0-9a-f]{40}", sha) else None
 
 
+RED_CONCLUSIONS = {"failure", "timed_out", "cancelled"}
+TRAIN_BRANCH_RE = r"^release/"
+
+
+def load_cancel_config(config: str | None, root: Path) -> tuple[bool, str]:
+    """DL306: (`ci_watch.cancel_on_red` default True, top-level `train_branch_re` default ^release/)."""
+    path = Path(config) if config else root / ".delivery" / "config.json"
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return True, TRAIN_BRANCH_RE
+    if not isinstance(data, dict):
+        return True, TRAIN_BRANCH_RE
+    section = data.get("ci_watch")
+    flag = section.get("cancel_on_red", True) if isinstance(section, dict) else True
+    pattern = data.get("train_branch_re")
+    return flag is not False, pattern if isinstance(pattern, str) and pattern else TRAIN_BRANCH_RE
+
+
+def is_train_head(run_id: object, pattern: str, repo: str | None) -> bool:
+    """True when the run's head branch matches the train pattern. Unreadable means no."""
+    try:
+        data = gh_json(["run", "view", str(run_id), "--json", "headBranch", *repo_args(repo)])
+        branch = data.get("headBranch") if isinstance(data, dict) else None
+        return isinstance(branch, str) and re.search(pattern, branch) is not None
+    except (GhError, re.error):
+        return False
+
+
+def red_jobs(run: dict, repo: str | None) -> list[dict]:
+    """Jobs of a run that have already ended red (completed with failure, timed_out or cancelled)."""
+    if run.get("status") == "completed":
+        return [{"name": "(whole run)", "conclusion": run.get("conclusion")}] \
+            if run.get("conclusion") in RED_CONCLUSIONS else []
+    data = gh_json(["run", "view", str(run.get("databaseId")), "--json", "jobs", *repo_args(repo)])
+    jobs = data.get("jobs", []) if isinstance(data, dict) else []
+    return [j for j in jobs if isinstance(j, dict) and j.get("status", "completed") == "completed"
+            and j.get("conclusion") in RED_CONCLUSIONS]
+
+
+def cancel_on_red(sha: str, runs: list[dict], args: argparse.Namespace, st: dict) -> bool:
+    """DL306: when a train head has a red job, cancel its other runs. True when the watch must end red."""
+    if args.no_cancel_on_red:
+        return False
+    if "cancel_cfg" not in st:
+        st["cancel_cfg"] = load_cancel_config(args.config, config_root())
+    enabled, pattern = st["cancel_cfg"]
+    if not enabled or st.get("train") is False:
+        return False
+    ours = st.setdefault("cancelled", set())
+    red: list[tuple[dict, list[dict]]] = []
+    for run in runs:
+        if run.get("databaseId") in ours:
+            continue
+        try:
+            jobs = red_jobs(run, args.repo)
+        except GhError:
+            continue
+        if jobs:
+            red.append((run, jobs))
+    if not red:
+        return False
+    if "train" not in st:
+        st["train"] = is_train_head(runs[0].get("databaseId"), pattern, args.repo)
+    if not st["train"]:
+        return False
+    print(f"ci_watch: red on train head {sha[:10]}:")
+    for run, jobs in red:
+        for job in jobs:
+            print(f"  FAILED job: {job.get('name')} ({job.get('conclusion')}) in run "
+                  f"{run.get('databaseId')} ({run.get('workflowName')})")
+    for run in runs:
+        rid = run.get("databaseId")
+        if run.get("status") == "completed" or rid is None:
+            continue
+        try:
+            gh_json(["run", "cancel", str(rid), *repo_args(args.repo)])
+        except GhError as exc:
+            # gh prints no JSON for cancel; only a real error is logged.
+            if "invalid JSON" not in str(exc):
+                print(f"ci_watch: could not cancel run {rid}: {exc}", file=sys.stderr)
+                continue
+        ours.add(rid)
+        print(f"ci_watch: cancelled run {rid} ({run.get('workflowName')}), red run on this head")
+    print(f"ci_watch: push freeze lifted for {sha[:10]}: the cancelled runs end, a fix push is allowed")
+    st["red_runs"] = [r for r, _ in red]
+    return True
+
+
 def poll_commit(sha: str, args: argparse.Namespace, st: dict) -> int | None:
     """DL235: one poll of one commit. Returns the exit code once decided, None while it waits.
     `st` carries errors, warned, fallback_state, state and queued_only between polls."""
@@ -854,6 +951,12 @@ def poll_commit(sha: str, args: argparse.Namespace, st: dict) -> int | None:
             elif pending:
                 state = f"{len(pending)} of {len(runs)} run(s) not completed"
                 warn_queued_jobs(pending, args.repo, warned, args.queue_warn_seconds)
+                if cancel_on_red(sha, runs if args.only_workflow else add_other_workflows(runs, sha, args.repo, warned),
+                                 args, st):
+                    for run in st["red_runs"]:
+                        print_failed_jobs(run, args.repo)
+                    ledger_ci(sha, "failure", args.repo)
+                    return finish(1, runs, sha, args)
                 if not args.no_fallback:
                     fallback_launch.check_and_launch(
                         sha, pending, fallback_deps(args.repo, fallback_state))
@@ -942,6 +1045,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-trim", action="store_true",
                     help="do not trim Docker Desktop's data disk after the runs complete "
                          "(runs only on Windows, and only when .delivery/config.json has ci.docker_trim: true)")
+    ap.add_argument("--no-cancel-on-red", action="store_true",
+                    help="on a train head, do not cancel the other runs when one job fails "
+                         "(config ci_watch.cancel_on_red: false does the same)")
     ap.add_argument("--no-post-run", action="store_true",
                     help="do not run the ci_watch.post_run hooks of the project config")
     args = ap.parse_args(argv)
