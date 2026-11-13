@@ -200,6 +200,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.59** — Held runs in the agent brief (DL258). The brief template says a cancelled or `held` branch run while a release PR's CI runs is not a failure. The agent checks `gh run view <id> --json conclusion` and the run list for a re-run, waits about 10 minutes and dispatches once more if none appeared, and after two held or cancelled runs writes READY when every local test passed and says in the report that CI was held. A docs check W1 on docs/work is expected on a branch and is never a reason for NOT READY. `test_brief_template.py` pins the phrases.
 
+**R5.60** — Rust-only release scope (DL294, next to R5.30, DL-80). `ci-scope.json` may carry a `rust_release` block: `why`, `rust_only` and `node_inputs` (the same glob forms as the other keys). On a release pull request whose code files all match `rust_only` and none matches `node_inputs`, `ci_scope.py` returns the fourth scope `rust-release` instead of `full`. The Node suites do not run for it; the project's CI plan runs only the tests that call Rust builds. The order is: no diff, `full_files`, CI-only (`ci-smoke`), then release PR (`rust-release` when Rust-only, else `full`), else `affected`. A non-release PR never gets it, a docs-only release stays `full`, and no block means `full` as before.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
