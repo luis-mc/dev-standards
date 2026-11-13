@@ -7,6 +7,9 @@ Subcommands:
   deny                 cargo-deny with a cached RustSec clone (warn up to 7 days old, fail after)
   run [--] CMD...      run CMD with the linker env and, when gate.json says
                        "toolchain-isolated" is true (default false, DS206), without system compilers on PATH
+  fmt | check | clippy | test [ARGS...]
+                       cargo fmt/check/clippy/test through `run`; RUST_CRATES (package names) limits
+                       them to `-p a -p b`, else the whole workspace (DL295)
   smoke                build each binary in smoke.json "binaries" in debug and run --version
 
 Exit codes: 0 ok, 1 failure, 2 usage. Standard library only. Tools come from
@@ -15,6 +18,7 @@ Exit codes: 0 ok, 1 failure, 2 usage. Standard library only. Tools come from
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -182,7 +186,106 @@ def build_env(root: Path) -> tuple[dict[str, str], list[str]]:
         env["CXX_x86_64_pc_windows_msvc"] = str(llvm["clang-cl"])
         env["AR_x86_64_pc_windows_msvc"] = str(llvm["llvm-lib"])
         env["RUST_CI_LLVM_BIN"] = str(bindir)
+    env.update(target_cache_env(root))
     return env, warns
+
+
+# --------------------------------------------------------------------------
+# persistent per-runner target cache (DL295)
+# --------------------------------------------------------------------------
+
+def _safe(text: str) -> str:
+    return re.sub(r"[^A-Za-z0-9._-]", "_", text) or "x"
+
+
+def cache_key(root: Path) -> str:
+    channel, _ = read_toolchain(root)
+    try:
+        digest = hashlib.sha256((root / "Cargo.lock").read_bytes()).hexdigest()[:16]
+    except OSError:
+        digest = "nolock"
+    return _safe("%s-%s" % (channel, digest))
+
+
+def _tree_size(path: Path) -> int:
+    total = 0
+    for dirpath, _dirs, files in os.walk(path):
+        for f in files:
+            try:
+                total += os.lstat(os.path.join(dirpath, f)).st_size
+            except OSError:
+                pass
+    return total
+
+
+def key_in_use(key: Path) -> bool:
+    """True when a cargo process holds <key>/*/.cargo-lock. Without fcntl (Windows) every key is in use."""
+    try:
+        import fcntl
+    except ImportError:
+        return True
+    for lock in key.glob("*/.cargo-lock"):
+        try:
+            fd = os.open(str(lock), os.O_RDWR)
+        except OSError:
+            return True
+        try:
+            try:
+                fcntl.flock(fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            except OSError:
+                return True
+            fcntl.flock(fd, fcntl.LOCK_UN)
+        finally:
+            os.close(fd)
+    return False
+
+
+def prune_target_cache(runner_dir: Path, current: Path, cap_bytes: int) -> list[str]:
+    """Delete the oldest keys while the runner's keys exceed the cap. Returns the removed key names.
+
+    Never the current key, never the newest other key, never a key in use."""
+    keys = [p for p in runner_dir.iterdir() if p.is_dir()]
+    sizes = {p: _tree_size(p) for p in keys}
+    total = sum(sizes.values())
+    removed: list[str] = []
+    others = sorted((p for p in keys if p != current), key=lambda p: p.stat().st_mtime)
+    keep_newest = others[-1] if others else None
+    for p in others:
+        if total <= cap_bytes:
+            break
+        if p == keep_newest or key_in_use(p):
+            continue
+        shutil.rmtree(p, ignore_errors=True)
+        total -= sizes[p]
+        removed.append(p.name)
+    return removed
+
+
+def target_cache_env(root: Path) -> dict[str, str]:
+    """{'CARGO_TARGET_DIR': path} for the persistent cache, or {} when it is off or fails."""
+    if os.environ.get("CARGO_TARGET_DIR") or os.environ.get("DELIVERY_NO_TARGET_CACHE") == "1":
+        return {}
+    try:
+        runner = _safe(os.environ.get("RUNNER_NAME") or "local")
+        runner_dir = cache_dir() / "cargo-target" / runner
+        key = runner_dir / cache_key(root)
+        key.mkdir(parents=True, exist_ok=True)
+        os.utime(key, None)
+        cap = int(float(os.environ.get("RUST_TARGET_CAP_GB") or 40) * 1024 ** 3)
+        removed = prune_target_cache(runner_dir, key, cap)
+    except (OSError, ValueError, RustCiError) as exc:
+        print("rust_ci: build cache unavailable (%s); using target/" % exc, file=sys.stderr)
+        return {}
+    print("rust_ci: build cache %s (pruned: %s)" % (key, ", ".join(removed) or "none"), file=sys.stderr)
+    return {"CARGO_TARGET_DIR": str(key)}
+
+
+def crate_args(flag: str = "--workspace") -> list[str]:
+    """`-p a -p b` from RUST_CRATES, else `flag` (whole workspace)."""
+    names = (os.environ.get("RUST_CRATES") or "").split()
+    if not names:
+        return [flag]
+    return [x for n in names for x in ("-p", n)]
 
 
 def cmd_env(root: Path, fmt: str) -> int:
@@ -237,6 +340,23 @@ def cmd_run(root: Path, command: list[str]) -> int:
         keep = [env["RUST_CI_LLVM_BIN"]] if "RUST_CI_LLVM_BIN" in env else []  # linkers are set by absolute path
         full["PATH"] = strip_path(full.get("PATH", ""), keep)
     return subprocess.run(command, cwd=root, env=full).returncode
+
+
+def cmd_cargo(root: Path, verb: str, extra: list[str]) -> int:
+    if extra and extra[0] == "--":
+        extra = extra[1:]
+    cargo = _cargo()
+    if verb == "fmt":
+        names = (os.environ.get("RUST_CRATES") or "").split()
+        scope = [x for n in names for x in ("-p", n)] if names else ["--all"]
+        cmd = [cargo, "fmt"] + scope + ["--check"] + extra
+    elif verb == "check":
+        cmd = [cargo, "check", "--locked"] + crate_args() + ["--all-targets"] + extra
+    elif verb == "clippy":
+        cmd = [cargo, "clippy", "--locked"] + crate_args() + ["--all-targets"] + extra + ["--", "-D", "warnings"]
+    else:
+        cmd = [cargo, "test", "--locked"] + crate_args() + extra
+    return cmd_run(root, cmd)
 
 
 # --------------------------------------------------------------------------
@@ -342,7 +462,7 @@ def cmd_smoke(root: Path) -> int:
         if cmd_run(root, [_cargo(), "build", "--locked", "--bin", name]) != 0:
             print("rust_ci: smoke: FAILED, build of %s failed" % name, file=sys.stderr)
             return 1
-        target = os.environ.get("CARGO_TARGET_DIR") or str(root / "target")
+        target = build_env(root)[0].get("CARGO_TARGET_DIR") or os.environ.get("CARGO_TARGET_DIR") or str(root / "target")
         res = subprocess.run([os.path.join(target, "debug", name + exe), "--version"],
                              capture_output=True, text=True)
         if res.returncode != 0:
@@ -363,6 +483,8 @@ def main(argv: list[str] | None = None) -> int:
     r = sub.add_parser("run")
     r.add_argument("command", nargs=argparse.REMAINDER)
     sub.add_parser("smoke")
+    for verb in ("fmt", "check", "clippy", "test"):
+        sub.add_parser(verb).add_argument("extra", nargs=argparse.REMAINDER)
     try:
         args = ap.parse_args(argv)
     except SystemExit as exc:
@@ -377,6 +499,8 @@ def main(argv: list[str] | None = None) -> int:
             return cmd_deny(root)
         if args.cmd == "run":
             return cmd_run(root, args.command)
+        if args.cmd in ("fmt", "check", "clippy", "test"):
+            return cmd_cargo(root, args.cmd, args.extra)
         return cmd_smoke(root)
     except RustCiError as exc:
         print("rust_ci: %s" % exc, file=sys.stderr)

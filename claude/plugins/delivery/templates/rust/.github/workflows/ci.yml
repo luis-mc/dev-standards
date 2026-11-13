@@ -23,6 +23,7 @@ on:
       - 'deny.toml'
       - '**/*.rs'
       - 'scripts/delivery/rust_ci.py'
+      - 'scripts/delivery/rust_scope.py'
       - 'tools.json'
       - '.github/workflows/ci.yml'
   push:
@@ -103,6 +104,20 @@ jobs:
           # commit and reports clean — an absent check that looks like a pass.
           fetch-depth: 0
 
+      # DL295: how much of the workspace this run must build. rust_scope.py reads the diff and the
+      # member manifests. run=false: a pull request that touches no Rust path, so every later step is
+      # skipped. full=true: a push, a release pull request or a workspace-wide input. Otherwise
+      # crates= lists the touched crates and the crates that depend on them.
+      - name: Scope the Rust steps
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # The diff base is HEAD^1; make sure it is present on a shallow clone.
+          if ! git fetch --no-tags --depth=2 --quiet origin "$GITHUB_SHA"; then echo "fetch of the diff base failed; the scope falls back to a full run if the diff is unreadable"; fi
+          python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
+
       # §12: secret scanning as a CI gate. The pre-commit hook is the other half
       # of that requirement and lives in .githooks/pre-commit.
       #
@@ -115,6 +130,7 @@ jobs:
       # `--log-opts="HEAD"` scans the history of the commit under test only, not every remote branch
       # that `fetch-depth: 0` also fetches (DL211).
       - name: Secret scan (gitleaks, full history)
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           if ! python3 -c "import json,sys; g = json.load(open('scripts/delivery/tools.json'))['gitleaks']; sys.exit(0 if not isinstance(g, str) and g.get('sha256', {}).get('linux_x64') else 1)"; then
             echo "::error::scripts/delivery/tools.json has no pinned SHA-256 for gitleaks. Run: python3 scripts/delivery/tools_pin.py gitleaks <version>"
@@ -127,6 +143,7 @@ jobs:
       # D141: the exact channel from rust-toolchain.toml, installed with the
       # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
       - name: Install the pinned Rust toolchain
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           python3 scripts/delivery/rust_ci.py toolchain
           export PATH="$HOME/.cargo/bin:$PATH"   # DL192: GITHUB_PATH only reaches later steps
@@ -136,31 +153,42 @@ jobs:
 
       # D140: pinned linker environment for every later step.
       - name: Apply the linker environment
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
 
       # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
       # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-        if: ${{ runner.environment == 'github-hosted' }}
+        if: ${{ steps.scope.outputs.run != 'false' && (runner.environment == 'github-hosted') }}
 
       # §2.2: install from the committed lockfile in frozen mode. --locked fails
       # rather than silently updating Cargo.lock, which is the whole point — a CI
       # install that can resolve a different graph than the developer's is not a
       # build.
       - name: Install (locked)
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: cargo fetch --locked
 
       - name: Format check
-        run: cargo fmt --all --check
+        if: ${{ steps.scope.outputs.run != 'false' }}
+        env:
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
+        run: python3 scripts/delivery/rust_ci.py fmt
 
       # Rust has no separate typecheck step; `cargo check` is it, and it is much
       # faster than a full build for gate purposes.
       - name: Check (typecheck)
-        run: cargo check --locked --all-targets
+        if: ${{ steps.scope.outputs.run != 'false' }}
+        env:
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
+        run: python3 scripts/delivery/rust_ci.py check
 
       - name: Lint
-        run: cargo clippy --locked --all-targets -- -D warnings
+        if: ${{ steps.scope.outputs.run != 'false' }}
+        env:
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
+        run: python3 scripts/delivery/rust_ci.py clippy
 
       # §3.2 + §3.3: the layer rules and the adapter rule are enforced by crate
       # boundaries plus cargo-deny's `bans` section — see deny.toml. Cargo will
@@ -168,11 +196,13 @@ jobs:
       # IS the enforcement; deny.toml catches the case where someone adds the
       # dependency to make the import compile.
       - name: Boundary check (§3.2, §3.3)
+        if: ${{ steps.scope.outputs.run != 'false' && steps.scope.outputs.full == 'true' }}
         run: python3 scripts/delivery/rust_ci.py deny
 
       # §4.1: generated clients regenerated and committed. Asserting a clean tree
       # is the only check a stale committed artifact cannot satisfy.
       - name: Find the codegen and contract targets
+        if: ${{ steps.scope.outputs.run != 'false' }}
         id: targets
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
@@ -186,7 +216,7 @@ jobs:
           PY
 
       - name: Codegen target missing
-        if: ${{ steps.targets.outputs.codegen != 'true' }}
+        if: ${{ steps.scope.outputs.run != 'false' && (steps.targets.outputs.codegen != 'true') }}
         run: echo "Skipped the codegen drift check - this workspace has no codegen bin yet."
 
       - name: Codegen drift check
@@ -201,12 +231,15 @@ jobs:
 
       # §11.1: unit tests over core and service logic. Pure, fast, no I/O.
       - name: Unit tests
-        run: cargo test --locked --lib
+        if: ${{ steps.scope.outputs.run != 'false' }}
+        env:
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
+        run: python3 scripts/delivery/rust_ci.py test --lib
 
       # §11.1: contract tests — every client and the server against the same
       # fixtures. The highest-value control in the repository.
       - name: Contract target missing
-        if: ${{ steps.targets.outputs.contract != 'true' }}
+        if: ${{ steps.scope.outputs.run != 'false' && (steps.targets.outputs.contract != 'true') }}
         run: echo "Skipped the contract tests - this workspace has no contract test target yet."
 
       - name: Contract tests
@@ -248,9 +281,23 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      # DL295: how much of the workspace this run must build. rust_scope.py reads the diff and the
+      # member manifests. run=false: a pull request that touches no Rust path, so every later step is
+      # skipped. full=true: a push, a release pull request or a workspace-wide input. Otherwise
+      # crates= lists the touched crates and the crates that depend on them.
+      - name: Scope the Rust steps
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # The diff base is HEAD^1; make sure it is present on a shallow clone.
+          if ! git fetch --no-tags --depth=2 --quiet origin "$GITHUB_SHA"; then echo "fetch of the diff base failed; the scope falls back to a full run if the diff is unreadable"; fi
+          python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
       # D141: the exact channel from rust-toolchain.toml, installed with the
       # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
       - name: Install the pinned Rust toolchain
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           python3 scripts/delivery/rust_ci.py toolchain
           export PATH="$HOME/.cargo/bin:$PATH"   # DL192: GITHUB_PATH only reaches later steps
@@ -259,13 +306,14 @@ jobs:
 
       # D140: pinned linker environment for every later step.
       - name: Apply the linker environment
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
 
       # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
       # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-        if: ${{ runner.environment == 'github-hosted' }}
+        if: ${{ steps.scope.outputs.run != 'false' && (runner.environment == 'github-hosted') }}
 
       # §5.4: migrations applied in order by a dedicated runner. This must run
       # before any sqlx compile step, because the macros check against the live
@@ -275,6 +323,7 @@ jobs:
       # root folder, so this finds every `migrations` folder (root, apps/*, crates/*)
       # and runs each one. With none, it does nothing.
       - name: Migrate (seed through the migration chain)
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           dirs=$(for d in migrations apps/*/migrations crates/*/migrations; do [ -d "$d" ] && echo "$d"; done)
           if [ -z "$dirs" ]; then
@@ -289,6 +338,7 @@ jobs:
 
       # DL187: named test targets run only when the workspace has them (cargo metadata).
       - name: Find the integration test targets
+        if: ${{ steps.scope.outputs.run != 'false' }}
         id: targets
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"
@@ -332,9 +382,23 @@ jobs:
             echo "::error::pool runner without pool-db-env or $HOME/db.env; the pool database is missing"
             exit 1
           fi
+      # DL295: how much of the workspace this run must build. rust_scope.py reads the diff and the
+      # member manifests. run=false: a pull request that touches no Rust path, so every later step is
+      # skipped. full=true: a push, a release pull request or a workspace-wide input. Otherwise
+      # crates= lists the touched crates and the crates that depend on them.
+      - name: Scope the Rust steps
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # The diff base is HEAD^1; make sure it is present on a shallow clone.
+          if ! git fetch --no-tags --depth=2 --quiet origin "$GITHUB_SHA"; then echo "fetch of the diff base failed; the scope falls back to a full run if the diff is unreadable"; fi
+          python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
       # D141: the exact channel from rust-toolchain.toml, installed with the
       # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
       - name: Install the pinned Rust toolchain
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           python3 scripts/delivery/rust_ci.py toolchain
           export PATH="$HOME/.cargo/bin:$PATH"   # DL192: GITHUB_PATH only reaches later steps
@@ -343,13 +407,14 @@ jobs:
 
       # D140: pinned linker environment for every later step.
       - name: Apply the linker environment
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           python3 scripts/delivery/rust_ci.py env --format json | python3 -c "import json,os,sys; e=json.load(sys.stdin); open(os.environ['GITHUB_ENV'],'a').writelines('%s=%s\\n' % kv for kv in e.items())"
 
       # Hosted runners start empty, so Swatinem/rust-cache pays off there. Pool
       # runners keep the tool cache (CI_TOOLS_DIR) and the cargo target between runs.
       - uses: Swatinem/rust-cache@d1527c8f67ef9af357290475d4af4b0fab8f12e0 # v2
-        if: ${{ runner.environment == 'github-hosted' }}
+        if: ${{ steps.scope.outputs.run != 'false' && (runner.environment == 'github-hosted') }}
 
       # §5.4: migrations applied in order by a dedicated runner. This must run
       # before any sqlx compile step, because the macros check against the live
@@ -359,6 +424,7 @@ jobs:
       # root folder, so this finds every `migrations` folder (root, apps/*, crates/*)
       # and runs each one. With none, it does nothing.
       - name: Migrate (seed through the migration chain)
+        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           dirs=$(for d in migrations apps/*/migrations crates/*/migrations; do [ -d "$d" ] && echo "$d"; done)
           if [ -z "$dirs" ]; then
@@ -373,6 +439,7 @@ jobs:
 
       # DL187: named test targets run only when the workspace has them (cargo metadata).
       - name: Find the integration test targets
+        if: ${{ steps.scope.outputs.run != 'false' }}
         id: targets
         run: |
           python3 - <<'PY' >> "$GITHUB_OUTPUT"

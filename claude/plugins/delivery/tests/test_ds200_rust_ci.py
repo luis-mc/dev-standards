@@ -31,6 +31,7 @@ class RustCi(unittest.TestCase):
         os.environ["CI_TOOLS_DIR"] = str(self.tmp / "cache")
         os.environ["CI_TOOLS_JSON"] = str(self.tmp / "pins.json")
         os.environ["RUST_CI_ROOT"] = str(self.root)
+        os.environ["DELIVERY_NO_TARGET_CACHE"] = "1"  # DL295: the target cache has its own tests
         (self.tmp / "pins.json").write_text("{}")
         self.log = self.tmp / "calls.log"
         self.cargo = self.tmp / "cargo"
