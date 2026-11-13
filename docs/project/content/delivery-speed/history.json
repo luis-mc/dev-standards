@@ -1,5 +1,9 @@
 [
   {
+    "date": "13 Nov 13:51",
+    "change": "DL298 item changed from \"Watcher merged RELEASE-123 with template-build red\" to \"Watcher requires every CI run on the ready head\""
+  },
+  {
     "date": "13 Nov 12:31",
     "change": "DL293 item changed from \"RELEASE: Rust-only release scope and Rust CI speed (DL293, DL294)\" to \"RELEASE: Rust-only release scope and Rust CI speed (DL294, DL295)\""
   },

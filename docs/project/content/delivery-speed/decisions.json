@@ -5992,6 +5992,30 @@
       "chosen": "Keep Not now (Recommended)",
       "decided": "2026-11-13",
       "owner_words": "Keep Not now (Recommended) (owner 06:3x)"
+    },
+    {
+      "id": "D264",
+      "question": "Which CI runs must be green before the delivery watcher merges a release (after RELEASE-123 merged with template-build red)?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL298",
+      "options": [
+        {
+          "label": "Every run on the head (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Add template-build to config",
+          "summary": "offered"
+        },
+        {
+          "label": "Leave as is",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Every run on the head (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Every run on the head (Recommended) (owner 13:3x)"
     }
   ]
 }
