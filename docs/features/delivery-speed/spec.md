@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.7.0
+version: 0.8.0
 owner: agents
 type: explanation
 code:
@@ -171,6 +171,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.8.0 | 2026-11-13 | RELEASE-127 | Gate steps accept an optional when_changed list of path patterns; a step is skipped with a reason when no changed file matches.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait.<br>fast_guards.py runs the gate.json always_on_guards whose input globs match a changed file, so the boundary check and guard tests run before a push. | DL304, DL306, DL307 |
 | 0.7.0 | 2026-11-13 | RELEASE-123 | ci_scope.py gets the rust-release scope (see delivery R5.60).<br>Rust CI speed: crate scoping (rust_scope.py, RUST_CRATES) and a persistent per-runner target cache. Spec text is in the delivery feature, R5.50. | DL294, DL295 |
 | 0.6.2 | 2026-11-11 | RELEASE-98 | Secret scans skip the delivery installer's state files; shipped scripts avoid secret-shaped variable names; the branch gate ignores untracked docs/work/ files. | DL204 |
 | 0.6.1 | 2026-11-10 | RELEASE-84 | The pre-push hook source moved to delivery templates/shared/.githooks. | DL172 |

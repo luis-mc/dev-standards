@@ -50,7 +50,7 @@ exit, read the message, fix the cause and rerun.
    at most 80 characters, open statuses only. It shows under the Expected value.
 
    A release (`--release`) may carry phases, repeatable
-   `--phase NAME=HH:MM-HH:MM` (`agents`, `join`, `ci`, `merge`), and one named
+   `--phase NAME=HH:MM-HH:MM` (`agents`, `join`, `ci`, `fix`, `merge`; `ci` and `fix` may repeat), and one named
    `--risk "LABEL=MINUTES"`. Its Expected is the end of its last phase. Name
    the risk; never pad it in.
    `--release` gives the task the next release number, shown as `RELEASE-<n>`.

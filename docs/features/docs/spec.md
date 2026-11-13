@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.3.1
+version: 1.4.0
 owner: agents
 type: reference
 code:
@@ -179,6 +179,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.4.0 | 2026-11-13 | RELEASE-127 | A release phase may be named fix (a fix round between a red CI and the next CI); ci and fix may repeat. | DL305 |
 | 1.3.1 | 2026-11-11 | RELEASE-109 | check warns and render notes a stale Full Progress lede (see features/artifacts R5.37a). | DL251 |
 | 1.3.0 | 2026-11-11 | RELEASE-107 | Every generated page shows the luismc-docs version and a latest or update flag; generated Markdown and llms.txt get a header line; all pages use the default page colours (a project design.css changes accents only); fonts are 0.9x (R5.16 to R5.18).<br>Fold bumps a spec's own **Version:** line in place and refuses a doc with both forms. | DL239, DL243 |
 | 1.2.0 | 2026-11-11 | RELEASE-106 | mark-deferred writes and opens a local Full Progress page; the end-of-turn hook prints its path while deferred. | DL238 |

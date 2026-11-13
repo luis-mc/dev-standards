@@ -136,6 +136,11 @@ timed out. A script never exits 0 when it could not decide.
   `--full`), and are skipped (outcome `skip`) when no package changed;
   `ui-changed` runs only when a changed file is under a `ui_paths` prefix or the
   gate is widened.
+- `when_changed` (optional, DL304): a non-empty list of path patterns, matched
+  like `widen_on` entries. The step runs only when a changed file matches one;
+  otherwise it is skipped with the reason `no change under when_changed (...)`.
+  It narrows the step's `scope`; it never widens it. A step without it is
+  unchanged. A time-limited run still runs the step when its paths changed.
 - `widen_on` entries: one ending in `/` is a path prefix; one containing `*` is a
   glob over the full path; anything else is a root-level file only (a nested
   `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
@@ -191,6 +196,14 @@ timed out. A script never exits 0 when it could not decide.
   `guard`; Go tests named `TestGuard*`; Rust tests named `guard_*`; .NET
   `Category=Guard`.
 - `pre_push: true` marks the steps `fast_guards.py` runs.
+- `always_on_guards` (optional list, DL307): project guards that are not gate steps, such as
+  the boundary check (dependency-cruiser) or a guard test. Each is
+  `{"name": ..., "command": ..., "inputs": [globs]}`. `fast_guards.py` runs, after the
+  `pre_push` steps, each guard with an input glob that matches a file changed since the
+  base, one at a time, with its time printed. Others are skipped with one line each.
+  Globs: `*` stays in one directory, `**` crosses directories; `["**"]` always runs. A failed
+  guard fails the run with its name and the tail of its output. Without the key, nothing
+  changes.
 - `setup`: commands that install dependencies from the lockfile in frozen mode
   (`pnpm install --frozen-lockfile`, `go mod download` with `-mod=readonly`
   builds, `cargo fetch --locked`, `dotnet restore --locked-mode`).
@@ -496,6 +509,12 @@ shlex (no shell), then `{run_id}`, `{head}` (full sha), `{conclusion}`, `{workfl
 in each word. A non-zero exit, a timeout, a command that cannot start or a malformed config is
 logged on stderr, the next hook still runs, and the exit code is never changed. `--no-post-run`
 skips them; `--config FILE` names another config. Nothing runs after exit 2 or 4.
+Cancel on red (DL306): when SHA is a train head (branch matching top-level `train_branch_re`, default
+`^release/`) and a job of any run for SHA ends `failure`, `timed_out` or `cancelled`, ci_watch prints the
+job, runs `gh run cancel RUN_ID` for every other run of SHA that is not completed (never other commits or
+branches), logs that the push freeze lifts, and exits 1 without waiting. The freeze is read from the live
+runs, so it ends as the cancelled runs complete. Agent branches are never cancelled. `--no-cancel-on-red`
+or `ci_watch.cancel_on_red: false` keeps the old wait.
 A run that executed no job (conclusion `skipped`, or a push run whose jobs were all skipped, "already
 tested on the pull request") is not a pass when SHA is the head of an open pull request
 (`gh api repos/{owner}/{repo}/commits/SHA/pulls`, read only when such a run is the whole answer): it keeps

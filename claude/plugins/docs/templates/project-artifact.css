@@ -770,6 +770,7 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
+.release-timeline .rt-bar.fix { fill: var(--failed); }
 .release-timeline .rt-bar.merge { fill: var(--ink); }
 .release-timeline .rt-risk { fill: var(--rule-strong); opacity: .55; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
@@ -792,6 +793,7 @@ details.status-fold > summary strong { min-width: 0; }
 .rt-swatch.agents { background: var(--running-mark); }
 .rt-swatch.join { background: var(--signal); }
 .rt-swatch.ci { background: var(--live); }
+.rt-swatch.fix { background: var(--failed); }
 .rt-swatch.merge { background: var(--ink); }
 .state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 

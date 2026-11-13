@@ -819,11 +819,93 @@ def _cmd_measure(root, args) -> int:
     return 0
 
 
+# --- DL303: owns overlap between agents --------------------------------------------------------
+
+def brief_owns(text: str) -> str:
+    """The `owns:` value of a brief's delivery block (the first `owns:` line; '' when there is none)."""
+    blk = re.search(r"```delivery\s*\n(.*?)```", text or "", re.S)
+    m = re.search(r"^[ \t]*owns:[ \t]*(.+)$", blk.group(1) if blk else (text or ""), re.M)
+    return m.group(1).strip() if m else ""
+
+
+def _strip_parens(text: str) -> str:
+    out, depth = [], 0
+    for ch in text:
+        if ch == "(":
+            depth += 1
+        elif ch == ")" and depth:
+            depth -= 1
+        elif not depth:
+            out.append(ch)
+    return "".join(out)
+
+
+def owns_paths(text) -> list:
+    """DL303: [(path, open)] from an owns line. Parenthetical notes go; '<...>' placeholders and globs cut the
+    path to its fixed prefix (open=True); items that are prose, not paths, are dropped."""
+    out = []
+    for item in re.split(r"[,;]", _strip_parens(str(text or ""))):
+        item = item.strip().strip("`'\"").replace("\\", "/")
+        is_open = False
+        m = re.search(r"[<*?\[{]", item)
+        if m:
+            item, is_open = item[:m.start()], True
+        item = item.strip()
+        if not item or re.search(r"\s", item) or ("/" not in item and "." not in item):
+            continue
+        out.append((item, is_open or item.endswith("/")))
+    return out
+
+
+def owns_overlap(a_text, b_text) -> list:
+    """DL303: the overlapping paths of two owns lines: the same path, or one a prefix of the other."""
+    hits = set()
+    for pa, oa in owns_paths(a_text):
+        for pb, ob in owns_paths(b_text):
+            for x, ox, y in ((pa, oa, pb), (pb, ob, pa)):    # x may be the prefix of y
+                if y == x or (y.startswith(x) and (ox or y[len(x)] == "/")):
+                    hits.add(x)
+                    break
+    return sorted(hits)
+
+
+def _agent_joined(led: dict, a: dict) -> bool:
+    if a.get("joined"):
+        return True
+    task = a.get("task")
+    for t in led.get("trains") or []:
+        if t.get("state") in ("joined", "pushed", "ci", "green", "red", "merged", "live", "cleaned") and \
+                any(isinstance(c, dict) and c.get("task") == task for c in t.get("cargo") or []):
+            return True
+    return False
+
+
+def owns_warnings(led: dict, me: dict, owns) -> list:
+    """DL303: one WARNING per running agent, or done agent not yet joined, whose owns overlaps `owns`."""
+    out = []
+    for o in led.get("agents") or []:
+        if not isinstance(o, dict) or o is me or not o.get("owns"):
+            continue
+        if o.get("state") in _AGENT_DONE and (o.get("state") != "done" or _agent_joined(led, o)):
+            continue
+        hit = owns_overlap(owns, o["owns"])
+        if hit:
+            out.append("WARNING: agent %s (%s, %s) already owns %s; this brief may repeat its slice"
+                       % (o.get("task") or o.get("id"), o.get("id") or "-", o.get("state"), ", ".join(hit)))
+    return out
+
+
 def _cmd_agent_eta(root, args) -> int:
     from datetime import timedelta
     bd = {"setup": args.setup, "work": args.work, "checks": args.checks}
     total = sum(bd.values())
     box = {}
+    owns = getattr(args, "owns", None) or ""
+    if getattr(args, "brief", None):
+        try:
+            owns = brief_owns(Path(args.brief).read_text(encoding="utf-8", errors="replace"))
+        except OSError as exc:
+            raise LedgerError("cannot read brief %s: %s" % (args.brief, exc))
 
     def fn(led):
         key = str(args.agent)
@@ -835,7 +917,12 @@ def _cmd_agent_eta(root, args) -> int:
         a["eta"] = {"total_min": total, "breakdown": bd, "basis": args.basis, "due": iso(start + timedelta(minutes=total))}
         add_event(led, "agent.eta", str(a.get("task") or a.get("id") or ""), "delivery_ledger")
         box["eta"] = a["eta"]
+        if owns:
+            box["warn"] = owns_warnings(led, a, owns)
+            a["owns"] = owns
     update(root, fn)
+    for line in box.get("warn") or []:
+        print(line, file=sys.stderr)
     print(json.dumps(box["eta"], indent=2))
     return 0
 
@@ -929,9 +1016,50 @@ def stale_agents(root, record=None, led: dict | None = None) -> list:
         return []
 
 
+def _run_cmd(argv, root, timeout=25):
+    """DL303: stdout of a command, None on any failure. Tests replace this with a fake."""
+    try:
+        p = subprocess.run(argv, cwd=str(root), capture_output=True, text=True, encoding="utf-8",
+                           errors="replace", timeout=timeout)
+        return p.stdout if p.returncode == 0 else None
+    except (OSError, subprocess.SubprocessError):
+        return None
+
+
+def branch_commit_time(root, branch) -> datetime | None:
+    """DL303: the committer time of the newest commit on `origin/<branch>`; None when the branch is missing
+    or every lookup fails. `git ls-remote` first, then the GitHub API, then a fetch and `git log`."""
+    if not branch:
+        return None
+    ref = _run_cmd(["git", "ls-remote", "--heads", "origin", str(branch)], root)
+    if ref is not None and not ref.strip():
+        return None                                   # the branch does not exist (yet)
+    out = _run_cmd(["gh", "api", "repos/{owner}/{repo}/commits/%s" % branch, "--jq", ".commit.committer.date"], root)
+    when = parse_iso((out or "").strip())
+    if when is None and _run_cmd(["git", "fetch", "origin", str(branch)], root, 60) is not None:
+        when = parse_iso((_run_cmd(["git", "log", "-1", "--format=%cI", "origin/%s" % branch], root) or "").strip())
+    return when
+
+
+def agent_liveness(root, a: dict, last_event_at=None):
+    """DL303: (time, source) of an agent's last sign of life. The branch's last commit counts first (the run's
+    last_event_at lags); last_event_at is the fallback when the branch is missing or the lookup fails. When both
+    are known, the newer one wins."""
+    branch_at = branch_commit_time(root, a.get("branch"))
+    event_at = parse_iso(last_event_at)
+    if branch_at is not None and (event_at is None or branch_at >= event_at):
+        return branch_at, "branch"
+    if event_at is not None:
+        return event_at, "last_event_at"
+    return None, "none"
+
+
 def _cmd_agent_check(root, args) -> int:
-    """DL127: record that the session looked at an open agent (sets last_checked), so nobody edits the JSON."""
+    """DL127: record that the session looked at an open agent (sets last_checked), so nobody edits the JSON.
+    DL303: also records the agent's liveness time and which source gave it."""
     box = {}
+    rows = [a for a in load(root)["agents"] if a.get("state") not in _AGENT_DONE and _agent_matches(a, str(args.agent))]
+    live_at, source = agent_liveness(root, rows[0], getattr(args, "last_event_at", None)) if rows else (None, "none")
 
     def fn(led):
         key = str(args.agent)
@@ -941,9 +1069,12 @@ def _cmd_agent_check(root, args) -> int:
         a = rows[0]
         a["last_checked"] = iso()
         box["at"] = a["last_checked"]
+        a["liveness_source"] = source
+        if live_at is not None:
+            a["liveness_at"] = iso(live_at)
         add_event(led, "agent.checked", str(a.get("task") or a.get("id") or ""), "delivery_ledger")
     update(root, fn)
-    print(box["at"])
+    print(box["at"] + " liveness=%s source=%s" % (iso(live_at) if live_at else "-", source))
     return 0
 
 
@@ -1209,12 +1340,15 @@ def main(argv=None) -> int:
     for k in ("setup", "work", "checks"):
         p.add_argument("--" + k, required=True, type=float, metavar="MIN")
     p.add_argument("--basis")
+    p.add_argument("--owns", help="the brief's owns: line; warns when another live agent owns the same paths")
+    p.add_argument("--brief", help="a brief file; its delivery block's owns: line is used")
     p = sub.add_parser("agent-done")
     p.add_argument("agent", help="the agent id or task of an open agent")
     p.add_argument("--by", default="session", choices=("session",))
     p.add_argument("--result", required=True, choices=("ready", "not-ready", "failed"))
     p = sub.add_parser("agent-check")
     p.add_argument("agent", help="the agent id or task of an open agent")
+    p.add_argument("--last-event-at", help="the run's last_event_at from RemoteTrigger list_runs (the fallback time)")
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
     for sp in sub.choices.values():  # --root also works after the subcommand
