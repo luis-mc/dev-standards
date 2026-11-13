@@ -148,6 +148,15 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.37** — **A leftover non-generic label is removed only with a yes** (DL316, D275, D279). The plan reads the labels of the repository's Windows runner. For each label that is not generic: when no workflow file of the repository (read through `gh api repos/<owner>/<repo>/contents/.github/workflows`) names it, the plan adds the step `Remove label <name> from runner <runner>` (`gh api -X DELETE repos/<owner>/<repo>/actions/runners/<id>/labels/<name>`), which runs only after a yes that names the label. When a workflow file still names it, there is no step; the plan prints the files that must switch to `vars.CI_RUNS_ON_WINDOWS` (R5.36). When the workflow files cannot be read, nothing is removed and the plan says so.
 
+
+**R5.38** — **The doctor finds a runner it cannot read** (DL318). A Windows runner is found from the service list (`Win32_Service`, name `actions.runner.*`; the path gives the folder, `StartName` the account) as well as from folders. When this account cannot read the folder, the runner is still reported: the account check uses `StartName`, and the `.env` hooks, `CI_TOOLS_DIR`, `RUSTUP_HOME` and `CARGO_HOME` checks are warnings that say "needs an administrator shell". The doctor never says "no runner found" while a runner service exists.
+
+**R5.39** — **The doctor checks `runs-on` labels** (DL317, DL318, D275, D278). For each repository in the config, the doctor reads its workflows and fails when a literal `runs-on` label set is carried by no online runner of the repository (the finding names file and line). It warns when a self-hosted job uses a literal label instead of `fromJSON(vars.CI_RUNS_ON)` or `fromJSON(vars.CI_RUNS_ON_WINDOWS)`, and when `CI_RUNS_ON_WINDOWS` is unset while the repository has a Windows self-hosted runner.
+
+**R5.40** — **Several pool agents may serve one repository** (DL323, D282). Every agent of a repository carries the routing label `repo-<route>`, so one `CI_RUNS_ON` matches all of them; `route` defaults to the agent's slug and is stored in `agents.json` (an entry without `route` routes by its slug). `pool-add-agent --route <slug>` sets it; without it, a new agent for a repository that another entry serves reuses that entry's route and is named `<route>-2`, `-3`, and so on.
+
+**R5.41** — **Per-agent parts stay per slug** (DL323). User, folder, `TMPDIR`, Wine prefix and database roles stay per slug. Removing one agent leaves the others of that repository working. The pool memory and CPU cap and the machine slot limit do not change.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -170,6 +179,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py`, `claude/plugins/delivery/tests/test_dl223_pool_path_order.py` |
 | R5.31 to R5.34 | `claude/plugins/delivery/tests/test_dl310_windows_runner.py`, `claude/plugins/delivery/tests/test_dl315_runner_remove_token.py` (mocked probe; the real account, rights and service run only on Windows) |
 | R5.31 (symlink right, host-load task), R5.35 to R5.37 | `claude/plugins/delivery/tests/test_dl316_windows_only_generic.py` (mocked probe) |
+| R5.38, R5.39 | `claude/plugins/delivery/tests/test_dl318_doctor_locked_runner.py` (mocked service list and workflows) |
+| R5.40, R5.41 | `claude/plugins/delivery/tests/test_dl323_pool_agents_per_repo.py` |
 
 ## 12. Code map
 
