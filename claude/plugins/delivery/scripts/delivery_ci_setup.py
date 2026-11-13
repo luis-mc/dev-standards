@@ -6,7 +6,7 @@
     delivery_ci_setup.py checklist [--root DIR] [--json]
     delivery_ci_setup.py confirm   ITEM...  [--root DIR]
     template_adopt.py status | diff PATH | adopt PATH|--all [--dry-run] [--write-conflicts]   (DL308: adopt template changes, see its docstring)
-    delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh  --repos o/a,o/b [--windows-repos o/c] [--pool NAME] [--yes] [--yes-delete NAMES]
+    delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh  --repos o/a,o/b [--windows-repos o/c] [--only windows|linux] [--pool NAME] [--yes] [--yes-delete NAMES]
 
 `pool-*` is the guided path for Option 1 (DL30): detect what exists, show one plan, remove old runners and build clean,
 run each step after a yes. Deleting needs `--yes-delete` naming exactly what goes. It follows contract section 13:
@@ -743,8 +743,11 @@ def cmd_pool(args, root) -> int:
         return 2
     pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap, repo_paths=[root], probe=probe,
                 browsers=getattr(args, "browsers", None), playwright_version=getattr(args, "playwright", None),
-                drop_layers=getattr(args, "drop_layer", None) or (), drop_apt=getattr(args, "drop_apt", None) or ())
+                drop_layers=getattr(args, "drop_layer", None) or (), drop_apt=getattr(args, "drop_apt", None) or (),
+                only=getattr(args, "only", None))
     print("\n".join(render_plan(pl, found)))
+    for note in pl.get("notes") or []:
+        print("Note: %s" % note)
     host, why = P.host_kvm(probe, args.pool)  # DL274: KVM is optional and off by default
     print("KVM on this host: %s (%s). It stays off unless you run pool-refresh --kvm on."
           % ("yes" if host else "no" if host is False else "unknown", why))
@@ -859,6 +862,7 @@ def main(argv=None) -> int:
     ap.add_argument("--kvm", choices=["on", "off"], help="pool-refresh: turn POOL_KVM on or off (on is refused when the host has no usable KVM)")
     ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
     ap.add_argument("--drain-timeout", type=float, default=None, metavar="SEC", help="pool-refresh: seconds to wait for running jobs to finish before the recreate (default 2700)")
+    ap.add_argument("--only", choices=["windows", "linux"], help="pool-plan/run: plan and run only this OS's steps (host-load stays in both)")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)
