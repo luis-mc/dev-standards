@@ -273,7 +273,7 @@ def target_cache_env(root: Path) -> dict[str, str]:
         os.utime(key, None)
         cap = int(float(os.environ.get("RUST_TARGET_CAP_GB") or 40) * 1024 ** 3)
         removed = prune_target_cache(runner_dir, key, cap)
-    except (OSError, ValueError, RustCiError) as exc:
+    except (OSError, ValueError, ImportError, RustCiError) as exc:  # ImportError: no ci_tool next to this script
         print("rust_ci: build cache unavailable (%s); using target/" % exc, file=sys.stderr)
         return {}
     print("rust_ci: build cache %s (pruned: %s)" % (key, ", ".join(removed) or "none"), file=sys.stderr)
