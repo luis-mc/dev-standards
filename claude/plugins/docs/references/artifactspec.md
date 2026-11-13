@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.20.2
+**Version:** 1.21.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.21.0 — 2026-11-13.**
+
+- R6.12, R6.13: in Full Progress every checklist group and every At a glance group starts closed, so the page opens as a list of headings with counts; feature artifacts keep their open rule (DL313).
 
 **1.20.2 — 2026-11-07.**
 
