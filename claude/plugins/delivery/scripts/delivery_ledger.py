@@ -900,8 +900,8 @@ def _cmd_agent_eta(root, args) -> int:
     bd = {"setup": args.setup, "work": args.work, "checks": args.checks}
     total = sum(bd.values())
     box = {}
-    owns = args.owns or ""
-    if args.brief:
+    owns = getattr(args, "owns", None) or ""
+    if getattr(args, "brief", None):
         try:
             owns = brief_owns(Path(args.brief).read_text(encoding="utf-8", errors="replace"))
         except OSError as exc:
@@ -1059,7 +1059,7 @@ def _cmd_agent_check(root, args) -> int:
     DL303: also records the agent's liveness time and which source gave it."""
     box = {}
     rows = [a for a in load(root)["agents"] if a.get("state") not in _AGENT_DONE and _agent_matches(a, str(args.agent))]
-    live_at, source = agent_liveness(root, rows[0], args.last_event_at) if rows else (None, "none")
+    live_at, source = agent_liveness(root, rows[0], getattr(args, "last_event_at", None)) if rows else (None, "none")
 
     def fn(led):
         key = str(args.agent)
