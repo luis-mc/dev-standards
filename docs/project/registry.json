@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T02:27+00:00",
+  "updated": "2026-11-13T02:50+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5123,13 +5123,53 @@
       "id": "DL285",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Apply RELEASE-119 supervisor to this PC's pool",
       "detail": "pool-refresh --yes when every pool runner is idle (refuses if a job runs); then check the 4 runners and their user ids.",
-      "expected": "13 Nov ~03:15",
-      "changed": "2026-11-13T02:27+00:00",
-      "expected_basis": "waits for idle runners, then ~8 min rebuild",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T02:50+00:00",
       "no_release": "machine settings only (pool image)"
+    },
+    {
+      "id": "DL286",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-120: createrepo-c in the linux-packaging layer",
+      "detail": "Join, CI and merge for DL287.",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T02:50+00:00",
+      "release": 120,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-13T02:40+00:00",
+          "end": "2026-11-13T02:48+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T02:48+00:00",
+          "end": "2026-11-13T02:54+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T02:54+00:00",
+          "end": "2026-11-13T02:57+00:00"
+        }
+      ],
+      "started": "2026-11-13T02:37+00:00"
+    },
+    {
+      "id": "DL287",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "linux-packaging layer: add createrepo-c (rpm repo metadata)",
+      "detail": "Peer report: an rpm repo step skips without createrepo_c. Add createrepo-c to the layer, check createrepo_c in the doctor.",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T02:50+00:00",
+      "rides": "DL286",
+      "started": "2026-11-13T02:37+00:00"
     },
     {
       "id": "DS1",
