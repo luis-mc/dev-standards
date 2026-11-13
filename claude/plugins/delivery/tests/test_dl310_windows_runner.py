@@ -172,7 +172,7 @@ class Secrets(unittest.TestCase):
         text = P.windows_runner_script(self.step)
         self.assertIn("registration-token", text)
         self.assertEqual(re.findall(r"--windowslogonpassword (\S+)", text), ["$pw"])
-        self.assertEqual(set(re.findall(r"--token (\S+)", text)), {"$token"})
+        self.assertEqual(set(re.findall(r"--token (\S+)", text)), {"$token", "$rt"})  # DL315: $rt is the remove token
         self.assertIn("$pw = $null", text)
         self.assertNotIn("Write-Host $pw", text)
         self.assertNotRegex(text, r"(?i)(echo|Write-Host|Write-Output|Out-File|Add-Content)[^\r\n]*\$(pw|token)")
