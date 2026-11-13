@@ -9,7 +9,11 @@ time limit (5 minutes); one over it is killed with everything it started and
 fails. A failed step is reported the way the branch gate reports one: the
 "FAIL <step>: <reason> (exit N, Ns) - log: <path>" line and the last 40 lines of
 its output, so a blocked push says which check failed and why. Step logs are in
-.delivery/logs/pre-push/ of the checkout the script is run from. Never writes or
+.delivery/logs/pre-push/ of the checkout the script is run from. Then it runs the
+gate.json "always_on_guards" (DL307): each {name, command, inputs: [globs]} whose
+inputs match a file changed since the base, one at a time; the others are skipped
+with one line each, and "**" always runs. A failed guard fails the run with its
+name and output tail. Never writes or
 publishes a gate result; the pre-push hook calls it once per pushed ref.
 
 --commit SHA names the commit to check (the hook passes the one being pushed).
@@ -28,6 +32,7 @@ from __future__ import annotations
 
 import argparse
 import os
+import re
 import shutil
 import signal
 import stat
@@ -220,6 +225,66 @@ def run_guards(root: Path, work: Path, args: argparse.Namespace) -> int:
         shutil.rmtree(tmp, ignore_errors=True)
 
 
+def glob_to_regex(pat: str) -> "re.Pattern[str]":
+    """A path glob as a regex: `*` and `?` stay inside one directory, `**` crosses
+    directories, `**/` also matches no directory."""
+    pat = pat.replace("\\", "/")
+    out, i = [], 0
+    while i < len(pat):
+        c = pat[i]
+        if pat.startswith("**/", i):
+            out.append("(?:.*/)?")
+            i += 3
+        elif pat.startswith("**", i):
+            out.append(".*")
+            i += 2
+        elif c == "*":
+            out.append("[^/]*")
+            i += 1
+        elif c == "?":
+            out.append("[^/]")
+            i += 1
+        else:
+            out.append(re.escape(c))
+            i += 1
+    return re.compile("".join(out) + r"\Z")
+
+
+def guard_match(inputs: list[str], files: list[str]) -> str | None:
+    """The first changed file one of the globs matches, or None."""
+    regexes = [glob_to_regex(g) for g in inputs]
+    for f in files:
+        if any(r.match(f) for r in regexes):
+            return f
+    return None
+
+
+def run_always_on_guards(root: Path, guards: list[dict], ctx, args: argparse.Namespace) -> bool:
+    """Run each declared guard whose inputs match a changed file, one at a time
+    (DL307). True when all that ran passed. Skipped guards get one line each."""
+    ok = True
+    for g in guards:
+        hit = guard_match(g["inputs"], ctx.files)
+        if hit is None:
+            print("always-on guard %s: skipped, no changed file matches its inputs" % g["name"], flush=True)
+            continue
+        print("always-on guard %s: running (%s changed) ..." % (g["name"], hit), flush=True)
+        log_rel = "%s/guard-%s.log" % (dc.FAST_LOG_DIR, dc._log_name(g["name"]))
+        log_path = root / log_rel
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(log_path, "wb") as log:
+            code, secs, timed_out = dc.run_logged(g["command"], ctx.root, None, log, args.timeout_minutes * 60)
+        if code == 0 and not timed_out:
+            print("always-on guard %s: pass (%.1fs)" % (g["name"], secs), flush=True)
+            continue
+        ok = False
+        why = "timed out" if timed_out else "exit %d" % code
+        print("FAIL always-on guard %s: %s (%.1fs) - log: %s" % (g["name"], why, secs, log_rel), flush=True)
+        for line in dc.log_tail(log_path):
+            print("    " + line)
+    return ok
+
+
 def _run_steps(root: Path, steps: list[dict], ctx, args: argparse.Namespace) -> int:
     print("fast_guards: head %s, base %s, limit %g min per step" % (ctx.head[:10], ctx.base[:10], args.timeout_minutes))
     entries, _ = dc.execute_steps(
@@ -233,8 +298,10 @@ def _run_steps(root: Path, steps: list[dict], ctx, args: argparse.Namespace) -> 
     )
     print("\n" + dc.summary_table(entries))
     dc.print_failures(entries, root)
+    guards = ctx.cfg.get("always_on_guards") or []
+    guards_ok = run_always_on_guards(root, guards, ctx, args) if guards else True
     if dc.overall_pass(entries):
-        return dc.EXIT_OK
+        return dc.EXIT_OK if guards_ok else dc.EXIT_FAIL
     if not any(e["outcome"] != "skip" for e in entries):
         dc.eprint("error: no pre_push step ran, so the guards cannot decide")
     return dc.EXIT_FAIL

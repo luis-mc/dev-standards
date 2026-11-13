@@ -271,6 +271,31 @@ def _check_e2e_map(value: object, where: str) -> dict:
     return {"specs": clean, "full_on": _str_list(value, "full_on", label)}
 
 
+def _check_always_on_guards(value, where: str) -> list[dict]:
+    """The project's always-on guards (DL307): [{name, command, inputs: [globs]}]. Absent means none."""
+    if value is None:
+        return []
+    if not isinstance(value, list):
+        raise DeliveryError("%s: 'always_on_guards' must be a list" % where)
+    out, seen = [], set()
+    for i, g in enumerate(value):
+        label = "%s: always_on_guards[%d]" % (where, i)
+        if not isinstance(g, dict):
+            raise DeliveryError("%s must be an object" % label)
+        name, command, inputs = g.get("name"), g.get("command"), g.get("inputs")
+        if not isinstance(name, str) or not name.strip():
+            raise DeliveryError("%s needs a 'name'" % label)
+        if name in seen:
+            raise DeliveryError("%s: duplicate guard name '%s'" % (where, name))
+        seen.add(name)
+        if not isinstance(command, str) or not command.strip():
+            raise DeliveryError("%s ('%s') needs a 'command'" % (label, name))
+        if not isinstance(inputs, list) or not inputs or not all(isinstance(x, str) and x for x in inputs):
+            raise DeliveryError("%s ('%s'): 'inputs' must be a non-empty list of globs" % (label, name))
+        out.append({"name": name, "command": command, "inputs": list(inputs)})
+    return out
+
+
 def load_gate(root: Path) -> dict:
     """Read and validate scripts/delivery/gate.json. Fills defaults."""
     path = root / GATE_JSON_PATH
@@ -313,6 +338,7 @@ def load_gate(root: Path) -> dict:
         cfg["e2e_spec_paths"] = _str_list(cfg, "e2e_spec_paths", where)
     else:
         cfg["e2e_spec_paths"] = list(DEFAULT_E2E_SPEC_PATHS)
+    cfg["always_on_guards"] = _check_always_on_guards(cfg.get("always_on_guards"), where)
     pk = cfg.get("packages")
     if not isinstance(pk, dict) or pk.get("kind") not in PACKAGE_KINDS:
         raise DeliveryError(

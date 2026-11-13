@@ -506,6 +506,8 @@ flowchart LR
 
 **R13.91** — **Windows deferred** (DL192). On the rust track the installer writes `windows-msi-check.yml` and `package-windows.yml` only when `ci.options.windows` in `.delivery/config.json` holds a CI option. When it is absent (or the value is `deferred`), Windows is deferred: both files are skipped and the installer says so. `package.yml` runs its cargo-xwin steps only when the repository variable `CI_WINDOWS` is `on`. To turn Windows on, run `delivery_ci.py set`, set `CI_WINDOWS` to `on`, and run `install` again; no file is edited by hand. The other tracks are unchanged.
 
+**R13.96** — **Guards on input** (DL307). `gate.json` may list `always_on_guards`: `{name, command, inputs: [globs]}`. `fast_guards.py` runs, after the `pre_push` steps, each guard whose `inputs` match a file changed since the base, one at a time. The others are skipped with one line each. `["**"]` always runs. A failed guard fails the run and prints its name and the tail of its output. With no list, nothing changes. The ts template declares the boundary check (dependency-cruiser) this way.
+
 The cloud runner (`cloud_shard.py`) and the poster (`cloud_status.py`) are tested versions of this contract. A product may contribute a proven runner later. It keeps the result JSON, the result branch name, the claim and the status rules.
 
 Failure modes:

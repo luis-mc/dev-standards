@@ -196,6 +196,14 @@ timed out. A script never exits 0 when it could not decide.
   `guard`; Go tests named `TestGuard*`; Rust tests named `guard_*`; .NET
   `Category=Guard`.
 - `pre_push: true` marks the steps `fast_guards.py` runs.
+- `always_on_guards` (optional list, DL307): project guards that are not gate steps, such as
+  the boundary check (dependency-cruiser) or a guard test. Each is
+  `{"name": ..., "command": ..., "inputs": [globs]}`. `fast_guards.py` runs, after the
+  `pre_push` steps, each guard with an input glob that matches a file changed since the
+  base, one at a time, with its time printed. Others are skipped with one line each.
+  Globs: `*` stays in one directory, `**` crosses directories; `["**"]` always runs. A failed
+  guard fails the run with its name and the tail of its output. Without the key, nothing
+  changes.
 - `setup`: commands that install dependencies from the lockfile in frozen mode
   (`pnpm install --frozen-lockfile`, `go mod download` with `-mod=readonly`
   builds, `cargo fetch --locked`, `dotnet restore --locked-mode`).

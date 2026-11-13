@@ -73,5 +73,12 @@
       "run_full": "{ [ -n \"${E2E_CHROMIUM_PATH:-}\" ] && [ -x \"$E2E_CHROMIUM_PATH\" ]; } || pnpm exec playwright install chromium && pnpm exec playwright test",
       "env": {"CI": "true"}
     }
+  ],
+  "always_on_guards": [
+    {
+      "name": "boundary",
+      "command": "pnpm exec depcruise --config .dependency-cruiser.cjs apps packages",
+      "inputs": ["apps/**", "packages/**", ".dependency-cruiser.cjs", "tsconfig*.json"]
+    }
   ]
 }
