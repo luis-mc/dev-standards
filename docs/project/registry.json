@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T02:50+00:00",
+  "updated": "2026-11-13T03:00+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5170,6 +5170,53 @@
       "changed": "2026-11-13T02:50+00:00",
       "rides": "DL286",
       "started": "2026-11-13T02:37+00:00"
+    },
+    {
+      "id": "DL288",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-121: pool refresh never cuts a job",
+      "detail": "Join, CI and merge for DL289.",
+      "expected": "13 Nov ~03:54",
+      "changed": "2026-11-13T03:00+00:00",
+      "expected_basis": "agent ~35 min from 03:03, join 7, CI 6",
+      "release": 121,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-13T03:03+00:00",
+          "end": "2026-11-13T03:38+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-13T03:38+00:00",
+          "end": "2026-11-13T03:45+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T03:45+00:00",
+          "end": "2026-11-13T03:51+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T03:51+00:00",
+          "end": "2026-11-13T03:54+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL289",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "pool-refresh: build first, drain runners, then recreate (no cut jobs)",
+      "detail": "Peer report 13 Nov: the 02:42 refresh checked runners idle, built the image (~3.5 min), then recreated the container; a job assigned at 02:44:38 was cut and failed at 02:55. Fix: build the image while runners work, drain (idle listeners stop, busy ones finish their job), re-check, then recreate within seconds.",
+      "expected": "13 Nov ~03:38",
+      "changed": "2026-11-13T03:00+00:00",
+      "expected_basis": "cloud agent from 03:03, ~35 min",
+      "rides": "DL288",
+      "started": "2026-11-13T03:00+00:00"
     },
     {
       "id": "DS1",
