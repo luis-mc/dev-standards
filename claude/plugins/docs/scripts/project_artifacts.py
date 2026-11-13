@@ -1660,7 +1660,8 @@ def cmd_feature_new(args):
 
 
 DROPPED_REASON_MAX = 80      # R5.49: longest `dropped_reason`
-PHASE_NAMES = ('agents', 'join', 'ci', 'merge')       # R5.40
+PHASE_NAMES = ('agents', 'join', 'ci', 'fix', 'merge')       # R5.40
+REPEAT_PHASES = ('ci', 'fix')      # R5.40: a red CI and its fix round may come again; the others once
 RISK_LABEL_MAX = 40
 NO_RELEASE_MAX = 80          # R5.47a: longest `no_release` reason
 _POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
@@ -1700,7 +1701,7 @@ def parse_phases(specs, now_dt):
         name = name.strip()
         if not sep or name not in PHASE_NAMES:
             raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM with NAME one of %s' % (spec, ', '.join(PHASE_NAMES)))
-        if any(p['name'] == name for p in out):
+        if name not in REPEAT_PHASES and any(p['name'] == name for p in out):
             raise Fail(1, '--phase: %s is given twice' % name)
         a, sep, b = span.partition('-')
         if not sep:
@@ -1854,7 +1855,7 @@ def release_problems(task, by_id):
                 if not isinstance(p, dict) or p.get('name') not in PHASE_NAMES or a is None or b is None or b <= a:
                     out.append(('R5.40', 'a phase needs a name (%s) and a start before its end, ISO times with an offset'
                                 % ', '.join(PHASE_NAMES)))
-                elif p['name'] in seen:
+                elif p['name'] in seen and p['name'] not in REPEAT_PHASES:
                     out.append(('R5.40', 'phase %s appears twice' % p['name']))
                 else:
                     seen.add(p['name'])
@@ -3538,7 +3539,7 @@ def build_parser():
     s.add_argument('--release', nargs='?', const=True, type=release_arg, metavar='N',
                    help='this task is a release; it gets the next number, RELEASE-n, or N when given (which also corrects a stored number) (R5.40, R5.45)')
     s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
-                   help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
+                   help='a release phase (agents, join, ci, fix, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
@@ -3557,7 +3558,7 @@ def build_parser():
     s.add_argument('--release', nargs='?', const=True, type=release_arg, metavar='N',
                    help='this task is a release; it gets the next number, RELEASE-n, or N when given (which also corrects a stored number) (R5.40, R5.45)')
     s.add_argument('--phase', action='append', metavar='NAME=HH:MM-HH:MM',
-                   help='a release phase (agents, join, ci, merge), repeatable; "" clears them')
+                   help='a release phase (agents, join, ci, fix, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')

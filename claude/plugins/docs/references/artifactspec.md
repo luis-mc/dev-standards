@@ -1066,8 +1066,9 @@ double-click.
    "risk": {"label": "+1 fix round", "minutes": 10}}
   ```
 
-  A phase `name` is `agents`, `join`, `ci` or `merge` (merge and cleanup), at
-  most once each; `start` and `end` are ISO times with an offset, `end` after
+  A phase `name` is `agents`, `join`, `ci`, `fix` (a fix round between a red CI
+  and the next CI) or `merge` (merge and cleanup). `ci` and `fix` may repeat
+  (agents, join, ci, fix, ci, merge); the others appear at most once; `start` and `end` are ISO times with an offset, `end` after
   `start`. With `--phase NAME=HH:MM-HH:MM`, an end earlier than its start is the
   next day (`ci=23:48-00:28`), and the phases given after it continue on that
   day, so give them in time order; an end equal to its start is refused. `risk` is one named risk: a `label` of at most 40 characters and

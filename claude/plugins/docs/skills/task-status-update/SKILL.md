@@ -72,7 +72,8 @@ exit, read the message, fix the cause and rerun.
      Running gets the current time by itself (R5.48).
    - `--phase NAME=HH:MM-HH:MM`: a release phase, repeatable, in the project's
      zone (`NAME=DD Mon HH:MM-DD Mon HH:MM` for another day). NAME is one of
-     `agents`, `join`, `ci`, `merge`. `--phase ""` clears the phases; give it
+     `agents`, `join`, `ci`, `fix` (a fix round after a red CI), `merge`;
+     `ci` and `fix` may repeat. `--phase ""` clears the phases; give it
      alone.
    - `Dropped`: closes a task truthfully when its work was folded into another
      task or is no longer wanted (not Live, not Failed, not On hold). Give

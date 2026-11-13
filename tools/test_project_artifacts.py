@@ -595,7 +595,7 @@ def test_release_refusals(env):
         (add + ['--rides', 'ZZ9'], 'not a task'),
         (add + ['--phase', 'agents=17:30-18:00'], '--release'),
         (add + ['--risk', 'x=5'], '--release'),
-        (add + ['--release', '--phase', 'deploy=17:30-18:00'], 'one of agents, join, ci, merge'),
+        (add + ['--release', '--phase', 'deploy=17:30-18:00'], 'one of agents, join, ci, fix, merge'),
         (add + ['--release', '--phase', 'agents=18:00-18:00'], 'after the start'),
         (add + ['--release', '--phase', 'agents=17:30-17:45', '--phase', 'agents=17:45-18:00'], 'twice'),
         (add + ['--release', '--phase', 'agents=17:30'], 'NAME=HH:MM-HH:MM'),
