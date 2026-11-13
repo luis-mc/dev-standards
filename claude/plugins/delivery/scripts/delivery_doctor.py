@@ -635,7 +635,7 @@ def windows_runner_items(dirs, services=None):
     and CARGO_HOME, and it reads the same machine.json (and the same hook folder) as the pool."""
     items = []
     folder = str(MS.machine_dir()).replace("\\", "/").rstrip("/").lower()
-    services = _windows_services() if services is None else services
+    services = services or []  # the service list is read once, by machine_items, and passed in
     norm = lambda p: p.replace("/", "\\").rstrip("\\").lower()  # noqa: E731
     by_folder = {norm(s["folder"]): s for s in services if s["folder"]}
     dirs = list(dirs) + [s["folder"] for s in services if s["folder"] and norm(s["folder"]) not in {norm(x) for x in dirs}]
