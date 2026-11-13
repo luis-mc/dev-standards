@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T20:06+00:00",
+  "updated": "2026-11-13T20:13+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5672,33 +5672,32 @@
       "id": "DL314",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: Windows runner setup removes the old runner safely",
       "detail": "Join DL315 (remove-token fix), fold, CI, merge, install, tell the peer.",
-      "expected": "13 Nov ~20:45",
-      "changed": "2026-11-13T20:06+00:00",
-      "expected_basis": "own fix ~15 min, join 5, CI 10, merge 5",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T20:13+00:00",
       "release": 130,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-13T20:10+00:00",
-          "end": "2026-11-13T20:25+00:00"
+          "start": "2026-11-13T20:00+00:00",
+          "end": "2026-11-13T20:07+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-13T20:25+00:00",
-          "end": "2026-11-13T20:30+00:00"
+          "start": "2026-11-13T20:07+00:00",
+          "end": "2026-11-13T20:09+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-13T20:30+00:00",
-          "end": "2026-11-13T20:40+00:00"
+          "start": "2026-11-13T20:09+00:00",
+          "end": "2026-11-13T20:15+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-13T20:40+00:00",
-          "end": "2026-11-13T20:45+00:00"
+          "start": "2026-11-13T20:15+00:00",
+          "end": "2026-11-13T20:20+00:00"
         }
       ],
       "started": "2026-11-13T20:06+00:00"
@@ -5707,14 +5706,23 @@
       "id": "DL315",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Windows runner setup: remove old runner with a remove token, before the lock",
       "detail": "Found while preparing the move to the shared Windows runner: the setup removed an existing runner with a registration token (GitHub needs a remove token), ignored the failure, and locked the folder before removal, so a failed removal could leave the old runner without access to its folder. Fix: remove-token, checked exit, removal before the lock.",
-      "expected": "13 Nov ~20:45",
-      "changed": "2026-11-13T20:06+00:00",
-      "expected_basis": "own fix done, RELEASE-130 join+CI+merge ~20 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T20:13+00:00",
       "rides": "DL314",
       "started": "2026-11-13T20:06+00:00"
+    },
+    {
+      "id": "DL316",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Windows-only mode for the runner setup (no Linux pool rebuild)",
+      "detail": "pool-run with --windows-repos also rebuilds the Linux pool; add a mode that only sets up Windows runners (or writes their script), so a runner move never touches a busy Linux pool. Found 13 Nov while preparing the first shared Windows runner move.",
+      "expected": "14 Nov",
+      "changed": "2026-11-13T20:13+00:00"
     },
     {
       "id": "DS1",
