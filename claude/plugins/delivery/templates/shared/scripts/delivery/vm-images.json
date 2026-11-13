@@ -1,0 +1,45 @@
+{
+  "_comment": "DL281: distros for vm_check.py. The checksum file is read first; the image is the file in it that matches pattern. A '*' in checksum_url is looked up in the directory listing of base_url. checksum_format: bsd = 'SHA256 (name) = hex', sums = 'hex  name'.",
+  "distros": {
+    "fedora-45": {
+      "base_url": "https://dl.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/x86_64/images/",
+      "checksum_url": "https://dl.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/x86_64/images/Fedora-Cloud-45-*-x86_64-CHECKSUM",
+      "checksum_format": "bsd",
+      "algo": "sha256",
+      "pattern": "Fedora-Cloud-Base-Generic-45-*.x86_64.qcow2",
+      "user": "fedora"
+    },
+    "rocky-9": {
+      "base_url": "https://dl.rockylinux.org/pub/rocky/9/images/x86_64/",
+      "checksum_url": "https://dl.rockylinux.org/pub/rocky/9/images/x86_64/Rocky-9-GenericCloud-Base.latest.x86_64.qcow2.CHECKSUM",
+      "checksum_format": "bsd",
+      "algo": "sha256",
+      "pattern": "Rocky-9-GenericCloud-Base.latest.x86_64.qcow2",
+      "user": "rocky"
+    },
+    "rocky-10": {
+      "base_url": "https://dl.rockylinux.org/pub/rocky/10/images/x86_64/",
+      "checksum_url": "https://dl.rockylinux.org/pub/rocky/10/images/x86_64/Rocky-10-GenericCloud-Base.latest.x86_64.qcow2.CHECKSUM",
+      "checksum_format": "bsd",
+      "algo": "sha256",
+      "pattern": "Rocky-10-GenericCloud-Base.latest.x86_64.qcow2",
+      "user": "rocky"
+    },
+    "debian-12": {
+      "base_url": "https://cloud.debian.org/images/cloud/bookworm/latest/",
+      "checksum_url": "https://cloud.debian.org/images/cloud/bookworm/latest/SHA512SUMS",
+      "checksum_format": "sums",
+      "algo": "sha512",
+      "pattern": "debian-12-genericcloud-amd64.qcow2",
+      "user": "debian"
+    },
+    "ubuntu-24.04": {
+      "base_url": "https://cloud-images.ubuntu.com/releases/noble/release/",
+      "checksum_url": "https://cloud-images.ubuntu.com/releases/noble/release/SHA256SUMS",
+      "checksum_format": "sums",
+      "algo": "sha256",
+      "pattern": "ubuntu-24.04-server-cloudimg-amd64.img",
+      "user": "ubuntu"
+    }
+  }
+}

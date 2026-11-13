@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.8.0
+version: 0.9.0
 owner: agents
 type: reference
 code:
@@ -64,7 +64,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 ### 5.2 Pool image and refresh
 
-**R5.9** (was delivery R13.68) — **Pool image layers** (DL149, D146). The pool base image is ubuntu:24.04 and always carries `build-essential` and `pkg-config`. `.delivery/config.json` `pool.layers` may list `windows-packaging`, which adds `dotnet-sdk-8.0 wine wine64 xvfb xauth msitools` (about 1 GB, 64-bit Wine, packages from the distribution, no extra feed); `linux-packaging` (DL274), which adds `dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils` and `policycoreutils-python-utils` when the base image's apt has it (the build skips it quietly if not); and `kvm` (DL274), which adds `qemu-system-x86 qemu-utils cloud-image-utils`. All layers are off by default. The doctor checks `dpkg-deb rpmbuild checkmodule semodule_package` for `linux-packaging` and `qemu-system-x86_64 cloud-localds` for `kvm`. A project file `.delivery/pool.apt` lists extra apt packages, one per line, `#` for comments. A name holds only letters, digits and `+ - .` and does not start with `-`; anything else is refused with the line number and nothing changes. An unknown layer is refused the same way. `pool-refresh` reads both from the project checkout and adds them to what the pool `.env` already holds in `POOL_LAYERS` and `POOL_APT` (R5.11); `compose.yaml` passes them as build args. A missing or empty key changes nothing, and a layer turned off in the repo config alone is not removed from the pool.
+**R5.9** (was delivery R13.68) — **Pool image layers** (DL149, D146). The pool base image is ubuntu:24.04 and always carries `build-essential` and `pkg-config`. `.delivery/config.json` `pool.layers` may list `windows-packaging`, which adds `dotnet-sdk-8.0 wine wine64 xvfb xauth msitools` (about 1 GB, 64-bit Wine, packages from the distribution, no extra feed); `linux-packaging` (DL274), which adds `dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils gnupg shellcheck systemd` (DL281 added the last three) and `policycoreutils-python-utils` when the base image's apt has it (the build skips it quietly if not); and `kvm` (DL274), which adds `qemu-system-x86 qemu-utils cloud-image-utils openssh-client` (DL281 added ssh for `vm_check.py`). All layers are off by default. The doctor checks `dpkg-deb rpmbuild checkmodule semodule_package gpg shellcheck systemd-analyze` for `linux-packaging` and `qemu-system-x86_64 cloud-localds ssh` for `kvm`. A project file `.delivery/pool.apt` lists extra apt packages, one per line, `#` for comments. A name holds only letters, digits and `+ - .` and does not start with `-`; anything else is refused with the line number and nothing changes. An unknown layer is refused the same way. `pool-refresh` reads both from the project checkout and adds them to what the pool `.env` already holds in `POOL_LAYERS` and `POOL_APT` (R5.11); `compose.yaml` passes them as build args. A missing or empty key changes nothing, and a layer turned off in the repo config alone is not removed from the pool.
 
 **R5.10** (was delivery R13.69) — **No rebuild under a running job** (DL149). `pool-refresh --yes` reads `gh api repos/<repo>/actions/runners` for each repository in the pool's `agents.json`. When a pool runner has `busy=true`, or the list cannot be read, it refuses with `refused: pool runner busy: <name> (<repo>). Wait for the job or use --force.` and changes nothing. `--force` rebuilds and prints a warning.
 
@@ -118,6 +118,12 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 - *Label.* `labels_for` adds `kvm` when `POOL_KVM=1` and `/dev/kvm` is readable and writable in the container, so new runners register with it. Existing runners get or lose the label without re-registration through the GitHub API; the doctor prints the exact command (`gh api -X POST repos/OWNER/REPO/actions/runners/ID/labels -f 'labels[]=kvm'`, or `-X DELETE .../labels/kvm` when `POOL_KVM` is off). The supervisor does not call GitHub, because the runner credentials stay on the host.
 - *Doctor checks.* `pool.<name>.kvm-host`, `kvm-compose`, `kvm-container` (`/dev/kvm` usable in the running pool) and `kvm-label`. A host without KVM is a fail only when `POOL_KVM=1`.
 
+**R5.29** — **VM checks** (DL281). A job on a runner labelled `kvm` (R5.28) can boot throwaway distro VMs with `scripts/delivery/vm_check.py` (standard library only, Linux only). The guide is `docs/guides/vm-checks.md`.
+- *Cache.* `--cache`, else `$VM_CACHE`, else `/ci-tools/vm-cache` when writable, else `~/.cache/vm-check`. At each agent start `prepare_kvm` makes `/ci-tools/vm-cache` as `root:<kvm group>` mode `2775` when the tool volume is mounted, so every runner user shares it. Each write goes to a temp name under a `flock` lock and is renamed, so two jobs never download or build the same thing twice.
+- *Kept between runs.* The image (keyed by its published checksum, downloaded again only when that changes, SHA-256 or SHA-512 checked), the prepared base disk (keyed by image checksum and package list), and with `--resume` the snapshot disk (keyed by base key, qemu version, `-cpu host` model, memory and CPUs; a mismatch rebuilds it). The ssh key is made once in the cache with mode 600.
+- *Repeated each run.* A thin overlay on the base (or a copy of the snapshot disk, because the saved state lives in that file), the boot or `-loadvm ready`, and after a resume the guest clock set from the host and the guest random pool reseeded. The overlay is always deleted and qemu always killed, also on error or timeout.
+- *Commands.* `prepare`, `run`, `selinux` (Enforcing, install an rpm, optional policy module, no AVC denials since boot), `prune` (keep the newest per distro) and `doctor`. Default `-m 1024 -smp 2`; a warning prints when the pool has less than memory + 1 GiB free.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -136,6 +142,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.17, R5.18 | `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R5.19 to R5.21 | `claude/plugins/delivery/tests/test_dl176_pool_resize.py`, `claude/plugins/delivery/tests/test_dl103_pool_keep_cap.py` |
 | R5.22 to R5.24 | `claude/plugins/delivery/tests/test_dl177_pool_measure.py` |
+| R5.28, R5.29 | `claude/plugins/delivery/tests/test_dl274_kvm_layers.py`, `claude/plugins/delivery/tests/test_dl281_vm_check.py` |
 | R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py`, `claude/plugins/delivery/tests/test_dl223_pool_path_order.py` |
 
 ## 12. Code map
@@ -150,6 +157,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.9.0 | 2026-11-13 | RELEASE-118 | VM checks (R5.29): vm_check.py boots throwaway distro VMs on kvm runners with a shared cache, optional resume snapshots and an SELinux check; prepare_kvm makes the shared cache folder. | DL281 |
 | 0.8.0 | 2026-11-12 | RELEASE-117 | Pool layers linux-packaging and kvm; optional KVM (POOL_KVM=1, compose.kvm.yaml, host check, kvm label), R5.28. | DL274 |
 | 0.7.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks. | DL270 |
 | 0.7.0 | 2026-11-11 | RELEASE-105 | A repository can declare NOLOGIN database roles; the pool creates them and grants them to its login (R5.27). | DL231 |
