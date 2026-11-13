@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T15:19+00:00",
+  "updated": "2026-11-13T16:48+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5575,6 +5575,16 @@
       "detail": "Peer finding 13 Nov: the agent finish-watch regex misses reports whose only done marker is a ticked checklist line '- [x] CODE DONE' with no final bare line. Agents use both forms. Accept both.",
       "expected": "14 Nov",
       "changed": "2026-11-13T15:19+00:00"
+    },
+    {
+      "id": "DL310",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Needs you",
+      "item": "Shared Windows machine runner in luismc-delivery (peer ask)",
+      "detail": "Peer ask 13 Nov: make a project's repo-only Windows CI runner a shared machine runner like the Linux pool: one machine install, sha256-checked shared tool cache (rustup-init, llvm, cargo-xwin pins), load slots within 85% memory / 60% CPU, per-project registration via delivery-ci-setup. Touches host security (Windows service account, machine install): waits for owner confirmation and design answers before build.",
+      "expected": "13 Nov; waits on owner answer",
+      "changed": "2026-11-13T16:48+00:00"
     },
     {
       "id": "DS1",
