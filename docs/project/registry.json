@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T17:05+00:00",
+  "updated": "2026-11-13T17:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5580,11 +5580,11 @@
       "id": "DL310",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Shared Windows machine runner in luismc-delivery (peer ask)",
       "detail": "Peer ask 13 Nov: make a project's repo-only Windows CI runner a shared machine runner like the Linux pool: one machine install, sha256-checked shared tool cache (rustup-init, llvm, cargo-xwin pins), load slots within 85% memory / 60% CPU, per-project registration via delivery-ci-setup. Touches host security (Windows service account, machine install): waits for owner confirmation and design answers before build.",
-      "expected": "13 Nov ~17:40",
-      "changed": "2026-11-13T17:05+00:00",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T17:11+00:00",
       "rides": "DL311",
       "started": "2026-11-13T16:53+00:00"
     },
@@ -5592,12 +5592,11 @@
       "id": "DL311",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: DL310 shared Windows machine runner",
       "detail": "Join DL310, fold notes, CI, merge, smoke, install, tell the peer the version.",
-      "expected": "13 Nov ~17:40",
-      "changed": "2026-11-13T17:05+00:00",
-      "expected_basis": "template-build from 17:05 ~10 min, ready-PR CI ~10 min, merge 5",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T17:12+00:00",
       "release": 128,
       "phases": [
         {
