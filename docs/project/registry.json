@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T22:33+00:00",
+  "updated": "2026-11-13T23:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5570,12 +5570,11 @@
       "id": "DL309",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Finish watch accepts a ticked '- [x] CODE DONE' checklist line",
       "detail": "Peer finding 13 Nov: the agent finish-watch regex misses reports whose only done marker is a ticked checklist line '- [x] CODE DONE' with no final bare line. Agents use both forms. Accept both.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "cloud agents from 22:30 (~13-30 min), then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:01+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:30+00:00"
     },
@@ -5721,12 +5720,11 @@
       "id": "DL316",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Windows-only mode for the runner setup (no Linux pool rebuild)",
       "detail": "pool-run with --windows-repos also rebuilds the Linux pool; add a mode that only sets up Windows runners (or writes their script), so a runner move never touches a busy Linux pool. Found 13 Nov while preparing the first shared Windows runner move.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "cloud agents from 22:30 (~13-30 min), then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:01+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:30+00:00"
     },
@@ -5734,12 +5732,11 @@
       "id": "DL317",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Shared Windows runner stays generic: projects target it by repo variable",
       "detail": "Owner D275: the pool must stay generic (a future product), so no project labels on shared runners. Setup sets a repo variable (CI_RUNS_ON_WINDOWS, like CI_RUNS_ON for Linux) with the generic labels; the doctor warns when a workflow names a label no runner has. The project-specific comics-pc label stays only until that project's workflows use the variable, then is removed.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "cloud agents from 22:30 (~13-30 min), then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:01+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:30+00:00"
     },
@@ -5747,12 +5744,11 @@
       "id": "DL318",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Doctor sees a Windows runner whose folder is locked",
       "detail": "After the first shared Windows runner move (13 Nov), delivery_doctor in a non-admin shell said no self-hosted runner found, because the runner folder is locked to its ci-* account. Detect runners from the service list (Win32_Service PathName/StartName) and report the folder checks as needing an admin shell instead of missing.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "cloud agents from 22:30 (~13-30 min), then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:01+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:30+00:00"
     },
@@ -5760,12 +5756,11 @@
       "id": "DL319",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Setup grants ci-* runner accounts the right to create symlinks",
       "detail": "Owner D273: cargo-xwin needs symlinks; the runner setup grants SeCreateSymbolicLinkPrivilege to each ci-* account (not Developer Mode). This PC got it by a one-time admin script on 13 Nov.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "cloud agents from 22:30 (~13-30 min), then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:01+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:30+00:00"
     },
@@ -5773,12 +5768,11 @@
       "id": "DL320",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Host-load task: register with PowerShell cmdlets, not cmd-quoted schtasks",
       "detail": "Owner D274: register the host-load task now (one-time admin script, 13 Nov). The plan's printed schtasks line uses cmd quoting that PowerShell 5.1 mangles; print Register-ScheduledTask lines (or a script) instead.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "cloud agents from 22:30 (~13-30 min), then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:02+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:30+00:00"
     },
@@ -5797,33 +5791,32 @@
       "id": "DL322",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: Windows runner follow-ups + ticked CODE DONE",
       "detail": "Join DL309, DL316, DL317, DL318, DL319, DL320 (3 cloud agents), fold, template-build, CI, merge, install, tell the peer.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:30+00:00",
-      "expected_basis": "agents to ~23:00, join 10, template-build+CI 20, merge 5",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:02+00:00",
       "release": 131,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-13T22:30+00:00",
-          "end": "2026-11-13T23:00+00:00"
+          "end": "2026-11-13T22:35+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-13T23:00+00:00",
-          "end": "2026-11-13T23:10+00:00"
+          "start": "2026-11-13T22:35+00:00",
+          "end": "2026-11-13T22:39+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-13T23:10+00:00",
-          "end": "2026-11-13T23:30+00:00"
+          "start": "2026-11-13T22:39+00:00",
+          "end": "2026-11-13T23:00+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-13T23:30+00:00",
-          "end": "2026-11-13T23:35+00:00"
+          "start": "2026-11-13T23:00+00:00",
+          "end": "2026-11-13T23:05+00:00"
         }
       ],
       "started": "2026-11-13T22:29+00:00"
@@ -5832,14 +5825,37 @@
       "id": "DL323",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Linux pool: several agents for one repository",
       "detail": "Owner D282: add a second comics-organizer agent to the Linux pool. Today an agent's routing label is repo-<slug> from its own slug, so a second agent for the same repo would never match CI_RUNS_ON. Let pool_agents add N agents per repo (slug-2, ...) that share the repo's routing label; setup option for the count.",
-      "expected": "13 Nov ~23:35",
-      "changed": "2026-11-13T22:31+00:00",
-      "expected_basis": "cloud agent from ~22:40 ~15 min, then RELEASE join+CI",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:02+00:00",
       "rides": "DL322",
       "started": "2026-11-13T22:31+00:00"
+    },
+    {
+      "id": "DL324",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Windows runner .env sets PSExecutionPolicyPreference so .ps1 hooks load",
+      "detail": "After the move to the ci-* account every Windows job failed: the runner runs the .ps1 hooks with powershell -command, and the new account has no execution policy (Restricted). Fix: the runner .env sets PSExecutionPolicyPreference=RemoteSigned (process scope, this runner only, no machine-wide change); reruns rewrite stale .env files.",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:02+00:00",
+      "rides": "DL322",
+      "started": "2026-11-13T22:41+00:00"
+    },
+    {
+      "id": "DL325",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "Add a second comics-organizer agent to the Linux pool (D282)",
+      "detail": "With DL323 (delivery 1.45.0): copy the new pool_agents.py into the running pool container, then pool-add-agent for the repo with the shared route, only when no pool job runs. No rebuild; the copy is lost on a container recreate until the next pool refresh rebuilds the image.",
+      "expected": "13 Nov ~23:30",
+      "changed": "2026-11-13T23:02+00:00",
+      "expected_basis": "waits for the busy comics-organizer pool job to end, then ~3 min",
+      "no_release": "machine change, ships nothing"
     },
     {
       "id": "DS1",
