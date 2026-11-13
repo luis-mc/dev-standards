@@ -457,7 +457,7 @@ def _log_entry(ident, **fields):
 
 # --- queue tickets -----------------------------------------------------------------------------
 
-def enqueue(ident, priority=None, now=None):
+def enqueue(ident, priority=None, now=None, beat_now=None):
     """Write a ticket in queue/. Returns the ticket dict (with its `file` and `queued_at`). The name is
     <priority>-<time in ns>-<random>, so a sorted listing is the order of service (D30)."""
     _mkdir(queue_dir())
@@ -465,7 +465,8 @@ def enqueue(ident, priority=None, now=None):
     prio = priority_from_event() if priority is None else priority
     name = '%d-%019d-%s.json' % (prio, int(now * 1e9), uuid.uuid4().hex[:8])
     rec = dict(ident, priority=prio, queued_at=_iso(now), queued_ts=now, pid=holder_pid(), host=socket.gethostname(),
-               gate_pid=os.getpid(), file=name)
+               gate_pid=os.getpid(), file=name,
+               beat_ts=now if beat_now is None else beat_now)
     if not _create_new(os.path.join(queue_dir(), name), rec):
         raise OSError('cannot write ticket %s' % name)
     return rec
@@ -478,9 +479,44 @@ def dequeue(ticket):
         pass
 
 
+def beat(ticket, now=None):
+    """Heartbeat: rewrite the ticket with beat_ts = now, under the same file name (the order of service does not
+    change). The write is a temp file and a replace. A missing ticket is not made again here. True if written."""
+    now = time.time() if now is None else now
+    path = os.path.join(queue_dir(), ticket['file'])
+    rec = _read_json(path)
+    if rec is None:
+        return False
+    rec['beat_ts'] = now
+    try:
+        tmp = _write_tmp(queue_dir(), rec, '.beat-')
+    except OSError:
+        return False
+    try:
+        os.replace(tmp, path)
+    except OSError:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+        return False
+    ticket['beat_ts'] = now
+    return True
+
+
+def beat_limit_sec(cfg):
+    """How old a ticket's last beat may be: max(4 x poll_sec, 120 s)."""
+    try:
+        poll = float((cfg.get('runner_gate') or {}).get('poll_sec', 15))
+    except (TypeError, ValueError):
+        poll = 15.0
+    return max(4 * poll, 120.0)
+
+
 def queue_list(cfg=None, now=None, prune=True):
     """The live tickets in order of service. A ticket whose gate process is gone, or older than slot_stale_min, is
-    dropped (when prune is true)."""
+    dropped (when prune is true). So is a ticket from any host whose last beat (beat_ts, else queued_ts) is older
+    than max(4 x poll_sec, 120 s); that drop is logged with the reason `no heartbeat`."""
     cfg = cfg or machine_config()
     now = time.time() if now is None else now
     out = []
@@ -496,8 +532,15 @@ def queue_list(cfg=None, now=None, prune=True):
         rec['file'] = name
         age = now - (rec.get('queued_ts') or now)
         dead = (rec.get('host') == socket.gethostname() and not pid_alive(rec.get('gate_pid')))
-        if dead or age > cfg['slot_stale_min'] * 60:
+        silent = now - (rec.get('beat_ts') or rec.get('queued_ts') or now) > beat_limit_sec(cfg)
+        if dead or silent or age > cfg['slot_stale_min'] * 60:
             if prune:
+                if silent and not dead:
+                    try:
+                        write_log(_log_entry(rec, outcome='ticket-dropped', reason='no heartbeat',
+                                             host=rec.get('host'), released_at=_iso(now)))
+                    except Exception:  # noqa: BLE001
+                        pass
                 try:
                     os.unlink(path)
                 except OSError:
