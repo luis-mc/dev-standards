@@ -131,6 +131,7 @@ One file for the machine, readable by every runner account:
   4. It removes the ticket and lets the job run.
 - **Order** (D30): a ready pull request's run and a run on the default branch come first. Branch and agent runs come next. Within each group it is first come, first served. The hook reads the priority from the event file the runner gives every job (`GITHUB_EVENT_PATH`: a pull request that is not a draft, or a push to the default branch).
 - The **job-completed hook** (`ACTIONS_RUNNER_HOOK_JOB_COMPLETED`, new) frees the slot and empties that runner's `_work` folder for that job.
+- **Ticket heartbeat** (DL292): while a gate waits, it rewrites its ticket every poll with `beat_ts` (same file name, so the order does not change). A ticket from any host whose last beat (`beat_ts`, else `queued_ts`) is older than the larger of 4 × `runner_gate.poll_sec` and 120 s is dropped and logged with the reason `no heartbeat`, its host, job and repository. A gate that finds its own ticket gone writes it again with its first queued time, so it keeps its place.
 - **Stale slots** (D25): a slot whose runner process is gone is freed at once. Any slot older than `slot_stale_min` (120 minutes) is freed. A freed slot is logged with what held it.
 - `delivery_ci.py slots` prints who holds each slot, the queue, and the wait of each ticket.
 - This fixes G1 and G7's missing common cap.

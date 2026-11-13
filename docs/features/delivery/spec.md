@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.33.2
+version: 0.34.0
 owner: agents
 type: reference
 code:
@@ -529,6 +529,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.34.0 | 2026-11-13 | RELEASE-122 | Queue tickets carry a heartbeat; a ticket with no beat is dropped from any host (see shared-self-hosted-runners 3.2). | DL292 |
 | 0.33.2 | 2026-11-12 | RELEASE-116 | join.py: a branch cut from an older head is merged as any branch and refused only on a real conflict; siblings of one older head are not stacked; the conflict report never prints an empty file list (R5.40). | DL272 |
 | 0.33.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks (R5.3 of the runner-pool spec). | DL270 |
 | 0.33.0 | 2026-11-12 | RELEASE-114 | Runner gate: short jobs named in runner_gate.light_jobs take their own light slot (light_slots, default 1) instead of waiting for a CI slot. | DL267 |
