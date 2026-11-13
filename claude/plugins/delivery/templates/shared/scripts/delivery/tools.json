@@ -189,5 +189,18 @@
         "bin": "zig"
       }
     }
+  },
+  "actions-runner": {
+    "version": "2.338.2",
+    "note": "DL310: sha256 as published with the actions/runner v2.338.2 release (release notes and the asset digest agree).",
+    "platforms": {
+      "windows_x64": {
+        "kind": "archive",
+        "url": "https://github.com/actions/runner/releases/download/v2.338.2/actions-runner-win-x64-2.338.2.zip",
+        "sha256": "a1f17aa987fc8158bc7521d284912267a0d01b7c2c4684b33c86783b5e8221cc",
+        "bin_dir": ".",
+        "bin": "config.cmd"
+      }
+    }
   }
 }

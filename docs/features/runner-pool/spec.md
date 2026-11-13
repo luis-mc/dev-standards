@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.10.0
+version: 0.11.0
 owner: agents
 type: reference
 code:
@@ -126,6 +126,22 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.30** — **Agent users survive id clashes** (DL284). At start, `pool_supervisor.py` recreates each agent's system user from the owner uid and gid of `/agents/<slug>`. A system user or group that holds one of those ids (a package added at image build, for example `systemd`) is moved first, to the highest free id below the lowest agent id and below 900, and one line is logged per move. An existing agent user whose primary group is not its own group with the folder's gid is fixed. Agent users, `root`, `nobody`, `nogroup`, `kvm` and ids under 100 are never moved; a clash with one of them logs an error and that runner does not start.
 
+**R5.31** — **A Windows runner is a shared machine runner with its own account** (DL310, D269, D270, D271). Each Windows runner service of `--windows-repos` runs as a dedicated local account, never NETWORK SERVICE or LocalSystem, and uses the same `machine.json` and slot queue as the Linux pool (R5.1 to R5.3; 85% memory, 60% CPU). There are no separate Windows slots.
+- *Account.* `ci-<short slug>`: at most 20 characters, lower case letters, digits and hyphens, the same name for the same repository on every run. A slug that does not fit, or a name another planned repository holds, gets a 4 character hash of the repository name. The account is not an administrator, is a member of the local group `luismc-ci-runners`, may log on as a service and is denied interactive and remote logon.
+- *Password.* Random. It is made inside the PowerShell process that registers the runner, set on the account and passed only to `config.cmd --windowslogonaccount .\<account> --windowslogonpassword`. It is never in the plan, a script, a log, the output or a report. A rerun makes a new one only when the service is registered again.
+- *Rights.* Runner folder: Full for its account, Administrators and SYSTEM only. The machine folder (queue and state): Modify for `luismc-ci-runners`. `runner-hooks`: Read and Execute for the group. `C:/ci-tools`: Modify for the group; `ci_tool.py` still checks every SHA-256.
+- *.env.* Per runner, rewritten on every run: `ACTIONS_RUNNER_HOOK_JOB_STARTED` and `ACTIONS_RUNNER_HOOK_JOB_COMPLETED` (the `.ps1` hooks), `CI_TOOLS_DIR=C:/ci-tools`, `RUSTUP_HOME` and `CARGO_HOME` under `<runner folder>/_tools`.
+
+**R5.32** — **One run sets up everything** (DL310, D269, D272). The runner zip comes from `tools.json` (pin `actions-runner`, `windows_x64`) through `ci_tool.py`; the step refuses while the pin has no real SHA-256. The registration token comes from `gh api -X POST repos/<owner>/<repo>/actions/runners/registration-token` when the service is registered and is never stored.
+- *Elevated shell.* `pool-run --windows-repos` runs the steps in this order: `runner-hooks`, `win-machine` (group and rights), `win-account`, `win-files` (download and folder rights), `winsvc` (`.env`, `config.cmd --runasservice` with the account, service start).
+- *Not elevated.* The step `win-script` writes `<machine folder>/setup/windows-runner-<slug>.ps1`, which does the same, fetches its own token and holds no secret. The run prints one line: run it in an administrator PowerShell. The run then checks that the service exists.
+- *Rerun.* A runner with the planned name, folder, labels, account and `.env` is `already`. A runner with another account is registered again in place; one with only a stale `.env` has the file rewritten and the service restarted, without a new password.
+- *Skill.* `/delivery-ci-setup` asks whether the project's Windows CI runs on the shared machine runner, then offers to set up everything.
+
+**R5.33** — **An old Windows runner is replaced only after the new one is online** (DL310). When a repository has a self-hosted Windows runner with another name (for example a hand-made one that runs as NETWORK SERVICE), the plan adds steps after the new service: stop and delete the old service, remove the old runner from GitHub, delete the old folder. Each is a deletion that needs the owner's yes naming it. A step waits when the new runner is not online, when the runner list cannot be read, or when the old runner has a job; it never touches a runner with a running job.
+
+**R5.34** — **The doctor checks each Windows runner** (DL310). Per runner folder: the service exists; it runs as its `ci-*` account, with a warning for NETWORK SERVICE, LocalSystem, an administrator account, another name or a missing group membership; `.env` has `CI_TOOLS_DIR`, `RUSTUP_HOME` and `CARGO_HOME`; and the runner reads the same machine folder as the pool (`DELIVERY_MACHINE_DIR` unset or equal, hooks inside it). Ids: `machine.winrunner:<folder>:service|account|env|machine`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -146,6 +162,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.22 to R5.24 | `claude/plugins/delivery/tests/test_dl177_pool_measure.py` |
 | R5.28, R5.29 | `claude/plugins/delivery/tests/test_dl274_kvm_layers.py`, `claude/plugins/delivery/tests/test_dl281_vm_check.py` |
 | R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py`, `claude/plugins/delivery/tests/test_dl223_pool_path_order.py` |
+| R5.31 to R5.34 | `claude/plugins/delivery/tests/test_dl310_windows_runner.py` (mocked probe; the real account, rights and service run only on Windows) |
 
 ## 12. Code map
 
@@ -159,6 +176,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.0 | 2026-11-13 | RELEASE-128 | A Windows runner service runs as its own non-admin ci-* account on the shared machine config and slot queue; one run sets up account, rights, download, registration, .env and service, replaces an old runner after the new one is online, and the doctor checks each Windows runner (R5.31 to R5.34). | DL310 |
 | 0.10.0 | 2026-11-13 | RELEASE-121 | pool-refresh builds the image first while the old container serves jobs, drains the pool through the machine folder (per-agent job marker, drain and drained files, --drain-timeout), then recreates with no build. | DL289 |
 | 0.9.2 | 2026-11-13 | RELEASE-120 | The linux-packaging layer adds createrepo-c (rpm repository metadata); the doctor checks createrepo_c. | DL287 |
 | 0.9.1 | 2026-11-13 | RELEASE-119 | A system user or group that holds an agent's uid or gid is moved to a free id before the agent user is recreated (R5.30). | DL284 |

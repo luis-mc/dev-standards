@@ -251,7 +251,11 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D266 | When a release CI run turns red: cancel the rest and lift the freeze? | Cancel + lift freeze (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D267 | How should CI-gate agents catch always-on guard and boundary failures? | Run guards on input change (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D268 | Template drift: build a diff-and-adopt helper? | Build a helper now | decided | 2026-11-13 |
+| delivery-speed | D269 | Build the shared Windows machine runner (peer ask)? | Build it (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
+| delivery-speed | D270 | Windows runner service account? | Dedicated local acct (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D271 | Windows runner load slots vs the Linux pool? | One shared limit (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D272 | How does a project join the Windows runner? | delivery-ci-setup step (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |
 | delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
