@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T01:58+00:00",
+  "updated": "2026-11-13T02:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5065,14 +5065,60 @@
       "id": "DL282",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Rebuild this PC's pool with RELEASE-118 (vm cache, ssh, packaging tools)",
       "detail": "pool-refresh --yes once no pool runner is busy; check 4 runners online with kvm, the doctor, /ci-tools/vm-cache; tell the peer.",
-      "expected": "13 Nov ~02:03",
-      "changed": "2026-11-13T01:58+00:00",
-      "expected_basis": "peer MSI job from 01:50 ~4 min, then rebuild ~8 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T02:14+00:00",
       "no_release": "machine settings only (pool image)",
       "started": "2026-11-13T01:58+00:00"
+    },
+    {
+      "id": "DL283",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-119: pool user id clash fix",
+      "detail": "Join, CI and merge for DL284.",
+      "expected": "13 Nov ~02:57",
+      "changed": "2026-11-13T02:14+00:00",
+      "expected_basis": "agent ~25 min from 02:16, join 7, CI 6",
+      "release": 119,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-13T02:16+00:00",
+          "end": "2026-11-13T02:41+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-13T02:41+00:00",
+          "end": "2026-11-13T02:48+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T02:48+00:00",
+          "end": "2026-11-13T02:54+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T02:54+00:00",
+          "end": "2026-11-13T02:57+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL284",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool supervisor: move system users/groups that take an agent's id",
+      "detail": "After RELEASE-118 the systemd package (linux-packaging layer) made systemd-network uid 998 and systemd-journal gid 999, the ids of two agent users; useradd failed (exit 4) and one runner stayed offline 02:05-02:13 until fixed by hand. ensure_user must move a clashing non-agent user or group to a free id below the agent range, then create the agent user.",
+      "expected": "13 Nov ~02:41",
+      "changed": "2026-11-13T02:14+00:00",
+      "expected_basis": "cloud agent from 02:16, ~25 min",
+      "rides": "DL283",
+      "started": "2026-11-13T02:14+00:00"
     },
     {
       "id": "DS1",
