@@ -52,7 +52,8 @@ class FilesTests(unittest.TestCase):
         ex = P.Executor(probe)
         calls = []
         run = lambda argv, **k: calls.append(argv) or type('R', (), {'returncode': 0, 'stderr': ''})()  # noqa: E731
-        with mock.patch.object(ex, 'runners_busy', lambda: busy), mock.patch.object(P.subprocess, 'run', run):
+        with mock.patch.object(ex, 'runners_busy', lambda: busy), mock.patch.object(P.subprocess, 'run', run), \
+                mock.patch.object(P.Executor, 'drain', lambda s, pool, t: (True, '')):
             ok, text = ex.refresh(self.plan(probe))
         return ok, text, calls
 
@@ -80,7 +81,8 @@ class FilesTests(unittest.TestCase):
         ok, text, calls = self.run_refresh(Probe())
         self.assertIn('image unchanged', text)
         self.assertNotIn('was rebuilt', text)
-        self.assertEqual(calls, [['docker', 'compose', 'up', '-d', '--build']])
+        self.assertEqual(calls, [['docker', 'compose', 'build'], ['docker', 'compose', 'stop', 'pool'],
+                                 ['docker', 'compose', 'up', '-d', '--no-build', '--force-recreate', 'pool']])
 
     def test_changed_image_recreates_the_container(self):
         p = Probe()
@@ -96,10 +98,12 @@ class FilesTests(unittest.TestCase):
         calls = []
         run = lambda argv, **k: calls.append(argv) or type('R', (), {'returncode': 0, 'stderr': ''})()  # noqa: E731
         rp = dict(self.plan(p), repos=['owner/example-app'])
-        with mock.patch.object(P, 'rebuild_gate', lambda *a: (True, '')), \
-                mock.patch.object(ex, 'runners_busy', lambda: True), mock.patch.object(P.subprocess, 'run', run):
+        with mock.patch.object(P, 'busy_pool_runners', lambda *a: (['main-app (owner/example-app)'], None)), \
+                mock.patch.object(ex, 'runners_busy', lambda: True), mock.patch.object(P.subprocess, 'run', run), \
+                mock.patch.object(P.Executor, 'drain', lambda s, pool, t: (True, '')):
             ok, text = ex.refresh(rp)
-        self.assertTrue(ok, text)
+        self.assertFalse(ok, text)
+        self.assertIn('refused: pool runner busy', text)
         self.assertIn('not recreated', text)
         self.assertNotIn(['docker', 'compose', 'up', '-d', '--no-build', '--force-recreate', 'pool'], calls)
 

@@ -812,11 +812,12 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
         lines.append("  - nothing to change in %s" % rp["path"])
     elif rp.get("why"):
         lines.append("  %s" % rp["why"])
-    lines.append("  - then rebuild the pool image (only when no job runs)")
+    lines.append("  - then build the image, drain the pool (running jobs finish), and recreate the container")
     print("\n".join(lines))
     if not getattr(args, "yes", False):
         return 0
-    ok, detail = P.Executor(probe).refresh(rp, force=getattr(args, "force", False))
+    ok, detail = P.Executor(probe).refresh(rp, force=getattr(args, "force", False),
+                                           drain_timeout=getattr(args, "drain_timeout", None) or P.DRAIN_TIMEOUT_SEC)
     print(detail)
     return 0 if ok else 1
 
@@ -849,6 +850,7 @@ def main(argv=None) -> int:
     ap.add_argument("--playwright", metavar="X", help="pool-plan/run/refresh: set PLAYWRIGHT_VERSION exactly (may lower it)")
     ap.add_argument("--kvm", choices=["on", "off"], help="pool-refresh: turn POOL_KVM on or off (on is refused when the host has no usable KVM)")
     ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
+    ap.add_argument("--drain-timeout", type=float, default=None, metavar="SEC", help="pool-refresh: seconds to wait for running jobs to finish before the recreate (default 2700)")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)

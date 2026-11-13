@@ -69,10 +69,11 @@ class Base(unittest.TestCase):
         calls = []
         def run(argv, **k):
             calls.append(argv)
-            if argv[:4] == ['docker', 'compose', 'up', '-d'] and '--build' in argv:
+            if argv[:3] == ['docker', 'compose', 'build']:
                 probe.phase = 1
             return type('R', (), {'returncode': run_rc, 'stderr': 'boom'})()
-        with mock.patch.object(ex, 'runners_busy', lambda: busy), mock.patch.object(P.subprocess, 'run', run):
+        with mock.patch.object(ex, 'runners_busy', lambda: busy), mock.patch.object(P.subprocess, 'run', run), \
+                mock.patch.object(P.Executor, 'drain', lambda s, pool, t: (True, '')):
             ok, text = ex.refresh(self.plan(probe))
         return ok, text, calls
 
@@ -154,25 +155,10 @@ class ResultTests(Base):
         self.assertNotIn('cache hit', text)
         self.assertIn(self.RECREATE, calls)
 
-    def test_compose_recreated_container_is_not_recreated_again(self):
-        p = Probe(ids=[('c1', 'sha256:aaa', 'sha256:aaa'), ('c2', 'sha256:bbb', 'sha256:bbb')])
-        ok, text, calls = self.refresh(p)
-        self.assertIn('image rebuilt', text)
-        self.assertIn('container recreated', text)
-        self.assertNotIn('cache hit', text)
-        self.assertNotIn(self.RECREATE, calls)
-
-    def test_container_replaced_with_same_image_is_not_a_cache_hit(self):
-        p = Probe(ids=[('c1', 'sha256:aaa', 'sha256:aaa'), ('c2', 'sha256:aaa', 'sha256:aaa')])
-        ok, text, calls = self.refresh(p)
-        self.assertIn('container recreated', text)
-        self.assertNotIn('cache hit', text)
-        self.assertNotIn(self.RECREATE, calls)
-
     def test_unchanged_image_is_a_cache_hit(self):
         ok, text, calls = self.refresh(Probe())
         self.assertIn('image unchanged (cache hit)', text)
-        self.assertNotIn(self.RECREATE, calls)
+        self.assertNotIn('was rebuilt', text)
 
 
 class GuardTests(Base):

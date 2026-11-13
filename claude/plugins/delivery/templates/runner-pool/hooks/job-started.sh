@@ -12,5 +12,7 @@ clean_tmp() {
   find /tmp -mindepth 1 -maxdepth 1 -user "$(id -u)" -exec rm -rf {} + || true
 }
 clean_tmp
+# DL289: a per-agent busy marker tells the pool supervisor a job runs. It is older than 6 h => stale. Never fails the job.
+d="$(dirname "${TMPDIR:-/none/x}")"; case "$d" in /agents/*) date +%s > "$d/.job-running" 2>/dev/null || true ;; esac
 unset PYTHONHOME PYTHONPATH LD_LIBRARY_PATH
 exec /usr/bin/python3 /opt/delivery/runner_load_gate.py "$@"
