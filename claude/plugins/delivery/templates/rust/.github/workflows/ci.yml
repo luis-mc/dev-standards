@@ -113,7 +113,10 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           HEAD_REF: ${{ github.head_ref }}
-        run: python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
+        run: |
+          # The diff base is HEAD^1; make sure it is present on a shallow clone.
+          if ! git fetch --no-tags --depth=2 --quiet origin "$GITHUB_SHA"; then echo "fetch of the diff base failed; the scope falls back to a full run if the diff is unreadable"; fi
+          python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
 
       # §12: secret scanning as a CI gate. The pre-commit hook is the other half
       # of that requirement and lives in .githooks/pre-commit.
@@ -170,7 +173,7 @@ jobs:
       - name: Format check
         if: ${{ steps.scope.outputs.run != 'false' }}
         env:
-          RUST_CRATES: ${{ steps.scope.outputs.full == 'true' && '' || steps.scope.outputs.crates }}
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
         run: python3 scripts/delivery/rust_ci.py fmt
 
       # Rust has no separate typecheck step; `cargo check` is it, and it is much
@@ -178,13 +181,13 @@ jobs:
       - name: Check (typecheck)
         if: ${{ steps.scope.outputs.run != 'false' }}
         env:
-          RUST_CRATES: ${{ steps.scope.outputs.full == 'true' && '' || steps.scope.outputs.crates }}
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
         run: python3 scripts/delivery/rust_ci.py check
 
       - name: Lint
         if: ${{ steps.scope.outputs.run != 'false' }}
         env:
-          RUST_CRATES: ${{ steps.scope.outputs.full == 'true' && '' || steps.scope.outputs.crates }}
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
         run: python3 scripts/delivery/rust_ci.py clippy
 
       # §3.2 + §3.3: the layer rules and the adapter rule are enforced by crate
@@ -230,7 +233,7 @@ jobs:
       - name: Unit tests
         if: ${{ steps.scope.outputs.run != 'false' }}
         env:
-          RUST_CRATES: ${{ steps.scope.outputs.full == 'true' && '' || steps.scope.outputs.crates }}
+          RUST_CRATES: ${{ steps.scope.outputs.crates }}
         run: python3 scripts/delivery/rust_ci.py test --lib
 
       # §11.1: contract tests — every client and the server against the same
@@ -278,8 +281,6 @@ jobs:
       DATABASE_URL: postgres://postgres:postgres@localhost:5432/app_test
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          fetch-depth: 2
       # DL295: how much of the workspace this run must build. rust_scope.py reads the diff and the
       # member manifests. run=false: a pull request that touches no Rust path, so every later step is
       # skipped. full=true: a push, a release pull request or a workspace-wide input. Otherwise
@@ -289,7 +290,10 @@ jobs:
         env:
           EVENT: ${{ github.event_name }}
           HEAD_REF: ${{ github.head_ref }}
-        run: python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
+        run: |
+          # The diff base is HEAD^1; make sure it is present on a shallow clone.
+          if ! git fetch --no-tags --depth=2 --quiet origin "$GITHUB_SHA"; then echo "fetch of the diff base failed; the scope falls back to a full run if the diff is unreadable"; fi
+          python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
       # D141: the exact channel from rust-toolchain.toml, installed with the
       # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
       - name: Install the pinned Rust toolchain
@@ -367,21 +371,8 @@ jobs:
       DELIVERY_SHARD: integration-pool
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        with:
-          fetch-depth: 2
-      # DL295: how much of the workspace this run must build. rust_scope.py reads the diff and the
-      # member manifests. run=false: a pull request that touches no Rust path, so every later step is
-      # skipped. full=true: a push, a release pull request or a workspace-wide input. Otherwise
-      # crates= lists the touched crates and the crates that depend on them.
-      - name: Scope the Rust steps
-        id: scope
-        env:
-          EVENT: ${{ github.event_name }}
-          HEAD_REF: ${{ github.head_ref }}
-        run: python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
       # DL187/DL190: load this agent's own database (DATABASE_URL and friends) into $GITHUB_ENV.
       - name: Load the pool database env
-        if: ${{ steps.scope.outputs.run != 'false' }}
         run: |
           if command -v pool-db-env >/dev/null 2>&1; then
             pool-db-env
@@ -391,6 +382,19 @@ jobs:
             echo "::error::pool runner without pool-db-env or $HOME/db.env; the pool database is missing"
             exit 1
           fi
+      # DL295: how much of the workspace this run must build. rust_scope.py reads the diff and the
+      # member manifests. run=false: a pull request that touches no Rust path, so every later step is
+      # skipped. full=true: a push, a release pull request or a workspace-wide input. Otherwise
+      # crates= lists the touched crates and the crates that depend on them.
+      - name: Scope the Rust steps
+        id: scope
+        env:
+          EVENT: ${{ github.event_name }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          # The diff base is HEAD^1; make sure it is present on a shallow clone.
+          if ! git fetch --no-tags --depth=2 --quiet origin "$GITHUB_SHA"; then echo "fetch of the diff base failed; the scope falls back to a full run if the diff is unreadable"; fi
+          python3 scripts/delivery/rust_scope.py --event "$EVENT" --head-ref "$HEAD_REF" --github-output
       # D141: the exact channel from rust-toolchain.toml, installed with the
       # sha256-pinned rustup-init (scripts/delivery/tools.json). Never `stable`.
       - name: Install the pinned Rust toolchain
