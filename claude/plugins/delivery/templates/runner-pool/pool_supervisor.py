@@ -57,24 +57,112 @@ def _group_exists(name):
         return False
 
 
-def ensure_user(agent, base, run=None, exists=_user_exists, group_exists=_group_exists, stat=os.stat, log=_log):
+def _read_users():
+    """(name, uid, gid) for every system user. Linux only."""
+    import pwd
+    return [(p.pw_name, p.pw_uid, p.pw_gid) for p in pwd.getpwall()]
+
+
+def _read_groups():
+    """(name, gid) for every system group. Linux only."""
+    import grp
+    return [(g.gr_name, g.gr_gid) for g in grp.getgrall()]
+
+
+ID_FLOOR, ID_CEILING = 100, 900
+KEEP_NAMES = ('root', 'nobody', 'nogroup', 'kvm')
+
+
+def _move_clash(kind, wanted, owner, rows, keep, ceiling, taken, run, log, dry=False):
+    """DL284: free id `wanted` if a user or group other than `owner` holds it.
+
+    kind is 'user' or 'group'; rows are (name, id). Returns True when the id is free afterwards.
+    A holder in `keep`, or an id under 100 or at 65534, is never moved: one plain error line, False.
+    """
+    holders = [name for name, num in rows if num == wanted and name != owner]
+    for name in holders:
+        if name in keep or wanted < ID_FLOOR or wanted >= 65534:
+            log('cannot move %s %s off id %d: it is protected; %s not created' % (kind, name, wanted, owner))
+            return False
+    if dry:
+        return True
+    for name in holders:
+        new = next((i for i in range(ceiling - 1, ID_FLOOR - 1, -1) if i not in taken), None)
+        if new is None:
+            log('cannot move %s %s off id %d: no free id below %d' % (kind, name, wanted, ceiling))
+            return False
+        argv = ['usermod', '-u', str(new), name] if kind == 'user' else ['groupmod', '-g', str(new), name]
+        rc = run(argv)
+        if rc not in (0, None):
+            log('could not move %s %s from id %d to %d (exit %s)' % (kind, name, wanted, new, rc))
+            return False
+        taken.add(new)
+        log('moved %s %s from id %d to %d (agent %s needs %d)' % (kind, name, wanted, new, owner, wanted))
+    return True
+
+
+def ensure_user(agent, base, run=None, exists=_user_exists, group_exists=_group_exists, stat=os.stat, log=_log,
+                users=_read_users, groups=_read_groups, agents=None):
     """Make sure the agent's system user exists (a rebuilt container loses /etc/passwd; /agents survives).
 
     The uid and gid come from the owner of /agents/<slug>. Returns True when the user exists afterwards.
     A missing folder logs one line and returns False.
+    DL284: a system user or group that holds the agent's uid or gid (a package added at image build) is moved to a
+    free id below the agent range first. An existing user whose primary group is not its own group with the
+    folder's gid is fixed. Agent users, root, nobody, nogroup, kvm and ids under 100 are never moved.
     """
     user, slug = agent['user'], agent['slug']
-    if exists(user):
-        return True
     run = run or (lambda argv: subprocess.run(argv, check=False).returncode)
+    have_user = exists(user)
     folder = posixpath.join(base, slug)  # a path inside the Linux container, whatever runs the test
     try:
         st = stat(folder)
     except OSError:
+        if have_user:
+            return True
         log('skip %s: folder %s is missing' % (user, folder))
         return False
-    if not group_exists(user):
-        run(['groupadd', '--system', '--gid', str(st.st_gid), user])
+    urows, grows = users(), groups()
+    me = next((r for r in urows if r[0] == user), None)
+    if have_user and me is not None and me[2] == st.st_gid and (user, st.st_gid) in grows:
+        return True
+    if have_user and me is None:
+        return True  # cannot read the user's group: leave it as it was
+    # ids of the agents, to find the range to stay under and the users never moved
+    agent_users, agent_ids = {user}, {st.st_uid, st.st_gid}
+    for other in agents or ():
+        agent_users.add(other['user'])
+        try:
+            o = stat(posixpath.join(base, other['slug']))
+            agent_ids.update((o.st_uid, o.st_gid))
+        except OSError:
+            pass
+    ceiling = min([ID_CEILING] + sorted(agent_ids))
+    taken = {r[1] for r in urows} | {r[1] for r in grows} | agent_ids
+    keep = set(KEEP_NAMES) | agent_users
+    urows_ids = [(n, u) for n, u, _ in urows]
+    if not have_user:  # check both ids before anything moves
+        if not (_move_clash('group', st.st_gid, user, grows, keep, ceiling, taken, run, log, dry=True)
+                and _move_clash('user', st.st_uid, user, urows_ids, keep, ceiling, taken, run, log, dry=True)):
+            return False
+    if not _move_clash('group', st.st_gid, user, grows, keep, ceiling, taken, run, log):
+        return False
+    group_ok = (user, st.st_gid) in grows or (not grows and group_exists(user))
+    if not group_ok:
+        if not group_exists(user):
+            rc = run(['groupadd', '--system', '--gid', str(st.st_gid), user])
+            if rc not in (0, None):
+                log('could not create group %s (exit %s)' % (user, rc))
+                return False
+    if have_user:
+        rc = run(['usermod', '-g', user, user])
+        if rc not in (0, None):
+            log('could not fix the primary group of %s (exit %s)' % (user, rc))
+            return False
+        log('fixed the primary group of %s to its own group' % user)
+        return True
+    if not _move_clash('user', st.st_uid, user, urows_ids, keep, ceiling, taken, run, log):
+        return False
     rc = run(['useradd', '--system', '--uid', str(st.st_uid), '--gid', str(st.st_gid),
               '--home-dir', folder, '--shell', '/usr/sbin/nologin', user])
     if rc not in (0, None):
@@ -317,8 +405,8 @@ def main(argv=None):
     ap.add_argument('--grace-sec', type=float, default=290.0)
     args = ap.parse_args(argv)
     for agent in load_agents(args.agents):
-        ensure_user(agent, args.base)
-    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a, vm_cache=True))
+        ensure_user(agent, args.base, agents=load_agents(args.agents))
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base, agents=load_agents(args.agents)) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a, vm_cache=True))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))

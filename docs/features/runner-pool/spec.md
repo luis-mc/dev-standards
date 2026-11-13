@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.9.0
+version: 0.9.1
 owner: agents
 type: reference
 code:
@@ -124,6 +124,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 - *Repeated each run.* A thin overlay on the base (or a copy of the snapshot disk, because the saved state lives in that file), the boot or `-loadvm ready`, and after a resume the guest clock set from the host and the guest random pool reseeded. The overlay is always deleted and qemu always killed, also on error or timeout.
 - *Commands.* `prepare`, `run`, `selinux` (Enforcing, install an rpm, optional policy module, no AVC denials since boot), `prune` (keep the newest per distro) and `doctor`. Default `-m 1024 -smp 2`; a warning prints when the pool has less than memory + 1 GiB free.
 
+**R5.30** — **Agent users survive id clashes** (DL284). At start, `pool_supervisor.py` recreates each agent's system user from the owner uid and gid of `/agents/<slug>`. A system user or group that holds one of those ids (a package added at image build, for example `systemd`) is moved first, to the highest free id below the lowest agent id and below 900, and one line is logged per move. An existing agent user whose primary group is not its own group with the folder's gid is fixed. Agent users, `root`, `nobody`, `nogroup`, `kvm` and ids under 100 are never moved; a clash with one of them logs an error and that runner does not start.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -157,6 +159,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.9.1 | 2026-11-13 | RELEASE-119 | A system user or group that holds an agent's uid or gid is moved to a free id before the agent user is recreated (R5.30). | DL284 |
 | 0.9.0 | 2026-11-13 | RELEASE-118 | VM checks (R5.29): vm_check.py boots throwaway distro VMs on kvm runners with a shared cache, optional resume snapshots and an SELinux check; prepare_kvm makes the shared cache folder. | DL281 |
 | 0.8.0 | 2026-11-12 | RELEASE-117 | Pool layers linux-packaging and kvm; optional KVM (POOL_KVM=1, compose.kvm.yaml, host check, kvm label), R5.28. | DL274 |
 | 0.7.1 | 2026-11-12 | RELEASE-115 | delivery_ci.py slots lists the light slots; the doctor machine.slots check frees and counts stale light locks. | DL270 |

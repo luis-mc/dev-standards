@@ -29,7 +29,8 @@ class EnsureUserTest(unittest.TestCase):
 
     def ensure(self, exists, stat, group_exists=lambda n: False):
         return SUP.ensure_user(AGENT, "/agents", run=self.run_fn, exists=lambda u: exists,
-                               group_exists=group_exists, stat=stat, log=self.logs.append)
+                               group_exists=group_exists, stat=stat, log=self.logs.append,
+                               users=lambda: [], groups=lambda: [])
 
     def test_missing_user_is_created_with_folder_ids(self):
         self.assertTrue(self.ensure(False, fake_stat(999, 999)))
