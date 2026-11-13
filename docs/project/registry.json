@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T13:23+00:00",
+  "updated": "2026-11-13T13:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5339,9 +5339,9 @@
       "status": "Running",
       "item": "RELEASE: fix forward rust_ci cache import crash (DL297)",
       "detail": "Fix forward for RELEASE-123: rust_ci.py falls back to target/ when ci_tool is missing. Join, PR CI incl. template-build, merge, smoke, cleanup.",
-      "expected": "13 Nov ~13:38",
-      "changed": "2026-11-13T13:23+00:00",
-      "expected_basis": "template-build on branch started 13:21 (~2 min), then PR CI ~10 min",
+      "expected": "13 Nov ~13:33",
+      "changed": "2026-11-13T13:27+00:00",
+      "expected_basis": "merged 13:27; plugin smoke ~3 min, then plugin update",
       "release": 124,
       "phases": [
         {
@@ -5352,12 +5352,12 @@
         {
           "name": "ci",
           "start": "2026-11-13T13:21+00:00",
-          "end": "2026-11-13T13:35+00:00"
+          "end": "2026-11-13T13:26+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-13T13:35+00:00",
-          "end": "2026-11-13T13:38+00:00"
+          "start": "2026-11-13T13:27+00:00",
+          "end": "2026-11-13T13:33+00:00"
         }
       ],
       "started": "2026-11-13T13:18+00:00"
@@ -5366,11 +5366,11 @@
       "id": "DL297",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "rust_ci build cache: fall back when ci_tool is missing",
       "detail": "RELEASE-123 template-build failed: target_cache_env imports ci_tool, absent in the Rust scaffold, and ImportError was not caught, so every gate command crashed. Catch ImportError and use target/.",
       "expected": "13 Nov",
-      "changed": "2026-11-13T13:22+00:00",
+      "changed": "2026-11-13T13:27+00:00",
       "rides": "DL296",
       "started": "2026-11-13T13:18+00:00"
     },
@@ -5380,9 +5380,9 @@
       "app": "",
       "status": "Needs you",
       "item": "Watcher merged RELEASE-123 with template-build red",
-      "detail": "delivery_watch requires only watcher.ci_workflows (spec-lint, secret-scan). template-build ran on PR 223 and failed at 13:15; the watcher merged at 13:16. Decide: add template-build to the list, or require every workflow that ran on the head.",
+      "detail": "delivery_watch requires only watcher.ci_workflows (spec-lint, secret-scan); template-build failed on PR 223 at 13:15 and the watcher merged at 13:16. It also counted PR 224's draft-time runs as green. Decide: add template-build to the list, or require every workflow that ran on the ready head.",
       "expected": "13 Nov ~14:00",
-      "changed": "2026-11-13T13:19+00:00",
+      "changed": "2026-11-13T13:27+00:00",
       "expected_basis": "owner decision on the rule"
     },
     {
