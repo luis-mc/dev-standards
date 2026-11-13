@@ -2,6 +2,7 @@
   "//": [
     "The CI scope rules (scripts/delivery/ci_scope.py). Edit them for this repository; delete the file to opt out.",
     "full: a release pull request, or a change to full_files. ci-smoke: a change only to ci_files (docs may ride along): the CI tests, the guard tests and the named smoke set. affected: everything else.",
+    "Optional rust_release block (not set here; add it where a Rust part sits next to the Node part): a release pull request whose code files all match rust_only and none node_inputs gets scope rust-release, so Node suites are skipped.",
     "full_files: a leading ! is an exception. docs: changes here are not code. smoke: the fixed set a CI-only change runs."
   ],
   "default_branch": "main",

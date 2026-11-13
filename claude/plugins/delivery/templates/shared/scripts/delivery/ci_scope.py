@@ -4,7 +4,7 @@
     ci_scope.py [--config FILE] [--event E] [--head-ref R] [--base-ref B]
                 [--base REF | --changed-file FILE|- | PATH...] [--github-output] [--json]
 
-Three scopes, from the changed paths and the event:
+Four scopes, from the changed paths and the event:
 
   full       a release pull request (ready, from a head branch matching `release_pr.head_re` into
              `release_pr.base`), or a change to a `full_files` path (what every workspace reads: the lockfile,
@@ -14,11 +14,15 @@ Three scopes, from the changed paths and the event:
              `scripts` glob changed in that file.
   ci-smoke   a change only to `ci_files` (the CI's own scripts and workflows; `docs` may ride along): the CI
              tests, the guard tests and a fixed, named `smoke` set, even on a release pull request.
+  rust-release  a release pull request whose code files are all Rust (`rust_release.rust_only` matches each and
+             `rust_release.node_inputs` matches none). Optional: it needs a `rust_release` block. Node suites do not
+             run for it; the project's CI plan runs only the tests that call Rust builds (how is the project's
+             choice). A docs-only release has no code files and stays full.
   affected   everything else (agent branches, fix pushes, the default branch after a merge): only what the
              change reaches. Pick the jobs and areas with area_select.py (`mode`, `areas`).
 
 Order: no diff -> full; a `full_files` match -> full; every non-doc file in `ci_files` -> ci-smoke;
-release PR -> full; else affected. Any doubt (no diff) is full.
+release PR -> rust-release when Rust-only, else full; else affected. Any doubt (no diff) is full.
 
 The project's committed config (default `scripts/delivery/ci-scope.json`; all keys optional):
 
@@ -28,7 +32,9 @@ The project's committed config (default `scripts/delivery/ci-scope.json`; all ke
       "full_files": ["package.json", "pnpm-lock.yaml", ".github", "!.github/workflows"],
       "ci_files": ["scripts/ci", "scripts/delivery", ".github/workflows"],
       "docs": ["docs", "**/*.md", ".claude"],
-      "smoke": {"tests": ["scripts/**/*.test.ts"], "e2e": ["apps/web/e2e/smoke.spec.ts"]}
+      "smoke": {"tests": ["scripts/**/*.test.ts"], "e2e": ["apps/web/e2e/smoke.spec.ts"]},
+      "rust_release": {"why": "release PR, Rust-only: Node suites skipped",
+                       "rust_only": ["crates", "Cargo.toml", "Cargo.lock"], "node_inputs": ["apps", "package.json"]}
     }
 
 Globs are area_select.py's (`**/`, `*`, `?`; a plain path matches everything under it). In `full_files` an entry
@@ -101,6 +107,13 @@ def package_json_counts(old: str | None, new: str | None, rule: dict) -> bool:
     return any(any_match(n, patterns or []) for n in names)
 
 
+def is_rust_only(rule: dict, code: list[str]) -> bool:
+    only = rule.get("rust_only") or []
+    if not only or not code:
+        return False
+    return all(any_match(f, only) and not any_match(f, rule.get("node_inputs") or []) for f in code)
+
+
 def is_release_pr(cfg: dict, event: str | None, head_ref: str, base_ref: str) -> bool:
     rel = cfg.get("release_pr") or {}
     if not rel.get("head_re"):
@@ -144,6 +157,9 @@ def decide(cfg: dict, changed: list[str] | None, event: str | None = None,
     if code and all(any_match(f, ci) for f in code):
         return out("ci-smoke", "only CI scripts and workflows changed", True)
     if is_release_pr(cfg, event, head_ref, base_ref):
+        rule = cfg.get("rust_release") or {}
+        if is_rust_only(rule, code):
+            return out("rust-release", rule.get("why") or "release PR, Rust-only: Node suites skipped", ci_changed)
         return out("full", "release pull request", ci_changed)
     return out("affected", "what the change reaches", ci_changed)
 
