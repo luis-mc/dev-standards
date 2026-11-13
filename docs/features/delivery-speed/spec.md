@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.6.2
+version: 0.7.0
 owner: agents
 type: explanation
 code:
@@ -171,6 +171,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.7.0 | 2026-11-13 | RELEASE-123 | ci_scope.py gets the rust-release scope (see delivery R5.60).<br>Rust CI speed: crate scoping (rust_scope.py, RUST_CRATES) and a persistent per-runner target cache. Spec text is in the delivery feature, R5.50. | DL294, DL295 |
 | 0.6.2 | 2026-11-11 | RELEASE-98 | Secret scans skip the delivery installer's state files; shipped scripts avoid secret-shaped variable names; the branch gate ignores untracked docs/work/ files. | DL204 |
 | 0.6.1 | 2026-11-10 | RELEASE-84 | The pre-push hook source moved to delivery templates/shared/.githooks. | DL172 |
 | 0.6.0 | 2026-11-09 | RELEASE-71 | DS199's ci_tool.py tool command and tools.json pins (rustup-init, llvm, cargo-deny, cargo-xwin) are used by the Rust workflows in DS201. The tool cache is kept on pool runners; hosted runners use Swatinem/rust-cache.<br>Adds R5.14 to R5.16: the generic tool fetcher, the Rust tool pins and the gate scope map.<br>Zig is pinned from the ziglang wheel on PyPI; ci_tool.py gets a wheel kind, and tool zig prints the zig path. | DS201, DS203, DS205 |

@@ -170,6 +170,7 @@ class Cache(unittest.TestCase):
             out.append(k)
         return run, out
 
+    @unittest.skipIf(os.name == "nt", "no fcntl on Windows: every key counts as in use, so nothing is pruned")
     def test_prune_keeps_current_and_newest_other(self):
         run, ks = self.keys(5)
         removed = rust_ci.prune_target_cache(run, ks[1], 1500)
