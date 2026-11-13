@@ -215,7 +215,8 @@ class EnvFile(unittest.TestCase):
             "CI_TOOLS_DIR=C:/ci-tools",
             "RUSTUP_HOME=C:/actions-runners/example-app/_tools/rustup",
             "CARGO_HOME=C:/actions-runners/example-app/_tools/cargo",
-            "CI_RUNNER_RIGHTS=" + P.RIGHTS_MARK])  # DL319
+            "CI_RUNNER_RIGHTS=" + P.RIGHTS_MARK,  # DL319
+            "PSExecutionPolicyPreference=RemoteSigned"])  # DL324
 
     def test_no_cmd_hook_and_no_second_machine_folder(self):
         text = P.windows_env_text("C:/r/x", MACHINE + "/runner-hooks")

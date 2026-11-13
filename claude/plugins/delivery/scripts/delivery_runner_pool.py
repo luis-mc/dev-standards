@@ -1037,7 +1037,11 @@ def windows_env_text(folder, hooks_dir, tools_dir=WIN_TOOLS_DIR):
             'CI_TOOLS_DIR=%s\n'
             'RUSTUP_HOME=%s/_tools/rustup\n'
             'CARGO_HOME=%s/_tools/cargo\n'
-            'CI_RUNNER_RIGHTS=%s\n' % (hooks_dir, hooks_dir, tools_dir, folder, folder, RIGHTS_MARK))
+            'CI_RUNNER_RIGHTS=%s\n'
+            # DL324: a ci-* account has no execution policy (Restricted), so the runner could not load the .ps1 hooks.
+            # Process scope, this runner only: no machine-wide policy change.
+            'PSExecutionPolicyPreference=RemoteSigned\n'
+            % (hooks_dir, hooks_dir, tools_dir, folder, folder, RIGHTS_MARK))
 
 
 def runner_pin_problem(pin_path=None):
