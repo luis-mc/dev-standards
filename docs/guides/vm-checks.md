@@ -45,6 +45,10 @@ Measured on a real pool with KVM, Fedora 45 Cloud Base, 1 GiB, 2 CPUs.
 
 ## Notes
 
+- `run -- CMD...` runs one program with its arguments. For a shell line, pass `-- sh -c 'a; b'`.
+- When the checksum file cannot be read (no network), the newest cached image of the distro is used.
+- First real run on a pool (13 Nov): Fedora 45, SELinux check with an rpm and a module: about 27 s cold, about 20 s with `--resume`; Enforcing, 0 AVC.
+
 - A seed that powers off ends the VM before login. The snapshot base uses an idle seed.
 - Two jobs on one cache wait on a lock, they do not build twice.
 - The VM counts against the pool memory (`POOL_MEM`). The script warns when less than the VM size plus 1 GiB is free.

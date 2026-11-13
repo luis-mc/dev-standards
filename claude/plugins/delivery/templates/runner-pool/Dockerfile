@@ -74,9 +74,9 @@ RUN if [ "$POOL_BROWSERS" = "chromium" ]; then \
 # Ubuntu 24.04 ships dotnet-sdk-8.0 and wine64 itself, so no Microsoft feed and no i386 architecture are added (64-bit Wine only).
 RUN pk=""; \
     case ",$POOL_LAYERS," in *,windows-packaging,*) pk="dotnet-sdk-8.0 wine wine64 xvfb xauth msitools";; esac; \
-    case ",$POOL_LAYERS," in *,linux-packaging,*) pk="$pk dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils"; \
+    case ",$POOL_LAYERS," in *,linux-packaging,*) pk="$pk dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils gnupg shellcheck systemd"; \
       apt-get update >/dev/null 2>&1; if apt-cache show policycoreutils-python-utils >/dev/null 2>&1; then pk="$pk policycoreutils-python-utils"; fi;; esac; \
-    case ",$POOL_LAYERS," in *,kvm,*) pk="$pk qemu-system-x86 qemu-utils cloud-image-utils";; esac; \
+    case ",$POOL_LAYERS," in *,kvm,*) pk="$pk qemu-system-x86 qemu-utils cloud-image-utils openssh-client";; esac; \
     pk="$pk $POOL_APT"; \
     if [ -n "$(echo $pk)" ]; then \
       apt-get update && apt-get install -y --no-install-recommends $pk && rm -rf /var/lib/apt/lists/*; \

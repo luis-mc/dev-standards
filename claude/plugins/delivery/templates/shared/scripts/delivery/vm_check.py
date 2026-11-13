@@ -66,21 +66,37 @@ def http_open(url, timeout=60):
     return urllib.request.urlopen(url, timeout=timeout)
 
 
+def add_hostfwd(sock, port):
+    """Forward a host port to the guest's ssh on netdev n0. A qemu error is raised, never ignored (DL281)."""
+    out = monitor_cmd(sock, 'hostfwd_add n0 tcp:127.0.0.1:%d-:22' % port)
+    body = out.split(chr(10), 1)[1] if chr(10) in out else ''
+    if 'rror' in body or 'ould not' in body or 'nvalid' in body:
+        raise VmError('hostfwd_add failed: ' + body.strip())
+
+
 def monitor_cmd(path, cmd, timeout=120.0):
-    """Send one command to the qemu human monitor on a unix socket; return its text."""
+    """Send one command to the qemu human monitor on a unix socket; return its text.
+    DL281: wait for the full banner prompt first, then for the command's own reply line and the next prompt;
+    a partial read returned before qemu ran the command."""
     s = socket.socket(socket.AF_UNIX)
     s.settimeout(timeout)
     s.connect(path)
     try:
-        s.recv(4096)  # banner
+        buf = b''
+        while b'(qemu)' not in buf:
+            chunk = s.recv(4096)
+            if not chunk:
+                break
+            buf += chunk
         s.sendall((cmd + '\n').encode())
         data = b''
-        while not data.rstrip().endswith(b'(qemu)'):
+        while not (b'\n' in data and data.rstrip().endswith(b'(qemu)')):
             chunk = s.recv(4096)
             if not chunk:
                 break
             data += chunk
-        return data.decode('utf-8', 'replace')
+        text = re.sub(r'\x1b\[[0-9;]*[A-Za-z]', '', data.decode('utf-8', 'replace'))
+        return text
     finally:
         s.close()
 
@@ -237,15 +253,34 @@ def download(url, dest, algo, want):
 
 
 def ensure_image(cache, distro, spec):
-    """Return (path, checksum). Downloads once per published checksum; later calls only read the checksum file."""
-    name, digest = parse_checksums(fetch_text(resolve_checksum_url(spec)), spec['checksum_format'], spec['pattern'])
-    path = os.path.join(sub(cache, 'images'), '%s-%s.qcow2' % (distro, digest[:16]))
-    if os.path.exists(path):
-        return path, digest
-    with lock(cache, 'image-' + distro):
-        if not os.path.exists(path):
-            log('downloading %s' % name)
-            download(spec['base_url'] + name, path, spec['algo'], digest)
+    """Return (path, checksum). Downloads once per published checksum; later calls only read the checksum file.
+    DL281: when the checksum file cannot be read (no network), the newest cached image of the distro is used."""
+    images = sub(cache, 'images')
+    try:
+        name, digest = parse_checksums(fetch_text(resolve_checksum_url(spec)), spec['checksum_format'], spec['pattern'])
+    except (OSError, ValueError) as e:  # URLError is an OSError
+        cached = sorted((os.path.getmtime(p), p) for p in
+                        (os.path.join(images, n) for n in os.listdir(images))
+                        if p.endswith('.sum') and os.path.basename(p).startswith(distro + '-'))
+        if not cached:
+            raise VmError('cannot read the checksum file for %s and no image is cached: %s' % (distro, e))
+        sumfile = cached[-1][1]
+        with open(sumfile, encoding='utf-8') as f:
+            digest = f.read().strip()
+        log('offline (%s): using the cached %s image' % (e, distro))
+        return sumfile[:-len('.sum')] + '.qcow2', digest
+    path = os.path.join(images, '%s-%s.qcow2' % (distro, digest[:16]))
+    if not os.path.exists(path):
+        with lock(cache, 'image-' + distro):
+            if not os.path.exists(path):
+                log('downloading %s' % name)
+                download(spec['base_url'] + name, path, spec['algo'], digest)
+    sumfile = path[:-len('.qcow2')] + '.sum'
+    if not os.path.exists(sumfile):
+        tmp = tmp_name(sumfile)
+        with open(tmp, 'w', encoding='utf-8') as f:
+            f.write(digest + '\n')
+        os.replace(tmp, sumfile)
     return path, digest
 
 
@@ -271,7 +306,7 @@ def ensure_ssh_key(cache):
 
 
 def user_data(pubkey, packages=None, poweroff=False):
-    lines = ['#cloud-config', 'ssh_authorized_keys:', '  - ' + pubkey]
+    lines = ['#cloud-config', 'disable_root: false', 'ssh_authorized_keys:', '  - ' + pubkey]
     if packages:
         lines += ['package_update: true', 'packages:'] + ['  - ' + p for p in packages]
     if poweroff:
@@ -337,6 +372,12 @@ def warn_memory(mem_mb, root='/sys/fs/cgroup'):
     limit, used = read('memory.max'), read('memory.current')
     if limit is None or used is None:
         return None
+    try:  # DL281: page cache the kernel can drop is not in use; count it as free (as docker stats does)
+        with open(os.path.join(root, 'memory.stat'), encoding='utf-8') as f:
+            stat = dict(line.split() for line in f if line.count(' ') == 1)
+        used -= int(stat.get('inactive_file', 0))
+    except (OSError, ValueError):
+        pass
     if limit - used < mem_mb * (1 << 20) + GIB:
         msg = 'only %d MiB free in the pool; a %d MiB VM needs %d MiB more than that for headroom' % (
             (limit - used) >> 20, mem_mb, 1024)
@@ -393,7 +434,7 @@ class Vm:
         self.proc = spawn(qemu_argv(disk, self.seed, self.mem, self.cpus, sock, loadvm=self.resume))
         self.port = free_port()
         self._wait_monitor(sock)
-        monitor_cmd(sock, 'hostfwd_add tcp:127.0.0.1:%d-:22' % self.port)
+        add_hostfwd(sock, self.port)
         self.timings['qemu_start_s'] = round(mono() - t0, 2)
         self._wait_ssh()
         self.timings['boot_to_ssh_s'] = round(mono() - t0, 2)
@@ -504,7 +545,7 @@ def ensure_snapshot(cache, distro, spec, base, bkey, key, pub, seed, mem, cpus):
                 vm.proc = spawn(qemu_argv(tmp, seed, mem, cpus, sock))
                 vm.port = free_port()
                 vm._wait_monitor(sock)
-                monitor_cmd(sock, 'hostfwd_add tcp:127.0.0.1:%d-:22' % vm.port)
+                add_hostfwd(sock, vm.port)
                 vm._wait_ssh()
                 out = monitor_cmd(sock, 'savevm ' + SNAP_NAME, timeout=300)
                 if 'error' in out.lower():

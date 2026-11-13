@@ -2,8 +2,8 @@
   "_comment": "DL281: distros for vm_check.py. The checksum file is read first; the image is the file in it that matches pattern. A '*' in checksum_url is looked up in the directory listing of base_url. checksum_format: bsd = 'SHA256 (name) = hex', sums = 'hex  name'.",
   "distros": {
     "fedora-45": {
-      "base_url": "https://download.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/x86_64/images/",
-      "checksum_url": "https://download.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/x86_64/images/Fedora-Cloud-45-*-x86_64-CHECKSUM",
+      "base_url": "https://dl.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/x86_64/images/",
+      "checksum_url": "https://dl.fedoraproject.org/pub/fedora/linux/releases/45/Cloud/x86_64/images/Fedora-Cloud-45-*-x86_64-CHECKSUM",
       "checksum_format": "bsd",
       "algo": "sha256",
       "pattern": "Fedora-Cloud-Base-Generic-45-*.x86_64.qcow2",

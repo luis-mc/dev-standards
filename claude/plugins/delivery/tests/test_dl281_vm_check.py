@@ -157,7 +157,7 @@ class VmTests(Tmp):
 
         def spawn(argv):
             self.qemu = argv
-            sock = argv[argv.index("-monitor") + 1].split(":")[1].split(",")[0]
+            sock = argv[argv.index("-monitor") + 1].split(",")[0][len("unix:"):]  # Windows paths have a colon
             Path(sock).write_text("")
             return proc
         patches = [mock.patch.object(V, "sh", sh), mock.patch.object(V, "spawn", spawn),
