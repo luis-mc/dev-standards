@@ -200,6 +200,9 @@ class Watcher:
         self._guard_missing_logged = False
         self._guard_start_logged = False
         self._bad_ci_logged: set = set()
+        self._extras_logged: set = set()
+        self._extra_required: list = []
+        self._ready_cache: dict = {}
         self.repo = repo
         self.ci_runs = ci_runs
         self.repo_args = ["--repo", repo] if repo else []
@@ -483,16 +486,29 @@ class Watcher:
             return None, None
         return data.get("headRefOid"), data.get("state")
 
-    def runs_for_commit(self, sha: str):
-        """The runs of every required workflow (watcher.ci_workflows) for one commit; None when gh failed."""
+    def runs_for_commit(self, sha: str, train: dict | None = None, ready_at: datetime | None = None):
+        """The runs that count for one commit; None when gh failed. The configured workflows (watcher.ci_workflows)
+        are listed one by one. DL298: one more listing without --workflow adds every other workflow that has a
+        pull_request run on the head (a path-filtered one that never started adds nothing). Runs created before
+        `ready_at` (draft-time runs) are dropped."""
+        self._extra_required = []
         out = []
-        for wf in self.workflows_needed():
+        needed = self.workflows_needed()
+        for wf in needed:
             data = self.gh_json(["run", "list", "--commit", sha, "--workflow", wf, "--limit", "100",
                                  "--json", RUN_FIELDS, *self.repo_args])
             if not isinstance(data, list):
                 return None
             out += [dict(r, _workflow=wf) for r in data
                     if isinstance(r, dict) and str(r.get("headSha", sha)).startswith(sha[:7])]
+        if needed:
+            everything = self.gh_json(["run", "list", "--commit", sha, "--limit", "100",
+                                       "--json", RUN_FIELDS + ",workflowDatabaseId", *self.repo_args])
+            if not isinstance(everything, list):
+                return None
+            out += self._extra_runs(sha, out, everything, train)
+        if ready_at is not None:
+            out = [r for r in out if not self._before(r, ready_at)]
         contexts = C.cloud_contexts(self.root, self.cfg)
         if contexts:
             statuses = self.statuses_for_commit(sha, contexts)
@@ -501,10 +517,90 @@ class Watcher:
             out += statuses
         return out
 
+    @staticmethod
+    def _before(run: dict, when: datetime) -> bool:
+        made = L.parse_iso(run.get("createdAt"))
+        return made is not None and made < when
+
+    def _extra_runs(self, sha: str, configured: list, everything: list, train) -> list:
+        """Runs of workflows that are not configured: event pull_request only, not in watcher.ignore_workflows."""
+        known_ids = {r.get("databaseId") for r in configured}
+        known_wf = {r.get("workflowDatabaseId") for r in configured if r.get("workflowDatabaseId")}
+        known_names = {str(r.get("workflowName")).lower() for r in configured if r.get("workflowName")}
+        ignored = self._ignored_names()
+        extra = []
+        for r in everything:
+            if not isinstance(r, dict) or not str(r.get("headSha", sha)).startswith(sha[:7]):
+                continue
+            name = str(r.get("workflowName") or "")
+            if r.get("event") != "pull_request" or not name or r.get("databaseId") in known_ids \
+                    or r.get("workflowDatabaseId") in known_wf or name.lower() in known_names \
+                    or name.lower() in ignored:
+                continue
+            extra.append(dict(r, _workflow="extra:" + name))
+        names = sorted({r["_workflow"] for r in extra})
+        self._extra_required = names
+        key = (train or {}).get("id") or sha
+        if names and key not in self._extras_logged:
+            self._extras_logged.add(key)
+            self.out("train %s: extra workflows joined the required set: %s" %
+                     ((train or {}).get("id") or sha[:7], ", ".join(n[6:] for n in names)))
+        return extra
+
+    def _ignored_names(self) -> set:
+        """watcher.ignore_workflows as lower-case workflow names; a file entry is read as the `name:` of that file."""
+        names = set()
+        for item in C.ignore_workflows(self.cfg):
+            names.add(item.lower())
+            if item.lower().endswith((".yml", ".yaml")):
+                names.add(Path(item).stem.lower())
+                try:
+                    text = (self.root / ".github" / "workflows" / item).read_text(encoding="utf-8", errors="replace")
+                except OSError:
+                    continue
+                m = re.search(r"""^name\s*:\s*["']?([^"'#\n]+?)["']?\s*(?:#.*)?$""", text, re.M)
+                if m:
+                    names.add(m.group(1).strip().lower())
+        return names
+
+    def ready_info(self, train: dict, head: str):
+        """(is_draft, ready_at) for the train's PR. ready_at is the last ready_for_review event when there was
+        one, else the PR's createdAt; None when unknown (then no run is dropped)."""
+        pr = train.get("pr")
+        data = self.gh_json(["pr", "view", str(pr), "--json", "createdAt,isDraft", *self.repo_args])
+        if not isinstance(data, dict):
+            return False, None
+        draft = data.get("isDraft") is True
+        ready = L.parse_iso(data.get("createdAt"))
+        key = (pr, head)
+        if key in self._ready_cache and not draft:
+            return draft, self._ready_cache[key]
+        rc, out, _ = self.read(["gh", "api", "repos/%s/issues/%s/timeline" % (self.repo or "{owner}/{repo}", pr),
+                                "--paginate", "--jq", '.[] | select(.event=="ready_for_review") | .created_at'])
+        if rc == 0:
+            stamps = [L.parse_iso(x.strip().strip('"')) for x in (out or "").splitlines() if x.strip()]
+            stamps = [x for x in stamps if x]
+            if stamps:
+                ready = max(stamps)
+        if not draft:
+            self._ready_cache[key] = ready
+        return draft, ready
+
+    def head_ci(self, train: dict, head: str):
+        """(runs, state) for the train's head; (None, None) when gh failed. A PR that is still a draft is never green."""
+        draft, ready = self.ready_info(train, head)
+        runs = self.runs_for_commit(head, train, ready)
+        if runs is None:
+            return None, None
+        state = ci_state_from_runs(runs, self.ci_required())
+        if draft and state == "success":
+            state = "queued"
+        return runs, state
+
     def ci_required(self) -> list:
         """What must be green for a train: the workflow files (options a and b) and the commit-status contexts of
         the cloud shards (option c). The same rule for all three: the newest result of each is success (DL15)."""
-        return self.workflows_needed() + C.cloud_contexts(self.root, self.cfg)
+        return self.workflows_needed() + list(self._extra_required) + C.cloud_contexts(self.root, self.cfg)
 
     def workflows_needed(self) -> list:
         """The workflow files to read. Empty when every chosen OS is cloud: option c uses no GitHub Actions."""
@@ -616,10 +712,9 @@ class Watcher:
                 continue
             if self.rp["cancel_replaced_runs"]:
                 self.cancel_superseded(train, head)
-            runs = self.runs_for_commit(head)
+            runs, state = self.head_ci(train, head)
             if runs is None:
                 continue
-            state = ci_state_from_runs(runs, self.ci_required())
             ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state, **ci_wall(runs, state)}
             if state == "success" and train.get("state") != "green":
                 self._set_train(train, "green", ci=ci)
@@ -657,10 +752,9 @@ class Watcher:
         if not head:
             return
         moved = head != stored
-        runs = self.runs_for_commit(head)
+        runs, state = self.head_ci(train, head)
         if runs is None:
             return
-        state = ci_state_from_runs(runs, self.ci_required())
         if not moved and state != "success":
             return
         ci = {"head_sha": head, "run_ids": [r["databaseId"] for r in runs], "state": state, **ci_wall(runs, state)}

@@ -94,7 +94,7 @@ class MergeTests(unittest.TestCase):
         r[("gh", "run", "list", "--commit")] = lambda argv: (0, runs((2, "in_progress", None, SHA, "release/29")))
         sh = FakeShell(r)
         watcher(root, sh).run_once()
-        listed = [c for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"]]
+        listed = [c for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"] and "--workflow" in c]
         self.assertEqual(listed[0][4], SHA)
         self.assertEqual(listed[0][5:7], ["--workflow", "ci.yml"])
         self.assertEqual(sh.writes(), [])  # stored success on the old head does not merge
@@ -219,6 +219,8 @@ class GreenNeedsEveryRequiredWorkflowTests(unittest.TestCase):
         routes = routes_for_green()
 
         def listing(argv):
+            if "--workflow" not in argv:
+                return 0, "[]"
             wf = argv[argv.index("--workflow") + 1]
             return 0, runs(*per_workflow.get(wf, []))
         routes[("gh", "run", "list", "--commit")] = listing
@@ -287,6 +289,8 @@ class GreenNeedsEveryPrWorkflowTests(GreenNeedsEveryRequiredWorkflowTests):
         routes = routes_for_green()
 
         def listing(argv):
+            if "--workflow" not in argv:
+                return 0, "[]"
             return 0, runs(*per_workflow.get(argv[argv.index("--workflow") + 1], []))
         routes[("gh", "run", "list", "--commit")] = listing
         sh = FakeShell(routes)
@@ -318,7 +322,7 @@ class GreenNeedsEveryPrWorkflowTests(GreenNeedsEveryRequiredWorkflowTests):
         root, sh = self.run_pr({"secret-scan.yml": self.done(1), "spec-lint.yml": self.done(2),
                                 "docs-check.yml": self.done(3)})
         self.assertTrue(self.train(root)["green_at"])
-        asked = [c[c.index("--workflow") + 1] for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"]]
+        asked = [c[c.index("--workflow") + 1] for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"] and "--workflow" in c]
         self.assertNotIn("template-build.yml", asked)
 
     def test_pr_workflows_finds_only_pull_request_triggers(self):
@@ -358,12 +362,14 @@ class GreenNeedsEveryPrWorkflowTests(GreenNeedsEveryRequiredWorkflowTests):
         per = {"secret-scan.yml": self.done(1), "spec-lint.yml": self.done(2)}
 
         def listing(argv):
+            if "--workflow" not in argv:
+                return 0, "[]"
             return 0, runs(*per.get(argv[argv.index("--workflow") + 1], []))
         routes[("gh", "run", "list", "--commit")] = listing
         sh = FakeShell(routes)
         watcher(root, sh).run_once()
         self.assertTrue(self.train(root)["green_at"])
-        asked = [c[c.index("--workflow") + 1] for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"]]
+        asked = [c[c.index("--workflow") + 1] for c in sh.calls if c[:4] == ["gh", "run", "list", "--commit"] and "--workflow" in c]
         self.assertNotIn("docs-check.yml", asked)
 
 
@@ -402,8 +408,8 @@ class RedRerunTests(unittest.TestCase):
         before = L.load(root)["trains"][0]
         watcher(root, sh).run_once()
         self.assertEqual(sh.writes(), [])
-        self.assertEqual([c[:3] for c in sh.calls if c[:2] == ["gh", "pr"]], [["gh", "pr", "view"]])
-        self.assertEqual(len([c for c in sh.calls if c[:3] == ["gh", "run", "list"]]), 1)
+        self.assertEqual([c[:3] for c in sh.calls if c[:2] == ["gh", "pr"]], [["gh", "pr", "view"]] * 2)   # head + ready info (DL298)
+        self.assertEqual(len([c for c in sh.calls if c[:3] == ["gh", "run", "list"]]), 2)   # configured + whole head (DL298)
         t = L.load(root)["trains"][0]
         self.assertEqual((t["state"], t["ci"]), ("red", before["ci"]))
 

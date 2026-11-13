@@ -80,7 +80,7 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 
 **R5.6** — SessionStart prints a short ledger summary and injects the question rules (Q-1 to Q-5). It says when no watcher has a fresh heartbeat.
 
-**R5.7** — The watcher pushes the next joined train, opens its ready PR (or adopts the one open PR of a train pushed by hand), and merges only when the PR head is the commit whose required workflows (`watcher.ci_workflows`) all succeeded. A `hold` stops it.
+**R5.7** — The watcher pushes the next joined train, opens its ready PR (or adopts the one open PR of a train pushed by hand), and merges only when the PR head is the commit whose required workflows (`watcher.ci_workflows`) all succeeded, and every other `pull_request` workflow with a run on that head (not those in `watcher.ignore_workflows`) succeeded too. Runs made while the PR was a draft do not count, and a draft PR is never green. A `hold` stops it.
 
 **R5.8** — When `runner_plan` allows it, the watcher cancels CI runs that a newer push replaced. It also holds non-train CI runs while a train's CI runs.
 
