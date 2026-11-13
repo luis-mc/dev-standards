@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T13:09+00:00",
+  "updated": "2026-11-13T13:23+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5278,12 +5278,11 @@
       "id": "DL293",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: Rust-only release scope and Rust CI speed (DL294, DL295)",
       "detail": "Join DL294 and DL295, release PR CI, merge, plugin smoke, cleanup, peer announcement.",
-      "expected": "13 Nov ~13:28",
-      "changed": "2026-11-13T13:09+00:00",
-      "expected_basis": "join started 13:10, 5 + CI 10 + merge 3",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T13:22+00:00",
       "release": 123,
       "phases": [
         {
@@ -5313,11 +5312,11 @@
       "id": "DL294",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Release-PR scope rust-release: skip Node suites on a Rust-only release",
       "detail": "ci_scope.py template: rust_release config (rust_only, node_inputs, why); a release PR whose every non-doc file is Rust-only and none a Node input gets scope rust-release. full_files and ci-smoke decided first. Peer reference, shape kept as-is.",
       "expected": "13 Nov",
-      "changed": "2026-11-13T12:40+00:00",
+      "changed": "2026-11-13T13:22+00:00",
       "rides": "DL293",
       "started": "2026-11-13T12:31+00:00"
     },
@@ -5325,13 +5324,66 @@
       "id": "DL295",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Rust CI speed: crate-scoped PR runs and per-runner target cache",
       "detail": "Rust template: rust_scope.py (crate graph from Cargo.toml, touched + dependents; workspace-wide inputs run full), rust_ci.py RUST_CRATES -p scoping, persistent CARGO_TARGET_DIR keyed by toolchain + Cargo.lock hash, RUST_TARGET_CAP_GB pruning that skips keys in use, DELIVERY_NO_TARGET_CACHE opt-out.",
       "expected": "13 Nov",
-      "changed": "2026-11-13T13:09+00:00",
+      "changed": "2026-11-13T13:22+00:00",
       "rides": "DL293",
       "started": "2026-11-13T12:31+00:00"
+    },
+    {
+      "id": "DL296",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: fix forward rust_ci cache import crash (DL297)",
+      "detail": "Fix forward for RELEASE-123: rust_ci.py falls back to target/ when ci_tool is missing. Join, PR CI incl. template-build, merge, smoke, cleanup.",
+      "expected": "13 Nov ~13:38",
+      "changed": "2026-11-13T13:23+00:00",
+      "expected_basis": "template-build on branch started 13:21 (~2 min), then PR CI ~10 min",
+      "release": 124,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-13T13:16+00:00",
+          "end": "2026-11-13T13:20+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T13:21+00:00",
+          "end": "2026-11-13T13:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T13:35+00:00",
+          "end": "2026-11-13T13:38+00:00"
+        }
+      ],
+      "started": "2026-11-13T13:18+00:00"
+    },
+    {
+      "id": "DL297",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "rust_ci build cache: fall back when ci_tool is missing",
+      "detail": "RELEASE-123 template-build failed: target_cache_env imports ci_tool, absent in the Rust scaffold, and ImportError was not caught, so every gate command crashed. Catch ImportError and use target/.",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T13:22+00:00",
+      "rides": "DL296",
+      "started": "2026-11-13T13:18+00:00"
+    },
+    {
+      "id": "DL298",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Needs you",
+      "item": "Watcher merged RELEASE-123 with template-build red",
+      "detail": "delivery_watch requires only watcher.ci_workflows (spec-lint, secret-scan). template-build ran on PR 223 and failed at 13:15; the watcher merged at 13:16. Decide: add template-build to the list, or require every workflow that ran on the head.",
+      "expected": "13 Nov ~14:00",
+      "changed": "2026-11-13T13:19+00:00",
+      "expected_basis": "owner decision on the rule"
     },
     {
       "id": "DS1",
