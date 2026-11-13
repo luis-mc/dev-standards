@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T23:02+00:00",
+  "updated": "2026-11-13T23:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5849,12 +5849,11 @@
       "id": "DL325",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "Add a second comics-organizer agent to the Linux pool (D282)",
       "detail": "With DL323 (delivery 1.45.0): copy the new pool_agents.py into the running pool container, then pool-add-agent for the repo with the shared route, only when no pool job runs. No rebuild; the copy is lost on a container recreate until the next pool refresh rebuilds the image.",
-      "expected": "13 Nov ~23:30",
-      "changed": "2026-11-13T23:02+00:00",
-      "expected_basis": "waits for the busy comics-organizer pool job to end, then ~3 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:33+00:00",
       "no_release": "machine change, ships nothing"
     },
     {

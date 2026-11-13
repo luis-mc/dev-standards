@@ -6476,6 +6476,46 @@
       "chosen": "Release it (Recommended)",
       "decided": "2026-11-13",
       "owner_words": "Release it (Recommended)"
+    },
+    {
+      "id": "D286",
+      "question": "Set CI_RUNS_ON_WINDOWS on the project now with one gh command?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL325",
+      "options": [
+        {
+          "label": "Set the variable now (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Wait for a full setup run",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Set the variable now (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Set the variable now (Recommended)"
+    },
+    {
+      "id": "D287",
+      "question": "Add the second pool agent while the first runs a job?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL325",
+      "options": [
+        {
+          "label": "Add it now (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Wait for idle",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Add it now (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Add it now (Recommended)"
     }
   ]
 }
