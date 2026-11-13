@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.20.2
+**Version:** 1.21.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.21.0 — 2026-11-13.**
+
+- R6.12, R6.13: in Full Progress every checklist group and every At a glance group starts closed, so the page opens as a list of headings with counts; feature artifacts keep their open rule (DL313).
 
 **1.20.2 — 2026-11-07.**
 
@@ -1418,9 +1422,11 @@ double-click.
   `<details class="status-fold" data-group="<key>">` whose first child is a
   `<summary>` holding the group heading in `<strong>` (and a muted
   `span.fold-count`), followed by the group's `table.status-checklist`; there is
-  no group heading row and no script. The group `built` (`Live or built`) is
-  rendered closed, without the `open` attribute, every time; every other group
-  is rendered `open`. The earlier-rows line of R6.3 sits inside
+  no group heading row and no script. In Full Progress every group is rendered
+  closed, without the `open` attribute, so the page opens as a list of
+  headings with their counts (DL313). In a feature artifact the group `built`
+  (`Live or built`) is rendered closed every time and every other group is
+  rendered `open`. The earlier-rows line of R6.3 sits inside
   the `built` group, after its table. A closed `Live or built` summary shows how
   many `Built` (unreleased) and `Live` rows it holds, so collapsing it does not
   hide unreleased work (R6.3). The structure stylesheet gives the summary a
@@ -1430,7 +1436,7 @@ double-click.
   groups expanded where the browser supports `::details-content`. Columns stay
   aligned across groups with a `<colgroup>` and a fixed table layout. `check`
   reports a group that is not such a `<details>`, a heading kept as a table row,
-  a `Live or built` group that is open, another group that is closed, and an
+  a group whose open state differs from the rule above, and an
   `Earlier` fold outside `Live or built` (R6.12). Verified by
   `groups_are_collapsible_details`, `live_or_built_starts_closed`,
   `check_finds_a_wrong_open_state` and `collapsible_group_style_is_accessible`.
@@ -1444,7 +1450,9 @@ double-click.
   for an empty `you` group, the sentence `Nothing needs you.`. The groups `built`
   and `live` (done work) are rendered closed, without `open`; `you`, `running`
   and `waiting` are rendered `open`, and `you` is always shown, open, with its
-  sentence when empty. The summary is styled by the rules of R6.12 (chevron,
+  sentence when empty. In Full Progress every glance group, `you` included, is
+  rendered closed; the count in its summary still shows how many items it holds
+  (DL313). The summary is styled by the rules of R6.12 (chevron,
   tap target of at least 2.75rem, `:focus-visible` outline, no script); the
   coloured left bar of each group stays; the groups stack at every width, so a
   phone never scrolls sideways. `check` reports a glance group that is not such
@@ -1926,12 +1934,12 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 | Exactly one full-progress artifact when any feature artifact exists | INV-2 |
 | Section 0 first, named `Status and checklist`, holding the stamp, the lede (optional), At a glance, tiles, key and checklist in order | R5.3 |
 | At a glance block: groups in order; each group lists exactly its tasks; Live within 24 hours, at most 8 | R5.33 to R5.35 |
-| Each glance group a `<details class="glance-group">` with label and count in the `<summary>`; `built` and `live` closed, the others open | R6.13 |
+| Each glance group a `<details class="glance-group">` with label and count in the `<summary>`; Full Progress: all closed; feature artifact: `built` and `live` closed, the others open | R6.13 |
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
 | Only the nine statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
-| Every group a `<details class="status-fold">` with its heading in the `<summary>`; `Live or built` closed, the others open; `Earlier` inside `Live or built` | R6.12 |
+| Every group a `<details class="status-fold">` with its heading in the `<summary>`; Full Progress: all closed; feature artifact: `Live or built` closed, the others open; `Earlier` inside `Live or built` | R6.12 |
 | Expected format on open rows | R6.6 |
 | Warning: open row whose Expected time has passed | R6.14 |
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |

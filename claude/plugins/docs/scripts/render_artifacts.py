@@ -1046,13 +1046,16 @@ def _glance_task(task: dict, gkey='', by_id=None) -> str:
         esc(task['id']), esc(task['id']), dep, _release_span(task) if is_release(task) else '', esc(shown_item(task)), expected)
 
 
-def glance_open(gkey: str) -> bool:
-    """R6.13: the At a glance groups that are done (Built, not released; Live in the last 24 hours) render closed,
-    every other group, and always Needs you, renders open."""
+def glance_open(gkey: str, kind: str = 'feature') -> bool:
+    """R6.13: in Full Progress every At a glance group renders closed (DL313). In a feature artifact the groups that
+    are done (Built, not released; Live in the last 24 hours) render closed, every other group, and always Needs you,
+    renders open."""
+    if kind == 'full-progress':
+        return False
     return gkey not in ('built', 'live')
 
 
-def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
+def _at_a_glance(tasks: list, decisions, ref: datetime, kind: str = 'feature') -> str:
     """R5.33 and R6.13: the At a glance block of section 0, generated from the registry; each group is a
     `<details class="glance-group">` whose `<summary>` holds the label and the count."""
     groups = []
@@ -1067,7 +1070,7 @@ def _at_a_glance(tasks: list, decisions, ref: datetime) -> str:
         count = len(shown) + len(found) + more
         groups.append('<details class="glance-group glance-%s" data-glance="%s"%s><summary>'
                       '<span class="glance-label">%s</span><span class="fold-count">%d task%s</span></summary>\n%s\n</details>'
-                      % (gkey, gkey, ' open' if glance_open(gkey) else '', esc(label), count, '' if count == 1 else 's', body))
+                      % (gkey, gkey, ' open' if glance_open(gkey, kind) else '', esc(label), count, '' if count == 1 else 's', body))
     return '<div class="at-a-glance">\n%s\n</div>' % '\n'.join(groups)
 
 
@@ -1219,8 +1222,11 @@ def wants_release_line(kind: str, gkey: str) -> bool:
     return kind == 'feature' or gkey == 'built'
 
 
-def group_open(gkey: str) -> bool:
-    """R6.12: every checklist group renders open except Live or built, which always renders closed."""
+def group_open(gkey: str, kind: str = 'feature') -> bool:
+    """R6.12: in Full Progress every checklist group renders closed (DL313). In a feature artifact every group renders
+    open except Live or built, which always renders closed."""
+    if kind == 'full-progress':
+        return False
     return gkey != 'built'
 
 
@@ -1264,7 +1270,7 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links:
         out.append('<details class="status-fold%s" data-group="%s"%s><summary><strong>%s</strong>'
                    '<span class="fold-count">%s</span></summary>\n%s\n</details>'
                    % (' release-group' if gkey.startswith('release-') else '', gkey,
-                      ' open' if group_open(gkey) else '', esc(title), _count_label(gkey, shown, len(old)), body))
+                      ' open' if group_open(gkey, kind) else '', esc(title), _count_label(gkey, shown, len(old)), body))
     return '\n'.join(out) if out else _table([], kind, label)
 
 
@@ -2103,7 +2109,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'stamp': '<time datetime="%s">%s</time> (%s)' % (esc(stamp_iso), esc(stamp_text), esc(label)),
         'published': _published_line(manifest, label) if kind == 'feature' else '',
         'lede': lede,
-        'glance': _at_a_glance(mine, decisions, moment),
+        'glance': _at_a_glance(mine, decisions, moment, kind),
         'tiles': _tiles(mine),
         'key': _key(label),
         'timeline': ('\n' + timeline.rstrip('\n')) if timeline else '',
@@ -2472,9 +2478,9 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             summ = kids[0] if kids and kids[0].tag == 'summary' else None
             if summ is None or find(summ, 'span', 'glance-label') is None or find(summ, 'span', 'fold-count') is None:
                 add('R6.13', 'glance group %r must be a <details> whose first child is a <summary> holding the label and the count' % g.attrs.get('data-glance', ''))
-            if ('open' in g.attrs) != glance_open(g.attrs.get('data-glance', '')):
+            if ('open' in g.attrs) != glance_open(g.attrs.get('data-glance', ''), kind):
                 add('R6.13', 'glance group %r must render %s' % (g.attrs.get('data-glance', ''),
-                    'open' if glance_open(g.attrs.get('data-glance', '')) else 'closed (done groups start closed)'))
+                    'open' if glance_open(g.attrs.get('data-glance', ''), kind) else 'closed'))
             tasks_in = [li.attrs.get('data-glance-task') for li in find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs)]
             for li in find_all(g, 'li', pred=lambda n: 'data-glance-task' in n.attrs):
                 dep_span = find(li, 'span', 'glance-dep')
@@ -2534,8 +2540,8 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         group_marks.append((gkey, text_of(strong) if strong is not None else ''))
         if summary is None or strong is None:
             add('R6.12', 'group %r must be a <details> whose first child is a <summary> holding the group heading in <strong>' % gkey)
-        if ('open' in fold.attrs) != group_open(gkey):
-            add('R6.12', 'group %r must render %s' % (gkey, 'open' if group_open(gkey) else 'closed (Live or built always starts closed)'))
+        if ('open' in fold.attrs) != group_open(gkey, kind):
+            add('R6.12', 'group %r must render %s' % (gkey, 'open' if group_open(gkey, kind) else 'closed'))
         for inner in find_all(fold, 'table', 'status-checklist'):
             table_group[id(inner)] = gkey
     for table_no, table in enumerate(tables):
