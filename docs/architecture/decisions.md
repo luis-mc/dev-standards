@@ -246,6 +246,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D261 | Permission rule to remove a verified-dead queue ticket in the machine folder? | No rule needed (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D262 | Who reinstalls the runner hooks on the Windows host runner (outside the pool) to get the DL292 heartbeat? | comics-organizer session (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D263 | Privileged pool service after the DL278 study: keep D256 (Not now)? | Keep Not now (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D264 | Which CI runs must be green before the delivery watcher merges a release (after RELEASE-123 merged with template-build red)? | Every run on the head (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |
 | delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
