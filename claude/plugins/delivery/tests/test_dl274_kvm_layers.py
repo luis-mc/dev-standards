@@ -59,7 +59,7 @@ class LayerListTests(unittest.TestCase):
                 self.assertIn(pkg, df, "%s missing from the Dockerfile (%s)" % (pkg, layer))
         self.assertIn("policycoreutils-python-utils", df)
         self.assertEqual(P.LAYER_TOOLS["linux-packaging"], ("dpkg-deb", "rpmbuild", "checkmodule", "semodule_package",
-                                                          "gpg", "shellcheck", "systemd-analyze"))  # DL281
+                                                          "gpg", "shellcheck", "systemd-analyze", "createrepo_c"))  # DL281
         self.assertEqual(P.LAYER_TOOLS["kvm"], ("qemu-system-x86_64", "cloud-localds", "ssh"))  # DL281: vm_check.py needs ssh
 
     def test_layers_are_accepted_in_config(self):
