@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T16:48+00:00",
+  "updated": "2026-11-13T16:54+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5580,11 +5580,49 @@
       "id": "DL310",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Needs you",
+      "status": "Running",
       "item": "Shared Windows machine runner in luismc-delivery (peer ask)",
       "detail": "Peer ask 13 Nov: make a project's repo-only Windows CI runner a shared machine runner like the Linux pool: one machine install, sha256-checked shared tool cache (rustup-init, llvm, cargo-xwin pins), load slots within 85% memory / 60% CPU, per-project registration via delivery-ci-setup. Touches host security (Windows service account, machine install): waits for owner confirmation and design answers before build.",
-      "expected": "13 Nov; waits on owner answer",
-      "changed": "2026-11-13T16:48+00:00"
+      "expected": "13 Nov ~17:38",
+      "changed": "2026-11-13T16:53+00:00",
+      "expected_basis": "cloud agent started 16:53, ~45 min",
+      "rides": "DL311",
+      "started": "2026-11-13T16:53+00:00"
+    },
+    {
+      "id": "DL311",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: DL310 shared Windows machine runner",
+      "detail": "Join DL310, fold notes, CI, merge, smoke, install, tell the peer the version.",
+      "expected": "13 Nov ~18:15",
+      "changed": "2026-11-13T16:54+00:00",
+      "expected_basis": "DL310 agent ~17:38, join 10, CI 10, merge 5",
+      "release": 128,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-13T16:53+00:00",
+          "end": "2026-11-13T17:40+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-13T17:40+00:00",
+          "end": "2026-11-13T17:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-13T17:50+00:00",
+          "end": "2026-11-13T18:05+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-13T18:05+00:00",
+          "end": "2026-11-13T18:15+00:00"
+        }
+      ],
+      "started": "2026-11-13T16:54+00:00"
     },
     {
       "id": "DS1",

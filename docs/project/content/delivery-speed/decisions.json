@@ -6112,6 +6112,90 @@
       "chosen": "Build a helper now",
       "decided": "2026-11-13",
       "owner_words": "Build a helper now (owner 14:5x)"
+    },
+    {
+      "id": "D269",
+      "question": "Build the shared Windows machine runner (peer ask)?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL310",
+      "options": [
+        {
+          "label": "Build it (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Design only",
+          "summary": "offered"
+        },
+        {
+          "label": "Not now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Build it (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Build it (Recommended) (owner 16:5x)"
+    },
+    {
+      "id": "D270",
+      "question": "Windows runner service account?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL310",
+      "options": [
+        {
+          "label": "Dedicated local acct (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep NETWORK SERVICE",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Dedicated local acct (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "option 1, and offer to setup everything for user"
+    },
+    {
+      "id": "D271",
+      "question": "Windows runner load slots vs the Linux pool?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL310",
+      "options": [
+        {
+          "label": "One shared limit (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Separate Windows slots",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "One shared limit (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "One shared limit (Recommended)"
+    },
+    {
+      "id": "D272",
+      "question": "How does a project join the Windows runner?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL310",
+      "options": [
+        {
+          "label": "delivery-ci-setup step (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Manual, you approve each",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "delivery-ci-setup step (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "delivery-ci-setup step (Recommended)"
     }
   ]
 }
