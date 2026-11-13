@@ -26,6 +26,6 @@ Add to `docs/features/runner-pool/spec.md` after R5.34:
 Test table: change the row `R5.31 to R5.34` to `R5.31 to R5.36` and append `claude/plugins/delivery/tests/test_dl318_doctor_locked_runner.py` to its files.
 
 ## Branch head SHA
-See the last commit of `DL318-doctor-locked-runner` (`git rev-parse HEAD`).
+b74036127e354927ff7f0dafe9ffdfe810fe754f (code and tests); the report commit follows it.
 
 READY
