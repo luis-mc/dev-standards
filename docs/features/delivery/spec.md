@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.35.0
+version: 0.35.1
 owner: agents
 type: reference
 code:
@@ -531,6 +531,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.35.1 | 2026-11-13 | RELEASE-124 | The Rust build cache falls back to target/ when ci_tool.py is missing, so gate commands never crash on it. | DL297 |
 | 0.35.0 | 2026-11-13 | RELEASE-123 | Adds R5.60: the rust-release CI scope for a Rust-only release pull request.<br>Rust CI: rust_scope.py scopes fmt, clippy and test to the touched crates and their dependents (RUST_CRATES), and rust_ci.py keeps a pruned per-runner target cache (CARGO_TARGET_DIR). | DL294, DL295 |
 | 0.34.0 | 2026-11-13 | RELEASE-122 | Queue tickets carry a heartbeat; a ticket with no beat is dropped from any host (see shared-self-hosted-runners 3.2). | DL292 |
 | 0.33.2 | 2026-11-12 | RELEASE-116 | join.py: a branch cut from an older head is merged as any branch and refused only on a real conflict; siblings of one older head are not stacked; the conflict report never prints an empty file list (R5.40). | DL272 |
