@@ -359,7 +359,9 @@ def check_agents(ledger, cfg, at):
                         '(minutes from the files touched, with the basis).' % (name, a.get('id') or name)))
         if a.get('state') not in ('running', 'stalled', 'pushed'):    # DL54 F8: the watcher sets stalled / pushed
             continue
-        since = a.get('last_checked') or a.get('started')
+        # DL303: the newest sign of life counts: the check, or the branch commit / run event it recorded
+        since = max((x for x in (a.get('last_checked'), a.get('liveness_at')) if H.parse_ts(x)),
+                    key=H.parse_ts, default=None) or a.get('started')
         age = H.minutes_since(since, at)
         due = H.parse_ts(eta.get('due'))
         overdue = due is not None and due <= at and (H.parse_ts(a.get('last_checked')) or due) <= due
