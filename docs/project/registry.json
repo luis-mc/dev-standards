@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T13:51+00:00",
+  "updated": "2026-11-13T14:09+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5377,12 +5377,11 @@
       "id": "DL298",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Watcher requires every CI run on the ready head",
       "detail": "delivery_watch requires only watcher.ci_workflows (spec-lint, secret-scan); template-build failed on PR 223 at 13:15 and the watcher merged at 13:16. It also counted PR 224's draft-time runs as green. Decide: add template-build to the list, or require every workflow that ran on the ready head.",
-      "expected": "13 Nov ~14:18",
-      "changed": "2026-11-13T13:51+00:00",
-      "expected_basis": "cloud agent 13:53, 3 + 15 + 7 = 25 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T14:09+00:00",
       "rides": "DL299",
       "started": "2026-11-13T13:51+00:00"
     },
@@ -5390,35 +5389,36 @@
       "id": "DL299",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: watcher requires every CI run on the ready head (DL298)",
       "detail": "Join DL298, release PR CI, merge, plugin smoke, cleanup, plugin update, peer announcement.",
-      "expected": "13 Nov ~14:35",
-      "changed": "2026-11-13T13:51+00:00",
-      "expected_basis": "agent 13:53 +25 min, join + CI ~15 min, merge 3",
+      "expected": "13 Nov ~14:30",
+      "changed": "2026-11-13T14:09+00:00",
+      "expected_basis": "join 14:11, CI ~12 min from ~14:15, merge 3",
       "release": 125,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-13T13:53+00:00",
-          "end": "2026-11-13T14:18+00:00"
+          "start": "2026-11-13T13:52+00:00",
+          "end": "2026-11-13T14:09+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-13T14:18+00:00",
-          "end": "2026-11-13T14:22+00:00"
+          "start": "2026-11-13T14:11+00:00",
+          "end": "2026-11-13T14:15+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-13T14:22+00:00",
-          "end": "2026-11-13T14:32+00:00"
+          "start": "2026-11-13T14:15+00:00",
+          "end": "2026-11-13T14:27+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-13T14:32+00:00",
-          "end": "2026-11-13T14:35+00:00"
+          "start": "2026-11-13T14:27+00:00",
+          "end": "2026-11-13T14:30+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-13T14:09+00:00"
     },
     {
       "id": "DS1",
