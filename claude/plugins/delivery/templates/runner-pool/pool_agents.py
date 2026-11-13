@@ -84,8 +84,9 @@ def kvm_usable(environ=None, access=os.access, exists=os.path.exists):
     return env.get('POOL_KVM') == '1' and exists('/dev/kvm') and access('/dev/kvm', os.R_OK | os.W_OK)
 
 
-def labels_for(pool, slug, kvm=None):
-    labels = ['self-hosted', 'linux', 'x64', 'pool-%s' % pool, 'repo-%s' % slug]
+def labels_for(pool, slug, kvm=None, route=None):
+    """DL323: the routing label is repo-<route>; route defaults to the slug, and agents of one repository share it."""
+    labels = ['self-hosted', 'linux', 'x64', 'pool-%s' % pool, 'repo-%s' % (route or slug)]
     if kvm_usable() if kvm is None else kvm:
         labels.append('kvm')
     return labels
@@ -157,15 +158,36 @@ def role_sql(login, roles):
     return sql
 
 
-def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base='/agents', run=sh, createdb=False, db_roles=()):
+def route_of(entry):
+    """DL323: an entry without 'route' routes by its slug."""
+    return entry.get('route') or entry.get('slug')
+
+
+def next_slug(route, agents):
+    taken = {a.get('slug') for a in agents}
+    n = 2
+    while '%s-%d' % (route, n) in taken:
+        n += 1
+    return '%s-%d' % (route, n)
+
+
+def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base='/agents', run=sh, createdb=False, db_roles=(), route=None):
     if not SLUG.match(slug):
         raise PoolError('bad slug %r (lowercase letters, digits, dash)' % slug)
     if not REPO.match(repo):
         raise PoolError('bad repository %r (OWNER/NAME)' % repo)
     if not private:
         raise PoolError('refused: %s is not asserted private. A self-hosted runner for a public repository is not allowed.' % repo)
-    user, folder = 'r-%s' % slug, os.path.join(base, slug)
     data = load(agents_file)
+    if route is not None and not SLUG.match(route):
+        raise PoolError('bad route %r (lowercase letters, digits, dash)' % route)
+    if route is None and not any(a.get('slug') == slug for a in data['agents']):
+        # DL323: a second agent for a repository another entry already serves joins that route as <route>-N.
+        same = [a for a in data['agents'] if a.get('repo') == repo]
+        if same:
+            route = route_of(same[0])
+            slug = next_slug(route, data['agents'])
+    user, folder = 'r-%s' % slug, os.path.join(base, slug)
     db_roles = check_db_roles(slug, db_roles, data['agents'])
     have = [a for a in data['agents'] if a.get('slug') == slug]
     if have:
@@ -194,7 +216,7 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         r = run(argv)
         if r.returncode not in (0, 9):  # 9 = user exists
             raise PoolError('%s failed: %s' % (argv[0], redact(r.stderr.strip(), token)))
-    labels = labels_for(pool, slug)
+    labels = labels_for(pool, slug, route=route)
     cfg = ['runuser', '-u', user, '--', './config.sh', '--unattended', '--url', 'https://github.com/' + repo,
            '--token', token, '--name', '%s-%s' % (pool, slug), '--labels', ','.join(labels), '--work', '_work', '--replace']
     if not os.path.exists(os.path.join(folder, '.runner')):  # a rerun after a failed step keeps the registration
@@ -207,6 +229,8 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
     ensure_agent_tmp(folder, user, run)
     create_db(slug, folder, user, run, createdb, db_roles)
     entry = {'slug': slug, 'user': user, 'repo': repo, 'private': True, 'labels': labels}
+    if route and route != slug:
+        entry['route'] = route
     if createdb:
         entry['createdb'] = True
     if db_roles:
@@ -312,6 +336,7 @@ def main(argv=None, stdin=None):
         ap.add_argument('repo')
         ap.add_argument('--private', action='store_true', help='assert the repository is private')
         ap.add_argument('--db-role', action='append', default=[], help='a NOLOGIN role the pool creates for this repository (repeatable)')
+        ap.add_argument('--route', help='routing slug: the label repo-<route>; agents of one repository share it (default: its own slug)')
         ap.add_argument('--db-createdb', action='store_true', help='give the database login CREATEDB (owner decision)')
     else:
         ap.add_argument('--delete-files', action='store_true')
@@ -325,7 +350,7 @@ def main(argv=None, stdin=None):
         if removing:
             print(remove_agent(args.slug, token, args.agents, args.base, delete_files=args.delete_files))
         else:
-            print(add_agent(args.slug, args.repo, token, args.pool, args.private, args.agents, args.base, createdb=args.db_createdb, db_roles=args.db_role))
+            print(add_agent(args.slug, args.repo, token, args.pool, args.private, args.agents, args.base, createdb=args.db_createdb, db_roles=args.db_role, route=args.route))
     except PoolError as exc:
         print('pool: %s' % redact(str(exc), token), file=sys.stderr)
         return 1
