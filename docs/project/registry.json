@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T05:10+00:00",
+  "updated": "2026-11-13T06:59+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4995,12 +4995,11 @@
       "id": "DL278",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Study: privileged pool service for distro tests (possible, pros, cons)",
       "detail": "Owner 12 Nov 23:0x: test a privileged pool service for the Linux distro matrix (Docker-in-runner / rootless podman, cgroup v2, /dev/loop, systemd boot) with throwaway containers only; report at 06:30 whether it is possible, pros and cons. The real pool is not touched.",
-      "expected": "13 Nov ~06:30",
-      "changed": "2026-11-12T22:58+00:00",
-      "expected_basis": "throwaway tests tonight, report when the owner is back",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T06:59+00:00",
       "no_release": "study only, report to the owner",
       "started": "2026-11-12T22:58+00:00"
     },
