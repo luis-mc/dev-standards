@@ -118,6 +118,12 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 - *Label.* `labels_for` adds `kvm` when `POOL_KVM=1` and `/dev/kvm` is readable and writable in the container, so new runners register with it. Existing runners get or lose the label without re-registration through the GitHub API; the doctor prints the exact command (`gh api -X POST repos/OWNER/REPO/actions/runners/ID/labels -f 'labels[]=kvm'`, or `-X DELETE .../labels/kvm` when `POOL_KVM` is off). The supervisor does not call GitHub, because the runner credentials stay on the host.
 - *Doctor checks.* `pool.<name>.kvm-host`, `kvm-compose`, `kvm-container` (`/dev/kvm` usable in the running pool) and `kvm-label`. A host without KVM is a fail only when `POOL_KVM=1`.
 
+**R5.29** — **VM checks** (DL281). A job on a runner labelled `kvm` (R5.28) can boot throwaway distro VMs with `scripts/delivery/vm_check.py` (standard library only, Linux only). The guide is `docs/guides/vm-checks.md`.
+- *Cache.* `--cache`, else `$VM_CACHE`, else `/ci-tools/vm-cache` when writable, else `~/.cache/vm-check`. At each agent start `prepare_kvm` makes `/ci-tools/vm-cache` as `root:<kvm group>` mode `2775` when the tool volume is mounted, so every runner user shares it. Each write goes to a temp name under a `flock` lock and is renamed, so two jobs never download or build the same thing twice.
+- *Kept between runs.* The image (keyed by its published checksum, downloaded again only when that changes, SHA-256 or SHA-512 checked), the prepared base disk (keyed by image checksum and package list), and with `--resume` the snapshot disk (keyed by base key, qemu version, `-cpu host` model, memory and CPUs; a mismatch rebuilds it). The ssh key is made once in the cache with mode 600.
+- *Repeated each run.* A thin overlay on the base (or a copy of the snapshot disk, because the saved state lives in that file), the boot or `-loadvm ready`, and after a resume the guest clock set from the host and the guest random pool reseeded. The overlay is always deleted and qemu always killed, also on error or timeout.
+- *Commands.* `prepare`, `run`, `selinux` (Enforcing, install an rpm, optional policy module, no AVC denials since boot), `prune` (keep the newest per distro) and `doctor`. Default `-m 1024 -smp 2`; a warning prints when the pool has less than memory + 1 GiB free.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -136,6 +142,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.17, R5.18 | `claude/plugins/delivery/tests/test_dl149_pool_layers.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R5.19 to R5.21 | `claude/plugins/delivery/tests/test_dl176_pool_resize.py`, `claude/plugins/delivery/tests/test_dl103_pool_keep_cap.py` |
 | R5.22 to R5.24 | `claude/plugins/delivery/tests/test_dl177_pool_measure.py` |
+| R5.28, R5.29 | `claude/plugins/delivery/tests/test_dl274_kvm_layers.py`, `claude/plugins/delivery/tests/test_dl281_vm_check.py` |
 | R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py`, `claude/plugins/delivery/tests/test_dl223_pool_path_order.py` |
 
 ## 12. Code map
