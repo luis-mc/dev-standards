@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T03:00+00:00",
+  "updated": "2026-11-13T03:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5175,12 +5175,11 @@
       "id": "DL288",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-121: pool refresh never cuts a job",
       "detail": "Join, CI and merge for DL289.",
-      "expected": "13 Nov ~03:54",
-      "changed": "2026-11-13T03:00+00:00",
-      "expected_basis": "agent ~35 min from 03:03, join 7, CI 6",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T03:19+00:00",
       "release": 121,
       "phases": [
         {
@@ -5203,20 +5202,32 @@
           "start": "2026-11-13T03:51+00:00",
           "end": "2026-11-13T03:54+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-13T03:12+00:00"
     },
     {
       "id": "DL289",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "pool-refresh: build first, drain runners, then recreate (no cut jobs)",
       "detail": "Peer report 13 Nov: the 02:42 refresh checked runners idle, built the image (~3.5 min), then recreated the container; a job assigned at 02:44:38 was cut and failed at 02:55. Fix: build the image while runners work, drain (idle listeners stop, busy ones finish their job), re-check, then recreate within seconds.",
-      "expected": "13 Nov ~03:38",
-      "changed": "2026-11-13T03:00+00:00",
-      "expected_basis": "cloud agent from 03:03, ~35 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T03:19+00:00",
       "rides": "DL288",
       "started": "2026-11-13T03:00+00:00"
+    },
+    {
+      "id": "DL290",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "Pool refresh to install the drain (RELEASE-121)",
+      "detail": "Rebuild this PC's pool with delivery 1.39.0 so refreshes drain before recreate. First refresh: old supervisor has no drain mode, so it uses --force after the GitHub busy check, only when all 4 runners are idle and memory is under 85%. Tell comics-organizer the window first.",
+      "expected": "13 Nov ~04:30",
+      "changed": "2026-11-13T03:20+00:00",
+      "expected_basis": "comics job running + memory 90%; build ~4 min once idle",
+      "no_release": "applies a release to this PC's pool"
     },
     {
       "id": "DS1",
