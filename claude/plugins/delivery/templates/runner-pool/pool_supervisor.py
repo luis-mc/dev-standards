@@ -19,6 +19,16 @@ import sys
 import time
 
 BACKOFF_MIN, BACKOFF_MAX, HEALTHY_SEC = 2.0, 300.0, 60.0
+JOB_MARKER = '.job-running'
+MARKER_STALE_SEC = 6 * 3600
+
+
+def job_running(base, slug, now=time.time, getmtime=os.path.getmtime):
+    """DL289: True when the agent's job-started hook left a marker newer than 6 hours (an older one is stale)."""
+    try:
+        return now() - getmtime(posixpath.join(base, slug, JOB_MARKER)) < MARKER_STALE_SEC
+    except OSError:
+        return False
 
 
 def load_agents(path):
@@ -261,7 +271,8 @@ def popen_spawn(agent, base, env=None):
 
 
 class Supervisor:
-    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None, environ=None, which=shutil.which):
+    def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None, environ=None, which=shutil.which,
+                 drain_dir=None, busy=None):
         self.agents_file, self.base = agents_file, base
         self.which = which
         self.environ = environ if environ is not None else os.environ
@@ -272,6 +283,45 @@ class Supervisor:
         self.clock = clock
         self.state = {}  # slug -> {proc, started, fails, next}
         self.stopping = False
+        self.drain_dir = drain_dir  # DL289: folder holding the drain file; None turns drain mode off
+        self.busy = busy or (lambda slug: job_running(self.base, slug))
+
+    def draining(self):
+        return bool(self.drain_dir) and os.path.isfile(os.path.join(self.drain_dir, 'drain'))
+
+    def _write(self, name, text):
+        try:
+            with open(os.path.join(self.drain_dir, name), 'w', encoding='utf-8') as f:
+                f.write(text)
+        except OSError as exc:
+            _log('could not write %s: %s' % (name, exc))
+
+    def _remove(self, name):
+        try:
+            os.remove(os.path.join(self.drain_dir, name))
+        except OSError:
+            pass
+
+    def drain_tick(self):
+        """DL289: stop idle listeners, let busy ones finish their job, start none. Writes `drained` when no listener runs."""
+        busy = []
+        for slug, st in self.state.items():
+            proc = st['proc']
+            if proc is not None and proc.poll() is not None:
+                st['proc'], st['fails'], st['next'] = None, 0, 0.0  # a drained exit is no failure
+            elif proc is not None:
+                if self.busy(slug):
+                    busy.append(slug)
+                else:
+                    proc.terminate()  # no job: a stop does not cancel anything
+        if busy:
+            self._remove('drained')
+            self._write('drain-busy', '\n'.join(busy) + '\n')
+        else:
+            running = any(s['proc'] is not None and s['proc'].poll() is None for s in self.state.values())
+            self._remove('drain-busy')
+            if not running:
+                self._write('drained', 'drained\n')
 
     def agent_env(self, agent=None):
         """The environment for a new agent: a copy with CI_MAX_PARALLEL set for the current agent count.
@@ -298,6 +348,12 @@ class Supervisor:
             del self.state[slug]
         if self.stopping:
             return
+        if self.draining():
+            self.drain_tick()
+            return
+        if self.drain_dir and os.path.isfile(os.path.join(self.drain_dir, 'drained')):
+            self._remove('drained')
+            self._remove('drain-busy')
         now = self.clock()
         for slug, agent in wanted.items():
             st = self.state.setdefault(slug, {'proc': None, 'started': 0.0, 'fails': 0, 'next': 0.0})
@@ -403,10 +459,12 @@ def main(argv=None):
     ap.add_argument('--agents', default='/agents.json')
     ap.add_argument('--base', default='/agents')
     ap.add_argument('--grace-sec', type=float, default=290.0)
+    ap.add_argument('--drain-dir', default=None, help='folder with the drain file (default /machine/pools/$POOL_NAME)')
     args = ap.parse_args(argv)
     for agent in load_agents(args.agents):
         ensure_user(agent, args.base, agents=load_agents(args.agents))
-    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base, agents=load_agents(args.agents)) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a, vm_cache=True))
+    sup = Supervisor(args.agents, args.base, ensure=lambda a: ensure_user(a, args.base, agents=load_agents(args.agents)) and prepare_tmp(a, args.base) and prepare_wine_ok(a, args.base) and prepare_kvm(a, vm_cache=True),
+                     drain_dir=args.drain_dir or posixpath.join('/machine', 'pools', os.environ.get('POOL_NAME') or 'main'))
     done = []
     signal.signal(signal.SIGTERM, lambda *_: done.append(1))
     signal.signal(signal.SIGINT, lambda *_: done.append(1))

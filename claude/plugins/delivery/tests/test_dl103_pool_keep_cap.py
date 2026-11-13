@@ -172,7 +172,7 @@ class RefreshTests(unittest.TestCase):
                                   type('R', (), {'returncode': 0, 'stderr': '', 'stdout': ''})()):
             ok, text = ex.refresh(P.refresh_plan(OfflineProbe(), 'main', [self.repo]))
         self.assertTrue(ok, text)
-        self.assertEqual([c for c in calls if c[:2] == ['docker', 'compose']], [['docker', 'compose', 'up', '-d', '--build']])
+        self.assertEqual([c for c in calls if c[:2] == ['docker', 'compose']], [['docker', 'compose', 'build']])
         self.assertIn('could not compare the image ids', text)
 
     def test_refresh_with_no_change_still_rebuilds(self):
