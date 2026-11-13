@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T12:33+00:00",
+  "updated": "2026-11-13T12:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5312,12 +5312,11 @@
       "id": "DL294",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Release-PR scope rust-release: skip Node suites on a Rust-only release",
       "detail": "ci_scope.py template: rust_release config (rust_only, node_inputs, why); a release PR whose every non-doc file is Rust-only and none a Node input gets scope rust-release. full_files and ci-smoke decided first. Peer reference, shape kept as-is.",
-      "expected": "13 Nov ~12:48",
-      "changed": "2026-11-13T12:33+00:00",
-      "expected_basis": "cloud agent started 12:33, 3+7+5 = 15 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T12:40+00:00",
       "rides": "DL293",
       "started": "2026-11-13T12:31+00:00"
     },
