@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.11.1
+version: 0.12.0
 owner: agents
 type: reference
 code:
@@ -194,6 +194,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.12.0 | 2026-11-13 | RELEASE-131 | Windows-only mode --only windows\|linux (R5.35), repository variable CI_RUNS_ON_WINDOWS (R5.36), label removal only with a yes (R5.37), the symbolic-link right for ci-* accounts and a PowerShell host-load task (R5.31, R5.32).<br>R5.38-R5.41: the doctor finds a locked Windows runner and checks runs-on labels (DL318); several pool agents per repository (DL323). | DL316, DL318 |
 | 0.11.1 | 2026-11-13 | RELEASE-130 | R5.32 setup: an existing runner in the folder is removed with a remove token and a checked exit code before the folder is locked (DL315). | DL315 |
 | 0.11.0 | 2026-11-13 | RELEASE-128 | A Windows runner service runs as its own non-admin ci-* account on the shared machine config and slot queue; one run sets up account, rights, download, registration, .env and service, replaces an old runner after the new one is online, and the doctor checks each Windows runner (R5.31 to R5.34). | DL310 |
 | 0.10.0 | 2026-11-13 | RELEASE-121 | pool-refresh builds the image first while the old container serves jobs, drains the pool through the machine folder (per-agent job marker, drain and drained files, --drain-timeout), then recreates with no build. | DL289 |
