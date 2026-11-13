@@ -28,9 +28,9 @@
     "change-notes",
     "guards",
     "lint",
+    "deny",
     "typecheck",
     "unit",
-    "deny",
     "xwin"
   ],
   "steps": [
@@ -61,6 +61,19 @@
       "paths": "rust"
     },
     {
+      "name": "deny",
+      "scope": "always",
+      "pre_push": false,
+      "paths": "rust",
+      "when_changed": [
+        "Cargo.toml",
+        "*/Cargo.toml",
+        "Cargo.lock",
+        "deny.toml"
+      ],
+      "run": "python3 scripts/delivery/rust_ci.py deny"
+    },
+    {
       "name": "typecheck",
       "scope": "changed+dependents",
       "pre_push": true,
@@ -72,13 +85,6 @@
       "scope": "changed",
       "run": "python3 scripts/delivery/rust_ci.py run -- cargo test --locked --workspace --lib",
       "paths": "rust"
-    },
-    {
-      "name": "deny",
-      "scope": "always",
-      "pre_push": false,
-      "paths": "rust",
-      "run": "python3 scripts/delivery/rust_ci.py deny"
     },
     {
       "name": "xwin",

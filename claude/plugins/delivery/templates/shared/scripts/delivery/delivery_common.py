@@ -347,6 +347,10 @@ def load_gate(root: Path) -> dict:
             raise DeliveryError("%s ('%s') needs a 'run' command" % (label, name))
         if "run_full" in step and not isinstance(step["run_full"], str):
             raise DeliveryError("%s ('%s'): 'run_full' must be a string" % (label, name))
+        if "when_changed" in step:
+            wc = step["when_changed"]
+            if not isinstance(wc, list) or not wc or not all(isinstance(e, str) and e for e in wc):
+                raise DeliveryError("%s ('%s'): 'when_changed' must be a non-empty list of path patterns" % (label, name))
         step["pre_push"] = bool(step.get("pre_push", False))
         env = step.get("env", {})
         if not isinstance(env, dict) or not all(
@@ -1012,6 +1016,9 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     skip = scope_skip(step, ctx)
     if skip:
         return False, None, skip
+    wc = step.get("when_changed")
+    if wc and not any(widen_match(f, e) for f in ctx.files for e in wc):
+        return False, None, "no change under when_changed (%s)" % ", ".join(wc)
     scope = step["scope"]
     wide = ctx.widened
     e2e_specs = ""
