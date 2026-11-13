@@ -6260,6 +6260,30 @@
       "chosen": "Generic pool, projects target it by repo variable",
       "decided": "2026-11-13",
       "owner_words": "but comics-pc is a specific project tag; I want the ci runners pool to be generic to eventually extract as a product"
+    },
+    {
+      "id": "D276",
+      "question": "Which dev-standards plugins stay installed at user level?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL321",
+      "options": [
+        {
+          "label": "Only project-setup (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "None at user level",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep all six",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "None at user level",
+      "decided": "2026-11-13",
+      "owner_words": "None at user level"
     }
   ]
 }

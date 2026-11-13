@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T20:36+00:00",
+  "updated": "2026-11-13T20:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5763,6 +5763,17 @@
       "detail": "Owner D274: register the host-load task now (one-time admin script, 13 Nov). The plan's printed schtasks line uses cmd quoting that PowerShell 5.1 mangles; print Register-ScheduledTask lines (or a script) instead.",
       "expected": "14 Nov",
       "changed": "2026-11-13T20:36+00:00"
+    },
+    {
+      "id": "DL321",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Remove dev-standards plugins from user level (owner D276)",
+      "detail": "Owner 13 Nov: no dev-standards plugin at user level; each project keeps its own project install. Uninstalled all six at user scope; project installs and cache kept.",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T20:46+00:00",
+      "no_release": "machine setting, ships nothing"
     },
     {
       "id": "DS1",
