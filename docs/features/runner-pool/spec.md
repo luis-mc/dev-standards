@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.9.2
+version: 0.10.0
 owner: agents
 type: reference
 code:
@@ -159,6 +159,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.10.0 | 2026-11-13 | RELEASE-121 | pool-refresh builds the image first while the old container serves jobs, drains the pool through the machine folder (per-agent job marker, drain and drained files, --drain-timeout), then recreates with no build. | DL289 |
 | 0.9.2 | 2026-11-13 | RELEASE-120 | The linux-packaging layer adds createrepo-c (rpm repository metadata); the doctor checks createrepo_c. | DL287 |
 | 0.9.1 | 2026-11-13 | RELEASE-119 | A system user or group that holds an agent's uid or gid is moved to a free id before the agent user is recreated (R5.30). | DL284 |
 | 0.9.0 | 2026-11-13 | RELEASE-118 | VM checks (R5.29): vm_check.py boots throwaway distro VMs on kvm runners with a shared cache, optional resume snapshots and an SELinux check; prepare_kvm makes the shared cache folder. | DL281 |
