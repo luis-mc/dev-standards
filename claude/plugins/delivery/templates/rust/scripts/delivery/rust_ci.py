@@ -339,6 +339,10 @@ def cmd_run(root: Path, command: list[str]) -> int:
     if isolated(root):
         keep = [env["RUST_CI_LLVM_BIN"]] if "RUST_CI_LLVM_BIN" in env else []  # linkers are set by absolute path
         full["PATH"] = strip_path(full.get("PATH", ""), keep)
+    # DL301: Windows resolves the program with this process's PATH, not env's; resolve it on the job PATH first.
+    found = shutil.which(command[0], path=full.get("PATH"))
+    if found:
+        command = [found, *command[1:]]
     return subprocess.run(command, cwd=root, env=full).returncode
 
 
