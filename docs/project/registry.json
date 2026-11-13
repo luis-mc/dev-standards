@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T02:14+00:00",
+  "updated": "2026-11-13T02:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5077,12 +5077,11 @@
       "id": "DL283",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-119: pool user id clash fix",
       "detail": "Join, CI and merge for DL284.",
-      "expected": "13 Nov ~02:57",
-      "changed": "2026-11-13T02:14+00:00",
-      "expected_basis": "agent ~25 min from 02:16, join 7, CI 6",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T02:27+00:00",
       "release": 119,
       "phases": [
         {
@@ -5105,20 +5104,32 @@
           "start": "2026-11-13T02:54+00:00",
           "end": "2026-11-13T02:57+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-13T02:21+00:00"
     },
     {
       "id": "DL284",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool supervisor: move system users/groups that take an agent's id",
       "detail": "After RELEASE-118 the systemd package (linux-packaging layer) made systemd-network uid 998 and systemd-journal gid 999, the ids of two agent users; useradd failed (exit 4) and one runner stayed offline 02:05-02:13 until fixed by hand. ensure_user must move a clashing non-agent user or group to a free id below the agent range, then create the agent user.",
-      "expected": "13 Nov ~02:41",
-      "changed": "2026-11-13T02:14+00:00",
-      "expected_basis": "cloud agent from 02:16, ~25 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T02:27+00:00",
       "rides": "DL283",
       "started": "2026-11-13T02:14+00:00"
+    },
+    {
+      "id": "DL285",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "Apply RELEASE-119 supervisor to this PC's pool",
+      "detail": "pool-refresh --yes when every pool runner is idle (refuses if a job runs); then check the 4 runners and their user ids.",
+      "expected": "13 Nov ~03:15",
+      "changed": "2026-11-13T02:27+00:00",
+      "expected_basis": "waits for idle runners, then ~8 min rebuild",
+      "no_release": "machine settings only (pool image)"
     },
     {
       "id": "DS1",
