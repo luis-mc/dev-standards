@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T22:31+00:00",
+  "updated": "2026-11-13T22:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -4972,12 +4972,12 @@
       "id": "DL276",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Dropped",
       "item": "CI rule: a test's inputs include every program it runs",
       "detail": "D258: port the peer project's programs map (ci-scope.json programs, ci_scope.py, guard test) once its reference works; add the rule to the shared rules.",
       "expected": "13 Nov",
-      "changed": "2026-11-12T22:52+00:00",
-      "expected_basis": "waits on the peer's reference version"
+      "changed": "2026-11-13T22:33+00:00",
+      "dropped_reason": "already shipped: peer ci_scope.py equals the luismc-delivery template"
     },
     {
       "id": "DL277",

@@ -1,5 +1,9 @@
 [
   {
+    "date": "13 Nov 22:33",
+    "change": "dropped: already shipped: peer ci_scope.py equals the luismc-delivery template"
+  },
+  {
     "date": "13 Nov 20:36",
     "change": "DL317 item changed from \"Windows runner setup keeps a replaced runner's custom labels\" to \"Shared Windows runner stays generic: projects target it by repo variable\""
   },
