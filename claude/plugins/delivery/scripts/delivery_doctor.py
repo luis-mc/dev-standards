@@ -29,6 +29,8 @@ Eight checks (a ninth, `rust`, appears only on the rust track: see below), each 
            exists and is readable (a difference with the old ~/.claude file is a warning naming the keys); every runner
            folder has both hooks (ACTIONS_RUNNER_HOOK_JOB_STARTED -> runner_load_gate, ..._COMPLETED -> runner_job_done;
            on Windows a .ps1 hook passes the execution policy check, a hook ending in .cmd FAILS: the runner rejects it);
+           DL310: each Windows runner service runs as its own ci-* account (WARN for NETWORK SERVICE, LocalSystem or an admin
+           account), its .env has CI_TOOLS_DIR, RUSTUP_HOME and CARGO_HOME, and it reads the same machine.json as the pool;
            a dry-run push of a ci-wait test ref from each runner's kept checkout WARNs when it fails (the runner account
            needs git credentials); no slot is stale and no queue ticket is older than
            `slot_stale_min`; host-load.json is under 60 s old; the pool checks of delivery_runner_pool.doctor_checks(root)
@@ -175,6 +177,7 @@ def _runner_dirs():
     if not dirs:
         for base in (os.path.expanduser("~"), "C:\\", "/opt", "/srv"):
             dirs += glob.glob(os.path.join(base, "actions-runner*"))
+        dirs += glob.glob(os.path.join("C:\\", "actions-runners", "*"))  # DL310: one folder per Windows runner service
     return [d for d in dirs if os.path.isfile(os.path.join(d, ".runner")) or os.path.isfile(os.path.join(d, "config.sh"))
             or os.path.isfile(os.path.join(d, "config.cmd"))]
 
@@ -506,6 +509,69 @@ def _runner_name(runner_dir):
         return None
 
 
+WIN_GROUP = "luismc-ci-runners"
+SHARED_ACCOUNTS = ("networkservice", "localsystem", "system", "localservice")
+
+
+def _account_name(text):
+    return (text or "").replace("/", "\\").split("\\")[-1].strip().lower()
+
+
+def _account_in_group(account, group):
+    """True or False when `net localgroup` can be read, None when it cannot."""
+    import subprocess
+    try:
+        out = subprocess.run(["net", "localgroup", group], capture_output=True, text=True, timeout=15).stdout
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return _account_name(account) in {_account_name(l) for l in out.splitlines()}
+
+
+def windows_runner_items(dirs):
+    """DL310 (R5.31): each Windows runner of the shared machine layer: its service exists and runs as its own ci-* account (a
+    warning for NETWORK SERVICE, LocalSystem or an administrator account), its .env has both hooks, CI_TOOLS_DIR, RUSTUP_HOME
+    and CARGO_HOME, and it reads the same machine.json (and the same hook folder) as the pool."""
+    items = []
+    folder = str(MS.machine_dir()).replace("\\", "/").rstrip("/").lower()
+    for d in dirs:
+        tag = "machine.winrunner:" + d
+        svc = _service_account(d)
+        if svc is None or svc[1] is None:
+            items.append(_item(tag + ":service", "warn", "runner %s has no readable Windows service: it does not start with the machine. "
+                                                        "Run /delivery-ci-setup with the Windows repository to set it up." % d))
+        else:
+            name, start = svc
+            acct = _account_name(start)
+            admin = _account_in_group(acct, "Administrators") if acct not in SHARED_ACCOUNTS else None
+            if acct in SHARED_ACCOUNTS or "nt authority" in (start or "").lower():
+                items.append(_item(tag + ":account", "warn", "service %s runs as %s: give it its own non-admin ci-* account "
+                                                            "(/delivery-ci-setup replaces it)." % (name, start)))
+            elif admin:
+                items.append(_item(tag + ":account", "warn", "service %s runs as %s, an administrator account: use a non-admin ci-* account."
+                                   % (name, start)))
+            elif not acct.startswith("ci-"):
+                items.append(_item(tag + ":account", "warn", "service %s runs as %s, not a ci-* account of this setup." % (name, start)))
+            elif _account_in_group(acct, WIN_GROUP) is False:
+                items.append(_item(tag + ":account", "warn", "service %s runs as %s, which is not in the group %s." % (name, start, WIN_GROUP)))
+            else:
+                items.append(_item(tag + ":account", "ok", "service %s runs as %s (not an administrator)" % (name, start)))
+        want = ("CI_TOOLS_DIR", "RUSTUP_HOME", "CARGO_HOME")
+        miss = [v for v in want if not _env_value(d, v)]
+        items.append(_item(tag + ":env", "warn" if miss else "ok", ("runner %s: .env lacks %s (run /delivery-ci-setup again)" % (d, ", ".join(miss)))
+                           if miss else "runner %s .env has CI_TOOLS_DIR, RUSTUP_HOME and CARGO_HOME" % d))
+        other = _env_value(d, "DELIVERY_MACHINE_DIR")
+        hook = (_env_value(d, HOOK_VAR) or "").strip("\"'").replace("\\", "/").lower()
+        if other and other.strip("\"'").replace("\\", "/").rstrip("/").lower() != folder:
+            items.append(_item(tag + ":machine", "warn", "runner %s reads %s, not the machine folder %s: it would use other limits and slots than the pool."
+                               % (d, other, MS.machine_dir())))
+        elif hook and "runner_load_gate" in hook and not hook.startswith(folder + "/"):
+            items.append(_item(tag + ":machine", "warn", "runner %s uses a hook outside %s: its copy of the machine layer may read another "
+                                                         "machine.json than the pool." % (d, MS.machine_dir())))
+        else:
+            items.append(_item(tag + ":machine", "ok", "runner %s reads the same machine.json and slot queue as the pool" % d))
+    return items
+
+
 def machine_items(root, cfg):
     """The single results of the machine check: [{'id', 'status', 'detail'}]."""
     import load as L
@@ -551,6 +617,8 @@ def machine_items(root, cfg):
             items.append(_item("machine.hooks:" + d, "ok", "runner %s has both hooks" % d))
     if not dirs:
         items.append(_item("machine.hooks", "ok", "no runner folder found on this machine"))
+    if _is_windows():
+        items += windows_runner_items(dirs)
     for d in dirs:
         probe = _push_probe(d)
         if probe is None:
