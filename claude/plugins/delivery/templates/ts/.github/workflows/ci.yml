@@ -196,7 +196,7 @@ jobs:
               || echo "::warning::rerun-first failed; every job runs"
           fi
 
-      # Optional (scripts/delivery/ci-scope.json present): full / ci-smoke / affected (DL-80). Jobs that want the
+      # Optional (scripts/delivery/ci-scope.json present): full / ci-smoke / rust-release / affected (DL-80). Jobs that want the
       # scope read `needs.plan.outputs.scope`; an empty output means full.
       - name: Decide the scope
         id: scope

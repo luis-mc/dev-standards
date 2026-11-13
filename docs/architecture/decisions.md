@@ -242,6 +242,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D258 | Peer request: generic CI rule 'a test's inputs include every program it runs' (programs map in ci-scope.json + guard)? | Wait for their reference (Recommended) | decided | 2026-11-12 |
 | delivery-speed | D259 | VM test helper: resume from a snapshot saved after boot? Measured on the pool: cold boot 11.6-11.9 s, restore 0.7 s, snapshot ~550 MB per image. | Opt-in resume, keyed and checked (Recommended) | decided | 2026-11-12 |
 | delivery-speed | D26 | Machine-wide CI load control: how does /delivery-ci-setup install the hooks and machine config? | Run it with permission | decided | 2026-11-04 |
+| delivery-speed | D260 | Pool memory cap (D254, 8.5 GiB): 779k reclaims overnight, 0 OOM, PC 88-92% memory. Change it? | Keep 8.5 GiB (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D261 | Permission rule to remove a verified-dead queue ticket in the machine folder? | No rule needed (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D262 | Who reinstalls the runner hooks on the Windows host runner (outside the pool) to get the DL292 heartbeat? | comics-organizer session (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D263 | Privileged pool service after the DL278 study: keep D256 (Not now)? | Keep Not now (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D27 | Machine-wide CI load control: where is it specified? | Delivery spec section 13 | decided | 2026-11-04 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |
 | delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
