@@ -1929,11 +1929,11 @@ def _browser_checks(add, probe, pool, env_vals, agents, repo_paths):
 # --- DL149: opt-in image layers and the project apt fragment --------------------------------------------------------
 
 LAYERS = {'windows-packaging': 'dotnet-sdk-8.0 wine wine64 xvfb xauth msitools',
-          'linux-packaging': 'dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils gnupg shellcheck systemd',  # DL274, plus policycoreutils-python-utils when apt has it
+          'linux-packaging': 'dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils gnupg shellcheck systemd createrepo-c',  # DL274, plus policycoreutils-python-utils when apt has it
           'kvm': 'qemu-system-x86 qemu-utils cloud-image-utils openssh-client'}  # DL281 adds ssh for vm_check.py; the Dockerfile holds the same lists
 APT_NAME = re.compile(r'^[A-Za-z0-9+.\-]+$')
 LAYER_TOOLS = {'windows-packaging': ('wine', 'xvfb-run', 'dotnet'),
-               'linux-packaging': ('dpkg-deb', 'rpmbuild', 'checkmodule', 'semodule_package', 'gpg', 'shellcheck', 'systemd-analyze'),
+               'linux-packaging': ('dpkg-deb', 'rpmbuild', 'checkmodule', 'semodule_package', 'gpg', 'shellcheck', 'systemd-analyze', 'createrepo_c'),
                'kvm': ('qemu-system-x86_64', 'cloud-localds', 'ssh')}
 
 

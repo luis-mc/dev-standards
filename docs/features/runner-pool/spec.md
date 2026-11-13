@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.9.1
+version: 0.9.2
 owner: agents
 type: reference
 code:
@@ -64,7 +64,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 ### 5.2 Pool image and refresh
 
-**R5.9** (was delivery R13.68) — **Pool image layers** (DL149, D146). The pool base image is ubuntu:24.04 and always carries `build-essential` and `pkg-config`. `.delivery/config.json` `pool.layers` may list `windows-packaging`, which adds `dotnet-sdk-8.0 wine wine64 xvfb xauth msitools` (about 1 GB, 64-bit Wine, packages from the distribution, no extra feed); `linux-packaging` (DL274), which adds `dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils gnupg shellcheck systemd` (DL281 added the last three) and `policycoreutils-python-utils` when the base image's apt has it (the build skips it quietly if not); and `kvm` (DL274), which adds `qemu-system-x86 qemu-utils cloud-image-utils openssh-client` (DL281 added ssh for `vm_check.py`). All layers are off by default. The doctor checks `dpkg-deb rpmbuild checkmodule semodule_package gpg shellcheck systemd-analyze` for `linux-packaging` and `qemu-system-x86_64 cloud-localds ssh` for `kvm`. A project file `.delivery/pool.apt` lists extra apt packages, one per line, `#` for comments. A name holds only letters, digits and `+ - .` and does not start with `-`; anything else is refused with the line number and nothing changes. An unknown layer is refused the same way. `pool-refresh` reads both from the project checkout and adds them to what the pool `.env` already holds in `POOL_LAYERS` and `POOL_APT` (R5.11); `compose.yaml` passes them as build args. A missing or empty key changes nothing, and a layer turned off in the repo config alone is not removed from the pool.
+**R5.9** (was delivery R13.68) — **Pool image layers** (DL149, D146). The pool base image is ubuntu:24.04 and always carries `build-essential` and `pkg-config`. `.delivery/config.json` `pool.layers` may list `windows-packaging`, which adds `dotnet-sdk-8.0 wine wine64 xvfb xauth msitools` (about 1 GB, 64-bit Wine, packages from the distribution, no extra feed); `linux-packaging` (DL274), which adds `dpkg-dev rpm make checkpolicy selinux-policy-dev policycoreutils gnupg shellcheck systemd createrepo-c` (DL281 added gnupg, shellcheck and systemd; DL287 added createrepo-c) and `policycoreutils-python-utils` when the base image's apt has it (the build skips it quietly if not); and `kvm` (DL274), which adds `qemu-system-x86 qemu-utils cloud-image-utils openssh-client` (DL281 added ssh for `vm_check.py`). All layers are off by default. The doctor checks `dpkg-deb rpmbuild checkmodule semodule_package gpg shellcheck systemd-analyze createrepo_c` for `linux-packaging` and `qemu-system-x86_64 cloud-localds ssh` for `kvm`. A project file `.delivery/pool.apt` lists extra apt packages, one per line, `#` for comments. A name holds only letters, digits and `+ - .` and does not start with `-`; anything else is refused with the line number and nothing changes. An unknown layer is refused the same way. `pool-refresh` reads both from the project checkout and adds them to what the pool `.env` already holds in `POOL_LAYERS` and `POOL_APT` (R5.11); `compose.yaml` passes them as build args. A missing or empty key changes nothing, and a layer turned off in the repo config alone is not removed from the pool.
 
 **R5.10** (was delivery R13.69) — **No rebuild under a running job** (DL149). `pool-refresh --yes` reads `gh api repos/<repo>/actions/runners` for each repository in the pool's `agents.json`. When a pool runner has `busy=true`, or the list cannot be read, it refuses with `refused: pool runner busy: <name> (<repo>). Wait for the job or use --force.` and changes nothing. `--force` rebuilds and prints a warning.
 
@@ -159,6 +159,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.9.2 | 2026-11-13 | RELEASE-120 | The linux-packaging layer adds createrepo-c (rpm repository metadata); the doctor checks createrepo_c. | DL287 |
 | 0.9.1 | 2026-11-13 | RELEASE-119 | A system user or group that holds an agent's uid or gid is moved to a free id before the agent user is recreated (R5.30). | DL284 |
 | 0.9.0 | 2026-11-13 | RELEASE-118 | VM checks (R5.29): vm_check.py boots throwaway distro VMs on kvm runners with a shared cache, optional resume snapshots and an SELinux check; prepare_kvm makes the shared cache folder. | DL281 |
 | 0.8.0 | 2026-11-12 | RELEASE-117 | Pool layers linux-packaging and kvm; optional KVM (POOL_KVM=1, compose.kvm.yaml, host check, kvm label), R5.28. | DL274 |
