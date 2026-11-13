@@ -1040,13 +1040,30 @@ def ps_account(acct):
     ] + RIGHTS_PS
 
 
-def ps_files(acct, folder, tools_dir, python, ci_tool=None):
+def ps_unregister(repo):
+    """DL315: a runner already configured in the folder is removed first, with a remove token (GitHub refuses a registration
+    token here), before the folder is locked to the new account. A failure stops the script with the old runner untouched."""
+    return [
+        "if (Test-Path (Join-Path $folder '.runner')) {",
+        '  $rt = (gh api -X POST %s --jq .token)' % _psq('repos/%s/actions/runners/remove-token' % repo),
+        "  if ($LASTEXITCODE -ne 0 -or -not $rt) { throw 'gh could not make a remove token; the old runner and its folder are unchanged' }",
+        '  Push-Location $folder',
+        '  & .\\config.cmd remove --token $rt',
+        '  $code = $LASTEXITCODE; Pop-Location; $rt = $null',
+        "  if ($code -ne 0) { throw 'config.cmd remove failed; the old runner is still registered and its folder rights are unchanged' }",
+        '}',
+    ]
+
+
+def ps_files(acct, folder, tools_dir, python, ci_tool=None, repo=None, unregister=False):
     """Download the runner through ci_tool (SHA-256 checked, cached in the tool folder), unpack it into the runner folder and
-    lock the folder: Full for the account, Administrators and SYSTEM only."""
+    lock the folder: Full for the account, Administrators and SYSTEM only. With `unregister`, a runner already configured
+    in the folder is removed first (DL315)."""
     ci_tool = ci_tool or CI_TOOL
     f = _psq(_winpath(folder))
     return ps_header('Runner files in %s' % _winpath(folder)) + [
         '$folder = %s' % f,
+    ] + (ps_unregister(repo) if unregister and repo else []) + [
         '$env:CI_TOOLS_DIR = %s' % _psq(_winpath(tools_dir)),
         'New-Item -ItemType Directory -Force -Path $folder | Out-Null',
         'if (-not (Test-Path (Join-Path $folder %s))) {' % _psq('config.cmd'),
@@ -1073,7 +1090,6 @@ def ps_register(repo, name, acct, folder, env_text, register=True, labels=WIN_RU
             '$token = (gh api -X POST %s --jq .token)' % _psq('repos/%s/actions/runners/registration-token' % repo),
             "if ($LASTEXITCODE -ne 0 -or -not $token) { throw 'gh could not make a registration token (is gh signed in for this account?)' }",
             "Push-Location $folder",
-            "if (Test-Path (Join-Path $folder '.runner')) { & .\\config.cmd remove --token $token | Out-Null }",
             '$b = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)',
             "$pw = 'Aa1!' + [Convert]::ToBase64String($b)",
             "Set-LocalUser -Name $acct -Password (ConvertTo-SecureString $pw -AsPlainText -Force)",
@@ -1099,7 +1115,8 @@ def windows_runner_script(step, setup_machine=True):
     if setup_machine:
         lines += ps_machine(step['machine_dir'], step['hooks_dir'], step['tools_dir'])
     lines += ps_account(step['account'])
-    lines += ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool'))
+    lines += ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool'),
+                      step.get('repo'), step.get('register', True))
     lines += ps_register(step['repo'], step['runner'], step['account'], step['folder'], step['env_text'], step.get('register', True))
     return '\r\n'.join(lines) + '\r\n'
 
@@ -1941,7 +1958,8 @@ class Executor:
     def do_windows_files(self, step):
         if step.get('pin_problem'):
             return False, step['pin_problem']
-        return self._ps(ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool')))
+        return self._ps(ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool'),
+                      step.get('repo'), step.get('register', True)))
 
     def do_windows_service(self, step):
         """Write .env, then register: the token and the password are made inside PowerShell and never come back here."""

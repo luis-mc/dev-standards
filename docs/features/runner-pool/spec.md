@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.11.0
+version: 0.11.1
 owner: agents
 type: reference
 code:
@@ -135,7 +135,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 **R5.32** — **One run sets up everything** (DL310, D269, D272). The runner zip comes from `tools.json` (pin `actions-runner`, `windows_x64`) through `ci_tool.py`; the step refuses while the pin has no real SHA-256. The registration token comes from `gh api -X POST repos/<owner>/<repo>/actions/runners/registration-token` when the service is registered and is never stored.
 - *Elevated shell.* `pool-run --windows-repos` runs the steps in this order: `runner-hooks`, `win-machine` (group and rights), `win-account`, `win-files` (download and folder rights), `winsvc` (`.env`, `config.cmd --runasservice` with the account, service start).
 - *Not elevated.* The step `win-script` writes `<machine folder>/setup/windows-runner-<slug>.ps1`, which does the same, fetches its own token and holds no secret. The run prints one line: run it in an administrator PowerShell. The run then checks that the service exists.
-- *Rerun.* A runner with the planned name, folder, labels, account and `.env` is `already`. A runner with another account is registered again in place; one with only a stale `.env` has the file rewritten and the service restarted, without a new password.
+- *Rerun.* A runner with the planned name, folder, labels, account and `.env` is `already`. A runner with another account is registered again in place: `win-files` first removes it with a remove token (`.../actions/runners/remove-token`; GitHub refuses a registration token there) and stops on a non-zero exit, before the folder is locked to the new account, so a failed removal leaves the old runner working (DL315); one with only a stale `.env` has the file rewritten and the service restarted, without a new password.
 - *Skill.* `/delivery-ci-setup` asks whether the project's Windows CI runs on the shared machine runner, then offers to set up everything.
 
 **R5.33** — **An old Windows runner is replaced only after the new one is online** (DL310). When a repository has a self-hosted Windows runner with another name (for example a hand-made one that runs as NETWORK SERVICE), the plan adds steps after the new service: stop and delete the old service, remove the old runner from GitHub, delete the old folder. Each is a deletion that needs the owner's yes naming it. A step waits when the new runner is not online, when the runner list cannot be read, or when the old runner has a job; it never touches a runner with a running job.
@@ -162,7 +162,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.22 to R5.24 | `claude/plugins/delivery/tests/test_dl177_pool_measure.py` |
 | R5.28, R5.29 | `claude/plugins/delivery/tests/test_dl274_kvm_layers.py`, `claude/plugins/delivery/tests/test_dl281_vm_check.py` |
 | R5.26 | `claude/plugins/delivery/tests/test_dl215_pool_node.py`, `claude/plugins/delivery/tests/test_dl223_pool_path_order.py` |
-| R5.31 to R5.34 | `claude/plugins/delivery/tests/test_dl310_windows_runner.py` (mocked probe; the real account, rights and service run only on Windows) |
+| R5.31 to R5.34 | `claude/plugins/delivery/tests/test_dl310_windows_runner.py`, `claude/plugins/delivery/tests/test_dl315_runner_remove_token.py` (mocked probe; the real account, rights and service run only on Windows) |
 
 ## 12. Code map
 
@@ -176,6 +176,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.11.1 | 2026-11-13 | RELEASE-130 | R5.32 setup: an existing runner in the folder is removed with a remove token and a checked exit code before the folder is locked (DL315). | DL315 |
 | 0.11.0 | 2026-11-13 | RELEASE-128 | A Windows runner service runs as its own non-admin ci-* account on the shared machine config and slot queue; one run sets up account, rights, download, registration, .env and service, replaces an old runner after the new one is online, and the doctor checks each Windows runner (R5.31 to R5.34). | DL310 |
 | 0.10.0 | 2026-11-13 | RELEASE-121 | pool-refresh builds the image first while the old container serves jobs, drains the pool through the machine folder (per-agent job marker, drain and drained files, --drain-timeout), then recreates with no build. | DL289 |
 | 0.9.2 | 2026-11-13 | RELEASE-120 | The linux-packaging layer adds createrepo-c (rpm repository metadata); the doctor checks createrepo_c. | DL287 |
