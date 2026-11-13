@@ -902,7 +902,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.4.5 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-13T05:10+00:00">13 Nov 05:10</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-13T06:59+00:00">13 Nov 06:59</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Nov 05:11</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -1269,6 +1269,74 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D263">
+<h3 class="decision-head"><span class="decision-id">D263</span> <span class="decision-question">Privileged pool service after the DL278 study: keep D256 (Not now)?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL278</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep Not now (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Keep Not now (Recommended) (owner 06:3x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Build as opt-in layer</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D262">
+<h3 class="decision-head"><span class="decision-id">D262</span> <span class="decision-question">Who reinstalls the runner hooks on the Windows host runner (outside the pool) to get the DL292 heartbeat?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL292</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">comics-organizer session (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;comics-organizer session (Recommended) (owner 06:3x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">I do it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D261">
+<h3 class="decision-head"><span class="decision-id">D261</span> <span class="decision-question">Permission rule to remove a verified-dead queue ticket in the machine folder?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL292</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">No rule needed (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;No rule needed (Recommended) (owner 06:3x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Add a permission rule</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D260">
+<h3 class="decision-head"><span class="decision-id">D260</span> <span class="decision-question">Pool memory cap (D254, 8.5 GiB): 779k reclaims overnight, 0 OOM, PC 88-92% memory. Change it?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL290</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep 8.5 GiB (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Keep 8.5 GiB (Recommended) (owner 06:3x)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Raise to 10 GiB</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Lower to 7 GiB</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D259">
 <h3 class="decision-head"><span class="decision-id">D259</span> <span class="decision-question">VM test helper: resume from a snapshot saved after boot? Measured on the pool: cold boot 11.6-11.9 s, restore 0.7 s, snapshot ~550 MB per image.</span></h3>
 <p class="decision-meta">Asked 12 Nov · Decided 12 Nov · Task DL281</p>

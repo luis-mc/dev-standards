@@ -5904,6 +5904,94 @@
       "chosen": "Opt-in resume, keyed and checked (Recommended)",
       "decided": "2026-11-12",
       "owner_words": "measure and if worth it, implement it (owner 23:2x); pick made under the overnight rules (D247: my recommended option, recorded)"
+    },
+    {
+      "id": "D260",
+      "question": "Pool memory cap (D254, 8.5 GiB): 779k reclaims overnight, 0 OOM, PC 88-92% memory. Change it?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL290",
+      "options": [
+        {
+          "label": "Keep 8.5 GiB (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Raise to 10 GiB",
+          "summary": "offered"
+        },
+        {
+          "label": "Lower to 7 GiB",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Keep 8.5 GiB (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Keep 8.5 GiB (Recommended) (owner 06:3x)"
+    },
+    {
+      "id": "D261",
+      "question": "Permission rule to remove a verified-dead queue ticket in the machine folder?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL292",
+      "options": [
+        {
+          "label": "No rule needed (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Add a permission rule",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "No rule needed (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "No rule needed (Recommended) (owner 06:3x)"
+    },
+    {
+      "id": "D262",
+      "question": "Who reinstalls the runner hooks on the Windows host runner (outside the pool) to get the DL292 heartbeat?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL292",
+      "options": [
+        {
+          "label": "comics-organizer session (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "I do it",
+          "summary": "offered"
+        },
+        {
+          "label": "Leave it",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "comics-organizer session (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "comics-organizer session (Recommended) (owner 06:3x)"
+    },
+    {
+      "id": "D263",
+      "question": "Privileged pool service after the DL278 study: keep D256 (Not now)?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL278",
+      "options": [
+        {
+          "label": "Keep Not now (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Build as opt-in layer",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Keep Not now (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Keep Not now (Recommended) (owner 06:3x)"
     }
   ]
 }
