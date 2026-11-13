@@ -820,11 +820,15 @@ def groups_are_collapsible_details(fx):
 @test
 @with_fixture
 def live_or_built_starts_closed(fx):
-    """R6.12: Live or built is always closed, every other group open; the closed heading still counts Built rows."""
+    """R6.12: in Full Progress every group starts closed (DL313); in a feature artifact Live or built is closed and
+    every other group open; the closed heading still counts Built rows."""
     for name in ('full-progress', 'artifacts'):
         dom = R.parse_dom(fx.render(name))
-        for fold in checklist_folds(dom):
-            assert ('open' in fold.attrs) == (fold.attrs['data-group'] != 'built'), (name, fold.attrs)
+        folds = checklist_folds(dom)
+        assert folds, name
+        for fold in folds:
+            want = False if name == 'full-progress' else fold.attrs['data-group'] != 'built'
+            assert ('open' in fold.attrs) == want, (name, fold.attrs)
     fp = R.parse_dom(fx.render('full-progress'))
     built = [f for f in R.find_all(fp, 'details', 'status-fold') if f.attrs['data-group'] == 'built'][0]
     assert R.text_of(R.find(built, 'span', 'fold-count')) == '2 built, 3 live, 1 earlier', R.text_of(R.find(built, 'span', 'fold-count'))
@@ -835,7 +839,7 @@ def live_or_built_starts_closed(fx):
 def check_finds_a_wrong_open_state(fx):
     fp = fx.render('full-progress')
     expect(fx, sub1(fp, 'data-group="built">', 'data-group="built" open>'), 'full-progress', ['R6.12'])
-    expect(fx, sub1(fp, 'data-group="now" open>', 'data-group="now">'), 'full-progress', ['R6.12'])
+    expect(fx, sub1(fp, 'data-group="now">', 'data-group="now" open>'), 'full-progress', ['R6.12'])
     # a heading kept as a table row, and an Earlier fold moved out of Live or built
     row = '<tr data-task="DS6">'
     expect(fx, sub1(fp, row, '<tr class="status-group" data-group="now"><td colspan="5"><strong>x</strong></td></tr>' + row),
@@ -855,7 +859,8 @@ def glance_groups_are_collapsible_details(fx):
         for g in groups:
             kids = [n for n in g.children if n.tag != '#text']
             assert kids[0].tag == 'summary' and R.find(kids[0], 'span', 'glance-label') is not None
-            assert ('open' in g.attrs) == (g.attrs['data-glance'] not in ('built', 'live')), (name, g.attrs)
+            want = False if name == 'full-progress' else g.attrs['data-glance'] not in ('built', 'live')
+            assert ('open' in g.attrs) == want, (name, g.attrs)
         assert fx.check(out, name) == []
     out = fx.render('full-progress')
     counts = {g.attrs['data-glance']: R.text_of(R.find(g, 'span', 'fold-count'))
@@ -875,7 +880,9 @@ def check_finds_a_wrong_glance_state(fx):
     fx.registry = glance_registry()
     fp = fx.render('full-progress')
     expect(fx, sub1(fp, 'data-glance="live">', 'data-glance="live" open>'), 'full-progress', ['R6.13'])
-    expect(fx, sub1(fp, 'data-glance="running" open>', 'data-glance="running">'), 'full-progress', ['R6.13'])
+    expect(fx, sub1(fp, 'data-glance="running">', 'data-glance="running" open>'), 'full-progress', ['R6.13'])
+    fa = fx.render('artifacts')
+    expect(fx, sub1(fa, 'data-glance="you" open>', 'data-glance="you">'), 'artifacts', ['R6.13'])
     at = fp.index('data-glance="you"')
     expect(fx, fp[:at] + fp[at:].replace('class="fold-count">', 'class="fold-count">9', 1), 'full-progress', ['R6.13'])
 
