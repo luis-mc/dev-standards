@@ -694,7 +694,8 @@ class P4HostLoadTaskTests(unittest.TestCase):
         t = next(x for x in self.pl["steps"] if x["id"] == "host-load-task")
         text = " ".join(t["printed"])
         self.assertNotIn("/SC MINUTE", text)
-        self.assertIn("/SC ONSTART", text)
+        self.assertNotIn("schtasks", text)  # DL320: PowerShell cmdlets, not cmd-quoted schtasks
+        self.assertIn("New-ScheduledTaskTrigger -AtStartup", text)
         self.assertIn('C:\\Python\\python.exe', text)
         self.assertIn('C:\\ProgramData\\luismc-delivery\\host-load\\host-load-loop.py', text)
         self.assertNotIn(" load.py", text)

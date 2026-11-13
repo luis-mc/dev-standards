@@ -256,7 +256,20 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D270 | Windows runner service account? | Dedicated local acct (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D271 | Windows runner load slots vs the Linux pool? | One shared limit (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D272 | How does a project join the Windows runner? | delivery-ci-setup step (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D273 | How should Windows runner accounts get the right to create symlinks (cargo-xwin needs it)? | Grant to ci-* accounts (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D274 | Register the host-load scheduled task on this PC? | I'll register it now (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D275 | Keep a project-specific label on a shared runner? | Generic pool, projects target it by repo variable | decided | 2026-11-13 |
+| delivery-speed | D276 | Which dev-standards plugins stay installed at user level? | None at user level | decided | 2026-11-13 |
+| delivery-speed | D277 | When to build DL309 and DL316-DL320? | All now, one release (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D278 | How do workflows target the shared Windows runner? | CI_RUNS_ON_WINDOWS (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D279 | Who removes a leftover project label on a shared runner? | Setup removes it, with a yes (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D28 | Machine-wide CI load control: when is it built? | Build now | decided | 2026-11-04 |
+| delivery-speed | D280 | How is the Windows-only runner setup started? | --only windows flag (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D281 | Which ci-* runner accounts get the symlink right? | Every ci-* account (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D282 | Add a second comics-organizer agent to the Linux pool? | Add a second agent (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D283 | What happens to DL276 (programs CI rule port)? | Ask the peer once more (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D284 | Run tonight's work under the overnight rules? | Yes, overnight rules (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D285 | Release the stale RELEASE-41 ledger hold? | Release it (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
 | delivery-speed | D30 | Machine-wide CI queue: in what order do waiting jobs get a slot? | Ready-PR jobs first | decided | 2026-11-04 |

@@ -40,6 +40,7 @@ DEFAULT_CONFIG = {
                     'light_jobs': ['smoke', 'prune', 'prune-*', 'cleanup', 'remove-train', 'decide', 'delete-*',
                                    'runners']},
     'runner_dirs': [],
+    'generic_labels': [],  # DL316: extra runner labels that count as generic (D275)
 }
 CONFIG_KEYS = tuple(DEFAULT_CONFIG)
 LOG_MAX_LINES = 5000
@@ -131,6 +132,9 @@ def normalise_config(raw):
             out['runner_gate']['light_jobs'] = [x for x in lj if isinstance(x, str) and x]
         if rg.get('on_timeout') in ('fail', 'run'):
             out['runner_gate']['on_timeout'] = rg['on_timeout']
+    gl = raw.get('generic_labels')  # DL316: kept on a rewrite of machine.json
+    if isinstance(gl, list):
+        out['generic_labels'] = [x for x in gl if isinstance(x, str) and x]
     rd = raw.get('runner_dirs')
     if isinstance(rd, list):
         out['runner_dirs'] = [x for x in rd if isinstance(x, str) and x]

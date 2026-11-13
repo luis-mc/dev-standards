@@ -27,6 +27,7 @@ import shutil
 import subprocess
 import sys
 import time
+import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -696,6 +697,7 @@ LOOP_SCRIPT = """\
 import os
 import sys
 import time
+import urllib.parse
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
@@ -900,6 +902,70 @@ def windows_runner_folder(slug):
     return '%s/%s' % (WIN_RUNNERS_DIR, slug)
 
 
+# --- DL316: a generic pool (D275, D278, D279) ------------------------------------------------------------------------
+# A shared runner carries no project label. Windows workflows read the repository variable CI_RUNS_ON_WINDOWS, a JSON list.
+
+GENERIC_BASE = ('self-hosted', 'windows', 'linux', 'macos', 'x64', 'x86', 'arm', 'arm64')
+WIN_RUNS_ON = ('self-hosted', 'Windows', 'X64')
+
+
+def configured_generic_labels():
+    """The list `generic_labels` of machine.json (extra labels any project may name, such as a capability). [] when none."""
+    try:
+        raw = MS.read_config_file() if MS and hasattr(MS, 'read_config_file') else None
+    except Exception:  # noqa: BLE001
+        raw = None
+    vals = (raw or {}).get('generic_labels')
+    return [str(v) for v in vals if isinstance(v, str) and v.strip()] if isinstance(vals, list) else []
+
+
+def generic_label_set(pool='main'):
+    """Lower case names of the labels that are generic: self-hosted, OS names, architectures, the pool label, and machine.json
+    `generic_labels`."""
+    return {x.lower() for x in GENERIC_BASE} | {('pool-%s' % pool).lower()} | {x.lower() for x in configured_generic_labels()}
+
+
+def windows_runs_on(labels, generic=None):
+    """The JSON list for CI_RUNS_ON_WINDOWS: self-hosted, Windows, X64 and each generic capability label of the runner
+    (a label named in machine.json `generic_labels`). Never a project name."""
+    out = list(WIN_RUNS_ON)
+    have = {x.lower() for x in out}
+    extra = {x.lower() for x in configured_generic_labels()}
+    for l in labels or []:
+        if str(l).lower() in extra and str(l).lower() not in have:
+            out.append(str(l))
+            have.add(str(l).lower())
+    return out
+
+
+def workflows_naming(probe, repo, labels):
+    """{label: [workflow files that name it]} read through gh. A label maps to None when the files cannot be read."""
+    out = {l: [] for l in labels}
+    listing, _why = probe.gh_json(['api', 'repos/%s/contents/.github/workflows' % repo])
+    if not isinstance(listing, list):
+        return {l: None for l in labels}
+    for f in listing:
+        name = f.get('name') if isinstance(f, dict) else None
+        if not name or not name.endswith(('.yml', '.yaml')):
+            continue
+        r = probe.gh(['api', 'repos/%s/contents/.github/workflows/%s' % (repo, name), '-H', 'Accept: application/vnd.github.raw'])
+        if not (r and r[0] == 0):
+            return {l: None for l in labels}
+        text = (r[1] or '').lower()
+        for l in labels:
+            if l.lower() in text:
+                out[l].append(name)
+    return out
+
+
+def host_load_task_ps(python, loop):
+    """DL320: the host-load task as PowerShell cmdlets. PowerShell 5.1 mangles the quotes of a cmd-style schtasks line."""
+    return ["$a = New-ScheduledTaskAction -Execute %s -Argument %s" % (_psq(python), _psq('"%s"' % loop)),
+            '$t = New-ScheduledTaskTrigger -AtStartup',
+            'Register-ScheduledTask -TaskName luismc-host-load -Action $a -Trigger $t -User SYSTEM -RunLevel Highest -Force',
+            'Start-ScheduledTask -TaskName luismc-host-load']
+
+
 def _wanted_windows(found, repo, account=None):
     """The Windows runner already in the state this plan would create: same name, repository, folder and labels.
     Returns {'runner', 'folder', 'service'} or None. Such a runner is kept, not removed."""
@@ -961,13 +1027,21 @@ def _psq(text):
     return "'" + str(text).replace("'", "''") + "'"
 
 
+RIGHTS_MARK = 'symlink-1'  # DL319: a runner whose .env lacks it is set up again, so its account gets the new right
+
+
 def windows_env_text(folder, hooks_dir, tools_dir=WIN_TOOLS_DIR):
     """The runner's .env: both hooks (the runner rejects .cmd hooks), the shared tool cache, and a private Rust home."""
     return ('ACTIONS_RUNNER_HOOK_JOB_STARTED=%s/runner_load_gate.ps1\n'
             'ACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s/runner_job_done.ps1\n'
             'CI_TOOLS_DIR=%s\n'
             'RUSTUP_HOME=%s/_tools/rustup\n'
-            'CARGO_HOME=%s/_tools/cargo\n' % (hooks_dir, hooks_dir, tools_dir, folder, folder))
+            'CARGO_HOME=%s/_tools/cargo\n'
+            'CI_RUNNER_RIGHTS=%s\n'
+            # DL324: a ci-* account has no execution policy (Restricted), so the runner could not load the .ps1 hooks.
+            # Process scope, this runner only: no machine-wide policy change.
+            'PSExecutionPolicyPreference=RemoteSigned\n'
+            % (hooks_dir, hooks_dir, tools_dir, folder, folder, RIGHTS_MARK))
 
 
 def runner_pin_problem(pin_path=None):
@@ -1004,13 +1078,15 @@ def ps_machine(machine_dir, hooks_dir, tools_dir=WIN_TOOLS_DIR):
     ]
 
 
+# DL319, D281: the last right lets cargo-xwin make symbolic links. The loop adds the account when the line exists, so a rerun
+# is idempotent.
 RIGHTS_PS = [
     '$sid = (Get-LocalUser -Name $acct).SID.Value',
     "$cfg = Join-Path $env:TEMP ('luismc-rights-' + [guid]::NewGuid().ToString('N') + '.inf')",
     "$sdb = Join-Path $env:TEMP ('luismc-rights-' + [guid]::NewGuid().ToString('N') + '.sdb')",
     'secedit /export /cfg $cfg /areas USER_RIGHTS | Out-Null',
     '$text = Get-Content -Raw -Path $cfg',
-    "foreach ($r in 'SeServiceLogonRight', 'SeDenyInteractiveLogonRight', 'SeDenyRemoteInteractiveLogonRight') {",
+    "foreach ($r in 'SeServiceLogonRight', 'SeDenyInteractiveLogonRight', 'SeDenyRemoteInteractiveLogonRight', 'SeCreateSymbolicLinkPrivilege') {",
     '  if ($text -match \"(?m)^$r\\s*=\") {',
     '    if ($text -notmatch \"(?m)^$r\\s*=.*$([regex]::Escape($sid))\") { $text = $text -replace \"(?m)^($r\\s*=.*)$\", (\'$1,*\' + $sid) }',
     '  } else {',
@@ -1147,12 +1223,17 @@ def migration_guard(probe, step):
 
 
 def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
-         browsers=None, playwright_version=None, repo_paths=None, probe=None, drop_layers=(), drop_apt=()):
+         browsers=None, playwright_version=None, repo_paths=None, probe=None, drop_layers=(), drop_apt=(), only=None):
     """The steps, in the order of contract 6.3. A public repository gets no step; it is listed in `refused`.
 
     With no repositories given, they come from detect (`derive_repos`). With none derived either, the plan has no step
     and says why: it never removes a runner it does not rebuild. Removals are limited to the planned repositories.
-    A runner that already belongs to this pool is kept and its steps say `already` (safe to run again)."""
+    A runner that already belongs to this pool is kept and its steps say `already` (safe to run again).
+
+    `only` (DL316, D280) is 'windows' or 'linux': the plan holds only that OS's steps. The host-load steps stay in both modes
+    (they are machine level)."""
+    if only not in (None, 'windows', 'linux'):
+        raise ValueError("only must be 'windows' or 'linux'")
     derived = not linux_repos and not windows_repos
     if derived:
         linux_repos, windows_repos = derive_repos(found)
@@ -1166,7 +1247,11 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     bad = {x['repo'] for x in refused}
     keep_l = [r for r in linux_repos if r not in bad]
     keep_w = [r for r in windows_repos if r not in bad]
-    base = {'pool': pool, 'refused': refused, 'cap': cap, 'derived': derived, 'blocked': None}
+    if only == 'windows':
+        keep_l = []
+    elif only == 'linux':
+        keep_w = []
+    base = {'pool': pool, 'refused': refused, 'cap': cap, 'derived': derived, 'blocked': None, 'only': only, 'notes': []}
     if not keep_l and not keep_w:
         base.update(steps=[], minutes=0, needs=[], blocked='No repository to plan for: none was named and detect found no '
                     'private repository with a runner or a self-hosted workflow. No runner is removed.')
@@ -1215,7 +1300,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                                repo=r['repo'], runner_id=x['id'], runner=x['name']))
     repo_of = {f['path']: f.get('repo') for f in found['folders']}
     for svc in found['services']:
-        if svc.get('kind') != 'windows-service':
+        if svc.get('kind') != 'windows-service' or only == 'linux':
             continue
         if repo_of.get(svc.get('folder')) not in planned | {None}:
             continue
@@ -1233,8 +1318,8 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         steps.append(_step('delete-folder:%s' % f['path'], 'Delete the old runner folder %s' % f['path'], 'delete-folder',
                            delete=True, names=[f['path']], path=f['path']))
     for c in found['containers']:
-        if c.get('pool'):
-            continue  # the pool's own container is kept
+        if c.get('pool') or only == 'windows':
+            continue  # the pool's own container is kept; a Windows-only plan leaves Linux containers alone
         steps.append(_step('delete-container:%s' % c['name'], 'Stop and delete the container %s' % c['name'],
                            'delete-container', delete=True, names=['container ' + c['name']], container=c['name'],
                            via=c.get('via', '')))
@@ -1246,10 +1331,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         loop = _winpath(dest + '/host-load-loop.py')
         steps.append(_step('host-load-files', 'Copy load.py and a 15-second loop script to %s' % dest, 'host-load-files', dest=dest))
         steps.append(_step('host-load-task', 'Register the scheduled task that writes the host load file every 15 seconds',
-                           'host-load-task', elevated=True,
-                           printed=['schtasks /Create /TN luismc-host-load /SC ONSTART /RU SYSTEM /RL HIGHEST /F '
-                                    '/TR "\\"%s\\" \\"%s\\""' % (py, loop),
-                                    'schtasks /Run /TN luismc-host-load']))
+                           'host-load-task', elevated=True, printed=host_load_task_ps(py, loop)))
     if keep_l:
         w, enough = _wsl_values(found, cap)
         if w and (win or (found.get('wsl') or {}).get('exists')):
@@ -1331,7 +1413,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                   'in %s/.env (the runner rejects .cmd hooks), with CI_TOOLS_DIR, RUSTUP_HOME and CARGO_HOME'
                   % (hooks_dir, hooks_dir, folder)]
         if admin:
-            if register and not w:
+            if (register and not w) or (fresh and w and not register):  # DL319: a kept account gets the new right
                 steps.append(_step('win-account:%s' % repo, 'Local account %s for the %s service (not an administrator, no interactive or '
                                    'remote logon, may log on as a service)' % (acct, name), 'windows-account', **data))
                 steps.append(_step('win-files:%s' % repo, 'Download the runner (SHA-256 checked) to %s and lock the folder to %s'
@@ -1369,6 +1451,29 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
             if (fold.get('repo'), fold.get('name')) == (repo, oname):
                 steps.append(_step('delete-folder:%s' % fold['path'], 'Delete the old runner folder %s' % fold['path'], 'delete-folder',
                                    delete=True, names=[fold['path']], path=fold['path'], **common))
+    generic = generic_label_set(pool)
+    for repo in keep_w:  # DL316: Windows workflows read CI_RUNS_ON_WINDOWS (D278); a project label is removed only with a yes (D279)
+        gh = next((r for r in found['github']['repos'] if r['repo'] == repo), None) or {}
+        rn = next((x for x in gh.get('runners', []) if x.get('name') == new_names[repo]), None)
+        labels = (rn or {}).get('labels') or []
+        steps.append(_step('var:CI_RUNS_ON_WINDOWS:%s' % repo, 'Set CI_RUNS_ON_WINDOWS for %s' % repo, 'set-variable', repo=repo,
+                           name='CI_RUNS_ON_WINDOWS', value=json.dumps(windows_runs_on(labels, generic))))
+        custom = [l for l in labels if str(l).lower() not in generic]
+        if rn and custom:
+            named = workflows_naming(probe or Probe(), repo, custom)
+            for label in custom:
+                files = named.get(label)
+                if files is None:
+                    base['notes'].append('%s: the workflow files could not be read, so label %s on runner %s is left.'
+                                         % (repo, label, rn['name']))
+                elif files:
+                    base['notes'].append('%s: label %s on runner %s stays; switch these workflow files to '
+                                         'runs-on: ${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }}: %s.'
+                                         % (repo, label, rn['name'], ', '.join(files)))
+                else:
+                    steps.append(_step('label-remove:%s:%s' % (repo, label), 'Remove label %s from runner %s' % (label, rn['name']),
+                                       'remove-label', delete=True, names=['label %s on runner %s in %s' % (label, rn['name'], repo)],
+                                       repo=repo, runner_id=rn['id'], runner=rn['name'], label=label))
     for repo in keep_l:
         value = json.dumps(expected_runs_on(['self-hosted', 'linux'], pool))  # DL184: the shared rule
         steps.append(_step('var:CI_RUNS_ON:%s' % repo, 'Set CI_RUNS_ON for %s' % repo, 'set-variable', repo=repo,
@@ -1376,8 +1481,9 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         if serial is not None:
             steps.append(_step('var:CI_SERIAL:%s' % repo, 'Set CI_SERIAL for %s' % repo, 'set-variable', repo=repo,
                                name='CI_SERIAL', value='true' if serial else 'false'))
-    steps.append(_step('verify', 'Verify: each agent online with its labels, then one pool-check run per repository', 'verify',
-                       repos=keep_l, pool=pool))
+    if only != 'windows':
+        steps.append(_step('verify', 'Verify: each agent online with its labels, then one pool-check run per repository', 'verify',
+                           repos=keep_l, pool=pool))
     n_run = sum(1 for s in steps if s['state'] == 'todo')
     base.update(steps=steps, minutes=5 + 3 * n_run, needs=['a yes for each step', 'a yes that names what is deleted']
                 + (['an administrator shell for: ' + ', '.join(s['id'] for s in steps if s['elevated'])]
@@ -1880,6 +1986,12 @@ class Executor:
     def do_remove_runner(self, step):
         r = self.probe.gh(['api', '-X', 'DELETE', 'repos/%s/actions/runners/%s' % (step['repo'], step['runner_id'])])
         return (bool(r and r[0] == 0), 'removed from GitHub' if r and r[0] == 0 else 'gh refused the removal')
+
+    def do_remove_label(self, step):
+        """DL316: remove one custom label from one runner. Runs only after a yes that names the label (D279)."""
+        r = self.probe.gh(['api', '-X', 'DELETE', 'repos/%s/actions/runners/%s/labels/%s' % (
+            step['repo'], step['runner_id'], urllib.parse.quote(step['label'], safe=''))])
+        return (bool(r and r[0] == 0), 'label removed' if r and r[0] == 0 else 'gh refused the label removal')
 
     def do_delete_folder(self, step):
         shutil.rmtree(step['path'], ignore_errors=False)
@@ -2696,6 +2808,7 @@ def main(argv=None):
     ap.add_argument('--shrink', action='store_true', help='allow --resize to lower POOL_MEM or POOL_CPUS')
     ap.add_argument('--pool-gib', type=float, help="the pool's memory you want, in GiB (checked against the budgets)")
     ap.add_argument('--pool-cpus', type=float, help="the pool's CPUs you want (checked against the budgets)")
+    ap.add_argument('--only', choices=['windows', 'linux'], help='plan only this OS\'s steps (host-load stays in both)')
     args = ap.parse_args(argv)
     split = lambda s: [x for x in s.split(',') if x]  # noqa: E731
     if args.action == 'detect':
@@ -2715,7 +2828,7 @@ def main(argv=None):
             print('--playwright-version must look like 1.62.1', file=sys.stderr)
             return 2
         pl = plan(found, split(args.repos), split(args.windows_repos), args.pool, res, repo_path=(args.repo_path or [None])[0],
-                  browsers=args.browsers, playwright_version=args.playwright_version, repo_paths=args.repo_path or [], probe=Probe())
+                  browsers=args.browsers, playwright_version=args.playwright_version, repo_paths=args.repo_path or [], probe=Probe(), only=args.only)
         print(json.dumps(pl, indent=2))
         return 1 if pl['blocked'] else 0
     elif args.action == 'verify':

@@ -193,6 +193,66 @@ def _is_windows():
     return sys.platform.startswith("win")
 
 
+NEEDS_ADMIN = "needs an administrator shell"
+
+
+def _windows_services():
+    """DL318: the runner services of this machine as [{'name', 'folder', 'account'}], from Win32_Service (Name like
+    actions.runner.*; PathName gives the folder, StartName the account). [] off Windows or when the list cannot be read."""
+    if not _is_windows():
+        return []
+    import subprocess
+    ps = ("Get-CimInstance Win32_Service -Filter \"Name like 'actions.runner.%'\" | "
+          "Select-Object Name,PathName,StartName | ConvertTo-Json -Compress")
+    try:
+        out = subprocess.run(["powershell", "-NoProfile", "-Command", ps], capture_output=True, text=True, timeout=30).stdout
+        data = json.loads(out) if out.strip() else []
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return []
+    return service_rows(data)
+
+
+def service_rows(data):
+    """Rows of Win32_Service (a dict or a list of dicts with Name, PathName, StartName) as runner service dicts."""
+    if isinstance(data, dict):
+        data = [data]
+    rows = []
+    for r in data if isinstance(data, list) else []:
+        if not isinstance(r, dict) or not str(r.get("Name") or "").lower().startswith("actions.runner."):
+            continue
+        path = str(r.get("PathName") or "").strip()
+        exe = path[1:path.find('"', 1)] if path.startswith('"') and path.find('"', 1) > 0 else path.split(" ")[0]
+        parts = exe.replace("/", "\\").split("\\")
+        folder = "\\".join(parts[:-2]) if len(parts) > 2 and parts[-2].lower() == "bin" else "\\".join(parts[:-1])
+        rows.append({"name": str(r["Name"]), "folder": folder, "account": r.get("StartName")})
+    return rows
+
+
+def _folder_locked(d):
+    """True when the folder of a runner exists but this account may not read it (PermissionError)."""
+    for name in (".env", ".runner"):
+        try:
+            with open(os.path.join(d, name), "rb"):
+                return False
+        except PermissionError:
+            return True
+        except OSError:
+            continue
+    try:
+        os.listdir(d)
+    except PermissionError:
+        return True
+    except OSError:
+        pass
+    return False
+
+
+def _locked_service_dirs(services=None):
+    """Folders of runner services that this account cannot read, [(folder, service dict)]."""
+    return [(s["folder"], s) for s in (_windows_services() if services is None else services)
+            if s["folder"] and _folder_locked(s["folder"])]
+
+
 def _windows_env_hook():
     if not _is_windows():
         return None
@@ -308,7 +368,7 @@ def check_runner(root, cfg):
             try:
                 with open(os.path.join(d, ".env"), encoding="utf-8", errors="replace") as f:
                     v = _hook_value(f.read())
-            except OSError:
+            except OSError:  # includes PermissionError: reported by _check_runner_hook
                 continue
             if v and "runner_load_gate" in v and v.strip("\"'").lower().endswith(".ps1"):
                 problem = _execution_policy_problem(d)
@@ -323,22 +383,34 @@ def _check_runner_hook(root, cfg):
     env = os.environ.get(HOOK_VAR) or _windows_env_hook()
     dirs = _runner_dirs()
     hooked, bare = [], []
+    services = _windows_services()
+    locked = [d for d, _s in _locked_service_dirs(services)]
     for d in dirs:
         try:
             with open(os.path.join(d, ".env"), encoding="utf-8", errors="replace") as f:
                 v = _hook_value(f.read())
+        except PermissionError:
+            if d not in locked:
+                locked.append(d)
+            continue
         except OSError:
             v = None
         (hooked if v and "runner_load_gate" in v else bare).append(d)
+    note = ("; runner folder(s) %s: the hook %s (a warning, not a failure)" % (", ".join(locked), NEEDS_ADMIN)) if locked else ""
     if env and "runner_load_gate" in env and not bare:
-        return True, "%s is set to %s" % (HOOK_VAR, env)
+        return True, "%s is set to %s%s" % (HOOK_VAR, env, note)
     if hooked and not bare:
-        return True, "%s set in the .env of %s" % (HOOK_VAR, ", ".join(hooked))
+        return True, "%s set in the .env of %s%s" % (HOOK_VAR, ", ".join(hooked), note)
     if env and "runner_load_gate" not in env:
         return False, "%s is set to %s, not runner_load_gate. See the README, 'CI runner gate'." % (HOOK_VAR, env)
     if bare:
         return False, ("runner folder(s) %s have no %s=...runner_load_gate hook: new jobs can start over the load limits. "
                        "See the README, 'CI runner gate' (the doctor changes nothing)." % (", ".join(bare), HOOK_VAR))
+    if locked:
+        return True, "%d runner service(s) found; the hook check %s for %s (a warning, not a failure)" % (
+            len(locked), NEEDS_ADMIN, ", ".join(locked))
+    if services:
+        return True, "%d runner service(s) found; their folders are not listed here, check the hooks in an administrator shell" % len(services)
     return True, "no self-hosted runner found on this machine (nothing to hook)"
 
 
@@ -527,34 +599,58 @@ def _account_in_group(account, group):
     return _account_name(account) in {_account_name(l) for l in out.splitlines()}
 
 
-def windows_runner_items(dirs):
+def _account_item(tag, name, start):
+    acct = _account_name(start)
+    admin = _account_in_group(acct, "Administrators") if acct not in SHARED_ACCOUNTS else None
+    if acct in SHARED_ACCOUNTS or "nt authority" in (start or "").lower():
+        return _item(tag + ":account", "warn", "service %s runs as %s: give it its own non-admin ci-* account "
+                                              "(/delivery-ci-setup replaces it)." % (name, start))
+    if admin:
+        return _item(tag + ":account", "warn", "service %s runs as %s, an administrator account: use a non-admin ci-* account."
+                     % (name, start))
+    if not acct.startswith("ci-"):
+        return _item(tag + ":account", "warn", "service %s runs as %s, not a ci-* account of this setup." % (name, start))
+    if _account_in_group(acct, WIN_GROUP) is False:
+        return _item(tag + ":account", "warn", "service %s runs as %s, which is not in the group %s." % (name, start, WIN_GROUP))
+    return _item(tag + ":account", "ok", "service %s runs as %s (not an administrator)" % (name, start))
+
+
+def _locked_runner_items(tag, d, found):
+    """DL318: a runner folder this account cannot read. The runner is found; the account comes from the service list;
+    the folder checks are a warning that says what to do."""
+    items = []
+    if found and found.get("account"):
+        items.append(_account_item(tag, found["name"], found["account"]))
+    else:
+        items.append(_item(tag + ":account", "warn", "runner %s: the service account could not be read here (%s)." % (d, NEEDS_ADMIN)))
+    for what in (".env hooks (%s and %s)" % (HOOK_VAR, DONE_VAR), "CI_TOOLS_DIR", "RUSTUP_HOME", "CARGO_HOME"):
+        items.append(_item(tag + ":" + what.split(" ")[0], "warn", "runner %s: %s %s: the folder is locked to its ci-* account. "
+                           "Run the doctor from an administrator shell to check it." % (d, what, NEEDS_ADMIN)))
+    return items
+
+
+def windows_runner_items(dirs, services=None):
     """DL310 (R5.31): each Windows runner of the shared machine layer: its service exists and runs as its own ci-* account (a
     warning for NETWORK SERVICE, LocalSystem or an administrator account), its .env has both hooks, CI_TOOLS_DIR, RUSTUP_HOME
     and CARGO_HOME, and it reads the same machine.json (and the same hook folder) as the pool."""
     items = []
     folder = str(MS.machine_dir()).replace("\\", "/").rstrip("/").lower()
+    services = services or []  # the service list is read once, by machine_items, and passed in
+    norm = lambda p: p.replace("/", "\\").rstrip("\\").lower()  # noqa: E731
+    by_folder = {norm(s["folder"]): s for s in services if s["folder"]}
+    dirs = list(dirs) + [s["folder"] for s in services if s["folder"] and norm(s["folder"]) not in {norm(x) for x in dirs}]
     for d in dirs:
         tag = "machine.winrunner:" + d
-        svc = _service_account(d)
+        found = by_folder.get(norm(d))
+        if _folder_locked(d):
+            items += _locked_runner_items(tag, d, found)
+            continue
+        svc = _service_account(d) or ((found["name"], found["account"]) if found else None)
         if svc is None or svc[1] is None:
             items.append(_item(tag + ":service", "warn", "runner %s has no readable Windows service: it does not start with the machine. "
                                                         "Run /delivery-ci-setup with the Windows repository to set it up." % d))
         else:
-            name, start = svc
-            acct = _account_name(start)
-            admin = _account_in_group(acct, "Administrators") if acct not in SHARED_ACCOUNTS else None
-            if acct in SHARED_ACCOUNTS or "nt authority" in (start or "").lower():
-                items.append(_item(tag + ":account", "warn", "service %s runs as %s: give it its own non-admin ci-* account "
-                                                            "(/delivery-ci-setup replaces it)." % (name, start)))
-            elif admin:
-                items.append(_item(tag + ":account", "warn", "service %s runs as %s, an administrator account: use a non-admin ci-* account."
-                                   % (name, start)))
-            elif not acct.startswith("ci-"):
-                items.append(_item(tag + ":account", "warn", "service %s runs as %s, not a ci-* account of this setup." % (name, start)))
-            elif _account_in_group(acct, WIN_GROUP) is False:
-                items.append(_item(tag + ":account", "warn", "service %s runs as %s, which is not in the group %s." % (name, start, WIN_GROUP)))
-            else:
-                items.append(_item(tag + ":account", "ok", "service %s runs as %s (not an administrator)" % (name, start)))
+            items.append(_account_item(tag, svc[0], svc[1]))
         want = ("CI_TOOLS_DIR", "RUSTUP_HOME", "CARGO_HOME")
         miss = [v for v in want if not _env_value(d, v)]
         items.append(_item(tag + ":env", "warn" if miss else "ok", ("runner %s: .env lacks %s (run /delivery-ci-setup again)" % (d, ", ".join(miss)))
@@ -597,7 +693,12 @@ def machine_items(root, cfg):
         if diff:
             items.append(_item("machine.legacy", "warn", "machine.json and the old ~/.claude/luismc-delivery-machine.json differ "
                                                          "in load_limits: %s. machine.json wins; remove the old file." % ", ".join(diff)))
+    services = _windows_services()
+    locked_dirs = [d for d, _s in _locked_service_dirs(services) if d not in dirs]
     for d in dirs:
+        if _folder_locked(d):
+            locked_dirs.append(d)
+            continue
         missing, policy = [], []
         for var, script in ((HOOK_VAR, "runner_load_gate"), (DONE_VAR, "runner_job_done")):
             v = _env_value(d, var)
@@ -615,11 +716,15 @@ def machine_items(root, cfg):
                 (["runner %s lacks %s" % (d, ", ".join(missing))] if missing else []) + policy)))
         else:
             items.append(_item("machine.hooks:" + d, "ok", "runner %s has both hooks" % d))
-    if not dirs:
+    for d in locked_dirs:
+        items.append(_item("machine.hooks:" + d, "warn", "runner %s: the .env hooks %s (the folder is locked to its ci-* account)" % (d, NEEDS_ADMIN)))
+    if not dirs and not locked_dirs:
         items.append(_item("machine.hooks", "ok", "no runner folder found on this machine"))
     if _is_windows():
-        items += windows_runner_items(dirs)
+        items += windows_runner_items([d for d in dirs if d not in locked_dirs] + locked_dirs, services)
     for d in dirs:
+        if d in locked_dirs:
+            continue
         probe = _push_probe(d)
         if probe is None:
             items.append(_item("machine.push:" + d, "ok", "runner %s has no kept checkout yet (the first job makes one)" % d))
@@ -687,6 +792,10 @@ def machine_items(root, cfg):
                                                           % json.dumps(SETUP.expected_runs_on(cfg)[0] or ["self-hosted", "linux"])))
         else:
             items.append(_item("machine.runs_on", "ok", "CI_RUNS_ON is set"))
+    try:
+        items += workflow_items(root, cfg)  # DL317/DL318: runs-on labels against the online runners
+    except Exception as exc:  # noqa: BLE001
+        items.append(_item("workflows", "warn", "workflow label check crashed (%s: %s)" % (type(exc).__name__, exc)))
     sizes = [(d, _dir_size(os.path.join(d, "_work"))) for d in dirs if os.path.isdir(os.path.join(d, "_work"))]
     total = sum(sz for _, sz in sizes) / 1e9
     if sizes:
@@ -705,6 +814,127 @@ def check_machine(root, cfg):
     detail = "; ".join("%s %s: %s" % (i["status"], i["id"], i["detail"]) for i in items if i["status"] != "ok") or \
         "; ".join(i["detail"] for i in items)
     return ok, detail, items
+
+
+# --- workflow labels (DL317, DL318) -----------------------------------------------------------------
+
+GENERIC_VARS = ("CI_RUNS_ON", "CI_RUNS_ON_WINDOWS")
+HOSTED_PREFIXES = ("ubuntu-", "windows-", "macos-")
+
+
+def workflow_jobs(text):
+    """[(line number, [literal labels], expression text or None)] for every `runs-on:` of a workflow file."""
+    lines = text.splitlines()
+    out = []
+    for i, line in enumerate(lines):
+        m = re.match(r"^\s*runs-on\s*:\s*(.*?)\s*(#.*)?$", line)
+        if not m:
+            continue
+        val = m.group(1).strip()
+        if not val:
+            indent = len(line) - len(line.lstrip())
+            labels = []
+            for nxt in lines[i + 1:]:
+                lm = re.match(r"^(\s*)-\s*(.+?)\s*(#.*)?$", nxt)
+                if not lm or len(lm.group(1)) < indent:
+                    break
+                labels.append(lm.group(2).strip("\"'"))
+            val = "[" + ", ".join(labels) + "]"
+        if "${{" in val:
+            out.append((i + 1, [], val))
+            continue
+        val = val.strip()
+        if val.startswith("[") and val.endswith("]"):
+            val = val[1:-1]
+        out.append((i + 1, [x.strip().strip("\"'") for x in val.split(",") if x.strip().strip("\"'")], None))
+    return out
+
+
+def _config_repos(root, cfg):
+    """[(OWNER/NAME or None, folder)]: the config `repos` entries (a string OWNER/NAME, or {repo, path}), else this repository."""
+    out = []
+    for r in cfg.get("repos") or []:
+        if isinstance(r, str):
+            out.append((r, None))
+        elif isinstance(r, dict) and isinstance(r.get("repo"), str):
+            out.append((r["repo"], r.get("path") if isinstance(r.get("path"), str) else None))
+    if not out:
+        res = H.gh(root, ["repo", "view", "--json", "nameWithOwner", "-q", ".nameWithOwner"])
+        name = res[1].strip() if res and res[0] == 0 and res[1].strip() else None
+        out.append((name, root))
+    return out
+
+
+def _online_runners(root, repo):
+    """[{'labels': set of lower-case names, 'os': str}] of the online runners of the repo, or None when unreadable."""
+    res = H.gh(root, ["api", "repos/%s/actions/runners?per_page=100" % repo] if repo else
+               ["api", "repos/{owner}/{repo}/actions/runners?per_page=100"])
+    if res is None or res[0] != 0:
+        return None
+    try:
+        data = json.loads(res[1] or "{}")
+    except ValueError:
+        return None
+    return [{"labels": {str(l.get("name", "")).lower() for l in r.get("labels") or [] if isinstance(l, dict)},
+             "os": str(r.get("os") or "").lower(), "online": r.get("status") == "online"}
+            for r in data.get("runners") or [] if isinstance(r, dict)]
+
+
+def _repo_variables(root, repo):
+    res = H.gh(root, ["variable", "list", "--json", "name,value"] + (["-R", repo] if repo else []))
+    if res is None or res[0] != 0:
+        return None
+    try:
+        return {v["name"]: str(v.get("value") or "").strip() for v in json.loads(res[1] or "[]") if isinstance(v, dict) and "name" in v}
+    except ValueError:
+        return None
+
+
+def workflow_items(root, cfg):
+    """DL317 (doctor part) and DL318: for each repository, each literal runs-on label is carried by an online runner of it
+    (fail, with file and line), a self-hosted job names fromJSON(vars.CI_RUNS_ON[_WINDOWS]) rather than a literal label (warn),
+    and CI_RUNS_ON_WINDOWS is set when the repository has a Windows self-hosted runner (warn). GitHub-hosted labels are skipped."""
+    items = []
+    for repo, folder in _config_repos(root, cfg):
+        tag = repo or "this repository"
+        runners = _online_runners(root, repo)
+        variables = _repo_variables(root, repo)
+        wdir = os.path.join(folder, ".github", "workflows") if folder else None
+        jobs = []
+        if wdir and os.path.isdir(wdir):
+            for n in sorted(os.listdir(wdir)):
+                if n.endswith((".yml", ".yaml")):
+                    try:
+                        with open(os.path.join(wdir, n), encoding="utf-8", errors="replace") as f:
+                            jobs += [(n,) + j for j in workflow_jobs(f.read())]
+                    except OSError:
+                        continue
+        if runners is None:
+            items.append(_item("workflows.runners:" + tag, "warn", "cannot read the runners of %s (gh not signed in or no rights): "
+                                                                   "check the runs-on labels by hand" % tag))
+        online = [r for r in runners or [] if r["online"]]
+        bad, loose = [], []
+        for name, line, labels, expr in jobs:
+            low = [l.lower() for l in labels]
+            if expr is not None or not low or (len(low) == 1 and low[0].startswith(HOSTED_PREFIXES)):
+                continue
+            if "self-hosted" in low:
+                loose.append("%s:%d (%s)" % (name, line, ", ".join(labels)))
+            if runners is not None and not any(set(low) <= r["labels"] for r in online):
+                bad.append("%s:%d needs [%s]" % (name, line, ", ".join(labels)))
+        if runners is not None:
+            items.append(_item("workflows.labels:" + tag, "fail" if bad else "ok",
+                               ("no online runner of %s carries the label(s) of: %s" % (tag, "; ".join(bad))) if bad else
+                               "every literal runs-on label of %d job(s) in %s is carried by an online runner" % (len(jobs), tag)))
+        if loose:
+            items.append(_item("workflows.generic:" + tag, "warn", "self-hosted job(s) use a literal label: %s. Use "
+                               "${{ fromJSON(vars.CI_RUNS_ON) }} (Linux) or ${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }} (Windows)." % "; ".join(loose)))
+        has_win = any(r["os"] == "windows" or "windows" in r["labels"] for r in runners or [])
+        if has_win and variables is not None and not variables.get("CI_RUNS_ON_WINDOWS"):
+            items.append(_item("workflows.windows_var:" + tag, "warn", "%s has a Windows self-hosted runner but CI_RUNS_ON_WINDOWS is "
+                               "unset: Windows jobs cannot target the pool. Set it, for example `gh variable set CI_RUNS_ON_WINDOWS "
+                               "--body '[\"self-hosted\", \"windows\"]'`." % tag))
+    return items
 
 
 def clean_work(yes=False, out=print):

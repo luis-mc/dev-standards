@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.37.0
+version: 0.37.1
 owner: agents
 type: reference
 code:
@@ -94,7 +94,7 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 
 **R5.13** — Shared scripts (generated into a product): `branch_gate.py` runs the gate and writes `gate-result.json`; `gate_verify.py` trusts a result only for the same head and base; `join.py` merges trusted branches and runs the quick check; `ci_watch.py` watches the runs of one head; `cleanup.py` removes merged branches; `train_freeze.py` refuses pushes to a train in CI. When a job fails on a train head, `ci_watch.py` names it, cancels the other runs of that head (never other commits or agent branches) and ends at once, so the freeze lifts and the fix can be pushed; `--no-cancel-on-red` or `ci_watch.cancel_on_red: false` keeps the old wait. Exit codes are shared: 0 pass, 1 failed or untrusted, 2 usage, 3 join conflict, 4 timed out.
 
-**R5.14** — A branch that changes UI code or e2e specs runs the e2e specs of the screens it changed before it is done (DL-86). `branch_gate.py` records them in `gate-result.json` (`e2e`), `branch_gate.py --e2e-only` does it alone for an agent on the CI-gate path, `gate_verify.py` and `agent_ci.py` refuse a UI branch without a passing record for the head (DL-87), `e2e_push_check.py` in the pre-push hook refuses a push of changed e2e specs that were not run and passed (DL-88), and the launch check requires the brief to say so (DL-89).
+**R5.14** — A branch that changes UI code or e2e specs runs the e2e specs of the screens it changed before it is done (DL-86). `branch_gate.py` records them in `gate-result.json` (`e2e`), `branch_gate.py --e2e-only` does it alone for an agent on the CI-gate path, `gate_verify.py` and `agent_ci.py` refuse a UI branch without a passing record for the head (DL-87), `e2e_push_check.py` in the pre-push hook refuses a push of changed e2e specs that were not run and passed (DL-88), and the launch check requires the brief to say so (DL-89). The `CODE DONE` line that starts the CI-gate run (DL-81) may be a plain line, a list item (`- `, `* `, `+ `, `1. `) or a ticked checkbox (`- [x] CODE DONE`); an unticked `- [ ] CODE DONE` or a mention inside a sentence does not count. A project's own configured `marker` is used as written (DL309).
 
 The template's `playwright install` step picks by runner (DL230). On GitHub-hosted runners (`RUNNER_ENVIRONMENT=github-hosted`) it runs `playwright install --with-deps chromium`. On self-hosted pool runners, which have no sudo, it runs `playwright install chromium` and prints that the system libraries come from the pool's `POOL_BROWSERS=chromium` layer. Both `ci.yml` and `nightly-full.yml` do this.
 
@@ -537,6 +537,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.37.1 | 2026-11-13 | RELEASE-131 | The default CODE DONE marker accepts a list bullet and a ticked checkbox; an unticked box does not count. | DL309 |
 | 0.37.0 | 2026-11-13 | RELEASE-127 | agent-check records an agent's liveness from its branch's last commit (last_event_at is the fallback), the stop hook uses it, and agent-eta warns when a brief's owns overlaps another live agent.<br>The rust branch gate runs cargo-deny after lint when a Cargo.toml, Cargo.lock or deny.toml changed. New gate.json step key when_changed.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait. | DL303, DL304, DL306 |
 | 0.36.1 | 2026-11-13 | RELEASE-126 | rust_ci.py run resolves the program on the job PATH it passes (Windows looked it up on the parent's PATH: WinError 2). | DL301 |
 | 0.36.0 | 2026-11-13 | RELEASE-125 | The watcher requires every pull_request workflow that ran on the PR head, counts only runs made after the PR was ready, and never greens a draft PR. New key watcher.ignore_workflows. | DL298 |

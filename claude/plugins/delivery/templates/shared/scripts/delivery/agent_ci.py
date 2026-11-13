@@ -37,7 +37,8 @@ which wins):
     ci_prefix      ci/                the merged ref is <ci_prefix><task>
     report         docs/work/{task}/REPORT.md        then docs/work/reports/{task}.md; {task} = the branch name after the prefix, up to the first '-'
                    (a string, or a list tried in order; any one with the marker counts)
-    marker         ^\\s*CODE DONE\\b   regex, matched per line
+    marker         ^\\s*(?:(?:[-*+]|\\d+\\.)\\s+)?(?:\\[[xX]\\]\\s*)?CODE DONE\\b   regex, matched per line
+                   (default: an optional list bullet and a ticked box may come first; `- [ ] CODE DONE` does not count)
 
 A branch that changes UI code or e2e specs also needs its e2e record (DELIVERYSPEC DL-87): the agent runs
 `scripts/delivery/branch_gate.py --e2e-only` in its sandbox, which publishes the result of the specs mapped to the
@@ -61,7 +62,7 @@ from pathlib import Path
 
 DEFAULTS = {"workflow": "ci.yml", "base": "origin/master", "branch_prefix": "claude/", "ci_prefix": "ci/",
             "report": ["docs/work/{task}/REPORT.md", "docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
-            "marker": r"^\s*CODE DONE\b", "require_e2e": True}
+            "marker": r"^\s*(?:(?:[-*+]|\d+\.)\s+)?(?:\[[xX]\]\s*)?CODE DONE\b", "require_e2e": True}
 CONFIG = "scripts/delivery/ci-scope.json"
 DELIVERY_CONFIG = ".delivery/config.json"
 
