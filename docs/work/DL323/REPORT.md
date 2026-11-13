@@ -35,6 +35,6 @@ gh api -X POST repos/OWNER/REPO/actions/runners/registration-token --jq .token \
 ```
 (or omit `--route` to get `<route>-2`). The copy is lost on a container recreate until the image is rebuilt. The supervisor picks up the new `agents.json` entry as it does for any add; it needs no change.
 
-Branch head SHA: see the last commit on `DL323-pool-agents-per-repo`.
+Branch head SHA: the commit before this report update is a7718529defa069aab07928ac1908e98d97d9135.
 
 READY
