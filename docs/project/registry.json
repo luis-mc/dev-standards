@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-12T23:33+00:00",
+  "updated": "2026-11-13T00:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5019,11 +5019,11 @@
       "id": "DL280",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE-118: VM boot-check helper",
       "detail": "Join, CI and merge for DL280.",
       "expected": "13 Nov ~00:36",
-      "changed": "2026-11-12T23:33+00:00",
+      "changed": "2026-11-13T00:02+00:00",
       "expected_basis": "agent ~44 min from 23:36, join 7, CI 6",
       "release": 118,
       "phases": [
@@ -5047,18 +5047,18 @@
           "start": "2026-11-13T00:33+00:00",
           "end": "2026-11-13T00:36+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-13T00:02+00:00"
     },
     {
       "id": "DL281",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "vm_check.py: cached cloud-image VM checks (SELinux enforcing boot)",
       "detail": "D259: template helper for kvm runners. Cached, checksum-checked cloud images; a prepared base disk per distro; a thin overlay per run, deleted after; one boot for several checks; opt-in resume from a snapshot saved after boot (measured 11.7 s boot vs 0.7 s restore); SELinux check: getenforce, install rpm/module, AVC count.",
-      "expected": "13 Nov ~00:20",
-      "changed": "2026-11-12T23:33+00:00",
-      "expected_basis": "cloud agent from 23:36, ~44 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T00:02+00:00",
       "rides": "DL280",
       "started": "2026-11-12T23:33+00:00"
     },
