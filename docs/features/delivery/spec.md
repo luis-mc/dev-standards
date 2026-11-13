@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.36.1
+version: 0.37.0
 owner: agents
 type: reference
 code:
@@ -537,6 +537,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.37.0 | 2026-11-13 | RELEASE-127 | agent-check records an agent's liveness from its branch's last commit (last_event_at is the fallback), the stop hook uses it, and agent-eta warns when a brief's owns overlaps another live agent.<br>The rust branch gate runs cargo-deny after lint when a Cargo.toml, Cargo.lock or deny.toml changed. New gate.json step key when_changed.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait. | DL303, DL304, DL306 |
 | 0.36.1 | 2026-11-13 | RELEASE-126 | rust_ci.py run resolves the program on the job PATH it passes (Windows looked it up on the parent's PATH: WinError 2). | DL301 |
 | 0.36.0 | 2026-11-13 | RELEASE-125 | The watcher requires every pull_request workflow that ran on the PR head, counts only runs made after the PR was ready, and never greens a draft PR. New key watcher.ignore_workflows. | DL298 |
 | 0.35.1 | 2026-11-13 | RELEASE-124 | The Rust build cache falls back to target/ when ci_tool.py is missing, so gate commands never crash on it. | DL297 |
