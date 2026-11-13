@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T13:27+00:00",
+  "updated": "2026-11-13T13:29+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5336,12 +5336,11 @@
       "id": "DL296",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: fix forward rust_ci cache import crash (DL297)",
       "detail": "Fix forward for RELEASE-123: rust_ci.py falls back to target/ when ci_tool is missing. Join, PR CI incl. template-build, merge, smoke, cleanup.",
-      "expected": "13 Nov ~13:33",
-      "changed": "2026-11-13T13:27+00:00",
-      "expected_basis": "merged 13:27; plugin smoke ~3 min, then plugin update",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T13:29+00:00",
       "release": 124,
       "phases": [
         {
