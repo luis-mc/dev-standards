@@ -1,5 +1,9 @@
 [
   {
+    "date": "13 Nov 12:31",
+    "change": "DL293 item changed from \"RELEASE: Rust-only release scope and Rust CI speed (DL293, DL294)\" to \"RELEASE: Rust-only release scope and Rust CI speed (DL294, DL295)\""
+  },
+  {
     "date": "09 Nov 22:49",
     "change": "DL156 item changed from \"Ledger refuses agent rows without an id and duplicate release ids\" to \"Ledger refuses agent rows without a task and duplicate release ids\""
   },
