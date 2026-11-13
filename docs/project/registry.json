@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T13:04+00:00",
+  "updated": "2026-11-13T13:09+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5278,12 +5278,12 @@
       "id": "DL293",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE: Rust-only release scope and Rust CI speed (DL294, DL295)",
       "detail": "Join DL294 and DL295, release PR CI, merge, plugin smoke, cleanup, peer announcement.",
       "expected": "13 Nov ~13:28",
-      "changed": "2026-11-13T13:04+00:00",
-      "expected_basis": "DL295 ready ~13:10, join 5 + CI 10 + merge 3",
+      "changed": "2026-11-13T13:09+00:00",
+      "expected_basis": "join started 13:10, 5 + CI 10 + merge 3",
       "release": 123,
       "phases": [
         {
@@ -5306,7 +5306,8 @@
           "start": "2026-11-13T13:25+00:00",
           "end": "2026-11-13T13:28+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-13T13:09+00:00"
     },
     {
       "id": "DL294",
@@ -5324,12 +5325,11 @@
       "id": "DL295",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Rust CI speed: crate-scoped PR runs and per-runner target cache",
       "detail": "Rust template: rust_scope.py (crate graph from Cargo.toml, touched + dependents; workspace-wide inputs run full), rust_ci.py RUST_CRATES -p scoping, persistent CARGO_TARGET_DIR keyed by toolchain + Cargo.lock hash, RUST_TARGET_CAP_GB pruning that skips keys in use, DELIVERY_NO_TARGET_CACHE opt-out.",
-      "expected": "13 Nov ~13:10",
-      "changed": "2026-11-13T13:04+00:00",
-      "expected_basis": "report at Branch section 13:04; branch CI ~5 min",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T13:09+00:00",
       "rides": "DL293",
       "started": "2026-11-13T12:31+00:00"
     },
