@@ -904,7 +904,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-13T20:13+00:00">13 Nov 20:13</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-13T20:36+00:00">13 Nov 20:36</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Nov 18:52</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
@@ -930,13 +930,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">307</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">307</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">6</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">6</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL276"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL276</span>CI rule: a test&#x27;s inputs include every program it runs</td><td>D258: port the peer project&#x27;s programs map (ci-scope.json programs, ci_scope.py, guard test) once its reference works; add the rule to the shared rules.</td><td>13 Nov<span class="expected-basis">waits on the peer&#x27;s reference version</span></td></tr>
 <tr data-task="DL309"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL309</span>Finish watch accepts a ticked &#x27;- [x] CODE DONE&#x27; checklist line</td><td>Peer finding 13 Nov: the agent finish-watch regex misses reports whose only done marker is a ticked checklist line &#x27;- [x] CODE DONE&#x27; with no final bare line. Agents use both forms. Accept both.</td><td>14 Nov</td></tr>
 <tr data-task="DL316"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL316</span>Windows-only mode for the runner setup (no Linux pool rebuild)</td><td>pool-run with --windows-repos also rebuilds the Linux pool; add a mode that only sets up Windows runners (or writes their script), so a runner move never touches a busy Linux pool. Found 13 Nov while preparing the first shared Windows runner move.</td><td>14 Nov</td></tr>
+<tr data-task="DL317"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL317</span>Shared Windows runner stays generic: projects target it by repo variable</td><td>Owner D275: the pool must stay generic (a future product), so no project labels on shared runners. Setup sets a repo variable (CI_RUNS_ON_WINDOWS, like CI_RUNS_ON for Linux) with the generic labels; the doctor warns when a workflow names a label no runner has. The project-specific comics-pc label stays only until that project&#x27;s workflows use the variable, then is removed.</td><td>14 Nov</td></tr>
+<tr data-task="DL318"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL318</span>Doctor sees a Windows runner whose folder is locked</td><td>After the first shared Windows runner move (13 Nov), delivery_doctor in a non-admin shell said no self-hosted runner found, because the runner folder is locked to its ci-* account. Detect runners from the service list (Win32_Service PathName/StartName) and report the folder checks as needing an admin shell instead of missing.</td><td>14 Nov</td></tr>
+<tr data-task="DL319"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL319</span>Setup grants ci-* runner accounts the right to create symlinks</td><td>Owner D273: cargo-xwin needs symlinks; the runner setup grants SeCreateSymbolicLinkPrivilege to each ci-* account (not Developer Mode). This PC got it by a one-time admin script on 13 Nov.</td><td>14 Nov</td></tr>
+<tr data-task="DL320"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL320</span>Host-load task: register with PowerShell cmdlets, not cmd-quoted schtasks</td><td>Owner D274: register the host-load task now (one-time admin script, 13 Nov). The plan&#x27;s printed schtasks line uses cmd quoting that PowerShell 5.1 mangles; print Register-ScheduledTask lines (or a script) instead.</td><td>14 Nov</td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">313 tasks</span></summary>
@@ -1289,6 +1293,55 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D275">
+<h3 class="decision-head"><span class="decision-id">D275</span> <span class="decision-question">Keep a project-specific label on a shared runner?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL317</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Generic pool, projects target it by repo variable</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;but comics-pc is a specific project tag; I want the ci runners pool to be generic to eventually extract as a product&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep project labels</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D274">
+<h3 class="decision-head"><span class="decision-id">D274</span> <span class="decision-question">Register the host-load scheduled task on this PC?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL320</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">I&#x27;ll register it now (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;I&#x27;ll register it now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D273">
+<h3 class="decision-head"><span class="decision-id">D273</span> <span class="decision-question">How should Windows runner accounts get the right to create symlinks (cargo-xwin needs it)?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL319</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Grant to ci-* accounts (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Grant to ci-* accounts (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Turn on Developer Mode</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Neither for now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D272">
 <h3 class="decision-head"><span class="decision-id">D272</span> <span class="decision-question">How does a project join the Windows runner?</span></h3>
 <p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL310</p>
@@ -6067,6 +6120,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>13 Nov 20:36</td><td>DL317 item changed from &quot;Windows runner setup keeps a replaced runner&#x27;s custom labels&quot; to &quot;Shared Windows runner stays generic: projects target it by repo variable&quot;</td></tr>
 <tr><td>13 Nov 13:51</td><td>DL298 item changed from &quot;Watcher merged RELEASE-123 with template-build red&quot; to &quot;Watcher requires every CI run on the ready head&quot;</td></tr>
 <tr><td>13 Nov 12:31</td><td>DL293 item changed from &quot;RELEASE: Rust-only release scope and Rust CI speed (DL293, DL294)&quot; to &quot;RELEASE: Rust-only release scope and Rust CI speed (DL294, DL295)&quot;</td></tr>
 <tr><td>09 Nov 22:49</td><td>DL156 item changed from &quot;Ledger refuses agent rows without an id and duplicate release ids&quot; to &quot;Ledger refuses agent rows without a task and duplicate release ids&quot;</td></tr>

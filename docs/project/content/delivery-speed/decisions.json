@@ -6196,6 +6196,70 @@
       "chosen": "delivery-ci-setup step (Recommended)",
       "decided": "2026-11-13",
       "owner_words": "delivery-ci-setup step (Recommended)"
+    },
+    {
+      "id": "D273",
+      "question": "How should Windows runner accounts get the right to create symlinks (cargo-xwin needs it)?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL319",
+      "options": [
+        {
+          "label": "Grant to ci-* accounts (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Turn on Developer Mode",
+          "summary": "offered"
+        },
+        {
+          "label": "Neither for now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Grant to ci-* accounts (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Grant to ci-* accounts (Recommended)"
+    },
+    {
+      "id": "D274",
+      "question": "Register the host-load scheduled task on this PC?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL320",
+      "options": [
+        {
+          "label": "I'll register it now (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Leave it",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "I'll register it now (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "I'll register it now (Recommended)"
+    },
+    {
+      "id": "D275",
+      "question": "Keep a project-specific label on a shared runner?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL317",
+      "options": [
+        {
+          "label": "Generic pool, projects target it by repo variable",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep project labels",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Generic pool, projects target it by repo variable",
+      "decided": "2026-11-13",
+      "owner_words": "but comics-pc is a specific project tag; I want the ci runners pool to be generic to eventually extract as a product"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T20:13+00:00",
+  "updated": "2026-11-13T20:36+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5723,6 +5723,46 @@
       "detail": "pool-run with --windows-repos also rebuilds the Linux pool; add a mode that only sets up Windows runners (or writes their script), so a runner move never touches a busy Linux pool. Found 13 Nov while preparing the first shared Windows runner move.",
       "expected": "14 Nov",
       "changed": "2026-11-13T20:13+00:00"
+    },
+    {
+      "id": "DL317",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Shared Windows runner stays generic: projects target it by repo variable",
+      "detail": "Owner D275: the pool must stay generic (a future product), so no project labels on shared runners. Setup sets a repo variable (CI_RUNS_ON_WINDOWS, like CI_RUNS_ON for Linux) with the generic labels; the doctor warns when a workflow names a label no runner has. The project-specific comics-pc label stays only until that project's workflows use the variable, then is removed.",
+      "expected": "14 Nov",
+      "changed": "2026-11-13T20:36+00:00"
+    },
+    {
+      "id": "DL318",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Doctor sees a Windows runner whose folder is locked",
+      "detail": "After the first shared Windows runner move (13 Nov), delivery_doctor in a non-admin shell said no self-hosted runner found, because the runner folder is locked to its ci-* account. Detect runners from the service list (Win32_Service PathName/StartName) and report the folder checks as needing an admin shell instead of missing.",
+      "expected": "14 Nov",
+      "changed": "2026-11-13T20:29+00:00"
+    },
+    {
+      "id": "DL319",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Setup grants ci-* runner accounts the right to create symlinks",
+      "detail": "Owner D273: cargo-xwin needs symlinks; the runner setup grants SeCreateSymbolicLinkPrivilege to each ci-* account (not Developer Mode). This PC got it by a one-time admin script on 13 Nov.",
+      "expected": "14 Nov",
+      "changed": "2026-11-13T20:36+00:00"
+    },
+    {
+      "id": "DL320",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Host-load task: register with PowerShell cmdlets, not cmd-quoted schtasks",
+      "detail": "Owner D274: register the host-load task now (one-time admin script, 13 Nov). The plan's printed schtasks line uses cmd quoting that PowerShell 5.1 mangles; print Register-ScheduledTask lines (or a script) instead.",
+      "expected": "14 Nov",
+      "changed": "2026-11-13T20:36+00:00"
     },
     {
       "id": "DS1",
