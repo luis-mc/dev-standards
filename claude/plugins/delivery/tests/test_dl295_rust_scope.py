@@ -155,6 +155,17 @@ class Cache(unittest.TestCase):
         os.environ["CARGO_TARGET_DIR"] = "/somewhere"
         self.assertEqual(rust_ci.target_cache_env(self.root), {})
 
+    def test_missing_ci_tool_falls_back(self):
+        # DL297: a scaffold without ci_tool.py next to rust_ci.py must build in target/, not crash.
+        def missing():
+            raise ModuleNotFoundError("No module named 'ci_tool'")
+        real = rust_ci._ci_tool
+        rust_ci._ci_tool = missing
+        try:
+            self.assertEqual(self.quiet(rust_ci.target_cache_env, self.root), {})
+        finally:
+            rust_ci._ci_tool = real
+
     def test_problem_falls_back(self):
         (self.root / "rust-toolchain.toml").unlink()
         self.assertEqual(self.quiet(rust_ci.target_cache_env, self.root), {})
