@@ -148,7 +148,8 @@ class WatcherObeysConfigTests(unittest.TestCase):
         seed(root, [{"branch": "release/29", "pr": 10, "state": "ci"}])
         r = routes_for_green()
         heads = iter([SHA, OLD])      # the first read is the green run's head, the second sees a new push
-        r[("gh", "pr", "view", "10")] = lambda argv: (0, json.dumps({"headRefOid": next(heads), "state": "OPEN"}))
+        r[("gh", "pr", "view", "10")] = lambda argv: (
+            0, json.dumps({"isDraft": False} if "createdAt,isDraft" in argv else {"headRefOid": next(heads), "state": "OPEN"}))
         sh = FakeShell(r)
         watcher(root, sh).run_once()
         self.assertEqual(self.merges(sh), [])
