@@ -1,4 +1,4 @@
-# DL295 Rust CI speed (in progress)
+# DL295 Rust CI speed
 
 ## Base check
 
@@ -54,7 +54,7 @@
 | `python3 tools/test_delivery_ci.py --no-mutants` | 78 passed, 0 failed |
 | `python3 claude/plugins/docs/scripts/docs_check.py` | 2 errors: W1 on `docs/work/DL295/` (expected on a branch) and G1 `docs/architecture/decisions.md` stale, which is already stale on `origin/main` (checked with the branch stashed) |
 | `python3 tools/ci_areas.py --branch-advice` | `light: test locally only` |
-| `gh workflow run spec-lint.yml --ref DL295-rust-ci-speed -f areas=delivery` | run 2 pending |
+| `gh workflow run spec-lint.yml --ref DL295-rust-ci-speed -f areas=delivery` | run 800 on `cebbfd9`: every delivery job passed, including the aggregator; only `docs check` failed, with the two expected errors (W1 on `docs/work/DL295/REPORT.md`, G1 `docs/architecture/decisions.md` stale on `main`) |
 
 Run 1 (commit `6ddeb5e`) failed on two template tests that run only in CI
 (`test_dl190_pool_integration_job`, `test_dl187_ci_templates_pool`): the scope step had moved the pool job's
@@ -73,4 +73,6 @@ No mutation passes, no Docker, no cargo builds.
 
 ## Branch
 
-`DL295-rust-ci-speed`, head `cebbfd9db8b745d36d1469793cfeef68dba3eacb`.
+`DL295-rust-ci-speed`, head `cebbfd9db8b745d36d1469793cfeef68dba3eacb` plus this report commit.
+
+READY
