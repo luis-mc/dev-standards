@@ -5,6 +5,7 @@
     delivery_ci_setup.py apply     --answers FILE|-  [--root DIR] [--no-install] [--set-variables] [--json]
     delivery_ci_setup.py checklist [--root DIR] [--json]
     delivery_ci_setup.py confirm   ITEM...  [--root DIR]
+    template_adopt.py status | diff PATH | adopt PATH|--all [--dry-run] [--write-conflicts]   (DL308: adopt template changes, see its docstring)
     delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh  --repos o/a,o/b [--windows-repos o/c] [--pool NAME] [--yes] [--yes-delete NAMES]
 
 `pool-*` is the guided path for Option 1 (DL30): detect what exists, show one plan, remove old runners and build clean,
