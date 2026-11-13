@@ -17,6 +17,7 @@ from __future__ import annotations
 import argparse
 import datetime
 import json
+import hashlib
 import math
 import os
 import posixpath
@@ -74,6 +75,16 @@ class Probe:
 
     def gh(self, args, input=None):
         return self.sh(['gh'] + list(args), input=input)
+
+    def is_admin(self):
+        """DL310: True when this process is an elevated Windows administrator. Always False elsewhere."""
+        if not self.platform.startswith('win'):
+            return False
+        try:
+            import ctypes
+            return bool(ctypes.windll.shell32.IsUserAnAdmin())
+        except Exception:  # noqa: BLE001
+            return False
 
     def gh_json(self, args):
         r = self.gh(args)
@@ -275,7 +286,7 @@ def detect_services(probe):
     if probe.platform.startswith('win'):
         r = probe.sh(['powershell', '-NoProfile', '-Command',
                       "Get-CimInstance Win32_Service -Filter \"Name like 'actions.runner.%'\" | "
-                      'Select-Object Name,State,PathName | ConvertTo-Json'])
+                      'Select-Object Name,State,PathName,StartName | ConvertTo-Json'])
         if r and r[0] == 0 and r[1].strip():
             try:
                 data = json.loads(r[1])
@@ -283,7 +294,7 @@ def detect_services(probe):
                 data = []
             for x in [data] if isinstance(data, dict) else data:
                 out.append({'name': x.get('Name'), 'status': str(x.get('State', x.get('Status'))), 'kind': 'windows-service',
-                            'folder': service_folder(x.get('PathName')) or None})
+                            'folder': service_folder(x.get('PathName')) or None, 'account': x.get('StartName')})
     else:
         r = probe.sh(['systemctl', 'list-units', 'actions.runner.*', '--all', '--no-legend', '--plain'])
         for line in (r[1] if r and r[0] == 0 else '').splitlines():
@@ -889,7 +900,7 @@ def windows_runner_folder(slug):
     return '%s/%s' % (WIN_RUNNERS_DIR, slug)
 
 
-def _wanted_windows(found, repo):
+def _wanted_windows(found, repo, account=None):
     """The Windows runner already in the state this plan would create: same name, repository, folder and labels.
     Returns {'runner', 'folder', 'service'} or None. Such a runner is kept, not removed."""
     slug = slug_of(repo)
@@ -903,11 +914,219 @@ def _wanted_windows(found, repo):
                  and f.get('name') == name), None)
     if not fold:
         return None
-    svc = next((s['name'] for s in found['services'] if s.get('kind') == 'windows-service'
+    svc = next((s for s in found['services'] if s.get('kind') == 'windows-service'
                 and _norm(s.get('folder')).lower() == folder.lower()), None)
     if not svc:
         return None
-    return {'runner': name, 'folder': fold['path'], 'service': svc}
+    acct = account_name_of(svc.get('account'))
+    # DL310: an account the setup could not read is not held against the runner; a known other account means re-register.
+    return {'runner': name, 'folder': fold['path'], 'service': svc['name'], 'account': acct or None,
+            'account_ok': not acct or acct == (account or windows_account(repo))}
+
+
+# --- DL310: the shared Windows machine runner (D269 to D272) ----------------------------------------------------------
+# One dedicated local account per runner service, one group, one machine.json and one slot queue for every runner on the
+# machine. Every PowerShell part below is built from plain text; no password is ever written in it. The password is made
+# inside the PowerShell process that registers the runner and goes only to config.cmd.
+
+WIN_GROUP = 'luismc-ci-runners'
+WIN_TOOLS_DIR = 'C:/ci-tools'
+WIN_ACCOUNT_MAX = 20  # the longest local account name Windows takes
+RUNNER_PIN = 'actions-runner'
+RUNNER_PLATFORM = 'windows_x64'
+CI_TOOL = os.path.join(os.path.dirname(HERE), 'templates', 'shared', 'scripts', 'delivery', 'ci_tool.py')
+SID_ADMINS, SID_SYSTEM, SID_USERS = '*S-1-5-32-544', '*S-1-5-18', '*S-1-5-32-545'
+
+
+def windows_account(repo, taken=()):
+    """The local account of a runner service: `ci-<short slug>`, at most 20 characters, lower case letters, digits and
+    hyphens. Deterministic. A slug that does not fit, or a name another repository already holds, gets a 4 character
+    hash of the repository name so two repositories never share an account."""
+    plain = slug_of(repo)
+    name = 'ci-' + plain
+    if len(name) <= WIN_ACCOUNT_MAX and name not in set(taken):
+        return name
+    tag = hashlib.sha1(repo.lower().encode('utf-8')).hexdigest()[:4]
+    room = WIN_ACCOUNT_MAX - len('ci-') - 1 - len(tag)
+    return 'ci-%s-%s' % (plain[:room].rstrip('-') or 'x', tag)
+
+
+def account_name_of(text):
+    """`.\\ci-app`, `HOST\\ci-app` and `ci-app` all give `ci-app` (lower case)."""
+    return (text or '').replace('/', '\\').split('\\')[-1].strip().lower()
+
+
+def _psq(text):
+    """A PowerShell single quoted string."""
+    return "'" + str(text).replace("'", "''") + "'"
+
+
+def windows_env_text(folder, hooks_dir, tools_dir=WIN_TOOLS_DIR):
+    """The runner's .env: both hooks (the runner rejects .cmd hooks), the shared tool cache, and a private Rust home."""
+    return ('ACTIONS_RUNNER_HOOK_JOB_STARTED=%s/runner_load_gate.ps1\n'
+            'ACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s/runner_job_done.ps1\n'
+            'CI_TOOLS_DIR=%s\n'
+            'RUSTUP_HOME=%s/_tools/rustup\n'
+            'CARGO_HOME=%s/_tools/cargo\n' % (hooks_dir, hooks_dir, tools_dir, folder, folder))
+
+
+def runner_pin_problem(pin_path=None):
+    """A plain refusal text when tools.json has no real SHA-256 for the Windows runner download, else None (DL310)."""
+    pin_path = pin_path or os.path.join(os.path.dirname(CI_TOOL), 'tools.json')
+    try:
+        with open(pin_path, encoding='utf-8') as f:
+            entry = (((json.load(f).get(RUNNER_PIN) or {}).get('platforms') or {}).get(RUNNER_PLATFORM)) or {}
+    except (OSError, ValueError, AttributeError):
+        return 'refused: tools.json cannot be read, so the runner download cannot be checked.'
+    if not entry.get('url') or sha_is_bad(entry.get('sha256')):
+        return ('refused: the %s pin in tools.json has no real SHA-256 yet. The runner zip is never used unchecked. '
+                'Put the SHA-256 published with the actions/runner release into the pin, then run the setup again.' % RUNNER_PIN)
+    return None
+
+
+def ps_header(label):
+    return ['$ErrorActionPreference = %s' % _psq('Stop'), 'Write-Host %s' % _psq(label)]
+
+
+def ps_machine(machine_dir, hooks_dir, tools_dir=WIN_TOOLS_DIR):
+    """Group, and the rights on the shared folders. The queue and state folder: Modify. The hooks: read and execute (and the
+    administrator or the person who runs the setup may rewrite them). The tool cache: Modify (ci_tool still checks SHA-256)."""
+    grp, w = _psq(WIN_GROUP), lambda p: _psq(_winpath(p))  # noqa: E731
+    return ps_header('Group and shared folder rights') + [
+        'if (-not (Get-LocalGroup -Name %s -ErrorAction SilentlyContinue)) { New-LocalGroup -Name %s -Description %s | Out-Null }'
+        % (grp, grp, _psq('Accounts of CI runner services (luismc-delivery)')),
+        'New-Item -ItemType Directory -Force -Path %s, %s, %s | Out-Null' % (w(machine_dir), w(hooks_dir), w(tools_dir)),
+        'icacls %s /grant "%s:(OI)(CI)M" | Out-Null' % (w(machine_dir), WIN_GROUP),
+        'icacls %s /grant "%s:(OI)(CI)M" | Out-Null' % (w(tools_dir), WIN_GROUP),
+        '$me = [Security.Principal.WindowsIdentity]::GetCurrent().Name',
+        'icacls %s /inheritance:r /grant:r "%s:(OI)(CI)F" "%s:(OI)(CI)F" "$($me):(OI)(CI)M" "%s:(OI)(CI)RX" | Out-Null'
+        % (w(hooks_dir), SID_ADMINS, SID_SYSTEM, WIN_GROUP),
+    ]
+
+
+RIGHTS_PS = [
+    '$sid = (Get-LocalUser -Name $acct).SID.Value',
+    "$cfg = Join-Path $env:TEMP ('luismc-rights-' + [guid]::NewGuid().ToString('N') + '.inf')",
+    "$sdb = Join-Path $env:TEMP ('luismc-rights-' + [guid]::NewGuid().ToString('N') + '.sdb')",
+    'secedit /export /cfg $cfg /areas USER_RIGHTS | Out-Null',
+    '$text = Get-Content -Raw -Path $cfg',
+    "foreach ($r in 'SeServiceLogonRight', 'SeDenyInteractiveLogonRight', 'SeDenyRemoteInteractiveLogonRight') {",
+    '  if ($text -match \"(?m)^$r\\s*=\") {',
+    '    if ($text -notmatch \"(?m)^$r\\s*=.*$([regex]::Escape($sid))\") { $text = $text -replace \"(?m)^($r\\s*=.*)$\", (\'$1,*\' + $sid) }',
+    '  } else {',
+    '    $text = $text -replace \"(?m)^\\[Privilege Rights\\]\\s*$\", \"[Privilege Rights]`r`n$r = *$sid\"',
+    '  }',
+    '}',
+    'Set-Content -Path $cfg -Value $text -Encoding Unicode',
+    'secedit /configure /db $sdb /cfg $cfg /areas USER_RIGHTS | Out-Null',
+    'Remove-Item -Force -ErrorAction SilentlyContinue $cfg, $sdb',
+]
+
+
+def ps_account(acct):
+    """The runner's local account: not an administrator, in the group, allowed to log on as a service, denied interactive and
+    remote logon. A new account gets a random password that nobody sees; the registration step sets the one it uses."""
+    return ps_header('Local account %s' % acct) + [
+        '$acct = %s' % _psq(acct),
+        'if (-not (Get-LocalUser -Name $acct -ErrorAction SilentlyContinue)) {',
+        '  $b = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)',
+        "  $p = ConvertTo-SecureString ('Aa1!' + [Convert]::ToBase64String($b)) -AsPlainText -Force",
+        "  New-LocalUser -Name $acct -Password $p -PasswordNeverExpires -UserMayNotChangePassword -AccountNeverExpires "
+        "-Description 'CI runner service (luismc-delivery)' | Out-Null",
+        '}',
+        'Add-LocalGroupMember -Group %s -Member $acct -ErrorAction SilentlyContinue' % _psq(WIN_GROUP),
+        'Remove-LocalGroupMember -Group (Get-LocalGroup -SID %s) -Member $acct -ErrorAction SilentlyContinue'
+        % _psq(SID_ADMINS.lstrip('*')),
+    ] + RIGHTS_PS
+
+
+def ps_files(acct, folder, tools_dir, python, ci_tool=None):
+    """Download the runner through ci_tool (SHA-256 checked, cached in the tool folder), unpack it into the runner folder and
+    lock the folder: Full for the account, Administrators and SYSTEM only."""
+    ci_tool = ci_tool or CI_TOOL
+    f = _psq(_winpath(folder))
+    return ps_header('Runner files in %s' % _winpath(folder)) + [
+        '$folder = %s' % f,
+        '$env:CI_TOOLS_DIR = %s' % _psq(_winpath(tools_dir)),
+        'New-Item -ItemType Directory -Force -Path $folder | Out-Null',
+        'if (-not (Test-Path (Join-Path $folder %s))) {' % _psq('config.cmd'),
+        '  $src = & %s %s tool %s --platform %s --dir' % (_psq(_winpath(python)), _psq(_winpath(ci_tool)), RUNNER_PIN, RUNNER_PLATFORM),
+        '  if ($LASTEXITCODE -ne 0 -or -not $src) { throw %s }' % _psq('the runner download failed its SHA-256 check or could not be fetched'),
+        '  Copy-Item -Path (Join-Path $src %s) -Destination $folder -Recurse -Force' % _psq('*'),
+        '}',
+        'New-Item -ItemType Directory -Force -Path (Join-Path $folder %s), (Join-Path $folder %s) | Out-Null'
+        % (_psq('_tools\\rustup'), _psq('_tools\\cargo')),
+        'icacls $folder /inheritance:r /grant:r "%s:(OI)(CI)F" "%s:(OI)(CI)F" "%s:(OI)(CI)F" | Out-Null'
+        % (SID_ADMINS, SID_SYSTEM, acct),
+    ]
+
+
+def ps_register(repo, name, acct, folder, env_text, register=True, labels=WIN_RUNNER_LABELS):
+    """Write .env, then (when `register`) fetch a registration token now, make a random password, set it on the account and
+    give it to config.cmd; start the service. The token and the password live in PowerShell variables only."""
+    lines = ps_header('Runner service %s for %s' % (name, repo)) + [
+        '$acct = %s' % _psq(acct), '$folder = %s' % _psq(_winpath(folder)),
+        "Set-Content -Path (Join-Path $folder '.env') -Value @'\n%s'@ -Encoding Ascii -NoNewline" % env_text,
+    ]
+    if register:
+        lines += [
+            '$token = (gh api -X POST %s --jq .token)' % _psq('repos/%s/actions/runners/registration-token' % repo),
+            "if ($LASTEXITCODE -ne 0 -or -not $token) { throw 'gh could not make a registration token (is gh signed in for this account?)' }",
+            "Push-Location $folder",
+            "if (Test-Path (Join-Path $folder '.runner')) { & .\\config.cmd remove --token $token | Out-Null }",
+            '$b = New-Object byte[] 24; [Security.Cryptography.RandomNumberGenerator]::Create().GetBytes($b)',
+            "$pw = 'Aa1!' + [Convert]::ToBase64String($b)",
+            "Set-LocalUser -Name $acct -Password (ConvertTo-SecureString $pw -AsPlainText -Force)",
+            '& .\\config.cmd --unattended --url %s --token $token --name %s --labels %s --runasservice '
+            '--windowslogonaccount (".\\" + $acct) --windowslogonpassword $pw' % (
+                _psq('https://github.com/' + repo), _psq(name), _psq(','.join(labels))),
+            'if ($LASTEXITCODE -ne 0) { Pop-Location; throw %s }' % _psq('config.cmd failed'),
+            'Pop-Location',
+            '$token = $null; $pw = $null',
+        ]
+    lines += ["$svc = (Get-Content -Raw -Path (Join-Path $folder '.service')).Trim()",
+              'Restart-Service -Name $svc',
+              'Write-Host %s' % _psq('runner %s is set up' % name)]
+    return lines
+
+
+def windows_runner_script(step, setup_machine=True):
+    """The whole setup of one runner as one PowerShell script text. It holds no secret: it fetches its own token and makes its
+    own password at run time. The same parts run in the elevated setup."""
+    lines = ['#Requires -RunAsAdministrator',
+             '# DL310: shared machine runner for %s (written by the delivery setup; safe to run again).' % step['repo'],
+             '# It holds no token and no password: both are made while it runs and are never written down.']
+    if setup_machine:
+        lines += ps_machine(step['machine_dir'], step['hooks_dir'], step['tools_dir'])
+    lines += ps_account(step['account'])
+    lines += ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool'))
+    lines += ps_register(step['repo'], step['runner'], step['account'], step['folder'], step['env_text'], step.get('register', True))
+    return '\r\n'.join(lines) + '\r\n'
+
+
+def runner_has_job(probe, repo, name):
+    """True when GitHub lists the runner as busy. Unreadable counts as busy: a runner is touched only when it is seen idle."""
+    data, _why = probe.gh_json(['api', 'repos/%s/actions/runners?per_page=100' % repo])
+    if not isinstance(data, dict):
+        return True
+    return any(x.get('name') == name and x.get('busy') for x in data.get('runners', []))
+
+
+def migration_guard(probe, step):
+    """DL310: why an old-runner step must wait, else None. The new runner must be online, and the old one must have no job."""
+    old = step.get('old_runner')
+    if not old:
+        return None
+    data, _why = probe.gh_json(['api', 'repos/%s/actions/runners?per_page=100' % step['repo']])
+    if not isinstance(data, dict):
+        return 'the runner list of %s cannot be read, so %s is not touched' % (step['repo'], old)
+    runners = {x.get('name'): x for x in data.get('runners', [])}
+    new = runners.get(step.get('new_runner'))
+    if not new or new.get('status') != 'online':
+        return 'the new runner %s is not online yet, so %s stays' % (step.get('new_runner'), old)
+    if old in runners and runners[old].get('busy'):
+        return 'a job runs on %s: it is not touched. Run the setup again when the job ends.' % old
+    return None
 
 
 def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, serial=None, limits=None, repo_path=None,
@@ -942,7 +1161,24 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     host = found.get('host') or {}
     win = str(host.get('platform', '')).startswith('win')
     steps = [_step('idle', 'Wait until no existing runner has a job', 'wait-idle')]
-    wanted = {r: w for r, w in ((r, _wanted_windows(found, r)) for r in keep_w) if w}
+    accts = {}
+    for r in keep_w:
+        accts[r] = windows_account(r, taken=set(accts.values()))
+    wanted = {r: w for r, w in ((r, _wanted_windows(found, r, accts[r])) for r in keep_w) if w}
+    # DL310: an old Windows runner of a planned repository with another name is replaced AFTER the new one is online.
+    new_names = {r: windows_runner_name(slug_of(r)) for r in keep_w}
+    old_win = {}  # (repo, runner name) -> the GitHub runner entry
+    for r in found['github']['repos']:
+        if r['repo'] in keep_w:
+            for x in r['runners']:
+                if str(x.get('os')).lower() == 'windows' and x['name'] != new_names[r['repo']] \
+                        and not _has_label(x['labels'], 'pool-%s' % pool):
+                    old_win[(r['repo'], x['name'])] = x
+    old_folders = {_norm(f['path']).lower(): f for f in found['folders']
+                   if (f.get('repo'), f.get('name')) in old_win
+                   and _norm(f['path']).lower() != windows_runner_folder(slug_of(f['repo'])).lower()}
+    old_services = {sv['name']: sv for sv in found['services'] if sv.get('kind') == 'windows-service'
+                    and _norm(sv.get('folder')).lower() in old_folders}
     wanted_runners = {(r, w['runner']) for r, w in wanted.items()}
     wanted_services = {w['service'] for w in wanted.values() if w['service']}
     wanted_folders = {w['folder'].lower() for w in wanted.values()}
@@ -954,6 +1190,8 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                 continue  # already part of this pool: kept
             if (r['repo'], x['name']) in wanted_runners:
                 continue  # the Windows runner this plan would create: kept
+            if (r['repo'], x['name']) in old_win:
+                continue  # replaced after the new runner is online (below)
             steps.append(_step('remove:%s:%s' % (r['repo'], x['name']),
                                'Remove runner %s (%s) from %s' % (x['name'], x['os'], r['repo']), 'remove-runner',
                                delete=True, names=['runner %s (%s) in %s on GitHub' % (x['name'], x['os'], r['repo'])],
@@ -965,7 +1203,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         if repo_of.get(svc.get('folder')) not in planned | {None}:
             continue
         n = svc['name']
-        if n in wanted_services:
+        if n in wanted_services or n in old_services:
             continue
         steps.append(_step('winsvc-remove:%s' % n, 'Stop and delete the Windows runner service %s' % n, 'windows-service-remove',
                            delete=True, names=['Windows service ' + n], elevated=True, service=n,
@@ -973,7 +1211,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     for f in found['folders']:
         if f.get('repo') not in planned | {None}:
             continue
-        if _norm(f['path']).lower() in wanted_folders:
+        if _norm(f['path']).lower() in wanted_folders or _norm(f['path']).lower() in old_folders:
             continue
         steps.append(_step('delete-folder:%s' % f['path'], 'Delete the old runner folder %s' % f['path'], 'delete-folder',
                            delete=True, names=[f['path']], path=f['path']))
@@ -1043,22 +1281,77 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
             if _pool_has(found, pool, repo):
                 s['state'] = 'already'
             steps.append(s)
-    hooks_dir = windows_hooks_dir(host.get('machine_dir', 'C:/ProgramData/luismc-delivery'))
+    machine_dir = host.get('machine_dir', 'C:/ProgramData/luismc-delivery')
+    hooks_dir = windows_hooks_dir(machine_dir)
+    admin = bool(win and keep_w and getattr(probe or Probe(), 'is_admin', lambda: False)())
+    pin_problem = runner_pin_problem() if keep_w else None
+    py = _winpath(host.get('python') or sys.executable)
+    base_w = dict(machine_dir=machine_dir, hooks_dir=hooks_dir, tools_dir=WIN_TOOLS_DIR, python=py, ci_tool=CI_TOOL)
     if keep_w:
         steps.append(_step('runner-hooks', 'Copy the runner hook scripts to the stable folder %s (rewritten on every run)' % hooks_dir,
                            'runner-hooks', dest=hooks_dir, python=host.get('python') or sys.executable))
+    for repo in keep_w:  # DL310: is the .env of a kept runner what this plan would write? (unreadable counts as stale)
+        w = wanted.get(repo)
+        if w:
+            want_env = windows_env_text(w['folder'].replace('\\', '/'), hooks_dir)
+            w['env_ok'] = probe is None or probe.read_text(w['folder'] + '/.env') == want_env  # no probe: not judged
+    todo_w = [r for r in keep_w if not (r in wanted and wanted[r]['account_ok'] and wanted[r]['env_ok'])]
+    if admin and todo_w:
+        steps.append(_step('win-machine', 'Make the group %s and set the rights: %s and the tool cache %s Modify, runner-hooks Read & Execute'
+                           % (WIN_GROUP, machine_dir, WIN_TOOLS_DIR), 'windows-machine', **base_w))
     for repo in keep_w:
         slug = slug_of(repo)
-        s = _step('winsvc:%s' % repo, 'Windows runner service for %s with both hooks' % repo, 'windows-service',
-                  repo=repo, slug=slug, elevated=True,
-                  printed=['cd %s' % windows_runner_folder(slug),
-                           './config.cmd --url https://github.com/%s --token <TOKEN> --name %s --labels self-hosted,windows --runasservice'
-                           % (repo, windows_runner_name(slug)),
-                           'Set ACTIONS_RUNNER_HOOK_JOB_STARTED=%s/runner_load_gate.ps1 and ACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s/runner_job_done.ps1 in %s/.env (the runner rejects .cmd hooks)'
-                           % (hooks_dir, hooks_dir, windows_runner_folder(slug))])
-        if repo in wanted:
+        acct, folder, name = accts[repo], windows_runner_folder(slug), windows_runner_name(slug)
+        w = wanted.get(repo)
+        fresh = repo in todo_w
+        register = not (w and w['account_ok'])  # the password changes only when the service is registered again
+        data = dict(base_w, repo=repo, slug=slug, account=acct, runner=name, folder=folder, register=register,
+                    env_text=windows_env_text(folder, hooks_dir), new_runner=name, pin_problem=pin_problem)
+        manual = ['cd %s' % folder,
+                  './config.cmd --url https://github.com/%s --token <TOKEN> --name %s --labels self-hosted,windows --runasservice '
+                  '--windowslogonaccount .\\%s --windowslogonpassword <PASSWORD>' % (repo, name, acct),
+                  'Set ACTIONS_RUNNER_HOOK_JOB_STARTED=%s/runner_load_gate.ps1 and ACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s/runner_job_done.ps1 '
+                  'in %s/.env (the runner rejects .cmd hooks), with CI_TOOLS_DIR, RUSTUP_HOME and CARGO_HOME'
+                  % (hooks_dir, hooks_dir, folder)]
+        if admin:
+            if register and not w:
+                steps.append(_step('win-account:%s' % repo, 'Local account %s for the %s service (not an administrator, no interactive or '
+                                   'remote logon, may log on as a service)' % (acct, name), 'windows-account', **data))
+                steps.append(_step('win-files:%s' % repo, 'Download the runner (SHA-256 checked) to %s and lock the folder to %s'
+                                   % (folder, acct), 'windows-files', **data))
+            s = _step('winsvc:%s' % repo, 'Windows runner service for %s as %s with both hooks' % (repo, acct), 'windows-service',
+                      elevated=False, printed=manual, **data)
+        else:
+            if fresh:
+                steps.append(_step('win-script:%s' % repo, 'Write the PowerShell script that sets up everything for %s' % repo,
+                                   'windows-runner-script', **dict(data, script=_winpath('%s/setup/windows-runner-%s.ps1' % (
+                                       machine_dir.rstrip('/\\'), slug)))))
+            run_line = 'powershell -NoProfile -ExecutionPolicy Bypass -File "%s"' % _winpath(
+                '%s/setup/windows-runner-%s.ps1' % (machine_dir.rstrip('/\\'), slug))
+            s = _step('winsvc:%s' % repo, 'Windows runner service for %s as %s with both hooks' % (repo, acct), 'windows-service',
+                      elevated=True, printed=manual, say=['Open an administrator PowerShell and run: ' + run_line], **data)
+        if not fresh:
             s['state'] = 'already'
+            for x in steps:
+                if x['id'] in ('win-account:%s' % repo, 'win-files:%s' % repo):
+                    x['state'] = 'already'
         steps.append(s)
+    # DL310: replace the old Windows runners (another name or account) once the new one is online. Each step names what goes.
+    for (repo, oname), x in sorted(old_win.items()):
+        common = dict(repo=repo, old_runner=oname, new_runner=new_names[repo])
+        for n, sv in old_services.items():
+            fold = old_folders[_norm(sv['folder']).lower()]
+            if (fold.get('repo'), fold.get('name')) == (repo, oname):
+                steps.append(_step('winsvc-remove:%s' % n, 'Stop and delete the old Windows runner service %s (replaced by %s)' % (n, new_names[repo]),
+                                   'windows-service-remove', delete=True, names=['Windows service ' + n], elevated=not admin, service=n,
+                                   printed=['sc.exe stop "%s"' % n, 'sc.exe delete "%s"' % n], **common))
+        steps.append(_step('remove:%s:%s' % (repo, oname), 'Remove the old runner %s (%s) from %s' % (oname, x['os'], repo), 'remove-runner',
+                           delete=True, names=['runner %s (%s) in %s on GitHub' % (oname, x['os'], repo)], runner_id=x['id'],
+                           runner=oname, **common))
+        for key, fold in old_folders.items():
+            if (fold.get('repo'), fold.get('name')) == (repo, oname):
+                steps.append(_step('delete-folder:%s' % fold['path'], 'Delete the old runner folder %s' % fold['path'], 'delete-folder',
+                                   delete=True, names=[fold['path']], path=fold['path'], **common))
     for repo in keep_l:
         value = json.dumps(expected_runs_on(['self-hosted', 'linux'], pool))  # DL184: the shared rule
         steps.append(_step('var:CI_RUNS_ON:%s' % repo, 'Set CI_RUNS_ON for %s' % repo, 'set-variable', repo=repo,
@@ -1111,6 +1404,8 @@ def default_check(step, probe=None):
     probe = probe or Probe()
     if step.get('action') == 'windows-service-remove':
         return step['service'] not in [x['name'] for x in detect_services(probe)]
+    if step.get('action') == 'windows-service':
+        return any(step.get('slug', '\0') in (x['name'] or '') for x in detect_services(probe))
     if step.get('action') == 'host-load-task':
         r = probe.sh(['schtasks', '/Query', '/TN', 'luismc-host-load'])
         if r and r[0] == 0:
@@ -1552,6 +1847,9 @@ class Executor:
         h = getattr(self, 'do_' + step['action'].replace('-', '_'), None)
         if h is None:
             return False, 'no handler for %s' % step['action']
+        why = migration_guard(self.probe, step) if step.get('old_runner') else None
+        if why:  # DL310: never touch an old runner with a job, nor before the new one is online
+            return False, why
         try:
             return h(step)
         except Exception as exc:  # noqa: BLE001  a step must fail with a reason, never crash the run
@@ -1624,6 +1922,47 @@ class Executor:
             with open(os.path.join(dest, wrapper), 'w', encoding='utf-8', newline='\r\n') as f:
                 f.write(hook_wrapper(py, script))
         return True, 'wrote the hook scripts to %s (python %s)' % (dest, py)
+
+    def _ps(self, lines, timeout=900):
+        """Run PowerShell text through stdin (never a file, never an argument). Its output is trimmed to the last lines."""
+        r = self.probe.sh(['powershell', '-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-Command', '-'],
+                          input='\r\n'.join(lines) + '\r\n', timeout=timeout)
+        if r is None:
+            return False, 'PowerShell cannot run'
+        tail = ' / '.join(l.strip() for l in (r[1] or '').splitlines() if l.strip())[-300:]
+        return r[0] == 0, tail or ('done' if r[0] == 0 else 'PowerShell failed (exit %s)' % r[0])
+
+    def do_windows_machine(self, step):
+        return self._ps(ps_machine(step['machine_dir'], step['hooks_dir'], step['tools_dir']))
+
+    def do_windows_account(self, step):
+        return self._ps(ps_account(step['account']))
+
+    def do_windows_files(self, step):
+        if step.get('pin_problem'):
+            return False, step['pin_problem']
+        return self._ps(ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool')))
+
+    def do_windows_service(self, step):
+        """Write .env, then register: the token and the password are made inside PowerShell and never come back here."""
+        return self._ps(ps_register(step['repo'], step['runner'], step['account'], step['folder'], step['env_text'],
+                                    step.get('register', True)))
+
+    def do_windows_runner_script(self, step):
+        """Not elevated: write the script the owner runs in an administrator PowerShell. It holds no secret."""
+        if step.get('pin_problem'):
+            return False, step['pin_problem']
+        path = step['script']
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8-sig', newline='') as f:
+            f.write(windows_runner_script(step))
+        return True, 'wrote %s (no token and no password in it)' % path
+
+    def do_windows_service_remove(self, step):
+        n = step['service']
+        self.probe.sh(['sc.exe', 'stop', n])
+        r = self.probe.sh(['sc.exe', 'delete', n])
+        return (bool(r and r[0] == 0), 'service deleted' if r and r[0] == 0 else 'sc.exe delete refused')
 
     def do_pool_files(self, step):
         version, sha, source = resolve_runner(self.probe)
@@ -1844,11 +2183,12 @@ class Executor:
         return not bad, '; '.join('%s: %s' % (c['id'], c['detail']) for c in (bad or res))
 
 
-def run(pl, ask, ask_delete, say=print, execute=None, check=None):
+def run(pl, ask, ask_delete, say=print, execute=None, check=None, guard=None):
     """Run the plan. `ask(step)` and `ask_delete(step)` return True for a yes. A step with state `already` is skipped.
 
     An elevated step is printed for the owner, then `check(step)` decides if it is done. Stops at the first failure and
-    prints what is left. Returns {'done': [...], 'failed': step or None, 'left': [...], 'refused': [...]}.
+    prints what is left. `guard(step)` (DL310) returns a reason text when a step must wait (an old runner has a job, or the new
+    runner is not online yet); the run then stops there. Returns {'done': [...], 'failed': step or None, 'left': [...], 'refused': [...]}.
     """
     execute = execute or Executor().run
     check = check or default_check
@@ -1877,9 +2217,15 @@ def run(pl, ask, ask_delete, say=print, execute=None, check=None):
                 say('  not deleted (no yes). Stopping here.')
                 left = [s['id'] for s in steps[i:]]
                 break
+        why = guard(step) if guard else None
+        if why:
+            failed = step
+            say('  waits: %s' % why)
+            left = [s['id'] for s in steps[i:]]
+            break
         if step['elevated']:
             say('  Run this in an administrator shell, then answer:')
-            for line in step['printed']:
+            for line in step.get('say') or step['printed']:
                 say('    ' + line)
             own = step['action'] == 'windows-service-remove'  # the pool module checks its own removal step
             ok, detail = (bool((default_check if own else check)(step)), 'checked')

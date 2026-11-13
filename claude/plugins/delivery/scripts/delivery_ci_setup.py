@@ -684,10 +684,16 @@ def render_plan(pl, found) -> list:
         lines.append("  - %s [%s]" % (step["title"], mark))
     for r in pl["refused"]:
         lines.append("  ! %s" % r["reason"])
+    pin = next((st["pin_problem"] for st in pl["steps"] if st.get("pin_problem") and st["state"] != "already"), None)
+    if pin:
+        lines.append("  ! %s" % pin)
+    if any(st["action"] == "windows-runner-script" and st["state"] != "already" for st in pl["steps"]):
+        lines.append("  This shell is not an administrator. I write one PowerShell script per Windows runner (no secret in it); "
+                     "you run it once in an administrator PowerShell. In an administrator shell I do every step myself.")
     if pl.get("blocked"):
         lines.append("  ! %s" % pl["blocked"])
     lines.append("Writes in this repository: nothing. Writes on this machine: %s" % pool_dir(pl["pool"]))
-    lines.append("Changes outside the repository: GitHub runner registrations, repository variables, Docker, the machine config.")
+    lines.append("Changes outside the repository: GitHub runner registrations, repository variables, Docker, the machine config, and for a Windows runner: a local account, the group luismc-ci-runners and folder rights.")
     lines.append("Needs you: %s." % "; ".join(pl["needs"]))
     lines.append("About %d minutes." % pl["minutes"])
     return lines
@@ -754,7 +760,8 @@ def cmd_pool(args, root) -> int:
             return any(step["slug"] in (x["name"] or "") for x in P.detect_services(probe))
         return P.default_check(step, probe)
     result = P.run(pl, ask=lambda st: bool(args.yes), ask_delete=lambda st: all(n in yes_delete for n in st["names"]),
-                   execute=P.Executor(probe).run, check=check)
+                   execute=P.Executor(probe).run, check=check,
+                   guard=lambda st: P.migration_guard(probe, st))
     left = []
     if result["failed"]:
         left.append("Fix this and run the setup again: %s." % result["failed"]["title"])
