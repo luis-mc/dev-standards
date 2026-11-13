@@ -136,6 +136,11 @@ timed out. A script never exits 0 when it could not decide.
   `--full`), and are skipped (outcome `skip`) when no package changed;
   `ui-changed` runs only when a changed file is under a `ui_paths` prefix or the
   gate is widened.
+- `when_changed` (optional, DL304): a non-empty list of path patterns, matched
+  like `widen_on` entries. The step runs only when a changed file matches one;
+  otherwise it is skipped with the reason `no change under when_changed (...)`.
+  It narrows the step's `scope`; it never widens it. A step without it is
+  unchanged. A time-limited run still runs the step when its paths changed.
 - `widen_on` entries: one ending in `/` is a path prefix; one containing `*` is a
   glob over the full path; anything else is a root-level file only (a nested
   `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
