@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T00:40+00:00",
+  "updated": "2026-11-14T00:49+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5989,12 +5989,11 @@
       "id": "DL335",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-135: ci_watch false release entries",
       "detail": "Join, CI, merge and smoke for DL336.",
-      "expected": "14 Nov ~01:15",
-      "changed": "2026-11-14T00:40+00:00",
-      "expected_basis": "agent ~00:55 + join/CI/merge ~15 min",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T00:46+00:00",
       "release": 135,
       "started": "2026-11-14T00:40+00:00"
     },
@@ -6002,11 +6001,11 @@
       "id": "DL336",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "ci_watch: no release entry for a default-branch commit",
       "detail": "head_of() reads refname:short; refs/remotes/origin/HEAD shortens to 'origin', so watching a merge commit on main opens a false train 'origin' and the stop hook demands a merge. Use full ref names, skip HEAD and the default branch.",
       "expected": "14 Nov",
-      "changed": "2026-11-14T00:40+00:00",
+      "changed": "2026-11-14T00:46+00:00",
       "rides": "DL335",
       "started": "2026-11-14T00:33+00:00"
     },
@@ -6014,11 +6013,11 @@
       "id": "DL337",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Waiting",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
       "detail": "D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.",
       "expected": "14 Nov ~03:00",
-      "changed": "2026-11-14T00:34+00:00",
+      "changed": "2026-11-14T00:49+00:00",
       "expected_basis": "first idle window after RELEASE-135, ~5 min",
       "no_release": "machine maintenance: rebuild the pool image when idle"
     },
