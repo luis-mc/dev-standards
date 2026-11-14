@@ -776,6 +776,9 @@ def cmd_pool(args, root) -> int:
     host, why = P.host_kvm(probe, args.pool)  # DL274: KVM is optional and off by default
     print("KVM on this host: %s (%s). It stays off unless you run pool-refresh --kvm on."
           % ("yes" if host else "no" if host is False else "unknown", why))
+    wsl_warn = P.wslconfig_nested_warning(probe, P.read_pool_env(probe, args.pool))  # DL343
+    if wsl_warn:
+        print("Warning: %s" % wsl_warn)
     if args.action == "pool-plan":
         return 0
     if pl.get("blocked"):
