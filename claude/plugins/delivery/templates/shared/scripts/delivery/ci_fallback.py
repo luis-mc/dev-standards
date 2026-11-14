@@ -72,9 +72,40 @@ PUSH_RETRIES = 8
 
 # --- small helpers ------------------------------------------------------------------------------------------
 
-def _git(root, *args, stdin=None, env=None):
-    return subprocess.run(["git", *args], cwd=root, capture_output=True, text=True, input=stdin, check=False,
-                          env={**os.environ, **EMPTY_TREE_ENV, **(env or {})})
+MARKER_GIT_TIMEOUT = 20
+NONINTERACTIVE_ENV = {"GIT_TERMINAL_PROMPT": "0", "GCM_INTERACTIVE": "never", "GIT_ASKPASS": "echo",
+                      "SSH_ASKPASS": "echo", "GIT_SSH_COMMAND": "ssh -oBatchMode=yes"}
+
+
+def git_timeout() -> float:
+    """Seconds a marker git command may run: DELIVERY_MARKER_GIT_TIMEOUT, default 20."""
+    try:
+        v = float(os.environ.get("DELIVERY_MARKER_GIT_TIMEOUT") or MARKER_GIT_TIMEOUT)
+    except ValueError:
+        return float(MARKER_GIT_TIMEOUT)
+    return v if v > 0 else float(MARKER_GIT_TIMEOUT)
+
+
+def noninteractive_env(base=None) -> dict:
+    """base (default os.environ) plus the keys that stop git from asking anything. A value already set stays."""
+    env = dict(os.environ if base is None else base)
+    for k, v in NONINTERACTIVE_ENV.items():
+        env.setdefault(k, v)
+    return env
+
+
+def _git(root, *args, stdin=None, env=None, timeout=None):
+    """Run git without ever prompting and never longer than the timeout. A timeout or a missing git is a failed result
+    (returncode 124 or 127), never an exception: the marker API fails open (DL351)."""
+    limit = git_timeout() if timeout is None else timeout
+    full_env = noninteractive_env({**os.environ, **EMPTY_TREE_ENV, **(env or {})})
+    try:
+        return subprocess.run(["git", "-c", "credential.interactive=never", *args], cwd=root, capture_output=True,
+                              text=True, input=stdin, check=False, env=full_env, timeout=limit)
+    except subprocess.TimeoutExpired:
+        return subprocess.CompletedProcess(args, 124, "", "git timed out after %g s" % limit)
+    except OSError as exc:
+        return subprocess.CompletedProcess(args, 127, "", "git could not run: %s" % exc)
 
 
 def _num(v, minimum=0):
@@ -265,10 +296,16 @@ def wait_ref(sha: str, shard: str) -> str:
 def mark_wait(root: str, remote: str, sha: str, shard: str, holder: str, now=None) -> bool:
     """Write the wait marker of a held job (DL-90). Same method as a claim: a push that creates the branch. True when
     the marker exists after the call (made now, or made by an earlier try of the same shard)."""
-    if _create_branch(root, remote, wait_ref(sha, shard), {
-            "holder": holder, "sha": sha, "shard": shard, "at": _iso(_now(now))}):
-        return True
-    return bool(_ls(root, remote, wait_ref(sha, shard)))
+    try:
+        if _create_branch(root, remote, wait_ref(sha, shard), {
+                "holder": holder, "sha": sha, "shard": shard, "at": _iso(_now(now))}):
+            return True
+    except RuntimeError:  # git failed or timed out: no marker (DL351)
+        return False
+    try:
+        return bool(_ls(root, remote, wait_ref(sha, shard)))
+    except RuntimeError:  # git failed or timed out: no marker (DL351)
+        return False
 
 
 def read_wait(root: str, remote: str, sha: str, shard: str):
@@ -283,7 +320,10 @@ def clear_wait(root: str, remote: str, sha: str, shard: str) -> None:
 
 def claim_taken(root: str, remote: str, sha: str, shard: str) -> bool:
     """True when any claim exists for the shard: a held job that finds this ends with exit 3 (claim lost)."""
-    return bool(_attempts(root, remote, sha, shard))
+    try:
+        return bool(_attempts(root, remote, sha, shard))
+    except RuntimeError:  # git failed or timed out: the gate goes on as if no claim (DL351)
+        return False
 
 
 def _machine_file_candidates():
