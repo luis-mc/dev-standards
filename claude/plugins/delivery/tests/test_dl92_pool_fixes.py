@@ -95,7 +95,7 @@ class RecreateTests(unittest.TestCase):
         orig_read, orig_run, orig_det, orig_write = P.read_pool_env, P.subprocess.run, P.detect_github, P.write_pool_files
         P.read_pool_env = lambda pr, pool: next(envs)
         P.write_pool_files = lambda *a, **k: "C:/m/pools/main"
-        P.detect_github = lambda pr: {"repos": [{"repo": "o/a", "runners": [{"busy": busy}], "error": None}], "error": None}
+        P.detect_github = lambda pr: {"repos": [{"repo": "o/a", "runners": [{"name": "main-app", "os": "Linux", "busy": busy}], "error": None}], "error": None}
         P.subprocess.run = lambda argv, **k: calls.append(argv) or type("R", (), {"returncode": 0, "stderr": ""})()
         try:
             ok, text = P.Executor(probe).run({"action": "pool-files", "pool": "main", "cap": {"cpus": 4, "mem_gib": 7}})
