@@ -904,12 +904,22 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-13T23:33+00:00">13 Nov 23:33</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T00:07+00:00">14 Nov 00:07</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">13 Nov 18:52</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL327"><span class="task-id">DL327</span>Runner gate: heavy job class with its own machine slot</li>
+</ul>
+</details>
+<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL326"><span class="task-id">DL326</span><span class="glance-dep">cloud agent ~15-20 min, join 5, CI 10, merge 5</span> <span class="release-name">RELEASE-132</span>RELEASE: heavy slots in the runner gate <span class="glance-expected">14 Nov ~00:20</span></li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">47 tasks</span></summary>
 <ul>
@@ -925,10 +935,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">318</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">318</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">325 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL326"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL326</span><span class="release-name">RELEASE-132</span>RELEASE: heavy slots in the runner gate</td><td>Join DL327 (heavy job class with its own machine slot), fold, CI, merge, install, tell the peer.</td><td>14 Nov ~00:20<span class="expected-basis">cloud agent ~15-20 min, join 5, CI 10, merge 5</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 325 live</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL327"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL327</span>Runner gate: heavy job class with its own machine slot<span class="release-line"><span class="release-name">RELEASE-132</span></span></td><td>Owner D288: keep heavy jobs (integration, e2e, full suites) one at a time per machine by resource, not by a project label: runner_gate.heavy_jobs patterns (GITHUB_JOB or DELIVERY_SHARD, optional owner/repo: prefix) and heavy_slots (default 1). A heavy job takes a CI slot and the heavy slot; it waits while the heavy slot is held. Lets a project drop project labels like comics-linux-big.</td><td>13 Nov</td></tr>
 <tr data-task="DL325"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL325</span>Add a second comics-organizer agent to the Linux pool (D282)<span class="no-release-line">ships nothing: machine change, ships nothing</span></td><td>With DL323 (delivery 1.45.0): copy the new pool_agents.py into the running pool container, then pool-add-agent for the repo with the shared route, only when no pool job runs. No rebuild; the copy is lost on a container recreate until the next pool refresh rebuilds the image.</td><td>13 Nov</td></tr>
 <tr data-task="DL320"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL320</span>Host-load task: register with PowerShell cmdlets, not cmd-quoted schtasks<span class="release-line"><span class="release-name">RELEASE-131</span></span></td><td>Owner D274: register the host-load task now (one-time admin script, 13 Nov). The plan&#x27;s printed schtasks line uses cmd quoting that PowerShell 5.1 mangles; print Register-ScheduledTask lines (or a script) instead.</td><td>13 Nov</td></tr>
 <tr data-task="DL322"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL322</span><span class="release-name">RELEASE-131</span>RELEASE: Windows runner follow-ups + ticked CODE DONE</td><td>Join DL309, DL316, DL317, DL318, DL319, DL320 (3 cloud agents), fold, template-build, CI, merge, install, tell the peer.</td><td>13 Nov</td></tr>
@@ -1289,6 +1305,40 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D289">
+<h3 class="decision-head"><span class="decision-id">D289</span> <span class="decision-question">How many Linux pool agents may one repository have on this PC?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 14 Nov · Task DL325</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One agent per repository</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">The PC cannot carry two; reverses D282 and D287. Heavy jobs queue on the one agent.</p>
+<blockquote class="decision-words">&ldquo;there should not be 2 linux runners in the pool; this PC cannot handle it&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the second agent</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Two comics jobs at once inside the one pool cap (D282, D287).</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D288">
+<h3 class="decision-head"><span class="decision-id">D288</span> <span class="decision-question">How are heavy CI jobs kept to one at a time on a shared generic pool?</span></h3>
+<p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL327</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Heavy slots in the runner gate (Recommended)</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 13 Nov</span></div>
+<p class="decision-summary">offered</p>
+<blockquote class="decision-words">&ldquo;Heavy slots in the runner gate (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Generic &#x27;heavy&#x27; label on one agent</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep comics-linux-big for now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">offered</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D287">
 <h3 class="decision-head"><span class="decision-id">D287</span> <span class="decision-question">Add the second pool agent while the first runs a job?</span></h3>
 <p class="decision-meta">Asked 13 Nov · Decided 13 Nov · Task DL325</p>

@@ -6516,6 +6516,50 @@
       "chosen": "Add it now (Recommended)",
       "decided": "2026-11-13",
       "owner_words": "Add it now (Recommended)"
+    },
+    {
+      "id": "D288",
+      "question": "How are heavy CI jobs kept to one at a time on a shared generic pool?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL327",
+      "options": [
+        {
+          "label": "Heavy slots in the runner gate (Recommended)",
+          "summary": "offered"
+        },
+        {
+          "label": "Generic 'heavy' label on one agent",
+          "summary": "offered"
+        },
+        {
+          "label": "Keep comics-linux-big for now",
+          "summary": "offered"
+        }
+      ],
+      "chosen": "Heavy slots in the runner gate (Recommended)",
+      "decided": "2026-11-13",
+      "owner_words": "Heavy slots in the runner gate (Recommended)"
+    },
+    {
+      "id": "D289",
+      "question": "How many Linux pool agents may one repository have on this PC?",
+      "asked": "2026-11-13",
+      "status": "decided",
+      "task": "DL325",
+      "options": [
+        {
+          "label": "One agent per repository",
+          "summary": "The PC cannot carry two; reverses D282 and D287. Heavy jobs queue on the one agent."
+        },
+        {
+          "label": "Keep the second agent",
+          "summary": "Two comics jobs at once inside the one pool cap (D282, D287)."
+        }
+      ],
+      "chosen": "One agent per repository",
+      "decided": "2026-11-14",
+      "owner_words": "there should not be 2 linux runners in the pool; this PC cannot handle it"
     }
   ]
 }

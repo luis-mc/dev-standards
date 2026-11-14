@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T23:33+00:00",
+  "updated": "2026-11-13T23:56+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5855,6 +5855,53 @@
       "expected": "13 Nov",
       "changed": "2026-11-13T23:33+00:00",
       "no_release": "machine change, ships nothing"
+    },
+    {
+      "id": "DL326",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Waiting",
+      "item": "RELEASE: heavy slots in the runner gate",
+      "detail": "Join DL327 (heavy job class with its own machine slot), fold, CI, merge, install, tell the peer.",
+      "expected": "14 Nov ~00:20",
+      "changed": "2026-11-13T23:56+00:00",
+      "expected_basis": "cloud agent ~15-20 min, join 5, CI 10, merge 5",
+      "release": 132,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-13T23:40+00:00",
+          "end": "2026-11-14T00:00+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-14T00:00+00:00",
+          "end": "2026-11-14T00:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-14T00:05+00:00",
+          "end": "2026-11-14T00:15+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-14T00:15+00:00",
+          "end": "2026-11-14T00:20+00:00"
+        }
+      ],
+      "started": "2026-11-13T23:52+00:00"
+    },
+    {
+      "id": "DL327",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Runner gate: heavy job class with its own machine slot",
+      "detail": "Owner D288: keep heavy jobs (integration, e2e, full suites) one at a time per machine by resource, not by a project label: runner_gate.heavy_jobs patterns (GITHUB_JOB or DELIVERY_SHARD, optional owner/repo: prefix) and heavy_slots (default 1). A heavy job takes a CI slot and the heavy slot; it waits while the heavy slot is held. Lets a project drop project labels like comics-linux-big.",
+      "expected": "13 Nov",
+      "changed": "2026-11-13T23:56+00:00",
+      "rides": "DL326",
+      "started": "2026-11-13T23:53+00:00"
     },
     {
       "id": "DS1",
