@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T10:19+00:00",
+  "updated": "2026-11-14T10:37+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6013,14 +6013,14 @@
       "id": "DL337",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
       "detail": "Pool restarted 09:57 (kvm_intel loaded). Image still 13 Nov; rebuild when the pool is idle.",
-      "expected": "14 Nov ~11:00",
-      "changed": "2026-11-14T09:59+00:00",
+      "expected": "14 Nov ~11:25",
+      "changed": "2026-11-14T10:37+00:00",
       "no_release": "machine maintenance: rebuild the pool image when idle",
-      "expected_basis": "pool busy with CI jobs; rebuild ~5 min once idle",
-      "waits_on": "work"
+      "expected_basis": "refresh 10:38: drain comics job (max 45 min), then ~5 min rebuild",
+      "started": "2026-11-14T10:38+00:00"
     },
     {
       "id": "DL338",

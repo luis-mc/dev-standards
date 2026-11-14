@@ -904,16 +904,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-14T10:19+00:00">14 Nov 10:19</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T10:37+00:00">14 Nov 10:37</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">14 Nov 10:20</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL337"><span class="task-id">DL337</span><span class="glance-dep">pool busy with CI jobs; rebuild ~5 min once idle</span> Pool rebuild when idle (bake 1.46.1 gate scripts) <span class="glance-expected">14 Nov ~11:00</span></li>
+<li data-glance-task="DL337"><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts) <span class="glance-expected">14 Nov ~11:25</span><span class="glance-basis">refresh 10:38: drain comics job (max 45 min), then ~5 min rebuild</span></li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">52 tasks</span></summary>
@@ -930,11 +930,11 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">336</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">336</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL337"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>Pool restarted 09:57 (kvm_intel loaded). Image still 13 Nov; rebuild when the pool is idle.</td><td>14 Nov ~11:00<span class="expected-basis">pool busy with CI jobs; rebuild ~5 min once idle</span></td></tr>
+<tr data-task="DL337"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>Pool restarted 09:57 (kvm_intel loaded). Image still 13 Nov; rebuild when the pool is idle.</td><td>14 Nov ~11:25<span class="expected-basis">refresh 10:38: drain comics job (max 45 min), then ~5 min rebuild</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">343 tasks</span></summary>
