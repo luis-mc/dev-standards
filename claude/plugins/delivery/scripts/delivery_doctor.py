@@ -573,6 +573,57 @@ def _push_probe(runner_dir):
     return False, "dry-run push from %s failed (%s). %s" % (root, last[0][:160], fix)
 
 
+def _marker_git_timeout():
+    try:
+        v = float(os.environ.get("DELIVERY_MARKER_GIT_TIMEOUT") or 20)
+    except ValueError:
+        return 20.0
+    return v if v > 0 else 20.0
+
+
+def marker_credential_item(runner_dir):
+    """DL351 (R5.58): a runner with DELIVERY_MARKER_ROOT set needs a git credential that works without a prompt, or the
+    job-started hook waits on a credential helper. Runs `git ls-remote` from the checkout with the non-interactive env and
+    the marker timeout. None when the runner has no DELIVERY_MARKER_ROOT. A locked folder is a warning that needs admin."""
+    import subprocess
+    try:
+        root = _env_value(runner_dir, "DELIVERY_MARKER_ROOT")
+    except PermissionError:
+        return _item("machine.markercred:" + runner_dir, "warn", "runner %s: the marker credential %s (the folder is locked to its "
+                     "ci-* account)." % (runner_dir, NEEDS_ADMIN))
+    if not root:
+        return None
+    root = root.strip("\"'")
+    tag = "machine.markercred:" + runner_dir
+    fix = ("Store a fine-grained token for the runner account with contents write on the repository (git credential "
+           "manager for that account). Without it the ci-wait marker cannot be written and a prompt can stall the job.")
+    remote = _env_value(runner_dir, "DELIVERY_MARKER_REMOTE") or "origin"
+    env = dict(os.environ)
+    for k, v in (("GIT_TERMINAL_PROMPT", "0"), ("GCM_INTERACTIVE", "never"), ("GIT_ASKPASS", "echo"),
+                 ("SSH_ASKPASS", "echo"), ("GIT_SSH_COMMAND", "ssh -oBatchMode=yes")):
+        env.setdefault(k, v)
+    limit = _marker_git_timeout()
+    try:
+        r = subprocess.run(["git", "-c", "credential.interactive=never", "ls-remote", "--heads", remote, "refs/heads/ci-wait/doctor-check"],
+                           cwd=root, capture_output=True, text=True, timeout=limit, env=env)
+    except subprocess.TimeoutExpired:
+        return _item(tag, "warn", "runner %s: git ls-remote from the marker checkout %s timed out after %g s: the runner account has "
+                     "no non-interactive git credential. %s" % (runner_dir, root, limit, fix))
+    except PermissionError:
+        return _item(tag, "warn", "runner %s: the marker checkout %s %s (permission denied); run the doctor from an administrator "
+                     "shell." % (runner_dir, root, NEEDS_ADMIN))
+    except (OSError, subprocess.SubprocessError) as exc:
+        return _item(tag, "warn", "runner %s: git ls-remote from %s could not run (%s). %s" % (runner_dir, root, type(exc).__name__, fix))
+    if r.returncode == 0:
+        return _item(tag, "ok", "runner %s: the marker checkout %s reads the remote without a prompt" % (runner_dir, root))
+    err = (r.stderr or r.stdout or "").strip()
+    if "permission denied" in err.lower() and "publickey" not in err.lower() or "locked" in err.lower():
+        return _item(tag, "warn", "runner %s: the marker checkout %s %s (%s)." % (runner_dir, root, NEEDS_ADMIN, err.splitlines()[-1][:120]))
+    last = err.splitlines()[-1:] or ["no output"]
+    return _item(tag, "warn", "runner %s: the runner account has no non-interactive git credential for the marker checkout %s "
+                 "(git ls-remote failed: %s). %s" % (runner_dir, root, last[0][:160], fix))
+
+
 def _runner_name(runner_dir):
     try:
         with open(os.path.join(runner_dir, ".runner"), encoding="utf-8-sig") as f:
@@ -770,6 +821,9 @@ def machine_items(root, cfg):
         items += windows_runner_items([d for d in dirs if d not in locked_dirs] + locked_dirs, services)
         items += hook_python_items(os.path.join(str(folder), "runner-hooks"))
     for d in dirs:
+        cred = marker_credential_item(d)
+        if cred:
+            items.append(cred)
         if d in locked_dirs:
             continue
         probe = _push_probe(d)
