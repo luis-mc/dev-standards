@@ -39,3 +39,7 @@ was ever pruned there.
 - `docs_check.py`: only W1 (docs/work on branch), which is expected; strip before the join.
 - `ci_areas.py --branch-advice`: heavy area delivery, run `gh workflow run spec-lint.yml --ref DL342-pool-cache-kvm -f areas=delivery` (not run here).
 
+
+Branch head (before this line was added): 4aae564adf1cbda8f0cf19d19b1cc813ff3b98f3
+
+READY
