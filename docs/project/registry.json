@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T13:42+00:00",
+  "updated": "2026-11-14T13:52+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6249,11 +6249,11 @@
       "id": "DL352",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-140: gate skips git when fallback off; swap waits only for container",
       "detail": "Join, CI, merge and smoke for DL353 and DL354.",
-      "expected": "14 Nov ~13:50",
-      "changed": "2026-11-14T13:42+00:00",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T13:52+00:00",
       "release": 140,
       "phases": [
         {
@@ -6278,7 +6278,6 @@
         }
       ],
       "started": "2026-11-14T13:07+00:00",
-      "expected_basis": "PR CI started 13:44, ~5 min",
       "risk": {
         "label": "+1 fix round",
         "minutes": 10
@@ -6288,11 +6287,11 @@
       "id": "DL353",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner gate skips the ci-wait marker when ci.fallback is off",
       "detail": "Peer follow-up 13:05. First agent branched from a days-old commit (its base branch had been deleted) and conflicted; retry from main at 13:23 (one retry). The orchestrator adds the spec line at the join (DL354 owns spec.md).",
-      "expected": "14 Nov ~13:50",
-      "changed": "2026-11-14T13:42+00:00",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T13:52+00:00",
       "rides": "DL352",
       "started": "2026-11-14T13:07+00:00"
     },
@@ -6300,11 +6299,11 @@
       "id": "DL354",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool swap busy check counts Windows runners outside the container",
       "detail": "14 Nov 13:11: pool-refresh refused the Linux container recreate because the Windows service runner of the same repo was busy. The recreate only affects container runners; the busy check should look at those only.",
-      "expected": "14 Nov ~13:50",
-      "changed": "2026-11-14T13:42+00:00",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T13:52+00:00",
       "rides": "DL352",
       "started": "2026-11-14T13:21+00:00"
     },
