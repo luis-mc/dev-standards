@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T13:23+00:00",
+  "updated": "2026-11-14T13:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6250,46 +6250,49 @@
       "owner": "delivery-speed",
       "app": "",
       "status": "Running",
-      "item": "RELEASE-140: no ci-wait marker when the fallback is off",
-      "detail": "Join, CI, merge and smoke for DL353.",
+      "item": "RELEASE-140: gate skips git when fallback off; swap waits only for container",
+      "detail": "Join, CI, merge and smoke for DL353 and DL354.",
       "expected": "14 Nov ~13:50",
-      "changed": "2026-11-14T13:23+00:00",
+      "changed": "2026-11-14T13:42+00:00",
       "release": 140,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-14T13:07+00:00",
-          "end": "2026-11-14T13:39+00:00"
+          "end": "2026-11-14T13:40+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-14T13:39+00:00",
-          "end": "2026-11-14T13:43+00:00"
+          "start": "2026-11-14T13:41+00:00",
+          "end": "2026-11-14T13:44+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-14T13:43+00:00",
-          "end": "2026-11-14T13:48+00:00"
+          "start": "2026-11-14T13:44+00:00",
+          "end": "2026-11-14T13:49+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-14T13:48+00:00",
+          "start": "2026-11-14T13:49+00:00",
           "end": "2026-11-14T13:50+00:00"
         }
       ],
       "started": "2026-11-14T13:07+00:00",
-      "expected_basis": "retry agent due 13:39, then join and CI ~11 min"
+      "expected_basis": "PR CI started 13:44, ~5 min",
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 10
+      }
     },
     {
       "id": "DL353",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner gate skips the ci-wait marker when ci.fallback is off",
       "detail": "Peer follow-up 13:05. First agent branched from a days-old commit (its base branch had been deleted) and conflicted; retry from main at 13:23 (one retry). The orchestrator adds the spec line at the join (DL354 owns spec.md).",
-      "expected": "14 Nov ~13:39",
-      "changed": "2026-11-14T13:23+00:00",
-      "expected_basis": "retry agent from 13:23: setup 3 + work 8 + checks 5 min",
+      "expected": "14 Nov ~13:50",
+      "changed": "2026-11-14T13:42+00:00",
       "rides": "DL352",
       "started": "2026-11-14T13:07+00:00"
     },
@@ -6297,24 +6300,23 @@
       "id": "DL354",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Pool swap busy check counts Windows runners outside the container",
       "detail": "14 Nov 13:11: pool-refresh refused the Linux container recreate because the Windows service runner of the same repo was busy. The recreate only affects container runners; the busy check should look at those only.",
-      "expected": "14 Nov ~13:41",
-      "changed": "2026-11-14T13:19+00:00",
-      "expected_basis": "cloud agent from 13:21: setup 3 + work 12 + checks 5 min",
-      "rides": "DL355",
+      "expected": "14 Nov ~13:50",
+      "changed": "2026-11-14T13:42+00:00",
+      "rides": "DL352",
       "started": "2026-11-14T13:21+00:00"
     },
     {
       "id": "DL355",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Dropped",
       "item": "RELEASE-141: pool swap waits only for container runners",
       "detail": "Join, CI, merge and smoke for DL354.",
-      "expected": "14 Nov ~13:52",
-      "changed": "2026-11-14T13:19+00:00",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T13:42+00:00",
       "release": 141,
       "phases": [
         {
@@ -6342,7 +6344,9 @@
         "label": "+1 fix round",
         "minutes": 10
       },
-      "started": "2026-11-14T13:21+00:00"
+      "started": "2026-11-14T13:21+00:00",
+      "dropped_into": "DL352",
+      "dropped_reason": "DL354 rides RELEASE-140 with DL353"
     },
     {
       "id": "DS1",

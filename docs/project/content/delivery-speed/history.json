@@ -1,5 +1,13 @@
 [
   {
+    "date": "14 Nov 13:42",
+    "change": "dropped: folded into RELEASE-140: DL354 rides RELEASE-140 with DL353"
+  },
+  {
+    "date": "14 Nov 13:42",
+    "change": "DL352 item changed from \"RELEASE-140: no ci-wait marker when the fallback is off\" to \"RELEASE-140: gate skips git when fallback off; swap waits only for container\""
+  },
+  {
     "date": "13 Nov 22:33",
     "change": "dropped: already shipped: peer ci_scope.py equals the luismc-delivery template"
   },
