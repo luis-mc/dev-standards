@@ -148,7 +148,7 @@ flowchart LR
 
 **R5.11c** — When `mark-published` refuses a stale copy, it names the steps in order: `pending --json --refresh`, publish the copy unedited, `mark-published` again. The end-of-turn hook says to make every status change before running `pending`.
 
-**R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
+**R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. A phase given as HH:MM that starts before the previous phase ends is the next day, with or without a gap between them (DL359). When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
 
 **R5.11d** — A project's `design.css` is checked against the accents contract: the token contract minus the page, surface and ink tokens (`--paper`, `--surface`, `--surface-2`, `--ink`, `--ink-muted`, `--rule`, `--rule-strong`) and the size tokens. `design set` and `check` accept a file without them; a file that sets them is accepted with the ignored-tokens warning; a missing accent token, or its dark value, is refused and named. The plugin's own default design keeps the full contract. (DL259)
 
@@ -232,6 +232,7 @@ flowchart TB
 | R5.9 | `test_deferred_publish_does_not_block_until_the_reset` in `tools/test_project_artifacts.py`; `end_of_turn_reminds_once_while_deferred` in `tools/test_project_artifacts_hooks.py` |
 | R5.10 | `test_pending_refresh_lists_an_unchanged_full_progress` in `tools/test_project_artifacts.py`; `stop_blocks_when_full_progress_is_over_an_hour_old` in `tools/test_project_artifacts_hooks.py` |
 | R5.11 | `test_release_expected_is_the_end_of_the_last_phase`, `test_release_refusals` in `tools/test_project_artifacts.py` |
+| R5.11a | `claude/plugins/docs/tests/test_dl359_phase_gap_midnight.py` (a phase after a gap past midnight, same-day phases, a contiguous wrap) |
 | R5.12 | `test_retire_moves_the_feature_and_check_stays_clean`, `test_retire_refuses_a_feature_with_an_open_task` in `tools/test_project_artifacts.py` |
 | R5.13 | `test_promote_to_spec_writes_the_feature_spec`, `test_promote_mapping_by_heading` in `tools/test_project_artifacts.py` |
 | R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
