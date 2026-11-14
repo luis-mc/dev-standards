@@ -75,15 +75,17 @@ export function DatePicker({
   const gridRef = useRef<HTMLTableElement>(null);
 
   // A new value from outside moves the view and the typed text with it.
-  useEffect(() => {
+  // State is adjusted while rendering, so no effect and no dependency list is needed.
+  const [seenValue, setSeenValue] = useState(value);
+  if (value !== seenValue) {
+    setSeenValue(value);
     const day = parseIso(value);
     if (day) {
       setFocus(clampDay(day, minDay, maxDay));
       setText(formatTyped(day, locale));
       setError(null);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [value]);
+  }
 
   useEffect(() => {
     if (!moveFocus.current) return;
@@ -203,7 +205,7 @@ export function DatePicker({
                       type="button"
                       className="ds-datepicker__day"
                       tabIndex={isFocus ? 0 : -1}
-                      aria-label={`${days[di].long} ${formatLong(day, locale)}`}
+                      aria-label={`${days[di]?.long ?? ''} ${formatLong(day, locale)}`}
                       aria-current={compare(day, today) === 0 ? 'date' : undefined}
                       aria-disabled={out || undefined}
                       data-selected={isSelected || undefined}

@@ -8,10 +8,10 @@ export interface KeypadOptions {
   /** Digits after the decimal point; 0 (default) has no "." key. Ignored for a code. */
   decimals?: number;
   /** Lowest and highest number (kind "number"). */
-  min?: number;
-  max?: number;
+  min?: number | undefined;
+  max?: number | undefined;
   /** Longest buffer. For a code it is also the exact length Done needs. */
-  maxLength?: number;
+  maxLength?: number | undefined;
 }
 
 export type KeypadKey = '0' | '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8' | '9' | '.' | 'Backspace' | 'Clear';

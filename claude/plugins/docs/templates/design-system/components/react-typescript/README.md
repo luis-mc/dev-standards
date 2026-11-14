@@ -43,3 +43,7 @@ Then:
 - Keyboard: the date grid follows the WAI-ARIA APG date picker (arrows, Home, End, Page Up and Down); each time column is a spin button (Up, Down, Page Up and Down, Home, End); the keypad keys are one tab stop with arrow keys between them. Enter picks or finishes, Escape cancels.
 - No overlay of its own: put a picker in the project's one dialog and sheet component when it should float.
 - Pure logic in `*-logic.ts`, tested without a DOM; the components are tested in jsdom with React's `act`.
+
+## Strict TypeScript
+
+The templates target `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `noPropertyAccessFromIndexSignature`, and typescript-eslint `recommendedTypeChecked` (DL331). A project with looser flags still compiles them.

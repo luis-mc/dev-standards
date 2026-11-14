@@ -140,9 +140,9 @@ export function parseTyped(text: string, locale?: string): Day | null {
   if (bits.length !== 3 || bits.some((b) => !/^\d+$/.test(b))) return null;
   const order = fieldOrder(locale);
   const got: Record<string, string> = {};
-  order.forEach((k, i) => (got[k] = bits[i]));
-  if (got.y.length !== 4) return null;
-  const day = { y: Number(got.y), m: Number(got.m), d: Number(got.d) };
+  order.forEach((k, i) => (got[k] = bits[i] ?? ''));
+  if (got['y']?.length !== 4) return null;
+  const day = { y: Number(got['y']), m: Number(got['m']), d: Number(got['d']) };
   return isValidDay(day) ? day : null;
 }
 

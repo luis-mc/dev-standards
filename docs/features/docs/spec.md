@@ -97,6 +97,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.18** — Font sizes in the plugin's pages are 0.9 times the earlier ones: the base is 14.4px, and px and `clamp()` sizes are scaled (`rem` sizes follow the base). Pages drawn in a project's design-system gallery keep that project's own size tokens.
 
+**R5.19** — The React and TypeScript picker templates (`DatePicker`, `TimePicker`, `NumberKeypad`, their logic files, tests and `test-dom.ts`) compile with `tsc --noEmit` under `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `noPropertyAccessFromIndexSignature`, and pass typescript-eslint `recommendedTypeChecked` and react-hooks `recommended` with `reportUnusedDisableDirectives` on. They carry no `eslint-disable` for `react-hooks/exhaustive-deps`. Behaviour and rendered output are unchanged (DL331).
+
 ## 6. Non-functional requirements
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
@@ -143,6 +145,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.14 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R5.16, R5.17, R5.18 | `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
+| R5.19 | `claude/plugins/docs/tests/test_dl331_picker_strict.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.

@@ -78,7 +78,7 @@ export function NumberKeypad({
 
   const onRootKey = (e: KeyboardEvent<HTMLDivElement>) => {
     const target = e.target as HTMLElement;
-    const onKey = target.dataset.keypadKey !== undefined;
+    const onKey = target.dataset['keypadKey'] !== undefined;
     if (e.key === 'Escape' && onCancel) {
       e.preventDefault();
       onCancel();
