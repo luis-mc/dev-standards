@@ -40,7 +40,8 @@ def load_agents(path):
         return []
     out = []
     for a in data.get('agents', []) if isinstance(data, dict) else []:
-        if isinstance(a, dict) and a.get('slug') and a.get('user'):
+        # DL341: the registry also lists runner services of other OSes (kind "service"); only container agents start here
+        if isinstance(a, dict) and a.get('slug') and a.get('user') and str(a.get('kind') or 'container').lower() == 'container':
             out.append(a)
     return out
 
