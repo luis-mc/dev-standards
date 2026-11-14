@@ -39,7 +39,7 @@ class TargetLink(unittest.TestCase):
     def test_link_created_when_absent(self):
         out, _ = self.run_env()
         link = self.root / "target"
-        self.assertTrue(link.is_symlink())
+        self.assertTrue(rust_ci._is_link(link))  # a junction on Windows, a symlink elsewhere
         self.assertEqual(link.resolve(), Path(out["CARGO_TARGET_DIR"]).resolve())
 
     def test_exports_delivery_rust_target(self):
@@ -49,7 +49,7 @@ class TargetLink(unittest.TestCase):
     def test_stale_link_replaced(self):
         old = Path(self.tmp.name) / "old"
         old.mkdir()
-        os.symlink(str(old), str(self.root / "target"), target_is_directory=True)
+        rust_ci._make_link(self.root / "target", old)  # junction on Windows: no symlink privilege needed
         out, _ = self.run_env()
         self.assertEqual((self.root / "target").resolve(), Path(out["CARGO_TARGET_DIR"]).resolve())
         self.assertTrue(old.is_dir())
@@ -59,7 +59,7 @@ class TargetLink(unittest.TestCase):
         (real / "debug").mkdir(parents=True)
         (real / "debug" / "keep").write_text("x")
         out, err = self.run_env()
-        self.assertFalse(real.is_symlink())
+        self.assertFalse(rust_ci._is_link(real))
         self.assertTrue((real / "debug" / "keep").exists())
         self.assertIn("is a real folder; bins live in", err)
         self.assertIn("CARGO_TARGET_DIR", out)

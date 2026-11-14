@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.37.1
+version: 0.37.2
 owner: agents
 type: reference
 code:
@@ -540,6 +540,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.37.2 | 2026-11-14 | RELEASE-133 | Rust CI: rust_ci.py links `<repo>/target` to the target cache (symlink, or junction on Windows) and exports DELIVERY_RUST_TARGET (R5.61). | DL329 |
 | 0.37.1 | 2026-11-13 | RELEASE-131 | The default CODE DONE marker accepts a list bullet and a ticked checkbox; an unticked box does not count. | DL309 |
 | 0.37.0 | 2026-11-13 | RELEASE-127 | agent-check records an agent's liveness from its branch's last commit (last_event_at is the fallback), the stop hook uses it, and agent-eta warns when a brief's owns overlaps another live agent.<br>The rust branch gate runs cargo-deny after lint when a Cargo.toml, Cargo.lock or deny.toml changed. New gate.json step key when_changed.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait. | DL303, DL304, DL306 |
 | 0.36.1 | 2026-11-13 | RELEASE-126 | rust_ci.py run resolves the program on the job PATH it passes (Windows looked it up on the parent's PATH: WinError 2). | DL301 |
