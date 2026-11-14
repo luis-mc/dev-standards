@@ -229,7 +229,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.53 to R5.55 | `claude/plugins/delivery/tests/test_dl342_cache_cap.py` (temp folders and a mocked probe) |
 | R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |
 | R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
-| R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without `ci.fallback`; no git subprocess when off) |
+| R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
 
 ## 12. Code map
 
