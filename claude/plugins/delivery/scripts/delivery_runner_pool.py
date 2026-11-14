@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import datetime
+import glob
 import json
 import hashlib
 import math
@@ -119,6 +120,21 @@ class Probe:
 
     def python(self):
         return sys.executable
+
+    def python_config(self):
+        """DL339: the hook Python named in the machine config ("python" in machine.json) or DELIVERY_HOOK_PYTHON, else ''."""
+        v = os.environ.get('DELIVERY_HOOK_PYTHON')
+        if v:
+            return v
+        try:
+            with open(os.path.join(self.machine_dir(), 'machine.json'), encoding='utf-8') as f:
+                v = json.load(f).get('python')
+        except (OSError, ValueError, AttributeError):
+            return ''
+        return v if isinstance(v, str) else ''
+
+    def exists(self, path):
+        return os.path.exists(path)
 
     def cpu_count(self):
         return os.cpu_count()
@@ -411,7 +427,7 @@ def detect_host(probe, samples=None, gap=None):
                 used, decided = load_used, 'host-load file'
         elif figures:
             load_state = 'stale'
-    return {'platform': probe.platform, 'python': probe.python(), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
+    return {'platform': probe.platform, 'python': getattr(probe, 'python_config', lambda: '')() or '', 'python_exe': _probe_python(probe), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
             'total_gib': mem[0] if mem else None, 'used_gib': used, 'wsl_vm_gib': vm,
             'wsl_working_set_gib': parts[0], 'wsl_private_gib': parts[1], 'containers_gib': floor,
             'used_samples': [round(max(0.0, u - (v if v > 0 else box['pool'])), 1) for u, v in used_list],
@@ -883,6 +899,62 @@ WIN_RUNNERS_DIR = 'C:/actions-runners'
 HOOK_FILES = ('runner_load_gate.py', 'runner_job_done.py', 'load.py', 'machine_slots.py')
 
 
+HOOK_PYTHON_FIX = ('Install Python for all users (python.org installer, "Install for all users"), or pass the path of an all-users '
+                   'python.exe as "python" in the machine config.')
+
+
+def is_user_profile_path(path):
+    """DL339: True when a Windows path is inside a user profile (C:\\Users\\..., %USERPROFILE% or the LOCALAPPDATA tree)."""
+    p = str(path or '').replace('\\', '/').lower().rstrip('/')
+    if not p:
+        return False
+    if re.match(r'^([a-z]:)?/users/', p) or '/appdata/local/' in p or '/appdata/roaming/' in p:
+        return True
+    for var in ('USERPROFILE', 'LOCALAPPDATA'):
+        v = os.environ.get(var)
+        if v and p.startswith(v.replace('\\', '/').lower().rstrip('/') + '/'):
+            return True
+    return False
+
+
+def _py_version_key(path):
+    m = re.search(r'python(\d+)', path.replace('\\', '/').lower())
+    return int(m.group(1)) if m else 0
+
+
+def _probe_python(probe):
+    """The Python the probe reports (this process's on a real host), else sys.executable."""
+    try:
+        return (probe.python() if probe is not None and hasattr(probe, 'python') else None) or sys.executable
+    except Exception:  # noqa: BLE001
+        return sys.executable
+
+
+def choose_hook_python(configured, exe, probe=None):
+    """DL339 (R5.46): the Python a Windows hook wrapper or the host-load task runs. Returns (path, error); one is None.
+    Order: the configured path; this process's Python when outside any user profile; the newest all-users install
+    (Program Files, or `py -0p` output without profile paths). A per-user path is never returned, because the runner
+    service account cannot read a user profile."""
+    if configured:
+        return _winpath(configured), None
+    if exe and not is_user_profile_path(exe):
+        return _winpath(exe), None
+    found = []
+    for pf in ('C:/Program Files', 'C:/Program Files (x86)'):
+        found += glob.glob(pf + '/Python3*/python.exe')
+    r = probe.sh(['py', '-0p']) if probe is not None and hasattr(probe, 'sh') else None
+    if r and r[0] == 0:
+        for line in (r[1] or '').splitlines():
+            m = re.search(r'([A-Za-z]:[\\/].*?python[w]?\.exe)\s*$', line.strip(), re.I)
+            if m:
+                found.append(m.group(1))
+    ok = [c for c in found if not is_user_profile_path(c) and (probe is None or not hasattr(probe, 'exists') or probe.exists(c))]
+    if ok:
+        return _winpath(sorted(set(ok), key=lambda c: (_py_version_key(c), c))[-1]), None
+    return None, ('No Python outside a user profile was found (%s is per-user, and the runner service account cannot read it). %s'
+                  % (exe or 'this Python', HOOK_PYTHON_FIX))
+
+
 def hook_wrapper(python, script):
     """A PowerShell wrapper with the full path of the python, so the runner service account needs no PATH."""
     return ('# Runner hook for %s (written by the pool setup; a rerun refreshes it).\n'
@@ -1326,12 +1398,14 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     steps.append(_step('machine-config', 'Write the machine config (limits, slots) through the machine layer', 'machine-config',
                        limits=limits or {}))
     if win:
-        py = _winpath(host.get('python') or 'python')
+        py, py_err = choose_hook_python(host.get('python'), host.get('python_exe') or _probe_python(probe), probe)
         dest = host.get('machine_dir', 'C:/ProgramData/luismc-delivery').rstrip('/\\') + '/host-load'
         loop = _winpath(dest + '/host-load-loop.py')
+        py = py or 'python'
         steps.append(_step('host-load-files', 'Copy load.py and a 15-second loop script to %s' % dest, 'host-load-files', dest=dest))
-        steps.append(_step('host-load-task', 'Register the scheduled task that writes the host load file every 15 seconds',
-                           'host-load-task', elevated=True, printed=host_load_task_ps(py, loop)))
+        steps.append(_step('host-load-task', 'Register the scheduled task that writes the host load file every 15 seconds'
+                           + ((' - CANNOT RUN: ' + py_err) if py_err else ''),
+                           'host-load-task', elevated=True, printed=[] if py_err else host_load_task_ps(py, loop), problem=py_err))
     if keep_l:
         w, enough = _wsl_values(found, cap)
         if w and (win or (found.get('wsl') or {}).get('exists')):
@@ -1384,11 +1458,13 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     hooks_dir = windows_hooks_dir(machine_dir)
     admin = bool(win and keep_w and getattr(probe or Probe(), 'is_admin', lambda: False)())
     pin_problem = runner_pin_problem() if keep_w else None
-    py = _winpath(host.get('python') or sys.executable)
+    py, py_err = choose_hook_python(host.get('python'), host.get('python_exe') or _probe_python(probe), probe) if keep_w else (None, None)
+    py = py or 'python'
+    pin_problem = pin_problem or py_err  # DL339: no all-users Python: the files and service steps stop with the message
     base_w = dict(machine_dir=machine_dir, hooks_dir=hooks_dir, tools_dir=WIN_TOOLS_DIR, python=py, ci_tool=CI_TOOL)
     if keep_w:
         steps.append(_step('runner-hooks', 'Copy the runner hook scripts to the stable folder %s (rewritten on every run)' % hooks_dir,
-                           'runner-hooks', dest=hooks_dir, python=host.get('python') or sys.executable))
+                           'runner-hooks', dest=hooks_dir, python=py, problem=py_err))
     for repo in keep_w:  # DL310: is the .env of a kept runner what this plan would write? (unreadable counts as stale)
         w = wanted.get(repo)
         if w:
@@ -2042,11 +2118,13 @@ class Executor:
 
     def do_runner_hooks(self, step):
         """D99: copy the hook scripts to a stable folder; the wrappers call the python that runs this setup."""
+        if step.get('problem'):
+            return False, step['problem']
         dest = step['dest']
         os.makedirs(dest, exist_ok=True)
         for name in HOOK_FILES:
             shutil.copy2(os.path.join(HERE, name), dest)
-        py = _winpath(step.get('python') or sys.executable)
+        py = _winpath(step['python'])
         for wrapper, script in (('runner_load_gate.ps1', 'runner_load_gate.py'), ('runner_job_done.ps1', 'runner_job_done.py')):
             with open(os.path.join(dest, wrapper), 'w', encoding='utf-8', newline='\r\n') as f:
                 f.write(hook_wrapper(py, script))

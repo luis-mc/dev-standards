@@ -629,6 +629,47 @@ def _locked_runner_items(tag, d, found):
     return items
 
 
+HOOK_PYTHON_FIX = ('Install Python for all users (python.org installer, "Install for all users"), or pass the path of an '
+                   'all-users python.exe as "python" in the machine config, then run /delivery-ci-setup again.')
+
+
+def _is_user_profile_path(path):
+    p = str(path or "").replace(chr(92), "/").lower().rstrip("/")
+    if re.match(r"^([a-z]:)?/users/", p) or "/appdata/local/" in p or "/appdata/roaming/" in p:
+        return True
+    for var in ("USERPROFILE", "LOCALAPPDATA"):
+        v = os.environ.get(var)
+        if v and p.startswith(v.replace(chr(92), "/").lower().rstrip("/") + "/"):
+            return True
+    return False
+
+
+def hook_python_items(hooks_dir, exists=os.path.exists):
+    """DL339 (R5.46): the `$py = '...'` line of each runner-hooks .ps1: it fails when the Python is under a user profile
+    (the runner service account cannot read it) or does not exist."""
+    items = []
+    for name in ("runner_load_gate.ps1", "runner_job_done.ps1"):
+        tag = "machine.hookpython:" + name
+        try:
+            with open(os.path.join(hooks_dir, name), encoding="utf-8-sig", errors="replace") as f:
+                text = f.read()
+        except OSError:
+            continue  # a missing wrapper is reported by the hook checks
+        m = re.search(r"^\$py\s*=\s*'((?:[^']|'')*)'", text, re.M) or re.search(r"^&\s*'((?:[^']|'')*)'", text, re.M)
+        if not m:
+            items.append(_item(tag, "warn", "%s has no $py line the doctor can read" % name))
+            continue
+        py = m.group(1).replace("''", "'")
+        if _is_user_profile_path(py):
+            items.append(_item(tag, "fail", "%s runs %s, which is inside a user profile: the runner service account cannot read it, so "
+                                            "every job hook fails and the gate never runs. %s" % (name, py, HOOK_PYTHON_FIX)))
+        elif not exists(py):
+            items.append(_item(tag, "fail", "%s runs %s, which does not exist. %s" % (name, py, HOOK_PYTHON_FIX)))
+        else:
+            items.append(_item(tag, "ok", "%s runs %s (outside any user profile)" % (name, py)))
+    return items
+
+
 def windows_runner_items(dirs, services=None):
     """DL310 (R5.31): each Windows runner of the shared machine layer: its service exists and runs as its own ci-* account (a
     warning for NETWORK SERVICE, LocalSystem or an administrator account), its .env has both hooks, CI_TOOLS_DIR, RUSTUP_HOME
@@ -727,6 +768,7 @@ def machine_items(root, cfg):
         items.append(_item("machine.hooks", "ok", "no runner folder found on this machine"))
     if _is_windows():
         items += windows_runner_items([d for d in dirs if d not in locked_dirs] + locked_dirs, services)
+        items += hook_python_items(os.path.join(str(folder), "runner-hooks"))
     for d in dirs:
         if d in locked_dirs:
             continue
