@@ -218,12 +218,34 @@ def _tree_size(path: Path) -> int:
     return total
 
 
+def _key_in_use_win(key: Path) -> bool:
+    """DL342: Windows check with msvcrt byte-range locks. Anything unclear counts as in use."""
+    try:
+        import msvcrt
+    except ImportError:
+        return True
+    for lock in key.glob("*/.cargo-lock"):
+        try:
+            fd = os.open(str(lock), os.O_RDWR)
+        except OSError:
+            return True
+        try:
+            try:
+                msvcrt.locking(fd, msvcrt.LK_NBLCK, 1)
+            except OSError:
+                return True
+            msvcrt.locking(fd, msvcrt.LK_UNLCK, 1)
+        finally:
+            os.close(fd)
+    return False
+
+
 def key_in_use(key: Path) -> bool:
-    """True when a cargo process holds <key>/*/.cargo-lock. Without fcntl (Windows) every key is in use."""
+    """True when a cargo process holds <key>/*/.cargo-lock. Where neither fcntl nor msvcrt exists every key is in use."""
     try:
         import fcntl
     except ImportError:
-        return True
+        return _key_in_use_win(key)
     for lock in key.glob("*/.cargo-lock"):
         try:
             fd = os.open(str(lock), os.O_RDWR)
@@ -261,6 +283,47 @@ def prune_target_cache(runner_dir: Path, current: Path, cap_bytes: int) -> list[
     return removed
 
 
+def _clear_children(path: Path) -> None:
+    for child in list(path.iterdir()):
+        if child.is_dir() and not child.is_symlink():
+            shutil.rmtree(child, ignore_errors=True)
+        else:
+            try:
+                child.unlink()
+            except OSError:
+                pass
+
+
+def enforce_cap(runner_dir: Path, current: Path, cap_bytes: int) -> list[str]:
+    """DL342: make the runner's keys total at most the cap, except a key in use. Run after prune_target_cache.
+
+    1. The newest other key goes when the total is still over the cap.
+    2. The current key goes through two steps when it alone is over the cap: its incremental/ folders, then all its content.
+    Returns one text per removal, naming what went and why."""
+    msgs: list[str] = []
+    cap_gb = cap_bytes / 1024 ** 3
+    others = sorted((p for p in runner_dir.iterdir() if p.is_dir() and p != current), key=lambda p: p.stat().st_mtime)
+    total = _tree_size(current) + sum(_tree_size(p) for p in others)
+    if total > cap_bytes and others and not key_in_use(others[-1]):
+        size = _tree_size(others[-1])
+        shutil.rmtree(others[-1], ignore_errors=True)
+        total -= size
+        msgs.append("key %s (%.2f GB) over the %.0f GB cap" % (others[-1].name, size / 1024 ** 3, cap_gb))
+    size = _tree_size(current)
+    if size > cap_bytes and not key_in_use(current):
+        for inc in current.glob("*/incremental"):
+            shutil.rmtree(inc, ignore_errors=True)
+        after = _tree_size(current)
+        what = "incremental folders of %s" % current.name
+        if after > cap_bytes:
+            _clear_children(current)
+            after = _tree_size(current)
+            what = "all content of %s" % current.name
+        msgs.append("%s (%.2f -> %.2f GB), the key alone was over the %.0f GB cap"
+                    % (what, size / 1024 ** 3, after / 1024 ** 3, cap_gb))
+    return msgs
+
+
 def target_cache_env(root: Path) -> dict[str, str]:
     """{'CARGO_TARGET_DIR': path} for the persistent cache, or {} when it is off or fails."""
     if os.environ.get("CARGO_TARGET_DIR") or os.environ.get("DELIVERY_NO_TARGET_CACHE") == "1":
@@ -273,10 +336,13 @@ def target_cache_env(root: Path) -> dict[str, str]:
         os.utime(key, None)
         cap = int(float(os.environ.get("RUST_TARGET_CAP_GB") or 40) * 1024 ** 3)
         removed = prune_target_cache(runner_dir, key, cap)
+        cleaned = enforce_cap(runner_dir, key, cap)
     except (OSError, ValueError, ImportError, RustCiError) as exc:  # ImportError: no ci_tool next to this script
         print("rust_ci: build cache unavailable (%s); using target/" % exc, file=sys.stderr)
         return {}
     print("rust_ci: build cache %s (pruned: %s)" % (key, ", ".join(removed) or "none"), file=sys.stderr)
+    if cleaned:
+        print("rust_ci: cache cap: removed %s" % "; ".join(cleaned), file=sys.stderr)
     link_target(root, key)
     return {"CARGO_TARGET_DIR": str(key), "DELIVERY_RUST_TARGET": str(key)}
 
