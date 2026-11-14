@@ -108,6 +108,8 @@ The hook reads only the current turn from the end of the transcript, in 1 MiB bl
 
 **R5.22** — `assets/tooling/rust/` ships `Cargo.toml` (resolver 2, `crates/*` members, `[workspace.package]`, `[workspace.dependencies]`, a fixed release profile), `rust-toolchain.toml` (exact `1.91.0`, minimal profile, rustfmt and clippy, empty targets), `rustfmt.toml` and `deny.toml` (advisories, bans, licenses, sources). The wizard copies them to the repository root beside `crates/guards`. Every cargo command uses `--locked`, and CI installs the exact toolchain version. The tooling README maps each STACKSPEC invariant to its Rust command. (DS198)
 
+**R5.23** — The CI workflow that `claude-setup` ships (`assets/ci/dev-standards.yml`) takes its Node version from the project. A step picks the first file that exists of `.nvmrc`, `.node-version`, `.tool-versions` and `package.json`, and `actions/setup-node` reads it with `node-version-file`. With none of them, the workflow uses Node 24. It never pins Node 22. (DL332)
+
 ## 6. Non-functional requirements
 
 **R6.1** — `claude-setup` asks which target before reading or writing, and applies one batch after one confirmation.
@@ -170,6 +172,7 @@ flowchart TD
 | R5.11 | `tools/test_rule_tags.py` |
 | R5.13 | `tools/test_questions_stop.py` (the hook on recorded inputs and its wiring) |
 | R5.12 | `tools/test_spec_check.py`, `tools/test_authspec_check.py` |
+| R5.23 | `claude/plugins/project-setup/tests/test_dl332_ci_node_version.py` |
 | R5.1 to R5.5, R5.8, R5.9, R6.1 | not covered by a test yet; see section 11 |
 
 ## 10. Decisions
