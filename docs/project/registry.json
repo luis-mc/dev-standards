@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T08:39+00:00",
+  "updated": "2026-11-14T08:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6016,9 +6016,9 @@
       "status": "Waiting",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
       "detail": "D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.",
-      "expected": "14 Nov ~08:40",
-      "changed": "2026-11-14T08:29+00:00",
-      "expected_basis": "pool idle + mem <75%, checked every 2 min from 08:25; ~5 min build",
+      "expected": "14 Nov ~09:30",
+      "changed": "2026-11-14T08:40+00:00",
+      "expected_basis": "memory 92% now; needs idle pool + mem <75%, then ~5 min",
       "no_release": "machine maintenance: rebuild the pool image when idle"
     },
     {
