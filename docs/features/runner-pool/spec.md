@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.15.0
+version: 0.16.0
 owner: agents
 type: reference
 code:
@@ -179,6 +179,16 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.52** — **Removing a Windows runner** (DL341). `delivery_ci_setup.py pool-remove --runner NAME --yes` unregisters the runner with a remove token (as R5.33 does), then drops its entry. A failed unregister keeps the entry. No other entry changes. A runner replaced during setup leaves the registry in its own step.
 
+**R5.53** — **The Rust cache cap is real** (DL342). `rust_ci.py` keeps a runner's `cargo-target/<runner>` keys at or under `RUST_TARGET_CAP_GB` (default 40) before each build, except a key in use (`key_in_use`, also on Windows). After the old keys go, the newest other key goes if the total is still over. A current key that alone is over the cap loses its `incremental/` folders, then all its content. One line names what was removed and why. Cause of the 14 Nov disk-full: the old prune never touched the current key.
+
+**R5.54** — **Pool-side cache sweep** (DL342). For every runner the pool coordinates (Linux container agents and Windows services), the pool deletes the oldest entries of `<CI_TOOLS_DIR>/<category>/<runner>/` while the runner's total is over `tool_cache_cap_gb` (machine.json, default 30). It never touches a runner that has a job, or one GitHub cannot be asked about. It runs at pool start (`pool-up`) and with `delivery_runner_pool.py cache-sweep`, which a job-done hook may call. It reports what it removed.
+
+**R5.55** — **Doctor cache checks** (DL342). `cache-cap` warns when a runner's tool cache is over the cap. `cache-disk` warns when free disk on a Windows runner's cache drive is under 10%. The doctor deletes nothing.
+
+**R5.56** — **KVM module autoload** (DL343). With `POOL_KVM=1`, before any `docker compose up` of the pool (pool start, `pool-refresh`, the cap recreate), the pool checks `/dev/kvm` in the Docker VM. If it is missing, it loads `kvm_intel` or `kvm_amd` (by CPU vendor) with a one-shot helper, `docker run --rm --privileged --pid=host alpine nsenter -t 1 -m -- modprobe <module>`, and says so in one line. If `/dev/kvm` is still missing, it stops before compose and names the fix: `nestedVirtualization=true` in `.wslconfig`, then `wsl --shutdown`. Only the helper is privileged; the pool container never is. With `POOL_KVM` unset it does nothing.
+
+**R5.57** — **Nested virtualization in .wslconfig** (DL343). With `POOL_KVM=1` on Windows, the pool doctor (`kvm-wslconfig`) and `pool-plan` and `pool-run` warn when `.wslconfig` has no `nestedVirtualization=true` under `[wsl2]`, and print the line to add.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -187,6 +197,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | A job is held for a slot while the fallback runs its shard | The held job gets its slot, finds the claim taken, ends with exit 3 and frees the slot (R5.5). |
 | Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R5.7). |
 | A pool runner is busy or the runner list cannot be read | `pool-refresh --yes` refuses and changes nothing (R5.10). |
+| A runner's build cache fills the disk | `rust_ci.py` cleans an oversized key before the build (R5.53); the pool sweeps the oldest entries over the cap (R5.54); the doctor warns (R5.55). |
+| `/dev/kvm` is missing after a WSL restart | The pool loads the kvm module before compose up (R5.56); if that fails it stops with the `.wslconfig` fix and starts nothing (R5.57). |
 
 ## 9. How it is proven
 
@@ -206,6 +218,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.42 to R5.45 | `claude/plugins/delivery/tests/test_dl327_heavy_slots.py` |
 | R5.46, R5.47 | `claude/plugins/delivery/tests/test_dl339_hook_python.py` (mocked paths and probe) |
 | R5.48 to R5.52 | `claude/plugins/delivery/tests/test_dl341_pool_all_oses.py` (mocked gh and probe; the real service runs only on Windows) |
+| R5.53 to R5.55 | `claude/plugins/delivery/tests/test_dl342_cache_cap.py` (temp folders and a mocked probe) |
+| R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |
 
 ## 12. Code map
 
@@ -220,6 +234,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.16.0 | 2026-11-14 | RELEASE-138 | R5.53 to R5.55: the Rust build cache cap holds for the current key, the pool sweeps each runner's tool cache over a per-runner cap, and the doctor warns on an oversized cache and low disk.<br>R5.56, R5.57: the pool loads the kvm module in the Docker VM before it starts with POOL_KVM=1, and the doctor and setup check nestedVirtualization in .wslconfig. | DL342, DL343 |
 | 0.15.0 | 2026-11-14 | RELEASE-137 | R5.48 to R5.52 (D298): the pool covers every runner on the machine across OSes; Windows runners get pool labels and a registry entry, `pool_status.py` reports the whole pool, the doctor compares the registry with GitHub, and `pool-remove` drops a Windows entry. | DL341 |
 | 0.14.0 | 2026-11-14 | RELEASE-136 | R5.46, R5.47: the Windows hook wrappers and the host-load task never use a per-user Python; the doctor flags a per-user or missing $py path. | DL339 |
 | 0.13.0 | 2026-11-14 | RELEASE-132 | Heavy job class (R5.42 to R5.45, D288): runner_gate.heavy_jobs and heavy_slots keep two heavy jobs from running at once on one machine; the doctor reports both. | DL327 |

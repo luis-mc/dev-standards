@@ -78,6 +78,18 @@ class Probe:
     def gh(self, args, input=None):
         return self.sh(['gh'] + list(args), input=input)
 
+    def cache_sweep(self, tools_dir, runner, cap_bytes, remove):
+        """DL342: sweep_runner_cache on this machine's disk."""
+        return sweep_runner_cache(tools_dir, runner, cap_bytes, remove)
+
+    def disk_usage(self, path):
+        """DL342: (free bytes, total bytes) of the drive holding `path`, or None."""
+        try:
+            du = shutil.disk_usage(path)
+        except OSError:
+            return None
+        return du.free, du.total
+
     def is_admin(self):
         """DL310: True when this process is an elevated Windows administrator. Always False elsewhere."""
         if not self.platform.startswith('win'):
@@ -2348,6 +2360,9 @@ class Executor:
         if self.runners_busy():
             return ('. The cap changed but a job may run (or the runners cannot be read), so the pool was not recreated. '
                     'By hand: cd %s && %s' % (pool_dir(pool), cmd))
+        ok_kvm, kvm_text = self.kvm_gate(pool, new)
+        if not ok_kvm:
+            return '. The cap changed but the pool was not recreated: ' + kvm_text
         p = subprocess.run(cmd.split(), cwd=pool_dir(pool), capture_output=True, text=True)
         if p.returncode == 0:
             return '. The cap changed (%s/%s -> %s/%s); the pool was recreated' % (
@@ -2355,7 +2370,25 @@ class Executor:
         return '. The cap changed but the recreate failed (%s). By hand: cd %s && %s' % (
             p.stderr.strip()[-200:] or 'docker compose failed', pool_dir(pool), cmd)
 
+    def kvm_gate(self, pool, env=None):
+        """DL343: (ok, text). Loads the kvm module in the Docker VM when POOL_KVM=1 and /dev/kvm is missing.
+        `env` is the pool .env already read by the caller; None reads it."""
+        return ensure_kvm(self.probe, read_pool_env(self.probe, pool) if env is None else env)
+
+    def sweep_caches(self, pool):
+        """DL342: delete the oldest cache entries of idle runners over the cap. Text for the step result, '' when nothing happened."""
+        entries, _data = registry_read(self.probe, pool)
+        if not entries:
+            return ''
+        try:
+            return '; '.join(sweep_lines(sweep_pool_caches(self.probe, pool, entries), tool_cache_cap_gb(self.probe)))
+        except Exception:  # noqa: BLE001  a sweep never stops the pool
+            return ''
+
     def do_pool_up(self, step):
+        ok_kvm, kvm_text = self.kvm_gate(step['pool'])
+        if not ok_kvm:
+            return False, kvm_text
         version = read_pool_env(self.probe, step['pool']).get('RUNNER_VERSION') or RUNNER_VERSION
         if below_floor(version):
             return False, below_floor(version)
@@ -2369,7 +2402,9 @@ class Executor:
         env = self.pool_build_env(step['pool'], version, sha)
         p = subprocess.run(['docker', 'compose', 'up', '-d', '--build'], cwd=pool_dir(step['pool']), env=env,
                            capture_output=True, text=True)
-        return p.returncode == 0, 'pool is up' if p.returncode == 0 else (p.stderr.strip()[-300:] or 'docker compose failed')
+        if p.returncode != 0:
+            return False, p.stderr.strip()[-300:] or 'docker compose failed'
+        return True, '; '.join(x for x in ('pool is up', kvm_text, self.sweep_caches(step['pool'])) if x)
 
     def pool_build_env(self, pool, version, sha):
         """The environment `docker compose` needs to build the pool image."""
@@ -2452,6 +2487,11 @@ class Executor:
                 clear_drain(pool)
                 return False, gate_msg + ' The image is built; the container was not recreated.'
         cmd = recreate_command(pool)
+        ok_kvm, kvm_text = self.kvm_gate(pool)
+        if not ok_kvm:
+            clear_drain(pool)
+            return False, warn + kvm_text
+        warn += (kvm_text + '. ') if kvm_text else ''
         if not force:
             subprocess.run(['docker', 'compose', 'stop', 'pool'], cwd=pool_dir(pool), capture_output=True, text=True)
         clear_drain(pool)  # the new container starts with no drain file
@@ -2756,6 +2796,11 @@ def _kvm_checks(add, probe, pool, env_vals, compose_dir, agents):
             add('kvm-container', 'ok' if rr[0] == 0 else 'fail',
                 '/dev/kvm is usable in the running pool, so new runners get the kvm label' if rr[0] == 0
                 else '/dev/kvm is not usable in the running pool. Recreate it: cd %s && %s' % (compose_dir, recreate_command(pool)))
+    warn = wslconfig_nested_warning(probe, env_vals)
+    if warn:
+        add('kvm-wslconfig', 'warn', warn)
+    elif on and str(probe.platform).startswith('win'):
+        add('kvm-wslconfig', 'ok', '.wslconfig has nestedVirtualization=true')
     repos = [a.get('repo') for a in (agents or []) if a.get('repo')]
     if repos:
         cmds, err = kvm_runner_commands(probe, repos, pool, on)
@@ -2765,6 +2810,229 @@ def _kvm_checks(add, probe, pool, env_vals, compose_dir, agents):
             add('kvm-label', 'warn', 'runner labels differ from POOL_KVM=%s. Run: %s' % ('1' if on else 'unset', ' ; '.join(cmds)))
         else:
             add('kvm-label', 'ok', 'runner labels match POOL_KVM (%s)' % ('kvm label on' if on else 'no kvm label'))
+
+
+# --- DL343: load the kvm module in the Docker VM before the pool starts with POOL_KVM=1 -------------------------------
+
+KVM_FIX = ('Fix: set nestedVirtualization=true under [wsl2] in %USERPROFILE%\\.wslconfig, then run `wsl --shutdown` and start Docker again. '
+           'The pool container itself is never privileged.')
+
+
+def kvm_modprobe_cmd(module):
+    """The one-shot helper that loads a kernel module in the Docker VM. Only the helper is privileged, never the pool."""
+    return ['docker', 'run', '--rm', '--privileged', '--pid=host', 'alpine', 'nsenter', '-t', '1', '-m', '--', 'modprobe', module]
+
+
+def kvm_in_vm(probe):
+    """True, False, or None when docker cannot answer: is /dev/kvm in the Docker VM?"""
+    rr = probe.sh(['docker', 'run', '--rm', '--privileged', '--pid=host', 'alpine', 'nsenter', '-t', '1', '-m', '--',
+                   'test', '-e', '/dev/kvm'], timeout=180)
+    if rr is None:
+        return None
+    return rr[0] == 0
+
+
+def kvm_modules(probe):
+    """The kvm modules to try, by CPU vendor of the Docker VM: intel, amd, else both."""
+    rr = probe.sh(['docker', 'run', '--rm', 'alpine', 'grep', '-m1', 'vendor_id', '/proc/cpuinfo'], timeout=180)
+    text = (rr[1] if rr else '') or ''
+    if 'AuthenticAMD' in text:
+        return ['kvm_amd']
+    if 'GenuineIntel' in text:
+        return ['kvm_intel']
+    return ['kvm_intel', 'kvm_amd']
+
+
+def ensure_kvm(probe, env_vals):
+    """DL343 (R5.56): (ok, message). With POOL_KVM=1 and no /dev/kvm in the Docker VM, load kvm_intel or kvm_amd. Else nothing."""
+    if (env_vals.get('POOL_KVM') or '').strip() != '1':
+        return True, ''
+    have = kvm_in_vm(probe)
+    if have is None or have:
+        return True, ''
+    tried = []
+    for mod in kvm_modules(probe):
+        tried.append(mod)
+        probe.sh(kvm_modprobe_cmd(mod), timeout=180)
+        if kvm_in_vm(probe):
+            return True, '/dev/kvm was missing in the Docker VM; loaded %s' % mod
+    return False, ('/dev/kvm is missing in the Docker VM and loading %s did not help. Nothing was started. %s'
+                   % (' and '.join(tried), KVM_FIX))
+
+
+def wslconfig_nested(probe):
+    """True, False, or None (no .wslconfig readable): does .wslconfig set nestedVirtualization=true under [wsl2]?"""
+    text = probe.read_text(probe.wslconfig)
+    if text is None:
+        return None
+    section = ''
+    for line in text.splitlines():
+        line = line.strip()
+        if line.startswith('['):
+            section = line.lower()
+        elif section == '[wsl2]' and re.match(r'nestedvirtualization\s*=\s*true\b', line, re.I):
+            return True
+    return False
+
+
+def wslconfig_nested_warning(probe, env_vals):
+    """DL343 (R5.57): a warning text when POOL_KVM=1 on Windows and .wslconfig lacks nestedVirtualization=true, else ''."""
+    if (env_vals.get('POOL_KVM') or '').strip() != '1' or not str(probe.platform).startswith('win'):
+        return ''
+    if wslconfig_nested(probe):
+        return ''
+    return ('POOL_KVM=1 but %s has no nestedVirtualization=true. Add under [wsl2]: nestedVirtualization=true, then run `wsl --shutdown`.'
+            % probe.wslconfig)
+
+
+# --- DL342: per-runner tool cache cap (the pool-side safety net) -------------------------------------------------------
+
+TOOL_CACHE_CAP_GB = 30
+FREE_DISK_MIN_PCT = 10
+LINUX_TOOLS_DIR = '/ci-tools'
+
+
+def tool_cache_cap_gb(probe):
+    """The per-runner cache cap in GB: "tool_cache_cap_gb" in machine.json, else 30."""
+    try:
+        with open(os.path.join(probe.machine_dir(), 'machine.json'), encoding='utf-8') as f:
+            v = json.load(f).get('tool_cache_cap_gb')
+        if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0:
+            return float(v)
+    except (OSError, ValueError, AttributeError):
+        pass
+    return float(TOOL_CACHE_CAP_GB)
+
+
+def sweep_runner_cache(tools_dir, runner, cap_bytes, remove=True):
+    """Entries are <tools_dir>/<category>/<runner>/<entry>. Delete the oldest entries while the runner's total is over the cap.
+    Standard library only: the pool also runs this source inside a container. Returns {'size', 'removed': [[path, bytes]]}."""
+    import os as _os
+    import shutil as _sh
+
+    def size_of(path):
+        total = 0
+        for d, _dirs, files in _os.walk(path):
+            for f in files:
+                try:
+                    total += _os.lstat(_os.path.join(d, f)).st_size
+                except OSError:
+                    pass
+        return total
+    found = []
+    try:
+        cats = sorted(_os.listdir(tools_dir))
+    except OSError:
+        cats = []
+    for cat in cats:
+        base = _os.path.join(tools_dir, cat, runner)
+        if not _os.path.isdir(base):
+            continue
+        for name in _os.listdir(base):
+            path = _os.path.join(base, name)
+            try:
+                found.append([_os.stat(path).st_mtime, path, size_of(path) if _os.path.isdir(path) else _os.lstat(path).st_size])
+            except OSError:
+                pass
+    total = sum(x[2] for x in found)
+    out = {'size': total, 'removed': []}
+    for _mt, path, size in sorted(found):
+        if total <= cap_bytes:
+            break
+        if remove:
+            if _os.path.isdir(path) and not _os.path.islink(path):
+                _sh.rmtree(path, ignore_errors=True)
+            else:
+                try:
+                    _os.unlink(path)
+                except OSError:
+                    continue
+        total -= size
+        out['removed'].append([path, size])
+    out['size_after'] = total
+    return out
+
+
+def _entry_tools_dir(entry):
+    return entry.get('tools_dir') or (WIN_TOOLS_DIR if entry_os(entry) == 'windows' else LINUX_TOOLS_DIR)
+
+
+def run_sweep(probe, pool, entry, cap_bytes, remove):
+    """Run sweep_runner_cache for one registry entry. A Windows service runs on this machine; a Linux container agent in the
+    pool container. Returns the result dict, or None when it cannot be read."""
+    runner = entry_runner_name(entry, pool)
+    tools = _entry_tools_dir(entry)
+    if entry_kind(entry) == 'service':
+        return probe.cache_sweep(tools, runner, cap_bytes, remove)
+    import inspect
+    code = (inspect.getsource(sweep_runner_cache) + '\nimport json,sys\n'
+            'print(json.dumps(sweep_runner_cache(sys.argv[1], sys.argv[2], int(sys.argv[3]), sys.argv[4] == "1")))\n')
+    rr = probe.sh(['docker', 'exec', 'pool-%s-pool-1' % pool, 'python3', '-c', code, tools, runner, str(int(cap_bytes)),
+                   '1' if remove else '0'], timeout=600)
+    if rr is None or rr[0] != 0:
+        return None
+    try:
+        return json.loads((rr[1] or '').strip().splitlines()[-1])
+    except (ValueError, IndexError):
+        return None
+
+
+def sweep_pool_caches(probe, pool, entries, cap_gb=None, remove=True):
+    """DL342 (R5.54): for every runner the pool coordinates, delete the oldest cache entries over the cap. A runner with a job
+    (or one GitHub cannot be asked about) is left alone. Returns one dict per runner: runner, os, status, size, removed."""
+    cap_gb = tool_cache_cap_gb(probe) if cap_gb is None else cap_gb
+    cap = int(cap_gb * 1024 ** 3)
+    out = []
+    for a in entries or []:
+        if not isinstance(a, dict):
+            continue
+        name = entry_runner_name(a, pool)
+        row = {'runner': name, 'os': entry_os(a), 'status': 'ok', 'size': 0, 'removed': []}
+        if remove and a.get('repo') and runner_has_job(probe, a['repo'], name):
+            row['status'] = 'busy'
+        else:
+            res = run_sweep(probe, pool, a, cap, remove and True)
+            if res is None:
+                row['status'] = 'unreadable'
+            else:
+                row['size'] = res.get('size', 0)
+                row['removed'] = res.get('removed', [])
+        out.append(row)
+    return out
+
+
+def sweep_lines(rows, cap_gb):
+    lines = []
+    for r in rows:
+        if r['removed']:
+            lines.append('cache cap %.0f GB: %s removed %d entr%s (%.1f GB): %s' % (
+                cap_gb, r['runner'], len(r['removed']), 'y' if len(r['removed']) == 1 else 'ies',
+                sum(x[1] for x in r['removed']) / 1024 ** 3, ', '.join(os.path.basename(x[0]) for x in r['removed'])))
+        elif r['status'] != 'ok':
+            lines.append('cache cap: %s skipped (%s)' % (r['runner'], r['status']))
+    return lines
+
+
+def _cache_checks(add, probe, pool, entries):
+    """DL342 (R5.55): warn when a runner's cache is over the cap, and when free disk on the cache drive is under 10%."""
+    cap_gb = tool_cache_cap_gb(probe)
+    rows = sweep_pool_caches(probe, pool, entries, cap_gb, remove=False)
+    over = ['%s (%.1f GB)' % (r['runner'], r['size'] / 1024 ** 3) for r in rows if r['size'] > cap_gb * 1024 ** 3]
+    add('cache-cap', 'warn' if over else 'ok',
+        ('tool cache over the %.0f GB cap: %s. Run `delivery_runner_pool.py cache-sweep`; it deletes the oldest entries of an idle runner. '
+         'Cap: "tool_cache_cap_gb" in machine.json.' % (cap_gb, ', '.join(over))) if over
+        else 'every runner tool cache is within %.0f GB' % cap_gb)
+    dirs = sorted({_entry_tools_dir(a) for a in entries or [] if isinstance(a, dict) and entry_kind(a) == 'service'})
+    for d in dirs:
+        du = probe.disk_usage(d)
+        if du is None:
+            continue
+        free, total = du
+        pct = 100.0 * free / total if total else 100.0
+        add('cache-disk', 'warn' if pct < FREE_DISK_MIN_PCT else 'ok',
+            ('free disk on the drive of %s is %.0f%% (%.0f GB), under %d%%. Delete caches or free space before the pool stops.'
+             % (d, pct, free / 1024 ** 3, FREE_DISK_MIN_PCT)) if pct < FREE_DISK_MIN_PCT
+            else 'free disk on the drive of %s is %.0f%%' % (d, pct))
 
 
 def parse_pool_apt(text):
@@ -3049,6 +3317,7 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
                 if pub else 'every agent\'s repository is private')
         if all_entries is not None:
             registry_checks(add, probe, n, all_entries)
+            _cache_checks(add, probe, n, all_entries)
         _browser_checks(add, probe, n, env_vals, agents, repo_paths)
         _layer_checks(add, probe, n, env_vals, compose, repo_paths)
         _kvm_checks(add, probe, n, {k.strip(): v.strip() for k, v in env_vals.items()}, d, agents)
@@ -3076,7 +3345,7 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
 
 def main(argv=None):
     ap = argparse.ArgumentParser(prog='delivery_runner_pool.py', description=__doc__.split('\n\n')[0])
-    ap.add_argument('action', choices=['detect', 'sizing', 'plan', 'verify', 'doctor'])
+    ap.add_argument('action', choices=['detect', 'sizing', 'plan', 'verify', 'doctor', 'cache-sweep'])
     ap.add_argument('--json', action='store_true')
     ap.add_argument('--repos', default='')
     ap.add_argument('--windows-repos', default='')
@@ -3121,6 +3390,12 @@ def main(argv=None):
         res = verify(Probe(), split(args.repos), args.pool, dispatch=True)
         print(json.dumps(res, indent=2))
         return 0 if all(c['status'] == 'ok' for c in res) else 1
+    elif args.action == 'cache-sweep':
+        probe = Probe()
+        entries, _data = registry_read(probe, args.pool)
+        cap_gb = tool_cache_cap_gb(probe)
+        rows = sweep_pool_caches(probe, args.pool, entries or [], cap_gb)
+        print(json.dumps(rows, indent=2) if args.json else '\n'.join(sweep_lines(rows, cap_gb) or ['cache cap %.0f GB: nothing to remove' % cap_gb]))
     else:
         res = doctor_checks()
         print(json.dumps(res, indent=2) if args.json else '\n'.join('%-5s %s: %s' % (c['status'], c['id'], c['detail']) for c in res))
