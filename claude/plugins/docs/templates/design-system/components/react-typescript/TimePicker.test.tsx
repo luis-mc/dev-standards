@@ -54,6 +54,12 @@ function Harness(props: Omit<TimePickerProps, 'value' | 'onChange'> & { start: s
 
 describe('TimePicker', () => {
   const spins = () => [...m!.container.querySelectorAll('[role="spinbutton"]')] as HTMLElement[];
+  /** One spin button by position; fails the test if it is missing. */
+  const spin = (i: number): HTMLElement => {
+    const el = spins()[i];
+    if (!el) throw new Error(`no spin button ${i}`);
+    return el;
+  };
 
   it('shows one spin button per unit', () => {
     for (const [units, n] of [['h', 1], ['hm', 2], ['hms', 3]] as const) {
@@ -65,7 +71,8 @@ describe('TimePicker', () => {
 
   it('spin buttons carry their value, range and words', () => {
     m = mount(<Harness label="Reminder" start="18:30" units="hm" hourCycle="h23" />);
-    const [h, mins] = spins();
+    const h = spin(0);
+    const mins = spin(1);
     expect(h.getAttribute('aria-label')).toBe('Hours');
     expect(h.getAttribute('aria-valuenow')).toBe('18');
     expect(h.getAttribute('aria-valuemin')).toBe('0');
@@ -77,14 +84,14 @@ describe('TimePicker', () => {
   it('arrow keys step by the step, wrap, and Right moves to the next column', () => {
     const spy = vi.fn();
     m = mount(<Harness label="Reminder" start="23:55" units="hm" step={5} hourCycle="h23" spy={spy} />);
-    key(spins()[1], 'ArrowUp');
+    key(spin(1), 'ArrowUp');
     expect(spy).toHaveBeenLastCalledWith('23:00');
-    key(spins()[0], 'ArrowUp');
+    key(spin(0), 'ArrowUp');
     expect(spy).toHaveBeenLastCalledWith('00:00');
-    spins()[0].focus();
-    key(spins()[0], 'ArrowRight');
-    expect(document.activeElement).toBe(spins()[1]);
-    key(spins()[1], 'End');
+    spin(0).focus();
+    key(spin(0), 'ArrowRight');
+    expect(document.activeElement).toBe(spin(1));
+    key(spin(1), 'End');
     expect(spy).toHaveBeenLastCalledWith('00:55');
   });
 
@@ -100,13 +107,14 @@ describe('TimePicker', () => {
   it('a 12-hour clock spins 1 to 12 and switches AM and PM', () => {
     const spy = vi.fn();
     m = mount(<Harness label="Time" start="11:00" units="hm" locale="en-US" spy={spy} />);
-    const h = spins()[0];
+    const h = spin(0);
     expect(h.getAttribute('aria-valuemin')).toBe('1');
     expect(h.getAttribute('aria-valuemax')).toBe('12');
     expect(h.getAttribute('aria-valuenow')).toBe('11');
     key(h, 'ArrowUp'); // 11 AM -> 12 AM within the period
     expect(spy).toHaveBeenLastCalledWith('00:00');
-    const pm = [...m.container.querySelectorAll('[aria-pressed]')].find((b) => b.textContent === 'PM')!;
+    const pm = [...m.container.querySelectorAll('[aria-pressed]')].find((b) => b.textContent === 'PM');
+    if (!pm) throw new Error('no PM button');
     click(pm);
     expect(spy).toHaveBeenLastCalledWith('12:00');
   });
@@ -115,18 +123,20 @@ describe('TimePicker', () => {
     m = mount(<Harness label="Reminder" start="07:00" units="hm" hourCycle="h23"
       quick={[{ value: '07:00' }, { value: '20:00' }]} />);
     const chips = [...m.container.querySelectorAll('[role="group"] [aria-pressed]')] as HTMLElement[];
-    expect(chips[0].getAttribute('aria-pressed')).toBe('true');
-    click(chips[1]);
-    expect(spins()[0].getAttribute('aria-valuenow')).toBe('20');
+    expect(chips[0]?.getAttribute('aria-pressed')).toBe('true');
+    const second = chips[1];
+    if (!second) throw new Error('no second chip');
+    click(second);
+    expect(spin(0).getAttribute('aria-valuenow')).toBe('20');
   });
 
   it('Enter is Done and Escape cancels', () => {
     const onDone = vi.fn();
     const onCancel = vi.fn();
     m = mount(<TimePicker label="T" value="06:15" onChange={() => {}} hourCycle="h23" onDone={onDone} onCancel={onCancel} />);
-    key(spins()[0], 'Enter');
+    key(spin(0), 'Enter');
     expect(onDone).toHaveBeenCalledWith('06:15');
-    key(spins()[1], 'Escape');
+    key(spin(1), 'Escape');
     expect(onCancel).toHaveBeenCalledOnce();
   });
 });

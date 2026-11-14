@@ -1,7 +1,7 @@
 # DELIVERYSPEC — Delivery rules
 
 **Status:** Normative
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Applies to:** every project that delivers its work with the `luismc-delivery` plugin, and the plugin itself
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-delivery`
 
@@ -157,7 +157,7 @@ Goal: each delivery and orchestration rule is a mechanical check in the plugins 
 | DL-70 | Ask every open question at once, numbered. Use several dialogs in one message if there are more than 4. Never trickle. | owner lesson, CLAUDE.md | G | PRE `AskUserQuestion` (context) | count of open `owner_questions[]` vs this call | Y (rules text delivered by SessionStart; Q-5 trickle check in PRE) |
 | DL-71 | Write no explanation before a dialog in the same turn. Put context inside the question, or ask in plain chat. | owner lesson | G | PRE `AskUserQuestion` | transcript: assistant text since last user message > ~300 chars | N |
 | DL-72 | A rejected dialog with no owner words is not a stop: keep working, re-ask in plain chat. | owner lesson | G | POST-failure `AskUserQuestion` (context) | tool error text | N |
-| DL-73 | Never send email, messages, posts, issues or comments in the owner's name. Write drafts as files. | owner lesson, user CLAUDE.md | G | PRE (outbound: `gh issue/pr comment`, `gh issue create`, mail/Slack MCP send) | tool name, command | ~ auto-mode classifier only |
+| DL-73 | Never send email, messages, posts, issues, comments or reviews in the owner's name; write drafts as files. On repositories the owner owns, agents may open pull requests, mark them ready and edit their title and description; merging stays the owner's. | owner lesson, user CLAUDE.md | G | PRE (outbound: `gh issue/pr comment`, `gh issue create`, mail/Slack MCP send) | tool name, command | ~ auto-mode classifier only |
 | DL-74 | No Co-Authored-By or Claude attribution in commits or PR bodies (owner choice). | owner lesson | G (owner opt) | GIT commit-msg + PRE `git commit`/`gh pr create` | message/body text | N; violated by a project CI auto-fix script |
 | DL-75 | Create every doc under `docs/`. | rules | G | PRE `Write` of `*.md` | path | N |
 | DL-76 | A release runs CI once. Nothing after the merge re-runs what the release PR proved on the same tree. Only publish, deploy and production smoke run on the default branch. | owner lesson | P | STOP | PR merge commit tree vs PR head tree; default-branch runs of that commit and their jobs vs `pr_proven_jobs` | N |
@@ -266,7 +266,7 @@ Finished rows (closed trains, finished or disabled agents, finished installs, ev
 | DL-72 rejected dialog is not a stop | needs reading intent | POST-failure context line only |
 | DL-65 one truth | design property | the ledger is the only source the renderer and hooks read; a guard test fails if a hook parses chat for state |
 | speed-without-compromise, parallel-by-default | goals, not checks | STOP lists "startable now" items (To do tasks with deps met while slots are free; trains green and unpushed) once per turn |
-| DL-73 never send as owner | outbound tools are open-ended | A deny list of known outbound commands and MCP tools in config. The classifier stays the backstop |
+| DL-73 never send as owner (PR exception: D290 to D292) | outbound tools are open-ended | A deny list of known outbound commands and MCP tools in config. It never lists `gh pr create`, `ready` or `edit`. The classifier stays the backstop, and `claude-setup` allows those three in the project settings |
 
 ## 4. Build split: four parts by file ownership
 

@@ -242,8 +242,8 @@ the file. Create `.gitattributes` when it is absent.
 ### `settings.json` — add whole if absent, field-level if present
 
 If the file does not exist, copy the template as-is. For a user target, drop
-the template's `enabledPlugins` block first (only a project target enables the
-plugins). For a project target also drop the template's `hooks.Stop` entry: the
+the template's `enabledPlugins` and `permissions` blocks first (only a project target enables the
+plugins and the PR allow rules). For a project target also drop the template's `hooks.Stop` entry: the
 questions Stop hook is user level only. Then add the user-level pieces described in "The transcript-folds
 pieces".
 
@@ -264,6 +264,7 @@ The keys, and what each is for:
 | `effortLevel` | `"medium"` | the effort for sessions whose model has no `modelSettings` entry, such as cloud agents, which run Opus; the per-model entries beat it |
 | `hooks.SessionStart` | the drift-hook entry, see path note below | runs `hooks/effort_drift.py` at session start |
 | `hooks.Stop` | the questions-hook entry (user target only), see "The questions Stop hook" | runs `hooks/questions_stop.py` when Claude stops |
+| `permissions.allow` | `Bash(gh pr create:*)`, `Bash(gh pr ready:*)`, `Bash(gh pr edit:*)`; project target only; add each one that is missing, keep every other entry, never add `gh pr merge` | the PR exception of DL-73: agents may open, ready and edit pull requests on the owner's repositories; auto mode otherwise refuses `gh pr create`; merging stays the owner's |
 | `enabledPlugins."<plugin>@<marketplace>"` for each of the 6 plugins: `luismc-agents`, `luismc-audits`, `luismc-delivery`, `luismc-docs`, `luismc-project-setup`, `luismc-transcript-folds` | `true`, project target only (transcript-folds included); marketplace as found below; the plugin list is read from `.claude-plugin/marketplace.json` (see "All plugins") | turns on every plugin of the marketplace for the project (artifacts: ARTIFACTSPEC R10.1; delivery: DELIVERYSPEC D2, it supplies the hooks that enforce the rule tags) |
 | `extraKnownMarketplaces.<marketplace>` | `{"source": {"source": "github", "repo": "luis-mc/dev-standards"}}`, project target only, only when the key is missing; use the marketplace name and source found below | lets the project's `claude plugin install --scope project` find the marketplace (see "Marketplace entry") |
 

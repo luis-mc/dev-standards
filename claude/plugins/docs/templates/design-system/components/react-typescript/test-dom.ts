@@ -49,8 +49,9 @@ export function focus(target: Element) {
 /** Type into a React-controlled input: set the value through the native setter, then fire input. */
 export function typeInto(input: HTMLInputElement, text: string) {
   act(() => {
-    const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!;
-    setter.call(input, text);
+    const desc = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value');
+    if (!desc?.set) throw new Error('no native value setter');
+    desc.set.call(input, text);
     input.dispatchEvent(new Event('input', { bubbles: true }));
   });
 }

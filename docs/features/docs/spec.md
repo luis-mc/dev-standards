@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.4.0
+version: 1.4.1
 owner: agents
 type: reference
 code:
@@ -97,6 +97,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.18** — Font sizes in the plugin's pages are 0.9 times the earlier ones: the base is 14.4px, and px and `clamp()` sizes are scaled (`rem` sizes follow the base). Pages drawn in a project's design-system gallery keep that project's own size tokens.
 
+**R5.19** — The React and TypeScript picker templates (`DatePicker`, `TimePicker`, `NumberKeypad`, their logic files, tests and `test-dom.ts`) compile with `tsc --noEmit` under `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `noPropertyAccessFromIndexSignature`, and pass typescript-eslint `recommendedTypeChecked` and react-hooks `recommended` with `reportUnusedDisableDirectives` on. They carry no `eslint-disable` for `react-hooks/exhaustive-deps`. Behaviour and rendered output are unchanged (DL331).
+
 ## 6. Non-functional requirements
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
@@ -143,6 +145,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.14 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R5.16, R5.17, R5.18 | `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
+| R5.19 | `claude/plugins/docs/tests/test_dl331_picker_strict.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
@@ -179,6 +182,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.4.1 | 2026-11-14 | RELEASE-134 | The picker templates compile under strict TypeScript flags and pass typescript-eslint (R5.19). | DL331 |
 | 1.4.0 | 2026-11-13 | RELEASE-127 | A release phase may be named fix (a fix round between a red CI and the next CI); ci and fix may repeat. | DL305 |
 | 1.3.1 | 2026-11-11 | RELEASE-109 | check warns and render notes a stale Full Progress lede (see features/artifacts R5.37a). | DL251 |
 | 1.3.0 | 2026-11-11 | RELEASE-107 | Every generated page shows the luismc-docs version and a latest or update flag; generated Markdown and llms.txt get a header line; all pages use the default page colours (a project design.css changes accents only); fonts are 0.9x (R5.16 to R5.18).<br>Fold bumps a spec's own **Version:** line in place and refuses a doc with both forms. | DL239, DL243 |

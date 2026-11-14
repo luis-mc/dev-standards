@@ -152,6 +152,9 @@
     "claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json": [
       "docs/features/models/spec.md"
     ],
+    "claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py": [
+      "docs/features/project-setup/spec.md"
+    ],
     "claude/plugins/transcript-folds/**": [
       "docs/features/transcript-folds/spec.md"
     ],

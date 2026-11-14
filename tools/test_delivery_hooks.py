@@ -698,6 +698,18 @@ def dl55_second_install_waits():
 
 
 @test
+def dl334_pr_open_ready_edit_not_denied():
+    p = Project(ledger())
+    for c in ('gh issue create --title x', 'gh issue comment 5 --body hi', 'gh pr comment 5 --body hi',
+              'gh pr review 5 --approve'):
+        assert 'DL-73' in why(bash(p, c)), c
+    assert 'DL-73' in why(bash(p, 'mailx -s hi a@b.c'))
+    for c in ('gh pr create --title x --body y', 'gh pr ready 5', 'gh pr edit 5 --title z'):
+        assert 'DL-73' not in why(bash(p, c)), c
+    p.close()
+
+
+@test
 def dl73_outbound_send_from_config():
     p = Project(ledger())
     assert 'DL-73' in why(bash(p, 'gh issue comment 5 --body hi'))
