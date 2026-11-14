@@ -16,6 +16,7 @@
     "published_at": "2026-11-14T13:52+00:00",
     "published_fingerprint": "f3daac6a3a6fcad553129aa0638d4afaad09bf57b196c75f1e8335be31203bf3",
     "local_path": "C:\\GitHub\\dev-standards\\.claude\\artifacts-publish\\full-progress\\dev-standards\\full-progress-dev-standards.html",
+    "deferred_until": "2026-11-15T00:00+00:00",
     "local_opened": true
   },
   "feature_artifacts": [
@@ -111,7 +112,7 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-14T13:52+00:00",
+  "updated": "2026-11-14T14:40+00:00",
   "retired": [],
   "deleted": [
     {
