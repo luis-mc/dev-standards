@@ -904,12 +904,23 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-14T19:21+00:00">14 Nov 19:21</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T21:46+00:00">14 Nov 21:46</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">14 Nov 13:52</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL360"><span class="task-id">DL360</span><span class="release-name">RELEASE-143</span>hook typed names, phases past midnight <span class="glance-expected">14 Nov ~21:52</span><span class="glance-basis">RELEASE-143 CI started 21:47, ~5 min</span></li>
+</ul>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL358"><span class="task-id">DL358</span>Pre-commit hook passes typed names like gitleaks</li>
+<li data-glance-task="DL359"><span class="task-id">DL359</span>Release phases after a gap past midnight</li>
+</ul>
 </details>
 <details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">3 tasks</span></summary>
 <ul>
@@ -918,7 +929,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">D311: pool project covers every private-repo job (its M2+), then message</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">16 Nov</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">40 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">37 tasks</span></summary>
 <ul>
 <li data-glance-task="DL356"><span class="task-id">DL356</span>Runner account switch resets old file owners in _work</li>
 <li data-glance-task="DL357"><span class="task-id">DL357</span><span class="release-name">RELEASE-142</span>runner account switch resets old file owners</li>
@@ -928,22 +939,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL337"><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)</li>
 <li data-glance-task="DL350"><span class="task-id">DL350</span><span class="release-name">RELEASE-139</span>runner gate git hang fix</li>
 <li data-glance-task="DL351"><span class="task-id">DL351</span>Runner gate hangs on a git credential prompt (ci-wait marker)</li>
-<li class="glance-more">and 32 more</li>
+<li class="glance-more">and 29 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">345</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">8</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">345</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">8</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL360"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL360</span><span class="release-name">RELEASE-143</span>hook typed names, phases past midnight</td><td>Join, fold, ready PR, CI, merge, smoke, cleanup for DL358 and DL359.</td><td>14 Nov ~21:52<span class="expected-basis">RELEASE-143 CI started 21:47, ~5 min</span></td></tr>
 <tr data-task="DL346"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>15 Nov<span class="expected-basis">D307: starts when the pool project says its pool is ready for all projects</span></td></tr>
 <tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>16 Nov<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
 <tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>16 Nov<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
 <tr data-task="DL349"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL349</span>Projects move to the new runs-on contract</td><td>Phase E: each adopting project runs the delivery install update, the separate pool project writes RUNS_ON_*, old CI_RUNS_ON* deleted, first job watched per project.</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">353 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">2 built, 353 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL358"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL358</span>Pre-commit hook passes typed names like gitleaks<span class="release-line"><span class="release-name">RELEASE-143</span></span></td><td>Peer report: the shipped hook blocked typed Rust and TS parameter names ending in _key that gitleaks passes; the colon form now needs a quoted value, as in gitleaks.</td><td>14 Nov</td></tr>
+<tr data-task="DL359"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL359</span>Release phases after a gap past midnight<span class="release-line"><span class="release-name">RELEASE-143</span></span></td><td>Peer report: --phase join=20:42-20:55 ci=01:00-03:00 dated ci today; a phase that starts before the previous one ends now rolls to the next day.</td><td>14 Nov</td></tr>
 <tr data-task="DL356"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL356</span>Runner account switch resets old file owners in _work<span class="release-line"><span class="release-name">RELEASE-142</span></span></td><td>Peer report: after pool-run moved a Windows runner from NETWORK SERVICE to its own account, files in _work kept the old owner and explicit ACLs, so every Rust job failed access denied on lld-link.exe. win-files must take ownership and reset ACLs under the folder; doctor checks the runner account can read its tool cache.</td><td>14 Nov</td></tr>
 <tr data-task="DL357"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL357</span><span class="release-name">RELEASE-142</span>runner account switch resets old file owners</td><td>Join, fold, ready PR #241, CI, merge, smoke, cleanup for DL356 (delivery 1.47.4).</td><td>14 Nov</td></tr>
 <tr data-task="DL352"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL352</span><span class="release-name">RELEASE-140</span>gate skips git when fallback off; swap waits only for container</td><td>Join, CI, merge and smoke for DL353 and DL354.</td><td>14 Nov</td></tr>

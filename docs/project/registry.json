@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T19:21+00:00",
+  "updated": "2026-11-14T21:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6376,6 +6376,48 @@
         }
       ],
       "started": "2026-11-14T18:51+00:00"
+    },
+    {
+      "id": "DL358",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Pre-commit hook passes typed names like gitleaks",
+      "detail": "Peer report: the shipped hook blocked typed Rust and TS parameter names ending in _key that gitleaks passes; the colon form now needs a quoted value, as in gitleaks.",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T21:46+00:00",
+      "rides": "DL360"
+    },
+    {
+      "id": "DL359",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Release phases after a gap past midnight",
+      "detail": "Peer report: --phase join=20:42-20:55 ci=01:00-03:00 dated ci today; a phase that starts before the previous one ends now rolls to the next day.",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T21:45+00:00",
+      "rides": "DL360"
+    },
+    {
+      "id": "DL360",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-143: hook typed names, phases past midnight",
+      "detail": "Join, fold, ready PR, CI, merge, smoke, cleanup for DL358 and DL359.",
+      "expected": "14 Nov ~21:52",
+      "changed": "2026-11-14T21:45+00:00",
+      "expected_basis": "RELEASE-143 CI started 21:47, ~5 min",
+      "release": 143,
+      "phases": [
+        {
+          "name": "ci",
+          "start": "2026-11-14T21:47+00:00",
+          "end": "2026-11-14T21:52+00:00"
+        }
+      ],
+      "started": "2026-11-14T21:45+00:00"
     },
     {
       "id": "DS1",
