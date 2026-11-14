@@ -293,6 +293,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D303 | Where does the migration plan live, given dev-standards must not name other projects? | Private page and new project docs | decided | 2026-11-14 |
 | delivery-speed | D304 | How do the research findings about the separate runner-pool project reach it? | Message its session | decided | 2026-11-14 |
 | delivery-speed | D305 | DL337: the new pool image is built but the swap was refused (a job stayed busy through the 45-minute drain). What next? | Retry once when idle | decided | 2026-11-14 |
+| delivery-speed | D306 | DL337 retry refused because the swap counts the stuck Windows runner outside the container. How should the swap go? | Force the swap now | decided | 2026-11-14 |
 | delivery-speed | D31 | Machine-wide CI queue: should the doctor's machine check report runner disk use and offer cleanup? | Report and offer cleanup | decided | 2026-11-04 |
 | delivery-speed | D32 | Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27? | Yes, in DL27 | decided | 2026-11-04 |
 | delivery-speed | D33 | Who owns dev-standards draft PR #140 (shared runner pool research) from here? | This session | decided | 2026-11-04 |

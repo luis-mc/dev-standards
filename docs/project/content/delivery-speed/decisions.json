@@ -6928,6 +6928,30 @@
    "chosen": "Retry once when idle",
    "decided": "2026-11-14",
    "owner_words": "Retry once when idle"
+  },
+  {
+   "id": "D306",
+   "question": "DL337 retry refused because the swap counts the stuck Windows runner outside the container. How should the swap go?",
+   "asked": "2026-11-14",
+   "status": "decided",
+   "task": "DL337",
+   "options": [
+    {
+     "label": "Force the swap now",
+     "summary": "pool-refresh --force while no container job runs; the stuck Windows job is untouched."
+    },
+    {
+     "label": "Cancel the stuck job first",
+     "summary": "Cancel the other project's stuck run, then swap without force."
+    },
+    {
+     "label": "Leave it",
+     "summary": "Keep the old image until the pool is deleted; drop DL337."
+    }
+   ],
+   "chosen": "Force the swap now",
+   "decided": "2026-11-14",
+   "owner_words": "Force the swap now"
   }
  ]
 }

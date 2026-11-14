@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T13:11+00:00",
+  "updated": "2026-11-14T13:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6013,15 +6013,14 @@
       "id": "DL337",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
-      "detail": "Retry 13:11 (D305, once, no force) refused: the swap's busy check counts the Windows service runner host1-comics-organizer, which is outside the container and stuck on the 08:40 CI job (gate git hang). New image built; container still on the 13 Nov image. Needs the owner: cancel that stuck job, or allow --force (no container job runs now).",
-      "expected": "14 Nov ~14:00",
-      "changed": "2026-11-14T13:11+00:00",
+      "detail": "D306: force the swap once no container job runs (waits for idle container runners, then pool-refresh --force; the stuck Windows runner is not touched).",
+      "expected": "14 Nov ~13:25",
+      "changed": "2026-11-14T13:12+00:00",
       "no_release": "machine maintenance: rebuild the pool image when idle",
-      "expected_basis": "owner decides: cancel the stuck Windows job or allow --force",
-      "started": "2026-11-14T10:38+00:00",
-      "waits_on": "owner"
+      "expected_basis": "short prune job ends ~13:13, then ~2-5 min recreate",
+      "started": "2026-11-14T10:38+00:00"
     },
     {
       "id": "DL338",
