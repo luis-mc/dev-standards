@@ -46,10 +46,24 @@ jobs:
           files=(specs/*.md docs/architecture/*spec*.md)
           if [ ${#files[@]} -eq 0 ]; then echo "no spec files"; exit 0; fi
           python3 "$TOOLS/{{SPEC_CHECK}}" "${files[@]}"
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+      - name: Pick the Node version file
+        id: nodever
         if: hashFiles('scripts/design/*.test.ts') != ''
+        # The project decides its Node version: .nvmrc, .node-version, .tool-versions,
+        # then package.json (engines.node or volta). With none of them, Node 24 (current LTS).
+        run: |
+          for f in .nvmrc .node-version .tool-versions package.json; do
+            if [ -f "$f" ]; then echo "file=$f" >> "$GITHUB_OUTPUT"; exit 0; fi
+          done
+          echo "file=" >> "$GITHUB_OUTPUT"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: hashFiles('scripts/design/*.test.ts') != '' && steps.nodever.outputs.file != ''
         with:
-          node-version: '22'
+          node-version-file: ${{ steps.nodever.outputs.file }}
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: hashFiles('scripts/design/*.test.ts') != '' && steps.nodever.outputs.file == ''
+        with:
+          node-version: '24'
       - name: Design system guard tests
         if: hashFiles('scripts/design/*.test.ts') != ''
         env:
