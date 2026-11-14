@@ -904,18 +904,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-14T11:24+00:00">14 Nov 11:24</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T11:53+00:00">14 Nov 11:53</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">14 Nov 10:54</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DL337"><span class="task-id">DL337</span><span class="glance-dep">owner decides: retry when idle, or drop (pool is replaced)</span> Pool rebuild when idle (bake 1.46.1 gate scripts) <span class="glance-expected">14 Nov ~12:00</span></li>
-</ul>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
+<p class="glance-none">Nothing needs you.</p>
 </details>
 <details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
 <ul>
 <li data-glance-task="DL345"><span class="task-id">DL345</span>Plan: move the runner pool to its own project, remove it here <span class="glance-expected">14 Nov ~12:15</span><span class="glance-basis">research done 11:25; owner decisions, then ~25 min to write the plan</span></li>
+</ul>
+</details>
+<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DL337"><span class="task-id">DL337</span><span class="glance-dep">next idle window, then ~2 min swap</span> Pool rebuild when idle (bake 1.46.1 gate scripts) <span class="glance-expected">14 Nov ~13:00</span></li>
 </ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">51 tasks</span></summary>
@@ -936,8 +939,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL337"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>New image built 10:38 (1.47.1 files copied). Recreate refused 11:23: a comics-organizer job stayed busy through the 45-min drain. Pool still runs the 13 Nov image.</td><td>14 Nov ~12:00<span class="expected-basis">owner decides: retry when idle, or drop (pool is replaced)</span></td></tr>
 <tr data-task="DL345"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL345</span>Plan: move the runner pool to its own project, remove it here<span class="no-release-line">ships nothing: study and plan; removal ships as its own tasks</span></td><td>Research and design: inventory, coupling, learnings, migration and removal plan, improvements for the new pool project.</td><td>14 Nov ~12:15<span class="expected-basis">research done 11:25; owner decisions, then ~25 min to write the plan</span></td></tr>
+<tr data-task="DL337"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>New image built 10:38. Swap refused 11:23 (job busy through the drain). D305: retry once when idle, no force.</td><td>14 Nov ~13:00<span class="expected-basis">next idle window, then ~2 min swap</span></td></tr>
 </tbody></table></div>
 </details>
 <details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">343 tasks</span></summary>
@@ -1320,6 +1323,143 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D305">
+<h3 class="decision-head"><span class="decision-id">D305</span> <span class="decision-question">DL337: the new pool image is built but the swap was refused (a job stayed busy through the 45-minute drain). What next?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Retry once when idle</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Swap again with no force when no job runs.</p>
+<blockquote class="decision-words">&ldquo;Retry once when idle&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the 13 Nov image until the pool is deleted.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Force now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Recreate now and cut the running job.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D304">
+<h3 class="decision-head"><span class="decision-id">D304</span> <span class="decision-question">How do the research findings about the separate runner-pool project reach it?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Message its session</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Send the findings to its Claude session to record as its own tasks.</p>
+<blockquote class="decision-words">&ldquo;Message its session&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Pull request with findings</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A findings doc as a pull request in its docs/.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only in the plan</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The owner relays what they want.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D303">
+<h3 class="decision-head"><span class="decision-id">D303</span> <span class="decision-question">Where does the migration plan live, given dev-standards must not name other projects?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Private page and new project docs</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">A private page now, plus the new-project half as a pull request into its docs/.</p>
+<blockquote class="decision-words">&ldquo;Private page + new project docs&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Private page only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One private page.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">New project docs only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A plan file in the new project&#x27;s docs/.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D302">
+<h3 class="decision-head"><span class="decision-id">D302</span> <span class="decision-question">Which runner-side tools that ship to projects move to the separate runner-pool project (rust_ci cache cap, ci_tool tool cache, vm_check)?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only vm_check moves</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">rust_ci cap and ci_tool stay in delivery; vm_check moves.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All three move</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">The new pool owns every runner-side cache and VM tool.</p>
+<blockquote class="decision-words">&ldquo;All three move&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">All three stay</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delivery keeps them.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D301">
+<h3 class="decision-head"><span class="decision-id">D301</span> <span class="decision-question">Where do the local heavy-work guard and the cloud fallback&#x27;s slot-wait trigger go when the pool leaves?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Guard stays, wait trigger goes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Delivery keeps the local heavy-work guard with its own config file; the fallback loses the slot-wait trigger.</p>
+<blockquote class="decision-words">&ldquo;Guard stays, wait trigger goes&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both stay</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the guard; the new pool publishes slot-wait markers for the fallback.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Both go</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Remove both; the new pool&#x27;s load gate is the only limiter.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D300">
+<h3 class="decision-head"><span class="decision-id">D300</span> <span class="decision-question">How do delivery workflow templates choose a runner without knowing which pool fills it?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One neutral variable per OS</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Templates read RUNS_ON_LINUX, RUNS_ON_WINDOWS, RUNS_ON_MACOS (JSON label lists); unset means GitHub-hosted; any pool or the owner sets them.</p>
+<blockquote class="decision-words">&ldquo;option 1, but how will the mapping happen?&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Projects own runs-on</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Templates stop writing runs-on; each project edits its own.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep CI_RUNS_ON names</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The new pool writes the existing CI_RUNS_ON and CI_RUNS_ON_WINDOWS.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D299">
+<h3 class="decision-head"><span class="decision-id">D299</span> <span class="decision-question">When does dev-standards delete its runner pool and this machine&#x27;s runners, given the separate runner-pool project&#x27;s first release has no Linux container pool, KVM or Wine?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Cut at first release, hosted</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete right after the first release; Linux jobs use GitHub-hosted runners until the new project has Linux containers.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Freeze, cut at parity</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep this pool frozen until the new project covers Linux containers, KVM and Wine.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Cut at first release, pull containers forward</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete at the first release and ask the new project to build Linux containers first.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Owner gives the go</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">No automatic trigger: the pool and this machine&#x27;s runners are deleted only when the owner says so.</p>
+<blockquote class="decision-words">&ldquo;I&#x27;ll tell you when to delete your pool and pc runners&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D298">
 <h3 class="decision-head"><span class="decision-id">D298</span> <span class="decision-question">Is the runner pool only the Linux container, or every runner on the machine?</span></h3>
 <p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL341</p>
