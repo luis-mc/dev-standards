@@ -48,7 +48,7 @@ def repo_with_hook():
     return d
 
 
-def commit(d, name, text="API_TOKEN=sk_live_realvalue123\n"):
+def commit(d, name, text="API_TOKEN=sk_live_realvalue123\n"):  # secret-scan:ignore gitleaks:allow (fake fixture the hook must block)
     (d / name).write_text(text)
     sh(["git", "add", "-A"], cwd=d)
     return sh(["git", "commit", "-qm", "t"], cwd=d).returncode
@@ -115,7 +115,7 @@ def f19():
     sh("git add -A && git commit -qm a --no-verify", cwd=d)
     sh("git mv big.cfg big2.cfg", cwd=d)
     with open(d / "big2.cfg", "a") as fh:
-        fh.write("DB_SECRET=hunter2hunter2\n")
+        fh.write("DB_SECRET=hunter2hunter2\n")  # secret-scan:ignore gitleaks:allow (fake fixture)
     sh("git add -A", cwd=d)
     return [] if sh(["git", "commit", "-qm", "t"], cwd=d).returncode else ["F19 renamed file with secret committed"]
 
@@ -237,7 +237,24 @@ def f30():
     return []
 
 
-CHECKS = [f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f27, f28, f29, f30]
+def f31():
+    """DL358: the hook passes typed names and Rust paths, as gitleaks does, and still blocks a value."""
+    d = repo_with_hook()
+    e = []
+    nl = chr(10)
+    k = "_" + "key"     # built from parts so this file holds no secret-shaped line
+    ok = (f"use app_core::path{k}::ServedKey;", f"fn f(path{k}: &str) {{}}", f"struct S {{ sort{k}: u32 }}")
+    for i, text in enumerate(ok):
+        if commit(d, f"ok{i}.rs", text + nl) != 0:
+            e.append(f"F31 blocked a non-secret line: {text}")
+    value = '"' + "abcd" + "efgh12" + '"'
+    for i, text in enumerate((f"let api{k} = {value};", f"api{k}: {value}")):
+        if commit(d, f"bad{i}.rs", text + nl) == 0:
+            e.append(f"F31 committed a secret line: {text}")
+    return e
+
+
+CHECKS = [f14, f15, f16, f17, f18, f19, f20, f21, f22, f23, f24, f25, f27, f28, f29, f30, f31]
 
 
 def main():

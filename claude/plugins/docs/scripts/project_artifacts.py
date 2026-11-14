@@ -1710,6 +1710,11 @@ def parse_phases(specs, now_dt):
         timed = not any(_POINT_RE.match(x).group(1) for x in (a, b))     # HH:MM only: no date was given
         if timed and shift:
             start, end = start + timedelta(days=shift), end + timedelta(days=shift)
+        if timed and out:                            # R5.40: a phase that starts before the previous one ends is
+            prev_end = datetime.fromisoformat(out[-1]['end'])  # the next day, gap or no gap (DL359)
+            while start < prev_end:
+                start, end = start + timedelta(days=1), end + timedelta(days=1)
+                shift += 1
         if timed and end < start:                    # R5.40: an end earlier than its start is the next day
             end += timedelta(days=1)
             shift += 1

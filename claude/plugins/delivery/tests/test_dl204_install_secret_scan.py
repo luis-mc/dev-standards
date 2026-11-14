@@ -30,11 +30,16 @@ EXEMPT = [".delivery/ci-install-base/", ".delivery/ci-install-state.json"]
 def hook_patterns():
     """The pattern and the skipped line shapes, read from the hook so the two cannot drift."""
     text = HOOK.read_text(encoding="utf-8")
-    get = lambda name: re.search(r"^%s='(.*)'$" % name, text, re.M).group(1)
-    pat = get("pattern").replace("[[:space:]]", r"\s")
+    def get(name):      # single-quoted, or double-quoted with \" escapes (DL358)
+        m = re.search(r"^%s='(.*)'$" % name, text, re.M)
+        if m:
+            return m.group(1)
+        return re.search(r'^%s="(.*)"$' % name, text, re.M).group(1).replace('\\"', '"')
+    pat = get("pattern").replace("[[:space:]]", r"\s").replace("[:space:]", r"\s")  # also inside a class
     doc = get("doc_shape").replace("[[:space:]]", r"\s")
     ci = get("ci_dsn")
-    return re.compile(pat, re.I), re.compile(doc), re.compile(ci)
+    flags = re.I if 'grep -Ein "$pattern"' in text else 0   # the hook matches case-sensitively since DL358
+    return re.compile(pat, flags), re.compile(doc), re.compile(ci)
 
 
 def offenders(root):
