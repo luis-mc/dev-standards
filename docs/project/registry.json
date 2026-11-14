@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T08:29+00:00",
+  "updated": "2026-11-14T08:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6037,14 +6037,37 @@
       "id": "DL339",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Windows runner hooks: Python the runner account can run",
       "detail": "Setup writes sys.executable (the setup user's per-user Python under their profile) into runner_load_gate.ps1 / runner_job_done.ps1; a ci-* service account cannot read it, so the gate never runs (CommandNotFoundException). Pick an all-users Python, refuse a per-user one, doctor checks it.",
-      "expected": "14 Nov ~08:40",
-      "changed": "2026-11-14T08:29+00:00",
-      "expected_basis": "cloud agent from ~08:30, ~10 min",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T08:39+00:00",
       "rides": "DL338",
       "started": "2026-11-14T08:27+00:00"
+    },
+    {
+      "id": "DL340",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-137: one pool for every runner and OS",
+      "detail": "Join, CI, merge and smoke for DL341.",
+      "expected": "14 Nov ~09:40",
+      "changed": "2026-11-14T08:39+00:00",
+      "expected_basis": "starts after RELEASE-136 ~08:52; agent ~30 min + join/CI ~15 min",
+      "release": 137
+    },
+    {
+      "id": "DL341",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pool coordinates every runner on the machine, all OSes",
+      "detail": "D298: Windows runner services are pool members: registry entries with os/kind/service/account, pool-<name> and repo-<slug> labels, CI_RUNS_ON_WINDOWS with those labels, one pool-status table for all runners and jobs, doctor and remove cover Windows.",
+      "expected": "14 Nov ~09:25",
+      "changed": "2026-11-14T08:39+00:00",
+      "expected_basis": "cloud agent after DL339 lands ~08:52, ~30 min",
+      "rides": "DL340"
     },
     {
       "id": "DS1",

@@ -904,16 +904,16 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-14T08:29+00:00">14 Nov 08:29</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T08:39+00:00">14 Nov 08:39</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">14 Nov 08:29</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
 <ul>
-<li data-glance-task="DL339"><span class="task-id">DL339</span>Windows runner hooks: Python the runner account can run <span class="glance-expected">14 Nov ~08:40</span><span class="glance-basis">cloud agent from ~08:30, ~10 min</span></li>
+<li data-glance-task="DL339"><span class="task-id">DL339</span>Windows runner hooks: Python the runner account can run</li>
 </ul>
 </details>
 <details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">1 task</span></summary>
@@ -935,17 +935,19 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">329</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">329</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-waiting"><div class="count">1</div><div class="label">task waiting</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL337"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.</td><td>14 Nov ~08:40<span class="expected-basis">pool idle + mem &lt;75%, checked every 2 min from 08:25; ~5 min build</span></td></tr>
-<tr data-task="DL339"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL339</span>Windows runner hooks: Python the runner account can run<span class="release-line"><span class="release-name">RELEASE-136</span></span></td><td>Setup writes sys.executable (the setup user&#x27;s per-user Python under their profile) into runner_load_gate.ps1 / runner_job_done.ps1; a ci-* service account cannot read it, so the gate never runs (CommandNotFoundException). Pick an all-users Python, refuse a per-user one, doctor checks it.</td><td>14 Nov ~08:40<span class="expected-basis">cloud agent from ~08:30, ~10 min</span></td></tr>
 <tr data-task="DL338"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL338</span><span class="release-name">RELEASE-136</span>Windows hooks use an all-users Python</td><td>Join, CI, merge and smoke for DL339.</td><td>14 Nov ~08:55<span class="expected-basis">agent ~08:40 + join/CI/merge ~15 min</span></td></tr>
+<tr data-task="DL341"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL341</span>Pool coordinates every runner on the machine, all OSes<span class="release-line"><span class="release-name">RELEASE-137</span></span></td><td>D298: Windows runner services are pool members: registry entries with os/kind/service/account, pool-&lt;name&gt; and repo-&lt;slug&gt; labels, CI_RUNS_ON_WINDOWS with those labels, one pool-status table for all runners and jobs, doctor and remove cover Windows.</td><td>14 Nov ~09:25<span class="expected-basis">cloud agent after DL339 lands ~08:52, ~30 min</span></td></tr>
+<tr data-task="DL340"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL340</span><span class="release-name">RELEASE-137</span>one pool for every runner and OS</td><td>Join, CI, merge and smoke for DL341.</td><td>14 Nov ~09:40<span class="expected-basis">starts after RELEASE-136 ~08:52; agent ~30 min + join/CI ~15 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">336 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 336 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL339"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL339</span>Windows runner hooks: Python the runner account can run<span class="release-line"><span class="release-name">RELEASE-136</span></span></td><td>Setup writes sys.executable (the setup user&#x27;s per-user Python under their profile) into runner_load_gate.ps1 / runner_job_done.ps1; a ci-* service account cannot read it, so the gate never runs (CommandNotFoundException). Pick an all-users Python, refuse a per-user one, doctor checks it.</td><td>14 Nov</td></tr>
 <tr data-task="DL335"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL335</span><span class="release-name">RELEASE-135</span>ci_watch false release entries</td><td>Join, CI, merge and smoke for DL336.</td><td>14 Nov</td></tr>
 <tr data-task="DL336"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL336</span>ci_watch: no release entry for a default-branch commit<span class="release-line"><span class="release-name">RELEASE-135</span></span></td><td>head_of() reads refname:short; refs/remotes/origin/HEAD shortens to &#x27;origin&#x27;, so watching a merge commit on main opens a false train &#x27;origin&#x27; and the stop hook demands a merge. Use full ref names, skip HEAD and the default branch.</td><td>14 Nov</td></tr>
 <tr data-task="DL330"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL330</span><span class="release-name">RELEASE-134</span>picker strict TS, CI Node version</td><td>Join, CI, merge and smoke for DL331 and DL332.</td><td>14 Nov</td></tr>
@@ -1317,6 +1319,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D298">
+<h3 class="decision-head"><span class="decision-id">D298</span> <span class="decision-question">Is the runner pool only the Linux container, or every runner on the machine?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL341</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Every runner, all OSes</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Windows services are pool members: registry, labels, status, doctor, remove, slots.</p>
+<blockquote class="decision-words">&ldquo;the Runners Pool must coordinate ALL runners across all OSes&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Linux container only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Windows runners managed apart.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D297">
 <h3 class="decision-head"><span class="decision-id">D297</span> <span class="decision-question">Rebuild the pool overnight to bake the 1.46.1 gate scripts into the image?</span></h3>
 <p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL327</p>

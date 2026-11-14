@@ -6736,6 +6736,26 @@
       "chosen": "Rebuild when idle",
       "decided": "2026-11-14",
       "owner_words": "Rebuild when idle (Recommended)"
+    },
+    {
+      "id": "D298",
+      "question": "Is the runner pool only the Linux container, or every runner on the machine?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL341",
+      "options": [
+        {
+          "label": "Every runner, all OSes",
+          "summary": "Windows services are pool members: registry, labels, status, doctor, remove, slots."
+        },
+        {
+          "label": "Linux container only",
+          "summary": "Windows runners managed apart."
+        }
+      ],
+      "chosen": "Every runner, all OSes",
+      "decided": "2026-11-14",
+      "owner_words": "the Runners Pool must coordinate ALL runners across all OSes"
     }
   ]
 }
