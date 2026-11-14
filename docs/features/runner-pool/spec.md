@@ -195,6 +195,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.60** — **No marker when the fallback is off** (DL353, D301). The runner gate writes no ci-wait marker and runs no git when the project's `.delivery/config.json` has no enabled `ci.fallback` (a missing or unreadable config counts as off); it logs one line saying why (`no ci-wait marker written: fallback off (no ci.fallback in .delivery/config.json)`).
 
+**R5.61** — **An account switch leaves no unreadable file** (DL356). Before the Windows runner files step locks the runner folder to the runner account, Administrators take ownership of everything already in it and every file is reset to inherit (`takeown /R`, `icacls /reset /T`). Files a previous account made, such as the `_work` tool cache, are then readable by the new account.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -230,6 +232,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |
 | R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
 | R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
+| R5.61 | `claude/plugins/delivery/tests/test_dl356_runner_acl_reset.py` (generated files script: take ownership and reset before the lock) |
 
 ## 12. Code map
 
