@@ -189,6 +189,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.57** — **Nested virtualization in .wslconfig** (DL343). With `POOL_KVM=1` on Windows, the pool doctor (`kvm-wslconfig`) and `pool-plan` and `pool-run` warn when `.wslconfig` has no `nestedVirtualization=true` under `[wsl2]`, and print the line to add.
 
+**R5.58** — **The ci-wait marker never blocks the gate** (DL351). Every git command of the marker (`ci_fallback._git`) runs with `GIT_TERMINAL_PROMPT=0`, `GCM_INTERACTIVE=never`, `GIT_ASKPASS=echo`, `SSH_ASKPASS=echo`, `GIT_SSH_COMMAND='ssh -oBatchMode=yes'` (a value already set stays) and `-c credential.interactive=never`, and stops after `DELIVERY_MARKER_GIT_TIMEOUT` seconds (default 20). A timeout or failure is a failed result, never an exception out of the marker API. The gate logs `slot N taken` before the claim check, and each marker step that fails or times out logs one line (`ci-wait marker: git timed out after 20 s; going on`) and goes on. With `DELIVERY_MARKER_ROOT` set for a runner, the doctor runs `git ls-remote` from it with the same env and timeout and warns when the account has no non-interactive git credential; a locked folder is a warning that needs an administrator shell (R5.38). Check ID: `machine.markercred:<dir>`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -198,6 +200,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R5.7). |
 | A pool runner is busy or the runner list cannot be read | `pool-refresh --yes` refuses and changes nothing (R5.10). |
 | A runner's build cache fills the disk | `rust_ci.py` cleans an oversized key before the build (R5.53); the pool sweeps the oldest entries over the cap (R5.54); the doctor warns (R5.55). |
+| The runner account has no git credential and the marker's git would prompt | Git cannot prompt and stops after 20 s; the gate logs one line, goes on and starts the job; the doctor warns (R5.58). |
 | `/dev/kvm` is missing after a WSL restart | The pool loads the kvm module before compose up (R5.56); if that fails it stops with the `.wslconfig` fix and starts nothing (R5.57). |
 
 ## 9. How it is proven
@@ -217,6 +220,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.40, R5.41 | `claude/plugins/delivery/tests/test_dl323_pool_agents_per_repo.py` |
 | R5.42 to R5.45 | `claude/plugins/delivery/tests/test_dl327_heavy_slots.py` |
 | R5.46, R5.47 | `claude/plugins/delivery/tests/test_dl339_hook_python.py` (mocked paths and probe) |
+| R5.58 | `claude/plugins/delivery/tests/test_dl351_gate_git_hang.py` (fake git that sleeps or prompts) |
 | R5.48 to R5.52 | `claude/plugins/delivery/tests/test_dl341_pool_all_oses.py` (mocked gh and probe; the real service runs only on Windows) |
 | R5.53 to R5.55 | `claude/plugins/delivery/tests/test_dl342_cache_cap.py` (temp folders and a mocked probe) |
 | R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |

@@ -296,9 +296,12 @@ def wait_ref(sha: str, shard: str) -> str:
 def mark_wait(root: str, remote: str, sha: str, shard: str, holder: str, now=None) -> bool:
     """Write the wait marker of a held job (DL-90). Same method as a claim: a push that creates the branch. True when
     the marker exists after the call (made now, or made by an earlier try of the same shard)."""
-    if _create_branch(root, remote, wait_ref(sha, shard), {
-            "holder": holder, "sha": sha, "shard": shard, "at": _iso(_now(now))}):
-        return True
+    try:
+        if _create_branch(root, remote, wait_ref(sha, shard), {
+                "holder": holder, "sha": sha, "shard": shard, "at": _iso(_now(now))}):
+            return True
+    except RuntimeError:  # git failed or timed out: no marker (DL351)
+        return False
     try:
         return bool(_ls(root, remote, wait_ref(sha, shard)))
     except RuntimeError:  # git failed or timed out: no marker (DL351)
