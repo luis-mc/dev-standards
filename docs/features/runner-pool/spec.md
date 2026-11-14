@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.18.0
+version: 0.19.0
 owner: agents
 type: reference
 code:
@@ -195,6 +195,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.60** — **No marker when the fallback is off** (DL353, D301). The runner gate writes no ci-wait marker and runs no git when the project's `.delivery/config.json` has no enabled `ci.fallback` (a missing or unreadable config counts as off); it logs one line saying why (`no ci-wait marker written: fallback off (no ci.fallback in .delivery/config.json)`).
 
+**R5.61** — **An account switch leaves no unreadable file** (DL356). Before the Windows runner files step locks the runner folder to the runner account, Administrators take ownership of everything already in it and every file is reset to inherit (`takeown /R`, `icacls /reset /T`). Files a previous account made, such as the `_work` tool cache, are then readable by the new account.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -230,6 +232,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |
 | R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
 | R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
+| R5.61 | `claude/plugins/delivery/tests/test_dl356_runner_acl_reset.py` (generated files script: take ownership and reset before the lock) |
 
 ## 12. Code map
 
@@ -244,6 +247,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.19.0 | 2026-11-14 | RELEASE-142 | An account switch leaves no unreadable file: the Windows files step takes back and resets files already in the runner folder before it locks it (R5.61). | DL356 |
 | 0.18.0 | 2026-11-14 | RELEASE-140 | The gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301).<br>A container recreate counts only the runners in the pool container; a busy Windows service is shown as not affected and never refuses it (R5.59). | DL353, DL354 |
 | 0.17.0 | 2026-11-14 | RELEASE-139 | R5.58 (DL351): the ci-wait marker's git runs without prompts and with a timeout, the gate logs the slot before the claim check and never blocks on the marker, and the doctor warns when a runner has no non-interactive git credential. | DL351 |
 | 0.16.0 | 2026-11-14 | RELEASE-138 | R5.53 to R5.55: the Rust build cache cap holds for the current key, the pool sweeps each runner's tool cache over a per-runner cap, and the doctor warns on an oversized cache and low disk.<br>R5.56, R5.57: the pool loads the kvm module in the Docker VM before it starts with POOL_KVM=1, and the doctor and setup check nestedVirtualization in .wslconfig. | DL342, DL343 |

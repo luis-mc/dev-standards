@@ -1306,7 +1306,8 @@ def ps_unregister(repo):
 
 def ps_files(acct, folder, tools_dir, python, ci_tool=None, repo=None, unregister=False):
     """Download the runner through ci_tool (SHA-256 checked, cached in the tool folder), unpack it into the runner folder and
-    lock the folder: Full for the account, Administrators and SYSTEM only. With `unregister`, a runner already configured
+    lock the folder: Full for the account, Administrators and SYSTEM only; files already in it are taken back by
+    Administrators and reset to inherit, so an account switch leaves nothing unreadable (DL356). With `unregister`, a runner already configured
     in the folder is removed first (DL315)."""
     ci_tool = ci_tool or CI_TOOL
     f = _psq(_winpath(folder))
@@ -1322,6 +1323,10 @@ def ps_files(acct, folder, tools_dir, python, ci_tool=None, repo=None, unregiste
         '}',
         'New-Item -ItemType Directory -Force -Path (Join-Path $folder %s), (Join-Path $folder %s) | Out-Null'
         % (_psq('_tools\\rustup'), _psq('_tools\\cargo')),
+        # Files a previous account made (for example the _work tool cache) keep that owner and explicit ACLs; take them
+        # back and reset them to inherit, so the new account can read them after an account switch (DL356).
+        'takeown /F $folder /R /A /D Y | Out-Null',
+        'icacls $folder /reset /T /C /Q | Out-Null',
         'icacls $folder /inheritance:r /grant:r "%s:(OI)(CI)F" "%s:(OI)(CI)F" "%s:(OI)(CI)F" | Out-Null'
         % (SID_ADMINS, SID_SYSTEM, acct),
     ]
