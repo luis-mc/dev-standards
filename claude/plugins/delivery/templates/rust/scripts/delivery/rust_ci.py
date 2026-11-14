@@ -277,7 +277,73 @@ def target_cache_env(root: Path) -> dict[str, str]:
         print("rust_ci: build cache unavailable (%s); using target/" % exc, file=sys.stderr)
         return {}
     print("rust_ci: build cache %s (pruned: %s)" % (key, ", ".join(removed) or "none"), file=sys.stderr)
-    return {"CARGO_TARGET_DIR": str(key)}
+    link_target(root, key)
+    return {"CARGO_TARGET_DIR": str(key), "DELIVERY_RUST_TARGET": str(key)}
+
+
+def _is_link(path: Path) -> bool:
+    """True for a symlink or a Windows junction."""
+    if path.is_symlink():
+        return True
+    try:
+        return bool(getattr(path, "is_junction", lambda: False)())
+    except OSError:
+        return False
+
+
+def _make_link(link: Path, dest: Path) -> None:
+    if os.name == "nt":
+        try:
+            import _winapi  # type: ignore
+            _winapi.CreateJunction(str(dest), str(link))
+            return
+        except (ImportError, AttributeError):
+            pass
+        r = subprocess.run(["cmd", "/c", "mklink", "/J", str(link), str(dest)],
+                           capture_output=True, text=True)
+        if r.returncode != 0:
+            raise OSError((r.stderr or r.stdout or "mklink failed").strip())
+    else:
+        os.symlink(str(dest), str(link), target_is_directory=True)
+
+
+def _remove_link(link: Path) -> None:
+    if os.name == "nt" and not link.is_symlink():
+        os.rmdir(str(link))  # removes a junction, never its contents
+    else:
+        link.unlink()
+
+
+def _exclude_link(root: Path) -> None:
+    """Hide the link from git status: `target/` in .gitignore does not match a link, `/target` does."""
+    info = root / ".git" / "info"
+    try:
+        if not info.is_dir():
+            return
+        ex = info / "exclude"
+        text = ex.read_text(encoding="utf-8") if ex.exists() else ""
+        if "/target" not in [ln.strip() for ln in text.splitlines()]:
+            ex.write_text(text + ("" if not text or text.endswith("\n") else "\n") + "/target\n", encoding="utf-8")
+    except OSError:
+        pass
+
+
+def link_target(root: Path, cache: Path) -> bool:
+    """Point <root>/target at the cache folder (DL329). A real folder is kept; a failure only warns."""
+    link = root / "target"
+    try:
+        if _is_link(link):
+            _remove_link(link)
+        elif os.path.lexists(str(link)):
+            print("rust_ci: %s is a real folder; bins live in %s" % (link, cache), file=sys.stderr)
+            return False
+        _make_link(link, cache)
+        _exclude_link(root)
+        return True
+    except OSError as exc:
+        print("rust_ci: could not link %s to %s (%s); bins live in %s" % (link, cache, exc, cache),
+              file=sys.stderr)
+        return False
 
 
 def crate_args(flag: str = "--workspace") -> list[str]:
