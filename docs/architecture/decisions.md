@@ -270,6 +270,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D283 | What happens to DL276 (programs CI rule port)? | Ask the peer once more (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D284 | Run tonight's work under the overnight rules? | Yes, overnight rules (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D285 | Release the stale RELEASE-41 ledger hold? | Release it (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D286 | Set CI_RUNS_ON_WINDOWS on the project now with one gh command? | Set the variable now (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D287 | Add the second pool agent while the first runs a job? | Add it now (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D288 | How are heavy CI jobs kept to one at a time on a shared generic pool? | Heavy slots in the runner gate (Recommended) | decided | 2026-11-13 |
+| delivery-speed | D289 | How many Linux pool agents may one repository have on this PC? | One agent per repository | decided | 2026-11-14 |
 | delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
 | delivery-speed | D30 | Machine-wide CI queue: in what order do waiting jobs get a slot? | Ready-PR jobs first | decided | 2026-11-04 |
