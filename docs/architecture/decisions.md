@@ -275,6 +275,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D288 | How are heavy CI jobs kept to one at a time on a shared generic pool? | Heavy slots in the runner gate (Recommended) | decided | 2026-11-13 |
 | delivery-speed | D289 | How many Linux pool agents may one repository have on this PC? | One agent per repository | decided | 2026-11-14 |
 | delivery-speed | D29 | Machine-wide CI queue: what happens to a job that waits too long for a slot? | Fall back after X min | decided | 2026-11-04 |
+| delivery-speed | D290 | May agents open, ready and edit pull requests on the owner's repositories (DL-73 exception)? | Yes: create, ready, edit | decided | 2026-11-14 |
+| delivery-speed | D291 | Should claude-setup write gh pr create/ready/edit allow rules into each project's settings? | Yes, claude-setup writes them | decided | 2026-11-14 |
+| delivery-speed | D292 | Who adds the PR exception to the owner's global CLAUDE.md? | Claude edits it, approved now | decided | 2026-11-14 |
+| delivery-speed | D293 | Which jobs are heavy (one at a time across repos) on this machine? | Generic patterns | decided | 2026-11-14 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
 | delivery-speed | D30 | Machine-wide CI queue: in what order do waiting jobs get a slot? | Ready-PR jobs first | decided | 2026-11-04 |
 | delivery-speed | D31 | Machine-wide CI queue: should the doctor's machine check report runner disk use and offer cleanup? | Report and offer cleanup | decided | 2026-11-04 |

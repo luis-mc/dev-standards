@@ -1,7 +1,7 @@
 # DELIVERYSPEC — Delivery rules
 
 **Status:** Normative
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Applies to:** every project that delivers its work with the `luismc-delivery` plugin, and the plugin itself
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-delivery`
 

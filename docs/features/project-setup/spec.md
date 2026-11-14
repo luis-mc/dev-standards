@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.12.0
+version: 0.13.0
 owner: agents
 type: reference
 code:
@@ -208,6 +208,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.0 | 2026-11-14 | RELEASE-134 | The shipped CI workflow takes its Node version from the project (node-version-file), with Node 24 as the fallback (R5.23).<br>claude-setup writes the project allow rules for gh pr create, ready and edit, never merge; the rules asset carries the PR exception of DL-73 (R5.24). | DL332, DL334 |
 | 0.12.0 | 2026-11-11 | RELEASE-113 | claude-setup status flags a CI workflow pin older than the installed luismc-docs; ci_pin.py --bump rewrites the ref and --check exits 1 when stale. | DL263 |
 | 0.11.2 | 2026-11-11 | RELEASE-99 | The pre-commit secret pattern no longer matches a CSS selector such as a pseudo-class on a class ending in key.<br>questions_stop.py reads only the current turn from the end of the transcript (bounded memory). | DL207, DL208 |
 | 0.11.1 | 2026-11-11 | RELEASE-98 | Secret scans skip the delivery installer's state files; shipped scripts avoid secret-shaped variable names; the branch gate ignores untracked docs/work/ files. | DL204 |
