@@ -6560,6 +6560,98 @@
       "chosen": "One agent per repository",
       "decided": "2026-11-14",
       "owner_words": "there should not be 2 linux runners in the pool; this PC cannot handle it"
+    },
+    {
+      "id": "D290",
+      "question": "May agents open, ready and edit pull requests on the owner's repositories (DL-73 exception)?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL334",
+      "options": [
+        {
+          "label": "Yes: create, ready, edit",
+          "summary": "Issues, comments, reviews, mail stay drafts; merge stays the owner's."
+        },
+        {
+          "label": "Create and edit only",
+          "summary": "Marking ready stays the owner's."
+        },
+        {
+          "label": "No, keep DL-73 as is",
+          "summary": "Every PR action stays the owner's."
+        }
+      ],
+      "chosen": "Yes: create, ready, edit",
+      "decided": "2026-11-14",
+      "owner_words": "Yes: create, ready, edit (Recommended)"
+    },
+    {
+      "id": "D291",
+      "question": "Should claude-setup write gh pr create/ready/edit allow rules into each project's settings?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL334",
+      "options": [
+        {
+          "label": "Yes, claude-setup writes them",
+          "summary": "Three allow rules, never gh pr merge."
+        },
+        {
+          "label": "Document only",
+          "summary": "Owner adds them per project."
+        },
+        {
+          "label": "None",
+          "summary": "Auto mode keeps asking."
+        }
+      ],
+      "chosen": "Yes, claude-setup writes them",
+      "decided": "2026-11-14",
+      "owner_words": "Yes, claude-setup writes them (Recommended)"
+    },
+    {
+      "id": "D292",
+      "question": "Who adds the PR exception to the owner's global CLAUDE.md?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL334",
+      "options": [
+        {
+          "label": "Claude edits it, approved now",
+          "summary": "One exception line under Communications."
+        },
+        {
+          "label": "Owner edits it",
+          "summary": "File left untouched."
+        }
+      ],
+      "chosen": "Claude edits it, approved now",
+      "decided": "2026-11-14",
+      "owner_words": "You edit it, I approve now (Recommended)"
+    },
+    {
+      "id": "D293",
+      "question": "Which jobs are heavy (one at a time across repos) on this machine?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL327",
+      "options": [
+        {
+          "label": "Generic patterns",
+          "summary": "integration*, e2e*, *full*, linux-suites*"
+        },
+        {
+          "label": "One project's suites only",
+          "summary": "owner/repo:pattern for one job"
+        },
+        {
+          "label": "Leave empty",
+          "summary": "No heavy limit."
+        }
+      ],
+      "chosen": "Generic patterns",
+      "decided": "2026-11-14",
+      "owner_words": "Generic patterns (Recommended)"
     }
   ]
 }
