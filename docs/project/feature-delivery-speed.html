@@ -863,6 +863,7 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
+.release-timeline .rt-bar.fix { fill: var(--failed); }
 .release-timeline .rt-bar.merge { fill: var(--ink); }
 .release-timeline .rt-risk { fill: var(--rule-strong); opacity: .55; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
@@ -885,6 +886,7 @@ details.status-fold > summary strong { min-width: 0; }
 .rt-swatch.agents { background: var(--running-mark); }
 .rt-swatch.join { background: var(--signal); }
 .rt-swatch.ci { background: var(--live); }
+.rt-swatch.fix { background: var(--failed); }
 .rt-swatch.merge { background: var(--ink); }
 .state-chips { display: flex; flex-wrap: wrap; gap: 4px; }
 
@@ -900,27 +902,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.4.4 <span class="gen-flag gen-update">update: 2.6.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-14T00:28+00:00">14 Nov 00:28</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T00:34+00:00">14 Nov 00:34</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">14 Nov 00:28</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">1 task</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
 <ul>
-<li data-glance-task="DL334"><span class="task-id">DL334</span>DL-73 PR exception and claude-setup gh pr allow rules <span class="glance-expected">14 Nov ~00:50</span><span class="glance-basis">cloud agent from ~00:31, ~18 min</span></li>
+<li data-glance-task="DL336"><span class="task-id">DL336</span>ci_watch: no release entry for a default-branch commit <span class="glance-expected">14 Nov ~00:55</span><span class="glance-basis">cloud agent from ~00:37, ~16 min</span></li>
+<li data-glance-task="DL330"><span class="task-id">DL330</span><span class="release-name">RELEASE-134</span>picker strict TS, CI Node version <span class="glance-expected">14 Nov ~01:05</span><span class="glance-basis">agents ~00:45 + join/CI/merge ~15 min</span></li>
 </ul>
 </details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">2 tasks</span></summary>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">3 tasks</span></summary>
 <ul>
+<li data-glance-task="DL334"><span class="task-id">DL334</span>DL-73 PR exception and claude-setup gh pr allow rules</li>
 <li data-glance-task="DL331"><span class="task-id">DL331</span>Picker templates pass strict TS and typescript-eslint</li>
 <li data-glance-task="DL332"><span class="task-id">DL332</span>claude-setup CI asset: Node version from the repo</li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">52 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">50 tasks</span></summary>
 <ul>
 <li data-glance-task="DL333"><span class="task-id">DL333</span>DL-73: let agents open and ready PRs (owner decision needed)</li>
 <li data-glance-task="DL328"><span class="task-id">DL328</span><span class="release-name">RELEASE-133</span>Rust target cache link</li>
@@ -930,20 +934,23 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL327"><span class="task-id">DL327</span>Runner gate: heavy job class with its own machine slot</li>
 <li data-glance-task="DL320"><span class="task-id">DL320</span>Host-load task: register with PowerShell cmdlets, not cmd-quoted schtasks</li>
 <li data-glance-task="DL322"><span class="task-id">DL322</span><span class="release-name">RELEASE-131</span>RELEASE: Windows runner follow-ups + ticked CODE DONE</li>
-<li class="glance-more">and 44 more</li>
+<li class="glance-more">and 42 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">323</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">2</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">1</div><div class="label">task running</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">323</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">3</div><div class="label">tasks built</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL334"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL334</span>DL-73 PR exception and claude-setup gh pr allow rules<span class="release-line"><span class="release-name">RELEASE-134</span></span></td><td>Owner D290-D292: agents may create, ready and edit PRs on repos the owner owns; issues, comments, reviews, mail stay drafts; merge stays the owner&#x27;s. Reword DL-73 in DELIVERYSPEC and the claude-setup rules asset; claude-setup writes Bash(gh pr create/ready/edit:*) allow rules; hook deny list unchanged.</td><td>14 Nov ~00:50<span class="expected-basis">cloud agent from ~00:31, ~18 min</span></td></tr>
-<tr data-task="DL330"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL330</span><span class="release-name">RELEASE-134</span>picker strict TS, CI Node version</td><td>Join, CI, merge and smoke for DL331 and DL332.</td><td>14 Nov ~01:05<span class="expected-basis">agents ~00:45 + join/CI/merge ~15 min</span></td></tr>
+<tr data-task="DL336"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL336</span>ci_watch: no release entry for a default-branch commit<span class="release-line"><span class="release-name">RELEASE-135</span></span></td><td>head_of() reads refname:short; refs/remotes/origin/HEAD shortens to &#x27;origin&#x27;, so watching a merge commit on main opens a false train &#x27;origin&#x27; and the stop hook demands a merge. Use full ref names, skip HEAD and the default branch.</td><td>14 Nov ~00:55<span class="expected-basis">cloud agent from ~00:37, ~16 min</span></td></tr>
+<tr data-task="DL330"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL330</span><span class="release-name">RELEASE-134</span>picker strict TS, CI Node version</td><td>Join, CI, merge and smoke for DL331 and DL332.</td><td>14 Nov ~01:05<span class="expected-basis">agents ~00:45 + join/CI/merge ~15 min</span></td></tr>
+<tr data-task="DL335"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL335</span><span class="release-name">RELEASE-135</span>ci_watch false release entries</td><td>Join, CI, merge and smoke for DL336.</td><td>14 Nov ~01:15<span class="expected-basis">agent ~00:55 + join/CI/merge ~15 min</span></td></tr>
+<tr data-task="DL337"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.</td><td>14 Nov ~03:00<span class="expected-basis">first idle window after RELEASE-135, ~5 min</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">2 built, 330 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">3 built, 330 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL334"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL334</span>DL-73 PR exception and claude-setup gh pr allow rules<span class="release-line"><span class="release-name">RELEASE-134</span></span></td><td>Owner D290-D292: agents may create, ready and edit PRs on repos the owner owns; issues, comments, reviews, mail stay drafts; merge stays the owner&#x27;s. Reword DL-73 in DELIVERYSPEC and the claude-setup rules asset; claude-setup writes Bash(gh pr create/ready/edit:*) allow rules; hook deny list unchanged.</td><td>14 Nov</td></tr>
 <tr data-task="DL331"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL331</span>Picker templates pass strict TS and typescript-eslint<span class="release-line"><span class="release-name">RELEASE-134</span></span></td><td>date-picker, time-picker, number-keypad templates fail exactOptionalPropertyTypes, noUncheckedIndexedAccess, unbound-method (test-dom.ts) and a stale react-hooks/exhaustive-deps disable. Found by a project that adopted the plugin.</td><td>14 Nov</td></tr>
 <tr data-task="DL332"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL332</span>claude-setup CI asset: Node version from the repo<span class="release-line"><span class="release-name">RELEASE-134</span></span></td><td>assets/ci/dev-standards.yml pins Node 22; repos that need Node &gt;= 24 fail (ERR_PNPM_UNSUPPORTED_ENGINE). Read the version from the repo, default 24.</td><td>14 Nov</td></tr>
 <tr data-task="DL333"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL333</span>DL-73: let agents open and ready PRs (owner decision needed)<span class="no-release-line">ships nothing: waits for the owner&#x27;s decision on the DL-73 PR exception</span></td><td>Another session relayed an owner request: agents may create, ready and edit PRs on owner repos; issues, comments, reviews, mail stay drafts; merge stays the owner&#x27;s. Needs the owner&#x27;s own word: it loosens a vital rule and adds allow rules.</td><td>14 Nov</td></tr>
@@ -1311,6 +1318,70 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D297">
+<h3 class="decision-head"><span class="decision-id">D297</span> <span class="decision-question">Rebuild the pool overnight to bake the 1.46.1 gate scripts into the image?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL327</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Rebuild when idle</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Drain, rebuild, restart only when no job runs</p>
+<blockquote class="decision-words">&ldquo;Rebuild when idle (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep the hand-copied scripts</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D296">
+<h3 class="decision-head"><span class="decision-id">D296</span> <span class="decision-question">Overnight rules 14 Nov and return time?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL335</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Same rules, back 08:00</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">D284 rules; questions held until 08:00</p>
+<blockquote class="decision-words">&ldquo;Same rules, back 08:00 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Same rules, back 10:00</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Questions held until 10:00</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only finish RELEASE-134</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Nothing new after it</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D295">
+<h3 class="decision-head"><span class="decision-id">D295</span> <span class="decision-question">Fix the false release entries (ci_watch on a default-branch commit) overnight?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL336</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix it overnight</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Cloud agent and release, merge on green</p>
+<blockquote class="decision-words">&ldquo;Fix it overnight (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for the owner</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep holding the false entries</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D294">
+<h3 class="decision-head"><span class="decision-id">D294</span> <span class="decision-question">Is integration-light a heavy job on this machine?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL327</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave it out</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">heavy_jobs: integration, e2e*, *full*, linux-suites*</p>
+<blockquote class="decision-words">&ldquo;Leave it out (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep it heavy</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">integration* stays</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D293">
 <h3 class="decision-head"><span class="decision-id">D293</span> <span class="decision-question">Which jobs are heavy (one at a time across repos) on this machine?</span></h3>
 <p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL327</p>

@@ -6652,6 +6652,90 @@
       "chosen": "Generic patterns",
       "decided": "2026-11-14",
       "owner_words": "Generic patterns (Recommended)"
+    },
+    {
+      "id": "D294",
+      "question": "Is integration-light a heavy job on this machine?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL327",
+      "options": [
+        {
+          "label": "Leave it out",
+          "summary": "heavy_jobs: integration, e2e*, *full*, linux-suites*"
+        },
+        {
+          "label": "Keep it heavy",
+          "summary": "integration* stays"
+        }
+      ],
+      "chosen": "Leave it out",
+      "decided": "2026-11-14",
+      "owner_words": "Leave it out (Recommended)"
+    },
+    {
+      "id": "D295",
+      "question": "Fix the false release entries (ci_watch on a default-branch commit) overnight?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL336",
+      "options": [
+        {
+          "label": "Fix it overnight",
+          "summary": "Cloud agent and release, merge on green"
+        },
+        {
+          "label": "Wait for the owner",
+          "summary": "Keep holding the false entries"
+        }
+      ],
+      "chosen": "Fix it overnight",
+      "decided": "2026-11-14",
+      "owner_words": "Fix it overnight (Recommended)"
+    },
+    {
+      "id": "D296",
+      "question": "Overnight rules 14 Nov and return time?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL335",
+      "options": [
+        {
+          "label": "Same rules, back 08:00",
+          "summary": "D284 rules; questions held until 08:00"
+        },
+        {
+          "label": "Same rules, back 10:00",
+          "summary": "Questions held until 10:00"
+        },
+        {
+          "label": "Only finish RELEASE-134",
+          "summary": "Nothing new after it"
+        }
+      ],
+      "chosen": "Same rules, back 08:00",
+      "decided": "2026-11-14",
+      "owner_words": "Same rules, back 08:00 (Recommended)"
+    },
+    {
+      "id": "D297",
+      "question": "Rebuild the pool overnight to bake the 1.46.1 gate scripts into the image?",
+      "asked": "2026-11-14",
+      "status": "decided",
+      "task": "DL327",
+      "options": [
+        {
+          "label": "Rebuild when idle",
+          "summary": "Drain, rebuild, restart only when no job runs"
+        },
+        {
+          "label": "Leave it",
+          "summary": "Keep the hand-copied scripts"
+        }
+      ],
+      "chosen": "Rebuild when idle",
+      "decided": "2026-11-14",
+      "owner_words": "Rebuild when idle (Recommended)"
     }
   ]
 }

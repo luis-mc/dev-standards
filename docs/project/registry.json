@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T00:28+00:00",
+  "updated": "2026-11-14T00:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5930,13 +5930,14 @@
       "id": "DL330",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "RELEASE-134: picker strict TS, CI Node version",
       "detail": "Join, CI, merge and smoke for DL331 and DL332.",
       "expected": "14 Nov ~01:05",
-      "changed": "2026-11-14T00:20+00:00",
+      "changed": "2026-11-14T00:30+00:00",
       "expected_basis": "agents ~00:45 + join/CI/merge ~15 min",
-      "release": 134
+      "release": 134,
+      "started": "2026-11-14T00:30+00:00"
     },
     {
       "id": "DL331",
@@ -5977,14 +5978,50 @@
       "id": "DL334",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "DL-73 PR exception and claude-setup gh pr allow rules",
       "detail": "Owner D290-D292: agents may create, ready and edit PRs on repos the owner owns; issues, comments, reviews, mail stay drafts; merge stays the owner's. Reword DL-73 in DELIVERYSPEC and the claude-setup rules asset; claude-setup writes Bash(gh pr create/ready/edit:*) allow rules; hook deny list unchanged.",
-      "expected": "14 Nov ~00:50",
-      "changed": "2026-11-14T00:27+00:00",
-      "expected_basis": "cloud agent from ~00:31, ~18 min",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T00:30+00:00",
       "rides": "DL330",
       "started": "2026-11-14T00:27+00:00"
+    },
+    {
+      "id": "DL335",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-135: ci_watch false release entries",
+      "detail": "Join, CI, merge and smoke for DL336.",
+      "expected": "14 Nov ~01:15",
+      "changed": "2026-11-14T00:33+00:00",
+      "expected_basis": "agent ~00:55 + join/CI/merge ~15 min",
+      "release": 135
+    },
+    {
+      "id": "DL336",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "ci_watch: no release entry for a default-branch commit",
+      "detail": "head_of() reads refname:short; refs/remotes/origin/HEAD shortens to 'origin', so watching a merge commit on main opens a false train 'origin' and the stop hook demands a merge. Use full ref names, skip HEAD and the default branch.",
+      "expected": "14 Nov ~00:55",
+      "changed": "2026-11-14T00:33+00:00",
+      "expected_basis": "cloud agent from ~00:37, ~16 min",
+      "rides": "DL335",
+      "started": "2026-11-14T00:33+00:00"
+    },
+    {
+      "id": "DL337",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
+      "detail": "D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.",
+      "expected": "14 Nov ~03:00",
+      "changed": "2026-11-14T00:34+00:00",
+      "expected_basis": "first idle window after RELEASE-135, ~5 min",
+      "no_release": "machine maintenance: rebuild the pool image when idle"
     },
     {
       "id": "DS1",
