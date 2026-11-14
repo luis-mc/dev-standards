@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T13:12+00:00",
+  "updated": "2026-11-14T13:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6013,13 +6013,12 @@
       "id": "DL337",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
-      "detail": "D306: force the swap once no container job runs (waits for idle container runners, then pool-refresh --force; the stuck Windows runner is not touched).",
-      "expected": "14 Nov ~13:25",
-      "changed": "2026-11-14T13:12+00:00",
-      "no_release": "machine maintenance: rebuild the pool image when idle",
-      "expected_basis": "short prune job ends ~13:13, then ~2-5 min recreate",
+      "detail": "Swapped 13:14 with --force (D306) once container runners were idle; the new image carries the 1.47.x gate, cache cap and kvm files. All 4 container runners online, one listener each; the Session Conflict loop ended.",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T13:19+00:00",
+      "no_release": "machine maintenance: pool image swap",
       "started": "2026-11-14T10:38+00:00"
     },
     {
@@ -6154,11 +6153,13 @@
       "id": "DL346",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Waiting",
       "item": "Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json",
       "detail": "Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.",
-      "expected": "",
-      "changed": "2026-11-14T11:57+00:00"
+      "expected": "15 Nov",
+      "changed": "2026-11-14T13:19+00:00",
+      "expected_basis": "D307: starts when the pool project says its pool is ready for all projects",
+      "waits_on": "work"
     },
     {
       "id": "DL347",
@@ -6167,10 +6168,10 @@
       "status": "Waiting",
       "item": "Remove the runner pool from dev-standards",
       "detail": "Phase C (D299): on the owner's go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.",
-      "expected": "15 Nov",
-      "changed": "2026-11-14T11:57+00:00",
-      "expected_basis": "owner gives the go after the separate pool project's first release",
-      "waits_on": "owner"
+      "expected": "16 Nov",
+      "changed": "2026-11-14T13:19+00:00",
+      "expected_basis": "D311: pool project covers every private-repo job (its M2+), then message",
+      "waits_on": "work"
     },
     {
       "id": "DL348",
@@ -6179,10 +6180,10 @@
       "status": "Waiting",
       "item": "Tear down this machine's pool and runners",
       "detail": "Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.",
-      "expected": "15 Nov",
-      "changed": "2026-11-14T11:57+00:00",
-      "expected_basis": "owner gives the go; same window as the removal release",
-      "waits_on": "owner"
+      "expected": "16 Nov",
+      "changed": "2026-11-14T13:19+00:00",
+      "expected_basis": "D311: pool project covers every private-repo job (its M2+), then message",
+      "waits_on": "work"
     },
     {
       "id": "DL349",
@@ -6299,11 +6300,52 @@
       "id": "DL354",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Pool swap busy check counts Windows runners outside the container",
       "detail": "14 Nov 13:11: pool-refresh refused the Linux container recreate because the Windows service runner of the same repo was busy. The recreate only affects container runners; the busy check should look at those only.",
-      "expected": "",
-      "changed": "2026-11-14T13:11+00:00"
+      "expected": "14 Nov ~13:41",
+      "changed": "2026-11-14T13:19+00:00",
+      "expected_basis": "cloud agent from 13:21: setup 3 + work 12 + checks 5 min",
+      "rides": "DL355",
+      "started": "2026-11-14T13:21+00:00"
+    },
+    {
+      "id": "DL355",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-141: pool swap waits only for container runners",
+      "detail": "Join, CI, merge and smoke for DL354.",
+      "expected": "14 Nov ~13:52",
+      "changed": "2026-11-14T13:19+00:00",
+      "release": 141,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-14T13:21+00:00",
+          "end": "2026-11-14T13:41+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-14T13:41+00:00",
+          "end": "2026-11-14T13:45+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-14T13:45+00:00",
+          "end": "2026-11-14T13:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-14T13:50+00:00",
+          "end": "2026-11-14T13:52+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 10
+      },
+      "started": "2026-11-14T13:21+00:00"
     },
     {
       "id": "DS1",

@@ -6952,6 +6952,118 @@
    "chosen": "Force the swap now",
    "decided": "2026-11-14",
    "owner_words": "Force the swap now"
+  },
+  {
+   "id": "D307",
+   "question": "When does Phase A (delivery reads RUNS_ON_* per OS, guard on limits.json, no slot-wait trigger) start?",
+   "asked": "2026-11-14",
+   "status": "decided",
+   "task": "DL346",
+   "options": [
+    {
+     "label": "Launch now",
+     "summary": "Cloud agents build it this afternoon."
+    },
+    {
+     "label": "Wait until 17:00",
+     "summary": "Hold until the owner reads the plan."
+    },
+    {
+     "label": "Wait for the new pool's first release",
+     "summary": "Start once it exists."
+    },
+    {
+     "label": "Wait for the pool project's ready message",
+     "summary": "Start when the separate runner-pool project says its pool is ready for all the owner's projects."
+    }
+   ],
+   "chosen": "Wait for the pool project's ready message",
+   "decided": "2026-11-14",
+   "owner_words": "wait for when ci-runners-shared-pool tells you its ready to use its pool for all my projects"
+  },
+  {
+   "id": "D308",
+   "question": "D302 scope: which parts of ci_tool.py and rust_ci.py move to the separate runner-pool project?",
+   "asked": "2026-11-14",
+   "status": "decided",
+   "task": "DL345",
+   "options": [
+    {
+     "label": "Only the cache parts move",
+     "summary": "Shared-cache mode, the Rust cache cap and per-runner quotas move; downloads and the build stay in delivery; vm_check moves whole."
+    },
+    {
+     "label": "Move the whole files",
+     "summary": "The pool project ships both files."
+    }
+   ],
+   "chosen": "Only the cache parts move",
+   "decided": "2026-11-14",
+   "owner_words": "Only the cache parts move"
+  },
+  {
+   "id": "D309",
+   "question": "Fix the old pool's swap busy check that counts runners outside the container?",
+   "asked": "2026-11-14",
+   "status": "decided",
+   "task": "DL354",
+   "options": [
+    {
+     "label": "Drop, lesson only",
+     "summary": "Record it as a lesson for the new pool."
+    },
+    {
+     "label": "Fix it now",
+     "summary": "A cloud agent fixes it as a patch release."
+    }
+   ],
+   "chosen": "Fix it now",
+   "decided": "2026-11-14",
+   "owner_words": "Fix it now"
+  },
+  {
+   "id": "D310",
+   "question": "Rules until the owner is back at about 17:00 on 14 Nov?",
+   "asked": "2026-11-14",
+   "status": "decided",
+   "task": "DL345",
+   "options": [
+    {
+     "label": "Yes, overnight rules",
+     "summary": "Merge on green, fix peer bug reports, one CI rerun, one agent retry, never bypass a check, picks recorded, no questions."
+    },
+    {
+     "label": "Merge on green, park peer bugs",
+     "summary": "Record new peer bugs only."
+    },
+    {
+     "label": "Finish running work only",
+     "summary": "Nothing new."
+    }
+   ],
+   "chosen": "Yes, overnight rules",
+   "decided": "2026-11-14",
+   "owner_words": "Yes, overnight rules"
+  },
+  {
+   "id": "D311",
+   "question": "When may dev-standards delete its pool (relayed owner decision from the pool project, its D37)?",
+   "asked": "2026-11-14",
+   "status": "decided",
+   "task": "DL347",
+   "options": [
+    {
+     "label": "After the owner's own test of the new pool's first release",
+     "summary": "Delete once that test passes."
+    },
+    {
+     "label": "When the new pool runs every private-repo job",
+     "summary": "Linux containers with KVM, Wine, cargo-xwin/LLVM, Playwright browsers and Postgres per runner; private repos never use GitHub-hosted runners."
+    }
+   ],
+   "chosen": "When the new pool runs every private-repo job",
+   "decided": "2026-11-14",
+   "owner_words": "None of my private repo projects use github runners"
   }
  ]
 }

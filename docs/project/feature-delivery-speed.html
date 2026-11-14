@@ -904,25 +904,31 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.6.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-14T13:12+00:00">14 Nov 13:12</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-14T13:19+00:00">14 Nov 13:19</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">14 Nov 13:13</a> (Lisbon)</p>
 <p class="lede">Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">2 tasks</span></summary>
-<ul>
-<li data-glance-task="DL347"><span class="task-id">DL347</span><span class="glance-dep">owner gives the go after the separate pool project&#x27;s first release</span> Remove the runner pool from dev-standards <span class="glance-expected">15 Nov</span></li>
-<li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">owner gives the go; same window as the removal release</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">15 Nov</span></li>
-</ul>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
+<p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
 <ul>
-<li data-glance-task="DL337"><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts) <span class="glance-expected">14 Nov ~13:25</span><span class="glance-basis">short prune job ends ~13:13, then ~2-5 min recreate</span></li>
 <li data-glance-task="DL353"><span class="task-id">DL353</span>Runner gate skips the ci-wait marker when ci.fallback is off <span class="glance-expected">14 Nov ~13:25</span><span class="glance-basis">cloud agent from 13:07: setup 3 + work 10 + checks 5 min</span></li>
 <li data-glance-task="DL352"><span class="task-id">DL352</span><span class="release-name">RELEASE-140</span>no ci-wait marker when the fallback is off <span class="glance-expected">14 Nov ~13:36</span></li>
+<li data-glance-task="DL354"><span class="task-id">DL354</span>Pool swap busy check counts Windows runners outside the container <span class="glance-expected">14 Nov ~13:41</span><span class="glance-basis">cloud agent from 13:21: setup 3 + work 12 + checks 5 min</span></li>
+<li data-glance-task="DL355"><span class="task-id">DL355</span><span class="release-name">RELEASE-141</span>pool swap waits only for container runners <span class="glance-expected">14 Nov ~13:52</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">54 tasks</span></summary>
+<details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">3 tasks</span></summary>
 <ul>
+<li data-glance-task="DL346"><span class="task-id">DL346</span><span class="glance-dep">D307: starts when the pool project says its pool is ready for all projects</span> Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json <span class="glance-expected">15 Nov</span></li>
+<li data-glance-task="DL347"><span class="task-id">DL347</span><span class="glance-dep">D311: pool project covers every private-repo job (its M2+), then message</span> Remove the runner pool from dev-standards <span class="glance-expected">16 Nov</span></li>
+<li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">D311: pool project covers every private-repo job (its M2+), then message</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">16 Nov</span></li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">55 tasks</span></summary>
+<ul>
+<li data-glance-task="DL337"><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)</li>
 <li data-glance-task="DL350"><span class="task-id">DL350</span><span class="release-name">RELEASE-139</span>runner gate git hang fix</li>
 <li data-glance-task="DL351"><span class="task-id">DL351</span>Runner gate hangs on a git credential prompt (ci-wait marker)</li>
 <li data-glance-task="DL345"><span class="task-id">DL345</span>Plan: move the runner pool to its own project, remove it here</li>
@@ -930,27 +936,27 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL343"><span class="task-id">DL343</span>Runner pool loads kvm module at start when POOL_KVM=1</li>
 <li data-glance-task="DL344"><span class="task-id">DL344</span><span class="release-name">RELEASE-138</span>pool cache cap and kvm autoload</li>
 <li data-glance-task="DL340"><span class="task-id">DL340</span><span class="release-name">RELEASE-137</span>one pool for every runner and OS</li>
-<li data-glance-task="DL341"><span class="task-id">DL341</span>Pool coordinates every runner on the machine, all OSes</li>
-<li class="glance-more">and 46 more</li>
+<li class="glance-more">and 47 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">339</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-waiting"><div class="count">2</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">340</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">7</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">8 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL337"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: rebuild the pool image when idle</span></td><td>D306: force the swap once no container job runs (waits for idle container runners, then pool-refresh --force; the stuck Windows runner is not touched).</td><td>14 Nov ~13:25<span class="expected-basis">short prune job ends ~13:13, then ~2-5 min recreate</span></td></tr>
 <tr data-task="DL353"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL353</span>Runner gate skips the ci-wait marker when ci.fallback is off<span class="release-line"><span class="release-name">RELEASE-140</span></span></td><td>Peer follow-up 14 Nov 13:05: the marker&#x27;s only reader is the Option 4 cloud fallback. When the checkout&#x27;s .delivery/config.json has no ci.fallback (fallback off), Marker sets skipped and runs no git. Fits D301 (slot-wait trigger goes).</td><td>14 Nov ~13:25<span class="expected-basis">cloud agent from 13:07: setup 3 + work 10 + checks 5 min</span></td></tr>
 <tr data-task="DL352"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL352</span><span class="release-name">RELEASE-140</span>no ci-wait marker when the fallback is off</td><td>Join, CI, merge and smoke for DL353.</td><td>14 Nov ~13:36</td></tr>
-<tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>15 Nov<span class="expected-basis">owner gives the go after the separate pool project&#x27;s first release</span></td></tr>
-<tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>15 Nov<span class="expected-basis">owner gives the go; same window as the removal release</span></td></tr>
-<tr data-task="DL346"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>Not scheduled</td></tr>
+<tr data-task="DL354"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL354</span>Pool swap busy check counts Windows runners outside the container<span class="release-line"><span class="release-name">RELEASE-141</span></span></td><td>14 Nov 13:11: pool-refresh refused the Linux container recreate because the Windows service runner of the same repo was busy. The recreate only affects container runners; the busy check should look at those only.</td><td>14 Nov ~13:41<span class="expected-basis">cloud agent from 13:21: setup 3 + work 12 + checks 5 min</span></td></tr>
+<tr data-task="DL355"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL355</span><span class="release-name">RELEASE-141</span>pool swap waits only for container runners</td><td>Join, CI, merge and smoke for DL354.</td><td>14 Nov ~13:52</td></tr>
+<tr data-task="DL346"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>15 Nov<span class="expected-basis">D307: starts when the pool project says its pool is ready for all projects</span></td></tr>
+<tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>16 Nov<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
+<tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>16 Nov<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
 <tr data-task="DL349"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL349</span>Projects move to the new runs-on contract</td><td>Phase E: each adopting project runs the delivery install update, the separate pool project writes RUNS_ON_*, old CI_RUNS_ON* deleted, first job watched per project.</td><td>Not scheduled</td></tr>
-<tr data-task="DL354"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL354</span>Pool swap busy check counts Windows runners outside the container</td><td>14 Nov 13:11: pool-refresh refused the Linux container recreate because the Windows service runner of the same repo was busy. The recreate only affects container runners; the busy check should look at those only.</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">346 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">347 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL337"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL337</span>Pool rebuild when idle (bake 1.46.1 gate scripts)<span class="no-release-line">ships nothing: machine maintenance: pool image swap</span></td><td>Swapped 13:14 with --force (D306) once container runners were idle; the new image carries the 1.47.x gate, cache cap and kvm files. All 4 container runners online, one listener each; the Session Conflict loop ended.</td><td>14 Nov</td></tr>
 <tr data-task="DL350"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL350</span><span class="release-name">RELEASE-139</span>runner gate git hang fix</td><td>Join, CI, merge and smoke for DL351.</td><td>14 Nov</td></tr>
 <tr data-task="DL351"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL351</span>Runner gate hangs on a git credential prompt (ci-wait marker)<span class="release-line"><span class="release-name">RELEASE-139</span></span></td><td>Peer report 14 Nov 12:48: on a Windows service runner the job-start gate&#x27;s ci-wait marker git calls (ci_fallback _git: mark_wait/claim_taken/clear_wait) ran with no timeout and an interactive credential helper; the service account has no credential, so Git Credential Manager waited forever. Jobs stalled in Set up runner for 65-95 min. Fix: non-interactive git env, timeout, fail open, log slot taken before the claim check, doctor check.</td><td>14 Nov</td></tr>
 <tr data-task="DL345"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL345</span>Plan: move the runner pool to its own project, remove it here<span class="no-release-line">ships nothing: study and plan; removal ships as DL346-DL349</span></td><td>Plan published (private page); handover doc as a draft pull request in the separate pool project; findings sent to its session (D303, D304).</td><td>14 Nov</td></tr>
@@ -1332,6 +1338,93 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D311">
+<h3 class="decision-head"><span class="decision-id">D311</span> <span class="decision-question">When may dev-standards delete its pool (relayed owner decision from the pool project, its D37)?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL347</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">After the owner&#x27;s own test of the new pool&#x27;s first release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Delete once that test passes.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">When the new pool runs every private-repo job</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Linux containers with KVM, Wine, cargo-xwin/LLVM, Playwright browsers and Postgres per runner; private repos never use GitHub-hosted runners.</p>
+<blockquote class="decision-words">&ldquo;None of my private repo projects use github runners&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D310">
+<h3 class="decision-head"><span class="decision-id">D310</span> <span class="decision-question">Rules until the owner is back at about 17:00 on 14 Nov?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, overnight rules</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Merge on green, fix peer bug reports, one CI rerun, one agent retry, never bypass a check, picks recorded, no questions.</p>
+<blockquote class="decision-words">&ldquo;Yes, overnight rules&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Merge on green, park peer bugs</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record new peer bugs only.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Finish running work only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Nothing new.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D309">
+<h3 class="decision-head"><span class="decision-id">D309</span> <span class="decision-question">Fix the old pool&#x27;s swap busy check that counts runners outside the container?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL354</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop, lesson only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Record it as a lesson for the new pool.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fix it now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">A cloud agent fixes it as a patch release.</p>
+<blockquote class="decision-words">&ldquo;Fix it now&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D308">
+<h3 class="decision-head"><span class="decision-id">D308</span> <span class="decision-question">D302 scope: which parts of ci_tool.py and rust_ci.py move to the separate runner-pool project?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL345</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Only the cache parts move</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Shared-cache mode, the Rust cache cap and per-runner quotas move; downloads and the build stay in delivery; vm_check moves whole.</p>
+<blockquote class="decision-words">&ldquo;Only the cache parts move&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Move the whole files</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">The pool project ships both files.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D307">
+<h3 class="decision-head"><span class="decision-id">D307</span> <span class="decision-question">When does Phase A (delivery reads RUNS_ON_* per OS, guard on limits.json, no slot-wait trigger) start?</span></h3>
+<p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL346</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Launch now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Cloud agents build it this afternoon.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait until 17:00</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Hold until the owner reads the plan.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait for the new pool&#x27;s first release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Start once it exists.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Wait for the pool project&#x27;s ready message</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 14 Nov</span></div>
+<p class="decision-summary">Start when the separate runner-pool project says its pool is ready for all the owner&#x27;s projects.</p>
+<blockquote class="decision-words">&ldquo;wait for when ci-runners-shared-pool tells you its ready to use its pool for all my projects&rdquo;</blockquote>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D306">
 <h3 class="decision-head"><span class="decision-id">D306</span> <span class="decision-question">DL337 retry refused because the swap counts the stuck Windows runner outside the container. How should the swap go?</span></h3>
 <p class="decision-meta">Asked 14 Nov · Decided 14 Nov · Task DL337</p>
