@@ -48,7 +48,7 @@ describe('date logic', () => {
   it('lays a month out in weeks of seven, Monday first', () => {
     const weeks = monthGrid(2009, 3, 1);
     expect(weeks.every((w) => w.length === 7)).toBe(true);
-    expect(weeks[0].findIndex(Boolean)).toBe(6); // 1 March 2009 was a Sunday
+    expect(weeks[0]?.findIndex(Boolean)).toBe(6); // 1 March 2009 was a Sunday
     expect(weeks.flat().filter(Boolean)).toHaveLength(31);
   });
 
