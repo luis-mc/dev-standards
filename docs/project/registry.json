@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T00:17+00:00",
+  "updated": "2026-11-14T00:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5926,6 +5926,56 @@
       "changed": "2026-11-14T00:17+00:00",
       "rides": "DL328",
       "started": "2026-11-14T00:14+00:00"
+    },
+    {
+      "id": "DL330",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-134: picker strict TS, CI Node version",
+      "detail": "Join, CI, merge and smoke for DL331 and DL332.",
+      "expected": "14 Nov ~01:05",
+      "changed": "2026-11-14T00:20+00:00",
+      "expected_basis": "agents ~00:45 + join/CI/merge ~15 min",
+      "release": 134
+    },
+    {
+      "id": "DL331",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Picker templates pass strict TS and typescript-eslint",
+      "detail": "date-picker, time-picker, number-keypad templates fail exactOptionalPropertyTypes, noUncheckedIndexedAccess, unbound-method (test-dom.ts) and a stale react-hooks/exhaustive-deps disable. Found by a project that adopted the plugin.",
+      "expected": "14 Nov ~00:45",
+      "changed": "2026-11-14T00:20+00:00",
+      "expected_basis": "cloud agent from ~00:25, ~20 min",
+      "rides": "DL330",
+      "started": "2026-11-14T00:20+00:00"
+    },
+    {
+      "id": "DL332",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "claude-setup CI asset: Node version from the repo",
+      "detail": "assets/ci/dev-standards.yml pins Node 22; repos that need Node >= 24 fail (ERR_PNPM_UNSUPPORTED_ENGINE). Read the version from the repo, default 24.",
+      "expected": "14 Nov ~00:40",
+      "changed": "2026-11-14T00:20+00:00",
+      "expected_basis": "cloud agent from ~00:25, ~15 min",
+      "rides": "DL330",
+      "started": "2026-11-14T00:20+00:00"
+    },
+    {
+      "id": "DL333",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Needs you",
+      "item": "DL-73: let agents open and ready PRs (owner decision needed)",
+      "detail": "Another session relayed an owner request: agents may create, ready and edit PRs on owner repos; issues, comments, reviews, mail stay drafts; merge stays the owner's. Needs the owner's own word: it loosens a vital rule and adds allow rules.",
+      "expected": "14 Nov ~07:00",
+      "changed": "2026-11-14T00:20+00:00",
+      "expected_basis": "owner's answer; owner asleep",
+      "no_release": "waits for the owner's decision on the DL-73 PR exception"
     },
     {
       "id": "DS1",
