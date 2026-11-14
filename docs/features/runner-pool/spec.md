@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.13.0
+version: 0.14.0
 owner: agents
 type: reference
 code:
@@ -208,6 +208,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.0 | 2026-11-14 | RELEASE-136 | R5.46, R5.47: the Windows hook wrappers and the host-load task never use a per-user Python; the doctor flags a per-user or missing $py path. | DL339 |
 | 0.13.0 | 2026-11-14 | RELEASE-132 | Heavy job class (R5.42 to R5.45, D288): runner_gate.heavy_jobs and heavy_slots keep two heavy jobs from running at once on one machine; the doctor reports both. | DL327 |
 | 0.12.0 | 2026-11-13 | RELEASE-131 | Windows-only mode --only windows\|linux (R5.35), repository variable CI_RUNS_ON_WINDOWS (R5.36), label removal only with a yes (R5.37), the symbolic-link right for ci-* accounts and a PowerShell host-load task (R5.31, R5.32).<br>R5.38-R5.41: the doctor finds a locked Windows runner and checks runs-on labels (DL318); several pool agents per repository (DL323). | DL316, DL318 |
 | 0.11.1 | 2026-11-13 | RELEASE-130 | R5.32 setup: an existing runner in the folder is removed with a remove token and a checked exit code before the folder is locked (DL315). | DL315 |
