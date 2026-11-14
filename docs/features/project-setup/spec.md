@@ -113,6 +113,8 @@ The hook reads only the current turn from the end of the transcript, in 1 MiB bl
 
 **R5.24** — `claude-setup` writes the project allow rules `Bash(gh pr create:*)`, `Bash(gh pr ready:*)` and `Bash(gh pr edit:*)` into `permissions.allow` of the project's `.claude/settings.json`. It merges with the entries there, adds no duplicate and never adds `gh pr merge`. The rules asset carries the DL-73 exception: on repositories the owner owns, agents may open pull requests, mark them ready and edit their title and description. Issues, comments, reviews, email and messages stay drafts, and merging stays the owner's. (DL334, D290 to D292)
 
+**R5.25** — The shipped pre-commit hook matches a `*_KEY`, `*_TOKEN`, `*_SECRET` or `*_PASS` name the way `.gitleaks.toml` does: `=` then a value, or `:` then a quoted value. Typed names (`path_key: &str`), Rust paths (`path_key::Name`) and CSS selectors pass; a quoted or assigned value is still blocked. `DATABASE_URL` keeps its wider shape. (DL358)
+
 ## 6. Non-functional requirements
 
 **R6.1** — `claude-setup` asks which target before reading or writing, and applies one batch after one confirmation.
@@ -174,6 +176,7 @@ flowchart TD
 | R5.10, R6.2 | `tools/test_model_profiles.py` |
 | R5.11 | `tools/test_rule_tags.py` |
 | R5.24 | `claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py`, `tools/test_delivery_hooks.py` (the deny list still blocks outbound sends and never blocks PR create, ready or edit) |
+| R5.25 | `f31` in `tools/test_project_setup_fixes.py` (typed names and a Rust path committed; quoted and assigned values blocked) |
 | R5.13 | `tools/test_questions_stop.py` (the hook on recorded inputs and its wiring) |
 | R5.12 | `tools/test_spec_check.py`, `tools/test_authspec_check.py` |
 | R5.23 | `claude/plugins/project-setup/tests/test_dl332_ci_node_version.py` |
