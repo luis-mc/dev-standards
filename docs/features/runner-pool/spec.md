@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.12.0
+version: 0.13.0
 owner: agents
 type: reference
 code:
@@ -157,6 +157,14 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.41** — **Per-agent parts stay per slug** (DL323). User, folder, `TMPDIR`, Wine prefix and database roles stay per slug. Removing one agent leaves the others of that repository working. The pool memory and CPU cap and the machine slot limit do not change.
 
+**R5.42** — **A heavy job class** (DL327, D288). `runner_gate.heavy_jobs` in `machine.json` lists job keys or shard names, exact or `fnmatch` globs, matched against `GITHUB_JOB` and `DELIVERY_SHARD`. An entry `owner/repo:pattern` applies to that repository only (`GITHUB_REPOSITORY`). `heavy_slots` (default 1, `0` = no heavy limit) is the number of heavy jobs that may run at once on the machine. `heavy_jobs` defaults to `[]`. `normalise_config` keeps both.
+
+**R5.43** — **A heavy job takes the heavy slot first** (DL327, D288). The gate takes `slots/heavy-N.lock` first, then a CI slot as R5.2 says. While no heavy slot is free it polls, holds no CI slot and no queue ticket, so normal jobs keep flowing, and logs `heavy job X waits for the heavy slot (held by Y)`. It uses the same `max_wait_min` and `on_timeout` as the CI queue; the CI wait gets the time that is left. If the CI wait ends without a CI slot, the heavy slot is freed. Taking the heavy slot first in every job means two jobs never wait for each other's slots.
+
+**R5.44** — **Heavy slots are freed like the others** (DL327). `runner_job_done` frees the heavy slot with the CI slot of the job. A heavy slot whose holder process is gone, or older than `slot_stale_min`, is freed by the next gate or `free-stale`. A heavy job is never a light job: when a name matches both lists, heavy wins.
+
+**R5.45** — **Doctor reports the heavy class** (DL327). The `machine.heavy` check shows `heavy_slots` and `heavy_jobs`, and warns when `heavy_slots` is above `ci_slots`. A stale heavy slot is reported in `machine.slots`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -181,6 +189,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.31 (symlink right, host-load task), R5.35 to R5.37 | `claude/plugins/delivery/tests/test_dl316_windows_only_generic.py` (mocked probe) |
 | R5.38, R5.39 | `claude/plugins/delivery/tests/test_dl318_doctor_locked_runner.py` (mocked service list and workflows) |
 | R5.40, R5.41 | `claude/plugins/delivery/tests/test_dl323_pool_agents_per_repo.py` |
+| R5.42 to R5.45 | `claude/plugins/delivery/tests/test_dl327_heavy_slots.py` |
 
 ## 12. Code map
 
@@ -194,6 +203,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.0 | 2026-11-14 | RELEASE-132 | Heavy job class (R5.42 to R5.45, D288): runner_gate.heavy_jobs and heavy_slots keep two heavy jobs from running at once on one machine; the doctor reports both. | DL327 |
 | 0.12.0 | 2026-11-13 | RELEASE-131 | Windows-only mode --only windows\|linux (R5.35), repository variable CI_RUNS_ON_WINDOWS (R5.36), label removal only with a yes (R5.37), the symbolic-link right for ci-* accounts and a PowerShell host-load task (R5.31, R5.32).<br>R5.38-R5.41: the doctor finds a locked Windows runner and checks runs-on labels (DL318); several pool agents per repository (DL323). | DL316, DL318 |
 | 0.11.1 | 2026-11-13 | RELEASE-130 | R5.32 setup: an existing runner in the folder is removed with a remove token and a checked exit code before the folder is locked (DL315). | DL315 |
 | 0.11.0 | 2026-11-13 | RELEASE-128 | A Windows runner service runs as its own non-admin ci-* account on the shared machine config and slot queue; one run sets up account, rights, download, registration, .env and service, replaces an old runner after the new one is online, and the doctor checks each Windows runner (R5.31 to R5.34). | DL310 |

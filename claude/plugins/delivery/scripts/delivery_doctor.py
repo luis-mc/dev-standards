@@ -689,6 +689,11 @@ def machine_items(root, cfg):
     else:
         items.append(_item("machine.config", "ok", "%s: %d CI slot(s), local_heavy %d, cloud_ci_sessions %d, stale after %d min"
                            % (path, mcfg["ci_slots"], mcfg["local_heavy"], mcfg["cloud_ci_sessions"], mcfg["slot_stale_min"])))
+        too_many = mcfg["heavy_slots"] > mcfg["ci_slots"]
+        items.append(_item("machine.heavy", "warn" if too_many else "ok", "heavy_slots %d, heavy_jobs %s%s" % (
+            mcfg["heavy_slots"], mcfg["runner_gate"].get("heavy_jobs") or "[]",
+            "; heavy_slots is above ci_slots (%d), so the heavy limit never bites: lower it" % mcfg["ci_slots"]
+            if too_many else "")))
         diff = L.legacy_differs()
         if diff:
             items.append(_item("machine.legacy", "warn", "machine.json and the old ~/.claude/luismc-delivery-machine.json differ "
@@ -734,6 +739,8 @@ def machine_items(root, cfg):
     st_now = MS.status(mcfg, now)
     stale = [dict(s, label=str(s["slot"])) for s in st_now["slots"] if not s["free"] and s.get("stale")]
     stale += [dict(s, label="light-%d" % s["slot"]) for s in st_now.get("light_slots", [])
+              if not s["free"] and s.get("stale")]
+    stale += [dict(s, label="heavy-%d" % s["slot"]) for s in st_now.get("heavy_slots", [])
               if not s["free"] and s.get("stale")]
     old_tickets = []
     try:

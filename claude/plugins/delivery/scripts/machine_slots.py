@@ -5,6 +5,7 @@ One folder per machine (`machine_dir()`), readable and writable by every runner 
 
     machine.json        the limits (section 3.1 of the shared-runners design)
     slots/slot-N.lock   one file per busy CI slot, created create-new (atomic), so two hooks never take one slot
+    slots/heavy-N.lock  the same for a heavy slot (an integration or e2e job; `heavy_slots`, `runner_gate.heavy_jobs`, DL327)
     slots/light-N.lock  the same for a light slot (a short job: smoke, prune, cleanup; `light_slots`, `runner_gate.light_jobs`)
     queue/<ticket>.json one ticket per job that waits; the name sorts in the order of service
     slot-log.jsonl      one JSON line per take and per free, trimmed to the last 5000 lines
@@ -33,12 +34,14 @@ DEFAULT_CONFIG = {
     'load_limits': {'memory_pct': 85, 'cpu_pct': 60},
     'ci_slots': 2,
     'light_slots': 1,
+    'heavy_slots': 1,  # DL327: 0 = no heavy limit
     'local_heavy': 2,
     'cloud_ci_sessions': 10,
     'slot_stale_min': 120,
     'runner_gate': {'max_wait_min': 30, 'poll_sec': 15,
                     'light_jobs': ['smoke', 'prune', 'prune-*', 'cleanup', 'remove-train', 'decide', 'delete-*',
-                                   'runners']},
+                                   'runners'],
+                    'heavy_jobs': []},
     'runner_dirs': [],
     'generic_labels': [],  # DL316: extra runner labels that count as generic (D275)
 }
@@ -117,7 +120,7 @@ def normalise_config(raw):
             v = ll.get(k)
             if _num(v, 0, 100) and v > 0:
                 out['load_limits'][k] = v
-    for k, lo in (('ci_slots', 1), ('light_slots', 0), ('local_heavy', 1), ('cloud_ci_sessions', 1), ('slot_stale_min', 1)):
+    for k, lo in (('ci_slots', 1), ('light_slots', 0), ('heavy_slots', 0), ('local_heavy', 1), ('cloud_ci_sessions', 1), ('slot_stale_min', 1)):
         v = _num(raw.get(k), lo, integer=True)
         if v is not None and raw.get(k) == v:
             out[k] = v
@@ -130,6 +133,9 @@ def normalise_config(raw):
         lj = rg.get('light_jobs')
         if isinstance(lj, list):
             out['runner_gate']['light_jobs'] = [x for x in lj if isinstance(x, str) and x]
+        hj = rg.get('heavy_jobs')
+        if isinstance(hj, list):
+            out['runner_gate']['heavy_jobs'] = [x for x in hj if isinstance(x, str) and x]
         if rg.get('on_timeout') in ('fail', 'run'):
             out['runner_gate']['on_timeout'] = rg['on_timeout']
     gl = raw.get('generic_labels')  # DL316: kept on a rewrite of machine.json
@@ -562,22 +568,45 @@ def is_first(ticket, cfg=None, now=None):
 # --- slots -------------------------------------------------------------------------------------
 
 def slot_path(n, kind='ci'):
-    return os.path.join(slots_dir(), ('light-%d.lock' if kind == 'light' else 'slot-%d.lock') % n)
+    name = {'light': 'light-%d.lock', 'heavy': 'heavy-%d.lock'}.get(kind, 'slot-%d.lock')
+    return os.path.join(slots_dir(), name % n)
+
+
+def _count_key(kind):
+    return {'light': 'light_slots', 'heavy': 'heavy_slots'}.get(kind, 'ci_slots')
 
 
 def slot_label(lock):
     """'3' for CI slot 3, 'light-1' for light slot 1 (the name the logs use)."""
-    return ('light-%s' if (lock or {}).get('kind') == 'light' else '%s') % (lock or {}).get('slot')
+    kind = (lock or {}).get('kind')
+    return ('%s-%s' % (kind, (lock or {}).get('slot'))) if kind in ('light', 'heavy') else '%s' % (lock or {}).get('slot')
 
 
 def is_light_job(ident, cfg=None):
     """True when the job key or the shard matches an entry of `runner_gate.light_jobs` (exact or fnmatch glob) and
     light slots are on (`light_slots` > 0)."""
     cfg = cfg or machine_config()
-    if cfg.get('light_slots', 0) < 1:
+    if cfg.get('light_slots', 0) < 1 or is_heavy_job(ident, cfg):   # DL327: heavy wins over light
         return False
     names = [n for n in (ident.get('job'), ident.get('shard')) if n]
     return any(fnmatch.fnmatchcase(n, pat) for pat in cfg['runner_gate'].get('light_jobs', []) for n in names)
+
+
+def is_heavy_job(ident, cfg=None):
+    """True when the job key or the shard matches an entry of `runner_gate.heavy_jobs` (DL327) and heavy slots are on
+    (`heavy_slots` > 0). An entry `owner/repo:pattern` applies to that repository only (GITHUB_REPOSITORY)."""
+    cfg = cfg or machine_config()
+    if cfg.get('heavy_slots', 0) < 1:
+        return False
+    names = [n for n in (ident.get('job'), ident.get('shard')) if n]
+    for pat in cfg['runner_gate'].get('heavy_jobs', []):
+        if ':' in pat:
+            repo, pat = pat.split(':', 1)
+            if repo != ident.get('repo'):
+                continue
+        if any(fnmatch.fnmatchcase(n, pat) for n in names):
+            return True
+    return False
 
 
 def read_slots(cfg=None, kind='ci'):
@@ -585,7 +614,7 @@ def read_slots(cfg=None, kind='ci'):
     unreadable content has a holder with only `taken_ts`."""
     cfg = cfg or machine_config()
     out = []
-    for n in range(1, cfg['light_slots' if kind == 'light' else 'ci_slots'] + 1):
+    for n in range(1, cfg[_count_key(kind)] + 1):
         p = slot_path(n, kind)
         if os.path.exists(p):
             rec = _read_json(p)
@@ -604,6 +633,18 @@ def free_count(cfg=None):
     return sum(1 for s in read_slots(cfg) if s['holder'] is None)
 
 
+def free_heavy_count(cfg=None):
+    return sum(1 for s in read_slots(cfg, 'heavy') if s['holder'] is None)
+
+
+def heavy_holder(cfg=None):
+    """The record of the first job holding a heavy slot, or None."""
+    for s in read_slots(cfg, 'heavy'):
+        if s['holder']:
+            return s['holder']
+    return None
+
+
 def free_light_count(cfg=None):
     return sum(1 for s in read_slots(cfg, 'light') if s['holder'] is None)
 
@@ -614,14 +655,14 @@ def take_slot(ident, cfg=None, queued_ts=None, now=None, kind='ci'):
     cfg = cfg or machine_config()
     _mkdir(slots_dir())
     now = time.time() if now is None else now
-    for n in range(1, cfg['light_slots' if kind == 'light' else 'ci_slots'] + 1):
+    for n in range(1, cfg[_count_key(kind)] + 1):
         rec = dict(ident, slot=n, token=uuid.uuid4().hex, pid=holder_pid(), host=socket.gethostname(),
                    taken_at=_iso(now), taken_ts=now)
-        if kind == 'light':
-            rec['kind'] = 'light'
+        if kind in ('light', 'heavy'):
+            rec['kind'] = kind
         if _create_new(slot_path(n, kind), rec):
             write_log(_log_entry(ident, queued_at=_iso(queued_ts if queued_ts else now), slot_at=_iso(now), slot=n,
-                                 slot_kind='light' if kind == 'light' else None))
+                                 slot_kind=kind if kind != 'ci' else None))
             return rec
     return None
 
@@ -659,18 +700,18 @@ def free_slot(lock, outcome='ran', now=None):
     now = time.time() if now is None else now
     if not isinstance(lock, dict) or not lock.get('slot'):
         return False
-    kind = 'light' if lock.get('kind') == 'light' else 'ci'
+    kind = lock.get('kind') if lock.get('kind') in ('light', 'heavy') else 'ci'
     if not _remove_if_token(slot_path(lock['slot'], kind), lock.get('token')):
         return False
     write_log(_log_entry(lock, slot=lock['slot'], slot_at=lock.get('taken_at'), released_at=_iso(now),
-                         outcome=outcome, slot_kind='light' if kind == 'light' else None))
+                         outcome=outcome, slot_kind=kind if kind != 'ci' else None))
     return True
 
 
 def find_held(ident, cfg=None):
     """The locks held by this job (matched on repo, run, attempt and job; the runner name too when both have one)."""
     out = []
-    for kind in ('ci', 'light'):
+    for kind in ('ci', 'light', 'heavy'):
         out += _find_held_kind(ident, cfg, kind)
     return out
 
@@ -683,7 +724,7 @@ def _find_held_kind(ident, cfg, kind):
             continue
         if h.get('job') != ident.get('job') or (h.get('run_attempt') or 1) != (ident.get('run_attempt') or 1):
             continue
-        out.append(dict(h, slot=s['slot'], kind='light') if kind == 'light' else dict(h, slot=s['slot']))
+        out.append(dict(h, slot=s['slot'], kind=kind) if kind != 'ci' else dict(h, slot=s['slot']))
     return out
 
 
@@ -693,7 +734,7 @@ def free_stale(cfg=None, now=None):
     cfg = cfg or machine_config()
     now = time.time() if now is None else now
     freed = []
-    pairs = [(k, s) for k in ('ci', 'light') for s in read_slots(cfg, k)]
+    pairs = [(k, s) for k in ('ci', 'light', 'heavy') for s in read_slots(cfg, k)]
     for kind, s in pairs:
         h = s['holder']
         if h is None:
@@ -706,15 +747,15 @@ def free_stale(cfg=None, now=None):
         if not reason:
             continue
         lock = dict(h, slot=s['slot'])
-        if kind == 'light':
-            lock['kind'] = 'light'
+        if kind != 'ci':
+            lock['kind'] = kind
         if h.get('token'):
             ok = free_slot(lock, 'stale-freed', now)
         else:                                             # a lock with no readable content: no token to check
             ok = _remove_if_token(slot_path(s['slot'], kind), None)
             if ok:
                 write_log(_log_entry(lock, slot=s['slot'], released_at=_iso(now), outcome='stale-freed',
-                                     slot_kind='light' if kind == 'light' else None))
+                                     slot_kind=kind if kind != 'ci' else None))
         if ok:
             freed.append({'slot': s['slot'], 'reason': reason, 'holder': h, 'kind': kind})
     return freed
@@ -726,22 +767,22 @@ def status(cfg=None, now=None):
     """{'slots': [...], 'queue': [...]} with ages in seconds, for `delivery_ci.py slots` and the doctor."""
     cfg = cfg or machine_config()
     now = time.time() if now is None else now
-    slots, light = [], []
-    for kind, dest in (('ci', slots), ('light', light)):
+    slots, light, heavy = [], [], []
+    for kind, dest in (('ci', slots), ('light', light), ('heavy', heavy)):
         _status_kind(cfg, now, kind, dest)
     queue = []
     for t in queue_list(cfg, now, prune=False):
         queue.append({'repo': t.get('repo'), 'run_id': t.get('run_id'), 'job': t.get('job'), 'shard': t.get('shard'),
                       'priority': t.get('priority'), 'wait_s': round(now - (t.get('queued_ts') or now))})
-    return {'slots': slots, 'light_slots': light, 'queue': queue}
+    return {'slots': slots, 'light_slots': light, 'heavy_slots': heavy, 'queue': queue}
 
 
 def _status_kind(cfg, now, kind, slots):
     for s in read_slots(cfg, kind):
         h = s['holder']
         item = {'slot': s['slot'], 'free': h is None}
-        if kind == 'light':
-            item['kind'] = 'light'
+        if kind != 'ci':
+            item['kind'] = kind
         if h is not None:
             item.update(repo=h.get('repo'), run_id=h.get('run_id'), job=h.get('job'), shard=h.get('shard'),
                         runner=h.get('runner'), pid=h.get('pid'),
