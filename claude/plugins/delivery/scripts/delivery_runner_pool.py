@@ -2357,12 +2357,12 @@ class Executor:
         if not old.get('POOL_MEM') or all(env_number(old.get(k)) == env_number(new.get(k)) for k in ('POOL_MEM', 'POOL_CPUS')):
             return ''
         cmd = recreate_command(pool)
-        ok_kvm, kvm_text = self.kvm_gate(pool)
-        if not ok_kvm:
-            return '. The cap changed but the pool was not recreated: ' + kvm_text
         if self.runners_busy():
             return ('. The cap changed but a job may run (or the runners cannot be read), so the pool was not recreated. '
                     'By hand: cd %s && %s' % (pool_dir(pool), cmd))
+        ok_kvm, kvm_text = self.kvm_gate(pool, new)
+        if not ok_kvm:
+            return '. The cap changed but the pool was not recreated: ' + kvm_text
         p = subprocess.run(cmd.split(), cwd=pool_dir(pool), capture_output=True, text=True)
         if p.returncode == 0:
             return '. The cap changed (%s/%s -> %s/%s); the pool was recreated' % (
@@ -2370,9 +2370,10 @@ class Executor:
         return '. The cap changed but the recreate failed (%s). By hand: cd %s && %s' % (
             p.stderr.strip()[-200:] or 'docker compose failed', pool_dir(pool), cmd)
 
-    def kvm_gate(self, pool):
-        """DL343: (ok, text). Loads the kvm module in the Docker VM when POOL_KVM=1 and /dev/kvm is missing."""
-        return ensure_kvm(self.probe, read_pool_env(self.probe, pool))
+    def kvm_gate(self, pool, env=None):
+        """DL343: (ok, text). Loads the kvm module in the Docker VM when POOL_KVM=1 and /dev/kvm is missing.
+        `env` is the pool .env already read by the caller; None reads it."""
+        return ensure_kvm(self.probe, read_pool_env(self.probe, pool) if env is None else env)
 
     def sweep_caches(self, pool):
         """DL342: delete the oldest cache entries of idle runners over the cap. Text for the step result, '' when nothing happened."""
