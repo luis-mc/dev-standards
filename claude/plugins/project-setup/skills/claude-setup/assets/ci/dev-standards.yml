@@ -52,9 +52,13 @@ jobs:
         # The project decides its Node version: .nvmrc, .node-version, .tool-versions,
         # then package.json (engines.node or volta). With none of them, Node 24 (current LTS).
         run: |
-          for f in .nvmrc .node-version .tool-versions package.json; do
+          for f in .nvmrc .node-version .tool-versions; do
             if [ -f "$f" ]; then echo "file=$f" >> "$GITHUB_OUTPUT"; exit 0; fi
           done
+          # package.json only when it names a Node version; otherwise setup-node finds none.
+          if [ -f package.json ] && node -e 'const p=require("./package.json");process.exit((p.engines&&p.engines.node)||(p.volta&&p.volta.node)?0:1)' 2>/dev/null; then
+            echo "file=package.json" >> "$GITHUB_OUTPUT"; exit 0
+          fi
           echo "file=" >> "$GITHUB_OUTPUT"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         if: hashFiles('scripts/design/*.test.ts') != '' && steps.nodever.outputs.file != ''

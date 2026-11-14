@@ -18,6 +18,7 @@ code:
   - tools/test_rule_tags.py
   - tools/test_questions_stop.py
   - tools/test_project_setup_fixes.py
+  - claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py
   - tools/test_check_stack_rust.py
 last_verified: 2026-11-08
 ---
@@ -108,7 +109,9 @@ The hook reads only the current turn from the end of the transcript, in 1 MiB bl
 
 **R5.22** — `assets/tooling/rust/` ships `Cargo.toml` (resolver 2, `crates/*` members, `[workspace.package]`, `[workspace.dependencies]`, a fixed release profile), `rust-toolchain.toml` (exact `1.91.0`, minimal profile, rustfmt and clippy, empty targets), `rustfmt.toml` and `deny.toml` (advisories, bans, licenses, sources). The wizard copies them to the repository root beside `crates/guards`. Every cargo command uses `--locked`, and CI installs the exact toolchain version. The tooling README maps each STACKSPEC invariant to its Rust command. (DS198)
 
-**R5.23** — The CI workflow that `claude-setup` ships (`assets/ci/dev-standards.yml`) takes its Node version from the project. A step picks the first file that exists of `.nvmrc`, `.node-version`, `.tool-versions` and `package.json`, and `actions/setup-node` reads it with `node-version-file`. With none of them, the workflow uses Node 24. It never pins Node 22. (DL332)
+**R5.23** — The CI workflow that `claude-setup` ships (`assets/ci/dev-standards.yml`) takes its Node version from the project. A step picks the first file that exists of `.nvmrc`, `.node-version`, `.tool-versions` and a `package.json` that names a Node version (`engines.node` or `volta.node`), and `actions/setup-node` reads it with `node-version-file`. With none of them, the workflow uses Node 24. It never pins Node 22. (DL332)
+
+**R5.24** — `claude-setup` writes the project allow rules `Bash(gh pr create:*)`, `Bash(gh pr ready:*)` and `Bash(gh pr edit:*)` into `permissions.allow` of the project's `.claude/settings.json`. It merges with the entries there, adds no duplicate and never adds `gh pr merge`. The rules asset carries the DL-73 exception: on repositories the owner owns, agents may open pull requests, mark them ready and edit their title and description. Issues, comments, reviews, email and messages stay drafts, and merging stays the owner's. (DL334, D290 to D292)
 
 ## 6. Non-functional requirements
 
@@ -170,6 +173,7 @@ flowchart TD
 | R5.6, R5.7 | `tools/test_preflight.py` |
 | R5.10, R6.2 | `tools/test_model_profiles.py` |
 | R5.11 | `tools/test_rule_tags.py` |
+| R5.24 | `claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py`, `tools/test_delivery_hooks.py` (the deny list still blocks outbound sends and never blocks PR create, ready or edit) |
 | R5.13 | `tools/test_questions_stop.py` (the hook on recorded inputs and its wiring) |
 | R5.12 | `tools/test_spec_check.py`, `tools/test_authspec_check.py` |
 | R5.23 | `claude/plugins/project-setup/tests/test_dl332_ci_node_version.py` |

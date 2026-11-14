@@ -6,6 +6,13 @@
     "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
+  "permissions": {
+    "allow": [
+      "Bash(gh pr create:*)",
+      "Bash(gh pr ready:*)",
+      "Bash(gh pr edit:*)"
+    ]
+  },
   "enabledPlugins": {
     "luismc-agents@{{MARKETPLACE}}": true,
     "luismc-audits@{{MARKETPLACE}}": true,
