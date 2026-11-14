@@ -284,8 +284,15 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D296 | Overnight rules 14 Nov and return time? | Same rules, back 08:00 | decided | 2026-11-14 |
 | delivery-speed | D297 | Rebuild the pool overnight to bake the 1.46.1 gate scripts into the image? | Rebuild when idle | decided | 2026-11-14 |
 | delivery-speed | D298 | Is the runner pool only the Linux container, or every runner on the machine? | Every runner, all OSes | decided | 2026-11-14 |
+| delivery-speed | D299 | When does dev-standards delete its runner pool and this machine's runners, given the separate runner-pool project's first release has no Linux container pool, KVM or Wine? | Owner gives the go | decided | 2026-11-14 |
 | delivery-speed | D3 | Point 8: where is the delivery log kept? | Release notes | decided | 2026-10-11 |
 | delivery-speed | D30 | Machine-wide CI queue: in what order do waiting jobs get a slot? | Ready-PR jobs first | decided | 2026-11-04 |
+| delivery-speed | D300 | How do delivery workflow templates choose a runner without knowing which pool fills it? | One neutral variable per OS | decided | 2026-11-14 |
+| delivery-speed | D301 | Where do the local heavy-work guard and the cloud fallback's slot-wait trigger go when the pool leaves? | Guard stays, wait trigger goes | decided | 2026-11-14 |
+| delivery-speed | D302 | Which runner-side tools that ship to projects move to the separate runner-pool project (rust_ci cache cap, ci_tool tool cache, vm_check)? | All three move | decided | 2026-11-14 |
+| delivery-speed | D303 | Where does the migration plan live, given dev-standards must not name other projects? | Private page and new project docs | decided | 2026-11-14 |
+| delivery-speed | D304 | How do the research findings about the separate runner-pool project reach it? | Message its session | decided | 2026-11-14 |
+| delivery-speed | D305 | DL337: the new pool image is built but the swap was refused (a job stayed busy through the 45-minute drain). What next? | Retry once when idle | decided | 2026-11-14 |
 | delivery-speed | D31 | Machine-wide CI queue: should the doctor's machine check report runner disk use and offer cleanup? | Report and offer cleanup | decided | 2026-11-04 |
 | delivery-speed | D32 | Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27? | Yes, in DL27 | decided | 2026-11-04 |
 | delivery-speed | D33 | Who owns dev-standards draft PR #140 (shared runner pool research) from here? | This session | decided | 2026-11-04 |
