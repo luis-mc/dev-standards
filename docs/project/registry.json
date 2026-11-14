@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T08:55+00:00",
+  "updated": "2026-11-14T09:59+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6015,11 +6015,12 @@
       "app": "",
       "status": "Waiting",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
-      "detail": "D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.",
-      "expected": "14 Nov ~09:30",
-      "changed": "2026-11-14T08:40+00:00",
-      "expected_basis": "memory 92% now; needs idle pool + mem <75%, then ~5 min",
-      "no_release": "machine maintenance: rebuild the pool image when idle"
+      "detail": "Pool restarted 09:57 (kvm_intel loaded). Image still 13 Nov; rebuild when the pool is idle.",
+      "expected": "14 Nov ~11:00",
+      "changed": "2026-11-14T09:59+00:00",
+      "no_release": "machine maintenance: rebuild the pool image when idle",
+      "expected_basis": "pool busy with CI jobs; rebuild ~5 min once idle",
+      "waits_on": "work"
     },
     {
       "id": "DL338",
@@ -6049,12 +6050,11 @@
       "id": "DL340",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-137: one pool for every runner and OS",
       "detail": "Join, CI, merge and smoke for DL341.",
-      "expected": "14 Nov ~09:10",
-      "changed": "2026-11-14T08:55+00:00",
-      "expected_basis": "CI + template build started 08:54, ~10 min",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T08:58+00:00",
       "release": 137,
       "started": "2026-11-14T08:53+00:00"
     },
@@ -6062,13 +6062,77 @@
       "id": "DL341",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool coordinates every runner on the machine, all OSes",
       "detail": "D298: Windows runner services are pool members: registry entries with os/kind/service/account, pool-<name> and repo-<slug> labels, CI_RUNS_ON_WINDOWS with those labels, one pool-status table for all runners and jobs, doctor and remove cover Windows.",
       "expected": "14 Nov",
-      "changed": "2026-11-14T08:53+00:00",
+      "changed": "2026-11-14T08:58+00:00",
       "rides": "DL340",
       "started": "2026-11-14T08:42+00:00"
+    },
+    {
+      "id": "DL342",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner pool: size cap on per-runner tool caches",
+      "detail": "Pool cleans a runner's tool cache (e.g. cargo-target) when it passes a size cap (~30 GB); runner-pool spec says so. Cause: one runner's Rust build cache reached 320 GB, filled C: and stopped the pool (14 Nov). Owner chose cache cap.",
+      "expected": "14 Nov ~10:27",
+      "changed": "2026-11-14T09:58+00:00",
+      "expected_basis": "cloud agent from 10:02: setup 4 + work 15 + checks 6 min",
+      "rides": "DL344",
+      "started": "2026-11-14T10:02+00:00"
+    },
+    {
+      "id": "DL343",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Runner pool loads kvm module at start when POOL_KVM=1",
+      "detail": "After wsl --shutdown, /dev/kvm is missing (kvm_intel not autoloaded in the WSL kernel), so the pool container with compose.kvm.yaml fails to start. Pool start should modprobe kvm_intel/kvm_amd first and say so; setup checks nestedVirtualization in .wslconfig. Seen 14 Nov.",
+      "expected": "14 Nov ~10:27",
+      "changed": "2026-11-14T09:58+00:00",
+      "expected_basis": "cloud agent from 10:02: setup 4 + work 15 + checks 6 min",
+      "rides": "DL344",
+      "started": "2026-11-14T10:02+00:00"
+    },
+    {
+      "id": "DL344",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-138: pool cache cap and kvm autoload",
+      "detail": "Join, CI, merge and smoke for DL342 and DL343.",
+      "expected": "14 Nov ~10:39",
+      "changed": "2026-11-14T09:58+00:00",
+      "release": 138,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-14T10:02+00:00",
+          "end": "2026-11-14T10:27+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-14T10:27+00:00",
+          "end": "2026-11-14T10:32+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-14T10:32+00:00",
+          "end": "2026-11-14T10:37+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-14T10:37+00:00",
+          "end": "2026-11-14T10:39+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 10
+      },
+      "started": "2026-11-14T09:58+00:00"
     },
     {
       "id": "DS1",
