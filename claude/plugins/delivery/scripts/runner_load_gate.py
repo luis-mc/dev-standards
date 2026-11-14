@@ -253,7 +253,7 @@ def _timed_out(cfg, text, waited_s, marker, log):
     return (1 if cfg['on_timeout'] == 'fail' else 0), None
 
 
-def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monotonic, log=print, marker=None,
+def _ci_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monotonic, log=print, marker=None,
                priority=None):
     """Take a ticket and wait for: first in line, a free slot, load under the limits. Then take the slot. Returns
     (code, lock): 0 go (lock is the slot record, or None when `on_timeout` is run or the load cannot be measured),
@@ -363,6 +363,63 @@ def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monoto
         if ticket is not None:
             MS.dequeue(ticket)
         marker.stop()
+
+
+def _heavy_wait(cfg, ident, mcfg, sample, sleep, clock, log, marker):
+    """Take a heavy slot (DL327), polling with no CI slot and no ticket held. Returns (code, lock, waited_s):
+    0 with the lock, 0 with None (timed out and on_timeout is run), 1 timed out."""
+    started = clock()
+    deadline = started + cfg['max_wait_min'] * 60.0
+    waited = False
+    while True:
+        for f in MS.free_stale(mcfg):
+            log('runner gate: freed slot %s (%s): held by %s run %s job %s'
+                % (MS.slot_label(dict(f['holder'], slot=f['slot'], kind=f.get('kind'))), f['reason'],
+                   f['holder'].get('repo'), f['holder'].get('run_id'), f['holder'].get('job')))
+        lock = MS.take_slot(ident, mcfg, kind='heavy')
+        if lock is not None:
+            if waited:
+                log('runner gate: heavy slot %s taken after %.0f s' % (MS.slot_label(lock), clock() - started))
+            return 0, lock, clock() - started
+        h = MS.heavy_holder(mcfg) or {}
+        who = '%s run %s job %s' % (h.get('repo'), h.get('run_id'), h.get('job'))
+        if not waited:
+            waited = True
+            marker.start()
+            log('runner gate: heavy job %s waits for the heavy slot (held by %s); polling every %.0f s for up to %.0f min'
+                % (ident['job'], who, cfg['poll_sec'], cfg['max_wait_min']))
+        if clock() + cfg['poll_sec'] > deadline:
+            code, _ = _timed_out(cfg, 'no free heavy slot (held by %s)' % who, clock() - started, marker, log)
+            return code, None, clock() - started
+        sleep(cfg['poll_sec'])
+
+
+def queue_wait(lim, cfg, ident, sample=None, sleep=time.sleep, clock=time.monotonic, log=print, marker=None,
+               priority=None):
+    """The gate. A heavy job (runner_gate.heavy_jobs, DL327) takes a heavy slot first, with no CI slot held while it
+    waits, then goes through the CI queue. Same return as _ci_wait; the heavy slot is freed again when no CI slot
+    was taken (job-done frees both otherwise)."""
+    mcfg = MS.machine_config()
+    if not MS.is_heavy_job(ident, mcfg):
+        return _ci_wait(lim, cfg, ident, sample, sleep, clock, log, marker, priority)
+    started = clock()
+    marker = marker or Marker(log=log)
+    log('runner gate: heavy job %s (shard %s): taking a heavy slot first' % (ident['job'], ident['shard']))
+    try:
+        code, heavy, _ = _heavy_wait(cfg, ident, mcfg, sample, sleep, clock, log, marker)
+    finally:
+        marker.stop()
+    if heavy is None:
+        return code, None
+    rest = dict(cfg, max_wait_min=max(0.0, cfg['max_wait_min'] - (clock() - started) / 60.0))
+    try:
+        code, lock = _ci_wait(lim, rest, ident, sample, sleep, clock, log, marker, priority)
+    except BaseException:
+        MS.free_slot(heavy, 'error')
+        raise
+    if lock is None:
+        MS.free_slot(heavy, 'no-ci-slot')
+    return code, lock
 
 
 def main(argv=None):
