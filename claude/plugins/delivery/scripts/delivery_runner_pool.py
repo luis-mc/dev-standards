@@ -988,7 +988,11 @@ def registry_path(pool):
 
 def registry_read(probe, pool):
     """(entries or None when unreadable, the whole data dict). A missing file reads as no entries."""
-    text = probe.read_text(registry_path(pool))
+    return registry_read_at(probe, registry_path(pool))
+
+
+def registry_read_at(probe, path):
+    text = probe.read_text(path)
     if text is None:
         return [], {'agents': []}
     try:
@@ -2090,7 +2094,7 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
     if kvm_error:
         out['error'] = kvm_error
     try:
-        out['repos'] = [a['repo'] for a in json.loads(probe.read_text(os.path.join(pool_dir(pool), 'agents.json')) or '{}').get('agents', []) if a.get('repo')]
+        out['repos'] = [a['repo'] for a in container_entries(json.loads(probe.read_text(os.path.join(pool_dir(pool), 'agents.json')) or '{}').get('agents', [])) if a.get('repo')]
     except (ValueError, AttributeError, TypeError, KeyError):
         out['repos'] = []
     return out
@@ -2901,6 +2905,67 @@ def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
                 '/ci-tools is a writable volume (%s)' % tools_mount.group(1) if rr[0] == 0 else '/ci-tools is not writable in the running pool')
 
 
+def pool_repos(entries):
+    """Every repository the registry names, in order, once."""
+    out = []
+    for a in entries or []:
+        if isinstance(a, dict) and a.get('repo') and a['repo'] not in out:
+            out.append(a['repo'])
+    return out
+
+
+def github_runners(probe, repo):
+    """[{'id','name','os','status','busy','labels'}] of one repository, or None when gh cannot read it."""
+    rd, _why = probe.gh_json(['api', 'repos/%s/actions/runners?per_page=100' % repo])
+    if rd is None:
+        return None
+    return [{'id': x.get('id'), 'name': x.get('name'), 'os': str(x.get('os') or '').lower(), 'status': x.get('status'),
+             'busy': bool(x.get('busy')), 'labels': [l.get('name') for l in x.get('labels', []) if isinstance(l, dict)]}
+            for x in (rd.get('runners', []) if isinstance(rd, dict) else [])]
+
+
+def entry_runner_name(entry, pool):
+    """The GitHub runner name of a registry entry: a service entry's own name, a container agent's <pool>-<slug>."""
+    return entry.get('name') if entry_kind(entry) == 'service' else '%s-%s' % (pool, entry.get('slug'))
+
+
+def registry_checks(add, probe, pool, entries):
+    """DL341 (D298): the registry against GitHub for every pool repository and every OS. Read only. Findings:
+    a GitHub runner with this pool's label that the registry lacks; a registry entry with no GitHub runner; a Windows runner
+    in a pool repository without the pool labels."""
+    repos = pool_repos(entries)
+    if not repos:
+        add('registry', 'ok', 'the registry names no repository')
+        return
+    untracked, missing, nolabel, unread = [], [], [], []
+    for repo in repos:
+        runners = github_runners(probe, repo)
+        if runners is None:
+            unread.append(repo)
+            continue
+        names = {r['name']: r for r in runners}
+        mine = [a for a in entries if isinstance(a, dict) and a.get('repo') == repo]
+        known = {entry_runner_name(a, pool) for a in mine}
+        for r in runners:
+            if r['os'] == 'windows' and not has_pool_labels(r['labels'], pool):
+                nolabel.append('%s (%s)' % (r['name'], repo))
+            elif _has_label(r['labels'], 'pool-%s' % pool) and r['name'] not in known:
+                untracked.append('%s (%s)' % (r['name'], repo))
+        missing += ['%s (%s)' % (entry_runner_name(a, pool), repo) for a in mine if entry_runner_name(a, pool) not in names]
+    if unread:
+        add('registry', 'warn', 'the runners of %s cannot be read (gh not signed in or no rights): the registry was not compared' % ', '.join(unread))
+    add('registry-untracked', 'warn' if untracked else 'ok',
+        ('GitHub lists pool runners that agents.json lacks: %s. Run the pool setup again for the repository.' % ', '.join(untracked))
+        if untracked else 'every GitHub runner with the pool label is in the registry')
+    add('registry-missing', 'warn' if missing else 'ok',
+        ('the registry lists runners GitHub does not: %s. Set them up again, or remove the entry.' % ', '.join(missing))
+        if missing else 'every registry entry has a GitHub runner')
+    add('windows-labels', 'warn' if nolabel else 'ok',
+        ('a Windows runner has no pool labels (pool-%s, repo-<route>): %s. Run the pool setup with --windows-repos; it adds them, and set '
+         'CI_RUNS_ON_WINDOWS to [\"self-hosted\",\"Windows\",\"pool-%s\",\"repo-<route>\"].' % (pool, ', '.join(nolabel), pool))
+        if nolabel else 'every Windows pool runner carries the pool labels')
+
+
 def doctor_checks(root=None, probe=None, repo_paths=None):
     """Checks of the pool for the doctor's `machine` check (contract 12.3). `root` may be a machine folder with `pools/`.
     Each: {"id": "pool.<name>", "status": "ok"|"warn"|"fail"|"skip", "detail": str}. No pool: one `skip`."""
@@ -2915,9 +2980,10 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
         compose = probe.read_text(os.path.join(d, 'compose.yaml')) or ''
         env = probe.read_text(os.path.join(d, '.env')) or ''
         try:
-            agents = json.loads(probe.read_text(os.path.join(d, 'agents.json')) or '{}').get('agents', [])
+            all_entries = json.loads(probe.read_text(os.path.join(d, 'agents.json')) or '{}').get('agents', [])
+            agents = container_entries(all_entries)  # DL341: service entries (Windows) are not container agents
         except (ValueError, AttributeError):
-            agents = None
+            agents = all_entries = None
 
         def add(name, status, detail):
             out.append({'id': 'pool.%s.%s' % (n, name), 'status': status, 'detail': detail})
@@ -2973,6 +3039,8 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
             pub = [a.get('repo') for a in agents if a.get('private') is not True]
             add('private', 'fail' if pub else 'ok', 'agent for a repository not recorded private: %s' % ', '.join(map(str, pub))
                 if pub else 'every agent\'s repository is private')
+        if all_entries is not None:
+            registry_checks(add, probe, n, all_entries)
         _browser_checks(add, probe, n, env_vals, agents, repo_paths)
         _layer_checks(add, probe, n, env_vals, compose, repo_paths)
         _kvm_checks(add, probe, n, {k.strip(): v.strip() for k, v in env_vals.items()}, d, agents)

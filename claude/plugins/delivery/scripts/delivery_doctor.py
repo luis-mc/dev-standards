@@ -983,6 +983,11 @@ def workflow_items(root, cfg):
             items.append(_item("workflows.windows_var:" + tag, "warn", "%s has a Windows self-hosted runner but CI_RUNS_ON_WINDOWS is "
                                "unset: Windows jobs cannot target the pool. Set it, for example `gh variable set CI_RUNS_ON_WINDOWS "
                                "--body '[\"self-hosted\", \"windows\"]'`." % tag))
+        elif has_win and variables is not None and "pool-" not in str(variables.get("CI_RUNS_ON_WINDOWS") or "").lower():
+            # DL341: the old 3 label value still works; it does not route by pool or repository
+            items.append(_item("workflows.windows_pool_labels:" + tag, "warn", "CI_RUNS_ON_WINDOWS of %s has no pool labels. It still "
+                               "matches, but the pool cannot route the job. Run the pool setup with --windows-repos: it sets "
+                               "[\"self-hosted\",\"Windows\",\"pool-<pool>\",\"repo-<route>\"]." % tag))
     return items
 
 

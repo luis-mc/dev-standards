@@ -6,7 +6,7 @@
     delivery_ci_setup.py checklist [--root DIR] [--json]
     delivery_ci_setup.py confirm   ITEM...  [--root DIR]
     template_adopt.py status | diff PATH | adopt PATH|--all [--dry-run] [--write-conflicts]   (DL308: adopt template changes, see its docstring)
-    delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh  --repos o/a,o/b [--windows-repos o/c] [--only windows|linux] [--pool NAME] [--yes] [--yes-delete NAMES]
+    delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh | pool-status | pool-remove --runner NAME  --repos o/a,o/b [--windows-repos o/c] [--only windows|linux] [--pool NAME] [--yes] [--yes-delete NAMES]
 
 `pool-*` is the guided path for Option 1 (DL30): detect what exists, show one plan, remove old runners and build clean,
 run each step after a yes. Deleting needs `--yes-delete` naming exactly what goes. It follows contract section 13:
@@ -717,6 +717,29 @@ def can_do_now(pool) -> list:
             "`/delivery-ci-setup`: run again; it says what is already set and changes only what is missing."]
 
 
+def cmd_pool_remove(args, P, probe) -> int:
+    """DL341: unregister one Windows runner of the pool registry (remove token, as the setup does), then drop its entry.
+    Other entries are never touched. Without --yes it only says what it would do."""
+    if not args.runner:
+        print("delivery_ci_setup: pool-remove needs --runner NAME (a Windows entry of the pool registry)", file=sys.stderr)
+        return 1
+    entries, _data = P.registry_read(probe, args.pool)
+    ent = next((a for a in entries or [] if P.entry_kind(a) == "service" and a.get("name") == args.runner), None)
+    if ent is None:
+        print("delivery_ci_setup: no Windows runner %s in the registry of pool %s" % (args.runner, args.pool), file=sys.stderr)
+        return 1
+    step = {"id": "win-remove:%s" % args.runner, "action": "windows-runner-remove", "pool": args.pool, "runner": args.runner,
+            "repo": ent.get("repo"), "folder": ent.get("folder")}
+    print("Remove Windows runner %s of %s: unregister it with a remove token, then drop its registry entry. No other entry changes."
+          % (args.runner, ent.get("repo")))
+    if not args.yes:
+        print("Nothing changed. Add --yes to do it.")
+        return 0
+    ok, detail = P.Executor(probe).run(step)
+    print(("done: " if ok else "failed: ") + detail)
+    return 0 if ok else 1
+
+
 def cmd_pool(args, root) -> int:
     import delivery_runner_pool as P
     probe = P.Probe()
@@ -727,6 +750,8 @@ def cmd_pool(args, root) -> int:
         return 0
     if args.action == "pool-refresh":
         return cmd_pool_refresh(args, root, P, probe)
+    if args.action == "pool-remove":
+        return cmd_pool_remove(args, P, probe)
     found["pool_env"] = P.read_pool_env(probe, args.pool)
     cap = P.resolve_cap(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib,
                         getattr(args, "resize", False), getattr(args, "shrink", False), getattr(args, "pool_gib", None),
@@ -836,7 +861,7 @@ def cmd_pool_refresh(args, root, P, probe) -> int:
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci_setup.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm", "pool-detect", "pool-plan", "pool-run",
-                                           "pool-refresh"])
+                                           "pool-refresh", "pool-status", "pool-remove"])
     ap.add_argument("items", nargs="*", help="confirm: the item ids")
     ap.add_argument("--answers", help="apply: a JSON file of answers, or - for stdin")
     ap.add_argument("--root", default=".")
@@ -863,6 +888,7 @@ def main(argv=None) -> int:
     ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
     ap.add_argument("--drain-timeout", type=float, default=None, metavar="SEC", help="pool-refresh: seconds to wait for running jobs to finish before the recreate (default 2700)")
     ap.add_argument("--only", choices=["windows", "linux"], help="pool-plan/run: plan and run only this OS's steps (host-load stays in both)")
+    ap.add_argument("--runner", help="pool-remove: the name of the Windows runner in the pool registry to unregister and drop")
     ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
     ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)
@@ -878,6 +904,11 @@ def main(argv=None) -> int:
         return 2
     if args.action == "facts":
         print(json.dumps(facts(root), indent=2))
+        return 0
+    if args.action == "pool-status":  # DL341: read only, one report of every runner across OSes
+        import pool_status as PS
+        rep = PS.collect(pool=args.pool if "--pool" in (argv if argv is not None else sys.argv) else None)
+        print(json.dumps(rep, indent=2) if args.json else PS.render_text(rep))
         return 0
     if args.action.startswith("pool-"):
         return cmd_pool(args, root)

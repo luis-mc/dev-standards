@@ -121,6 +121,12 @@ def sh(argv, **kw):
     return subprocess.run(argv, capture_output=True, text=True, **kw)
 
 
+def is_service(entry):
+    """DL341: the registry also lists runner services of other OSes (kind "service"). The container never starts them
+    and add, remove and role checks leave them alone. An entry with no kind is a container agent."""
+    return str(entry.get('kind') or 'container').lower() != 'container'
+
+
 def check_db_roles(slug, roles, agents):
     """DL231: names of the NOLOGIN roles a repository declares. Roles are server-wide, so a name must be
     free of every pool login user, every database login, and every role another repository declares."""
@@ -134,7 +140,7 @@ def check_db_roles(slug, roles, agents):
             out.append(r)
     for a in agents:
         other = a.get('slug')
-        if other == slug:
+        if is_service(a) or other == slug:
             continue
         for r in out:
             if r == 'u_%s' % other.replace('-', '_') or r == 'db_%s' % other.replace('-', '_'):
@@ -164,7 +170,7 @@ def route_of(entry):
 
 
 def next_slug(route, agents):
-    taken = {a.get('slug') for a in agents}
+    taken = {a.get('slug') for a in agents if not is_service(a)}
     n = 2
     while '%s-%d' % (route, n) in taken:
         n += 1
@@ -183,7 +189,7 @@ def add_agent(slug, repo, token, pool, private, agents_file='/agents.json', base
         raise PoolError('bad route %r (lowercase letters, digits, dash)' % route)
     if route is None and not any(a.get('slug') == slug for a in data['agents']):
         # DL323: a second agent for a repository another entry already serves joins that route as <route>-N.
-        same = [a for a in data['agents'] if a.get('repo') == repo]
+        same = [a for a in data['agents'] if a.get('repo') == repo and not is_service(a)]
         if same:
             route = route_of(same[0])
             slug = next_slug(route, data['agents'])
