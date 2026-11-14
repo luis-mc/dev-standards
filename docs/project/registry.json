@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T00:13+00:00",
+  "updated": "2026-11-14T00:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5901,6 +5901,31 @@
       "changed": "2026-11-14T00:13+00:00",
       "rides": "DL326",
       "started": "2026-11-13T23:53+00:00"
+    },
+    {
+      "id": "DL328",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-133: Rust target cache link",
+      "detail": "Join, CI, merge and smoke for DL329.",
+      "expected": "14 Nov ~00:50",
+      "changed": "2026-11-14T00:13+00:00",
+      "expected_basis": "agent ~00:35 + join/CI/merge ~10 min",
+      "release": 133
+    },
+    {
+      "id": "DL329",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Rust target cache: link <repo>/target to the cache folder",
+      "detail": "rust_ci.py moves cargo output to a persistent CARGO_TARGET_DIR, so tools that read <repo>/target/{debug,release}/<bin> fail (ENOENT). Link <repo>/target to the cache folder per job (junction on Windows, symlink on Linux) and export the path. Found by a project that adopted the plugin.",
+      "expected": "14 Nov ~00:35",
+      "changed": "2026-11-14T00:14+00:00",
+      "expected_basis": "cloud agent started ~00:15, ~20 min",
+      "rides": "DL328",
+      "started": "2026-11-14T00:14+00:00"
     },
     {
       "id": "DS1",
