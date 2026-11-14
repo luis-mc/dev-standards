@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T00:49+00:00",
+  "updated": "2026-11-14T08:29+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6016,10 +6016,35 @@
       "status": "Waiting",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
       "detail": "D297: drain, rebuild, restart the Linux pool only when no CI job runs; replaces the hand-copied gate scripts.",
-      "expected": "14 Nov ~03:00",
-      "changed": "2026-11-14T00:49+00:00",
-      "expected_basis": "first idle window after RELEASE-135, ~5 min",
+      "expected": "14 Nov ~08:40",
+      "changed": "2026-11-14T08:29+00:00",
+      "expected_basis": "pool idle + mem <75%, checked every 2 min from 08:25; ~5 min build",
       "no_release": "machine maintenance: rebuild the pool image when idle"
+    },
+    {
+      "id": "DL338",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-136: Windows hooks use an all-users Python",
+      "detail": "Join, CI, merge and smoke for DL339.",
+      "expected": "14 Nov ~08:55",
+      "changed": "2026-11-14T08:27+00:00",
+      "expected_basis": "agent ~08:40 + join/CI/merge ~15 min",
+      "release": 136
+    },
+    {
+      "id": "DL339",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Windows runner hooks: Python the runner account can run",
+      "detail": "Setup writes sys.executable (the setup user's per-user Python under their profile) into runner_load_gate.ps1 / runner_job_done.ps1; a ci-* service account cannot read it, so the gate never runs (CommandNotFoundException). Pick an all-users Python, refuse a per-user one, doctor checks it.",
+      "expected": "14 Nov ~08:40",
+      "changed": "2026-11-14T08:29+00:00",
+      "expected_basis": "cloud agent from ~08:30, ~10 min",
+      "rides": "DL338",
+      "started": "2026-11-14T08:27+00:00"
     },
     {
       "id": "DS1",
