@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T18:51+00:00",
+  "updated": "2026-11-14T19:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6351,23 +6351,22 @@
       "id": "DL356",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner account switch resets old file owners in _work",
       "detail": "Peer report: after pool-run moved a Windows runner from NETWORK SERVICE to its own account, files in _work kept the old owner and explicit ACLs, so every Rust job failed access denied on lld-link.exe. win-files must take ownership and reset ACLs under the folder; doctor checks the runner account can read its tool cache.",
       "expected": "14 Nov",
-      "changed": "2026-11-14T18:51+00:00",
+      "changed": "2026-11-14T19:21+00:00",
       "rides": "DL357"
     },
     {
       "id": "DL357",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-142: runner account switch resets old file owners",
       "detail": "Join, fold, ready PR #241, CI, merge, smoke, cleanup for DL356 (delivery 1.47.4).",
-      "expected": "14 Nov ~18:56",
-      "changed": "2026-11-14T18:51+00:00",
-      "expected_basis": "RELEASE-142 CI started 18:51, ~5 min",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T19:21+00:00",
       "release": 142,
       "phases": [
         {
