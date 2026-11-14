@@ -427,7 +427,7 @@ def detect_host(probe, samples=None, gap=None):
                 used, decided = load_used, 'host-load file'
         elif figures:
             load_state = 'stale'
-    return {'platform': probe.platform, 'python': getattr(probe, 'python_config', lambda: '')() or '', 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
+    return {'platform': probe.platform, 'python': getattr(probe, 'python_config', lambda: '')() or '', 'python_exe': _probe_python(probe), 'machine_dir': probe.machine_dir(), 'cpus': probe.cpu_count(), 'docker_cpus': docker_ncpu(probe),
             'total_gib': mem[0] if mem else None, 'used_gib': used, 'wsl_vm_gib': vm,
             'wsl_working_set_gib': parts[0], 'wsl_private_gib': parts[1], 'containers_gib': floor,
             'used_samples': [round(max(0.0, u - (v if v > 0 else box['pool'])), 1) for u, v in used_list],
@@ -922,6 +922,14 @@ def _py_version_key(path):
     return int(m.group(1)) if m else 0
 
 
+def _probe_python(probe):
+    """The Python the probe reports (this process's on a real host), else sys.executable."""
+    try:
+        return (probe.python() if probe is not None and hasattr(probe, 'python') else None) or sys.executable
+    except Exception:  # noqa: BLE001
+        return sys.executable
+
+
 def choose_hook_python(configured, exe, probe=None):
     """DL339 (R5.46): the Python a Windows hook wrapper or the host-load task runs. Returns (path, error); one is None.
     Order: the configured path; this process's Python when outside any user profile; the newest all-users install
@@ -1390,7 +1398,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     steps.append(_step('machine-config', 'Write the machine config (limits, slots) through the machine layer', 'machine-config',
                        limits=limits or {}))
     if win:
-        py, py_err = choose_hook_python(host.get('python'), sys.executable, probe)
+        py, py_err = choose_hook_python(host.get('python'), host.get('python_exe') or _probe_python(probe), probe)
         dest = host.get('machine_dir', 'C:/ProgramData/luismc-delivery').rstrip('/\\') + '/host-load'
         loop = _winpath(dest + '/host-load-loop.py')
         py = py or 'python'
@@ -1450,7 +1458,7 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     hooks_dir = windows_hooks_dir(machine_dir)
     admin = bool(win and keep_w and getattr(probe or Probe(), 'is_admin', lambda: False)())
     pin_problem = runner_pin_problem() if keep_w else None
-    py, py_err = choose_hook_python(host.get('python'), sys.executable, probe) if keep_w else (None, None)
+    py, py_err = choose_hook_python(host.get('python'), host.get('python_exe') or _probe_python(probe), probe) if keep_w else (None, None)
     py = py or 'python'
     pin_problem = pin_problem or py_err  # DL339: no all-users Python: the files and service steps stop with the message
     base_w = dict(machine_dir=machine_dir, hooks_dir=hooks_dir, tools_dir=WIN_TOOLS_DIR, python=py, ci_tool=CI_TOOL)
