@@ -193,6 +193,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.59** — **A container recreate counts only the container's runners** (DL354). The busy check, the drain gate, `--force` warning and cap recreate of `pool-refresh` count only runners that live in the pool container: registry entries with `kind` `container` (os `linux`), matched to GitHub runners by name. With no readable registry the check falls back to the container agent names `<pool>-<slug>` and says so. A busy runner outside the container (a Windows service) never refuses the recreate and never appears in the `--force` warning; the result shows it on one line, `not affected: <name> busy`. A runner list that cannot be read still counts as busy (R5.10). Windows-only runs (`--only windows`) keep their own scope.
 
+**R5.60** — **No marker when the fallback is off** (DL353, D301). The runner gate writes no ci-wait marker and runs no git when the project's `.delivery/config.json` has no enabled `ci.fallback` (a missing or unreadable config counts as off); it logs one line saying why (`no ci-wait marker written: fallback off (no ci.fallback in .delivery/config.json)`).
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -227,6 +229,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.53 to R5.55 | `claude/plugins/delivery/tests/test_dl342_cache_cap.py` (temp folders and a mocked probe) |
 | R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |
 | R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
+| R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without `ci.fallback`; no git subprocess when off) |
 
 ## 12. Code map
 
