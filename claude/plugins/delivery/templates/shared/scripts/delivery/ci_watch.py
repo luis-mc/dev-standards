@@ -490,19 +490,49 @@ def ledger_root() -> Path:
     return dc.repo_root()
 
 
+def default_branch(repo: str | None = None) -> set[str]:
+    """DL336: names of the default branch: `default_branch` in .delivery/config.json, else origin/HEAD, else main/master."""
+    import delivery_common as dc
+    names: set[str] = set()
+    try:
+        cfg = json.loads((ledger_root() / ".delivery" / "config.json").read_text(encoding="utf-8"))
+        if isinstance(cfg.get("default_branch"), str) and cfg["default_branch"]:
+            names.add(cfg["default_branch"])
+    except Exception:  # noqa: BLE001
+        pass
+    if not names:
+        try:
+            out = dc.run_git(["symbolic-ref", "refs/remotes/origin/HEAD"], check=False)
+            if out.returncode == 0 and out.stdout.strip().startswith("refs/remotes/origin/"):
+                names.add(out.stdout.strip()[len("refs/remotes/origin/"):])
+        except Exception:  # noqa: BLE001
+            pass
+    return names or {"main", "master"}
+
+
 def head_of(sha: str, repo: str | None) -> tuple[str | None, int | None]:
     """DL138: (branch, PR number) whose head is `sha`, from the local and remote branches at the commit (git only:
     no PR lookup, so the PR number stays None and the ledger matches the train by branch or by its recorded head).
+    DL336: full ref names, so origin/HEAD is dropped; the default branch is dropped too.
     (None, None) when no branch is found; never raises."""
     try:
         import delivery_common as dc
-        for ref in ("refs/heads", "refs/remotes"):
-            out = dc.run_git(["for-each-ref", "--points-at", sha, "--format=%(refname:short)", ref], check=False)
-            names = [n.split("/", 1)[1] if ref.endswith("remotes") and "/" in n else n
-                     for n in out.stdout.split() if not n.endswith("/HEAD")]
-            names = [n for n in names if n not in ("main", "master", "HEAD")]
-            if names:
-                return names[0], None
+        skip = default_branch(repo) | {"HEAD"}
+        out = dc.run_git(["for-each-ref", "--points-at", sha, "--format=%(refname)", "refs/heads", "refs/remotes"],
+                         check=False)
+        for ref in out.stdout.split():
+            if ref.startswith("refs/heads/"):
+                name = ref[len("refs/heads/"):]
+            elif ref.startswith("refs/remotes/"):
+                parts = ref[len("refs/remotes/"):].split("/", 1)
+                if len(parts) < 2:
+                    continue
+                name = parts[1]
+            else:
+                continue
+            if name.rsplit("/", 1)[-1] == "HEAD" or name in skip:
+                continue
+            return name, None
     except Exception:  # noqa: BLE001
         pass
     return None, None

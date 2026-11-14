@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.37.2
+version: 0.37.3
 owner: agents
 type: reference
 code:
@@ -206,6 +206,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.61** — **Target link** (DL329, after R5.60). When the target cache is used, `rust_ci.py` makes `<repo>/target` point at the cache folder of the job, so a test in any language that runs `<repo>/target/{debug,release}/<bin>` finds the binary. On Linux and macOS the link is a symlink; on Windows it is a directory junction (`_winapi.CreateJunction`, else `cmd /c mklink /J`), which needs no symlink privilege. A missing `target` gets the link. A link or junction is replaced and points at the current key. A real folder is never touched: `rust_ci` prints `rust_ci: <repo>/target is a real folder; bins live in <cache>` and still uses the cache. A link failure is a warning and never fails a job. `rust_ci.py env` also exports `DELIVERY_RUST_TARGET=<cache path>` beside `CARGO_TARGET_DIR`, so a tool can read the path without the link. `DELIVERY_NO_TARGET_CACHE=1` and a preset `CARGO_TARGET_DIR` make no link. The link is added to `.git/info/exclude` as `/target` (a `target/` line in `.gitignore` does not match a link), so `git status`, fast guards and cleanup do not see it.
 
+**R5.62** — **Default branch head** (DL336, after R5.61). `ci_watch.py <sha>` records a train only for a feature branch. `head_of` reads full ref names, drops every `*/HEAD` ref (so `origin/HEAD` is no longer read as a branch called `origin`) and drops the default branch (`default_branch` in `.delivery/config.json`, else `git symbolic-ref refs/remotes/origin/HEAD`, else `main` and `master`). A commit only on the default branch, such as the merge commit of the post-merge smoke watch, gives `(None, None)`: the ledger makes no train and the stop hook does not ask for a merge (DL-03).
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -272,6 +274,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.6, R5.14 | `claude/plugins/delivery/tests/test_brief_template.py`, `claude/plugins/delivery/tests/test_pre_tool.py`, `tools/test_rule_tags.py` |
 | R5.7, R5.8 | `claude/plugins/delivery/tests/test_watch.py` |
 | R5.61 | `claude/plugins/delivery/tests/test_dl329_rust_target_link.py` |
+| R5.62 | `claude/plugins/delivery/tests/test_dl336_ci_watch_default_head.py` |
 | R5.9, R5.10, R6.5 | `claude/plugins/delivery/tests/test_load.py`, `tools/test_delivery_runner.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
@@ -540,6 +543,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.37.3 | 2026-11-14 | RELEASE-135 | ci_watch.py head_of drops origin/HEAD and the default branch, so a default-branch watch makes no train (R5.62). | DL336 |
 | 0.37.2 | 2026-11-14 | RELEASE-133 | Rust CI: rust_ci.py links `<repo>/target` to the target cache (symlink, or junction on Windows) and exports DELIVERY_RUST_TARGET (R5.61). | DL329 |
 | 0.37.1 | 2026-11-13 | RELEASE-131 | The default CODE DONE marker accepts a list bullet and a ticked checkbox; an unticked box does not count. | DL309 |
 | 0.37.0 | 2026-11-13 | RELEASE-127 | agent-check records an agent's liveness from its branch's last commit (last_event_at is the fallback), the stop hook uses it, and agent-eta warns when a brief's owns overlaps another live agent.<br>The rust branch gate runs cargo-deny after lint when a Cargo.toml, Cargo.lock or deny.toml changed. New gate.json step key when_changed.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait. | DL303, DL304, DL306 |
