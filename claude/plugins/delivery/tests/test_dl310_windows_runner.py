@@ -140,7 +140,7 @@ class PlanSteps(unittest.TestCase):
         env = P.windows_env_text("C:/actions-runners/example-app", MACHINE + "/runner-hooks")
         pr = Probe(files={"C:/actions-runners/example-app/.env": env})
         pl = plan(f, pr)
-        self.assertEqual([s["state"] for s in pl["steps"] if s["id"].startswith(("winsvc:", "win-"))], ["already"])
+        self.assertEqual([s["state"] for s in pl["steps"] if s["id"].startswith(("winsvc:", "win-")) and not s["id"].startswith("win-labels")], ["already"])
 
     def test_wrong_account_is_registered_again_but_stale_env_only_rewrites(self):
         svc = {"name": "actions.runner.owner-example-app.host1-example-app", "kind": "windows-service",

@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.14.0
+version: 0.15.0
 owner: agents
 type: reference
 code:
@@ -169,6 +169,16 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.47** — **Doctor checks the hook Python** (DL339). For each runner-hooks `.ps1` the doctor reads the `$py` path. It fails when the path is under a user profile or does not exist, and the text gives the fix (R5.46). Check ID: `machine.hookpython:<file>`.
 
+**R5.48** — **The pool covers every runner on the machine, across OSes** (D298, DL341). Linux container agents, Windows runner services and later macOS runners are all pool members, and the pool is the one place that lists them. `agents.json` records each: a container entry (`os` `linux`, `kind` `container`, the default when the keys are absent) and a Windows entry (`os` `windows`, `kind` `service`, with `name`, `service`, `account`, `folder`, `repo`, `route`, `labels`). The pool container starts only container entries; `pool_supervisor.py` and `pool_agents.py` skip `kind` `service`.
+
+**R5.49** — **Windows runners carry the pool labels** (DL341). Setup registers a Windows runner with `self-hosted`, `Windows`, `X64`, `pool-<pool>` and `repo-<route>`, and writes or updates its registry entry (the route is the one a container entry of that repository already uses, else the slug). A runner already there without the pool labels gets them added (`gh api -X POST repos/OWNER/REPO/actions/runners/ID/labels`). The suggested `CI_RUNS_ON_WINDOWS` is `["self-hosted","Windows","pool-<pool>","repo-<route>"]`; the old three-label value still matches.
+
+**R5.50** — **One status report** (DL341). `scripts/pool_status.py` (also `delivery_ci_setup.py pool-status`) prints machine load and limits, the CI, light and heavy slots with holders, the queue, every registry runner joined with GitHub (name, repo, os, kind, labels, online or busy, current job), the running and queued runs of each pool repository and the last finished jobs on pool runners. Text by default, `--json` for tools. It only reads, with `gh api` calls, and never waits.
+
+**R5.51** — **Doctor compares the registry with GitHub** (DL341). For every pool repository and every OS the pool doctor warns on: a GitHub runner with the pool label that the registry lacks (`registry-untracked`), a registry entry with no GitHub runner (`registry-missing`), and a Windows runner without the pool labels (`windows-labels`). The `machine` check warns when `CI_RUNS_ON_WINDOWS` has no pool label.
+
+**R5.52** — **Removing a Windows runner** (DL341). `delivery_ci_setup.py pool-remove --runner NAME --yes` unregisters the runner with a remove token (as R5.33 does), then drops its entry. A failed unregister keeps the entry. No other entry changes. A runner replaced during setup leaves the registry in its own step.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -195,11 +205,13 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.40, R5.41 | `claude/plugins/delivery/tests/test_dl323_pool_agents_per_repo.py` |
 | R5.42 to R5.45 | `claude/plugins/delivery/tests/test_dl327_heavy_slots.py` |
 | R5.46, R5.47 | `claude/plugins/delivery/tests/test_dl339_hook_python.py` (mocked paths and probe) |
+| R5.48 to R5.52 | `claude/plugins/delivery/tests/test_dl341_pool_all_oses.py` (mocked gh and probe; the real service runs only on Windows) |
 
 ## 12. Code map
 
 Source: claude/plugins/delivery/scripts/delivery_runner_pool.py
 Source: claude/plugins/delivery/scripts/machine_slots.py
+Source: claude/plugins/delivery/scripts/pool_status.py
 Source: claude/plugins/delivery/templates/runner-pool/
 
 ## Versions
@@ -208,6 +220,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.15.0 | 2026-11-14 | RELEASE-137 | R5.48 to R5.52 (D298): the pool covers every runner on the machine across OSes; Windows runners get pool labels and a registry entry, `pool_status.py` reports the whole pool, the doctor compares the registry with GitHub, and `pool-remove` drops a Windows entry. | DL341 |
 | 0.14.0 | 2026-11-14 | RELEASE-136 | R5.46, R5.47: the Windows hook wrappers and the host-load task never use a per-user Python; the doctor flags a per-user or missing $py path. | DL339 |
 | 0.13.0 | 2026-11-14 | RELEASE-132 | Heavy job class (R5.42 to R5.45, D288): runner_gate.heavy_jobs and heavy_slots keep two heavy jobs from running at once on one machine; the doctor reports both. | DL327 |
 | 0.12.0 | 2026-11-13 | RELEASE-131 | Windows-only mode --only windows\|linux (R5.35), repository variable CI_RUNS_ON_WINDOWS (R5.36), label removal only with a yes (R5.37), the symbolic-link right for ci-* accounts and a PowerShell host-load task (R5.31, R5.32).<br>R5.38-R5.41: the doctor finds a locked Windows runner and checks runs-on labels (DL318); several pool agents per repository (DL323). | DL316, DL318 |

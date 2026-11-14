@@ -974,6 +974,95 @@ def windows_runner_folder(slug):
     return '%s/%s' % (WIN_RUNNERS_DIR, slug)
 
 
+# --- DL341: the pool registry covers every runner on the machine, across OSes (D298) --------------------------------------
+# agents.json lists the Linux container agents (the pool container reads it) and the Windows runner services (it ignores
+# them: they have kind "service"). An entry with no `os` is linux, with no `kind` is a container.
+
+def entry_os(entry):
+    return str((entry or {}).get('os') or 'linux').lower()
+
+
+def entry_kind(entry):
+    return str((entry or {}).get('kind') or 'container').lower()
+
+
+def container_entries(entries):
+    return [a for a in entries or [] if isinstance(a, dict) and entry_kind(a) == 'container']
+
+
+def registry_path(pool):
+    return os.path.join(pool_dir(pool), 'agents.json')
+
+
+def registry_read(probe, pool):
+    """(entries or None when unreadable, the whole data dict). A missing file reads as no entries."""
+    return registry_read_at(probe, registry_path(pool))
+
+
+def registry_read_at(probe, path):
+    text = probe.read_text(path)
+    if text is None:
+        return [], {'agents': []}
+    try:
+        data = json.loads(text or '{}')
+    except ValueError:
+        return None, {'agents': []}
+    if not isinstance(data, dict) or not isinstance(data.get('agents', []), list):
+        return None, {'agents': []}
+    data.setdefault('agents', [])
+    return data['agents'], data
+
+
+def windows_labels(pool, route):
+    """DL341: the labels a Windows pool runner registers with."""
+    return ['self-hosted', 'Windows', 'X64', 'pool-%s' % pool, 'repo-%s' % route]
+
+
+def windows_service_name(repo, name):
+    """The service name config.cmd gives: actions.runner.<owner>-<repo>.<runner name>."""
+    return 'actions.runner.%s.%s' % (repo.replace('/', '-'), name)
+
+
+def windows_registry_entry(pool, repo, name, service, account, folder, route=None):
+    route = route or slug_of(repo)
+    return {'name': name, 'os': 'windows', 'kind': 'service', 'service': service, 'account': account,
+            'folder': _norm(folder), 'repo': repo, 'route': route, 'private': True, 'labels': windows_labels(pool, route)}
+
+
+def registry_upsert(data, entry):
+    """Replace the service entry of the same name, else append. Every other entry stays as it is."""
+    agents = [a for a in data.get('agents', []) if not (entry_kind(a) == 'service' and a.get('name') == entry['name'])]
+    agents.append(entry)
+    return dict(data, agents=agents)
+
+
+def registry_drop(data, name):
+    """Drop only the service entry called `name`. Returns (data, True when one was dropped)."""
+    keep = [a for a in data.get('agents', []) if not (entry_kind(a) == 'service' and a.get('name') == name)]
+    return dict(data, agents=keep), len(keep) != len(data.get('agents', []))
+
+
+def registry_write(pool, data):
+    path = registry_path(pool)
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    tmp = path + '.tmp'
+    with open(tmp, 'w', encoding='utf-8') as f:
+        json.dump(data, f, indent=2)
+    os.replace(tmp, path)
+
+
+def route_for(entries, repo):
+    """The routing slug of a repository: the one a container entry already uses, else the slug."""
+    for a in container_entries(entries):
+        if a.get('repo') == repo:
+            return a.get('route') or a.get('slug') or slug_of(repo)
+    return slug_of(repo)
+
+
+def has_pool_labels(labels, pool):
+    return _has_label(labels, 'pool-%s' % pool) and any(str(l).lower().startswith('repo-') for l in labels or [])
+
+
 # --- DL316: a generic pool (D275, D278, D279) ------------------------------------------------------------------------
 # A shared runner carries no project label. Windows workflows read the repository variable CI_RUNS_ON_WINDOWS, a JSON list.
 
@@ -997,10 +1086,10 @@ def generic_label_set(pool='main'):
     return {x.lower() for x in GENERIC_BASE} | {('pool-%s' % pool).lower()} | {x.lower() for x in configured_generic_labels()}
 
 
-def windows_runs_on(labels, generic=None):
+def windows_runs_on(labels, generic=None, pool=None, route=None):
     """The JSON list for CI_RUNS_ON_WINDOWS: self-hosted, Windows, X64 and each generic capability label of the runner
     (a label named in machine.json `generic_labels`). Never a project name."""
-    out = list(WIN_RUNS_ON)
+    out = list(WIN_RUNS_ON) + (['pool-%s' % pool] if pool else []) + (['repo-%s' % route] if pool and route else [])
     have = {x.lower() for x in out}
     extra = {x.lower() for x in configured_generic_labels()}
     for l in labels or []:
@@ -1265,7 +1354,8 @@ def windows_runner_script(step, setup_machine=True):
     lines += ps_account(step['account'])
     lines += ps_files(step['account'], step['folder'], step['tools_dir'], step['python'], step.get('ci_tool'),
                       step.get('repo'), step.get('register', True))
-    lines += ps_register(step['repo'], step['runner'], step['account'], step['folder'], step['env_text'], step.get('register', True))
+    lines += ps_register(step['repo'], step['runner'], step['account'], step['folder'], step['env_text'], step.get('register', True),
+                         step.get('labels') or WIN_RUNNER_LABELS)
     return '\r\n'.join(lines) + '\r\n'
 
 
@@ -1474,6 +1564,8 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
     if admin and todo_w:
         steps.append(_step('win-machine', 'Make the group %s and set the rights: %s and the tool cache %s Modify, runner-hooks Read & Execute'
                            % (WIN_GROUP, machine_dir, WIN_TOOLS_DIR), 'windows-machine', **base_w))
+    reg_entries = (registry_read(probe, pool)[0] or []) if probe is not None else []
+    routes = {r: route_for(reg_entries, r) for r in keep_w}  # DL341: the routing slug of each Windows repository
     for repo in keep_w:
         slug = slug_of(repo)
         acct, folder, name = accts[repo], windows_runner_folder(slug), windows_runner_name(slug)
@@ -1481,10 +1573,11 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         fresh = repo in todo_w
         register = not (w and w['account_ok'])  # the password changes only when the service is registered again
         data = dict(base_w, repo=repo, slug=slug, account=acct, runner=name, folder=folder, register=register,
-                    env_text=windows_env_text(folder, hooks_dir), new_runner=name, pin_problem=pin_problem)
+                    env_text=windows_env_text(folder, hooks_dir), new_runner=name, pin_problem=pin_problem,
+                    pool=pool, route=routes[repo], labels=windows_labels(pool, routes[repo]))
         manual = ['cd %s' % folder,
-                  './config.cmd --url https://github.com/%s --token <TOKEN> --name %s --labels self-hosted,windows --runasservice '
-                  '--windowslogonaccount .\\%s --windowslogonpassword <PASSWORD>' % (repo, name, acct),
+                  './config.cmd --url https://github.com/%s --token <TOKEN> --name %s --labels %s --runasservice '
+                  '--windowslogonaccount .\\%s --windowslogonpassword <PASSWORD>' % (repo, name, ','.join(data['labels']), acct),
                   'Set ACTIONS_RUNNER_HOOK_JOB_STARTED=%s/runner_load_gate.ps1 and ACTIONS_RUNNER_HOOK_JOB_COMPLETED=%s/runner_job_done.ps1 '
                   'in %s/.env (the runner rejects .cmd hooks), with CI_TOOLS_DIR, RUSTUP_HOME and CARGO_HOME'
                   % (hooks_dir, hooks_dir, folder)]
@@ -1511,15 +1604,26 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
                 if x['id'] in ('win-account:%s' % repo, 'win-files:%s' % repo):
                     x['state'] = 'already'
         steps.append(s)
+        # DL341: a kept runner that lacks the pool labels gets them added; the registry records the runner either way.
+        gh_r = next((r for r in found['github']['repos'] if r['repo'] == repo), None) or {}
+        have_r = next((x for x in gh_r.get('runners', []) if x.get('name') == name), None)
+        if have_r and w and not has_pool_labels(have_r.get('labels'), pool):
+            add = [l for l in (data['labels'][3:]) if not _has_label(have_r.get('labels'), l)]
+            steps.append(_step('win-labels:%s' % repo, 'Add the pool labels %s to runner %s' % (', '.join(add), name), 'add-labels',
+                               repo=repo, runner_id=have_r['id'], runner=name, labels=add))
+        steps.append(_step('registry:%s' % repo, 'Record the Windows runner %s in the pool registry (agents.json)' % name,
+                           'registry-windows', repo=repo, pool=pool, runner=name, account=acct, folder=folder, route=routes[repo]))
     # DL310: replace the old Windows runners (another name or account) once the new one is online. Each step names what goes.
     for (repo, oname), x in sorted(old_win.items()):
-        common = dict(repo=repo, old_runner=oname, new_runner=new_names[repo])
+        common = dict(repo=repo, old_runner=oname, new_runner=new_names[repo], pool=pool)
         for n, sv in old_services.items():
             fold = old_folders[_norm(sv['folder']).lower()]
             if (fold.get('repo'), fold.get('name')) == (repo, oname):
                 steps.append(_step('winsvc-remove:%s' % n, 'Stop and delete the old Windows runner service %s (replaced by %s)' % (n, new_names[repo]),
                                    'windows-service-remove', delete=True, names=['Windows service ' + n], elevated=not admin, service=n,
                                    printed=['sc.exe stop "%s"' % n, 'sc.exe delete "%s"' % n], **common))
+        steps.append(_step('registry-drop:%s:%s' % (repo, oname), 'Drop the old runner %s from the pool registry (if listed)' % oname,
+                           'registry-drop', pool=pool, runner=oname, repo=repo))
         steps.append(_step('remove:%s:%s' % (repo, oname), 'Remove the old runner %s (%s) from %s' % (oname, x['os'], repo), 'remove-runner',
                            delete=True, names=['runner %s (%s) in %s on GitHub' % (oname, x['os'], repo)], runner_id=x['id'],
                            runner=oname, **common))
@@ -1533,8 +1637,8 @@ def plan(found, linux_repos=None, windows_repos=None, pool='main', cap=None, ser
         rn = next((x for x in gh.get('runners', []) if x.get('name') == new_names[repo]), None)
         labels = (rn or {}).get('labels') or []
         steps.append(_step('var:CI_RUNS_ON_WINDOWS:%s' % repo, 'Set CI_RUNS_ON_WINDOWS for %s' % repo, 'set-variable', repo=repo,
-                           name='CI_RUNS_ON_WINDOWS', value=json.dumps(windows_runs_on(labels, generic))))
-        custom = [l for l in labels if str(l).lower() not in generic]
+                           name='CI_RUNS_ON_WINDOWS', value=json.dumps(windows_runs_on(labels, generic, pool, routes[repo]))))
+        custom = [l for l in labels if str(l).lower() not in generic and not str(l).lower().startswith('repo-')]
         if rn and custom:
             named = workflows_naming(probe or Probe(), repo, custom)
             for label in custom:
@@ -1998,7 +2102,7 @@ def refresh_plan(probe, pool, repo_paths=None, browsers=None, playwright_version
     if kvm_error:
         out['error'] = kvm_error
     try:
-        out['repos'] = [a['repo'] for a in json.loads(probe.read_text(os.path.join(pool_dir(pool), 'agents.json')) or '{}').get('agents', []) if a.get('repo')]
+        out['repos'] = [a['repo'] for a in container_entries(json.loads(probe.read_text(os.path.join(pool_dir(pool), 'agents.json')) or '{}').get('agents', [])) if a.get('repo')]
     except (ValueError, AttributeError, TypeError, KeyError):
         out['repos'] = []
     return out
@@ -2068,6 +2172,46 @@ class Executor:
         r = self.probe.gh(['api', '-X', 'DELETE', 'repos/%s/actions/runners/%s/labels/%s' % (
             step['repo'], step['runner_id'], urllib.parse.quote(step['label'], safe=''))])
         return (bool(r and r[0] == 0), 'label removed' if r and r[0] == 0 else 'gh refused the label removal')
+
+    def do_add_labels(self, step):
+        """DL341: add labels to one runner (gh api POST .../runners/<id>/labels). Existing labels stay."""
+        args = ['api', '-X', 'POST', 'repos/%s/actions/runners/%s/labels' % (step['repo'], step['runner_id'])]
+        for l in step['labels']:
+            args += ['-f', 'labels[]=%s' % l]
+        r = self.probe.gh(args)
+        return (bool(r and r[0] == 0), 'labels added' if r and r[0] == 0 else 'gh refused the labels')
+
+    def do_registry_windows(self, step):
+        """DL341: write or update the Windows runner's entry in the pool's agents.json. No other entry changes."""
+        pool, folder = step['pool'], step['folder']
+        svc = (self.probe.read_text(folder + '/.service') or '').strip() or windows_service_name(step['repo'], step['runner'])
+        entries, data = registry_read(self.probe, pool)
+        if entries is None:
+            return False, 'agents.json of pool %s is unreadable; it was not changed' % pool
+        entry = windows_registry_entry(pool, step['repo'], step['runner'], svc, step['account'], folder, step.get('route'))
+        registry_write(pool, registry_upsert(data, entry))
+        return True, 'recorded %s in %s' % (step['runner'], registry_path(pool))
+
+    def do_windows_runner_remove(self, step):
+        """DL341: unregister one Windows runner with a remove token (as DL315 does), then drop its registry entry."""
+        lines = ps_header('Remove runner %s' % step['runner']) + ['$folder = %s' % _psq(_winpath(step['folder']))] + ps_unregister(step['repo'])
+        ok, text = self._ps(lines)
+        if not ok:
+            return False, text + ' (the registry entry stays)'
+        return self.drop_registry(step, text)
+
+    def do_registry_drop(self, step):
+        """DL341: drop the registry entry of a replaced Windows runner. Only that entry."""
+        return self.drop_registry(step)
+
+    def drop_registry(self, step, text=''):
+        entries, data = registry_read(self.probe, step['pool'])
+        if entries is None:
+            return False, 'agents.json is unreadable; the entry stays'
+        data, dropped = registry_drop(data, step['runner'])
+        if dropped:
+            registry_write(step['pool'], data)
+        return True, (text + '; ' if text else '') + ('registry entry dropped' if dropped else 'no registry entry to drop')
 
     def do_delete_folder(self, step):
         shutil.rmtree(step['path'], ignore_errors=False)
@@ -2154,7 +2298,7 @@ class Executor:
     def do_windows_service(self, step):
         """Write .env, then register: the token and the password are made inside PowerShell and never come back here."""
         return self._ps(ps_register(step['repo'], step['runner'], step['account'], step['folder'], step['env_text'],
-                                    step.get('register', True)))
+                                    step.get('register', True), step.get('labels') or WIN_RUNNER_LABELS))
 
     def do_windows_runner_script(self, step):
         """Not elevated: write the script the owner runs in an administrator PowerShell. It holds no secret."""
@@ -2769,6 +2913,67 @@ def _layer_checks(add, probe, pool, env_vals, compose, repo_paths):
                 '/ci-tools is a writable volume (%s)' % tools_mount.group(1) if rr[0] == 0 else '/ci-tools is not writable in the running pool')
 
 
+def pool_repos(entries):
+    """Every repository the registry names, in order, once."""
+    out = []
+    for a in entries or []:
+        if isinstance(a, dict) and a.get('repo') and a['repo'] not in out:
+            out.append(a['repo'])
+    return out
+
+
+def github_runners(probe, repo):
+    """[{'id','name','os','status','busy','labels'}] of one repository, or None when gh cannot read it."""
+    rd, _why = probe.gh_json(['api', 'repos/%s/actions/runners?per_page=100' % repo])
+    if rd is None:
+        return None
+    return [{'id': x.get('id'), 'name': x.get('name'), 'os': str(x.get('os') or '').lower(), 'status': x.get('status'),
+             'busy': bool(x.get('busy')), 'labels': [l.get('name') for l in x.get('labels', []) if isinstance(l, dict)]}
+            for x in (rd.get('runners', []) if isinstance(rd, dict) else [])]
+
+
+def entry_runner_name(entry, pool):
+    """The GitHub runner name of a registry entry: a service entry's own name, a container agent's <pool>-<slug>."""
+    return entry.get('name') if entry_kind(entry) == 'service' else '%s-%s' % (pool, entry.get('slug'))
+
+
+def registry_checks(add, probe, pool, entries):
+    """DL341 (D298): the registry against GitHub for every pool repository and every OS. Read only. Findings:
+    a GitHub runner with this pool's label that the registry lacks; a registry entry with no GitHub runner; a Windows runner
+    in a pool repository without the pool labels."""
+    repos = pool_repos(entries)
+    if not repos:
+        add('registry', 'ok', 'the registry names no repository')
+        return
+    untracked, missing, nolabel, unread = [], [], [], []
+    for repo in repos:
+        runners = github_runners(probe, repo)
+        if runners is None:
+            unread.append(repo)
+            continue
+        names = {r['name']: r for r in runners}
+        mine = [a for a in entries if isinstance(a, dict) and a.get('repo') == repo]
+        known = {entry_runner_name(a, pool) for a in mine}
+        for r in runners:
+            if r['os'] == 'windows' and not has_pool_labels(r['labels'], pool):
+                nolabel.append('%s (%s)' % (r['name'], repo))
+            elif _has_label(r['labels'], 'pool-%s' % pool) and r['name'] not in known:
+                untracked.append('%s (%s)' % (r['name'], repo))
+        missing += ['%s (%s)' % (entry_runner_name(a, pool), repo) for a in mine if entry_runner_name(a, pool) not in names]
+    if unread:
+        add('registry', 'warn', 'the runners of %s cannot be read (gh not signed in or no rights): the registry was not compared' % ', '.join(unread))
+    add('registry-untracked', 'warn' if untracked else 'ok',
+        ('GitHub lists pool runners that agents.json lacks: %s. Run the pool setup again for the repository.' % ', '.join(untracked))
+        if untracked else 'every GitHub runner with the pool label is in the registry')
+    add('registry-missing', 'warn' if missing else 'ok',
+        ('the registry lists runners GitHub does not: %s. Set them up again, or remove the entry.' % ', '.join(missing))
+        if missing else 'every registry entry has a GitHub runner')
+    add('windows-labels', 'warn' if nolabel else 'ok',
+        ('a Windows runner has no pool labels (pool-%s, repo-<route>): %s. Run the pool setup with --windows-repos; it adds them, and set '
+         'CI_RUNS_ON_WINDOWS to [\"self-hosted\",\"Windows\",\"pool-%s\",\"repo-<route>\"].' % (pool, ', '.join(nolabel), pool))
+        if nolabel else 'every Windows pool runner carries the pool labels')
+
+
 def doctor_checks(root=None, probe=None, repo_paths=None):
     """Checks of the pool for the doctor's `machine` check (contract 12.3). `root` may be a machine folder with `pools/`.
     Each: {"id": "pool.<name>", "status": "ok"|"warn"|"fail"|"skip", "detail": str}. No pool: one `skip`."""
@@ -2783,9 +2988,10 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
         compose = probe.read_text(os.path.join(d, 'compose.yaml')) or ''
         env = probe.read_text(os.path.join(d, '.env')) or ''
         try:
-            agents = json.loads(probe.read_text(os.path.join(d, 'agents.json')) or '{}').get('agents', [])
+            all_entries = json.loads(probe.read_text(os.path.join(d, 'agents.json')) or '{}').get('agents', [])
+            agents = container_entries(all_entries)  # DL341: service entries (Windows) are not container agents
         except (ValueError, AttributeError):
-            agents = None
+            agents = all_entries = None
 
         def add(name, status, detail):
             out.append({'id': 'pool.%s.%s' % (n, name), 'status': status, 'detail': detail})
@@ -2841,6 +3047,8 @@ def doctor_checks(root=None, probe=None, repo_paths=None):
             pub = [a.get('repo') for a in agents if a.get('private') is not True]
             add('private', 'fail' if pub else 'ok', 'agent for a repository not recorded private: %s' % ', '.join(map(str, pub))
                 if pub else 'every agent\'s repository is private')
+        if all_entries is not None:
+            registry_checks(add, probe, n, all_entries)
         _browser_checks(add, probe, n, env_vals, agents, repo_paths)
         _layer_checks(add, probe, n, env_vals, compose, repo_paths)
         _kvm_checks(add, probe, n, {k.strip(): v.strip() for k, v in env_vals.items()}, d, agents)
