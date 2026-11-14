@@ -2346,17 +2346,22 @@ class Executor:
         return True, text
 
     def runners_busy(self):
-        """DL93: True when a runner has a job, or when that cannot be told (treated as busy)."""
+        """DL93, DL354: True when a runner in the pool container has a job, or when that cannot be told (treated as busy).
+        With `self.busy_pool` set, runners outside the container (Windows services) are not counted."""
         found = detect_github(self.probe)
         if found.get('error') or not found.get('repos'):
             return True
-        return any(x['busy'] for r in found['repos'] for x in r['runners']) or any(r.get('error') for r in found['repos'])
+        pool = getattr(self, 'busy_pool', None)
+        names, _note = pool_scope(self.probe, pool) if pool else (None, '')
+        return any(x['busy'] and (not pool or in_container_scope(x.get('name'), x.get('os'), names, pool))
+                   for r in found['repos'] for x in r['runners']) or any(r.get('error') for r in found['repos'])
 
     def apply_cap(self, pool, old, new):
         """DL93: a changed cap in .env reaches the container only when it is recreated. Do it when no job runs; else say how."""
         if not old.get('POOL_MEM') or all(env_number(old.get(k)) == env_number(new.get(k)) for k in ('POOL_MEM', 'POOL_CPUS')):
             return ''
         cmd = recreate_command(pool)
+        self.busy_pool = pool
         if self.runners_busy():
             return ('. The cap changed but a job may run (or the runners cannot be read), so the pool was not recreated. '
                     'By hand: cd %s && %s' % (pool_dir(pool), cmd))
@@ -2451,6 +2456,7 @@ class Executor:
             text += ('; ' if text else '') + 'wrote %s in %s' % (', '.join(sorted(rp['changes'])), rp['path'])
         elif not text:
             text = 'nothing to change in %s' % rp['path']
+        self.busy_pool = rp['pool']
         if not force and not (rp.get('repos')) and self.runners_busy():
             return True, text + ('. A job may run (or the runners cannot be read), so the pool was not rebuilt. '
                                  'By hand: cd %s && docker compose build' % pool_dir(rp['pool']))
@@ -2474,6 +2480,8 @@ class Executor:
         """DL289: drain the pool, check GitHub once more, then stop and recreate the container with no build."""
         pool = rp['pool']
         warn = ''
+        scope = scope_text(self.probe, rp.get('repos') or [], pool)
+        scope = scope + '. ' if scope else ''
         if force:
             busy, err = busy_pool_runners(self.probe, rp.get('repos') or [], pool)
             if busy:
@@ -2481,16 +2489,17 @@ class Executor:
         else:
             ok, msg = self.drain(pool, drain_timeout)
             if not ok:
-                return False, msg
+                return False, msg + ('. ' + scope.rstrip('. ') if scope else '')
             gate_ok, gate_msg = rebuild_gate(self.probe, rp.get('repos') or [], pool, False)
             if not gate_ok:
                 clear_drain(pool)
-                return False, gate_msg + ' The image is built; the container was not recreated.'
+                return False, gate_msg + ' The image is built; the container was not recreated.' + (' ' + scope.rstrip() if scope else '')
         cmd = recreate_command(pool)
         ok_kvm, kvm_text = self.kvm_gate(pool)
         if not ok_kvm:
             clear_drain(pool)
             return False, warn + kvm_text
+        warn = scope + warn
         warn += (kvm_text + '. ') if kvm_text else ''
         if not force:
             subprocess.run(['docker', 'compose', 'stop', 'pool'], cwd=pool_dir(pool), capture_output=True, text=True)
@@ -3074,18 +3083,63 @@ def read_pool_layers(repo_paths):
     return layers, apt, errors
 
 
-def busy_pool_runners(probe, repos, pool):
-    """DL149: (names of busy pool runners, error). Reads `gh api repos/<repo>/actions/runners` for each repo; unreadable -> error."""
-    busy = []
+SCOPE_FALLBACK_NOTE = 'the registry is missing, so container runners are counted by agent name (<pool>-<slug>)'
+
+
+def pool_scope(probe, pool):
+    """DL354 (R5.59): (names of the runners that live in the Linux pool container, note). A container recreate stops only these.
+    The names come from the registry entries with kind container (os linux). A missing or unreadable registry gives
+    (None, note): the caller falls back to the container agent naming <pool>-<slug>."""
+    entries, _data = registry_read(probe, pool)
+    if entries:
+        return {entry_runner_name(a, pool) for a in container_entries(entries) if entry_os(a) == 'linux'}, ''
+    return None, SCOPE_FALLBACK_NOTE
+
+
+def in_container_scope(name, os_name, names, pool):
+    """DL354: True when the GitHub runner `name` lives in the pool container."""
+    if names is not None:
+        return name in names
+    return str(name or '').startswith(pool + '-') and str(os_name or '').lower() not in ('windows', 'macos')
+
+
+def scan_pool_runners(probe, repos, pool):
+    """DL354: (busy container runners, busy runners outside the container, error, scope note).
+    Reads `gh api repos/<repo>/actions/runners` for each repo; unreadable -> error (the caller treats it as busy)."""
+    names, note = pool_scope(probe, pool)
+    busy, outside = [], []
     for repo in repos:
         data, why = probe.gh_json(['api', 'repos/%s/actions/runners' % repo])
         if not isinstance(data, dict):
-            return busy, 'could not read the runners of %s (%s)' % (repo, why or 'no answer')
+            return busy, outside, 'could not read the runners of %s (%s)' % (repo, why or 'no answer'), note
         for r in data.get('runners') or []:
+            if not r.get('busy'):
+                continue
+            name = str(r.get('name', ''))
             labels = {l.get('name') for l in r.get('labels') or []}
-            if r.get('busy') and ('pool-%s' % pool in labels or str(r.get('name', '')).startswith(pool + '-')):
-                busy.append('%s (%s)' % (r.get('name'), repo))
-    return busy, None
+            label = '%s (%s)' % (r.get('name'), repo)
+            if in_container_scope(name, r.get('os'), names, pool):
+                busy.append(label)
+            elif 'pool-%s' % pool in labels or name.startswith(pool + '-') or str(r.get('os') or '').lower() == 'windows':
+                outside.append(label)
+    return busy, outside, None, note
+
+
+def busy_pool_runners(probe, repos, pool):
+    """DL149, DL354: (names of busy runners in the pool container, error). Windows service runners are not counted."""
+    busy, _outside, err, _note = scan_pool_runners(probe, repos, pool)
+    return busy, err
+
+
+def scope_text(probe, repos, pool):
+    """DL354: one line for the result: the busy runners the operation does not touch, and the name fallback. '' when none."""
+    _busy, outside, _err, note = scan_pool_runners(probe, repos, pool)
+    parts = []
+    if outside:
+        parts.append('not affected: %s busy' % ', '.join(x.split(' (')[0] for x in outside))
+    if note:
+        parts.append(note)
+    return '; '.join(parts)
 
 
 def rebuild_gate(probe, repos, pool, force=False):
