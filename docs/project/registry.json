@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T10:37+00:00",
+  "updated": "2026-11-14T10:53+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6137,6 +6137,19 @@
           "end": "2026-11-14T10:22+00:00"
         }
       ]
+    },
+    {
+      "id": "DL345",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Plan: move the runner pool to its own project, remove it here",
+      "detail": "Research and design: inventory, coupling, learnings, migration and removal plan, improvements for the new pool project.",
+      "expected": "14 Nov ~11:35",
+      "changed": "2026-11-14T10:53+00:00",
+      "expected_basis": "3 research agents to ~11:12, then ~20 min design",
+      "no_release": "study and plan; removal ships as its own tasks",
+      "started": "2026-11-14T10:52+00:00"
     },
     {
       "id": "DS1",
