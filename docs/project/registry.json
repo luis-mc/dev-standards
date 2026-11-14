@@ -6419,6 +6419,16 @@
       "started": "2026-11-14T21:45+00:00"
     },
     {
+      "id": "DL361",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Dogfood: this repo's own pre-commit hook gets the case-aware pattern",
+      "detail": "This repo's .githooks/pre-commit still has the old [:=] pattern with grep -Ein; it blocked a record commit on 14 Nov for a typed name in a task detail. Bring it to the shipped hook's DL358 pattern.",
+      "expected": "",
+      "changed": "2026-11-14T22:00+00:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
