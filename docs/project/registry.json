@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-13T23:56+00:00",
+  "updated": "2026-11-14T00:13+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -5852,20 +5852,19 @@
       "status": "Live",
       "item": "Add a second comics-organizer agent to the Linux pool (D282)",
       "detail": "With DL323 (delivery 1.45.0): copy the new pool_agents.py into the running pool container, then pool-add-agent for the repo with the shared route, only when no pool job runs. No rebuild; the copy is lost on a container recreate until the next pool refresh rebuilds the image.",
-      "expected": "13 Nov",
-      "changed": "2026-11-13T23:33+00:00",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T00:13+00:00",
       "no_release": "machine change, ships nothing"
     },
     {
       "id": "DL326",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Waiting",
+      "status": "Live",
       "item": "RELEASE: heavy slots in the runner gate",
       "detail": "Join DL327 (heavy job class with its own machine slot), fold, CI, merge, install, tell the peer.",
-      "expected": "14 Nov ~00:20",
-      "changed": "2026-11-13T23:56+00:00",
-      "expected_basis": "cloud agent ~15-20 min, join 5, CI 10, merge 5",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T00:13+00:00",
       "release": 132,
       "phases": [
         {
@@ -5895,11 +5894,11 @@
       "id": "DL327",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Runner gate: heavy job class with its own machine slot",
       "detail": "Owner D288: keep heavy jobs (integration, e2e, full suites) one at a time per machine by resource, not by a project label: runner_gate.heavy_jobs patterns (GITHUB_JOB or DELIVERY_SHARD, optional owner/repo: prefix) and heavy_slots (default 1). A heavy job takes a CI slot and the heavy slot; it waits while the heavy slot is held. Lets a project drop project labels like comics-linux-big.",
-      "expected": "13 Nov",
-      "changed": "2026-11-13T23:56+00:00",
+      "expected": "14 Nov",
+      "changed": "2026-11-14T00:13+00:00",
       "rides": "DL326",
       "started": "2026-11-13T23:53+00:00"
     },
