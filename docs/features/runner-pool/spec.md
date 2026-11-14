@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.17.0
+version: 0.18.0
 owner: agents
 type: reference
 code:
@@ -191,6 +191,10 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.58** — **The ci-wait marker never blocks the gate** (DL351). Every git command of the marker (`ci_fallback._git`) runs with `GIT_TERMINAL_PROMPT=0`, `GCM_INTERACTIVE=never`, `GIT_ASKPASS=echo`, `SSH_ASKPASS=echo`, `GIT_SSH_COMMAND='ssh -oBatchMode=yes'` (a value already set stays) and `-c credential.interactive=never`, and stops after `DELIVERY_MARKER_GIT_TIMEOUT` seconds (default 20). A timeout or failure is a failed result, never an exception out of the marker API. The gate logs `slot N taken` before the claim check, and each marker step that fails or times out logs one line (`ci-wait marker: git timed out after 20 s; going on`) and goes on. With `DELIVERY_MARKER_ROOT` set for a runner, the doctor runs `git ls-remote` from it with the same env and timeout and warns when the account has no non-interactive git credential; a locked folder is a warning that needs an administrator shell (R5.38). Check ID: `machine.markercred:<dir>`.
 
+**R5.59** — **A container recreate counts only the container's runners** (DL354). The busy check, the drain gate, `--force` warning and cap recreate of `pool-refresh` count only runners that live in the pool container: registry entries with `kind` `container` (os `linux`), matched to GitHub runners by name. With no readable registry the check falls back to the container agent names `<pool>-<slug>` and says so. A busy runner outside the container (a Windows service) never refuses the recreate and never appears in the `--force` warning; the result shows it on one line, `not affected: <name> busy`. A runner list that cannot be read still counts as busy (R5.10). Windows-only runs (`--only windows`) keep their own scope.
+
+**R5.60** — **No marker when the fallback is off** (DL353, D301). The runner gate writes no ci-wait marker and runs no git when the project's `.delivery/config.json` has no enabled `ci.fallback` (a missing or unreadable config counts as off); it logs one line saying why (`no ci-wait marker written: fallback off (no ci.fallback in .delivery/config.json)`).
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -224,6 +228,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.48 to R5.52 | `claude/plugins/delivery/tests/test_dl341_pool_all_oses.py` (mocked gh and probe; the real service runs only on Windows) |
 | R5.53 to R5.55 | `claude/plugins/delivery/tests/test_dl342_cache_cap.py` (temp folders and a mocked probe) |
 | R5.56, R5.57 | `claude/plugins/delivery/tests/test_dl343_kvm_autoload.py` (mocked probe; modprobe runs only in a real Docker VM) |
+| R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
+| R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
 
 ## 12. Code map
 
@@ -238,6 +244,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.18.0 | 2026-11-14 | RELEASE-140 | The gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301).<br>A container recreate counts only the runners in the pool container; a busy Windows service is shown as not affected and never refuses it (R5.59). | DL353, DL354 |
 | 0.17.0 | 2026-11-14 | RELEASE-139 | R5.58 (DL351): the ci-wait marker's git runs without prompts and with a timeout, the gate logs the slot before the claim check and never blocks on the marker, and the doctor warns when a runner has no non-interactive git credential. | DL351 |
 | 0.16.0 | 2026-11-14 | RELEASE-138 | R5.53 to R5.55: the Rust build cache cap holds for the current key, the pool sweeps each runner's tool cache over a per-runner cap, and the doctor warns on an oversized cache and low disk.<br>R5.56, R5.57: the pool loads the kvm module in the Docker VM before it starts with POOL_KVM=1, and the doctor and setup check nestedVirtualization in .wslconfig. | DL342, DL343 |
 | 0.15.0 | 2026-11-14 | RELEASE-137 | R5.48 to R5.52 (D298): the pool covers every runner on the machine across OSes; Windows runners get pool labels and a registry entry, `pool_status.py` reports the whole pool, the doctor compares the registry with GitHub, and `pool-remove` drops a Windows entry. | DL341 |

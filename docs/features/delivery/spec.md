@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.37.3
+version: 0.37.4
 owner: agents
 type: reference
 code:
@@ -543,6 +543,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.37.4 | 2026-11-14 | RELEASE-140 | The runner gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301). | DL353 |
 | 0.37.3 | 2026-11-14 | RELEASE-135 | ci_watch.py head_of drops origin/HEAD and the default branch, so a default-branch watch makes no train (R5.62). | DL336 |
 | 0.37.2 | 2026-11-14 | RELEASE-133 | Rust CI: rust_ci.py links `<repo>/target` to the target cache (symlink, or junction on Windows) and exports DELIVERY_RUST_TARGET (R5.61). | DL329 |
 | 0.37.1 | 2026-11-13 | RELEASE-131 | The default CODE DONE marker accepts a list bullet and a ticked checkbox; an unticked box does not count. | DL309 |
