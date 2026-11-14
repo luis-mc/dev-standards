@@ -204,6 +204,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.60** — Rust-only release scope (DL294, next to R5.30, DL-80). `ci-scope.json` may carry a `rust_release` block: `why`, `rust_only` and `node_inputs` (the same glob forms as the other keys). On a release pull request whose code files all match `rust_only` and none matches `node_inputs`, `ci_scope.py` returns the fourth scope `rust-release` instead of `full`. The Node suites do not run for it; the project's CI plan runs only the tests that call Rust builds. The order is: no diff, `full_files`, CI-only (`ci-smoke`), then release PR (`rust-release` when Rust-only, else `full`), else `affected`. A non-release PR never gets it, a docs-only release stays `full`, and no block means `full` as before.
 
+**R5.61** — **Target link** (DL329, after R5.60). When the target cache is used, `rust_ci.py` makes `<repo>/target` point at the cache folder of the job, so a test in any language that runs `<repo>/target/{debug,release}/<bin>` finds the binary. On Linux and macOS the link is a symlink; on Windows it is a directory junction (`_winapi.CreateJunction`, else `cmd /c mklink /J`), which needs no symlink privilege. A missing `target` gets the link. A link or junction is replaced and points at the current key. A real folder is never touched: `rust_ci` prints `rust_ci: <repo>/target is a real folder; bins live in <cache>` and still uses the cache. A link failure is a warning and never fails a job. `rust_ci.py env` also exports `DELIVERY_RUST_TARGET=<cache path>` beside `CARGO_TARGET_DIR`, so a tool can read the path without the link. `DELIVERY_NO_TARGET_CACHE=1` and a preset `CARGO_TARGET_DIR` make no link. The link is added to `.git/info/exclude` as `/target` (a `target/` line in `.gitignore` does not match a link), so `git status`, fast guards and cleanup do not see it.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -269,6 +271,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.5 (questions) | `claude/plugins/delivery/tests/test_questions.py` |
 | R5.6, R5.14 | `claude/plugins/delivery/tests/test_brief_template.py`, `claude/plugins/delivery/tests/test_pre_tool.py`, `tools/test_rule_tags.py` |
 | R5.7, R5.8 | `claude/plugins/delivery/tests/test_watch.py` |
+| R5.61 | `claude/plugins/delivery/tests/test_dl329_rust_target_link.py` |
 | R5.9, R5.10, R6.5 | `claude/plugins/delivery/tests/test_load.py`, `tools/test_delivery_runner.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
