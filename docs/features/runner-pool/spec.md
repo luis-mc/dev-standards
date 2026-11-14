@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.16.0
+version: 0.17.0
 owner: agents
 type: reference
 code:
@@ -238,6 +238,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.17.0 | 2026-11-14 | RELEASE-139 | R5.58 (DL351): the ci-wait marker's git runs without prompts and with a timeout, the gate logs the slot before the claim check and never blocks on the marker, and the doctor warns when a runner has no non-interactive git credential. | DL351 |
 | 0.16.0 | 2026-11-14 | RELEASE-138 | R5.53 to R5.55: the Rust build cache cap holds for the current key, the pool sweeps each runner's tool cache over a per-runner cap, and the doctor warns on an oversized cache and low disk.<br>R5.56, R5.57: the pool loads the kvm module in the Docker VM before it starts with POOL_KVM=1, and the doctor and setup check nestedVirtualization in .wslconfig. | DL342, DL343 |
 | 0.15.0 | 2026-11-14 | RELEASE-137 | R5.48 to R5.52 (D298): the pool covers every runner on the machine across OSes; Windows runners get pool labels and a registry entry, `pool_status.py` reports the whole pool, the doctor compares the registry with GitHub, and `pool-remove` drops a Windows entry. | DL341 |
 | 0.14.0 | 2026-11-14 | RELEASE-136 | R5.46, R5.47: the Windows hook wrappers and the host-load task never use a per-user Python; the doctor flags a per-user or missing $py path. | DL339 |
