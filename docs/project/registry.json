@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T09:59+00:00",
+  "updated": "2026-11-14T10:10+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6074,12 +6074,11 @@
       "id": "DL342",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner pool: size cap on per-runner tool caches",
       "detail": "Pool cleans a runner's tool cache (e.g. cargo-target) when it passes a size cap (~30 GB); runner-pool spec says so. Cause: one runner's Rust build cache reached 320 GB, filled C: and stopped the pool (14 Nov). Owner chose cache cap.",
-      "expected": "14 Nov ~10:27",
-      "changed": "2026-11-14T09:58+00:00",
-      "expected_basis": "cloud agent from 10:02: setup 4 + work 15 + checks 6 min",
+      "expected": "14 Nov ~10:17",
+      "changed": "2026-11-14T10:10+00:00",
       "rides": "DL344",
       "started": "2026-11-14T10:02+00:00"
     },
@@ -6087,12 +6086,11 @@
       "id": "DL343",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Runner pool loads kvm module at start when POOL_KVM=1",
       "detail": "After wsl --shutdown, /dev/kvm is missing (kvm_intel not autoloaded in the WSL kernel), so the pool container with compose.kvm.yaml fails to start. Pool start should modprobe kvm_intel/kvm_amd first and say so; setup checks nestedVirtualization in .wslconfig. Seen 14 Nov.",
-      "expected": "14 Nov ~10:27",
-      "changed": "2026-11-14T09:58+00:00",
-      "expected_basis": "cloud agent from 10:02: setup 4 + work 15 + checks 6 min",
+      "expected": "14 Nov ~10:17",
+      "changed": "2026-11-14T10:10+00:00",
       "rides": "DL344",
       "started": "2026-11-14T10:02+00:00"
     },
@@ -6103,36 +6101,37 @@
       "status": "Running",
       "item": "RELEASE-138: pool cache cap and kvm autoload",
       "detail": "Join, CI, merge and smoke for DL342 and DL343.",
-      "expected": "14 Nov ~10:39",
-      "changed": "2026-11-14T09:58+00:00",
+      "expected": "14 Nov ~10:17",
+      "changed": "2026-11-14T10:10+00:00",
       "release": 138,
-      "phases": [
-        {
-          "name": "agents",
-          "start": "2026-11-14T10:02+00:00",
-          "end": "2026-11-14T10:27+00:00"
-        },
-        {
-          "name": "join",
-          "start": "2026-11-14T10:27+00:00",
-          "end": "2026-11-14T10:32+00:00"
-        },
-        {
-          "name": "ci",
-          "start": "2026-11-14T10:32+00:00",
-          "end": "2026-11-14T10:37+00:00"
-        },
-        {
-          "name": "merge",
-          "start": "2026-11-14T10:37+00:00",
-          "end": "2026-11-14T10:39+00:00"
-        }
-      ],
       "risk": {
         "label": "+1 fix round",
         "minutes": 10
       },
-      "started": "2026-11-14T09:58+00:00"
+      "started": "2026-11-14T09:58+00:00",
+      "expected_basis": "PR #238 CI started 10:10, ~5 min",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-14T10:00+00:00",
+          "end": "2026-11-14T10:03+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-14T10:06+00:00",
+          "end": "2026-11-14T10:10+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-14T10:10+00:00",
+          "end": "2026-11-14T10:15+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-14T10:15+00:00",
+          "end": "2026-11-14T10:17+00:00"
+        }
+      ]
     },
     {
       "id": "DS1",
