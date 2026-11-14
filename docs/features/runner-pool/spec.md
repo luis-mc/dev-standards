@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.18.0
+version: 0.19.0
 owner: agents
 type: reference
 code:
@@ -247,6 +247,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.19.0 | 2026-11-14 | RELEASE-142 | An account switch leaves no unreadable file: the Windows files step takes back and resets files already in the runner folder before it locks it (R5.61). | DL356 |
 | 0.18.0 | 2026-11-14 | RELEASE-140 | The gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301).<br>A container recreate counts only the runners in the pool container; a busy Windows service is shown as not affected and never refuses it (R5.59). | DL353, DL354 |
 | 0.17.0 | 2026-11-14 | RELEASE-139 | R5.58 (DL351): the ci-wait marker's git runs without prompts and with a timeout, the gate logs the slot before the claim check and never blocks on the marker, and the doctor warns when a runner has no non-interactive git credential. | DL351 |
 | 0.16.0 | 2026-11-14 | RELEASE-138 | R5.53 to R5.55: the Rust build cache cap holds for the current key, the pool sweeps each runner's tool cache over a per-runner cap, and the doctor warns on an oversized cache and low disk.<br>R5.56, R5.57: the pool loads the kvm module in the Docker VM before it starts with POOL_KVM=1, and the doctor and setup check nestedVirtualization in .wslconfig. | DL342, DL343 |
