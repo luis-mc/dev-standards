@@ -15,7 +15,7 @@
 - Before briefing an agent that needs an external site, run `scripts/delivery/reach_check.py` in its sandbox; if it fails, fetch the material locally and commit it. <!-- check: DL-43 -->
 - Run work in the cloud first; a local agent needs a `PC-bound:` reason line in its prompt unless the cloud cap is full. <!-- check: DL-39 -->
 - Worktrees and scratch live under the configured work root, never under the projects folder; remove them when done. <!-- check: DL-53 -->
-- Never send email, messages, posts, issues or comments in the owner's name; write drafts as files. <!-- check: DL-73 -->
+- Never send email, messages, posts, issues, comments or reviews in the owner's name; write drafts as files. On repositories the owner owns, agents may open pull requests, mark them ready and edit their title and description; merging stays the owner's. <!-- check: DL-73 -->
 - No Co-Authored-By or AI attribution in commits or PR bodies when `.delivery/config.json` sets `no_attribution`. <!-- check: DL-74 -->
 
 ## Integrate once, deploy once
