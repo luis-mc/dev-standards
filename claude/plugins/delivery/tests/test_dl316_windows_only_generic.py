@@ -84,13 +84,13 @@ class RunsOnWindows(unittest.TestCase):
         pl = plan(two_os_found(), WfProbe(), only="windows")
         s = next(x for x in pl["steps"] if x["id"] == "var:CI_RUNS_ON_WINDOWS:" + REPO)
         self.assertEqual((s["action"], s["name"]), ("set-variable", "CI_RUNS_ON_WINDOWS"))
-        self.assertEqual(json.loads(s["value"]), ["self-hosted", "Windows", "X64"])
+        self.assertEqual(json.loads(s["value"]), ["self-hosted", "Windows", "X64", "pool-main", "repo-example-app"])
 
     def test_capability_label_from_machine_config_is_included(self):
         with mock.patch.object(P, "configured_generic_labels", return_value=["gpu"]):
             pl = plan(two_os_found([runner(RNAME, labels=("self-hosted", "Windows", "X64", "gpu"))]), WfProbe(), only="windows")
         s = next(x for x in pl["steps"] if x["id"] == "var:CI_RUNS_ON_WINDOWS:" + REPO)
-        self.assertEqual(json.loads(s["value"]), ["self-hosted", "Windows", "X64", "gpu"])
+        self.assertEqual(json.loads(s["value"]), ["self-hosted", "Windows", "X64", "pool-main", "repo-example-app", "gpu"])
         self.assertFalse([x for x in pl["steps"] if x["action"] == "remove-label"])
 
     def test_generic_set(self):
