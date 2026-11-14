@@ -61,7 +61,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-14T11:57+00:00"
+      "updated": "2026-11-14T11:59+00:00"
     },
     {
       "key": "transcript-folds",
@@ -111,7 +111,7 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-14T11:58+00:00",
+  "updated": "2026-11-14T11:59+00:00",
   "retired": [],
   "deleted": [
     {

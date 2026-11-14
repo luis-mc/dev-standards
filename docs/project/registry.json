@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T11:57+00:00",
+  "updated": "2026-11-14T11:59+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6015,11 +6015,11 @@
       "app": "",
       "status": "Waiting",
       "item": "Pool rebuild when idle (bake 1.46.1 gate scripts)",
-      "detail": "New image built 10:38. Swap refused 11:23 (job busy through the drain). D305: retry once when idle, no force.",
+      "detail": "New image built 10:38; swap refused 11:23 (comics-organizer job busy). Since then the supervisor restarts the moobable, lan-link and home-automation listeners every few min: their first listeners (09:57) still run and hold the GitHub session, so the new ones exit with Session Conflict. Jobs unaffected (runners online, idle). The swap clears it. D305: retry once when idle, no force.",
       "expected": "14 Nov ~13:00",
-      "changed": "2026-11-14T11:53+00:00",
+      "changed": "2026-11-14T11:59+00:00",
       "no_release": "machine maintenance: rebuild the pool image when idle",
-      "expected_basis": "next idle window, then ~2 min swap",
+      "expected_basis": "comics-organizer runs since 08:40 hold the slot; swap ~2 min after",
       "started": "2026-11-14T10:38+00:00",
       "waits_on": "work"
     },
