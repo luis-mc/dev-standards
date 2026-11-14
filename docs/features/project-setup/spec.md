@@ -113,7 +113,7 @@ The hook reads only the current turn from the end of the transcript, in 1 MiB bl
 
 **R5.24** — `claude-setup` writes the project allow rules `Bash(gh pr create:*)`, `Bash(gh pr ready:*)` and `Bash(gh pr edit:*)` into `permissions.allow` of the project's `.claude/settings.json`. It merges with the entries there, adds no duplicate and never adds `gh pr merge`. The rules asset carries the DL-73 exception: on repositories the owner owns, agents may open pull requests, mark them ready and edit their title and description. Issues, comments, reviews, email and messages stay drafts, and merging stays the owner's. (DL334, D290 to D292)
 
-**R5.25** — The shipped pre-commit hook matches a `*_KEY`, `*_TOKEN`, `*_SECRET` or `*_PASS` name the way `.gitleaks.toml` does: `=` then a value, or `:` then a quoted value. Typed names (`path_key: &str`), Rust paths (`path_key::Name`) and CSS selectors pass; a quoted or assigned value is still blocked. `DATABASE_URL` keeps its wider shape. (DL358)
+**R5.25** — The shipped pre-commit hook matches secret-shaped names with case: an UPPER_CASE `*_KEY`, `*_TOKEN`, `*_SECRET` or `*_PASS` name matches `=` or `:` then a value; a lower- or mixed-case name matches only the way `.gitleaks.toml` does, `=` then a value or `:` then a quoted value. Typed names (`path_key: &str`), Rust paths (`path_key::Name`) and CSS selectors pass; a quoted or assigned value is still blocked. `DATABASE_URL` keeps its wider shape. (DL358)
 
 ## 6. Non-functional requirements
 
