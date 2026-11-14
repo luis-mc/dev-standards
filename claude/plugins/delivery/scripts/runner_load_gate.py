@@ -202,21 +202,33 @@ class Marker:
         except Exception as exc:  # noqa: BLE001
             self.log('runner gate: could not write the ci-wait marker (%s: %s)' % (type(exc).__name__, exc))
 
+    def _timeout_s(self):
+        try:
+            return self.mod.git_timeout()
+        except Exception:  # noqa: BLE001
+            return 20.0
+
+    def _step(self, what, fn, default):
+        """One marker step. Any failure or slow git is one log line, and the gate goes on (DL351)."""
+        t0 = time.monotonic()
+        try:
+            out = fn()
+        except Exception as exc:  # noqa: BLE001
+            self.log('ci-wait marker: %s failed (%s: %s); going on' % (what, type(exc).__name__, exc))
+            return default
+        if time.monotonic() - t0 >= self._timeout_s():
+            self.log('ci-wait marker: git timed out after %g s (%s); going on' % (self._timeout_s(), what))
+        return out
+
     def stop(self):
         if self.mod and self.on:
-            try:
-                self.mod.clear_wait(self.root, self.remote, self.sha, self.shard)
-            except Exception:  # noqa: BLE001
-                pass
+            self._step('clear', lambda: self.mod.clear_wait(self.root, self.remote, self.sha, self.shard), None)
             self.on = False
 
     def claim_lost(self):
         if not self.mod:
             return False
-        try:
-            return bool(self.mod.claim_taken(self.root, self.remote, self.sha, self.shard))
-        except Exception:  # noqa: BLE001
-            return False
+        return bool(self._step('claim check', lambda: self.mod.claim_taken(self.root, self.remote, self.sha, self.shard), False))
 
 
 def _ticket_state(ticket, mcfg):
@@ -233,14 +245,15 @@ def _ticket_state(ticket, mcfg):
 
 def _got(lock, ident, marker, waited_s, log):
     """A slot was taken: stop the marker, give the slot back when the fallback claimed the shard, else go."""
-    marker.stop()
     label = MS.slot_label(lock)
+    log('runner gate: slot %s taken after %.0f s' % (label, waited_s))  # before any marker git call (DL351)
+    marker.stop()
     if marker.claim_lost():
         MS.free_slot(lock, 'claim-lost')
         log('runner gate: claim lost: the fallback claimed shard %s while the job was held; '
             'ending without work, slot %s freed' % (ident['shard'], label))
         return 3, None
-    log('runner gate: slot %s taken after %.0f s; starting the job' % (label, waited_s))
+    log('runner gate: starting the job')
     return 0, lock
 
 
