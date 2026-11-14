@@ -165,6 +165,10 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.45** — **Doctor reports the heavy class** (DL327). The `machine.heavy` check shows `heavy_slots` and `heavy_jobs`, and warns when `heavy_slots` is above `ci_slots`. A stale heavy slot is reported in `machine.slots`.
 
+**R5.46** — **The hook Python is never a per-user path** (DL339). The Windows hook wrappers (`runner_load_gate.ps1`, `runner_job_done.ps1`) and the host-load task run a Python the runner service account can read. The setup picks it in this order: the `python` of the machine config; the Python that runs setup, only when it is outside any user profile (`%USERPROFILE%`, `C:\Users\`, the `LOCALAPPDATA` tree); the newest all-users install (`C:\Program Files\Python3*\python.exe`, or `py -0p` output without profile paths). With none, the runner-hooks, files and service steps fail and the host-load task is not printed; the message says to install Python for all users or to set the path in the machine config.
+
+**R5.47** — **Doctor checks the hook Python** (DL339). For each runner-hooks `.ps1` the doctor reads the `$py` path. It fails when the path is under a user profile or does not exist, and the text gives the fix (R5.46). Check ID: `machine.hookpython:<file>`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -190,6 +194,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.38, R5.39 | `claude/plugins/delivery/tests/test_dl318_doctor_locked_runner.py` (mocked service list and workflows) |
 | R5.40, R5.41 | `claude/plugins/delivery/tests/test_dl323_pool_agents_per_repo.py` |
 | R5.42 to R5.45 | `claude/plugins/delivery/tests/test_dl327_heavy_slots.py` |
+| R5.46, R5.47 | `claude/plugins/delivery/tests/test_dl339_hook_python.py` (mocked paths and probe) |
 
 ## 12. Code map
 
