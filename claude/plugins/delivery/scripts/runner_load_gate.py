@@ -161,6 +161,16 @@ def _fallback(root):
     return None
 
 
+def _fallback_on(mod, root):
+    """True when the project's .delivery/config.json switches the Option 4 fallback on. Uses the fallback's own rule
+    (`fallback_settings(...)['enabled']`), so there is one definition. A missing or unreadable config is off."""
+    try:
+        cfg = mod.CS.read_config(root)
+        return bool(mod.fallback_settings(cfg).get('enabled'))
+    except Exception:  # noqa: BLE001
+        return False
+
+
 class Marker:
     """The ci-wait marker of this job's shard. Every call fails open: no checkout, no shard, no git means no marker.
     Whenever there is no marker, one log line says why (`skipped`)."""
@@ -187,6 +197,10 @@ class Marker:
                 self.mod = _fallback(self.root)
                 if not self.mod:
                     self.skipped = 'ci_fallback.py could not be loaded (not in the checkout and not in the plugin)'
+                elif not _fallback_on(self.mod, self.root):
+                    # DL353, D301: the marker has one reader, the Option 4 fallback. Fallback off: no git at all.
+                    self.mod = None
+                    self.skipped = 'fallback off (no ci.fallback in .delivery/config.json)'
         self.on = False
 
     def start(self):
