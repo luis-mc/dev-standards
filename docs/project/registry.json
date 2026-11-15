@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-14T22:00+00:00",
+  "updated": "2026-11-15T02:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6427,6 +6427,54 @@
       "detail": "This repo's .githooks/pre-commit still has the old [:=] pattern with grep -Ein; it blocked a record commit on 14 Nov for a typed name in a task detail. Bring it to the shipped hook's DL358 pattern.",
       "expected": "",
       "changed": "2026-11-14T22:00+00:00"
+    },
+    {
+      "id": "DL362",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Pool KVM loader service and no-KVM fallback",
+      "detail": "After a reboot or WSL shutdown the pool container exits: kvm_intel not loaded. Owner chose (no Windows task): a privileged kvm-loader compose service with restart unless-stopped, plus the pool waits 120 s for /dev/kvm then starts without KVM.",
+      "expected": "15 Nov ~03:00",
+      "changed": "2026-11-15T02:20+00:00",
+      "expected_basis": "agent re-briefed 02:40, ~20 min",
+      "rides": "DL363",
+      "started": "2026-11-15T02:18+00:00"
+    },
+    {
+      "id": "DL363",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-144: DL362 pool start-up task",
+      "detail": "Join, CI, merge, cleanup and install of the pool start-up task",
+      "expected": "15 Nov ~03:15",
+      "changed": "2026-11-15T02:21+00:00",
+      "expected_basis": "agent ~20 min from 02:40, join 5, CI ~5, merge 5",
+      "release": 144,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-15T02:30+00:00",
+          "end": "2026-11-15T03:00+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-15T03:00+00:00",
+          "end": "2026-11-15T03:05+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-15T03:05+00:00",
+          "end": "2026-11-15T03:10+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-15T03:10+00:00",
+          "end": "2026-11-15T03:15+00:00"
+        }
+      ],
+      "started": "2026-11-15T02:18+00:00"
     },
     {
       "id": "DS1",
