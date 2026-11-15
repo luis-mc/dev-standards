@@ -197,6 +197,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.61** — **An account switch leaves no unreadable file** (DL356). Before the Windows runner files step locks the runner folder to the runner account, Administrators take ownership of everything already in it and every file is reset to inherit (`takeown /R`, `icacls /reset /T`). Files a previous account made, such as the `_work` tool cache, are then readable by the new account.
 
+**R5.62** — **The pool starts after a restart with no host task** (DL362). With `POOL_KVM=1`, `compose.kvm.yaml` adds a `kvm-loader` service (image `alpine`, `privileged: true`, `pid: host`, `restart: unless-stopped`). It loads `kvm_intel`, else `kvm_amd`, in the Docker VM with `nsenter -t 1 -m -- modprobe`, then sleeps forever. Docker Desktop restarts it at every Docker start, and the `pool` service depends on it being healthy, so `/dev/kvm` exists after a reboot, `wsl --shutdown` or a Docker restart. Nothing is installed on the host. Only the loader is privileged; the pool never is. If `/dev/kvm` is still missing when the supervisor prepares a runner, it waits up to 120 s, once per start, then logs `pool: /dev/kvm missing after 120 s; starting without KVM` and starts the runners without KVM. The doctor (`kvm-loader`) warns when `POOL_KVM=1` and `compose.kvm.yaml` has no `kvm-loader` service.
+
 ## 8. Failure modes
 
 | Failure | Result |

@@ -2802,7 +2802,13 @@ def _kvm_checks(add, probe, pool, env_vals, compose_dir, agents):
         if 'compose.kvm.yaml' not in use or not probe.isfile(os.path.join(compose_dir, 'compose.kvm.yaml')):
             add('kvm-compose', 'fail', 'POOL_KVM=1 but .env has no COMPOSE_FILE with compose.kvm.yaml. Run `delivery_ci_setup.py pool-refresh --kvm on --yes`.')
         else:
-            add('kvm-compose', 'ok', 'compose passes /dev/kvm (compose.kvm.yaml); never privileged')
+            add('kvm-compose', 'ok', 'compose passes /dev/kvm (compose.kvm.yaml); the pool is never privileged')
+            kv = probe.read_text(os.path.join(compose_dir, 'compose.kvm.yaml')) or ''
+            if not re.search(r'^\s*kvm-loader:', kv, re.M):
+                add('kvm-loader', 'warn', 'POOL_KVM=1 but compose.kvm.yaml has no kvm-loader service, so the pool stays down after a reboot '
+                    'or `wsl --shutdown`. Run `delivery_ci_setup.py pool-refresh --yes` to copy the new file.')
+            else:
+                add('kvm-loader', 'ok', 'kvm-loader service loads the kvm module at every Docker start')
         rr = probe.sh(['docker', 'exec', 'pool-%s-pool-1' % pool] + KVM_TEST)
         if rr is None or rr[0] is None:
             add('kvm-container', 'warn', 'docker cannot be read here, so /dev/kvm in the running pool is not checked')

@@ -407,6 +407,26 @@ def kvm_gid(stat=os.stat):
 VM_CACHE_ROOT = '/ci-tools/vm-cache'
 
 
+KVM_WAIT_SEC = 120
+_KVM_WAITED = []
+
+
+def wait_for_kvm(gid_of, limit=KVM_WAIT_SEC, sleep=time.sleep, clock=time.monotonic, log=_log):
+    """DL362 (R5.62): /dev/kvm can appear a little after the container starts (the kvm-loader service loads the module).
+    Wait up to `limit` seconds, once per start. Returns the device's gid, or None after logging one line."""
+    if _KVM_WAITED:
+        return gid_of()
+    gid = gid_of()
+    end = clock() + limit
+    while gid is None and clock() < end:
+        sleep(2)
+        gid = gid_of()
+    _KVM_WAITED.append(1)
+    if gid is None:
+        log('pool: /dev/kvm missing after %d s; starting without KVM' % limit)
+    return gid
+
+
 def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, log=_log, isdir=os.path.isdir, vm_cache=False):
     """DL274: with POOL_KVM=1, put the agent user in the group that owns /dev/kvm. The gid is read here, never assumed.
     A group with that gid is reused; else group `kvm` is made with it. Always returns True so the runner starts."""
@@ -415,7 +435,8 @@ def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, 
         return True
     gid = gid_of()
     if gid is None:
-        log('POOL_KVM=1 but /dev/kvm is missing in the container')
+        gid = wait_for_kvm(gid_of, log=log)
+    if gid is None:
         return True
     run = run or (lambda argv: subprocess.run(argv, check=False).returncode)
     if group_name is None:
