@@ -199,6 +199,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.62** — **The pool starts after a restart with no host task** (DL362). With `POOL_KVM=1`, `compose.kvm.yaml` adds a `kvm-loader` service (image `alpine`, `privileged: true`, `pid: host`, `restart: unless-stopped`). It loads `kvm_intel`, else `kvm_amd`, in the Docker VM with `nsenter -t 1 -m -- modprobe`, then sleeps forever. Docker Desktop restarts it at every Docker start, and the `pool` service depends on it being healthy, so `/dev/kvm` exists after a reboot, `wsl --shutdown` or a Docker restart. Nothing is installed on the host. Only the loader is privileged; the pool never is. If `/dev/kvm` is still missing when the supervisor prepares a runner, it waits up to 120 s, once per start, then logs `pool: /dev/kvm missing after 120 s; starting without KVM` and starts the runners without KVM. The doctor (`kvm-loader`) warns when `POOL_KVM=1` and `compose.kvm.yaml` has no `kvm-loader` service.
 
+**R5.63** — **A drain leaves no orphan listener** (DL365). The supervisor starts each agent in its own session (`start_new_session=True`). A stop (drain, a removed agent, or pool stop) sends SIGTERM to the whole process group, and SIGKILL after the stop grace, so `run.sh`, `run-helper.sh` and `bin/Runner.Listener` end together. Before `tick()` starts an agent it looks in `/proc` for a live process whose command line contains `/agents/<slug>/bin/Runner.Listener`. If one exists it logs once (`a Runner.Listener is still running; not starting a second one`), starts nothing, and tries again on the next tick. This stops the second listener that looped on `A session for this runner already exists`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -235,6 +237,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
 | R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
 | R5.61 | `claude/plugins/delivery/tests/test_dl356_runner_acl_reset.py` (generated files script: take ownership and reset before the lock) |
+| R5.63 | `claude/plugins/delivery/tests/test_dl365_drain_orphans.py` (own session, group signals, no spawn while a listener lives) |
 
 ## 12. Code map
 
