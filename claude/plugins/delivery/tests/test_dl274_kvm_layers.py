@@ -80,7 +80,8 @@ class ComposeTests(unittest.TestCase):
     def test_override_passes_kvm_never_privileged(self):
         kvm = (POOL / "compose.kvm.yaml").read_text()
         self.assertRegex(kvm, r"^\s*-\s*/dev/kvm:/dev/kvm\s*$".replace("^", "(?m)^"))
-        self.assertNotRegex(kvm, r"(?m)^\s*privileged:\s*true")
+        # DL362: only the kvm-loader helper is privileged; the pool service never is.
+        self.assertNotRegex(kvm[kvm.index("  pool:"):], r"(?m)^\s*privileged:\s*true")
 
     def test_refresh_unset_writes_no_kvm_keys(self):
         with tempfile.TemporaryDirectory() as d:
