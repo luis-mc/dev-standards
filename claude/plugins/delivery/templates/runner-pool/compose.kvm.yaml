@@ -1,8 +1,27 @@
 # DL274: optional KVM for the pool. Used only when .env has POOL_KVM=1 (the setup then writes COMPOSE_FILE).
-# It passes the /dev/kvm device. It never sets privileged. The supervisor adds the runner users to the device's group at start.
+# It passes the /dev/kvm device to the pool, which is never privileged. The supervisor adds the runner users to the device's group at start.
+# DL362 (R5.62): the kvm-loader service loads the kvm module in the Docker VM (Docker Desktop restarts it at every Docker start),
+# so /dev/kvm exists after a reboot, `wsl --shutdown` or a Docker restart. Only this helper is privileged.
 services:
+  kvm-loader:
+    image: alpine
+    privileged: true
+    pid: host
+    restart: unless-stopped
+    command:
+      - sh
+      - -c
+      - nsenter -t 1 -m -- modprobe kvm_intel || nsenter -t 1 -m -- modprobe kvm_amd; touch /tmp/loaded; exec sleep infinity
+    healthcheck:
+      test: ["CMD", "test", "-e", "/tmp/loaded"]
+      interval: 2s
+      retries: 30
+    networks: [pool-net]
   pool:
     devices:
       - /dev/kvm:/dev/kvm
     environment:
       POOL_KVM: "1"
+    depends_on:
+      kvm-loader:
+        condition: service_healthy

@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.19.0
+version: 0.20.0
 owner: agents
 type: reference
 code:
@@ -197,6 +197,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.61** — **An account switch leaves no unreadable file** (DL356). Before the Windows runner files step locks the runner folder to the runner account, Administrators take ownership of everything already in it and every file is reset to inherit (`takeown /R`, `icacls /reset /T`). Files a previous account made, such as the `_work` tool cache, are then readable by the new account.
 
+**R5.62** — **The pool starts after a restart with no host task** (DL362). With `POOL_KVM=1`, `compose.kvm.yaml` adds a `kvm-loader` service (image `alpine`, `privileged: true`, `pid: host`, `restart: unless-stopped`). It loads `kvm_intel`, else `kvm_amd`, in the Docker VM with `nsenter -t 1 -m -- modprobe`, then sleeps forever. Docker Desktop restarts it at every Docker start, and the `pool` service depends on it being healthy, so `/dev/kvm` exists after a reboot, `wsl --shutdown` or a Docker restart. Nothing is installed on the host. Only the loader is privileged; the pool never is. If `/dev/kvm` is still missing when the supervisor prepares a runner, it waits up to 120 s, once per start, then logs `pool: /dev/kvm missing after 120 s; starting without KVM` and starts the runners without KVM. The doctor (`kvm-loader`) warns when `POOL_KVM=1` and `compose.kvm.yaml` has no `kvm-loader` service.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -247,6 +249,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.0 | 2026-11-15 | RELEASE-144 | R5.62: with POOL_KVM=1 a kvm-loader compose service loads the kvm module at every Docker start; the supervisor waits up to 120 s for /dev/kvm and then starts without KVM; the doctor warns when the service is missing. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL362 |
 | 0.19.0 | 2026-11-14 | RELEASE-142 | An account switch leaves no unreadable file: the Windows files step takes back and resets files already in the runner folder before it locks it (R5.61). | DL356 |
 | 0.18.0 | 2026-11-14 | RELEASE-140 | The gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301).<br>A container recreate counts only the runners in the pool container; a busy Windows service is shown as not affected and never refuses it (R5.59). | DL353, DL354 |
 | 0.17.0 | 2026-11-14 | RELEASE-139 | R5.58 (DL351): the ci-wait marker's git runs without prompts and with a timeout, the gate logs the slot before the claim check and never blocks on the marker, and the doctor warns when a runner has no non-interactive git credential. | DL351 |
