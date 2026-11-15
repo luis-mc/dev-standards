@@ -88,7 +88,13 @@ fail=0
 #     shape is how .gitleaks.toml itself ended up blocked by this hook while
 #     gitleaks reported it clean, and how a contributor learns to reach for
 #     --no-verify.
-pattern='(DATABASE_URL|[A-Za-z0-9_]*_(TOKEN|SECRET|PASS|KEY))[[:space:]]*[:=]'
+# Case matters (grep -E, not -Ei). An UPPER_CASE name (`API_TOKEN`, `DB_SECRET`)
+# matches `=`, or `:` then a value: a space then a value that is not `{`, or a
+# quote or sign right after it. A lower- or mixed-case name (`api_key`) matches
+# only the way .gitleaks.toml's rule does: `=` then a value, or `:` then a quoted
+# value. So typed names (`path_key: &str`), Rust paths (`path_key::Name`) and CSS
+# selectors (`.a__key:active {`) do not match (DL358).
+pattern="DATABASE_URL[[:space:]]*(=|:[[:space:]]+[^ {])|[A-Z0-9_]*_(TOKEN|SECRET|PASS|KEY)[[:space:]]*(=|:[[:space:]]+[^ {]|:[^a-zA-Z0-9 {:])|[A-Za-z0-9_]*_([Tt]oken|[Ss]ecret|[Pp]ass|[Kk]ey)[[:space:]]*(=[[:space:]]*['\"]?[^[:space:]'\"#=]|:[[:space:]]*['\"][^[:space:]'\"])"
 # Matched lines are piped through `grep -n` first (for the "file:line" output
 # below), so this must allow for the "<lineno>:" prefix grep -n adds.
 comment_line='^[0-9]+:[[:space:]]*(//|#|\*)'
@@ -112,7 +118,7 @@ for f in $staged_files; do
   # Scan the staged blob (what's about to be committed), not the working
   # tree, so an unstaged local edit can't false-fail the commit.
   content=$(git show ":$f" 2>/dev/null) || continue
-  matches=$(printf '%s\n' "$content" | grep -Ein "$pattern" | grep -Ev "$comment_line" | grep -Ev "$doc_shape" | grep -Ev "$ci_dsn" | grep -v "$ignore_marker" || true)
+  matches=$(printf '%s\n' "$content" | grep -En "$pattern" | grep -Ev "$comment_line" | grep -Ev "$doc_shape" | grep -Ev "$ci_dsn" | grep -v "$ignore_marker" || true)
   if [ -n "$matches" ]; then
     echo "pre-commit: possible secret in '$f':" >&2
     echo "$matches" | sed 's/^/    /' >&2
