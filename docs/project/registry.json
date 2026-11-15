@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-15T10:38+00:00",
+  "updated": "2026-11-15T10:44+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6600,11 +6600,11 @@
       "id": "DL369",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Pool starts without /dev/kvm device map",
       "detail": "Real wsl --shutdown test 15 Nov 10:29: Docker restarted the pool before kvm-loader, and the /dev/kvm device mapping failed the container start. Fix: device_cgroup_rules c 10:232 and the supervisor creates /dev/kvm once the host has it.",
       "expected": "15 Nov",
-      "changed": "2026-11-15T10:38+00:00",
+      "changed": "2026-11-15T10:44+00:00",
       "rides": "DL370",
       "started": "2026-11-15T10:36+00:00"
     },
@@ -6612,12 +6612,11 @@
       "id": "DL370",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-148: DL369 pool KVM without device map",
       "detail": "Join, CI, merge, cleanup, then rebuild the pool and repeat the wsl --shutdown test",
-      "expected": "15 Nov ~11:15",
-      "changed": "2026-11-15T10:36+00:00",
-      "expected_basis": "agent ~23 min from 10:37, join 5, CI ~5, merge 5",
+      "expected": "15 Nov",
+      "changed": "2026-11-15T10:44+00:00",
       "release": 148,
       "phases": [
         {
