@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-15T03:30+00:00",
+  "updated": "2026-11-15T03:38+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6514,12 +6514,11 @@
       "id": "DL365",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Drain stop leaves orphan listeners",
       "detail": "A refused pool-refresh drain stopped idle agents by ending run.sh, but Runner.Listener kept running (reparented to tini). When the drain ended, the supervisor started second listeners: 3 duplicates looping 'session already exists'. Fix: _stop_one kills the whole process group, and the supervisor refuses to spawn while an agent's listener still runs.",
-      "expected": "15 Nov ~03:55",
-      "changed": "2026-11-15T03:30+00:00",
-      "expected_basis": "local agent started 03:31, ~24 min",
+      "expected": "15 Nov",
+      "changed": "2026-11-15T03:38+00:00",
       "rides": "DL366",
       "started": "2026-11-15T03:30+00:00"
     },
@@ -6527,12 +6526,11 @@
       "id": "DL366",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-146: DL365 drain orphan listeners",
       "detail": "Join, CI, merge, cleanup of the drain fix",
-      "expected": "15 Nov ~04:10",
-      "changed": "2026-11-15T03:30+00:00",
-      "expected_basis": "agent ~24 min from 03:31, join 5, CI ~5, merge 5",
+      "expected": "15 Nov",
+      "changed": "2026-11-15T03:38+00:00",
       "release": 146,
       "phases": [
         {
