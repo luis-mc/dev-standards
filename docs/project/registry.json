@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-15T03:38+00:00",
+  "updated": "2026-11-15T10:23+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6555,6 +6555,47 @@
         }
       ],
       "started": "2026-11-15T03:30+00:00"
+    },
+    {
+      "id": "DL367",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Drain waits on a stopped pool",
+      "detail": "pool-refresh drain waits up to 45 min for the supervisor's drained file even when the pool container is not running (seen 15 Nov 10:00 after a Docker restart). Fix: when the container is not running, treat the pool as drained at once.",
+      "expected": "15 Nov",
+      "changed": "2026-11-15T10:23+00:00",
+      "rides": "DL368"
+    },
+    {
+      "id": "DL368",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-147: DL367 drain on a stopped pool",
+      "detail": "Join, CI, merge, cleanup",
+      "expected": "15 Nov ~10:45",
+      "changed": "2026-11-15T10:23+00:00",
+      "expected_basis": "join 5, CI ~5 (spec-lint, secret-scan), merge 5",
+      "release": 147,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-15T10:30+00:00",
+          "end": "2026-11-15T10:35+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-15T10:35+00:00",
+          "end": "2026-11-15T10:40+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-15T10:40+00:00",
+          "end": "2026-11-15T10:45+00:00"
+        }
+      ],
+      "started": "2026-11-15T10:23+00:00"
     },
     {
       "id": "DS1",
