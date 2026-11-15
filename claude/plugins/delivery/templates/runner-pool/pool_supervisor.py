@@ -461,17 +461,68 @@ VM_CACHE_ROOT = '/ci-tools/vm-cache'
 
 KVM_WAIT_SEC = 120
 _KVM_WAITED = []
+KVM_MAJOR, KVM_MINOR = 10, 232
 
 
-def wait_for_kvm(gid_of, limit=KVM_WAIT_SEC, sleep=time.sleep, clock=time.monotonic, log=_log):
+def _read_misc():
+    with open('/proc/misc', encoding='utf-8') as f:
+        return f.read()
+
+
+def host_has_kvm(read=_read_misc):
+    """DL369 (R5.65): True when the host kernel has the kvm misc device (a line `232 kvm` in /proc/misc)."""
+    try:
+        text = read()
+    except OSError:
+        return False
+    return any(ln.split() == [str(KVM_MINOR), 'kvm'] for ln in text.splitlines())
+
+
+def _kvm_group_gid():
+    """The gid of group `kvm` in this container; the group is made (system gid) when missing. None on failure."""
+    import grp
+    try:
+        return grp.getgrnam('kvm').gr_gid
+    except KeyError:
+        subprocess.run(['groupadd', '--system', 'kvm'], check=False)
+        try:
+            return grp.getgrnam('kvm').gr_gid
+        except KeyError:
+            return None
+
+
+def ensure_kvm_node(host_has=host_has_kvm, exists=os.path.exists, mknod=None, chown=None, makedev=None, group_gid=_kvm_group_gid, log=_log):
+    """DL369 (R5.65): compose.kvm.yaml maps no device (a missing /dev/kvm made Docker refuse to start the pool). The
+    cgroup rule `c 10:232 rwm` allows the device, so make the node here when the host has it and the container does not.
+    Never raises; returns True when /dev/kvm exists afterwards."""
+    if exists('/dev/kvm'):
+        return True
+    if not host_has():
+        return False
+    try:
+        import stat as _stat
+        (mknod or os.mknod)('/dev/kvm', _stat.S_IFCHR | 0o660, (makedev or os.makedev)(KVM_MAJOR, KVM_MINOR))
+        gid = group_gid()
+        if gid is not None:
+            (chown or os.chown)('/dev/kvm', 0, gid)
+    except (OSError, AttributeError) as e:
+        log('pool: cannot create /dev/kvm: %s' % e)
+        return exists('/dev/kvm')
+    return True
+
+
+def wait_for_kvm(gid_of, limit=KVM_WAIT_SEC, sleep=time.sleep, clock=time.monotonic, log=_log, make_node=None):
     """DL362 (R5.62): /dev/kvm can appear a little after the container starts (the kvm-loader service loads the module).
     Wait up to `limit` seconds, once per start. Returns the device's gid, or None after logging one line."""
+    make_node = make_node or (lambda: None)
+    make_node()
     if _KVM_WAITED:
         return gid_of()
     gid = gid_of()
     end = clock() + limit
     while gid is None and clock() < end:
         sleep(2)
+        make_node()
         gid = gid_of()
     _KVM_WAITED.append(1)
     if gid is None:
@@ -479,15 +530,16 @@ def wait_for_kvm(gid_of, limit=KVM_WAIT_SEC, sleep=time.sleep, clock=time.monoto
     return gid
 
 
-def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, log=_log, isdir=os.path.isdir, vm_cache=False):
+def prepare_kvm(agent, environ=None, run=None, gid_of=kvm_gid, group_name=None, log=_log, isdir=os.path.isdir, vm_cache=False, make_node=ensure_kvm_node):
     """DL274: with POOL_KVM=1, put the agent user in the group that owns /dev/kvm. The gid is read here, never assumed.
     A group with that gid is reused; else group `kvm` is made with it. Always returns True so the runner starts."""
     env = os.environ if environ is None else environ
     if env.get('POOL_KVM') != '1':
         return True
+    make_node()
     gid = gid_of()
     if gid is None:
-        gid = wait_for_kvm(gid_of, log=log)
+        gid = wait_for_kvm(gid_of, log=log, make_node=make_node)
     if gid is None:
         return True
     run = run or (lambda argv: subprocess.run(argv, check=False).returncode)
