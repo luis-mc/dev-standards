@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.20.2
+version: 0.20.3
 owner: agents
 type: reference
 code:
@@ -258,6 +258,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.3 | 2026-11-15 | RELEASE-148 | R5.65: the pool service maps no /dev/kvm device (cgroup rule c 10:232 rwm); the supervisor makes the node when the host has kvm. | DL369 |
 | 0.20.2 | 2026-11-15 | RELEASE-147 | R5.64: a drain returns at once when the pool container is not running. | DL367 |
 | 0.20.1 | 2026-11-15 | RELEASE-146 | R5.63: a drain stops the whole agent process group and no second Runner.Listener starts while one still runs. | DL365 |
 | 0.20.0 | 2026-11-15 | RELEASE-144 | R5.62: with POOL_KVM=1 a kvm-loader compose service loads the kvm module at every Docker start; the supervisor waits up to 120 s for /dev/kvm and then starts without KVM; the doctor warns when the service is missing. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL362 |
