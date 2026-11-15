@@ -1,5 +1,7 @@
 # DL274: optional KVM for the pool. Used only when .env has POOL_KVM=1 (the setup then writes COMPOSE_FILE).
-# It passes the /dev/kvm device to the pool, which is never privileged. The supervisor adds the runner users to the device's group at start.
+# It allows the kvm device (c 10:232) to the pool by a cgroup rule; the pool is never privileged. A `devices:` mapping is not used: Docker
+# refuses to start the container when /dev/kvm is missing at a daemon-boot restart (DL369, R5.65). The supervisor makes the node and
+# adds the runner users to its group at start.
 # DL362 (R5.62): the kvm-loader service loads the kvm module in the Docker VM (Docker Desktop restarts it at every Docker start),
 # so /dev/kvm exists after a reboot, `wsl --shutdown` or a Docker restart. Only this helper is privileged.
 services:
@@ -18,8 +20,8 @@ services:
       retries: 30
     networks: [pool-net]
   pool:
-    devices:
-      - /dev/kvm:/dev/kvm
+    device_cgroup_rules:
+      - 'c 10:232 rwm'
     environment:
       POOL_KVM: "1"
     depends_on:
