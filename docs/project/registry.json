@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-15T03:16+00:00",
+  "updated": "2026-11-15T03:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6422,12 +6422,11 @@
       "id": "DL361",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Dogfood: this repo's own pre-commit hook gets the case-aware pattern",
       "detail": "This repo's .githooks/pre-commit still has the old [:=] pattern with grep -Ein; it blocked a record commit on 14 Nov for a typed name in a task detail. Bring it to the shipped hook's DL358 pattern.",
-      "expected": "15 Nov ~03:35",
-      "changed": "2026-11-15T03:16+00:00",
-      "expected_basis": "local agent started 03:17, ~18 min",
+      "expected": "15 Nov",
+      "changed": "2026-11-15T03:27+00:00",
       "rides": "DL364",
       "started": "2026-11-15T03:16+00:00"
     },
@@ -6481,12 +6480,11 @@
       "id": "DL364",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-145: DL361 repo hook pattern",
       "detail": "Join, CI, merge, cleanup of the repo hook dogfood",
-      "expected": "15 Nov ~03:50",
-      "changed": "2026-11-15T03:16+00:00",
-      "expected_basis": "agent ~18 min from 03:17, join 5, CI ~5, merge 5",
+      "expected": "15 Nov",
+      "changed": "2026-11-15T03:27+00:00",
       "release": 145,
       "phases": [
         {
