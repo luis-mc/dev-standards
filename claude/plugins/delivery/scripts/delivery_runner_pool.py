@@ -2525,6 +2525,8 @@ class Executor:
         while True:
             if self.probe.isfile(os.path.join(d, DRAINED_FILE)):
                 return True, ''
+            if self.pool_stopped(pool):  # DL367: no supervisor runs, so no job runs; nothing to wait for
+                return True, ''
             if waited >= timeout:
                 break
             self.probe.sleep(DRAIN_POLL_SEC)
@@ -2532,6 +2534,15 @@ class Executor:
         busy = [x.strip() for x in (self.probe.read_text(os.path.join(d, DRAIN_BUSY_FILE)) or '').splitlines() if x.strip()]
         clear_drain(pool)
         return False, 'refused: drain timed out, busy: %s' % (', '.join(busy) or 'unknown')
+
+    def pool_stopped(self, pool):
+        """DL367: True when docker says the pool container exists and is not running (or does not exist)."""
+        r = self.probe.sh(['docker', 'inspect', '--format', '{{.State.Running}}', 'pool-%s-pool-1' % pool])
+        if not r:
+            return False
+        if r[0] == 0:
+            return r[1].strip().lower() == 'false'
+        return 'no such' in (r[1] or '').lower()
 
     def image_ids(self, pool):
         """DL166: (container id, image the container runs, tagged image id); an empty string when one cannot be read."""

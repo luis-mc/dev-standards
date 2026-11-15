@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.20.1
+version: 0.20.2
 owner: agents
 type: reference
 code:
@@ -201,6 +201,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.63** — **A drain leaves no orphan listener** (DL365). The supervisor starts each agent in its own session (`start_new_session=True`). A stop (drain, a removed agent, or pool stop) sends SIGTERM to the whole process group, and SIGKILL after the stop grace, so `run.sh`, `run-helper.sh` and `bin/Runner.Listener` end together. Before `tick()` starts an agent it looks in `/proc` for a live process whose command line contains `/agents/<slug>/bin/Runner.Listener`. If one exists it logs once (`a Runner.Listener is still running; not starting a second one`), starts nothing, and tries again on the next tick. This stops the second listener that looped on `A session for this runner already exists`.
 
+**R5.64** — **A drain does not wait on a stopped pool** (DL367). `drain` checks `docker inspect --format {{.State.Running}} pool-<pool>-pool-1` before its first wait and on every poll. When the container is not running (Exited after a Docker restart, or missing), no supervisor can answer, so the drain returns at once as drained: a stopped pool has no jobs. Otherwise it waits up to 45 minutes as before.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -238,6 +240,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
 | R5.61 | `claude/plugins/delivery/tests/test_dl356_runner_acl_reset.py` (generated files script: take ownership and reset before the lock) |
 | R5.63 | `claude/plugins/delivery/tests/test_dl365_drain_orphans.py` (own session, group signals, no spawn while a listener lives) |
+| R5.64 | `claude/plugins/delivery/tests/test_dl367_drain_stopped_pool.py` (stopped or missing container: drain returns at once; running: still waits) |
 
 ## 12. Code map
 
@@ -252,6 +255,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.2 | 2026-11-15 | RELEASE-147 | R5.64: a drain returns at once when the pool container is not running. | DL367 |
 | 0.20.1 | 2026-11-15 | RELEASE-146 | R5.63: a drain stops the whole agent process group and no second Runner.Listener starts while one still runs. | DL365 |
 | 0.20.0 | 2026-11-15 | RELEASE-144 | R5.62: with POOL_KVM=1 a kvm-loader compose service loads the kvm module at every Docker start; the supervisor waits up to 120 s for /dev/kvm and then starts without KVM; the doctor warns when the service is missing. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL362 |
 | 0.19.0 | 2026-11-14 | RELEASE-142 | An account switch leaves no unreadable file: the Windows files step takes back and resets files already in the runner folder before it locks it (R5.61). | DL356 |
