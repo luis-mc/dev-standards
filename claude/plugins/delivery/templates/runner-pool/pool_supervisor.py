@@ -260,6 +260,9 @@ def per_agent_parallel(environ, n_agents):
         cpus = 1
     return max(1, cpus // max(1, n_agents))
 
+_SIGTERM = signal.SIGTERM
+_SIGKILL = getattr(signal, 'SIGKILL', signal.SIGTERM)
+
 
 def popen_spawn(agent, base, env=None):
     """Start one agent as its own user. The runner's own run.sh handles its job and exits when told to stop.
@@ -268,12 +271,52 @@ def popen_spawn(agent, base, env=None):
     """
     folder = os.path.join(base, agent['slug'])
     argv = ['runuser', '-u', agent['user'], '--', os.path.join(folder, 'run.sh')]
-    return subprocess.Popen(argv, cwd=folder, env=env)
+    # DL365: its own session, so a stop reaches run.sh, run-helper.sh and bin/Runner.Listener together.
+    return subprocess.Popen(argv, cwd=folder, env=env, start_new_session=True)
+
+
+def signal_group(proc, sig):
+    """DL365 (R5.63): send `sig` to the agent's whole process group. A Popen without a group gets terminate/kill."""
+    if isinstance(proc, subprocess.Popen) and hasattr(os, 'killpg'):
+        try:
+            os.killpg(proc.pid, sig)
+            return
+        except ProcessLookupError:
+            return
+        except OSError:
+            pass
+    if sig == getattr(signal, 'SIGKILL', None):
+        proc.kill()
+    else:
+        proc.terminate()
+
+
+def proc_listener_alive(slug, base='/agents', proc_dir='/proc', listdir=os.listdir, read=None):
+    """DL365 (R5.63): True when a live process runs this agent's bin/Runner.Listener (found by its /proc cmdline)."""
+    needle = posixpath.join(base, slug, 'bin', 'Runner.Listener')
+    if read is None:
+        def read(path):
+            with open(path, 'rb') as f:
+                return f.read()
+    try:
+        names = listdir(proc_dir)
+    except OSError:
+        return False
+    for name in names:
+        if not name.isdigit():
+            continue
+        try:
+            cmd = read(posixpath.join(proc_dir, name, 'cmdline')).replace(b'\0', b' ').decode('utf-8', 'replace')
+        except OSError:
+            continue
+        if needle in cmd:
+            return True
+    return False
 
 
 class Supervisor:
     def __init__(self, agents_file, base='/agents', spawn=None, clock=time.monotonic, ensure=None, environ=None, which=shutil.which,
-                 drain_dir=None, busy=None):
+                 drain_dir=None, busy=None, listener_alive=None, signal=None):
         self.agents_file, self.base = agents_file, base
         self.which = which
         self.environ = environ if environ is not None else os.environ
@@ -286,6 +329,9 @@ class Supervisor:
         self.stopping = False
         self.drain_dir = drain_dir  # DL289: folder holding the drain file; None turns drain mode off
         self.busy = busy or (lambda slug: job_running(self.base, slug))
+        self.listener_alive = listener_alive or (lambda slug: proc_listener_alive(slug, self.base))
+        self.signal = signal or signal_group
+        self.orphan_logged = set()  # slugs already logged as held back by a surviving listener
 
     def draining(self):
         return bool(self.drain_dir) and os.path.isfile(os.path.join(self.drain_dir, 'drain'))
@@ -314,7 +360,7 @@ class Supervisor:
                 if self.busy(slug):
                     busy.append(slug)
                 else:
-                    proc.terminate()  # no job: a stop does not cancel anything
+                    self.signal(proc, _SIGTERM)  # no job: a stop does not cancel anything
         if busy:
             self._remove('drained')
             self._write('drain-busy', '\n'.join(busy) + '\n')
@@ -367,6 +413,12 @@ class Supervisor:
                 st['next'] = now + min(BACKOFF_MAX, BACKOFF_MIN * (2 ** max(0, st['fails'] - 1)))
                 st['proc'] = None
             if now >= st['next']:
+                if self.listener_alive(slug):  # DL365: an orphan listener from a drained agent still runs
+                    if slug not in self.orphan_logged:
+                        self.orphan_logged.add(slug)
+                        _log('agent %s: a Runner.Listener is still running; not starting a second one' % slug)
+                    continue
+                self.orphan_logged.discard(slug)
                 if not self.ensure(agent):
                     if slug not in self.warned:
                         self.warned.add(slug)
@@ -381,7 +433,7 @@ class Supervisor:
     def _stop_one(self, slug):
         proc = self.state[slug]['proc']
         if proc is not None and proc.poll() is None:
-            proc.terminate()
+            self.signal(proc, _SIGTERM)
 
     def stop(self, grace_sec=300.0, sleep=time.sleep):
         """Graceful stop: ask every agent to end, wait for running jobs, then kill what is left."""
@@ -393,7 +445,7 @@ class Supervisor:
             sleep(1)
         for s in self.state.values():
             if s['proc'] is not None and s['proc'].poll() is None:
-                s['proc'].kill()
+                self.signal(s['proc'], _SIGKILL)
 
 
 def kvm_gid(stat=os.stat):

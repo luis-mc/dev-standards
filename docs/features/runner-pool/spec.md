@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.20.0
+version: 0.20.1
 owner: agents
 type: reference
 code:
@@ -199,6 +199,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.62** — **The pool starts after a restart with no host task** (DL362). With `POOL_KVM=1`, `compose.kvm.yaml` adds a `kvm-loader` service (image `alpine`, `privileged: true`, `pid: host`, `restart: unless-stopped`). It loads `kvm_intel`, else `kvm_amd`, in the Docker VM with `nsenter -t 1 -m -- modprobe`, then sleeps forever. Docker Desktop restarts it at every Docker start, and the `pool` service depends on it being healthy, so `/dev/kvm` exists after a reboot, `wsl --shutdown` or a Docker restart. Nothing is installed on the host. Only the loader is privileged; the pool never is. If `/dev/kvm` is still missing when the supervisor prepares a runner, it waits up to 120 s, once per start, then logs `pool: /dev/kvm missing after 120 s; starting without KVM` and starts the runners without KVM. The doctor (`kvm-loader`) warns when `POOL_KVM=1` and `compose.kvm.yaml` has no `kvm-loader` service.
 
+**R5.63** — **A drain leaves no orphan listener** (DL365). The supervisor starts each agent in its own session (`start_new_session=True`). A stop (drain, a removed agent, or pool stop) sends SIGTERM to the whole process group, and SIGKILL after the stop grace, so `run.sh`, `run-helper.sh` and `bin/Runner.Listener` end together. Before `tick()` starts an agent it looks in `/proc` for a live process whose command line contains `/agents/<slug>/bin/Runner.Listener`. If one exists it logs once (`a Runner.Listener is still running; not starting a second one`), starts nothing, and tries again on the next tick. This stops the second listener that looped on `A session for this runner already exists`.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -235,6 +237,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.59 | `claude/plugins/delivery/tests/test_dl354_swap_busy_scope.py` (mocked gh and probe; registry with container and service entries) |
 | R5.60 | `claude/plugins/delivery/tests/test_dl353_marker_off.py` (config with and without a fallback setting; no git subprocess when off) |
 | R5.61 | `claude/plugins/delivery/tests/test_dl356_runner_acl_reset.py` (generated files script: take ownership and reset before the lock) |
+| R5.63 | `claude/plugins/delivery/tests/test_dl365_drain_orphans.py` (own session, group signals, no spawn while a listener lives) |
 
 ## 12. Code map
 
@@ -249,6 +252,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.1 | 2026-11-15 | RELEASE-146 | R5.63: a drain stops the whole agent process group and no second Runner.Listener starts while one still runs. | DL365 |
 | 0.20.0 | 2026-11-15 | RELEASE-144 | R5.62: with POOL_KVM=1 a kvm-loader compose service loads the kvm module at every Docker start; the supervisor waits up to 120 s for /dev/kvm and then starts without KVM; the doctor warns when the service is missing. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL362 |
 | 0.19.0 | 2026-11-14 | RELEASE-142 | An account switch leaves no unreadable file: the Windows files step takes back and resets files already in the runner folder before it locks it (R5.61). | DL356 |
 | 0.18.0 | 2026-11-14 | RELEASE-140 | The gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301).<br>A container recreate counts only the runners in the pool container; a busy Windows service is shown as not affected and never refuses it (R5.59). | DL353, DL354 |
