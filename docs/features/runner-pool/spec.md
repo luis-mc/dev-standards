@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.20.2
+version: 0.20.3
 owner: agents
 type: reference
 code:
@@ -203,6 +203,8 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 
 **R5.64** — **A drain does not wait on a stopped pool** (DL367). `drain` checks `docker inspect --format {{.State.Running}} pool-<pool>-pool-1` before its first wait and on every poll. When the container is not running (Exited after a Docker restart, or missing), no supervisor can answer, so the drain returns at once as drained: a stopped pool has no jobs. Otherwise it waits up to 45 minutes as before.
 
+**R5.65** — **The pool container starts with no `/dev/kvm` device mapping** (DL369). Docker restarts the pool by its restart policy at daemon boot before the `kvm-loader` service runs, and `depends_on` is not honoured then. A `devices: /dev/kvm` mapping made that start fail with `error gathering device information while adding custom device "/dev/kvm": no such file or directory`. `compose.kvm.yaml` now sets `device_cgroup_rules: ['c 10:232 rwm']` on the pool and no `devices:` entry. On each poll of the 120 s wait, the supervisor checks `/proc/misc` for a `232 kvm` line. When the host has the device and the container has no `/dev/kvm`, it creates the node (`mknod` character device 10:232, mode 0660, group `kvm`). The wait stays bounded at 120 s, with the same no-KVM fallback line.
+
 ## 8. Failure modes
 
 | Failure | Result |
@@ -241,6 +243,7 @@ Each requirement names its old delivery ID. Delivery keeps that ID as a pointer.
 | R5.61 | `claude/plugins/delivery/tests/test_dl356_runner_acl_reset.py` (generated files script: take ownership and reset before the lock) |
 | R5.63 | `claude/plugins/delivery/tests/test_dl365_drain_orphans.py` (own session, group signals, no spawn while a listener lives) |
 | R5.64 | `claude/plugins/delivery/tests/test_dl367_drain_stopped_pool.py` (stopped or missing container: drain returns at once; running: still waits) |
+| R5.65 | `claude/plugins/delivery/tests/test_dl369_kvm_mknod.py` (no devices mapping, cgroup rule; /proc/misc read; node made when the host has kvm and the container does not) |
 
 ## 12. Code map
 
@@ -255,6 +258,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.3 | 2026-11-15 | RELEASE-148 | R5.65: the pool service maps no /dev/kvm device (cgroup rule c 10:232 rwm); the supervisor makes the node when the host has kvm. | DL369 |
 | 0.20.2 | 2026-11-15 | RELEASE-147 | R5.64: a drain returns at once when the pool container is not running. | DL367 |
 | 0.20.1 | 2026-11-15 | RELEASE-146 | R5.63: a drain stops the whole agent process group and no second Runner.Listener starts while one still runs. | DL365 |
 | 0.20.0 | 2026-11-15 | RELEASE-144 | R5.62: with POOL_KVM=1 a kvm-loader compose service loads the kvm module at every Docker start; the supervisor waits up to 120 s for /dev/kvm and then starts without KVM; the doctor warns when the service is missing. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL362 |

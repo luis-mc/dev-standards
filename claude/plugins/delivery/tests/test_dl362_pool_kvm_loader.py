@@ -31,6 +31,8 @@ class ComposeText(unittest.TestCase):
         self.assertIn('kvm-loader:', pool_part)
         self.assertIn('depends_on', pool_part)
         self.assertNotIn('privileged', pool_part)
+        self.assertIn('device_cgroup_rules', pool_part)
+        self.assertNotIn('devices:', pool_part)
 
 
 class SupervisorWait(unittest.TestCase):
@@ -53,7 +55,7 @@ class SupervisorWait(unittest.TestCase):
     def test_prepare_kvm_still_starts_the_runner(self):
         now = [0]
         orig = S.wait_for_kvm
-        S.wait_for_kvm = lambda gid_of, log=None: orig(gid_of, sleep=lambda n: now.__setitem__(0, now[0] + n), clock=lambda: now[0], log=lambda m: None)
+        S.wait_for_kvm = lambda gid_of, log=None, **kw: orig(gid_of, sleep=lambda n: now.__setitem__(0, now[0] + n), clock=lambda: now[0], log=lambda m: None)
         try:
             self.assertTrue(S.prepare_kvm({'user': 'r-a'}, {'POOL_KVM': '1'}, run=lambda a: None, gid_of=lambda: None))
         finally:
