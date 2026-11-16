@@ -59,6 +59,7 @@ STATUS_RE = re.compile(r"<!-- status:start -->.*?<!-- status:end -->", re.S)
 ENTRY_RE = re.compile(r"^- C\d+\b", re.M)
 ORDER_RE = re.compile(r"^#{1,6}\s*order of work\b", re.I | re.M)
 RULE_ID_RE = re.compile(r"^\|\s*(UX-\d+)\s*\|", re.M)
+CORE_IDS = tuple(f"CORE-{n}" for n in range(1, 8))
 GUARD_STACKS = {"typescript-vitest": "typescript-vitest", "typescript-vitest-kit": "typescript-vitest-kit"}
 # Opt-in shared component templates (R15.10): templates/design-system/components/<stack>/.
 COMPONENT_STACKS = {"react-typescript": "react-typescript"}
@@ -613,6 +614,11 @@ def check(root: Path, base: str | None = None) -> list:
         rules = RULE_ID_RE.findall((folder / "ux-rules.md").read_text(encoding="utf-8")) if (folder / "ux-rules.md").is_file() else []
         for rid in sorted({r for r in rules if rules.count(r) > 1}):
             out.append(finding(WARN, "DS5", rel(name, "ux-rules.md"), f"rule ID {rid} appears twice (R15.2)"))
+        if name == DRAFT and (folder / "ux-rules.md").is_file():
+            ux = (folder / "ux-rules.md").read_text(encoding="utf-8")
+            lost = [c for c in CORE_IDS if not re.search(r"\b%s\b" % c, ux)]
+            if lost:
+                out.append(finding(WARN, "DS6", rel(name, "ux-rules.md"), "no Core UX Principles section: " + ", ".join(lost) + " missing (R15.12)"))
         if (folder / "ux-rules.md").is_file() and name in (DRAFT, f"v{nums[-1]}" if nums else DRAFT):
             state = gallery_state(folder)
             if name == DRAFT and state != "fresh" and on_task_branch(root):
