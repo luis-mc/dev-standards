@@ -20,8 +20,8 @@ Checks (each finding has a code):
       a WARNING for now, it becomes an error later (owner decision); put <!-- ux-ok --> on the line to allow it
   T1  last_verified missing or older than stale_days (warning); T2 code newer than doc (warning)
   D1  diagram: a feature spec with no Mermaid block and no image (warning)
-  DS1-DS5  design system (R15.7, warnings): README without an order of work (DS1); a numbered version edited after
-      approval or without a recorded approval (DS2); layout and missing files (DS3); stale gallery (DS4); duplicate rule IDs (DS5)
+  DS1-DS6  design system (R15.7, warnings): README without an order of work (DS1); a numbered version edited after
+      approval or without a recorded approval (DS2); layout and missing files (DS3); stale gallery (DS4); duplicate rule IDs (DS5); no Core UX Principles CORE-1 to CORE-7 in next-version/ux-rules.md (DS6)
 
 Exit 0 when no errors (warnings allowed unless --strict), 1 on errors, 2 on a usage problem.
 """
