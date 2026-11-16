@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-16T15:55+00:00",
+  "updated": "2026-11-16T16:28+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -10860,8 +10860,8 @@
       "status": "Running",
       "item": "Core UX Principles in luismc-docs",
       "detail": "Seven binding Core UX Principles (CORE-1..7) at the top of the design-system ux-rules template; starter rules mapped to them; DOCSPEC 15, design-system-setup skill and docs_check require them; briefs/PR bodies cite them. Owner request relayed 16 Nov 15:55.",
-      "expected": "16 Nov ~16:45",
-      "changed": "2026-11-16T15:54+00:00",
+      "expected": "16 Nov ~17:10",
+      "changed": "2026-11-16T16:28+00:00",
       "rides": "ST8",
       "started": "2026-11-16T15:54+00:00"
     },
@@ -10872,8 +10872,8 @@
       "status": "Running",
       "item": "Starter UX rules gap review",
       "detail": "Review a real project's 22 standing UX rules against starter UX-1..UX-56; add the generic ones missing as starter rules (new IDs after UX-56), leave project-specific ones out. Owner request relayed 16 Nov ~16:00.",
-      "expected": "16 Nov ~16:45",
-      "changed": "2026-11-16T15:55+00:00",
+      "expected": "16 Nov ~17:10",
+      "changed": "2026-11-16T16:28+00:00",
       "rides": "ST8",
       "started": "2026-11-16T15:55+00:00"
     },
