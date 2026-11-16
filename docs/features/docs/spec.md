@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.4.1
+version: 1.5.0
 owner: agents
 type: reference
 code:
@@ -182,6 +182,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.5.0 | 2026-11-16 | RELEASE-149 | The design-system starter opens with the binding Core UX Principles (CORE-1 to CORE-7), UX-57 to UX-61 are added, and docs_check warns (DS6) when next-version/ux-rules.md lacks the principles (DOCSPEC R15.12). | ST6 |
 | 1.4.1 | 2026-11-14 | RELEASE-134 | The picker templates compile under strict TypeScript flags and pass typescript-eslint (R5.19). | DL331 |
 | 1.4.0 | 2026-11-13 | RELEASE-127 | A release phase may be named fix (a fix round between a red CI and the next CI); ci and fix may repeat. | DL305 |
 | 1.3.1 | 2026-11-11 | RELEASE-109 | check warns and render notes a stale Full Progress lede (see features/artifacts R5.37a). | DL251 |
