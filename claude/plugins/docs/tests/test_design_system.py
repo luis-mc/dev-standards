@@ -190,6 +190,15 @@ class DesignSystemTests(unittest.TestCase):
         w(d, "docs/design-system/next-version/ux-rules.md", "# r\n| UX-1 | a | none yet |\n| UX-1 | b | none yet |\n")
         self.assertIn("DS5", codes(S.check(d)))
 
+    def test_ds6_core_principles_missing(self):  # R15.12
+        d = ds_repo()
+        self.assertNotIn("DS6", codes(S.check(d)))
+        w(d, "docs/design-system/next-version/ux-rules.md", "# r\n| UX-1 | a | none yet |\n")
+        self.assertIn("DS6", codes(S.check(d)))
+        text = (S.TEMPLATES / "next-version" / "ux-rules.md").read_text(encoding="utf-8")
+        w(d, "docs/design-system/next-version/ux-rules.md", text.replace("CORE-7", "CORE-x"))
+        self.assertIn("DS6", codes(S.check(d)))
+
     def test_silent_without_design_system(self):
         self.assertEqual(S.check(project()), [])
         d = project()

@@ -1,6 +1,7 @@
 <!-- Paste into the UI task brief template and the pull request template. Keep or delete each line to fit the project. -->
 ## Design system checklist (UI briefs and pull request bodies)
 
+- [ ] Core UX Principles checked: CORE-1 to CORE-7 (name the IDs you checked).
 - [ ] Design-system version followed: `v<N>` (the highest numbered folder), and the sections used: `ux-rules`, `components`, `tokens`, `content` (name the rule IDs).
 - [ ] For a wizard: I rendered it in first run, running, paused, stopped, failed, done and done after reload. Later steps could not be pressed. Stop was there when the job can stop. Done showed the result. Each button that starts work was disabled and said so while it ran.
 - [ ] The step, lock, Stop and busy state come from the shared wizard part. The page passes data only.
