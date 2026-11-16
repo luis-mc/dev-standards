@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "2008da0b14dc74f2e1b89b874d093aa8892bf1292694c003689601ab032ad6ad",
-    "published_at": "2026-11-15T10:36+00:00",
-    "published_fingerprint": "84c1fc9cc4367ee99d648dc88121ee9a351be492541b0c0f27dafd1882bac0dc",
+    "published_sha256": "7efe5f8b42d8bb386d097e24e8052bf2217432d1dab74716a17ad383bfcfbcd0",
+    "published_at": "2026-11-16T15:28+00:00",
+    "published_fingerprint": "073b4e25ca56755456fec2aa1e862e77bb8f06b75f73729d7632a58f9ff5bd77",
     "local_path": "C:\\GitHub\\dev-standards\\.claude\\artifacts-publish\\full-progress\\dev-standards\\full-progress-dev-standards.html",
     "local_opened": true
   },
@@ -61,7 +61,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-15T10:44+00:00"
+      "updated": "2026-11-16T12:28+00:00"
     },
     {
       "key": "transcript-folds",
@@ -95,7 +95,7 @@
       "apps": [
         "luismc-docs"
       ],
-      "updated": "2026-11-15T01:28+00:00"
+      "updated": "2026-11-16T15:55+00:00"
     },
     {
       "key": "design-field-updates",
@@ -111,7 +111,7 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-15T10:44+00:00",
+  "updated": "2026-11-16T15:55+00:00",
   "retired": [],
   "deleted": [
     {
