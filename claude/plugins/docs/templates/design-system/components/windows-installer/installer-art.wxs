@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Wires the generated bitmaps into the stock WixUI dialogs.
+     Run make-installer-art.ts first; it writes banner.bmp and dialog.bmp.
+     Pass -d ArtDir=<folder> to candle/wix build. A second product passes its own folder. -->
+<Wix xmlns="http://wixtoolset.org/schemas/v4/wxs">
+  <Fragment>
+    <!-- WixUIBannerBmp: 493x58. WixUIDialogBmp: 493x312. -->
+    <WixVariable Id="WixUIBannerBmp" Value="$(ArtDir)\banner.bmp" />
+    <WixVariable Id="WixUIDialogBmp" Value="$(ArtDir)\dialog.bmp" />
+  </Fragment>
+</Wix>

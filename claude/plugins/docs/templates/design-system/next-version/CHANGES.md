@@ -15,4 +15,5 @@ One entry per change, `- C<n>: what changed (file; source)`.
 - C11: UX-56 added: dates use the date picker, times the time picker, the number keypad only for counts, measures and codes; never a native date, time or number input (ux-rules.md; owner decision D101, 07 Nov)
 - C12: Core UX Principles CORE-1 to CORE-7 added at the top as binding rules, and the starter rules that detail them say "Details CORE-n" (ux-rules.md; ST6)
 - C13: UX-11, UX-12, UX-14, UX-15, UX-16, UX-17, UX-18, UX-29, UX-31 and UX-55 extended; UX-57 to UX-61 added: shared naming function, background jobs that work on change, one brand-motif part, one tab row and filter bar, a companion app follows the main app (ux-rules.md; ST7)
+- C14: UX-62 to UX-65 added, and components 35 and 36: stock WixUI dialogs with token-drawn banner and side bitmaps, one native update window with a layout check, a web update window on macOS and Linux, one toast for an automatic update (ux-rules.md, components.md, components/windows-installer; owner decision, 18 Nov; DU13)
 <!-- - C1: what changed (file; source) -->
