@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-16T16:45+00:00",
+  "updated": "2026-11-18T19:31+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6168,8 +6168,8 @@
       "status": "Waiting",
       "item": "Remove the runner pool from dev-standards",
       "detail": "Phase C (D299): on the owner's go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.",
-      "expected": "16 Nov",
-      "changed": "2026-11-14T13:19+00:00",
+      "expected": "23 Nov ~14:00",
+      "changed": "2026-11-17T00:28+00:00",
       "expected_basis": "D311: pool project covers every private-repo job (its M2+), then message",
       "waits_on": "work"
     },
@@ -6180,8 +6180,8 @@
       "status": "Waiting",
       "item": "Tear down this machine's pool and runners",
       "detail": "Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.",
-      "expected": "16 Nov",
-      "changed": "2026-11-14T13:19+00:00",
+      "expected": "23 Nov ~15:00",
+      "changed": "2026-11-17T00:28+00:00",
       "expected_basis": "D311: pool project covers every private-repo job (its M2+), then message",
       "waits_on": "work"
     },
@@ -10628,6 +10628,52 @@
       "changed": "2026-11-05T16:33+00:00",
       "rides": "DL61",
       "started": "2026-11-05T16:17+00:00"
+    },
+    {
+      "id": "DU13",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Live",
+      "item": "Design-system default for install and update windows",
+      "detail": "Owner request 18 Nov 15:35. Starter rules, templates and guard: (1) MSI keeps stock WixUI dialogs with banner and side bitmaps drawn at build time from tokens, never hand-picked colours. (2) Windows update: one native window for the whole flow (steps, progress, Cancel, result on its own Done step, no message box), band and product icon, laid out from content, layout check at 100/150/200% text. (3) macOS/Linux: the app's web window in the design-system look. (4) Automatic update ends with one toast with the icon, never a modal.",
+      "expected": "18 Nov",
+      "changed": "2026-11-18T19:31+00:00",
+      "rides": "DU14",
+      "started": "2026-11-18T18:47+00:00"
+    },
+    {
+      "id": "DU14",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Live",
+      "item": "Release the install and update window default (DU13)",
+      "detail": "Join DU13, ready PR, CI, merge, cleanup, record Live.",
+      "expected": "18 Nov",
+      "changed": "2026-11-18T19:31+00:00",
+      "release": 150,
+      "started": "2026-11-18T18:47+00:00",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-18T18:47+00:00",
+          "end": "2026-11-18T19:27+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-18T19:27+00:00",
+          "end": "2026-11-18T19:32+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-18T19:32+00:00",
+          "end": "2026-11-18T19:42+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-18T19:42+00:00",
+          "end": "2026-11-18T19:45+00:00"
+        }
+      ]
     },
     {
       "id": "MP1",
