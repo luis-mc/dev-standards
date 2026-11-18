@@ -86,6 +86,10 @@ Every rule has an ID. A feature spec and the code cite the ID (`design system UX
 | UX-59 | **A brand motif is drawn by one shared part.** No screen draws its own copy. | none yet |
 | UX-60 | **One tab row and one filter bar per page, at most.** A tab's count is drawn by one shared part. | none yet |
 | UX-61 | **A companion app follows the main app's design.** A change asked for the companion that would hurt the main app is questioned, then refused or made companion-only, and the decision is recorded in the PR body. | none yet |
+| UX-62 | **A Windows installer keeps the stock WixUI dialogs and gives them the product's artwork.** The banner (WixUIBannerBmp, 493x58) and the side picture (WixUIDialogBmp, 493x312) are drawn at build time from the design-system tokens, never with hand-picked colours. A second product gets its own variant, such as a black-and-white one, from its own tokens. Details: the installer artwork component. | none yet |
+| UX-63 | **A Windows update runs in one native window.** It shows the steps Review, Downloading, Waiting for work to finish, Installing and Restarting, with progress, then Done. Cancel is shown where the updater supports it. The result is on its own Done step ("Now running 1.2.3"). There is never a separate message box. If the window must close for a restart, it reopens on Done in the same look. | none yet |
+| UX-64 | **The update window looks like the product and fits its content.** It carries the product band and the product icon, never a generic icon. It is laid out from its content: no fixed pixel height, no scrollbar, nothing cut off. It ships with a layout check that runs at 100%, 150% and 200% text scale and fails when a control is clipped or a button is off the window. | none yet |
+| UX-65 | **On macOS and Linux the update UI is the app's own web window.** It is in the design-system look and has the same steps and the same Done result as UX-63. An update that nobody asked for (nobody clicked Update) ends with one desktop toast with the product icon. Clicking it opens the Done step. It is never a modal box, on any system. | none yet |
 <!-- rule-table:end -->
 
 ## How to add a rule

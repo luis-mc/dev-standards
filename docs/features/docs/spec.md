@@ -99,6 +99,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.19** — The React and TypeScript picker templates (`DatePicker`, `TimePicker`, `NumberKeypad`, their logic files, tests and `test-dom.ts`) compile with `tsc --noEmit` under `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `noPropertyAccessFromIndexSignature`, and pass typescript-eslint `recommendedTypeChecked` and react-hooks `recommended` with `reportUnusedDisableDirectives` on. They carry no `eslint-disable` for `react-hooks/exhaustive-deps`. Behaviour and rendered output are unchanged (DL331).
 
+**R5.20** — The design-system starter holds the default for install and update windows (DU13, owner decision 18 Nov): rules UX-62 to UX-65, a component "Update window" (35) and a component "Installer artwork" (36), both citing the rules. The templates are in `templates/design-system/components/windows-installer/`: a Node script that reads the token file and writes the two WixUI bitmaps (493x58 and 493x312, token colours only), a WiX snippet that wires them, and a PowerShell update window with a `-LayoutCheck` switch that exits non-zero when a control is clipped or a button is off-window at 100%, 150% and 200% text scale. The update template has no message box and no fixed pixel height on content controls. The `design-system-setup` skill names this default where it lists what the starter holds. The gallery draws both components.
+
 ## 6. Non-functional requirements
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
@@ -146,6 +148,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R5.16, R5.17, R5.18 | `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.19 | `claude/plugins/docs/tests/test_dl331_picker_strict.py` |
+| R5.20 | `claude/plugins/docs/tests/test_du13_install_update.py`, `claude/plugins/docs/tests/test_design_system.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.

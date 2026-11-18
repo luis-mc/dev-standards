@@ -353,6 +353,22 @@ The body scrolls when the content is taller than the space. The overlay never gr
 - **Rules:** UX-4, UX-7, UX-12, UX-26, UX-17, UX-16.
 - **Guard:** none yet.
 
+## 35. Update window
+
+- **Used for:** the whole update of a desktop app, in one window. Steps: Review, Downloading, Waiting for work to finish, Installing, Restarting, Done. It shows progress and Cancel where the updater supports it. The result is on Done ("Now running 1.2.3"). On Windows it is a native window; on macOS and Linux it is the app's own web window. An update nobody asked for ends with one desktop toast with the product icon that opens Done.
+- **Looks:** the product band at the top with the product icon, the step line, one detail line, a progress bar and a button row at the right. It grows with its content; it has no scrollbar.
+- **Source:** `components/windows-installer/update-window.ps1`
+- **Rules:** UX-30, UX-63, UX-64, UX-65, UX-16, UX-17.
+- **Guard:** the `-LayoutCheck` switch of the script, run at 100%, 150% and 200% text scale.
+
+## 36. Installer artwork
+
+- **Used for:** the banner and side picture of a Windows MSI installer that keeps the stock WixUI dialogs. A build script draws both from the tokens. A second product passes its own token variant.
+- **Looks:** a surface-coloured banner with a primary band at its left edge, and a side picture with a primary panel. No other colour appears.
+- **Source:** `components/windows-installer/make-installer-art.ts`, `components/windows-installer/installer-art.wxs`
+- **Rules:** UX-55, UX-62.
+- **Guard:** none yet.
+
 ## How to add a component
 
 - Give it the next number.
