@@ -50,6 +50,7 @@ python3 "$S" approve-implementation v1 --approved-on 2026-11-20 --evidence "chat
 - Apps follow the highest numbered version. UI work for a new version waits for the owner's approval of the version, an audit of the apps, and the owner's approval of the implementation.
 - Every design system carries the Core UX Principles (`CORE-1` to `CORE-7`, binding, at the top of `ux-rules.md`; never deleted, never counted as starter items). `docs_check` warns (DS6) when `next-version/ux-rules.md` lacks them. A UI brief and a PR body cite the CORE IDs they checked.
 - Rules carry IDs (`UX-<n>`); feature specs and code cite the ID and never copy the rule. Words users see live in `content.md` (DOCSPEC R11.3).
+- The starter also holds the default for install and update windows (UX-62 to UX-65; components 35 and 36; templates in `templates/design-system/components/windows-installer/`): stock WixUI dialogs with banner and side bitmaps drawn from the tokens, one native update window with a `-LayoutCheck`, a web update window on macOS and Linux, and one toast for an automatic update. Offer it when the project ships a desktop installer or updater; otherwise delete the rules and components.
 - Templates hold structure and a starter set of generic, project-neutral rules. Keep, change or delete each one; never import another project's rules.
 
 ## Guard tests

@@ -254,6 +254,22 @@ def d_change_review(d):
             + d.mark("color-needs-you", "color-needs-you-bg"))
 
 
+def d_update_window(d):
+    steps = "".join(f'<span style="padding:4px {d.size("space-2", "8px")};font:600 {d.size("size-1")} {d.fam()};'
+                    f'color:{d.col("color-text") if i == 5 else d.col("color-text-muted")}">{w}</span>'
+                    for i, w in enumerate(("Review", "Downloading", "Waiting", "Installing", "Restarting", "Done")))
+    band = (f'<div style="padding:{d.size("space-3", "12px")};background:{d.col("color-primary")};color:{d.col("color-on-primary")};'
+            f'font:600 {d.size("size-2")} {d.fam()}">Example App</div>')
+    return (f'<div style="border:1px solid {d.col("color-border")};background:{d.col("color-surface")}">{band}'
+            f'<div style="padding:{d.size("space-3", "12px")}">{steps}<p>Now running 1.2.3</p>{d.btn("Close")}</div></div>')
+
+
+def d_installer_artwork(d):
+    return (f'<div style="display:flex;border:1px solid {d.col("color-border")};min-height:{d.size("row", "56px")}">'
+            f'<div style="width:33%;background:{d.col("color-primary")}"></div>'
+            f'<div style="flex:1;background:{d.col("color-surface")};padding:{d.size("space-3", "12px")}">{d.muted("Welcome to Example App")}</div></div>')
+
+
 def d_segmented(d):
     seg = "".join(f'<span style="padding:10px {d.size("space-4", "16px")};min-height:{d.size("target-min", "44px")};box-sizing:border-box;border:1px solid {d.col("color-border")};'
                   f'{"background:" + d.col("color-primary") + ";color:" + d.col("color-on-primary") + ";font-weight:600" if i == 0 else "background:" + d.col("color-surface")}">{n}</span>'
@@ -456,7 +472,7 @@ def d_number_keypad(d):
 DRAWINGS = {
     "page header": d_page_header, "top menu and breadcrumbs": d_top_menu, "tabs": d_tabs, "wizard": d_wizard,
     "sticky action bar": d_action_bar, "action rows": d_action_rows, "buttons": d_buttons,
-    "card, card grid and facts list": d_card, "dialog and sheet": d_dialog, "pager": d_pager, "list toolbar": d_list_toolbar, "change review": d_change_review,
+    "card, card grid and facts list": d_card, "dialog and sheet": d_dialog, "pager": d_pager, "list toolbar": d_list_toolbar, "change review": d_change_review, "update window": d_update_window, "installer artwork": d_installer_artwork,
     "segmented choices and filter chips": d_segmented, "one-choice list": d_one_choice, "form field family": d_form,
     "tables and list rows": d_tables, "progress bar": d_progress, "badges and counts": d_badges, "messages and banner": d_messages,
     "empty, failed and error states": d_states, "selection bar": d_selection_bar, "search bar and find layout": d_search,
