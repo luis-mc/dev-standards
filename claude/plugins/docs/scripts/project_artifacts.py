@@ -2686,6 +2686,13 @@ def cmd_mark_published(args):
         stale = stale_copy_reason(ctx, rec, e)
         if stale:
             raise Fail(1, 'refusing to mark published: ' + stale)
+        if AR is not None:       # R9.13: a second publish inside the settle window is warned about, never undone
+            prev = AR.published_at(rec.manifest)
+            window = AR.settle_sec(ctx.root)
+            if prev is not None and (current_instant() - prev).total_seconds() < window:
+                warn('the previous Full Progress publish was %d s ago (settle window %d s); every republish counts '
+                     'against the daily limit: next time wait until the changes settle, then publish once'
+                     % ((current_instant() - prev).total_seconds(), window))
         e['url'] = url
         # the hash of the committed render, not of the publish copy (R5.32): nothing links to the url,
         # so no other artifact changes
@@ -3265,6 +3272,12 @@ def write_publish_copy(ctx, rec, key, e):
     return str(dest)
 
 
+def record_last_write(rec):
+    """R9.13: the latest `updated` stamp of the registry and the manifest (ISO text), '' when none."""
+    stamps = [x.get('updated') for x in (rec.registry, rec.manifest) if isinstance(x, dict) and x.get('updated')]
+    return max(stamps, key=lambda t: (parse_iso(t) or datetime.min.replace(tzinfo=timezone.utc))) if stamps else ''
+
+
 def cmd_pending(args):
     """Lists Full Progress when its committed render changed since the last publish, and queued events.
     A feature artifact is never listed (R9.5)."""
@@ -3277,7 +3290,7 @@ def cmd_pending(args):
         except Fail as fl:
             warn('pending --refresh could not render first (%s)' % fl.msg)
         ctx, rec = load_for_read(args)
-    arts, deferred = [], []
+    arts, deferred, settling = [], [], []
     if rec is not None:
         for key, kind, e in rec.artifacts():
             if kind != 'full-progress':
@@ -3299,6 +3312,11 @@ def cmd_pending(args):
                         continue
                     reason = 'changed since last publish'
                 elif refresh:
+                    # R9.14 (AR72): an unchanged copy is asked for only by the hourly fail-safe or a release change
+                    tasks = [t for t in rec.tasks() if isinstance(t, dict)]
+                    if AR is None or (AR.hourly_due(rec.manifest, current_instant(), tasks=tasks) is None
+                                      and not AR.release_changes(tasks, rec.manifest, current_instant())):
+                        continue
                     reason = 'refresh requested (hourly or release change)'
                 else:
                     continue
@@ -3309,6 +3327,14 @@ def cmd_pending(args):
                                      'reason': 'deferred until %s' % wait[1]})
                     if e.get('local_path'):
                         deferred[-1]['local_path'] = e['local_path']
+                    continue
+                hourly = reason.startswith('refresh requested')
+                settle = None if (hourly or AR is None) else AR.settle_wait(
+                    rec.manifest, record_last_write(rec), AR.settle_sec(ctx.root), current_instant())
+                if settle is not None:        # R9.13: not asked for inside the settle window
+                    settling.append({'key': key, 'title': e.get('title', ''), 'file': e.get('file', ''),
+                                     'wait_sec': settle[0], 'reason': 'changes are settling (%s was under %d s ago); '
+                                     'publish once after the last change' % (settle[1], AR.settle_sec(ctx.root))})
                     continue
                 copy_path = write_publish_copy(ctx, rec, key, e)
             item = {'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
@@ -3326,6 +3352,8 @@ def cmd_pending(args):
         out = {'artifacts': arts, 'queue': queue, 'retired': retired}
         if deferred:
             out['deferred'] = deferred
+        if settling:
+            out['settling'] = settling
         if schema_warns:
             out['warnings'] = [{'file': '.delivery', 'message': m} for m in schema_warns]
         print(json.dumps(out, indent=2, ensure_ascii=False))
@@ -3338,7 +3366,9 @@ def cmd_pending(args):
         for d in deferred:
             print('deferred %s (%s): %s%s' % (d['key'], d['file'], d['reason'],
                                               '; local copy: %s' % d['local_path'] if d.get('local_path') else ''))
-        if not arts and not queue and not deferred:
+        for d in settling:
+            print('settling %s (%s): %s' % (d['key'], d['file'], d['reason']))
+        if not arts and not queue and not deferred and not settling:
             print('nothing pending')
         for m in schema_warns:
             print('warning  .delivery: %s' % m)

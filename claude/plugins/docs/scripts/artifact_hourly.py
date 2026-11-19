@@ -7,11 +7,13 @@ registry's tasks. Standard library only.
 
 Seam for tests: CLAUDE_ARTIFACTS_NOW (ISO) overrides the clock, as in project_artifacts.py.
 """
+import json
 import os
 import re
 from datetime import datetime, timedelta, timezone
 
 STALE_MINUTES = 60      # R9.8: Full Progress is published at least this often while a project is live
+SETTLE_DEFAULT = 60     # R9.13 (AR72): seconds the record must be quiet, and Full Progress unpublished, before a publish is asked for
 FAR_PAST = timedelta(days=42)   # F25
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')
 WORK_OPEN_STATUSES = ('Running', 'Waiting', 'Needs you')     # R9.8: the hourly fail-safe applies only then
@@ -151,3 +153,30 @@ def overdue_tasks(tasks, manifest, now=None):
 def overdue_text(task):
     return '%s (%s) is %s but its Expected "%s" has passed' % (
         task.get('id'), task.get('item', ''), task.get('status'), task.get('expected'))
+
+
+def settle_sec(root):
+    """R9.13: `full_progress.settle_sec` of <root>/.delivery/config.json; 60 when unset or not a number >= 0."""
+    try:
+        with open(os.path.join(str(root), '.delivery', 'config.json'), encoding='utf-8') as f:
+            cfg = json.load(f)
+        v = cfg['full_progress']['settle_sec']
+    except (OSError, ValueError, KeyError, TypeError):
+        return SETTLE_DEFAULT
+    return v if isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0 else SETTLE_DEFAULT
+
+
+def settle_wait(manifest, last_write, window, now=None):
+    """R9.13: (seconds still to wait, why) while a publish of Full Progress would be inside the settle window, else None.
+    Inside it when the previous publish, or the record's last write (`last_write`, ISO text), is less than `window`
+    seconds old. Never applies to the hourly fail-safe."""
+    now = now or now_instant()
+    best = None
+    pub = published_at(manifest)
+    for at, why in ((pub, 'the previous publish'), (parse_iso(last_write) if last_write else None, 'the last record change')):
+        if at is None:
+            continue
+        left = window - (now - at).total_seconds()
+        if 0 < left and (best is None or left > best[0]):
+            best = (int(left) + 1, why)
+    return best
