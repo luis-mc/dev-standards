@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-19T06:48+00:00",
+  "updated": "2026-11-19T08:02+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -736,6 +736,99 @@
       "changed": "2026-11-11T10:00+00:00",
       "rides": "DS231",
       "started": "2026-11-11T09:07+00:00"
+    },
+    {
+      "id": "AR70",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "Full Progress publish copy goes stale",
+      "detail": "Peer report (ci-runners-shared-pool, owner's ask, 19 Nov): only pending writes .claude/artifacts-publish copy, so set-task-status/task-add/render then publish sends the old copy; plain pending skips detail-only changes (R9.6 fingerprint); the 3-step order (pending --json --refresh, publish, mark-published) is only in a mark-published error; render says 'nothing to do' while the copy is stale; To do tasks with no open release show under no release.",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T08:01+00:00",
+      "rides": "AR71",
+      "started": "2026-11-19T07:30+00:00"
+    },
+    {
+      "id": "AR71",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Live",
+      "item": "RELEASE: fresh Full Progress publish copy (AR70)",
+      "detail": "Join AR70, fold, ready PR, CI, merge on green, record Live, announce versions.",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T08:01+00:00",
+      "release": 152,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-19T07:30+00:00",
+          "end": "2026-11-19T08:10+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-19T08:10+00:00",
+          "end": "2026-11-19T08:15+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-19T08:15+00:00",
+          "end": "2026-11-19T08:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-19T08:20+00:00",
+          "end": "2026-11-19T08:22+00:00"
+        }
+      ],
+      "started": "2026-11-19T07:30+00:00"
+    },
+    {
+      "id": "AR72",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Publish Full Progress once per burst of changes",
+      "detail": "Owner (19 Nov): changes to Full Progress less than a minute apart give ONE publish, after the last change. In code for every project: a Full Progress publish within the settle window (default 60 s, config) of the previous publish or of a still-changing record is held and asked for once the record has been quiet for the window or at the end of the turn. Minutes-apart publishes (launch, then live) stay as today; 60-min fail-safe unchanged.",
+      "expected": "19 Nov ~08:46",
+      "changed": "2026-11-19T08:02+00:00",
+      "rides": "AR73",
+      "expected_basis": "cloud agent from 08:06: setup 5 + work 25 + checks 10",
+      "started": "2026-11-19T08:06+00:00"
+    },
+    {
+      "id": "AR73",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "To do",
+      "item": "RELEASE: Full Progress publish once per burst (AR72)",
+      "detail": "Launch AR72 after RELEASE-152 merges (shares project_artifacts.py and the end-of-turn hook with AR70); join, fold, ready PR, CI, merge on green, record Live, announce versions.",
+      "expected": "19 Nov ~09:15",
+      "changed": "2026-11-19T07:28+00:00",
+      "expected_basis": "after RELEASE-152 ~08:22; agent 40 + join 5 + CI 5 + merge 2",
+      "release": 153,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-19T08:23+00:00",
+          "end": "2026-11-19T09:03+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-19T09:03+00:00",
+          "end": "2026-11-19T09:08+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-19T09:08+00:00",
+          "end": "2026-11-19T09:13+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-19T09:13+00:00",
+          "end": "2026-11-19T09:15+00:00"
+        }
+      ]
     },
     {
       "id": "DL1",
