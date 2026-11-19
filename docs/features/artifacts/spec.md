@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.12.1
+version: 0.13.0
 owner: agents
 type: reference
 code:
@@ -302,6 +302,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.0 | 2026-11-19 | RELEASE-152 | Every command that writes the record refreshes the Full Progress publish copy; render says whether it is current; task-add warns when a task has no release to ride (R5.18, R5.19). | AR70 |
 | 0.12.1 | 2026-11-14 | RELEASE-143 | A phase given as HH:MM that starts before the previous phase ends is the next day, with or without a gap (R5.11a). | DL359 |
 | 0.12.0 | 2026-11-13 | RELEASE-127 | A release phase may be named fix (a fix round between a red CI and the next CI); ci and fix may repeat. | DL305 |
 | 0.11.5 | 2026-11-12 | RELEASE-117 | The after-command hook takes the task of a ci_watch or gh run watch result from the watched head, not from the checkout, and never queues a change for a Live task. | DL275 |
