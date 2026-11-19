@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.13.1
+version: 0.13.2
 owner: agents
 type: reference
 code:
@@ -211,6 +211,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.2 | 2026-11-19 | RELEASE-151 | Tech-stack invariants note that release assets carry the version in the file name (DL-96). | DL371 |
 | 0.13.1 | 2026-11-14 | RELEASE-143 | The pre-commit hook matches secret-shaped names the way gitleaks does, so typed names and Rust paths no longer block a commit (R5.25). | DL358 |
 | 0.13.0 | 2026-11-14 | RELEASE-134 | The shipped CI workflow takes its Node version from the project (node-version-file), with Node 24 as the fallback (R5.23).<br>claude-setup writes the project allow rules for gh pr create, ready and edit, never merge; the rules asset carries the PR exception of DL-73 (R5.24). | DL332, DL334 |
 | 0.12.0 | 2026-11-11 | RELEASE-113 | claude-setup status flags a CI workflow pin older than the installed luismc-docs; ci_pin.py --bump rewrites the ref and --check exits 1 when stale. | DL263 |
