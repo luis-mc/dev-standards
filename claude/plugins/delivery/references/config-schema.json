@@ -549,6 +549,17 @@
         }
       }
     },
+    "release_assets": {
+      "type": "object",
+      "description": "DL-96: release asset naming.",
+      "properties": {
+        "versioned_names": {
+          "type": "boolean",
+          "default": true,
+          "description": "DL-96: release assets are named <installer_name>_<version>.<ext>, and SHA256SUMS lists those names. false keeps the plain names. CI build artifacts always keep stable names (DL-22)."
+        }
+      }
+    },
     "pr_proven_jobs": {
       "type": "array",
       "items": {

@@ -11,6 +11,7 @@ code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/delivery/templates/shared/.githooks/pre-push
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
+  - claude/plugins/delivery/references/release-asset-names.md
   - tools/test_delivery_*.py
 last_verified: 2026-11-08
 artifact: feature-delivery-speed.html
@@ -100,6 +101,8 @@ flowchart LR
 
 **R5.16** — A gate step in `gate.json` may carry `paths: KEY`. When `scope_map` maps path prefixes to keys, `plan_step` in `delivery_common.py` skips that step if files changed, every changed file lies under some `scope_map` key, and none lies under KEY. An unmapped file, an unknown key or a missing `scope_map` changes nothing. The rust `gate.json` ships the key `rust` only, so a Rust-only change skips JS steps only in a project that adds a `js` key and marks its JS steps `paths: "js"`. (DS201)
 
+**R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -128,6 +131,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
+| R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
 
 ## 10. Decisions
 

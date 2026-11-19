@@ -103,6 +103,7 @@ jobs:
       # §13.1 Build artifacts: one stable name for this kind, so the older ones are
       # pruned (artifact-prune.yml lists this workflow). A build that must outlive
       # the next one is a release asset, not an artifact.
+      # A release asset carries the version in its name (DL-96); this artifact name stays stable (DL-22).
       - name: Keep the packaged program
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:

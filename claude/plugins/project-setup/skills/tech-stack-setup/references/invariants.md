@@ -1472,6 +1472,10 @@ review controls mobile release timing, so the sequence is always
 **additive API → web/admin → mobile submission**. A mobile binary MUST NOT depend
 on an unreleased endpoint.
 
+- Release assets (installers, packages, archives, SHA256SUMS entries) SHOULD carry
+  the version in the file name, `<name>_<version>.<ext>` (DL-96). CI build
+  artifacts keep stable names (§13.1).
+
 ### 13.5 Branch gate
 
 Every repository MUST ship a branch gate: one command that an agent or a person

@@ -83,3 +83,5 @@ eval "set -- $ARGS"
 "$XVFB" -a "$WINE_BIN" "$TOOLDIR/$EXE" "$@"
 ls "$OUT"/*.msi >/dev/null 2>&1 || { echo "windows-msi-linux: no MSI in $OUT" >&2; exit 1; }
 say "built (a CI check only, not the shipped file): $(ls "$OUT"/*.msi)"
+# DL-96: the check file keeps its plain name; a shipped asset is named <installer_name>_<version>.msi
+# (see package-windows.yml and references/release-asset-names.md).
