@@ -1845,6 +1845,34 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   `test_detail_only_change_reaches_copy_but_is_not_listed`,
   `test_render_wording` and `test_order_in_hook_and_rule`.
 
+- **R9.13** — The settle window (AR72). The claude.ai daily publish limit counts
+  every republish, so a burst of record changes is published once, after the
+  last change. `full_progress.settle_sec` in `<root>/.delivery/config.json`
+  sets the window in seconds; the default is 60. While the previous Full
+  Progress publish, or the record's last change, is less than the window old,
+  `pending` does not list Full Progress. `pending --json` then adds a
+  `settling` list (key, `wait_sec`, reason) and the plain output a `settling`
+  line. The end-of-turn hook does not block for that publish; it prints
+  `Full Progress changes are settling; publish once after the last change`.
+  When the window has passed and the page still differs, `pending` lists it
+  and the hook blocks as before, so no change is lost. `mark-published` warns
+  when the previous publish was less than the window ago. Both times are kept to
+  the second under the key `settle` of `.claude/artifacts-stop-state.json`
+  (the record's own stamps are to the minute). The plugin has no hook on the
+  Artifact tool, so the check lives in `pending`, `mark-published` and the
+  end-of-turn hook. Publishes minutes apart are not affected, and the hourly
+  fail-safe (R9.8) ignores the window. Verified by
+  `test_burst_is_asked_for_once_after_the_window`,
+  `test_second_publish_inside_the_window_is_warned_and_one_after_is_not`,
+  `test_changes_unpublished_after_the_window_are_still_asked_for` and
+  `test_settle_key_defaults_to_60_and_is_read_from_config`.
+
+- **R9.14** — A copy identical to the last published one is not asked for. With
+  `--refresh`, `pending` lists an unchanged Full Progress only when the hourly
+  fail-safe (R9.8) or a release change (R9.9) asks for it. Verified by
+  `test_unchanged_copy_is_not_asked_for_outside_the_hourly_failsafe` and
+  `test_hourly_failsafe_fires_at_60_minutes`.
+
 ---
 
 ## 10. Installation and the rule file
