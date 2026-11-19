@@ -16,6 +16,8 @@
 - `python3 tools/test_delivery_windows.py`, `tools/test_smoke_packaged.py`: all passed.
 
 ## docs_check
-`python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors (T2 skipped, shallow clone).
+`python3 claude/plugins/docs/scripts/docs_check.py`: two errors, both expected on a task branch. G1: `docs/docs-map.json` is generated and is not committed here (the release regenerates it; it also keeps the M1 warning about the new reference until then). W1: `docs/work/` files stay on this branch only. No other errors (T2 skipped, shallow clone).
+
+Branch head: see `git rev-parse origin/DL371-versioned-asset-names`.
 
 READY
