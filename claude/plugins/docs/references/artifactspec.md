@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.23.0
+**Version:** 1.24.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.24.0 — 2026-11-19.**
+
+- A `--phase` list with no dates takes its day from the occurrence of its first time nearest now, so a release begun the evening before keeps its date (R5.52). A phase far ahead of a past one warns, and two refusals name the fix.
 
 **1.23.0 — 2026-11-19.**
 
@@ -1327,6 +1331,17 @@ double-click.
   full name in `title`; and a legend of the bar colours. Times
   are tabular figures and in the stamp's time zone. Colours come from the design
   tokens only. Verified by the `ci_runs_*` cases in `tools/test_render_artifacts.py`.
+- **R5.52** — `--phase NAME=HH:MM-HH:MM` (and `task-add`) reads a phase list with no
+  date from the first HH:MM phase: that time takes the occurrence nearest now, yesterday, today
+  or tomorrow, whichever is within 12 hours, the same idea as the nearest year of a
+  `DD Mon` date. The R5.40 chaining then follows from that anchor (a phase that starts before the
+  previous one ends is the next day, an end before its start is the next day). A phase given as
+  `DD Mon HH:MM` keeps its date. A phase that lands more than 12 hours after now while the phase before it is past
+  gets a warning, never a refusal, naming the phase, the date it got and the `DD Mon HH:MM` form.
+  `--phase ""` with other phases is refused with the text "clear first with --phase "" alone, then give
+  the new phases in a second call"; a change that leaves Expected behind the old phases is refused
+  with the fix named (clear them with `--phase ""` first, or give new phases). Verified by
+  `test_ar74_phase_dates`.
 
 ---
 

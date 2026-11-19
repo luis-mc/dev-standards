@@ -1695,10 +1695,12 @@ def parse_phases(specs, now_dt):
     zone; returns the stored list ordered by start, or [] for `--phase ""` (which clears them)."""
     if any(not str(s).strip() for s in specs):
         if len(specs) > 1:
-            raise Fail(1, '--phase "" clears the phases; give it alone')
+            raise Fail(1, '--phase "" clears the phases and cannot be mixed with other phases: clear first with '
+                          '--phase "" alone, then give the new phases in a second call')
         return []
     out = []
     shift = 0                # whole days a phase before this one rolled over midnight (R5.40)
+    anchored = False         # R5.52: the first HH:MM phase fixes the day of the HH:MM phases that follow
     for spec in specs:
         name, sep, span = str(spec).partition('=')
         name = name.strip()
@@ -1711,6 +1713,9 @@ def parse_phases(specs, now_dt):
             raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM' % spec)
         start, end = _phase_point(a, now_dt, spec), _phase_point(b, now_dt, spec)
         timed = not any(_POINT_RE.match(x).group(1) for x in (a, b))     # HH:MM only: no date was given
+        if timed and not anchored:
+            anchored = True
+            shift = min((-1, 0, 1), key=lambda d: abs(start + timedelta(days=d) - now_dt))   # R5.52: nearest occurrence
         if timed and shift:
             start, end = start + timedelta(days=shift), end + timedelta(days=shift)
         if timed and out:                            # R5.40: a phase that starts before the previous one ends is
@@ -1724,6 +1729,12 @@ def parse_phases(specs, now_dt):
         if end <= start:
             raise Fail(1, '--phase "%s": the end must be after the start' % spec)
         out.append({'name': name, 'start': start.isoformat(timespec='minutes'), 'end': end.isoformat(timespec='minutes')})
+    for prev, cur in zip(out, out[1:]):      # R5.52: a phase far ahead after one already past is probably the wrong day
+        start = datetime.fromisoformat(cur['start'])
+        if datetime.fromisoformat(prev['end']) < now_dt and start - now_dt > timedelta(hours=12):
+            warn('--phase %s starts %s, more than 12 h from now while the phase before it is past; '
+                 'if that is the wrong day, give it as "%s=DD Mon HH:MM-DD Mon HH:MM"'
+                 % (cur['name'], start.strftime('%d %b %H:%M'), cur['name']))
     return sorted(out, key=lambda p: (p['start'], p['name']))
 
 
@@ -1988,7 +1999,11 @@ def apply_release_fields(task, by_id, args, now_dt, root=None, expected_given=Tr
             task['expected'] = want + ('; ' + note if note else '')
     problems = release_problems(task, by_id)
     if problems:
-        raise Fail(1, '%s: %s' % (task.get('id', 'new task'), '; '.join(m for _, m in problems)))
+        hint = ''
+        if any(r == 'R5.41' for r, _ in problems) and task.get('phases') and args.phase is None:
+            hint = ('; to set --expected by hand, clear the old phases first with --phase "" (alone), '
+                    'or give the new phases with --phase')
+        raise Fail(1, '%s: %s%s' % (task.get('id', 'new task'), '; '.join(m for _, m in problems), hint))
 
 
 def clean_basis(text):
