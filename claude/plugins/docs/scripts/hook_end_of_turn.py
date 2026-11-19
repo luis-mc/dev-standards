@@ -347,10 +347,11 @@ def build_reason(root, script, artifacts, queue):
         # `path` is the publish copy (links to the feature files as file:/// URLs); the committed file is the fallback
         source = a.get('path') or os.path.join(record, str(a.get('file', '')))
         out.append('- Publish "%s" once, now, at the end of the turn (%s; %s): publish the file %s with the Artifact '
-                   'tool, unedited (%s), then run: %s mark-published %s --url <the artifact URL>. Feature artifacts '
+                   'tool, unedited (%s), then run: %s mark-published %s --url <the artifact URL>. Order: 1) %s pending '
+                   '--json --refresh; 2) publish the path it prints; 3) mark-published. Feature artifacts '
                    'are files in the repository and are never published.'
                    % (a.get('title') or key, a.get('file', ''), a.get('reason', 'pending'),
-                      source, target, py, key))
+                      source, target, py, key, py))
     out.append('Then run %s pending --json to confirm nothing is left.' % py)
     return '\n'.join(out)
 
