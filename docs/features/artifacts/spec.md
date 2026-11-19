@@ -176,7 +176,7 @@ flowchart LR
 
 **R5.21** — A copy identical to the last published one is not asked for, even with `pending --refresh`, unless the hourly fail-safe or a release change asks. (AR72, ARTIFACTSPEC R9.14)
 
-**R5.22** — A phase list with no dates (`--phase NAME=HH:MM-HH:MM`) takes the day of its first HH:MM phase from the occurrence nearest now (yesterday, today or tomorrow); later phases chain from it, and `DD Mon HH:MM` phases keep their date. A phase more than 12 h ahead while the one before it is past warns, naming the `DD Mon HH:MM` form. `--phase ""` mixed with phases, and a Waiting release with `--expected` over old phases, are refused with the fix named. (AR74, ARTIFACTSPEC R5.44a)
+**R5.22** — A phase list with no dates (`--phase NAME=HH:MM-HH:MM`) takes the day of its first HH:MM phase from the occurrence nearest now (yesterday, today or tomorrow); later phases chain from it, and `DD Mon HH:MM` phases keep their date. A phase more than 12 h ahead while the one before it is past warns, naming the `DD Mon HH:MM` form. `--phase ""` mixed with phases, and a Waiting release with `--expected` over old phases, are refused with the fix named. (AR74, ARTIFACTSPEC R5.52)
 
 ## 6. Non-functional requirements
 

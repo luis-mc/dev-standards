@@ -1,4 +1,4 @@
-"""AR74: an HH:MM-only phase list takes the occurrence nearest now (R5.40a); a far phase warns; two error hints."""
+"""AR74: an HH:MM-only phase list takes the occurrence nearest now (R5.52); a far phase warns; two error hints."""
 import contextlib
 import io
 import sys

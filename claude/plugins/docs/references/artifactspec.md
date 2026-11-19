@@ -1172,7 +1172,7 @@ double-click.
   Needs you chip. `check` finds a State that differs from the registry
   (R5.44). Verified by `state_column_counts`, `check_state_column` and
   `test_state_column_counts_in_the_record`.
-- **R5.44a** — `--phase NAME=HH:MM-HH:MM` (and `task-add`) reads a phase list with no
+- **R5.52** — `--phase NAME=HH:MM-HH:MM` (and `task-add`) reads a phase list with no
   date from the first HH:MM phase: that time takes the occurrence nearest now, yesterday, today
   or tomorrow, whichever is within 12 hours, the same idea as the nearest year of a
   `DD Mon` date. The R5.40 chaining then follows from that anchor (a phase that starts before the
