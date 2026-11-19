@@ -3,7 +3,7 @@
 - Record work as a task before starting it. <!-- advice -->
 - Start branch names with the task ID. <!-- advice -->
 - Change status only with `set-task-status`. <!-- check: claude/plugins/docs/scripts/project_artifacts.py#cmd_set_task_status -->
-- Publish Full Progress once, at the end of the turn, never mid-turn; feature artifacts are files in the repo (`docs/artifacts/feature-<slug>.html`) and are never published. <!-- check: claude/plugins/docs/scripts/hook_end_of_turn.py#build_reason -->
+- Publish Full Progress once, at the end of the turn, never mid-turn, in this order: `pending --json --refresh`, publish the path it prints, then `mark-published`; feature artifacts are files in the repo (`docs/artifacts/feature-<slug>.html`) and are never published. <!-- check: claude/plugins/docs/scripts/hook_end_of_turn.py#build_reason -->
 - Never type a status row by hand. <!-- advice -->
 - Put every doc under `docs/`. <!-- advice -->
 - The record is written to `docs/artifacts/` (or the project's `record_dir` setting) in the working tree; the plugin never commits or pushes it, the project commits when it chooses. <!-- advice -->
