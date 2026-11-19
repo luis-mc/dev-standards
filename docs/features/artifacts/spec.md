@@ -176,6 +176,8 @@ flowchart LR
 
 **R5.21** — A copy identical to the last published one is not asked for, even with `pending --refresh`, unless the hourly fail-safe or a release change asks. (AR72, ARTIFACTSPEC R9.14)
 
+**R5.22** — A phase list with no dates (`--phase NAME=HH:MM-HH:MM`) takes the day of its first HH:MM phase from the occurrence nearest now (yesterday, today or tomorrow); later phases chain from it, and `DD Mon HH:MM` phases keep their date. A phase more than 12 h ahead while the one before it is past warns, naming the `DD Mon HH:MM` form. `--phase ""` mixed with phases, and a Waiting release with `--expected` over old phases, are refused with the fix named. (AR74, ARTIFACTSPEC R5.44a)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -247,6 +249,7 @@ flowchart TB
 | R5.19 | `test_task_add_warns_without_a_release_to_ride`, `test_task_add_no_warning_with_an_open_release` in `claude/plugins/docs/tests/test_ar70_publish_copy.py` |
 | R5.20 | `test_burst_is_asked_for_once_after_the_window`, `test_a_turn_end_asks_once_after_its_own_changes`, `test_second_publish_inside_the_window_is_warned_and_one_after_is_not`, `test_changes_unpublished_after_the_window_are_still_asked_for`, `test_settle_key_defaults_to_60_and_is_read_from_config` in `claude/plugins/docs/tests/test_ar72_publish_settle.py` |
 | R5.21 | `test_unchanged_copy_is_not_asked_for_outside_the_hourly_failsafe`, `test_hourly_failsafe_fires_at_60_minutes` in `claude/plugins/docs/tests/test_ar72_publish_settle.py`; `test_pending_refresh_lists_an_unchanged_full_progress` in `tools/test_project_artifacts.py` |
+| R5.22 | `test_next_morning_keeps_the_evening_before`, `test_evening_chains_to_next_day`, `test_same_day_stays_today`, `test_dated_phases_keep_their_date`, `test_far_phase_warns_and_succeeds`, `test_clear_with_others_hint`, `test_waiting_expected_with_old_phases_hint` in `claude/plugins/docs/tests/test_ar74_phase_dates.py` |
 | R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
 | R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `tools/test_project_artifacts_hooks.py` |
 | R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `tools/test_project_artifacts_hooks.py` |
