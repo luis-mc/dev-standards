@@ -29,7 +29,7 @@
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.6.0 | 2026-11-01 |
-| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.13.0 | 2026-11-01 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.14.0 | 2026-11-01 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.0 | 2026-11-01 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.2.2 | 2026-11-09 |
 
@@ -56,7 +56,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.13.0 | 2026-11-01 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.14.0 | 2026-11-01 |
 
 ### audits
 
@@ -151,7 +151,7 @@
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.9.0 | 2026-11-08 |
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.6.0 | 2026-11-01 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.1.4 | 2026-11-08 |
-| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.13.0 | 2026-11-01 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.14.0 | 2026-11-01 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.13.2 | 2026-11-08 |
 | [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.20.3 | 2026-11-10 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.0 | 2026-11-01 |
