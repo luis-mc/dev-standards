@@ -1341,6 +1341,7 @@ def run_change(ctx, apply, new_ok=False):
         try:
             result = apply(rec) or {}
             result = finish_change(ctx, rec, result)
+            result['publish_copy'] = refresh_publish_copy(ctx)       # R9.12
             note = remove_stale_rule(ctx)
             if note:
                 result.setdefault('notes', []).append(note)
@@ -2092,15 +2093,22 @@ def cmd_task_add(args):
             row['waits_on'] = waits_on
         apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt, ctx.root, expected_given=expected_given)
         apply_started(row, args, now.dt)
+        no_release_row = not any(is_release(t) and t.get('status') in OPEN_STATUSES for t in rec.tasks())
         reg['tasks'].append(row)
         if owner != 'project':
             rec.render_keys[owner] = 'new'
         rec.render_keys[FP_NAME] = 'new'
         rec.message = ctx.rel + ': %s %s' % (tid, status)
-        return {'command': 'task-add', 'id': tid, 'status': status}
+        return {'command': 'task-add', 'id': tid, 'status': status,
+                'no_release_to_ride': bool(no_release_row and status in ('To do', 'Running', 'Built')
+                                           and not row.get('rides') and not is_release(row)
+                                           and not row.get('no_release'))}
 
     res = run_change(ctx, apply)
     emit(args, res, res['id'])
+    if res.get('no_release_to_ride'):     # R6.15: a warning, never a refusal
+        warn('%s has no release to ride and shows under no release. Make the release with `task-add --release` '
+             '(a release row), then set `--rides <release id>` on the task' % res['id'])
     if not args.json_out:
         print('project_artifacts: %s added (%s)' % (res['id'], short(res)), file=sys.stderr)
     return 0
@@ -2533,10 +2541,19 @@ def render_changed(ctx, render_all=False):
     return run_change(ctx, apply)
 
 
+def render_line(res):
+    """R9.12: what `render` says; never a bare "nothing to do" while the publish copy may have changed."""
+    copy = res.get('publish_copy')
+    tail = {'refreshed': 'publish copy refreshed', 'current': 'publish copy is current'}.get(copy)
+    if res.get('rendered'):
+        return 'rendered: ' + ', '.join(res['rendered']) + (' (%s)' % tail if tail else '')
+    return 'record already rendered; ' + (tail or 'there is no Full Progress publish copy to refresh')
+
+
 def cmd_render(args):
     ctx = make_ctx(args)
     res = render_changed(ctx, args.all)
-    emit(args, res, ['rendered: ' + (', '.join(res['rendered']) or 'nothing to do')])
+    emit(args, res, [render_line(res)])
     if not getattr(args, 'json_out', False):
         try:
             _ctx, rec = load_for_read(args)
@@ -3209,6 +3226,29 @@ def refresh_local_copies(ctx, rec):
             write_local_copy(rec, key, e, lp)
         except (OSError, UnicodeError) as ex:
             warn('the local copy %s was not refreshed (%s)' % (lp, ex))
+
+
+def refresh_publish_copy(ctx):
+    """R9.12: after a command wrote the record, make the Full Progress publish copy match it. Returns 'refreshed',
+    'current' or None (no rendered Full Progress). Whether `pending` lists the page still follows R9.6."""
+    try:
+        if not (ctx.record_dir / 'manifest.json').is_file():
+            return None
+        rec = Record.load(ctx.record_dir)
+        for key, kind, e in rec.artifacts():
+            if kind != 'full-progress' or key in rec.broken() or not isinstance(e.get('file'), str):
+                continue
+            if read_html(rec.dir / e['file']) is None:
+                return None
+            dest = ctx.root / PUBLISH_REL / e['file']
+            meta = read_copy_meta(dest) if dest.is_file() else None
+            if meta and meta.get('inputs_sha256') == record_inputs_hash(rec.dir) \
+                    and hashlib.sha256(dest.read_bytes()).hexdigest() == meta.get('sha256'):
+                return 'current'
+            return 'refreshed' if write_publish_copy(ctx, rec, key, e) else None
+    except Exception as ex:          # the record is written; a copy that cannot be made is only a warning
+        warn('the publish copy was not refreshed (%s)' % ex)
+    return None
 
 
 def write_publish_copy(ctx, rec, key, e):

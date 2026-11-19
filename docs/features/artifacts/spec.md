@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.12.1
+version: 0.13.0
 owner: agents
 type: reference
 code:
@@ -168,6 +168,10 @@ flowchart LR
 
 **R5.37a** — `check` warns (never an error) when the Full Progress lede names `RELEASE-n` and a higher-numbered release is Live. The text is `content/full-progress/meta.json: the lede names RELEASE-14 but RELEASE-35 is live; update it with edit-content`. `render` prints the same line as a note. Only the release-number test exists; the record keeps no content change times. (DL251, ARTIFACTSPEC R5.37)
 
+**R5.18** — Every command that writes the record (`set-task-status`, `task-add`, `edit-content`, `render` and the rest) also rewrites the Full Progress publish copy when it no longer matches the record, so the copy on disk is never older than the record. Whether `pending` lists the page still follows the fingerprint rule (R5.8). `render` says `record already rendered; publish copy is current` (or `publish copy refreshed`), never a bare `nothing to do`. The stop-hook text and the rule line give the order: `pending --json --refresh`, publish the path it prints, then `mark-published`. (AR70, ARTIFACTSPEC R9.12)
+
+**R5.19** — `task-add` of a To do, Running or Built task with no `--rides`, no `--release` and no open release row prints a warning that names the fix (`task-add --release`, then `--rides`) and exits 0. (AR70, ARTIFACTSPEC R6.15)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -235,6 +239,8 @@ flowchart TB
 | R5.11a | `claude/plugins/docs/tests/test_dl359_phase_gap_midnight.py` (a phase after a gap past midnight, same-day phases, a contiguous wrap) |
 | R5.12 | `test_retire_moves_the_feature_and_check_stays_clean`, `test_retire_refuses_a_feature_with_an_open_task` in `tools/test_project_artifacts.py` |
 | R5.13 | `test_promote_to_spec_writes_the_feature_spec`, `test_promote_mapping_by_heading` in `tools/test_project_artifacts.py` |
+| R5.18 | `test_copy_follows_set_task_status_and_task_add`, `test_detail_only_change_reaches_copy_but_is_not_listed`, `test_render_wording`, `test_render_says_refreshed_when_the_copy_was_old`, `test_order_in_hook_and_rule`, `test_mark_published_still_refuses_an_older_copy` in `claude/plugins/docs/tests/test_ar70_publish_copy.py` |
+| R5.19 | `test_task_add_warns_without_a_release_to_ride`, `test_task_add_no_warning_with_an_open_release` in `claude/plugins/docs/tests/test_ar70_publish_copy.py` |
 | R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
 | R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `tools/test_project_artifacts_hooks.py` |
 | R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `tools/test_project_artifacts_hooks.py` |
@@ -296,6 +302,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.0 | 2026-11-19 | RELEASE-152 | Every command that writes the record refreshes the Full Progress publish copy; render says whether it is current; task-add warns when a task has no release to ride (R5.18, R5.19). | AR70 |
 | 0.12.1 | 2026-11-14 | RELEASE-143 | A phase given as HH:MM that starts before the previous phase ends is the next day, with or without a gap (R5.11a). | DL359 |
 | 0.12.0 | 2026-11-13 | RELEASE-127 | A release phase may be named fix (a fix round between a red CI and the next CI); ci and fix may repeat. | DL305 |
 | 0.11.5 | 2026-11-12 | RELEASE-117 | The after-command hook takes the task of a ci_watch or gh run watch result from the watched head, not from the checkout, and never queues a change for a Live task. | DL275 |

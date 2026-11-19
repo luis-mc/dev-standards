@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.21.0
+**Version:** 1.22.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.22.0 — 2026-11-19.**
+
+- Adds R9.12 (the publish copy follows the record; render wording; the three-step publish order) and R6.15 (task-add warns when a task has no release to ride).
 
 **1.21.0 — 2026-11-13.**
 
@@ -1468,6 +1472,12 @@ double-click.
   refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
   `test_check_flags_open_rows_past_their_expected_time`.
 
+- **R6.15** — `task-add` of a To do, Running or Built task with no `--rides`,
+  no `--release`, no `--no-release` and no open release row prints a warning
+  that names the fix: `task-add --release` for the release, then `--rides` on
+  the task. It is a warning; the exit code is 0. Verified by
+  `test_task_add_warns_without_a_release_to_ride`.
+
 ---
 
 ## 7. Commands
@@ -1820,6 +1830,20 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   no recorded copy it behaves as before. Verified by
   `test_pending_records_the_publish_copy_hash_and_time` and
   `test_mark_published_refuses_a_stale_or_edited_copy`.
+
+- **R9.12** — The publish copy follows the record (AR70). Every command that
+  writes the record (`set-task-status`, `task-add`, `edit-content`, `render`
+  and the others) also rewrites the Full Progress publish copy when it no
+  longer matches the record, so the copy is never older than the record. This
+  refreshes the copy only: whether `pending` lists Full Progress still follows
+  R9.6, and the R9.11 check is unchanged. `render` prints
+  `record already rendered; publish copy is current` or `... publish copy
+  refreshed` when nothing new rendered, never a bare `nothing to do`. The
+  end-of-turn hook and the rule line give the same order: `pending --json
+  --refresh`, publish the path it prints, then `mark-published`. Verified by
+  `test_copy_follows_set_task_status_and_task_add`,
+  `test_detail_only_change_reaches_copy_but_is_not_listed`,
+  `test_render_wording` and `test_order_in_hook_and_rule`.
 
 ---
 

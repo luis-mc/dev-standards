@@ -205,7 +205,7 @@ class RecordPages(unittest.TestCase):
         code, out, err = self.run_cmd("check")      # no clone here: the fresh render says unknown
         self.assertEqual(code, 0, out + err)
         code, out, err = self.run_cmd("render")
-        self.assertIn("nothing to do", out)
+        self.assertIn("record already rendered; publish copy is current", out)
 
     def test_ignored_tokens_lists_neutrals(self):
         got = R.ignored_tokens(":root{--paper:#fff;--signal:#123;--surface-2:#eee;--ink:#000}")
