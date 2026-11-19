@@ -36,7 +36,9 @@ def ar63_refusal_names_the_steps_in_order():
     p.ok('mark-published', 'full-progress', '--url', URL)
     p.ok('set-task-status', 'AR1', 'Waiting', '--expected', '14 Oct ~09:00')
     p.run('pending', '--json', '--refresh')
-    p.ok('task-add', '--owner', 'artifacts', '--item', 'New', '--detail', 'd', '--expected', '15 Oct')
+    # a record change after the copy was written, by hand (a command would refresh the copy, R9.12)
+    reg = p.clone / 'docs' / 'artifacts' / 'registry.json'
+    reg.write_text(reg.read_text(encoding='utf-8') + ' ', encoding='utf-8')
     r = p.run('mark-published', 'full-progress', '--url', URL)
     assert r.code != 0 and 'older than the latest record change' in r.all, r.all
     a, b, c = r.all.index('pending --json --refresh'), r.all.index('Artifact tool'), r.all.rindex('mark-published')
