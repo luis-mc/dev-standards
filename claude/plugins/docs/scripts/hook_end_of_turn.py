@@ -400,6 +400,7 @@ def build_background_reason(script):
 def main():
     if hooks_off():
         return 0
+    os.environ['CLAUDE_ARTIFACTS_TURN_END'] = '1'   # R9.13: the turn is ending; only the previous publish holds it
     data = read_input()
     root = hook_root(data)
     if not root:

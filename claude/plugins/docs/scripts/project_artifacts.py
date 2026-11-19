@@ -3337,9 +3337,11 @@ def cmd_pending(args):
                         deferred[-1]['local_path'] = e['local_path']
                     continue
                 hourly = reason.startswith('refresh requested')
+                # R9.13: at the end of a turn the burst is over, so only the previous publish holds it back
+                turn_end = os.environ.get('CLAUDE_ARTIFACTS_TURN_END') == '1'
                 settle = None if (hourly or H is None) else H.settle_wait(
-                    rec.manifest, record_last_write(rec, ctx), H.settle_sec(ctx.root), current_instant(),
-                    H.read_settle(ctx.root, 'publish'))
+                    rec.manifest, '' if turn_end else record_last_write(rec, ctx), H.settle_sec(ctx.root),
+                    current_instant(), H.read_settle(ctx.root, 'publish'))
                 if settle is not None:        # R9.13: not asked for inside the settle window
                     settling.append({'key': key, 'title': e.get('title', ''), 'file': e.get('file', ''),
                                      'wait_sec': settle[0], 'reason': 'changes are settling (%s was under %d s ago); '

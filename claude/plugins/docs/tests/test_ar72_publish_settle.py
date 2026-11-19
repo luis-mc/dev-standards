@@ -58,12 +58,21 @@ class Settle(RecordCase):
         return self.cmd(sec, "mark-published", "full-progress", "--url", URL)
 
     def test_burst_is_asked_for_once_after_the_window(self):
-        for i, sec in enumerate((0, 10, 20)):
+        for i, sec in enumerate((0, 10, 20)):       # mid-turn: pending holds Full Progress back while it changes
             self.change(sec, "change %d" % i)
-            out = self.hook(sec + 1)
-            self.assertNotEqual(out.get("decision"), "block", out)
-            self.assertIn("settling", out.get("systemMessage", ""))
-        out = self.hook(20 + 70)        # quiet for 70 s
+            j = json.loads(self.cmd(sec + 1, "pending", "--json").stdout)
+            self.assertEqual(j["artifacts"], [], j)
+            self.assertTrue(j.get("settling"), j)
+        j = json.loads(self.cmd(20 + 70, "pending", "--json").stdout)     # quiet for 70 s
+        self.assertEqual(len(j["artifacts"]), 1, j)
+        out = self.hook(20 + 70)
+        self.assertEqual(out.get("decision"), "block", out)
+        self.assertIn("Publish", out["reason"])
+
+    def test_a_turn_end_asks_once_after_its_own_changes(self):
+        for i, sec in enumerate((0, 10, 20)):       # one turn, three changes; the turn ends 2 s after the last
+            self.change(sec, "change %d" % i)
+        out = self.hook(22)
         self.assertEqual(out.get("decision"), "block", out)
         self.assertIn("Publish", out["reason"])
 

@@ -1866,6 +1866,11 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   `test_second_publish_inside_the_window_is_warned_and_one_after_is_not`,
   `test_changes_unpublished_after_the_window_are_still_asked_for` and
   `test_settle_key_defaults_to_60_and_is_read_from_config`.
+  At the end of a turn the burst is over: the end-of-turn hook sets
+  `CLAUDE_ARTIFACTS_TURN_END=1` for the `pending` it runs, and then only the
+  previous publish holds Full Progress back, never the record's last change,
+  so a turn that changed the record seconds before it ends is still asked to
+  publish once. Verified by `test_a_turn_end_asks_once_after_its_own_changes`.
 
 - **R9.14** — A copy identical to the last published one is not asked for. With
   `--refresh`, `pending` lists an unchanged Full Progress only when the hourly
