@@ -4,13 +4,14 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.8.1
+version: 0.9.0
 owner: agents
 type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/delivery/templates/shared/.githooks/pre-push
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
+  - claude/plugins/delivery/references/release-asset-names.md
   - tools/test_delivery_*.py
 last_verified: 2026-11-08
 artifact: feature-delivery-speed.html
@@ -100,6 +101,8 @@ flowchart LR
 
 **R5.16** — A gate step in `gate.json` may carry `paths: KEY`. When `scope_map` maps path prefixes to keys, `plan_step` in `delivery_common.py` skips that step if files changed, every changed file lies under some `scope_map` key, and none lies under KEY. An unmapped file, an unknown key or a missing `scope_map` changes nothing. The rust `gate.json` ships the key `rust` only, so a Rust-only change skips JS steps only in a project that adds a `js` key and marks its JS steps `paths: "js"`. (DS201)
 
+**R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -128,6 +131,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
+| R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
 
 ## 10. Decisions
 
@@ -171,6 +175,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.9.0 | 2026-11-19 | RELEASE-151 | R5.17: release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |
 | 0.8.1 | 2026-11-14 | RELEASE-133 | Rust target cache: `<repo>/target` links to the cache folder; spec text is delivery R5.61. | DL329 |
 | 0.8.0 | 2026-11-13 | RELEASE-127 | Gate steps accept an optional when_changed list of path patterns; a step is skipped with a reason when no changed file matches.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait.<br>fast_guards.py runs the gate.json always_on_guards whose input globs match a changed file, so the boundary check and guard tests run before a push. | DL304, DL306, DL307 |
 | 0.7.0 | 2026-11-13 | RELEASE-123 | ci_scope.py gets the rust-release scope (see delivery R5.60).<br>Rust CI speed: crate scoping (rust_scope.py, RUST_CRATES) and a persistent per-runner target cache. Spec text is in the delivery feature, R5.50. | DL294, DL295 |

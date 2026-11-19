@@ -1,7 +1,7 @@
 # DELIVERYSPEC — Delivery rules
 
 **Status:** Normative
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Applies to:** every project that delivers its work with the `luismc-delivery` plugin, and the plugin itself
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-delivery`
 
@@ -116,6 +116,7 @@ Goal: each delivery and orchestration rule is a mechanical check in the plugins 
 | DL-93 | A cloud `RemoteTrigger` create without connectors attaches all of the account's connectors. The create body sets `"mcp_connections": []` and `"clear_mcp_connections": true`, unless `mcp_connections` lists the connectors the brief needs. The launch check refuses a create body that has neither. | owner decision D114 | G | PRE `RemoteTrigger` | `tool_input.body` keys; `checks_off` may list `DL-93` | Y |
 | DL-94 | CI jobs fetch pinned tools through the per-runner cache. `workflow_fetch_check.py` flags a workflow `run:` step that downloads a release asset or binary (curl, wget, Invoke-WebRequest, iwr or urllib on a `/releases/download/` URL or one ending in .zip .tar.gz .tgz .exe .msi .xz) when it does not go through `scripts/delivery/ci_tool.py`, writes into `$RUNNER_TEMP`, or has no sha256 check. A line opts out with a trailing `# ci-tool: ok <reason>`. The hook refuses a Write, Edit or MultiEdit of `.github/workflows/*.yml` that adds one, and names the line and the fix. | the 8 Nov release-asset outage | G | PRE `Write`/`Edit`/`MultiEdit` | `.github/workflows/` file text; `checks_off` may list `DL-94` | Y |
 | DL-95 | The GitHub REST quota (5,000 calls an hour) is shared by every session and tool on one account. `gh run watch` runs only with `--interval 60` or more; CI is watched with `ci_watch.py`, one process for many commits or runs (`ci_watch.py SHA1 SHA2 --run ID`), which polls every 60 s, backs off while every run is queued, and sleeps until the reset when fewer than 200 calls remain. The hook refuses `gh run watch` without `--interval` of 60 or more. | owner decision D228 (11 Nov 2026) | G | PRE `Bash`/`PowerShell` | the command text; `checks_off` may list `DL-95` | Y `hook_pre_tool.py`, `ci_watch.py` |
+| DL-96 | Release assets carry the version in the file name: `<installer_name>_<version>.<ext>`, also in SHA256SUMS. `release_assets.versioned_names: false` opts out. CI build artifacts keep stable names (DL-22). See `references/release-asset-names.md`. | owner lesson | P (G as option) | CI | release workflow YAML, `config.json` | Y `package-windows.yml`, `test_dl371_versioned_asset_names.py` |
 
 ### Local machine, runners, installs (1c)
 
