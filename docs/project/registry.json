@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-18T19:31+00:00",
+  "updated": "2026-11-19T06:48+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6641,6 +6641,52 @@
         }
       ],
       "started": "2026-11-15T10:36+00:00"
+    },
+    {
+      "id": "DL371",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Versioned release asset names by default",
+      "detail": "Peer request (ci-runners-shared-pool, owner's ask, 19 Nov): release assets named <installer>_<version>.<ext> (msi, pkg, deb, rpm, tar.gz, SHA256SUMS) by default in the delivery release templates and DELIVERYSPEC/STACKSPEC text, with an opt-out. Updaters look for the versioned name first, plain as fallback; docs link the release page; CI build artifacts keep stable names (DL-22).",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T06:48+00:00",
+      "rides": "DL372",
+      "started": "2026-11-19T06:36+00:00"
+    },
+    {
+      "id": "DL372",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE: versioned asset names (DL371)",
+      "detail": "Join DL371, fold, ready PR, CI, merge on green, record Live, announce versions.",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T06:48+00:00",
+      "release": 151,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-19T06:36+00:00",
+          "end": "2026-11-19T07:14+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-19T07:14+00:00",
+          "end": "2026-11-19T07:19+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-19T07:19+00:00",
+          "end": "2026-11-19T07:24+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-19T07:24+00:00",
+          "end": "2026-11-19T07:26+00:00"
+        }
+      ],
+      "started": "2026-11-19T06:36+00:00"
     },
     {
       "id": "DS1",
