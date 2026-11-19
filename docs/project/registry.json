@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-19T08:31+00:00",
+  "updated": "2026-11-19T08:58+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -833,25 +833,23 @@
       "id": "AR74",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Release phases given as HH:MM roll to the wrong day",
       "detail": "Peer report (comics-organizer, 19 Nov): --phase NAME=HH:MM-HH:MM is always read as today, so an early phase begun the previous evening and re-given next morning lands tonight and pushes later phases a day ahead. Fix: an HH:MM phase takes the occurrence nearest now (within 12 h), the first phase anchors the chain; warn on a phase >12 h ahead after a past one. Hints: --phase \"\" must be alone; Waiting --expected refused while old phases remain says to clear them first.",
-      "expected": "19 Nov ~09:09",
-      "changed": "2026-11-19T08:31+00:00",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T08:58+00:00",
       "rides": "AR75",
-      "expected_basis": "cloud agent from 08:34: setup 5 + work 20 + checks 10",
       "started": "2026-11-19T08:34+00:00"
     },
     {
       "id": "AR75",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: phase dates (AR74)",
       "detail": "Launch AR74 after RELEASE-153 merges (same script as AR72); join, fold, ready PR, CI, merge on green, record Live, announce.",
-      "expected": "19 Nov ~09:21",
-      "changed": "2026-11-19T08:31+00:00",
-      "expected_basis": "agent 35 min from 08:34 + join 5 + CI 5 + merge 2",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T08:58+00:00",
       "release": 154,
       "phases": [
         {
