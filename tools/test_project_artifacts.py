@@ -63,7 +63,8 @@ class Res:
 def base_env(extra=None):
     env = dict(os.environ)
     env.update({'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': str(TMP / 'nullconfig'),
-                'GIT_TERMINAL_PROMPT': '0', 'CLAUDE_ARTIFACTS_NOW': NOW})
+                'GIT_TERMINAL_PROMPT': '0', 'CLAUDE_ARTIFACTS_NOW': NOW,
+                'CLAUDE_ARTIFACTS_SETTLE_SEC': '0'})     # AR72: these cases write and publish at one fixed instant
     for k in ('GIT_AUTHOR_NAME', 'GIT_AUTHOR_EMAIL', 'GIT_COMMITTER_NAME', 'GIT_COMMITTER_EMAIL',
               'CLAUDE_ARTIFACTS_NO_ZONEINFO', 'CLAUDE_ARTIFACTS_NO_POWERSHELL', 'GIT_DIR', 'GIT_WORK_TREE',
               'LUISMC_ARTIFACTS_WORKTREE'):
@@ -3185,12 +3186,18 @@ def test_mark_published_refuses_a_stale_or_edited_copy(env):
 
 @case
 def test_pending_refresh_lists_an_unchanged_full_progress(env):
-    """R9.8: --refresh lists Full Progress although nothing changed, with a fresh copy; plain pending does not."""
+    """R9.8, R9.14: --refresh lists an unchanged Full Progress only when the hourly fail-safe or a release change asks; plain pending does not."""
     p = env.baseline()
     p.run('pending', '--json')
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     assert p.run('pending', '--json').code == 0
     r = p.run('pending', '--json', '--refresh')
+    assert r.code == 0 and r.json()['artifacts'] == [], r.all       # AR72: an unchanged copy is not asked for
+    p.ok('set-task-status', 'AR1', 'Running', '--expected', '13 Oct ~12:00')
+    p.run('pending', '--json')
+    p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
+    late = {'CLAUDE_ARTIFACTS_NOW': '2026-10-12T12:30:00+01:00'}     # over 60 minutes later, work open: the fail-safe
+    r = p.run('pending', '--json', '--refresh', env=late)
     j = r.json()['artifacts']
     assert r.code == 1 and len(j) == 1 and 'refresh' in j[0]['reason'] and j[0]['url'].endswith('/ccc'), r.all
     assert Path(j[0]['path']).is_file() and j[0]['copy_sha256']

@@ -110,6 +110,22 @@ def pending_items(root, script):
     return artifacts, queue, retired, deferred
 
 
+SETTLE_NOTE = 'Full Progress changes are settling; publish once after the last change'
+
+
+def settling_items(root, script):
+    """R9.13 (AR72): the Full Progress entries `pending --json` held back because the record changed, or Full
+    Progress was published, inside the settle window. [] when none or unreadable. Runs pending a second time
+    only when the first read found nothing to ask for."""
+    r = run(command_for(script) + ['pending', '--json'], root, PENDING_TIMEOUT)
+    if r is None:
+        return []
+    try:
+        return [e for e in json.loads(r[1]).get('settling', []) if isinstance(e, dict)]
+    except (ValueError, AttributeError, TypeError):
+        return []
+
+
 def only_full_progress(artifacts):
     """R8.11: Full Progress is the only artifact that is published; any other entry is ignored."""
     return [a for a in artifacts if a.get('kind') == 'full-progress' or a.get('key') == 'full-progress']
@@ -384,6 +400,7 @@ def build_background_reason(script):
 def main():
     if hooks_off():
         return 0
+    os.environ['CLAUDE_ARTIFACTS_TURN_END'] = '1'   # R9.13: the turn is ending; only the previous publish holds it
     data = read_input()
     root = hook_root(data)
     if not root:
@@ -455,6 +472,14 @@ def main():
         if sid in state:
             del state[sid]
             write_state(state_path, state)
+        try:
+            settling = settling_items(root, script) if found is not None else []
+        except Exception as exc:
+            warn('settle check skipped (%s: %s)' % (type(exc).__name__, exc))
+            settling = []
+        if settling:
+            told = '\n'.join(part for part in (told, 'luismc-docs: %s (waiting %d s).' % (
+                SETTLE_NOTE, max(int(e.get('wait_sec') or 0) for e in settling))) if part)
         if told:
             print(json.dumps({'systemMessage': told}))
         return 0
