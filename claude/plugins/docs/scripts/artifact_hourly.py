@@ -156,7 +156,14 @@ def overdue_text(task):
 
 
 def settle_sec(root):
-    """R9.13: `full_progress.settle_sec` of <root>/.delivery/config.json; 60 when unset or not a number >= 0."""
+    """R9.13: `full_progress.settle_sec` of <root>/.delivery/config.json; 60 when unset or not a number >= 0.
+    Seam for tests: CLAUDE_ARTIFACTS_SETTLE_SEC overrides it."""
+    forced = os.environ.get('CLAUDE_ARTIFACTS_SETTLE_SEC')
+    if forced:
+        try:
+            return max(0.0, float(forced))
+        except ValueError:
+            pass
     try:
         with open(os.path.join(str(root), '.delivery', 'config.json'), encoding='utf-8') as f:
             cfg = json.load(f)
@@ -166,17 +173,58 @@ def settle_sec(root):
     return v if isinstance(v, (int, float)) and not isinstance(v, bool) and v >= 0 else SETTLE_DEFAULT
 
 
-def settle_wait(manifest, last_write, window, now=None):
+STATE_REL = os.path.join('.claude', 'artifacts-stop-state.json')
+
+
+def stamp_settle(root, field, instant=None):
+    """R9.13: remember, to the second, when the record last changed ('write') or Full Progress was last published
+    ('publish'), under the key "settle" of the stop-state file (the record's own stamps are to the minute).
+    Never raises: a state that cannot be written only makes the window coarser."""
+    path = os.path.join(str(root), STATE_REL)
+    try:
+        try:
+            with open(path, encoding='utf-8') as f:
+                state = json.load(f)
+        except (OSError, ValueError):
+            state = {}
+        if not isinstance(state, dict):
+            state = {}
+        entry = state.get('settle') if isinstance(state.get('settle'), dict) else {}
+        entry[field] = (instant or now_instant()).isoformat(timespec='seconds')
+        state['settle'] = entry
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        tmp = '%s.%d.tmp' % (path, os.getpid())
+        with open(tmp, 'w', encoding='utf-8') as f:
+            json.dump(state, f)
+        os.replace(tmp, path)
+    except OSError:
+        pass
+
+
+def read_settle(root, field):
+    """The ISO text stamp_settle stored for `field`, '' when none."""
+    try:
+        with open(os.path.join(str(root), STATE_REL), encoding='utf-8') as f:
+            v = json.load(f)['settle'][field]
+    except (OSError, ValueError, KeyError, TypeError):
+        return ''
+    return v if isinstance(v, str) else ''
+
+
+def settle_wait(manifest, last_write, window, now=None, last_publish=''):
     """R9.13: (seconds still to wait, why) while a publish of Full Progress would be inside the settle window, else None.
     Inside it when the previous publish, or the record's last write (`last_write`, ISO text), is less than `window`
     seconds old. Never applies to the hourly fail-safe."""
     now = now or now_instant()
     best = None
     pub = published_at(manifest)
+    if pub is not None and last_publish:
+        pub = max(pub, parse_iso(last_publish) or pub)       # the stamp to the second, when there is one
     for at, why in ((pub, 'the previous publish'), (parse_iso(last_write) if last_write else None, 'the last record change')):
         if at is None:
             continue
-        left = window - (now - at).total_seconds()
-        if 0 < left and (best is None or left > best[0]):
+        age = (now - at).total_seconds()
+        left = window - age
+        if age >= 0 and 0 < left and (best is None or left > best[0]):
             best = (int(left) + 1, why)
     return best
