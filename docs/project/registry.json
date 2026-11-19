@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-19T08:02+00:00",
+  "updated": "2026-11-19T08:31+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -787,48 +787,95 @@
       "id": "AR72",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Publish Full Progress once per burst of changes",
       "detail": "Owner (19 Nov): changes to Full Progress less than a minute apart give ONE publish, after the last change. In code for every project: a Full Progress publish within the settle window (default 60 s, config) of the previous publish or of a still-changing record is held and asked for once the record has been quiet for the window or at the end of the turn. Minutes-apart publishes (launch, then live) stay as today; 60-min fail-safe unchanged.",
-      "expected": "19 Nov ~08:46",
-      "changed": "2026-11-19T08:02+00:00",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T08:30+00:00",
       "rides": "AR73",
-      "expected_basis": "cloud agent from 08:06: setup 5 + work 25 + checks 10",
       "started": "2026-11-19T08:06+00:00"
     },
     {
       "id": "AR73",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE: Full Progress publish once per burst (AR72)",
       "detail": "Launch AR72 after RELEASE-152 merges (shares project_artifacts.py and the end-of-turn hook with AR70); join, fold, ready PR, CI, merge on green, record Live, announce versions.",
-      "expected": "19 Nov ~09:15",
-      "changed": "2026-11-19T07:28+00:00",
-      "expected_basis": "after RELEASE-152 ~08:22; agent 40 + join 5 + CI 5 + merge 2",
+      "expected": "19 Nov",
+      "changed": "2026-11-19T08:30+00:00",
       "release": 153,
       "phases": [
         {
           "name": "agents",
-          "start": "2026-11-19T08:23+00:00",
-          "end": "2026-11-19T09:03+00:00"
+          "start": "2026-11-19T08:06+00:00",
+          "end": "2026-11-19T08:46+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-19T09:03+00:00",
-          "end": "2026-11-19T09:08+00:00"
+          "start": "2026-11-19T08:46+00:00",
+          "end": "2026-11-19T08:51+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-19T09:08+00:00",
-          "end": "2026-11-19T09:13+00:00"
+          "start": "2026-11-19T08:51+00:00",
+          "end": "2026-11-19T08:56+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-19T09:13+00:00",
-          "end": "2026-11-19T09:15+00:00"
+          "start": "2026-11-19T08:56+00:00",
+          "end": "2026-11-19T08:58+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-19T08:06+00:00"
+    },
+    {
+      "id": "AR74",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "Release phases given as HH:MM roll to the wrong day",
+      "detail": "Peer report (comics-organizer, 19 Nov): --phase NAME=HH:MM-HH:MM is always read as today, so an early phase begun the previous evening and re-given next morning lands tonight and pushes later phases a day ahead. Fix: an HH:MM phase takes the occurrence nearest now (within 12 h), the first phase anchors the chain; warn on a phase >12 h ahead after a past one. Hints: --phase \"\" must be alone; Waiting --expected refused while old phases remain says to clear them first.",
+      "expected": "19 Nov ~09:09",
+      "changed": "2026-11-19T08:31+00:00",
+      "rides": "AR75",
+      "expected_basis": "cloud agent from 08:34: setup 5 + work 20 + checks 10",
+      "started": "2026-11-19T08:34+00:00"
+    },
+    {
+      "id": "AR75",
+      "owner": "artifacts",
+      "app": "luismc-artifacts",
+      "status": "Running",
+      "item": "RELEASE: phase dates (AR74)",
+      "detail": "Launch AR74 after RELEASE-153 merges (same script as AR72); join, fold, ready PR, CI, merge on green, record Live, announce.",
+      "expected": "19 Nov ~09:21",
+      "changed": "2026-11-19T08:31+00:00",
+      "expected_basis": "agent 35 min from 08:34 + join 5 + CI 5 + merge 2",
+      "release": 154,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-19T08:34+00:00",
+          "end": "2026-11-19T09:09+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-19T09:09+00:00",
+          "end": "2026-11-19T09:14+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-19T09:14+00:00",
+          "end": "2026-11-19T09:19+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-19T09:19+00:00",
+          "end": "2026-11-19T09:21+00:00"
+        }
+      ],
+      "started": "2026-11-19T08:34+00:00"
     },
     {
       "id": "DL1",
