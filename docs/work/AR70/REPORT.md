@@ -21,4 +21,8 @@ Not done: item e (copy written_at on the page); it would change the page hash.
 - heavy area advice (`gh workflow run`) not run: workflows are not allowed.
 
 ## docs_check
-Last run before the commit: only M1 (docs feature maps the plugin code). Answered with `Docs: none` in the commit message; result below.
+`python3 claude/plugins/docs/scripts/docs_check.py`: M1 cleared by the `Docs: none` commit line. One W1 error remains: the report under docs/work/ is expected on an agent branch and is stripped before the join (docs_work.py strip). No other findings.
+
+Branch head: see `git rev-parse HEAD` of AR70-publish-copy-fresh (the final commit).
+
+READY
