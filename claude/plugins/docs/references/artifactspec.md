@@ -1468,6 +1468,12 @@ double-click.
   refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
   `test_check_flags_open_rows_past_their_expected_time`.
 
+- **R6.15** — `task-add` of a To do, Running or Built task with no `--rides`,
+  no `--release`, no `--no-release` and no open release row prints a warning
+  that names the fix: `task-add --release` for the release, then `--rides` on
+  the task. It is a warning; the exit code is 0. Verified by
+  `test_task_add_warns_without_a_release_to_ride`.
+
 ---
 
 ## 7. Commands
@@ -1820,6 +1826,20 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   no recorded copy it behaves as before. Verified by
   `test_pending_records_the_publish_copy_hash_and_time` and
   `test_mark_published_refuses_a_stale_or_edited_copy`.
+
+- **R9.12** — The publish copy follows the record (AR70). Every command that
+  writes the record (`set-task-status`, `task-add`, `edit-content`, `render`
+  and the others) also rewrites the Full Progress publish copy when it no
+  longer matches the record, so the copy is never older than the record. This
+  refreshes the copy only: whether `pending` lists Full Progress still follows
+  R9.6, and the R9.11 check is unchanged. `render` prints
+  `record already rendered; publish copy is current` or `... publish copy
+  refreshed` when nothing new rendered, never a bare `nothing to do`. The
+  end-of-turn hook and the rule line give the same order: `pending --json
+  --refresh`, publish the path it prints, then `mark-published`. Verified by
+  `test_copy_follows_set_task_status_and_task_add`,
+  `test_detail_only_change_reaches_copy_but_is_not_listed`,
+  `test_render_wording` and `test_order_in_hook_and_rule`.
 
 ---
 
