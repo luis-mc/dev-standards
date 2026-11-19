@@ -1076,7 +1076,7 @@ def test_render_noop_and_all(env):
     before = p.head()
     files = p.files()
     r = p.ok('render')
-    assert 'nothing to do' in r.out and p.head() == before and p.files() == files
+    assert 'record already rendered' in r.out and p.head() == before and p.files() == files      # R9.12
     r = p.ok('render', '--all', '--json', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-11T08:00:00+00:00'})
     assert sorted(r.json()['rendered']) == sorted(['full-progress', 'artifacts', 'site'])
     assert p.files() != files and p.head() == before
@@ -2236,7 +2236,7 @@ def test_render_with_earlier_findings(env):
     assert sorted(r.json()['rendered']) == ['artifacts', 'full-progress'], r.out
     assert p.show('docs/artifacts/feature-the-site.html') == site_html and p.head() == before
     r = p.ok('render')
-    assert 'nothing to do' in r.out and 'note: 1 earlier finding remains; run check' in r.out, r.all
+    assert 'record already rendered' in r.out and 'note: 1 earlier finding remains; run check' in r.out, r.all
     assert dirty_outside(p) == []
 
 
@@ -3165,14 +3165,16 @@ def test_mark_published_refuses_a_stale_or_edited_copy(env):
     p = env.baseline()
     a = p.run('pending', '--json').json()['artifacts'][0]
     time.sleep(0.05)
-    p.ok('set-task-status', 'AR1', 'Waiting')                      # the record changes after the copy was written
+    # the record changes after the copy was written, by hand (a command would refresh the copy, R9.12)
+    reg = p.clone / 'docs/artifacts/registry.json'
+    reg.write_text(reg.read_text(encoding='utf-8') + ' ', encoding='utf-8')
     r = p.run('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     assert r.code == 1 and 'older than the latest record change' in r.err, r.all
     assert not p.man()['full_progress_artifact'].get('url')
     a = p.run('pending', '--json').json()['artifacts'][0]          # a fresh copy
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     # an edited copy
-    p.ok('set-task-status', 'AR1', 'Running')
+    p.ok('set-task-status', 'AR1', 'Waiting')
     a = p.run('pending', '--json').json()['artifacts'][0]
     Path(a['path']).write_text('<title>edited</title>', encoding='utf-8')
     r = p.run('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
