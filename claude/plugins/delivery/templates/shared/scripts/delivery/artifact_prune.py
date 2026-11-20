@@ -39,8 +39,9 @@ for any head commit failed, was cancelled or timed out in the last 24 hours (a r
 The extra API calls are made only for the options a group sets. Any failure to read them stops the
 prune with exit 2, so it never decides without knowing.
 
-Workflow list (DL122): GitHub Actions reads `on.workflow_run.workflows` before any step runs, so it cannot
-be dynamic. The list is project-owned instead, in the same section:
+Workflow list (DL122): the template once ran after the workflows of this list (`on.workflow_run`). Since DL379 it
+runs on its daily schedule and by hand only, so the list is a note of the workflows that upload artifacts; it sits
+in a `# workflows: [...]` comment line of the template. The list stays project-owned, in the same section:
 
     {"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}}
 
@@ -102,7 +103,7 @@ BACKOFF_CAP = 60.0
 DEFAULT_CONFIG = ".delivery/config.json"
 DEFAULT_WORKFLOWS = ["CI", "Package"]
 DEFAULT_WORKFLOW_FILE = ".github/workflows/artifact-prune.yml"
-WORKFLOWS_LINE_RE = re.compile(r"^(?P<indent>[ \t]*)workflows:[ \t]*\[[^\]\r\n]*\][ \t]*(?:#[^\r\n]*)?(?=\r?$)", re.MULTILINE)
+WORKFLOWS_LINE_RE = re.compile(r"^(?P<indent>[ \t]*(?:#[ \t]*)?)workflows:[ \t]*\[[^\]\r\n]*\][ \t]*(?:#[^\r\n]*)?(?=\r?$)", re.MULTILINE)
 
 
 def _env_float(name: str, default: float) -> float:

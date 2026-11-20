@@ -713,10 +713,9 @@ def workflow_problems(text: str) -> list[str]:
             p.append(msg)
 
     need(r"^on:\s*$", "no top-level `on:`")
-    need(r"^  workflow_run:\s*\n(?:    .*\n)*?    workflows:\s*\[\s*[\"']CI[\"']\s*,\s*[\"']Package[\"']\s*\]",
-         "workflow_run must list workflows: [\"CI\", \"Package\"]")
-    need(r"^  workflow_run:\s*\n(?:    .*\n)*?    types:\s*\[\s*completed\s*\]",
-         "workflow_run must use types: [completed]")
+    # DL379: the sweep runs once a day and by hand, never after another workflow.
+    if re.search(r"^  workflow_run:", text, re.M):
+        p.append("workflow_run must not trigger the prune (DL379: schedule and workflow_dispatch only)")
     need(r"^  schedule:\s*\n\s+- cron:\s*'[^']+'", "no schedule cron")
     need(r"^  workflow_dispatch:", "no workflow_dispatch")
     # a daily cron: five fields, day-of-month, month and day-of-week are *
@@ -758,11 +757,7 @@ def workflow_problems(text: str) -> list[str]:
         if not re.fullmatch(r"[\w.-]+/[\w./-]+@[0-9a-f]{40}", u):
             p.append(f"action {u!r} is not pinned like the track ci.yml files (@<commit SHA>)")
     need(r"^\s*timeout-minutes:\s*\d+", "the job needs a timeout-minutes")
-    # The instruction to products: a comment above `on:` that names `workflows:`.
     head = text.split("\non:", 1)[0]
-    if not (re.search(r"^# .*workflows:", head, re.M) and "upload-artifact" in head):
-        p.append("a comment must tell a product to list every artifact-uploading workflow "
-                 "in `workflows:`")
     if not re.search(r"^# .*stable", head, re.M | re.I):
         p.append("a comment must say artifact names are stable per kind")
     return p
@@ -785,8 +780,8 @@ def workflow_structure():
 def workflow_checker_catches_each_defect():
     text = WORKFLOW.read_text(encoding="utf-8")
     cases = [
-        ('workflows: ["CI", "Package"]', 'workflows: ["CI"]', "workflows: [\"CI\", \"Package\"]"),
-        ("types: [completed]", "types: [requested]", "types: [completed]"),
+        ("  schedule:\n", "  workflow_run:\n    workflows: [\"CI\"]\n    types: [completed]\n  schedule:\n",
+         "workflow_run must not trigger"),
         ("  schedule:\n    - cron: '23 3 * * *'\n", "", "schedule cron"),
         ("  workflow_dispatch:\n", "", "workflow_dispatch"),
         ("cron: '23 3 * * *'", "cron: '*/5 * * * *'", "once a day"),
@@ -802,7 +797,6 @@ def workflow_checker_catches_each_defect():
         ("python3 scripts/delivery/artifact_prune.py", "python3 scripts/other.py", "must run"),
         ("actions/checkout@11d5960a326750d5838078e36cf38b85af677262", "actions/checkout@main", "pinned"),
         ("    timeout-minutes: 10\n", "", "timeout-minutes"),
-        ("# PRODUCT: `workflows:` below must list", "# `below` must list", "must tell a product"),
         ("# Artifact names must be stable", "# Artifact names must be", "stable per kind"),
     ]
     for old, new, expect in cases:

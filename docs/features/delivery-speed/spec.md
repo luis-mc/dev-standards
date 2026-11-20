@@ -113,6 +113,8 @@ flowchart LR
 
 **R5.22** — `ci_watch.py` never cancels a red run by default (D105, DL-97, task DL378). On the first failed job it prints the job at once, waits until every job of the head's runs has completed, then prints every failed job with its failed steps and exits 1. `ci_watch.cancel_on_red: true` or `--cancel-on-red` cancels only a train head whose failed job or step matches `ci_watch.blocking_job_re` (default `setup|install|lockfile|build|checkout`); any other failure warns and waits. This replaces the DL306 default.
 
+**R5.23** — The shipped workflow templates and this repository's workflows set `timeout-minutes` of 30 or less on every job that runs steps (G2; DL379). `artifact-prune.yml` runs on its daily schedule and by hand only, never after another workflow (DL-22), and keeps the newest artifact of each name. In `spec-lint.yml` the gate mutation pass and the mutation flags of the cleanup and change-note suites never run on a pull request: only the nightly workflow runs them, and pull requests run the scenarios with `--no-mutants` (G6). A project with a job above 30 minutes splits it.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -146,6 +148,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.20 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |
 | R5.21 | `claude/plugins/delivery/tests/test_dl376_test_guardrails.py` |
 | R5.22 | `claude/plugins/delivery/tests/test_dl378_ci_watch_red_finishes.py` |
+| R5.23 | `claude/plugins/delivery/tests/test_dl379_templates_guardrails.py` |
 
 ## 10. Decisions
 
