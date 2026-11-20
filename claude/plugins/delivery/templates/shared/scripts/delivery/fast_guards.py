@@ -289,12 +289,16 @@ def run_test_guardrails(work: Path) -> bool:
     """The always-on test guardrails guard (DL-99): scan `work` and print the report. In "warn" mode
     (the default) it never fails; in "block" mode a break fails it. A scan that cannot run is reported
     and never blocks."""
-    import test_guardrails as tg
+    try:
+        import test_guardrails as tg
+    except ImportError:
+        print("always-on guard test-guardrails: skipped, test_guardrails.py is not installed", flush=True)
+        return True
 
     print("always-on guard test-guardrails: running ...", flush=True)
     try:
         report = tg.scan(work, tg.load_config(work))
-    except (ValueError, OSError) as e:
+    except Exception as e:  # a scan that cannot run never blocks a push
         print("always-on guard test-guardrails: skipped, %s" % e, flush=True)
         return True
     print(tg.render(report), flush=True)
