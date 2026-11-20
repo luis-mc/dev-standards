@@ -292,14 +292,14 @@ def run_test_guardrails(work: Path) -> bool:
     try:
         import test_guardrails as tg
     except ImportError:
-        print("always-on guard test-guardrails: skipped, test_guardrails.py is not installed", flush=True)
+        print("always-on guard test-guardrails: not run, test_guardrails.py is not installed", flush=True)
         return True
 
     print("always-on guard test-guardrails: running ...", flush=True)
     try:
         report = tg.scan(work, tg.load_config(work))
     except Exception as e:  # a scan that cannot run never blocks a push
-        print("always-on guard test-guardrails: skipped, %s" % e, flush=True)
+        print("always-on guard test-guardrails: not run, %s" % e, flush=True)
         return True
     print(tg.render(report), flush=True)
     if report["mode"] == "block" and tg.failed(report):
