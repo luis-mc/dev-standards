@@ -303,6 +303,7 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D312 | Which of the four CI proposals (red run finishes, no fail-fast on release PRs, rerun narrowing for every test job, guardrails G1-G7) go into luismc-delivery? | All four | decided | 2026-11-20 |
 | delivery-speed | D313 | Should the guardrails guard block a push when a guardrail fails, or only warn? | Warn now, block later | decided | 2026-11-20 |
 | delivery-speed | D314 | Should each project get its own fix list from the CI study as a message to its session? | Yes, message each | decided | 2026-11-20 |
+| delivery-speed | D315 | Which follow-ups (ci_watch red-run cancel, template prune and timeouts, dev-standards spec-lint guardrails) ride RELEASE-155? | None, ship now; rest next | decided | 2026-11-20 |
 | delivery-speed | D32 | Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27? | Yes, in DL27 | decided | 2026-11-04 |
 | delivery-speed | D33 | Who owns dev-standards draft PR #140 (shared runner pool research) from here? | This session | decided | 2026-11-04 |
 | delivery-speed | D34 | Should Claude cloud sessions running CI (Option 3 main or Option 4 fallback) have a limit on how many run at once? | Yes, one limit for both roles | decided | 2026-11-04 |
