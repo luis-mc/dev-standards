@@ -1,4 +1,4 @@
-"""DL306: on a train head, the first red job cancels the other runs of that head and ends the watch.
+"""DL306 (DL378: only a blocking failure cancels): on a train head, a blocking red job cancels the other runs of that head and ends the watch.
 Stubbed gh (no network, no clock)."""
 import contextlib
 import io
@@ -29,7 +29,7 @@ class FakeGh:
         self.branch = branch
         self.runs = runs or [run(1, "in_progress"), run(2, "in_progress", name="lint"), run(3, "completed", "success", "x")]
         self.jobs = jobs if jobs is not None else {
-            1: [{"name": "rust", "status": "completed", "conclusion": "failure"},
+            1: [{"name": "build-rust", "status": "completed", "conclusion": "failure"},
                 {"name": "web", "status": "in_progress", "conclusion": None}],
             2: [{"name": "lint", "status": "in_progress", "conclusion": None}]}
         self.calls = []
@@ -77,7 +77,7 @@ class RedRunCancel(unittest.TestCase):
         code, out = watch(fake)
         self.assertEqual(code, 1)
         self.assertEqual(sorted(fake.cancelled()), ["1", "2"])
-        self.assertIn("FAILED job: rust", out)
+        self.assertIn("FAILED job: build-rust", out)
         self.assertIn("push freeze lifted", out)
         self.assertEqual(out.count("did not succeed"), 0)
 
@@ -170,7 +170,7 @@ class RedRunCancel(unittest.TestCase):
             return base(args)
         code, out = watch(mock.Mock(side_effect=handler))
         self.assertEqual(code, 1)
-        self.assertIn("FAILED job: rust", out)
+        self.assertIn("FAILED job: build-rust", out)
 
     def test_train_regex_from_config(self):
         fake = FakeGh("train/7")
@@ -185,7 +185,7 @@ class ConfigLoad(unittest.TestCase):
         import tempfile
         with tempfile.TemporaryDirectory() as d:
             p = Path(d) / "c.json"
-            self.assertEqual(cw.load_cancel_config(str(p), Path(d)), (True, r"^release/"))
+            self.assertEqual(cw.load_cancel_config(str(p), Path(d)), (False, r"^release/"))
             p.write_text(json.dumps({"ci_watch": {"cancel_on_red": False}, "train_branch_re": "^t/"}), encoding="utf-8")
             self.assertEqual(cw.load_cancel_config(str(p), Path(d)), (False, "^t/"))
 

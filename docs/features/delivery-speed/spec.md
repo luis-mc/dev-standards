@@ -111,6 +111,8 @@ flowchart LR
 
 **R5.21** — `test_guardrails.py` (DL-99, task DL376) scans the repository without running a test and reports seven guardrails: G1 per-test timeouts (unit 10 s, integration 60 s, e2e 120 s), G2 job `timeout-minutes` of 30 or less, G3 no CI retries, G4 no sleeps in tests, G5 at most 20 cases per test, G6 no mutation or many-run property tests on pull requests, G7 test times uploaded. `fast_guards.py` runs it on every push. `ci.test_guardrails.mode` is `warn` (default, never fails) or `block`; `ci.test_guardrails.off` needs a reason in `ci.test_guardrails.reasons`; `ci.jobs.<id>.test_timeout_s` and `timeout_minutes` may only lower a limit.
 
+**R5.22** — `ci_watch.py` never cancels a red run by default (D105, DL-97, task DL378). On the first failed job it prints the job at once, waits until every job of the head's runs has completed, then prints every failed job with its failed steps and exits 1. `ci_watch.cancel_on_red: true` or `--cancel-on-red` cancels only a train head whose failed job or step matches `ci_watch.blocking_job_re` (default `setup|install|lockfile|build|checkout`); any other failure warns and waits. This replaces the DL306 default.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -143,6 +145,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.18, R5.19 | `claude/plugins/delivery/tests/test_dl374_red_run_finishes.py` |
 | R5.20 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |
 | R5.21 | `claude/plugins/delivery/tests/test_dl376_test_guardrails.py` |
+| R5.22 | `claude/plugins/delivery/tests/test_dl378_ci_watch_red_finishes.py` |
 
 ## 10. Decisions
 
