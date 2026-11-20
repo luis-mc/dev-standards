@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.9.0
+version: 0.10.0
 owner: agents
 type: explanation
 code:
@@ -103,6 +103,14 @@ flowchart LR
 
 **R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
 
+**R5.18** — A red release CI run finishes (DL-97, D105, task DL374). The pre-tool hook refuses `gh run cancel` (and the API cancel call) for a release or join branch run that has a failed job and jobs still queued or running. The command comment `# D105: blocks-all` allows it, for a failure that blocks every later job (setup, lockfile, build). If `gh run view` fails, the cancel is allowed with a warning. `cancel_joined_runs.py` skips such runs unless `--blocks-all`.
+
+**R5.19** — No fail-fast on release pull-request CI (DL-98, D104, task DL374). Every shipped matrix sets `fail-fast: false`, and no suite step stops at its first failure. `ci.jobs.<id>.fail_fast` is `never-on-release` (default), `never` or `on`. `delivery_doctor.py` warns on a pull-request workflow with a matrix lacking `fail-fast: false`, or a `--fail-fast`, `-x`, `--exitfirst`, `--bail` or `maxFailures` flag, unless the job's `fail_fast` is `on`. The branch gate in the agent sandbox keeps its cheapest-first stop.
+
+**R5.20** — After a red run, the next head's run of a test job runs the tests that failed plus the tests of code changed since that run's head (`rerun_tests.py`, task DL375). The failure list comes from the previous run's test report, else its log, for pytest and unittest, vitest and jest, Playwright, go test, cargo test and cargo nextest. It runs the whole job when `ci.jobs.<job-id>.rerun` is `"whole"` (default `"failed+changed"`), the previous run was cancelled or timed out, a valve changed (lockfile, toolchain file, workflow file, a CI script under `scripts/delivery` or `scripts/ci`, a `ci_scope.py` full-run path), the failure list cannot be read, or a changed file maps to no test. After a green run nothing changes. A narrowed green run is not the merge gate; the ready PR's full CI is.
+
+**R5.21** — `test_guardrails.py` (DL-99, task DL376) scans the repository without running a test and reports seven guardrails: G1 per-test timeouts (unit 10 s, integration 60 s, e2e 120 s), G2 job `timeout-minutes` of 30 or less, G3 no CI retries, G4 no sleeps in tests, G5 at most 20 cases per test, G6 no mutation or many-run property tests on pull requests, G7 test times uploaded. `fast_guards.py` runs it on every push. `ci.test_guardrails.mode` is `warn` (default, never fails) or `block`; `ci.test_guardrails.off` needs a reason in `ci.test_guardrails.reasons`; `ci.jobs.<id>.test_timeout_s` and `timeout_minutes` may only lower a limit.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -132,6 +140,9 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
+| R5.18, R5.19 | `claude/plugins/delivery/tests/test_dl374_red_run_finishes.py` |
+| R5.20 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |
+| R5.21 | `claude/plugins/delivery/tests/test_dl376_test_guardrails.py` |
 
 ## 10. Decisions
 
@@ -175,6 +186,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.10.0 | 2026-11-20 | RELEASE-155 | R5.18, R5.19: a red release CI run is never cancelled while jobs run (DL-97); no fail-fast on release PR CI (DL-98).<br>R5.20: after a red run a test job reruns the failed tests plus the tests of changed code (rerun_tests.py); ci.jobs.<job-id>.rerun whole opts out.<br>R5.21: test_guardrails.py scans for the seven test guardrails (DL-99); fast_guards.py runs it in warn mode by default, block mode fails on a break. | DL374, DL375, DL376 |
 | 0.9.0 | 2026-11-19 | RELEASE-151 | R5.17: release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |
 | 0.8.1 | 2026-11-14 | RELEASE-133 | Rust target cache: `<repo>/target` links to the cache folder; spec text is delivery R5.61. | DL329 |
 | 0.8.0 | 2026-11-13 | RELEASE-127 | Gate steps accept an optional when_changed list of path patterns; a step is skipped with a reason when no changed file matches.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait.<br>fast_guards.py runs the gate.json always_on_guards whose input globs match a changed file, so the boundary check and guard tests run before a push. | DL304, DL306, DL307 |

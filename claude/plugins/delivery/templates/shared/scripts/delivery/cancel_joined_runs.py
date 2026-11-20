@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Cancel the CI runs of agent branches that an integration branch already contains.
 
-    cancel_joined_runs.py --into <INTEGRATION> [--remote origin] [--repo OWNER/NAME] [--yes]
+    cancel_joined_runs.py --into <INTEGRATION> [--remote origin] [--repo OWNER/NAME] [--yes] [--blocks-all]
 
 After the orchestrator joins agent branches into `<ID>-integration`, the runs those
 branches started are not needed, but on a single self-hosted runner they keep it
@@ -14,6 +14,8 @@ A run is cancelled only when all of these hold:
   - its head commit is reachable from <remote>/<INTEGRATION>, so a branch pushed
     again after the join is left alone.
 Runs of any other branch are never touched.
+A run that already has a failed job and still has jobs queued or in progress is skipped (D105: a red
+release run finishes), unless --blocks-all says the failed job blocks every later job (setup, lockfile, build).
 
 It is a dry run by default: it prints the plan and cancels nothing. With --yes it runs
 `gh run cancel <id>` for each run and prints each result.
@@ -103,11 +105,27 @@ def plan(remote: str, into: str, repo: str | None) -> list[dict]:
     return picked
 
 
+def is_red_and_running(run_id: int | str, repo: str | None) -> bool:
+    """D105: True when the run has a failed job and jobs still going. gh failing counts as not red (fail open)."""
+    code, out, _ = gh("run", "view", str(run_id), "--json", "status,jobs", repo=repo)
+    if code != 0:
+        return False
+    try:
+        jobs = json.loads(out or "{}").get("jobs") or []
+    except (ValueError, AttributeError):
+        return False
+    red = any(j.get("conclusion") in ("failure", "timed_out", "startup_failure") for j in jobs)
+    live = any(j.get("status") in ACTIVE for j in jobs)
+    return red and live
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="cancel_joined_runs.py", description=__doc__.split("\n")[0])
     ap.add_argument("--into", required=True, help="integration branch name")
     ap.add_argument("--remote", default="origin")
     ap.add_argument("--repo", help="OWNER/NAME passed to gh")
+    ap.add_argument("--blocks-all", action="store_true",
+                    help="cancel red runs too: the failed job blocks every later job (D105 exception)")
     ap.add_argument("--yes", action="store_true", help="cancel the runs (default: dry run)")
     try:
         a = ap.parse_args(argv)
@@ -124,6 +142,11 @@ def main(argv: list[str] | None = None) -> int:
     except (RuntimeError, ValueError) as e:
         print(f"cancel_joined_runs: {e}", file=sys.stderr)
         return 2
+    if not a.blocks_all:
+        kept = [r for r in runs if is_red_and_running(r["databaseId"], a.repo)]
+        for r in kept:
+            print(f"skip {r['databaseId']} {r['headBranch']}: red run with jobs still running (D105)")
+        runs = [r for r in runs if r not in kept]
     for r in runs:
         print(f"cancel {r['databaseId']} {r['headBranch']} {r.get('workflowName', '')} {r.get('url', '')}".rstrip())
     if not a.yes:

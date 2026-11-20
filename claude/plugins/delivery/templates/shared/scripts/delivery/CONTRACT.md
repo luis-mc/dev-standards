@@ -1063,5 +1063,43 @@ is not configured and writes `"gate": "not configured"` to `join-result.json`.
   of the running version. It runs after the readiness checks.
 - `rerun_args.py`: re-run files as paths relative to the test root with forward slashes, option values kept, and a
   re-run that crashed before running a test is a crash, not a second failure.
+- `rerun_tests.py` (DL375, D312): rerun narrowing for every test job. After a red run, the next head's run of a job
+  runs the tests that failed on that run plus the tests of the code changed since that run's head. The failure list
+  is read from the previous run's test report (JUnit XML, Playwright JSON, `go test -json`) when there is one, else
+  from the job log (pytest and unittest, vitest and jest, Playwright, go test, cargo libtest, cargo nextest); an
+  unknown or unreadable format is "whole". Output is `mode` (`narrow`, `whole` or `current`), a `reason` and the
+  runner arguments: pytest node ids, vitest `FILE -t REGEX`, Playwright `FILE:LINE` (or `--grep`), go `PKG -run
+  REGEX` per package, cargo `--lib|--test T|--bin B -- --exact NAMES` per binary, nextest `-E FILTERSET`. Changed
+  code maps to test files with `area_select.py` (`areas.*.tests`); a changed file with no area, or an area with no
+  `tests`, is whole. Cargo and nextest select by name only, so changed code there is whole. `mode` is `whole` when:
+  `ci.jobs.<job-id>.rerun` is `"whole"` (default `"failed+changed"`); the previous run was cancelled, timed out or
+  ended in any state but failure; a valve changed (a lockfile, a toolchain file, a workflow file, a CI script under
+  `scripts/delivery` or `scripts/ci`, or anything `ci_scope.py` does not call `affected`); or the failure list
+  cannot be read. After a green previous run (or none) `mode` is `current`: today's behaviour. `ci_rerun_first.py`
+  still orders jobs; this script narrows the tests inside one job. A narrowed green run is not the merge gate: the
+  ready PR's full CI is.
 - `windows-msi-linux.sh` and `windows-msi-check.yml`: the optional Linux MSI recipe. A CI check only; the shipped
   MSI is built on Windows (decision 10). Wine cannot write LZX, so the cabinet level is `mszip` off Windows.
+
+### DL376 — Test guardrails guard (DL-99, D312 and D313)
+
+- `test_guardrails.py [--root DIR] [--config FILE] [--json] [--mode warn|block]` reads the repository (it runs no
+  test) and prints, per guardrail, `PASS`, `OFF (reason)`, or a count of breaks with up to 10 `file:line` offenders.
+  `--json` gives `{mode, results: {G1..G7: {title, state, count, breaks: [{file, line, message}]}}, notes}`.
+  `scan(root, cfg)` and `load_config(root)` are the importable parts. Exit 0 (warn mode, or block with no break),
+  1 (block mode with a break), 2 (unreadable config or an unknown `mode`).
+- Guardrails: G1 per-test timeout within unit 10 s, integration 60 s, e2e 120 s (vitest/jest `testTimeout` and
+  per-test overrides, Playwright `timeout`, pytest-timeout, Go `-timeout`, nextest `slow-timeout` with
+  `terminate-after`; plain `cargo test` is a break); G2 every workflow job has `timeout-minutes` of 30 or less;
+  G3 no retries (Playwright `retries`, `--reruns`, flaky plugins, `retryTimes`, nextest `retries`, a re-run of failed
+  files); G4 no sleeps or deadline-less loops in test files (counted per file); G5 at most 20 cases per test
+  (`.each`, `parametrize`, Go table rows, rstest `#[case]`); G6 no mutation run and no property test with many runs
+  (fast-check `numRuns` over 100, hypothesis `max_examples` over 100, proptest cases over 256) in a workflow triggered
+  on `pull_request` or on a push to a non-default branch; G7 some workflow uploads test times (`ci-run-times`, a
+  JUnit report or a timing JSON).
+- Config in `.delivery/config.json`: `ci.test_guardrails.mode` (`warn` default, or `block`), `ci.test_guardrails.off`
+  (guardrails turned off) with `ci.test_guardrails.reasons.<id>` (a guardrail turned off without a reason is
+  reported and still scanned), `ci.jobs.<id>.timeout_minutes` (G2, lowers the 30) and
+  `ci.jobs.<id>.test_timeout_s.{unit,integration,e2e}` (G1; lowers a limit, a higher value is a break).
+- `fast_guards.py` runs it after the gate steps and the project's always-on guards, every push, no matter which
+  files changed. In `warn` mode it never fails the run; in `block` mode a break fails it.

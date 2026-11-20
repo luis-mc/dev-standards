@@ -1,7 +1,7 @@
 # DELIVERYSPEC — Delivery rules
 
 **Status:** Normative
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Applies to:** every project that delivers its work with the `luismc-delivery` plugin, and the plugin itself
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-delivery`
 
@@ -84,6 +84,8 @@ Goal: each delivery and orchestration rule is a mechanical check in the plugins 
 | DL-25 | removed: project-specific, not part of the plugins |
 | DL-26 | removed: project-specific, not part of the plugins |
 | DL-27 | removed: project-specific, not part of the plugins |
+| DL-97 | A red release CI run finishes (D105). Never `gh run cancel` (or the API cancel call) a release or join branch run that has a failed job and jobs still queued or running; wait for every job, fix every failure, push once. Exception: a failure that blocks every later job (setup, lockfile, build), marked `# D105: blocks-all`. `cancel_joined_runs.py` skips such runs unless `--blocks-all`. A gh failure allows with a warning. | owner decision D312, proposal D105 | G | PRE `gh run cancel` | `gh run view <id> --json status,jobs,headBranch`, `join_branch_re` | Y `hook_pre_tool.py`, `cancel_joined_runs.py`, `test_dl374_red_run_finishes.py` |
+| DL-98 | No fail-fast on release pull-request CI (D104). Every matrix sets `fail-fast: false` and no suite step passes `--fail-fast`, `-x`, `--exitfirst`, `--bail` or `maxFailures`, unless `ci.jobs.<id>.fail_fast` is `on` for that job (default `never-on-release`). The agent-sandbox branch gate keeps its cheapest-first stop. Doctor WARNs. | owner decision D312, proposal D104 | G | doctor | workflow YAML, `ci.jobs.<id>.fail_fast` | Y `delivery_doctor.py`, `templates/ts/.github/workflows/ci.yml`, `test_dl374_red_run_finishes.py` |
 
 ### Agents (1b)
 
@@ -117,6 +119,7 @@ Goal: each delivery and orchestration rule is a mechanical check in the plugins 
 | DL-94 | CI jobs fetch pinned tools through the per-runner cache. `workflow_fetch_check.py` flags a workflow `run:` step that downloads a release asset or binary (curl, wget, Invoke-WebRequest, iwr or urllib on a `/releases/download/` URL or one ending in .zip .tar.gz .tgz .exe .msi .xz) when it does not go through `scripts/delivery/ci_tool.py`, writes into `$RUNNER_TEMP`, or has no sha256 check. A line opts out with a trailing `# ci-tool: ok <reason>`. The hook refuses a Write, Edit or MultiEdit of `.github/workflows/*.yml` that adds one, and names the line and the fix. | the 8 Nov release-asset outage | G | PRE `Write`/`Edit`/`MultiEdit` | `.github/workflows/` file text; `checks_off` may list `DL-94` | Y |
 | DL-95 | The GitHub REST quota (5,000 calls an hour) is shared by every session and tool on one account. `gh run watch` runs only with `--interval 60` or more; CI is watched with `ci_watch.py`, one process for many commits or runs (`ci_watch.py SHA1 SHA2 --run ID`), which polls every 60 s, backs off while every run is queued, and sleeps until the reset when fewer than 200 calls remain. The hook refuses `gh run watch` without `--interval` of 60 or more. | owner decision D228 (11 Nov 2026) | G | PRE `Bash`/`PowerShell` | the command text; `checks_off` may list `DL-95` | Y `hook_pre_tool.py`, `ci_watch.py` |
 | DL-96 | Release assets carry the version in the file name: `<installer_name>_<version>.<ext>`, also in SHA256SUMS. `release_assets.versioned_names: false` opts out. CI build artifacts keep stable names (DL-22). See `references/release-asset-names.md`. | owner lesson | P (G as option) | CI | release workflow YAML, `config.json` | Y `package-windows.yml`, `test_dl371_versioned_asset_names.py` |
+| DL-99 | Test guardrails G1 to G7 run as an always-on guard, in warn mode by default (D312, D313). G1 every test runner has a per-test timeout (unit 10 s, integration 60 s, e2e 120 s). G2 every workflow job sets `timeout-minutes` of 30 or less. G3 no retries in CI. G4 no sleeps or open-ended waits in test files. G5 at most 20 cases per test. G6 no mutation run and no many-run property test on a pull request or a non-default push. G7 a workflow uploads test times. `ci.test_guardrails.mode` is `warn` (print breaks, never fail) or `block` (fail on any break not turned off); `ci.test_guardrails.off` turns a guardrail off and needs a reason in `ci.test_guardrails.reasons`; `ci.jobs.<id>.test_timeout_s` and `timeout_minutes` may only lower a limit. | owner decisions D312, D313 | G (mode in config) | PRE (`fast_guards.py`) + CI | repository files, `config.json` | Y `test_guardrails.py`, `test_dl376_test_guardrails.py` |
 
 ### Local machine, runners, installs (1c)
 
