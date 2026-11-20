@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-20T16:42+00:00",
+  "updated": "2026-11-20T23:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6983,6 +6983,51 @@
       "changed": "2026-11-20T15:29+00:00",
       "rides": "DL377",
       "started": "2026-11-20T14:57+00:00"
+    },
+    {
+      "id": "DL380",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Release the cancel_superseded fix",
+      "detail": "join, fold, ready PR, CI, merge",
+      "expected": "20 Nov",
+      "changed": "2026-11-20T23:35+00:00",
+      "release": 158,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-20T23:15+00:00",
+          "end": "2026-11-20T23:35+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-20T23:35+00:00",
+          "end": "2026-11-20T23:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-20T23:40+00:00",
+          "end": "2026-11-20T23:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-20T23:50+00:00",
+          "end": "2026-11-20T23:55+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL381",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Watcher cancels a replaced CI run only when a newer run exists",
+      "detail": "cancel_superseded skips bot-pushed heads, needs a newer run for the newer head, never cancels a red run when cancel_on_red is false (D105)",
+      "expected": "20 Nov",
+      "changed": "2026-11-20T23:35+00:00",
+      "rides": "DL380",
+      "started": "2026-11-20T23:15+00:00"
     },
     {
       "id": "DS1",

@@ -902,10 +902,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.7.0 <span class="gen-flag gen-update">update: 2.11.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.7.0 <span class="gen-flag gen-update">update: 2.12.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-20T16:09+00:00">20 Nov 16:09</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">20 Nov 16:11</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-20T23:35+00:00">20 Nov 23:35</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">20 Nov 23:16</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -918,19 +918,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">D311: pool project covers every private-repo job (its M2+), then message</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">23 Nov ~15:00</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">7 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">9 tasks</span></summary>
 <ul>
+<li data-glance-task="DL380"><span class="task-id">DL380</span><span class="release-name">RELEASE-158</span>Release the cancel_superseded fix</li>
+<li data-glance-task="DL381"><span class="task-id">DL381</span>Watcher cancels a replaced CI run only when a newer run exists</li>
 <li data-glance-task="DL377"><span class="task-id">DL377</span><span class="release-name">RELEASE-156</span>ci_watch keeps red release runs; CI templates follow the guardrails</li>
 <li data-glance-task="DL378"><span class="task-id">DL378</span>ci_watch.py never cancels a red release run while jobs still run (D105)</li>
 <li data-glance-task="DL379"><span class="task-id">DL379</span>CI templates and spec-lint follow the test guardrails</li>
 <li data-glance-task="DL373"><span class="task-id">DL373</span><span class="release-name">RELEASE-155</span>CI policy rules D104-D106 and test guardrails G1-G7</li>
 <li data-glance-task="DL374"><span class="task-id">DL374</span>Red release CI run finishes; no fail-fast on release-PR CI (D105, D104)</li>
 <li data-glance-task="DL375"><span class="task-id">DL375</span>Rerun narrowing for every test job (D106)</li>
-<li data-glance-task="DL376"><span class="task-id">DL376</span>Test guardrails G1-G7 guard, warn mode (D313)</li>
+<li class="glance-more">and 1 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">367</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">8</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">369</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">8</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
@@ -940,8 +942,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <tr data-task="DL349"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL349</span>Projects move to the new runs-on contract</td><td>Phase E: each adopting project runs the delivery install update, the separate pool project writes RUNS_ON_*, old CI_RUNS_ON* deleted, first job watched per project.</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">375 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">377 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL380"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL380</span><span class="release-name">RELEASE-158</span>Release the cancel_superseded fix</td><td>join, fold, ready PR, CI, merge</td><td>20 Nov</td></tr>
+<tr data-task="DL381"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL381</span>Watcher cancels a replaced CI run only when a newer run exists<span class="release-line"><span class="release-name">RELEASE-158</span></span></td><td>cancel_superseded skips bot-pushed heads, needs a newer run for the newer head, never cancels a red run when cancel_on_red is false (D105)</td><td>20 Nov</td></tr>
 <tr data-task="DL377"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL377</span><span class="release-name">RELEASE-156</span>ci_watch keeps red release runs; CI templates follow the guardrails</td><td>Join DL378, DL379; fold; ready PR; CI; merge on green</td><td>20 Nov</td></tr>
 <tr data-task="DL378"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL378</span>ci_watch.py never cancels a red release run while jobs still run (D105)<span class="release-line"><span class="release-name">RELEASE-156</span></span></td><td>ci_watch waits for every job on a release or join head; same blocks-all exception as DL-97</td><td>20 Nov</td></tr>
 <tr data-task="DL379"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL379</span>CI templates and spec-lint follow the test guardrails<span class="release-line"><span class="release-name">RELEASE-156</span></span></td><td>Templates: Artifact prune on a schedule only, timeout-minutes &lt;= 30 per job; dev-standards spec-lint: timeouts on its jobs, mutation pass nightly</td><td>20 Nov</td></tr>
