@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.24.0
+**Version:** 1.25.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.25.0 — 2026-11-20.**
+
+- Added R5.53 and R5.54: the Where it stands cell of Full Progress section 1 is derived from the record and kept short; R5.37 also warns on a train label or #NN in a lede.
 
 **1.24.0 — 2026-11-19.**
 
