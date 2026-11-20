@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-20T16:10+00:00",
+  "updated": "2026-11-20T16:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -879,12 +879,11 @@
       "id": "AR76",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-157: Full Progress 'Where it stands' built from the record",
       "detail": "Join AR77; fold; ready PR; CI; merge on green",
-      "expected": "20 Nov ~16:55",
-      "changed": "2026-11-20T16:10+00:00",
-      "expected_basis": "1 cloud agent ~15-25 min measured, join 10, CI 5",
+      "expected": "20 Nov",
+      "changed": "2026-11-20T16:42+00:00",
       "release": 157,
       "started": "2026-11-20T16:09+00:00",
       "phases": [
@@ -909,12 +908,11 @@
       "id": "AR77",
       "owner": "artifacts",
       "app": "luismc-artifacts",
-      "status": "Running",
+      "status": "Live",
       "item": "Where it stands: last live release, what open tasks wait on, next date",
       "detail": "Full Progress feature rows build the cell from the record, not the static lede; the lede stays on the feature page",
-      "expected": "20 Nov ~16:35",
-      "changed": "2026-11-20T16:10+00:00",
-      "expected_basis": "cloud agent started ~16:12, ~25 min",
+      "expected": "20 Nov",
+      "changed": "2026-11-20T16:42+00:00",
       "rides": "AR76"
     },
     {
