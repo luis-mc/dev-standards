@@ -1039,7 +1039,8 @@ def test_edit_content_from_folder(env):
     assert p.show('docs/artifacts/content/artifacts/01-what-and-why.html') is None
     html = p.show('docs/artifacts/feature-artifacts.html')
     assert 'Tokens and structure.' in html and 'Design is settled.' in html and 'First.' in html
-    assert 'Design is settled' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    # AR77 (R5.53): Full Progress builds 'Where it stands' from the record for a feature with tasks; the lede stays on the feature page.
+    assert 'Design is settled' not in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     assert p.run('check').code == 0
     assert dirty_outside(p) == [] and p.head() == p.head(), dirty(p)       # only docs/artifacts/ changed, nothing committed
     assert any(x.endswith('feature-artifacts.html') for x in dirty(p))
@@ -1400,7 +1401,7 @@ def test_pending_never_lists_a_feature_artifact(env):
     meta['lede'] = 'The site changed. More follows.'
     (d / 'meta.json').write_text(json.dumps(meta), encoding='utf-8')
     p.ok('edit-content', 'site', '--from', d)
-    assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']   # its lede is quoted in section 1
+    assert p.run('pending').code == 0          # R5.53: a feature with tasks shows a cell built from the record, not its lede
     p.ok('mark-published', 'full-progress', '--url', 'https://claude.ai/artifact/ccc')
     p.ok('feature-new', '--key', 'fresh', '--title', 'Fresh', '--prefix', 'FR', '--apps', 'x')
     assert [a['key'] for a in p.run('pending', '--json').json()['artifacts']] == ['full-progress']

@@ -1100,6 +1100,91 @@ def _first_sentence(lede_html: str) -> str:
     return match.group(1) if match else text
 
 
+STANDS_MAX = 220                 # R5.54
+STANDS_OPEN = ('Running', 'Needs you', 'Waiting', 'To do')
+VERSION_RE = re.compile(r'\b(?:([A-Za-z][\w-]*)\s+)?v?(\d+\.\d+\.\d+)\b')
+EXP_DAY_RE = re.compile(r'^(\d{2} (?:' + '|'.join(MONTHS) + r'))')
+
+
+def _id_runs(ids: list) -> str:
+    """DL346, DL347, DL348 -> `DL346-DL348`; a gap starts a new run."""
+    parsed = []
+    for tid in ids:
+        m = TASK_ID_RE.match(tid)
+        parsed.append((m.group(1), int(m.group(2))) if m else (tid, None))
+    parsed.sort(key=lambda p: (p[0], p[1] if p[1] is not None else 0))
+    runs, i = [], 0
+    while i < len(parsed):
+        j = i
+        while (parsed[i][1] is not None and j + 1 < len(parsed) and parsed[j + 1][0] == parsed[i][0]
+               and parsed[j + 1][1] == parsed[j][1] + 1):
+            j += 1
+        name = lambda p: p[0] if p[1] is None else '%s%d' % p
+        runs.append(name(parsed[i]) if j == i else '%s-%s' % (name(parsed[i]), name(parsed[j])))
+        i = j + 1
+    return ', '.join(runs)
+
+
+def _expected_day(task) -> str:
+    m = EXP_DAY_RE.match(str((task or {}).get('expected') or ''))
+    return m.group(1) if m else ''
+
+
+def feature_stands(key: str, tasks: list, lede_html: str = '') -> str:
+    """R5.53, R5.54: the Where it stands cell of Full Progress section 1, built from the record: the newest Live
+    release this feature's tasks rode, then one clause per open status. No tasks: the lede's first sentence."""
+    mine = [t for t in tasks if t.get('owner') == key]
+    if not mine:
+        return _first_sentence(lede_html) if lede_html else ''
+    by_id = {t['id']: t for t in tasks}
+    parts = []
+    rides = {t.get('rides') for t in mine if t.get('rides')}
+    live = [r for r in (by_id.get(i) for i in rides) if r and release_number(r) and r.get('status') == 'Live']
+    if live:
+        rel = max(live, key=release_number)
+        day = str(rel.get('changed') or '')[:10]
+        when = _fmt_day(day) if ISO_DAY_RE.match(day) else _expected_day(rel)
+        ver = ''
+        for text in (rel.get('item'), rel.get('detail')):
+            m = VERSION_RE.search(str(text or ''))
+            if m:
+                ver = ' '.join(x for x in (m.group(1), m.group(2)) if x)
+                break
+        parts.append('Live: %s%s' % (release_name(rel), ' (%s)' % when if when else '') + (' ' + ver if ver else ''))
+    for status in STANDS_OPEN:
+        groups = {}
+        for t in mine:
+            if t['status'] != status:
+                continue
+            if status == 'Running':
+                rel = by_id.get(t.get('rides'))
+                on = ('in %s' % release_name(rel)) if rel is not None and release_number(rel) else ''
+                day = _expected_day(rel) or _expected_day(t)
+            else:
+                basis = _norm(t.get('expected_basis') or '')
+                if not basis and t.get('waits_on') in ('owner', 'work'):
+                    basis = 'you' if t['waits_on'] == 'owner' else 'other work'
+                on = ('on %s' % basis) if basis else ''
+                day = _expected_day(t)
+            groups.setdefault((on, day), []).append(t['id'])
+        for (on, day), ids in groups.items():
+            parts.append('%s: %s' % (status, _id_runs(ids)) + (' ' + on if on else '') + (' (~%s)' % day if day else ''))
+    if len(parts) == (1 if live else 0):
+        if not live:
+            return _first_sentence(lede_html) if lede_html else ''
+    while len(parts) > 1 and len('; '.join(parts)) > STANDS_MAX:
+        parts.pop(0)                               # the oldest detail goes first, whole clauses only
+    text = '; '.join(parts)
+    if len(text) > STANDS_MAX:                     # one clause left: shorten what it waits on, never inside an ID
+        head, _, tail = text.partition(' on ')
+        room = STANDS_MAX - len(head) - 5
+        if tail and room > 8:
+            tail = tail.rstrip(')')
+            text = '%s on %s\u2026' % (head, tail[:room].rstrip())
+    return text + '.'
+
+
+
 def _id_ranges(key: str, prefix: str, tasks: list) -> str:
     by_prefix = {}
     for task in tasks:
@@ -1920,7 +2005,7 @@ def _feature_section(manifest: dict, tasks: list, contents: dict, problems: list
             continue
         title = esc(entry['title'])
         link = _link(feature_links[entry['key']], title)
-        stands = _first_sentence(content['meta']['lede'])
+        stands = feature_stands(entry['key'], tasks, content['meta']['lede'])
         if not stands:                    # R5.36: an empty note never leaves the column blank
             stands = feature_summary([t for t in tasks if t.get('owner') == entry['key']], content.get('decisions')) + '.'
             stands = stands[0].upper() + stands[1:]

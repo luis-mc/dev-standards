@@ -2587,8 +2587,8 @@ FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release
 
 def publish_fingerprint(rec):
     """R9.6: a hash of what the owner sees in Full Progress and can change: each task's id, owner, status, item,
-    Expected and release fields, each open decision, and each feature row of section 1 (title and the note it
-    quotes). A detail, a basis, a content section and the stamps are left out on purpose."""
+    Expected and release fields, each open decision, and each feature row of section 1 (title and its derived
+    Where it stands cell, R5.53). A detail, a content section, a content section and the stamps are left out on purpose."""
     tasks = [[t.get(k) for k in FINGERPRINT_TASK_FIELDS] for t in rec.tasks() if isinstance(t, dict)]
     contents = rec.render_contents()
     open_of = getattr(R, 'open_decisions', None)
@@ -2599,7 +2599,7 @@ def publish_fingerprint(rec):
             continue
         meta = content.get('meta') if isinstance(content.get('meta'), dict) else {}
         try:
-            note = R._first_sentence(meta['lede']) if meta.get('lede') else ''
+            note = R.feature_stands(key, [t for t in rec.tasks() if isinstance(t, dict)], meta.get('lede') or '')   # R5.53
         except Exception:
             note = str(meta.get('lede', ''))
         features.append([key, e.get('title'), e.get('prefix'), note])
@@ -3022,6 +3022,7 @@ def lede_warnings(rec):
 
 
 STALE_LEDE_RE = re.compile(r'RELEASE-(\d+)(?![\d\w])')
+TRAIN_LEDE_RE = re.compile(r'\btrain-\d{4}-\d{2}-\d{2}(?:-\d+)?\b|(?<![\w&])#\d+\b')    # R5.37a: a train label or a PR number
 
 
 def stale_lede_warnings(rec):
@@ -3032,15 +3033,21 @@ def stale_lede_warnings(rec):
     contents, _findings = load_contents(rec)
     content = contents.get(key)
     lede = ((content or {}).get('meta') or {}).get('lede')
+    out = []
+    for ckey, c in sorted(contents.items()):         # a train label or #NN in any lede goes stale (warning only)
+        text = ((c or {}).get('meta') or {}).get('lede')
+        if isinstance(text, str) and TRAIN_LEDE_RE.search(text):
+            out.append(('content/%s/meta.json' % ckey, 'the lede names a train label or a pull request number, which go stale; '
+                        'name the RELEASE-n or drop it (edit-content)'))
     if not isinstance(lede, str):
-        return []
+        return out
     named = [int(n) for n in STALE_LEDE_RE.findall(lede)]
     live = [release_number(t) for t in rec.tasks() if isinstance(t, dict) and t.get('status') == 'Live']
     live = [n for n in live if n is not None]
     if not named or not live or max(named) >= max(live):
-        return []
+        return out
     return [('content/%s/meta.json' % key, 'the lede names RELEASE-%d but RELEASE-%d is live; update it with edit-content'
-             % (max(named), max(live)))]
+             % (max(named), max(live)))] + out
 
 
 def decision_warnings(rec):
