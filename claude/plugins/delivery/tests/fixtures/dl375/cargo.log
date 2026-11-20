@@ -1,0 +1,16 @@
+     Running unittests src/lib.rs (target/debug/deps/mycrate-0123456789abcdef)
+running 2 tests
+test tests::ok ... ok
+test tests::bad ... FAILED
+
+failures:
+
+---- tests::bad stdout ----
+panicked
+
+failures:
+    tests::bad
+
+test result: FAILED. 1 passed; 1 failed
+     Running tests/it.rs (target/debug/deps/it-fedcba9876543210)
+test api::broken ... FAILED
