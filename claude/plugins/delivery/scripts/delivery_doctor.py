@@ -42,6 +42,8 @@ Eight checks (a ninth, `rust`, appears only on the rust track: see below), each 
            FAILS on: no host linker ("linker cc not found" and the fix command); clang-cl or lld-link missing when
            rust-toolchain.toml targets include Windows; rust-toolchain.toml missing or not an exact version (not
            stable); tools.json without a sha256 for rustup-init, llvm, zig or cargo-deny (missing keys are findings).
+           DL-98 (D104): WARNS when a pull-request workflow has a matrix without `fail-fast: false` or a stop-at-first-failure
+           flag on a suite step, unless ci.jobs.<id>.fail_fast is "on".
            WARNS (never fails) on: advisory DB cache older than 7 days or absent; under 10 GB free for target/.
            It changes nothing; each finding prints the command.
   scripts  (DL188) `ci.scripts-current`: scripts/delivery files that are older than, or missing from, the plugin's templates
@@ -1370,6 +1372,71 @@ def check_scripts(root, cfg):
     return True, "; ".join(bad) or items[0]["detail"], items
 
 
+STOP_FLAG_RE = re.compile(r"(?<![\w-])(--fail-fast|--exitfirst|--bail|-x)(?![\w-])|maxFailures")
+
+
+def fail_fast_findings(text, name, cfg):
+    """DL-98 (D104): lines of one workflow that stop a release PR run at its first failing suite."""
+    if not re.search(r"^\s*pull_request\s*:|^\s*on\s*:.*\bpull_request\b", text, re.M):
+        return []
+    ci = cfg.get("ci") if isinstance(cfg.get("ci"), dict) else {}
+    jobs_cfg = ci.get("jobs") if isinstance(ci.get("jobs"), dict) else {}
+
+    def on(job):
+        j = jobs_cfg.get(job)
+        return isinstance(j, dict) and j.get("fail_fast") == "on"
+
+    lines = text.splitlines()
+    out, job = [], None
+    in_jobs = False
+    for i, line in enumerate(lines):
+        if re.match(r"^jobs\s*:", line):
+            in_jobs = True
+            continue
+        m = re.match(r"^  ([A-Za-z0-9_-]+)\s*:\s*$", line)
+        if in_jobs and m:
+            job = m.group(1)
+        if on(job):
+            continue
+        m = re.match(r"^(\s*)strategy\s*:", line)
+        if m:
+            indent = len(m.group(1))
+            block = []
+            for nxt in lines[i + 1:]:
+                if nxt.strip() and len(nxt) - len(nxt.lstrip()) <= indent:
+                    break
+                block.append(nxt)
+            body = "\n".join(block)
+            if re.search(r"^\s*matrix\s*:", body, re.M) and not re.search(r"^\s*fail-fast\s*:\s*false\b", body, re.M):
+                out.append("%s job %s: matrix without fail-fast: false" % (name, job or "?"))
+        code = line.split("#", 1)[0]
+        if re.match(r"^\s*(-\s*)?(run|args)\s*:|^\s+\S", code) and STOP_FLAG_RE.search(code) and "echo" not in code:
+            out.append("%s job %s line %d: stop-at-first-failure flag %s" % (
+                name, job or "?", i + 1, STOP_FLAG_RE.search(code).group(0)))
+    return out
+
+
+def check_fail_fast(root, cfg):
+    """DL-98 (D104): WARN, never fail, when a pull-request workflow can stop at the first failing suite."""
+    wf = os.path.join(root, ".github", "workflows")
+    if not os.path.isdir(wf):
+        return None
+    found = []
+    for n in sorted(os.listdir(wf)):
+        if not n.endswith((".yml", ".yaml")):
+            continue
+        try:
+            with open(os.path.join(wf, n), encoding="utf-8") as f:
+                found += fail_fast_findings(f.read(), n, cfg)
+        except OSError:
+            continue
+    if not found:
+        return None
+    return True, "WARN DL-98 a release PR run must run every suite to the end (D104): " + "; ".join(found) + \
+        ". Set `fail-fast: false`, drop the flag, or set ci.jobs.<id>.fail_fast to \"on\".", \
+        [_item("ci.fail_fast", "warn", "; ".join(found))]
+
+
 def check_plugins(root, cfg):
     items = compat_items()
     if not items:
@@ -1379,7 +1446,7 @@ def check_plugins(root, cfg):
 
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust),
-          ("scripts", check_scripts), ("plugins", check_plugins))
+          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("plugins", check_plugins))
 
 
 def run_checks(root):

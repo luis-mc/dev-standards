@@ -7,7 +7,7 @@ rule, with a one-line reason that names the DL id and the fix, as
 Reads the ledger and .delivery/config.json read-only. A project without .delivery/ is
 untouched; an error in the hook allows the call (fail open).
 
-Checks: DL-77 (load guard, exit 2), DL-94 (workflow tool downloads), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
+Checks: DL-77 (load guard, exit 2), DL-97 (no cancel of a red release run), DL-94 (workflow tool downloads), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
 """
 import fnmatch
 import json
@@ -177,6 +177,67 @@ def check_run_watch(seg):
              'for every session). Watch CI with ci_watch.py, one watcher for many runs.')
 
 
+D105_ESCAPE_RE = re.compile(r'#\s*D105:\s*blocks-all\b', re.I)
+CANCEL_API_RE = re.compile(r'runs/(\d+)/cancel\b')
+
+
+def cancel_run_id(seg):
+    """The run id of `gh run cancel <id>` or `gh api .../actions/runs/<id>/cancel`, else None."""
+    t = H.strip_prefix(seg)
+    if H.starts_with(seg, ['gh', 'run', 'cancel']):
+        ids = [x for x in t[3:] if not x.startswith('-')]
+        return ids[0] if ids else None
+    if H.starts_with(seg, ['gh', 'api']):
+        for x in t:
+            m = CANCEL_API_RE.search(x)
+            if m:
+                return m.group(1)
+    return None
+
+
+def read_run_state(run_id, cwd):
+    """`gh run view <id> --json status,jobs,headBranch` as a dict, or None when gh fails (fail open)."""
+    try:
+        r = subprocess.run(['gh', 'run', 'view', run_id, '--json', 'status,jobs,headBranch'], cwd=cwd,
+                           capture_output=True, text=True, timeout=5)
+        if r.returncode != 0:
+            return None
+        data = json.loads(r.stdout or '{}')
+    except (OSError, subprocess.SubprocessError, ValueError):
+        return None
+    return data if isinstance(data, dict) else None
+
+
+def check_cancel_red_run(seg, command, cfg, cwd):
+    """DL-97 (D105): a release run that is red while jobs still run finishes; it is never cancelled.
+    Returns a warning string when gh failed (the call is allowed), else None."""
+    run_id = cancel_run_id(seg)
+    if not run_id or D105_ESCAPE_RE.search(command):
+        return None
+    state = read_run_state(run_id, cwd)
+    if state is None:
+        return 'DL-97 warning: could not read run %s with gh; the cancel is allowed unchecked.' % run_id
+    branch = state.get('headBranch')
+    release = H.is_release_branch(cfg, branch)
+    if not release and branch:
+        for key in ('release_branch_re', 'join_branch_re'):
+            try:
+                if cfg.get(key) and re.search(cfg[key], branch):
+                    release = True
+            except re.error:
+                pass
+    if not release or state.get('status') == 'completed':
+        return None
+    jobs = [j for j in (state.get('jobs') or []) if isinstance(j, dict)]
+    red = any(j.get('conclusion') in ('failure', 'timed_out', 'startup_failure') for j in jobs)
+    live = any(j.get('status') in ('queued', 'in_progress', 'waiting', 'pending') for j in jobs)
+    if red and live:
+        deny('DL-97 D105: a red release run finishes. Run %s on %s has a failed job and jobs still running: wait for '
+             'every job, fix every failure, push once. Cancel only when the failure blocks every later job (setup, '
+             'lockfile, build): add the comment "# D105: blocks-all" to the command.' % (run_id, branch))
+    return None
+
+
 def check_kill(seg, command):
     t = [x.lower() for x in H.strip_prefix(seg)]
     prog = t[0] if t else ''
@@ -331,6 +392,10 @@ def check_bash(root, cfg, ledger, data, at):
             deny('DL-07 do not watch the PR check list. Watch the workflow runs of the head commit: ci_watch.py <sha>.')
         if H.starts_with(seg, ['gh', 'run', 'watch']) and H.check_on(cfg, 'DL-95'):
             check_run_watch(seg)
+        if H.check_on(cfg, 'DL-97') and cancel_run_id(seg):
+            warn = check_cancel_red_run(seg, command, cfg, cwd)
+            if warn:
+                print(warn, file=sys.stderr)
         if H.starts_with(seg, ['vercel', 'env', 'rm']) and H.check_on(cfg, 'DL-20'):
             deny('DL-20 never vercel env rm to narrow targets (it deletes every target). Use vercel env update or '
                  'rm and re-add with all needed targets, then re-list Production.')
