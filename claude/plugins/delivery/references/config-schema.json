@@ -461,6 +461,36 @@
       "type": "object",
       "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: Option 1 self-hosted (your own self-hosted runners on any machines you run; the `runners` and `local_runners` keys belong to it), Option 2 github-hosted (GitHub's runners), Option 3 cloud (Claude cloud sessions, no Actions and no webhooks). Option 4 (own runners first, a fallback after a wait) is the `fallback` block. All use the same shard table; the option only decides where a shard runs and how its result comes back.",
       "properties": {
+        "jobs": {
+          "type": "object",
+          "description": "DL374-DL376 (D312): per-job CI policy, keyed by the workflow job id. The rules are fixed; these values tune them. Missing job or key: the plugin default.",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "fail_fast": {"type": "string", "enum": ["never-on-release", "never", "on"], "default": "never-on-release", "description": "D104: a release pull request's run never stops at its first failing suite; every suite runs to the end."},
+              "rerun": {"type": "string", "enum": ["failed+changed", "whole"], "default": "failed+changed", "description": "D106: after a red run, the next head runs the failed tests plus the tests of code changed since that run; a valve change, an unreadable failure list or a cancelled or timed-out run means whole."},
+              "timeout_minutes": {"type": "integer", "minimum": 1, "maximum": 30, "default": 30, "description": "G2: the job's timeout-minutes, at most 30."},
+              "test_timeout_s": {
+                "type": "object",
+                "description": "G1: per-test timeout in seconds by kind; never raised to make a test pass.",
+                "properties": {
+                  "unit": {"type": "integer", "minimum": 1, "maximum": 10, "default": 10},
+                  "integration": {"type": "integer", "minimum": 1, "maximum": 60, "default": 60},
+                  "e2e": {"type": "integer", "minimum": 1, "maximum": 120, "default": 120}
+                }
+              }
+            }
+          }
+        },
+        "test_guardrails": {
+          "type": "object",
+          "description": "DL376 (D313): the G1-G7 test guardrails guard. mode warn (default) reports a count per guardrail; block refuses a push that breaks one.",
+          "properties": {
+            "mode": {"type": "string", "enum": ["warn", "block"], "default": "warn"},
+            "off": {"type": "array", "items": {"type": "string", "pattern": "^G[1-7]$"}, "description": "Guardrails this project turns off, each with a reason in `reasons`."},
+            "reasons": {"type": "object", "additionalProperties": {"type": "string"}}
+          }
+        },
         "options": {
           "type": "object",
           "description": "One entry per OS the project tests on. A missing OS is not chosen; the doctor fails when the shard table has a shard for it.",

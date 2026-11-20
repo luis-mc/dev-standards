@@ -7064,6 +7064,78 @@
    "chosen": "When the new pool runs every private-repo job",
    "decided": "2026-11-14",
    "owner_words": "None of my private repo projects use github runners"
+  },
+  {
+   "id": "D312",
+   "question": "Which of the four CI proposals (red run finishes, no fail-fast on release PRs, rerun narrowing for every test job, guardrails G1-G7) go into luismc-delivery?",
+   "asked": "2026-11-20",
+   "status": "decided",
+   "task": "DL373",
+   "options": [
+    {
+     "label": "All four",
+     "summary": "Each fixes a cause the CI study measured."
+    },
+    {
+     "label": "Rules 1 and 2 only",
+     "summary": "Red runs finish and release-PR CI has no fail-fast."
+    },
+    {
+     "label": "Rule 3 only",
+     "summary": "Rerun narrowing for every test job."
+    },
+    {
+     "label": "Rule 4 only",
+     "summary": "Guardrails G1-G7 as guard tests."
+    }
+   ],
+   "chosen": "All four",
+   "decided": "2026-11-20",
+   "owner_words": "All four (Recommended)"
+  },
+  {
+   "id": "D313",
+   "question": "Should the guardrails guard block a push when a guardrail fails, or only warn?",
+   "asked": "2026-11-20",
+   "status": "decided",
+   "task": "DL376",
+   "options": [
+    {
+     "label": "Warn now, block later",
+     "summary": "Warnings with a count per guardrail; a project switches to block in config once clean."
+    },
+    {
+     "label": "Block new breaks only",
+     "summary": "Existing breaks are a baseline; a push adding one is refused."
+    },
+    {
+     "label": "Block every break",
+     "summary": "Every project fails G1 and G2 today."
+    }
+   ],
+   "chosen": "Warn now, block later",
+   "decided": "2026-11-20",
+   "owner_words": "Warn now, block later (Recommended)"
+  },
+  {
+   "id": "D314",
+   "question": "Should each project get its own fix list from the CI study as a message to its session?",
+   "asked": "2026-11-20",
+   "status": "decided",
+   "task": "TC13",
+   "options": [
+    {
+     "label": "Yes, message each",
+     "summary": "Live sessions get a message; the others a file for the owner."
+    },
+    {
+     "label": "No, page only",
+     "summary": "The owner decides who acts."
+    }
+   ],
+   "chosen": "Yes, message each",
+   "decided": "2026-11-20",
+   "owner_words": "Yes, message each (Recommended)"
   }
  ]
 }
