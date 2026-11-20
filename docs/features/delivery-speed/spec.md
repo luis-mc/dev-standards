@@ -103,6 +103,8 @@ flowchart LR
 
 **R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
 
+**R5.18** — After a red run, the next head's run of a test job runs the tests that failed plus the tests of code changed since that run's head (`rerun_tests.py`, task DL375). The failure list comes from the previous run's test report, else its log, for pytest and unittest, vitest and jest, Playwright, go test, cargo test and cargo nextest. It runs the whole job when `ci.jobs.<job-id>.rerun` is `"whole"` (default `"failed+changed"`), the previous run was cancelled or timed out, a valve changed (lockfile, toolchain file, workflow file, a CI script under `scripts/delivery` or `scripts/ci`, a `ci_scope.py` full-run path), the failure list cannot be read, or a changed file maps to no test. After a green run nothing changes. A narrowed green run is not the merge gate; the ready PR's full CI is.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -132,6 +134,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
+| R5.18 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |
 
 ## 10. Decisions
 
