@@ -103,6 +103,10 @@ flowchart LR
 
 **R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
 
+**R5.18** — A red release CI run finishes (DL-97, D105, task DL374). The pre-tool hook refuses `gh run cancel` (and the API cancel call) for a release or join branch run that has a failed job and jobs still queued or running. The command comment `# D105: blocks-all` allows it, for a failure that blocks every later job (setup, lockfile, build). If `gh run view` fails, the cancel is allowed with a warning. `cancel_joined_runs.py` skips such runs unless `--blocks-all`.
+
+**R5.19** — No fail-fast on release pull-request CI (DL-98, D104, task DL374). Every shipped matrix sets `fail-fast: false`, and no suite step stops at its first failure. `ci.jobs.<id>.fail_fast` is `never-on-release` (default), `never` or `on`. `delivery_doctor.py` warns on a pull-request workflow with a matrix lacking `fail-fast: false`, or a `--fail-fast`, `-x`, `--exitfirst`, `--bail` or `maxFailures` flag, unless the job's `fail_fast` is `on`. The branch gate in the agent sandbox keeps its cheapest-first stop.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -132,6 +136,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
+| R5.18, R5.19 | `claude/plugins/delivery/tests/test_dl374_red_run_finishes.py` |
 
 ## 10. Decisions
 

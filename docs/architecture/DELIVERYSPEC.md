@@ -84,6 +84,8 @@ Goal: each delivery and orchestration rule is a mechanical check in the plugins 
 | DL-25 | removed: project-specific, not part of the plugins |
 | DL-26 | removed: project-specific, not part of the plugins |
 | DL-27 | removed: project-specific, not part of the plugins |
+| DL-97 | A red release CI run finishes (D105). Never `gh run cancel` (or the API cancel call) a release or join branch run that has a failed job and jobs still queued or running; wait for every job, fix every failure, push once. Exception: a failure that blocks every later job (setup, lockfile, build), marked `# D105: blocks-all`. `cancel_joined_runs.py` skips such runs unless `--blocks-all`. A gh failure allows with a warning. | owner decision D312, proposal D105 | G | PRE `gh run cancel` | `gh run view <id> --json status,jobs,headBranch`, `join_branch_re` | Y `hook_pre_tool.py`, `cancel_joined_runs.py`, `test_dl374_red_run_finishes.py` |
+| DL-98 | No fail-fast on release pull-request CI (D104). Every matrix sets `fail-fast: false` and no suite step passes `--fail-fast`, `-x`, `--exitfirst`, `--bail` or `maxFailures`, unless `ci.jobs.<id>.fail_fast` is `on` for that job (default `never-on-release`). The agent-sandbox branch gate keeps its cheapest-first stop. Doctor WARNs. | owner decision D312, proposal D104 | G | doctor | workflow YAML, `ci.jobs.<id>.fail_fast` | Y `delivery_doctor.py`, `templates/ts/.github/workflows/ci.yml`, `test_dl374_red_run_finishes.py` |
 
 ### Agents (1b)
 

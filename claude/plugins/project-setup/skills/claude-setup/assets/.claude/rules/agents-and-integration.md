@@ -28,6 +28,9 @@
 - Open one ready PR when the join is pushed; its CI is the only full suite. Merge on green, never auto-merge. <!-- check: DL-05, DL-06, DL-08 -->
 - Watch CI by the workflow runs for the head commit (`scripts/delivery/ci_watch.py`), never by the PR check list. <!-- check: DL-07 -->
 - Never `gh run watch` without `--interval 60` or more: the default 3 s drains the GitHub quota every session shares. Watch CI with `ci_watch.py`, one watcher for many runs (`ci_watch.py SHA1 SHA2 --run ID`). <!-- check: DL-95 -->
+- A red release CI run finishes: never cancel it while jobs still run; wait, fix every failure, push once. Only a failure that blocks all later jobs (setup, lockfile, build) may be cancelled, with `# D105: blocks-all`. <!-- check: DL-97 -->
+- No fail-fast on release PR CI: every matrix sets `fail-fast: false` and no suite stops at its first failure (`ci.jobs.<id>.fail_fast`). The sandbox branch gate keeps its cheapest-first stop. <!-- check: DL-98 -->
+- Tests keep guardrails G1-G7: per-test timeout (unit 10 s, integration 60 s, e2e 2 min), job timeout-minutes ≤ 30, no CI retries, no sleeps, ≤ 20 cases per test, mutation off PR CI, test times reported. <!-- check: DL-99 -->
 - A train leaves when its cargo is green; late branches ride the next train. <!-- check: DL-01, DL-16 -->
 - One deploy per merge; smoke-test production; fix forward on a new branch. <!-- check: DL-18 -->
 - No preview deploys for agent branches. Never merge mid-round to "see it deployed". <!-- check: DL-19 -->
