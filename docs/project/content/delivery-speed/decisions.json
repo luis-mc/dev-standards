@@ -7136,6 +7136,34 @@
    "chosen": "Yes, message each",
    "decided": "2026-11-20",
    "owner_words": "Yes, message each (Recommended)"
+  },
+  {
+   "id": "D315",
+   "question": "Which follow-ups (ci_watch red-run cancel, template prune and timeouts, dev-standards spec-lint guardrails) ride RELEASE-155?",
+   "asked": "2026-11-20",
+   "status": "decided",
+   "task": "DL377",
+   "options": [
+    {
+     "label": "None, ship now; rest next",
+     "summary": "Merge RELEASE-155 when green; the four go to RELEASE-156 at once."
+    },
+    {
+     "label": "A: ci_watch red-run cancel",
+     "summary": "Fixes a direct conflict with D105."
+    },
+    {
+     "label": "B+C: template prune and timeouts",
+     "summary": "Projects get the fixes from the plugin."
+    },
+    {
+     "label": "D: dev-standards spec-lint",
+     "summary": "This repository's CI follows the guardrails."
+    }
+   ],
+   "chosen": "None, ship now; rest next",
+   "decided": "2026-11-20",
+   "owner_words": "None, ship now; rest next (Recommended)"
   }
  ]
 }

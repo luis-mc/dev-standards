@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-20T14:56+00:00",
+  "updated": "2026-11-20T14:57+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6890,6 +6890,62 @@
       "changed": "2026-11-20T14:56+00:00",
       "rides": "DL373",
       "started": "2026-11-20T14:07+00:00"
+    },
+    {
+      "id": "DL377",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-156: ci_watch keeps red release runs; CI templates follow the guardrails",
+      "detail": "Join DL378, DL379; fold; ready PR; CI; merge on green",
+      "expected": "20 Nov ~15:35",
+      "changed": "2026-11-20T14:57+00:00",
+      "expected_basis": "2 cloud agents ~15-25 min measured, join 10, CI 5",
+      "release": 156,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-20T14:50+00:00",
+          "end": "2026-11-20T15:15+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-20T15:15+00:00",
+          "end": "2026-11-20T15:25+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-20T15:25+00:00",
+          "end": "2026-11-20T15:35+00:00"
+        }
+      ],
+      "started": "2026-11-20T14:57+00:00"
+    },
+    {
+      "id": "DL378",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "ci_watch.py never cancels a red release run while jobs still run (D105)",
+      "detail": "ci_watch waits for every job on a release or join head; same blocks-all exception as DL-97",
+      "expected": "20 Nov ~15:15",
+      "changed": "2026-11-20T14:57+00:00",
+      "expected_basis": "cloud agent started ~14:50, ~20 min",
+      "rides": "DL377",
+      "started": "2026-11-20T14:57+00:00"
+    },
+    {
+      "id": "DL379",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "CI templates and spec-lint follow the test guardrails",
+      "detail": "Templates: Artifact prune on a schedule only, timeout-minutes <= 30 per job; dev-standards spec-lint: timeouts on its jobs, mutation pass nightly",
+      "expected": "20 Nov ~15:20",
+      "changed": "2026-11-20T14:57+00:00",
+      "expected_basis": "cloud agent started ~15:00, ~20 min",
+      "rides": "DL377",
+      "started": "2026-11-20T14:57+00:00"
     },
     {
       "id": "DS1",
