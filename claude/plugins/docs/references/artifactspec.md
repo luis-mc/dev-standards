@@ -1053,7 +1053,7 @@ double-click.
   keep the note to one or two sentences; the At a glance block lists the
   statuses. Records written before this requirement stay valid.
   The same warning applies to a lede (Full Progress or a feature) that names a train
-  label such as `train-2026-10-11-47` or a pull request as `#NN`; both go stale (R5.37a).
+  label such as `train-2026-10-11-47` or a pull request as `#NN`; both go stale.
 
 - **R5.38** — Right under the stamp, a feature artifact shows `Full Progress
   published: DD Mon HH:MM (<timezone_label>)` in `<p class="full-progress-published">`,

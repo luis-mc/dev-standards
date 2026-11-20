@@ -1039,7 +1039,8 @@ def test_edit_content_from_folder(env):
     assert p.show('docs/artifacts/content/artifacts/01-what-and-why.html') is None
     html = p.show('docs/artifacts/feature-artifacts.html')
     assert 'Tokens and structure.' in html and 'Design is settled.' in html and 'First.' in html
-    assert 'Design is settled' in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
+    # AR77 (R5.53): Full Progress builds 'Where it stands' from the record for a feature with tasks; the lede stays on the feature page.
+    assert 'Design is settled' not in p.show('docs/artifacts/' + p.man()['full_progress_artifact']['file'])
     assert p.run('check').code == 0
     assert dirty_outside(p) == [] and p.head() == p.head(), dirty(p)       # only docs/artifacts/ changed, nothing committed
     assert any(x.endswith('feature-artifacts.html') for x in dirty(p))
