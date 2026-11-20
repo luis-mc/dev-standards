@@ -30,6 +30,6 @@ Branch: DL376-test-guardrails. Mode default: warn. Requirement list for the join
 
 G1 treats a missing explicit timeout as a break for every runner (the tool defaults are not trusted). A per-job `test_timeout_s` lowers the kind's limit for the whole scan, since a config file cannot be tied to one job.
 
-Branch head SHA: see `git rev-parse origin/DL376-test-guardrails`.
+Work commit SHA: 331c3ace12c10cc6db7c8c6be1fcca9b37511ba2 (the branch head is this commit plus the report update).
 
 READY
