@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.11.0
+version: 0.12.0
 owner: agents
 type: explanation
 code:
@@ -115,6 +115,8 @@ flowchart LR
 
 **R5.23** — The shipped workflow templates and this repository's workflows set `timeout-minutes` of 30 or less on every job that runs steps (G2; DL379). `artifact-prune.yml` runs on its daily schedule and by hand only, never after another workflow (DL-22), and keeps the newest artifact of each name. In `spec-lint.yml` the gate mutation pass and the mutation flags of the cleanup and change-note suites never run on a pull request: only the nightly workflow runs them, and pull requests run the scenarios with `--no-mutants` (G6). A project with a job above 30 minutes splits it.
 
+**R5.24** — `delivery_watch.py` cancels an older run of a train branch only when all hold (D105, task DL381): a run of the same workflow exists for the newer head, the newer head commit's author and committer are not bots (login ending in `[bot]`, or `github-actions`; a push by the workflow token starts no run to replace the cancelled one), and the older run has no failed job yet, unless `ci_watch.cancel_on_red` is true. A failed `gh` lookup cancels nothing. Each skip adds a `ci.cancel_skipped` ledger event with the run id and the reason `no_newer_run`, `bot_head`, `red_run` or `unknown`; a real cancel keeps `ci.cancel_superseded`. `runner_plan.cancel_replaced_runs` still switches the whole step.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -149,6 +151,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.21 | `claude/plugins/delivery/tests/test_dl376_test_guardrails.py` |
 | R5.22 | `claude/plugins/delivery/tests/test_dl378_ci_watch_red_finishes.py` |
 | R5.23 | `claude/plugins/delivery/tests/test_dl379_templates_guardrails.py` |
+| R5.24 | `claude/plugins/delivery/tests/test_dl381_cancel_superseded.py` |
 
 ## 10. Decisions
 
@@ -192,6 +195,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.12.0 | 2026-11-20 | RELEASE-158 | R5.24: delivery_watch cancels an older run only when the newer head has its own run, is not a bot push and the older run has no failed job; each skip is a ci.cancel_skipped ledger event. | DL381 |
 | 0.11.0 | 2026-11-20 | RELEASE-156 | R5.22: ci_watch never cancels a red run by default (D105, DL-97); it waits for every job, then lists every failed job. cancel_on_red cancels only a blocking failure (setup, install, lockfile, build, checkout).<br>R5.23: template jobs time out in 30 minutes or less; artifact prune runs daily, not after every workflow; no mutation pass on pull requests. | DL378, DL379 |
 | 0.10.0 | 2026-11-20 | RELEASE-155 | R5.18, R5.19: a red release CI run is never cancelled while jobs run (DL-97); no fail-fast on release PR CI (DL-98).<br>R5.20: after a red run a test job reruns the failed tests plus the tests of changed code (rerun_tests.py); ci.jobs.<job-id>.rerun whole opts out.<br>R5.21: test_guardrails.py scans for the seven test guardrails (DL-99); fast_guards.py runs it in warn mode by default, block mode fails on a break. | DL374, DL375, DL376 |
 | 0.9.0 | 2026-11-19 | RELEASE-151 | R5.17: release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |

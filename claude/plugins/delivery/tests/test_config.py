@@ -213,7 +213,11 @@ class WatcherObeysConfigTests(unittest.TestCase):
         root = make_root()
         seed(root, [{"branch": "release/29", "pr": 10, "state": "ci"}])
         r = routes_for_green()
-        r[("gh", "run", "list", "--branch")] = (0, runs((7, "in_progress", None, OLD, "release/29")))
+        # DL381: a cancel needs a run for the newer head, a human head commit and no failed job
+        r[("gh", "run", "list", "--branch")] = (0, runs((7, "in_progress", None, OLD, "release/29"),
+                                                        (8, "in_progress", None, SHA, "release/29")))
+        r[("gh", "api")] = (0, json.dumps({"author": {"login": "alice"}, "committer": {"login": "alice"}}))
+        r[("gh", "run", "view")] = (0, json.dumps({"jobs": [{"conclusion": "success"}]}))
         r[("gh", "run", "cancel")] = (0, "")
         sh = FakeShell(r)
         watcher(root, sh).run_once()
