@@ -73,13 +73,18 @@ runs; hooks never change the exit code and a hook's output is passed through. A 
 its machine-only extras (disk trims, extra reports) in its own hook script instead of a fork of
 this file. --no-post-run skips them; --config names another config file.
 
-Cancel on red (DL306): while the watched head belongs to a train branch (config `train_branch_re`,
-default `^release/`), the first failed job (conclusion failure, timed_out or cancelled) in any run of
-that head ends the wait at once. The watcher names the job, runs `gh run cancel` for every run of
-that head that is still queued or running (never other commits or branches; never an agent branch),
-logs that the push freeze lifts (train_freeze.py reads the live runs, so the freeze ends when they
-complete), and exits 1. The runs it cancelled are not a second failure. --no-cancel-on-red, or
-`ci_watch.cancel_on_red: false` in the project config, keeps the old wait-until-done behaviour.
+Red runs finish (DL378, D105, DL-97; replaces the DL306 default): a red release or join run is
+never cancelled by default. On the first failed job (conclusion failure, timed_out or cancelled) in
+any run of the watched head the watcher prints the job at once and keeps waiting until every job of
+every run of the head has completed. Then it prints EVERY failed job with its failed steps and exits 1,
+so the orchestrator fixes every failure and pushes once. Config `ci_watch.cancel_on_red: true` or
+--cancel-on-red turns the cancel back on, but only for a train head (config `train_branch_re`, default
+`^release/`) whose failure is a blocking kind: a job name or failed step matching `ci_watch.blocking_job_re`
+(default `setup|install|lockfile|build|checkout`, case-insensitive). The watcher then runs `gh run cancel`
+for every run of that head that is still queued or running (never other commits or branches), logs that
+the push freeze lifts, and exits 1. A non-blocking failure only warns that D105 keeps the run going.
+The push freeze (train_freeze.py reads the live runs) lifts when the runs complete, or when the cancelled
+runs end. --no-cancel-on-red never cancels and drops the early line.
 
 Memory kills (DL95): a failed step whose log tail has "exit code 137" or "Killed" is reported as
 "killed for memory: the runner's cap is N", N read from the pool container on this machine with
@@ -863,19 +868,32 @@ RED_CONCLUSIONS = {"failure", "timed_out", "cancelled"}
 TRAIN_BRANCH_RE = r"^release/"
 
 
-def load_cancel_config(config: str | None, root: Path) -> tuple[bool, str]:
-    """DL306: (`ci_watch.cancel_on_red` default True, top-level `train_branch_re` default ^release/)."""
+BLOCKING_JOB_RE = r"(?i)setup|install|lockfile|build|checkout"
+
+
+def _read_config(config: str | None, root: Path) -> dict:
     path = Path(config) if config else root / ".delivery" / "config.json"
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError):
-        return True, TRAIN_BRANCH_RE
-    if not isinstance(data, dict):
-        return True, TRAIN_BRANCH_RE
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def load_cancel_config(config: str | None, root: Path) -> tuple[bool, str]:
+    """DL306/DL378: (`ci_watch.cancel_on_red`, default False; top-level `train_branch_re`, default ^release/)."""
+    data = _read_config(config, root)
     section = data.get("ci_watch")
-    flag = section.get("cancel_on_red", True) if isinstance(section, dict) else True
+    flag = section.get("cancel_on_red", False) if isinstance(section, dict) else False
     pattern = data.get("train_branch_re")
-    return flag is not False, pattern if isinstance(pattern, str) and pattern else TRAIN_BRANCH_RE
+    return flag is True, pattern if isinstance(pattern, str) and pattern else TRAIN_BRANCH_RE
+
+
+def load_blocking_re(config: str | None, root: Path) -> str:
+    """DL378: `ci_watch.blocking_job_re`, default setup|install|lockfile|build|checkout."""
+    section = _read_config(config, root).get("ci_watch")
+    value = section.get("blocking_job_re") if isinstance(section, dict) else None
+    return value if isinstance(value, str) and value else BLOCKING_JOB_RE
 
 
 def is_train_head(run_id: object, pattern: str, repo: str | None) -> bool:
@@ -899,16 +917,33 @@ def red_jobs(run: dict, repo: str | None) -> list[dict]:
             and j.get("conclusion") in RED_CONCLUSIONS]
 
 
+def is_blocking(jobs: list[dict], pattern: str) -> bool:
+    """DL378: True when a failed job, or one of its failed steps, matches the blocking pattern."""
+    try:
+        rx = re.compile(pattern)
+    except re.error:
+        rx = re.compile(BLOCKING_JOB_RE)
+    for job in jobs:
+        names = [str(job.get("name") or "")]
+        names += [str(s.get("name") or "") for s in job.get("steps", []) or []
+                  if s.get("conclusion") in RED_CONCLUSIONS]
+        if any(rx.search(n) for n in names):
+            return True
+    return False
+
+
 def cancel_on_red(sha: str, runs: list[dict], args: argparse.Namespace, st: dict) -> bool:
-    """DL306: when a train head has a red job, cancel its other runs. True when the watch must end red."""
+    """DL378: name the first failed jobs at once and keep waiting (D105, DL-97). With cancel_on_red
+    on (config or --cancel-on-red), a train head whose failure is a blocking kind (setup, install,
+    lockfile, build, checkout) is cancelled. True only when it cancelled and the watch must end red."""
     if args.no_cancel_on_red:
         return False
     if "cancel_cfg" not in st:
         st["cancel_cfg"] = load_cancel_config(args.config, config_root())
     enabled, pattern = st["cancel_cfg"]
-    if not enabled or st.get("train") is False:
-        return False
+    enabled = enabled or bool(getattr(args, "cancel_on_red", False))
     ours = st.setdefault("cancelled", set())
+    seen = st.setdefault("announced", set())
     red: list[tuple[dict, list[dict]]] = []
     for run in runs:
         if run.get("databaseId") in ours:
@@ -921,15 +956,28 @@ def cancel_on_red(sha: str, runs: list[dict], args: argparse.Namespace, st: dict
             red.append((run, jobs))
     if not red:
         return False
+    for run, jobs in red:
+        for job in jobs:
+            key = (run.get("databaseId"), job.get("name"))
+            if key not in seen:
+                seen.add(key)
+                print(f"ci_watch: FAILED job: {job.get('name')} ({job.get('conclusion')}) in run "
+                      f"{run.get('databaseId')} ({run.get('workflowName')}); waiting for the other jobs")
+    if not enabled or st.get("train") is False:
+        return False
     if "train" not in st:
         st["train"] = is_train_head(runs[0].get("databaseId"), pattern, args.repo)
     if not st["train"]:
         return False
-    print(f"ci_watch: red on train head {sha[:10]}:")
-    for run, jobs in red:
-        for job in jobs:
-            print(f"  FAILED job: {job.get('name')} ({job.get('conclusion')}) in run "
-                  f"{run.get('databaseId')} ({run.get('workflowName')})")
+    if "blocking_re" not in st:
+        st["blocking_re"] = load_blocking_re(args.config, config_root())
+    if not any(is_blocking(jobs, st["blocking_re"]) for _, jobs in red):
+        if not st.get("d105_warned"):
+            st["d105_warned"] = True
+            print("ci_watch: warning: cancel_on_red is on, but the failure is not a blocking kind; "
+                  "D105 (DL-97) keeps the run going and the watch waits for every job")
+        return False
+    print(f"ci_watch: blocking failure on train head {sha[:10]}, cancelling the other runs")
     for run in runs:
         rid = run.get("databaseId")
         if run.get("status") == "completed" or rid is None:
@@ -942,7 +990,7 @@ def cancel_on_red(sha: str, runs: list[dict], args: argparse.Namespace, st: dict
                 print(f"ci_watch: could not cancel run {rid}: {exc}", file=sys.stderr)
                 continue
         ours.add(rid)
-        print(f"ci_watch: cancelled run {rid} ({run.get('workflowName')}), red run on this head")
+        print(f"ci_watch: cancelled run {rid} ({run.get('workflowName')}), blocking failure on this head")
     print(f"ci_watch: push freeze lifted for {sha[:10]}: the cancelled runs end, a fix push is allowed")
     st["red_runs"] = [r for r, _ in red]
     return True
@@ -1075,9 +1123,12 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--no-trim", action="store_true",
                     help="do not trim Docker Desktop's data disk after the runs complete "
                          "(runs only on Windows, and only when .delivery/config.json has ci.docker_trim: true)")
+    ap.add_argument("--cancel-on-red", action="store_true",
+                    help="on a train head, cancel the other runs when a blocking job fails "
+                         "(setup, install, lockfile, build, checkout; config ci_watch.cancel_on_red: true "
+                         "does the same). Any other failure keeps the run going (D105, DL-97)")
     ap.add_argument("--no-cancel-on-red", action="store_true",
-                    help="on a train head, do not cancel the other runs when one job fails "
-                         "(config ci_watch.cancel_on_red: false does the same)")
+                    help="never cancel, and do not print the early failed-job line")
     ap.add_argument("--no-post-run", action="store_true",
                     help="do not run the ci_watch.post_run hooks of the project config")
     args = ap.parse_args(argv)
