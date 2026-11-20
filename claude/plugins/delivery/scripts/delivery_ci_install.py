@@ -308,7 +308,7 @@ def merge3(base: str, project: str, template: str):
     return "".join(out), conflicts
 
 
-PRUNE_LINE_RE = re.compile(r"^(?P<indent>[ \t]*)workflows:[ \t]*\[(?P<body>[^\]\r\n]*)\][ \t]*(?:#[^\r\n]*)?(?=\r?$)", re.MULTILINE)
+PRUNE_LINE_RE = re.compile(r"^(?P<indent>[ \t]*(?:#[ \t]*)?)workflows:[ \t]*\[(?P<body>[^\]\r\n]*)\][ \t]*(?:#[^\r\n]*)?(?=\r?$)", re.MULTILINE)
 PRUNE_PLAN = {}
 
 

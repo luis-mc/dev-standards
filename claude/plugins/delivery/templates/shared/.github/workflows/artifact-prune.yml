@@ -2,19 +2,17 @@ name: Artifact prune
 
 # Implements STACKSPEC §13.1 "Build artifacts": the platform keeps only the
 # newest build artifact of each name. Installers, bundles and test reports that
-# a workflow uploads are billed for storage, so older ones are deleted after
-# every run of a workflow that uploads one, and a daily sweep deletes any the
-# per-run pruning missed.
+# a workflow uploads are billed for storage, so older ones are deleted by one
+# sweep a day (DL379). It does not run after every workflow: a run per workflow
+# took the one self-hosted slot many times a day, and one prune waited hours.
+# A project whose storage fills sooner starts it by hand (workflow_dispatch).
 #
-# PRODUCT: `workflows:` below must list the `name:` of EVERY workflow of this
-# repository that uploads an artifact (actions/upload-artifact). GitHub reads
-# the list before any step runs, so it cannot be dynamic. The list is owned by
-# the project in `.delivery/config.json`:
+# Every workflow that uploads an artifact (actions/upload-artifact) is covered:
+# the sweep reads the artifacts of the whole repository. The line below is a
+# note of the ones the project knows, kept in `.delivery/config.json`:
 #   {"artifact_prune": {"workflows": ["CI", "Package", "Installers"]}}
-# Unset, it is `CI` and `Package` (package.yml). After a change or after a
-# plugin update run the script artifact_prune.py with --sync-workflow
-# and commit the file. The step "Check the workflow list" warns when they differ.
-# Until then the daily sweep catches the artifacts of any other workflow.
+# After a plugin update run scripts/delivery/artifact_prune.py --sync-workflow.
+# workflows: ["CI", "Package"]
 #
 # Installer artifacts (CIR10 W5): when a workflow publishes them, add to the run line
 # `--hold windows-installer --hold-workflow package-windows.yml`, so a failed publish keeps its installer.
@@ -23,9 +21,6 @@ name: Artifact prune
 # `windows-installer-1.4.2-run-812`), or the pruning cannot group them. A build
 # that must outlive the next one is a release asset, not an artifact.
 on:
-  workflow_run:
-    workflows: ["CI", "Package"]
-    types: [completed]
   schedule:
     - cron: '23 3 * * *'
   workflow_dispatch:

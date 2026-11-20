@@ -81,6 +81,7 @@ jobs:
     name: which areas does this change touch
     if: github.event_name != 'pull_request' || !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       specs: ${{ steps.areas.outputs.specs }}
       delivery: ${{ steps.areas.outputs.delivery }}
@@ -129,6 +130,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.specs == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -239,6 +241,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -269,6 +272,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -285,8 +289,9 @@ jobs:
   delivery-gate-shards:
     name: delivery - branch gate and trust rule (shard ${{ matrix.shard }}/4)
     needs: areas
-    if: needs.areas.outputs.delivery == 'true' && needs.areas.outputs.mutants_gate == 'true'
+    if: needs.areas.outputs.delivery == 'true' && needs.areas.outputs.mutants_gate == 'true' && github.event_name != 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -313,6 +318,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -351,6 +357,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -359,7 +366,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove train cleanup removes only what is finished
-        run: python3 tools/test_delivery_cleanup.py ${{ needs.areas.outputs.mutants_cleanup != 'true' && '--no-mutants' || '' }}
+        run: python3 tools/test_delivery_cleanup.py ${{ (needs.areas.outputs.mutants_cleanup != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
 
   # STACKSPEC 7.0.0 section 13.1: only the newest build artifact of each name is
   # kept, because artifact storage is billed. A pruner that keeps the oldest,
@@ -370,6 +377,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -387,6 +395,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -406,6 +415,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -424,6 +434,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -446,6 +457,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -454,7 +466,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove change notes are enforced and folded correctly
-        run: python3 tools/test_change_notes.py ${{ needs.areas.outputs.mutants_notes != 'true' && '--no-mutants' || '' }}
+        run: python3 tools/test_change_notes.py ${{ (needs.areas.outputs.mutants_notes != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
 
   # The area mapping is what decides which of these jobs run at all, so a
   # wrong rule silently skips a suite. Shared paths (this file, ci_areas.py
@@ -464,6 +476,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -496,6 +509,7 @@ jobs:
       - delivery-area-mapping
     if: always() && needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Every delivery suite passed or was skipped
         env:
@@ -515,6 +529,7 @@ jobs:
     name: change notes
     if: github.event_name == 'pull_request' && !github.event.pull_request.draft
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -546,6 +561,7 @@ jobs:
     name: change notes folded
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -563,6 +579,7 @@ jobs:
   docs-check:
     name: docs check
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
         with:
@@ -580,6 +597,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.profiles == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -618,6 +636,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.artifacts == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -678,6 +697,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.transcript-folds == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 
@@ -698,6 +718,7 @@ jobs:
     needs: areas
     if: needs.areas.outputs.docs == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
 

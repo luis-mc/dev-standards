@@ -15,7 +15,7 @@ jobs:
   shard:
     name: fallback ${{ inputs.shard }}
     runs-on: ${{ inputs.os == 'windows' && 'windows-latest' || 'ubuntu-latest' }}
-    timeout-minutes: 90
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with: {ref: "${{ inputs.sha }}", fetch-depth: 1}
