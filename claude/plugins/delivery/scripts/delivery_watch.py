@@ -629,15 +629,70 @@ class Watcher:
                         "conclusion": "success" if state == "success" else "failure"})
         return out
 
+    def _head_is_bot(self, head: str):
+        """DL381: True/False for the author and committer of `head`; None when the lookup fails."""
+        repo = self.repo or "{owner}/{repo}"
+        data = self.gh_json(["api", "repos/%s/commits/%s" % (repo, head)])
+        if not isinstance(data, dict):
+            return None
+        logins = []
+        for key in ("author", "committer"):
+            who = data.get(key)
+            if isinstance(who, dict) and who.get("login"):
+                logins.append(str(who["login"]).lower())
+        if not logins:
+            return None
+        return any(x.endswith("[bot]") or x == "github-actions" for x in logins)
+
+    def _run_has_failed_job(self, run_id):
+        """DL381: True/False for a failed job in the run; None when `gh run view` fails."""
+        data = self.gh_json(["run", "view", str(run_id), "--json", "jobs", *self.repo_args])
+        if not isinstance(data, dict) or not isinstance(data.get("jobs"), list):
+            return None
+        return any(isinstance(j, dict) and j.get("conclusion") in ("failure", "timed_out", "startup_failure")
+                   for j in data["jobs"])
+
     def cancel_superseded(self, train: dict, head: str) -> list[int]:
+        """DL381: cancel an older run only when the newer head has its own run, is not a bot push,
+        and the older run has no failed job (unless ci_watch.cancel_on_red). Every skip is logged."""
         data = self.gh_json(["run", "list", "--branch", train["branch"], "--workflow", WORKFLOW, "--limit", "50",
                              "--json", RUN_FIELDS, *self.repo_args]) or []
+        older = [r for r in data if r.get("status") in ("queued", "in_progress", "waiting", "pending")
+                 and not str(r.get("headSha", "")).startswith(head[:7])]
+        if not older:
+            return []
+        logged = self.__dict__.setdefault("_cancel_skip_logged", set())
+
+        def skip(run_id, reason):
+            if (run_id, reason) not in logged:
+                logged.add((run_id, reason))
+                self.mut(lambda led: L.add_event(led, "ci.cancel_skipped", "%s %s %s" % (train["id"], run_id, reason),
+                                                 "delivery_watch"))
+
+        ids = [r["databaseId"] for r in older]
+        if not any(str(r.get("headSha", "")).startswith(head[:7]) for r in data):
+            for i in ids:
+                skip(i, "no_newer_run")
+            return []
+        bot = self._head_is_bot(head)
+        if bot is not False:
+            for i in ids:
+                skip(i, "bot_head" if bot else "unknown")
+            return []
+        sec = self.cfg.get("ci_watch") if isinstance(self.cfg, dict) else None
+        on_red = isinstance(sec, dict) and sec.get("cancel_on_red") is True
         done = []
-        for r in data:
-            if r.get("status") in ("queued", "in_progress", "waiting", "pending") and \
-                    not str(r.get("headSha", "")).startswith(head[:7]):
-                self.act(["gh", "run", "cancel", str(r["databaseId"]), *self.repo_args])
-                done.append(r["databaseId"])
+        for i in ids:
+            if not on_red:
+                red = self._run_has_failed_job(i)
+                if red is None:
+                    skip(i, "unknown")
+                    continue
+                if red:
+                    skip(i, "red_run")
+                    continue
+            self.act(["gh", "run", "cancel", str(i), *self.repo_args])
+            done.append(i)
         if done:
             self.mut(lambda led: L.add_event(led, "ci.cancel_superseded", "%s %s" % (train["id"], done), "delivery_watch"))
         return done
