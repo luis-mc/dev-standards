@@ -379,8 +379,8 @@ def full_progress_structure(fx):
     # R5.6: link, task ID range, first sentence of the lede
     s1node = R.find(dom, 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1node, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells == [['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', '1 Running2 Built1 To do', 'The design is agreed.'],
-                     ['Feature: Model and effort profiles', '09 Oct 18:00', 'MP1 to MP2, DS2', '1 Running', 'Effort question is live!']], cells
+    assert cells == [['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16', '1 Running2 Built1 To do', 'Running: AR6 (~10 Oct); To do: AR7 (~11 Oct).'],
+                     ['Feature: Model and effort profiles', '09 Oct 18:00', 'MP1 to MP2, DS2', '1 Running', 'Running: MP2 (~13 Oct).']], cells
     anchors = [a.attrs['href'] for a in R.find_all(s1node, 'a')]
     assert anchors == [AR_FILE, MP_FILE], anchors  # R5.30: every feature is linked to its file, relative
 
@@ -1899,15 +1899,15 @@ def decisions_full_progress_line_counts_open_decisions(fx):
         return [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
     out = fx.render('full-progress', registry=registry)
     assert cells(out)[0] == ['Feature: Project artifacts standard', '10 Oct 12:39', 'AR5 to AR16',
-                            '1 Running1 Needs you2 Built1 open decision', 'The design is agreed. 1 decision open.']
-    assert cells(out)[1][4] == 'Effort question is live!'
+                            '1 Running1 Needs you2 Built1 open decision', 'Running: AR6 (~10 Oct); Needs you: AR7 (~11 Oct). 1 decision open.']
+    assert cells(out)[1][4] == 'Running: MP2 (~13 Oct).'
     assert fx.check(out, 'full-progress', registry=registry) == []
     put_decisions(fx, [open_dec(1), open_dec(2), dec(3)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][4] == 'The design is agreed. 2 decisions open.'
+    assert cells(fx.render('full-progress'))[0][4] == 'Running: AR6 (~10 Oct); To do: AR7 (~11 Oct). 2 decisions open.'
     put_decisions(fx, [dec(1)])
     fx.reload()
-    assert cells(fx.render('full-progress'))[0][4] == 'The design is agreed.'
+    assert cells(fx.render('full-progress'))[0][4] == 'Running: AR6 (~10 Oct); To do: AR7 (~11 Oct).'
 
 
 # ---- check_html: each Decisions check fires alone
@@ -2199,7 +2199,7 @@ def section_one_never_blank(fx):
     out = fx.render('full-progress')
     s1 = R.find(R.parse_dom(out), 'section', pred=lambda n: n.attrs.get('id') == 's1')
     cells = [[R.text_of(td) for td in R.find_all(tr, 'td')] for tr in R.find_all(s1, 'tr', pred=lambda n: R.find(n, 'td'))]
-    assert cells[1][4] == '1 running, 2 live, nothing needs you.', cells
+    assert cells[1][4] == 'Running: MP2 (~13 Oct).', cells         # R5.53: built from the record; R5.36 serves a feature with no tasks
     assert R.feature_summary([task('X1', 'a', 'Needs you', 'i', '10 Oct')]) == '1 needs you'
     assert fx.check(out, 'full-progress') == []
 

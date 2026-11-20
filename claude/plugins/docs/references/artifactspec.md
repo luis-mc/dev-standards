@@ -1048,6 +1048,8 @@ double-click.
 - **R5.37** — `check` warns, without failing, for a lede over 300 characters:
   keep the note to one or two sentences; the At a glance block lists the
   statuses. Records written before this requirement stay valid.
+  The same warning applies to a lede (Full Progress or a feature) that names a train
+  label such as `train-2026-10-11-47` or a pull request as `#NN`; both go stale (R5.37a).
 
 - **R5.38** — Right under the stamp, a feature artifact shows `Full Progress
   published: DD Mon HH:MM (<timezone_label>)` in `<p class="full-progress-published">`,
@@ -1342,6 +1344,23 @@ double-click.
   the new phases in a second call"; a change that leaves Expected behind the old phases is refused
   with the fix named (clear them with `--phase ""` first, or give new phases). Verified by
   `test_ar74_phase_dates`.
+
+- **R5.53** — The `Where it stands` cell of Full Progress section 1 (R5.6) is built
+  from the record on every render, not from the lede, for a feature that has tasks.
+  It holds, in this order: `Live: RELEASE-<n> (DD Mon)`, the newest Live release that
+  at least one of the feature's tasks rides, with the name and version the release row's
+  item or detail gives when it names one; then one clause per open status present
+  (Running, Needs you, Waiting, To do), as `<Status>: <IDs> on <basis> (~DD Mon)`. IDs
+  are written as ranges when consecutive (`DL346-DL348`). The basis is the task's
+  `expected_basis`, else `you` or `other work` from `waits_on`; a Running clause names
+  the release it rides (`in RELEASE-<n>`) and that release's Expected. Dropped, Live and
+  Built tasks are never listed. A feature with no tasks shows the first sentence of its lede.
+  The lede stays as it is on the feature page. The cell is part of the publish
+  fingerprint (R9.6), so a change in it counts as a Full Progress change. Verified by
+  `test_ar77_where_it_stands`.
+- **R5.54** — The cell is at most about 220 characters. When it is longer, whole clauses
+  are dropped from the front (the Live part first); an ID is never cut. A single clause
+  that is still too long has its basis shortened with an ellipsis.
 
 ---
 
@@ -2023,6 +2042,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 | Every feature task on the full-progress artifact, linked to the feature file by a relative link | R6.5, R5.30 |
 | Section 1 of Full Progress: the in-progress and complete folds, their open state and counts; the five columns, a Last updated time and a State per feature, sort buttons, rows in the default order | R5.6, R5.39, R5.44, R5.50 |
 | The CI runs section of Full Progress: absent without the file, folded, summary, figures, In progress table, 20 finished rows with waterfalls, legend, tokens only | R5.51 |
+| Where it stands is derived from the record: Live release, open work with IDs, basis and Expected; short; lede only when no tasks | R5.53, R5.54 |
 | Release fields: `release`, `phases`, `risk`, `rides`; Expected is the end of the last phase | R5.40, R5.41 |
 | Release numbers: positive, unique, none left `true`; `RELEASE-<n>` on every release row | R5.45 |
 | Full Progress grouped by release; release line on rows that rode one | R5.46 |
