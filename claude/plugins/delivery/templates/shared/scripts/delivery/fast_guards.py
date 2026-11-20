@@ -285,6 +285,25 @@ def run_always_on_guards(root: Path, guards: list[dict], ctx, args: argparse.Nam
     return ok
 
 
+def run_test_guardrails(work: Path) -> bool:
+    """The always-on test guardrails guard (DL-99): scan `work` and print the report. In "warn" mode
+    (the default) it never fails; in "block" mode a break fails it. A scan that cannot run is reported
+    and never blocks."""
+    import test_guardrails as tg
+
+    print("always-on guard test-guardrails: running ...", flush=True)
+    try:
+        report = tg.scan(work, tg.load_config(work))
+    except (ValueError, OSError) as e:
+        print("always-on guard test-guardrails: skipped, %s" % e, flush=True)
+        return True
+    print(tg.render(report), flush=True)
+    if report["mode"] == "block" and tg.failed(report):
+        print("FAIL always-on guard test-guardrails: a guardrail is broken (mode block)", flush=True)
+        return False
+    return True
+
+
 def _run_steps(root: Path, steps: list[dict], ctx, args: argparse.Namespace) -> int:
     print("fast_guards: head %s, base %s, limit %g min per step" % (ctx.head[:10], ctx.base[:10], args.timeout_minutes))
     entries, _ = dc.execute_steps(
@@ -300,6 +319,7 @@ def _run_steps(root: Path, steps: list[dict], ctx, args: argparse.Namespace) -> 
     dc.print_failures(entries, root)
     guards = ctx.cfg.get("always_on_guards") or []
     guards_ok = run_always_on_guards(root, guards, ctx, args) if guards else True
+    guards_ok = run_test_guardrails(ctx.root) and guards_ok
     if dc.overall_pass(entries):
         return dc.EXIT_OK if guards_ok else dc.EXIT_FAIL
     if not any(e["outcome"] != "skip" for e in entries):

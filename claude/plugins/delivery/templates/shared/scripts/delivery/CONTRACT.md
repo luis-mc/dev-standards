@@ -1065,3 +1065,26 @@ is not configured and writes `"gate": "not configured"` to `join-result.json`.
   re-run that crashed before running a test is a crash, not a second failure.
 - `windows-msi-linux.sh` and `windows-msi-check.yml`: the optional Linux MSI recipe. A CI check only; the shipped
   MSI is built on Windows (decision 10). Wine cannot write LZX, so the cabinet level is `mszip` off Windows.
+
+### DL376 — Test guardrails guard (DL-99, D312 and D313)
+
+- `test_guardrails.py [--root DIR] [--config FILE] [--json] [--mode warn|block]` reads the repository (it runs no
+  test) and prints, per guardrail, `PASS`, `OFF (reason)`, or a count of breaks with up to 10 `file:line` offenders.
+  `--json` gives `{mode, results: {G1..G7: {title, state, count, breaks: [{file, line, message}]}}, notes}`.
+  `scan(root, cfg)` and `load_config(root)` are the importable parts. Exit 0 (warn mode, or block with no break),
+  1 (block mode with a break), 2 (unreadable config or an unknown `mode`).
+- Guardrails: G1 per-test timeout within unit 10 s, integration 60 s, e2e 120 s (vitest/jest `testTimeout` and
+  per-test overrides, Playwright `timeout`, pytest-timeout, Go `-timeout`, nextest `slow-timeout` with
+  `terminate-after`; plain `cargo test` is a break); G2 every workflow job has `timeout-minutes` of 30 or less;
+  G3 no retries (Playwright `retries`, `--reruns`, flaky plugins, `retryTimes`, nextest `retries`, a re-run of failed
+  files); G4 no sleeps or deadline-less loops in test files (counted per file); G5 at most 20 cases per test
+  (`.each`, `parametrize`, Go table rows, rstest `#[case]`); G6 no mutation run and no property test with many runs
+  (fast-check `numRuns` over 100, hypothesis `max_examples` over 100, proptest cases over 256) in a workflow triggered
+  on `pull_request` or on a push to a non-default branch; G7 some workflow uploads test times (`ci-run-times`, a
+  JUnit report or a timing JSON).
+- Config in `.delivery/config.json`: `ci.test_guardrails.mode` (`warn` default, or `block`), `ci.test_guardrails.off`
+  (guardrails turned off) with `ci.test_guardrails.reasons.<id>` (a guardrail turned off without a reason is
+  reported and still scanned), `ci.jobs.<id>.timeout_minutes` (G2, lowers the 30) and
+  `ci.jobs.<id>.test_timeout_s.{unit,integration,e2e}` (G1; lowers a limit, a higher value is a break).
+- `fast_guards.py` runs it after the gate steps and the project's always-on guards, every push, no matter which
+  files changed. In `warn` mode it never fails the run; in `block` mode a break fails it.

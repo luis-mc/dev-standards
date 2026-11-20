@@ -103,6 +103,8 @@ flowchart LR
 
 **R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
 
+**R5.18** — `test_guardrails.py` (DL-99, task DL376) scans the repository without running a test and reports seven guardrails: G1 per-test timeouts (unit 10 s, integration 60 s, e2e 120 s), G2 job `timeout-minutes` of 30 or less, G3 no CI retries, G4 no sleeps in tests, G5 at most 20 cases per test, G6 no mutation or many-run property tests on pull requests, G7 test times uploaded. `fast_guards.py` runs it on every push. `ci.test_guardrails.mode` is `warn` (default, never fails) or `block`; `ci.test_guardrails.off` needs a reason in `ci.test_guardrails.reasons`; `ci.jobs.<id>.test_timeout_s` and `timeout_minutes` may only lower a limit.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -132,6 +134,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
+| R5.18 | `claude/plugins/delivery/tests/test_dl376_test_guardrails.py` |
 
 ## 10. Decisions
 
