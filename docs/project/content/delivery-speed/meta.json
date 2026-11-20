@@ -1,6 +1,6 @@
 {
   "title": "Feature: Delivery speed",
   "hero": "Each delivery layer does only its share, so a finished change goes live sooner",
-  "lede": "Shipped as STACKSPEC 8.0.0 in #47; the first delivery log is in the GitHub release train-2026-10-11-47.",
+  "lede": "Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.",
   "extra_css": ""
 }
