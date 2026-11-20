@@ -1063,5 +1063,20 @@ is not configured and writes `"gate": "not configured"` to `join-result.json`.
   of the running version. It runs after the readiness checks.
 - `rerun_args.py`: re-run files as paths relative to the test root with forward slashes, option values kept, and a
   re-run that crashed before running a test is a crash, not a second failure.
+- `rerun_tests.py` (DL375, D312): rerun narrowing for every test job. After a red run, the next head's run of a job
+  runs the tests that failed on that run plus the tests of the code changed since that run's head. The failure list
+  is read from the previous run's test report (JUnit XML, Playwright JSON, `go test -json`) when there is one, else
+  from the job log (pytest and unittest, vitest and jest, Playwright, go test, cargo libtest, cargo nextest); an
+  unknown or unreadable format is "whole". Output is `mode` (`narrow`, `whole` or `current`), a `reason` and the
+  runner arguments: pytest node ids, vitest `FILE -t REGEX`, Playwright `FILE:LINE` (or `--grep`), go `PKG -run
+  REGEX` per package, cargo `--lib|--test T|--bin B -- --exact NAMES` per binary, nextest `-E FILTERSET`. Changed
+  code maps to test files with `area_select.py` (`areas.*.tests`); a changed file with no area, or an area with no
+  `tests`, is whole. Cargo and nextest select by name only, so changed code there is whole. `mode` is `whole` when:
+  `ci.jobs.<job-id>.rerun` is `"whole"` (default `"failed+changed"`); the previous run was cancelled, timed out or
+  ended in any state but failure; a valve changed (a lockfile, a toolchain file, a workflow file, a CI script under
+  `scripts/delivery` or `scripts/ci`, or anything `ci_scope.py` does not call `affected`); or the failure list
+  cannot be read. After a green previous run (or none) `mode` is `current`: today's behaviour. `ci_rerun_first.py`
+  still orders jobs; this script narrows the tests inside one job. A narrowed green run is not the merge gate: the
+  ready PR's full CI is.
 - `windows-msi-linux.sh` and `windows-msi-check.yml`: the optional Linux MSI recipe. A CI check only; the shipped
   MSI is built on Windows (decision 10). Wine cannot write LZX, so the cabinet level is `mszip` off Windows.

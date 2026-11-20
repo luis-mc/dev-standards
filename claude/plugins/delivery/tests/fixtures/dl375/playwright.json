@@ -1,0 +1,4 @@
+{"config":{},"suites":[{"title":"login.spec.ts","file":"e2e/login.spec.ts","specs":[
+ {"title":"logs in","ok":true,"file":"e2e/login.spec.ts","line":5,"tests":[{"status":"expected"}]},
+ {"title":"rejects bad password","ok":false,"file":"e2e/login.spec.ts","line":12,"tests":[{"status":"unexpected"}]}],
+ "suites":[{"title":"nested","specs":[{"title":"shows menu","ok":false,"file":"e2e/login.spec.ts","line":30,"tests":[{"status":"unexpected"}]}]}]}]}

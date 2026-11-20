@@ -107,6 +107,8 @@ flowchart LR
 
 **R5.19** — No fail-fast on release pull-request CI (DL-98, D104, task DL374). Every shipped matrix sets `fail-fast: false`, and no suite step stops at its first failure. `ci.jobs.<id>.fail_fast` is `never-on-release` (default), `never` or `on`. `delivery_doctor.py` warns on a pull-request workflow with a matrix lacking `fail-fast: false`, or a `--fail-fast`, `-x`, `--exitfirst`, `--bail` or `maxFailures` flag, unless the job's `fail_fast` is `on`. The branch gate in the agent sandbox keeps its cheapest-first stop.
 
+**R5.20** — After a red run, the next head's run of a test job runs the tests that failed plus the tests of code changed since that run's head (`rerun_tests.py`, task DL375). The failure list comes from the previous run's test report, else its log, for pytest and unittest, vitest and jest, Playwright, go test, cargo test and cargo nextest. It runs the whole job when `ci.jobs.<job-id>.rerun` is `"whole"` (default `"failed+changed"`), the previous run was cancelled or timed out, a valve changed (lockfile, toolchain file, workflow file, a CI script under `scripts/delivery` or `scripts/ci`, a `ci_scope.py` full-run path), the failure list cannot be read, or a changed file maps to no test. After a green run nothing changes. A narrowed green run is not the merge gate; the ready PR's full CI is.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -137,6 +139,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
 | R5.18, R5.19 | `claude/plugins/delivery/tests/test_dl374_red_run_finishes.py` |
+| R5.20 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |
 
 ## 10. Decisions
 

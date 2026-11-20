@@ -1,0 +1,6 @@
+ ❯ src/a.test.ts (3 tests | 1 failed)
+   × math > adds numbers 3ms
+ FAIL  src/a.test.ts > math > adds numbers
+AssertionError: expected 3 to be 4
+ FAIL  src/b.test.ts > renders
+ Test Files  2 failed (2)

@@ -1,0 +1,8 @@
+    Starting 3 tests across 2 binaries
+        PASS [   0.004s] mycrate tests::ok
+        FAIL [   0.004s] mycrate tests::bad
+        FAIL [   0.005s] mycrate::bin/tool cli::broken
+------------
+     Summary [   0.01s] 3 tests run: 1 passed, 2 failed
+        FAIL [   0.004s] mycrate tests::bad
+        FAIL [   0.005s] mycrate::bin/tool cli::broken
