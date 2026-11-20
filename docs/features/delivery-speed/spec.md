@@ -109,6 +109,8 @@ flowchart LR
 
 **R5.20** — After a red run, the next head's run of a test job runs the tests that failed plus the tests of code changed since that run's head (`rerun_tests.py`, task DL375). The failure list comes from the previous run's test report, else its log, for pytest and unittest, vitest and jest, Playwright, go test, cargo test and cargo nextest. It runs the whole job when `ci.jobs.<job-id>.rerun` is `"whole"` (default `"failed+changed"`), the previous run was cancelled or timed out, a valve changed (lockfile, toolchain file, workflow file, a CI script under `scripts/delivery` or `scripts/ci`, a `ci_scope.py` full-run path), the failure list cannot be read, or a changed file maps to no test. After a green run nothing changes. A narrowed green run is not the merge gate; the ready PR's full CI is.
 
+**R5.21** — `test_guardrails.py` (DL-99, task DL376) scans the repository without running a test and reports seven guardrails: G1 per-test timeouts (unit 10 s, integration 60 s, e2e 120 s), G2 job `timeout-minutes` of 30 or less, G3 no CI retries, G4 no sleeps in tests, G5 at most 20 cases per test, G6 no mutation or many-run property tests on pull requests, G7 test times uploaded. `fast_guards.py` runs it on every push. `ci.test_guardrails.mode` is `warn` (default, never fails) or `block`; `ci.test_guardrails.off` needs a reason in `ci.test_guardrails.reasons`; `ci.jobs.<id>.test_timeout_s` and `timeout_minutes` may only lower a limit.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -140,6 +142,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
 | R5.18, R5.19 | `claude/plugins/delivery/tests/test_dl374_red_run_finishes.py` |
 | R5.20 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |
+| R5.21 | `claude/plugins/delivery/tests/test_dl376_test_guardrails.py` |
 
 ## 10. Decisions
 
