@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.9.0
+version: 0.10.0
 owner: agents
 type: explanation
 code:
@@ -186,6 +186,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.10.0 | 2026-11-20 | RELEASE-155 | R5.18, R5.19: a red release CI run is never cancelled while jobs run (DL-97); no fail-fast on release PR CI (DL-98).<br>R5.20: after a red run a test job reruns the failed tests plus the tests of changed code (rerun_tests.py); ci.jobs.<job-id>.rerun whole opts out.<br>R5.21: test_guardrails.py scans for the seven test guardrails (DL-99); fast_guards.py runs it in warn mode by default, block mode fails on a break. | DL374, DL375, DL376 |
 | 0.9.0 | 2026-11-19 | RELEASE-151 | R5.17: release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |
 | 0.8.1 | 2026-11-14 | RELEASE-133 | Rust target cache: `<repo>/target` links to the cache folder; spec text is delivery R5.61. | DL329 |
 | 0.8.0 | 2026-11-13 | RELEASE-127 | Gate steps accept an optional when_changed list of path patterns; a step is skipped with a reason when no changed file matches.<br>ci_watch cancels the other runs of a train head when one job fails, which lifts the push freeze; --no-cancel-on-red keeps the old wait.<br>fast_guards.py runs the gate.json always_on_guards whose input globs match a changed file, so the boundary check and guard tests run before a push. | DL304, DL306, DL307 |

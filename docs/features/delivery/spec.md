@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.38.0
+version: 0.38.1
 owner: agents
 type: reference
 code:
@@ -543,6 +543,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.38.1 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |
 | 0.38.0 | 2026-11-19 | RELEASE-151 | Release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |
 | 0.37.4 | 2026-11-14 | RELEASE-140 | The runner gate writes no ci-wait marker and runs no git when the project has no ci.fallback (DL353, D301). | DL353 |
 | 0.37.3 | 2026-11-14 | RELEASE-135 | ci_watch.py head_of drops origin/HEAD and the default branch, so a default-branch watch makes no train (R5.62). | DL336 |
