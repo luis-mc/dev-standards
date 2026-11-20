@@ -555,6 +555,8 @@ class RunTidyTests(unittest.TestCase):
                                                          (9, "completed", "failure", OLD, "release/29")))
         r[("gh", "run", "list", "--commit")] = (0, runs((8, "in_progress", None, SHA, "release/29")))
         r[("gh", "run", "cancel")] = (0, "")
+        r[("gh", "api")] = (0, json.dumps({"author": {"login": "alice"}, "committer": {"login": "alice"}}))  # DL381
+        r[("gh", "run", "view")] = (0, json.dumps({"jobs": [{"conclusion": "success"}]}))
         sh = FakeShell(r)
         watcher(root, sh).run_once()
         self.assertEqual([c for c in sh.calls if c[:3] == ["gh", "run", "cancel"]][0][3], "7")
