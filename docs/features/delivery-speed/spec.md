@@ -117,6 +117,8 @@ flowchart LR
 
 **R5.24** — `delivery_watch.py` cancels an older run of a train branch only when all hold (D105, task DL381): a run of the same workflow exists for the newer head, the newer head commit's author and committer are not bots (login ending in `[bot]`, or `github-actions`; a push by the workflow token starts no run to replace the cancelled one), and the older run has no failed job yet, unless `ci_watch.cancel_on_red` is true. A failed `gh` lookup cancels nothing. Each skip adds a `ci.cancel_skipped` ledger event with the run id and the reason `no_newer_run`, `bot_head`, `red_run` or `unknown`; a real cancel keeps `ci.cancel_superseded`. `runner_plan.cancel_replaced_runs` still switches the whole step.
 
+**R5.25** — Stale trains in `.delivery/ledger.json` are closed, not nagged about (task DL382). No train is recorded without a branch head: an empty name, `None` or a detached `HEAD` is refused. The Stop hook never tells a PR-less train to merge; one DL-03 line names the PR-less trains and the command `delivery_ledger.py close <id> --reason ...`. When the hook or `delivery_ledger.py show` runs, an open train with no `merged_at` whose PR is merged, or whose branch is gone from the remote with no open PR (and is older than a day), becomes state `closed` with reason `merged-elsewhere` or `branch-gone`. It costs one `gh` call per train, at most five trains per run, and a live result is cached for six hours. If `gh` or `git` fails, nothing changes. `delivery_ledger.py close <id> --reason TEXT` closes one train; `close-stale --before YYYY-MM-DD --reason TEXT [--dry-run]` closes every open train last updated before the date and prints each. The Stop output has at most one line per rule, with a count and the PR numbers, for example `DL-18 not smoke-tested (3): PRs 166, 172, 176`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -152,6 +154,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.22 | `claude/plugins/delivery/tests/test_dl378_ci_watch_red_finishes.py` |
 | R5.23 | `claude/plugins/delivery/tests/test_dl379_templates_guardrails.py` |
 | R5.24 | `claude/plugins/delivery/tests/test_dl381_cancel_superseded.py` |
+| R5.25 | `claude/plugins/delivery/tests/test_dl382_ledger_stale.py` |
 
 ## 10. Decisions
 

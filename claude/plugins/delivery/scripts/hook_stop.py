@@ -237,30 +237,76 @@ def check_questions_text(text):
 
 # --- ledger checks ---------------------------------------------------------------------------
 
-def check_trains(ledger, cfg, at):
+_DONE_TRAIN = tuple(H.TERMINAL_TRAIN) + ('closed',)
+
+
+def _ledger_py():
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), 'delivery_ledger.py')
+
+
+def _prs(rows):
+    return ', '.join(str(t.get('pr')) for t in rows)
+
+
+def check_trains(ledger, cfg, at, grouped=False):
+    """The train findings. `grouped` (DL382): one line per rule, with a count and the PR numbers."""
     out = []
     for t in H.trains_joined_unpushed(ledger, at, cfg['join_push_min']):
         out.append(('DL-02:' + str(t.get('id')), 'DL-02 %s is joined but not pushed and the previous train has been green '
                     'for more than %d min. Push it now (join.py --push), then open its ready PR.'
                     % (H.release_name(t), cfg['join_push_min'])))
+    nopr, merge, clean, smoke = [], [], [], []
     for t in H.trains_green_unmerged(ledger, at):
-        out.append(('DL-03:' + str(t.get('id')), 'DL-03 %s is green and not merged. Merge it now (gh pr merge %s, after '
-                    'ci_watch.py passed for its head), or record a hold with its reason: delivery_ledger.py hold.'
-                    % (H.release_name(t), t.get('pr', 'N'))))
+        (merge if t.get('pr') else nopr).append(t)
     for t in ledger['trains']:
-        if not t.get('merged_at') or t.get('state') in H.TERMINAL_TRAIN:
+        if not t.get('merged_at') or t.get('state') in _DONE_TRAIN:
             continue
         if H.on_hold(t, at):        # a recorded hold (delivery_ledger.py hold) suspends DL-14 and DL-18 until its `until`
             continue
-        pr = t.get('pr', 'N')
+        if not t.get('pr'):
+            if t not in nopr:
+                nopr.append(t)
+            continue
         if not t.get('cleaned_at'):
-            out.append(('DL-14:' + str(t.get('id')), 'DL-14 %s is merged and not cleaned. %s'
-                        % (H.release_name(t), record_hint(cfg, 'cleanup_command', 'cleaned', pr,
-                                                          'Run cleanup.py --pr %s' % pr))))
+            clean.append(t)
         if not (t.get('smoke') or {}).get('state'):
-            out.append(('DL-18:' + str(t.get('id')), 'DL-18 %s is merged and production was not smoke-tested. %s'
-                        % (H.release_name(t), record_hint(cfg, 'smoke_command', 'smoke', pr,
-                                                          'Run the smoke step after its deploy'))))
+            smoke.append(t)
+    led_py = _ledger_py()
+    if nopr:        # a train with no PR is never told to merge; it is told once how to close it
+        ids = ', '.join(str(t.get('id')) for t in nopr)
+        out.append(('DL-03:nopr:' + ','.join(str(t.get('id')) for t in nopr),
+                    'DL-03 %d train%s no PR (%s): close each with `python %s close <id> --reason ...`.'
+                    % (len(nopr), ' has' if len(nopr) == 1 else 's have', ids, led_py)))
+    if grouped:
+        if merge:
+            out.append(('DL-03:' + ','.join(str(t.get('id')) for t in merge),
+                        'DL-03 green and not merged (%d): PRs %s (gh pr merge N, after ci_watch.py passed for its head, '
+                        'or record a hold with its reason: delivery_ledger.py hold).' % (len(merge), _prs(merge))))
+        if clean:
+            out.append(('DL-14:' + ','.join(str(t.get('id')) for t in clean),
+                        'DL-14 merged and not cleaned (%d): PRs %s (%s)' % (
+                            len(clean), _prs(clean), record_hint(cfg, 'cleanup_command', 'cleaned', 'N',
+                                                                 'Run cleanup.py --pr N'))))
+        if smoke:
+            out.append(('DL-18:' + ','.join(str(t.get('id')) for t in smoke),
+                        'DL-18 not smoke-tested (%d): PRs %s (%s)' % (
+                            len(smoke), _prs(smoke), record_hint(cfg, 'smoke_command', 'smoke', 'N',
+                                                                 'Run the smoke step after its deploy'))))
+        return out
+    for t in merge:
+        out.append(('DL-03:' + str(t.get('id')), 'DL-03 %s is green and not merged. Merge it now (gh pr merge %s, after '
+                    'ci_watch.py passed for its head), or record a hold with its reason: delivery_ledger.py hold.'
+                    % (H.release_name(t), t.get('pr', 'N'))))
+    for t in clean:
+        pr = t.get('pr', 'N')
+        out.append(('DL-14:' + str(t.get('id')), 'DL-14 %s is merged and not cleaned. %s'
+                    % (H.release_name(t), record_hint(cfg, 'cleanup_command', 'cleaned', pr,
+                                                      'Run cleanup.py --pr %s' % pr))))
+    for t in smoke:
+        pr = t.get('pr', 'N')
+        out.append(('DL-18:' + str(t.get('id')), 'DL-18 %s is merged and production was not smoke-tested. %s'
+                    % (H.release_name(t), record_hint(cfg, 'smoke_command', 'smoke', pr,
+                                                      'Run the smoke step after its deploy'))))
     return out
 
 
@@ -288,6 +334,10 @@ def depends_on(ledger, key):
     """The ledger fields a finding depends on, as a JSON-able value: a train's or an agent's fields for a key that
     names one (DL-02/03/14/18/76, DL-30/32), nothing for the rest."""
     ident = key.split(':', 1)[1] if ':' in key else None
+    if ident and ident.startswith('nopr:'):
+        ident = ident[5:]
+    if ident and ',' in ident:          # DL382: a grouped finding depends on each of its trains
+        return [depends_on(ledger, 'x:' + i) for i in ident.split(',')]
     if ident:
         for rows, fields in ((ledger['trains'], DEPENDS_TRAIN), (ledger['agents'], DEPENDS_AGENT)):
             for r in rows:
@@ -584,10 +634,15 @@ def check_registry(root, cfg, at):
 
 def findings(root, data, cfg):
     at = H.now()
+    try:                              # DL382: close stale trains first; a failure changes nothing
+        import delivery_ledger as _L
+        _L.autoclose(root)
+    except Exception:  # noqa: BLE001
+        pass
     ledger = H.load_ledger(root)
     text = last_assistant_text(data)
     out = []
-    out += check_trains(ledger, cfg, at)
+    out += check_trains(ledger, cfg, at, grouped=True)
     out += check_agents(ledger, cfg, at)
     out += check_watcher(ledger, cfg, at)
     out += check_registry(root, cfg, at)
