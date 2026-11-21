@@ -32,7 +32,7 @@ def question(asked_at):
 
 def run(script, root, data, cfg=None):
     data = dict({"cwd": str(root), "session_id": "s1"}, **data)
-    env = dict(os.environ, DELIVERY_NOW=NOW.isoformat())
+    env = dict(os.environ, DELIVERY_NOW=NOW.isoformat(), DELIVERY_LOAD="10,10")  # DL384: never the real machine load
     p = subprocess.run([sys.executable, "-I", str(SCRIPTS / script)], input=json.dumps(data).encode(),
                        capture_output=True, env=env, timeout=60)
     out = p.stdout.decode().strip()
