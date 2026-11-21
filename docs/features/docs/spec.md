@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.6.0
+version: 1.7.0
 owner: agents
 type: reference
 code:
@@ -193,6 +193,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.7.0 | 2026-11-21 | RELEASE-160 | Lifecycle contract schema, starter, words table and words lint guards for a project with a local app (R5.21, R5.22).<br>Added R5.21: lifecycle parts (React and Rust models), DS234 design-system guards A to E and lifecycle guards LC-22, LC-23, LC-24, LC-30. (section 5) | DS235a, DS235b |
 | 1.6.0 | 2026-11-18 | RELEASE-150 | The design-system starter holds the default install and update windows: rules UX-62 to UX-65, two components and Windows templates (R5.20). | DU13 |
 | 1.5.0 | 2026-11-16 | RELEASE-149 | The design-system starter opens with the binding Core UX Principles (CORE-1 to CORE-7), UX-57 to UX-61 are added, and docs_check warns (DS6) when next-version/ux-rules.md lacks the principles (DOCSPEC R15.12). | ST6 |
 | 1.4.1 | 2026-11-14 | RELEASE-134 | The picker templates compile under strict TypeScript flags and pass typescript-eslint (R5.19). | DL331 |

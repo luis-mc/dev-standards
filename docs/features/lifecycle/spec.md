@@ -2,7 +2,7 @@
 id: lifecycle
 title: Install, update and remove
 apps: [luismc-docs, luismc-delivery]
-topics: [design-system, delivery, installers, updates]
+topics: [delivery, docs, testing]
 status: live
 version: 0.1.0
 owner: agents
