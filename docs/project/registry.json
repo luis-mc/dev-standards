@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-20T23:35+00:00",
+  "updated": "2026-11-21T15:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7030,6 +7030,30 @@
       "started": "2026-11-20T23:15+00:00"
     },
     {
+      "id": "DL382",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Ledger: no PR-less trains, auto-close, grouped Stop findings",
+      "detail": "Peer report 21 Nov: trains with pr=null give 'gh pr merge None'; repeated DL-18/DL-14 lines; asks a-e",
+      "expected": "21 Nov ~16:25",
+      "changed": "2026-11-21T15:25+00:00",
+      "expected_basis": "cloud agent starts 15:38, setup 5 + work 30 + checks 10",
+      "rides": "DL383",
+      "started": "2026-11-21T15:25+00:00"
+    },
+    {
+      "id": "DL383",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-159: DL382 ledger fix",
+      "detail": "join, CI, merge on green",
+      "expected": "",
+      "changed": "2026-11-21T15:25+00:00",
+      "release": 159
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -10820,6 +10844,38 @@
       "started": "2026-11-11T09:05+00:00",
       "dropped_into": "DS231",
       "dropped_reason": "owner: merge 96 and 97 into one release"
+    },
+    {
+      "id": "DS233",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Lifecycle study: one install/update/remove standard",
+      "detail": "Owner decided D-a..D-h 21 Nov 14:35",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T14:36+00:00",
+      "no_release": "study; the kit ships it",
+      "started": "2026-11-21T12:52+00:00"
+    },
+    {
+      "id": "DS234",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Design-system enforcement A-E",
+      "detail": "Rendered-layout guard, raw spacing check, section component, none-yet limit, cited rule names its test; owner yes 21 Nov",
+      "expected": "",
+      "changed": "2026-11-21T13:34+00:00"
+    },
+    {
+      "id": "DS235",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Lifecycle kit: install/update/remove standard",
+      "detail": "Contract lifecycle.json, shared parts, checks LC-1..33, opt-out; owner decisions D-a..D-h 21 Nov; folds DS234",
+      "expected": "",
+      "changed": "2026-11-21T14:36+00:00"
     },
     {
       "id": "DU1",
