@@ -1,0 +1,62 @@
+/*
+ * Lifecycle parts (design system, parts). Tokens only (LC-23): every colour, font, size and space is var(--ds-*).
+ * No raw colour, no px or rem literal. Widths come from the content and wrap; nothing has a fixed size (LC-24).
+ */
+.ds-part {
+  box-sizing: border-box;
+  max-width: 100%;
+  padding: var(--ds-space-4);
+  border: var(--ds-border-width) solid var(--ds-color-divider);
+  border-radius: var(--ds-radius-2);
+  background: var(--ds-color-surface);
+  color: var(--ds-color-text);
+  font-family: var(--ds-font-body);
+  font-size: var(--ds-size-3);
+  line-height: var(--ds-line-height);
+  display: flex;
+  flex-direction: column;
+  gap: var(--ds-space-3);
+}
+.ds-part *, .ds-part *::before, .ds-part *::after { box-sizing: border-box; }
+.ds-part__title { margin: 0; font-size: var(--ds-size-5); font-weight: var(--ds-weight-semibold); line-height: var(--ds-line-height-tight); overflow-wrap: anywhere; }
+.ds-part__text { margin: 0; overflow-wrap: anywhere; }
+.ds-part__hint { margin: 0; color: var(--ds-color-text-muted); font-size: var(--ds-size-2); overflow-wrap: anywhere; }
+.ds-row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--ds-space-3); }
+.ds-row--end { justify-content: flex-end; }
+.ds-stack { display: flex; flex-direction: column; gap: var(--ds-space-2); }
+.ds-btn {
+  min-height: var(--ds-target-min); min-width: var(--ds-target-min);
+  padding: var(--ds-space-2) var(--ds-space-4);
+  border: var(--ds-border-width) solid var(--ds-color-border);
+  border-radius: var(--ds-radius-2);
+  background: var(--ds-color-surface); color: var(--ds-color-text);
+  font: inherit; font-weight: var(--ds-weight-semibold);
+}
+.ds-btn--primary { background: var(--ds-color-primary); border-color: var(--ds-color-primary); color: var(--ds-color-on-primary); }
+.ds-btn:disabled { opacity: var(--ds-opacity-disabled); }
+.ds-btn:focus-visible, .ds-field:focus-visible { outline: var(--ds-focus-width) solid var(--ds-color-focus); outline-offset: var(--ds-focus-offset); }
+.ds-field {
+  min-height: var(--ds-target-min); padding: var(--ds-space-2) var(--ds-space-3); max-width: 100%;
+  border: var(--ds-border-width) solid var(--ds-color-border); border-radius: var(--ds-radius-1);
+  background: var(--ds-color-surface); color: var(--ds-color-text); font: inherit;
+}
+.ds-choice { display: flex; align-items: flex-start; gap: var(--ds-space-3); min-height: var(--ds-target-min); padding: var(--ds-space-2) 0; }
+.ds-choice input { margin: 0; width: var(--ds-target-min); height: var(--ds-space-5); flex: none; }
+.ds-tone { display: inline-flex; padding: var(--ds-space-1) var(--ds-space-3); border-radius: var(--ds-radius-round); font-size: var(--ds-size-2); font-weight: var(--ds-weight-semibold); }
+.ds-tone--done { background: var(--ds-color-done-tint); color: var(--ds-color-on-done-tint); }
+.ds-tone--note { background: var(--ds-color-note-tint); color: var(--ds-color-on-note-tint); }
+.ds-tone--needs-you { background: var(--ds-color-needs-you-tint); color: var(--ds-color-on-needs-you-tint); }
+.ds-tone--problem { background: var(--ds-color-problem-tint); color: var(--ds-color-on-problem-tint); }
+.ds-progress { display: block; width: 100%; height: var(--ds-space-2); accent-color: var(--ds-color-primary); }
+.ds-list { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--ds-space-3); }
+.ds-list__item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--ds-space-2) var(--ds-space-4); }
+.ds-list__main { flex: 1 1 var(--ds-target-min); min-width: 0; overflow-wrap: anywhere; }
+.ds-banner--ready { border-color: var(--ds-color-note); }
+.ds-banner--failed { border-color: var(--ds-color-problem); }
+.ds-banner--done { border-color: var(--ds-color-done); }
+.ds-remote { max-width: 100%; }
+/* layout roles (UX-66): the page's top level uses these, never a plain gap */
+.ds-page-sections { display: flex; flex-direction: column; gap: var(--ds-space-6); padding: var(--ds-space-4); }
+.ds-card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--ds-card-min)), 1fr)); gap: var(--ds-space-5); }
+.ds-form-stack { display: flex; flex-direction: column; gap: var(--ds-space-4); }
+.ds-fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
