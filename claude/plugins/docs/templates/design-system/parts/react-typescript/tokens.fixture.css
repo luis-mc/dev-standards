@@ -1,0 +1,19 @@
+/* Token values for the fixtures only. A project reads its own tokens (tokens.md); this file is never shipped to an app. */
+:root {
+  --ds-color-page: #f6f7f9; --ds-color-surface: #ffffff; --ds-color-text: #1b1f24; --ds-color-text-muted: #4f5a66;
+  --ds-color-border: #7a8590; --ds-color-divider: #d4d9de; --ds-color-primary: #0b57d0; --ds-color-on-primary: #ffffff;
+  --ds-color-done: #146c2e; --ds-color-done-tint: #e6f4ea; --ds-color-on-done-tint: #146c2e;
+  --ds-color-note: #1f5fa8; --ds-color-note-tint: #e8f1fb; --ds-color-on-note-tint: #1f5fa8;
+  --ds-color-needs-you-tint: #fff4dc; --ds-color-on-needs-you-tint: #8a5300;
+  --ds-color-problem: #b3261e; --ds-color-problem-tint: #fdecea; --ds-color-on-problem-tint: #b3261e;
+  --ds-color-focus: #0b57d0;
+  --ds-font-body: system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ds-size-1: 0.75rem; --ds-size-2: 0.875rem; --ds-size-3: 1rem; --ds-size-5: 1.25rem; --ds-size-6: 1.75rem;
+  --ds-line-height: 1.5; --ds-line-height-tight: 1.25;
+  --ds-weight-semibold: 600;
+  --ds-space-0: 0; --ds-space-1: 4px; --ds-space-2: 8px; --ds-space-3: 12px; --ds-space-4: 16px; --ds-space-5: 24px; --ds-space-6: 32px; --ds-space-7: 48px;
+  --ds-target-min: 44px; --ds-card-min: 280px;
+  --ds-radius-1: 4px; --ds-radius-2: 8px; --ds-radius-round: 999px;
+  --ds-border-width: 1px; --ds-focus-width: 3px; --ds-focus-offset: 2px; --ds-opacity-disabled: 0.5;
+}
+body { margin: 0; background: var(--ds-color-page); }
