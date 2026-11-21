@@ -20,7 +20,7 @@ export function cssProblems(text) {
     const decl = l.replace(/var\([^)]*\)/g, 'VAR');
     if (COLOUR.test(decl)) out.push(`line ${i + 1}: raw colour`);
     if (LENGTH.test(decl)) out.push(`line ${i + 1}: raw size (${decl.match(LENGTH)[0]})`);
-    if (FONT.test(decl)) out.push(`line ${i + 1}: font family not from a token`);
+    if (FONT.test(l)) out.push(`line ${i + 1}: font family not from a token`);
   });
   return out;
 }
