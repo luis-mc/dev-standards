@@ -124,6 +124,12 @@ flowchart LR
 
 **R5.27** — `lifecycle_conformance.py` is a black-box runner (DL-LC2, task DS235c). It starts a fake Ed25519-signed update server and drives the updater through the contract. It checks LC-3, 4, 5, 6, 7, 25, 26 and 28, prints PASS or FAIL with the reason for each, and has `--json`. The Rust and Go cores in `templates/lifecycle/` pass it in their own tests (DL-LC3).
 
+**R5.28** — The lifecycle step scripts in `claude/plugins/delivery/templates/lifecycle/os/` (windows msi, linux deb and rpm, macos pkg) and the leftover scanners check install, reinstall, upgrade, rollback, downgrade, remove, purge, tray, boot and pairing against `lifecycle.json` (DELIVERYSPEC DL-109, DL-110; LC-8 to LC-21, LC-29, LC-33). The lanes job template names no runner.
+
+**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names and separate stores for public packages and private data (DL-112; LC-32).
+
+**R5.30** — `lifecycle_optout.py` fails a lifecycle opt-out with no decision ID, no reason or a past review date, prints what each opt-out loses, and the session hook lists the opt-outs in one line (DL-113; LC-27).
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -161,6 +167,8 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.24 | `claude/plugins/delivery/tests/test_dl381_cancel_superseded.py` |
 | R5.25 | `claude/plugins/delivery/tests/test_dl382_ledger_stale.py` |
 | R5.26, R5.27 | `claude/plugins/delivery/tests/test_ds235c_conformance.py` |
+| R5.28 | `claude/plugins/delivery/tests/test_ds235d_os_steps.py` |
+| R5.29, R5.30 | `claude/plugins/delivery/tests/test_ds235d_release_optout.py` |
 
 ## 10. Decisions
 

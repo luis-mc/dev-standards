@@ -1,0 +1,111 @@
+# DS235d: lifecycle lanes job template (DELIVERYSPEC LC-8 to LC-21).
+# A project copies this file to .github/workflows/ and sets, as repository variables, the JSON value
+# of `runs-on` for each lane it releases for. This file names no runner: where a lane runs is the
+# project's choice (GitHub-hosted, a shared pool, anything). A lane with no variable is skipped.
+# Lanes: windows, ubuntu-lts, fedora, debian, macos. Each lane writes lifecycle-result-<lane>.json,
+# which lifecycle_release_check.py reads on a release pull request.
+name: lifecycle
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  LIFECYCLE_JSON: docs/design-system/lifecycle.json   # the project's path to lifecycle.json
+
+jobs:
+  windows:
+    if: ${{ vars.LIFECYCLE_RUNS_ON_WINDOWS != '' }}
+    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_WINDOWS) }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the packages (a project step that sets LC_PKG, LC_PREV_PKG, LC_BROKEN_PKG and LC_OLDER_PKG)
+        run: ./scripts/lifecycle/fetch-packages.ps1 windows
+      - name: Lifecycle steps
+        run: pwsh templates/lifecycle/os/windows.ps1 -Check all | Tee-Object lifecycle-steps.txt
+      - name: Write the lane result
+        if: always()
+        run: python scripts/delivery/lifecycle_release_check.py write-result --lane windows --arch x64 --package msi --steps lifecycle-steps.txt --out lifecycle-result-windows.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lifecycle-result-windows, path: lifecycle-result-windows.json }
+
+  ubuntu-lts:
+    if: ${{ vars.LIFECYCLE_RUNS_ON_UBUNTU_LTS != '' }}
+    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_UBUNTU_LTS) }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the packages
+        run: ./scripts/lifecycle/fetch-packages.sh ubuntu-lts
+      - name: Lifecycle steps
+        run: sudo -E bash templates/lifecycle/os/linux-deb.sh all | tee lifecycle-steps.txt
+      - name: Write the lane result
+        if: always()
+        run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane ubuntu-lts --arch x64 --package deb --steps lifecycle-steps.txt --out lifecycle-result-ubuntu-lts.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lifecycle-result-ubuntu-lts, path: lifecycle-result-ubuntu-lts.json }
+
+  debian:
+    if: ${{ vars.LIFECYCLE_RUNS_ON_DEBIAN != '' }}
+    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_DEBIAN) }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the packages
+        run: ./scripts/lifecycle/fetch-packages.sh debian
+      - name: Lifecycle steps
+        run: sudo -E bash templates/lifecycle/os/linux-deb.sh all | tee lifecycle-steps.txt
+      - name: Write the lane result
+        if: always()
+        run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane debian --arch x64 --package deb --steps lifecycle-steps.txt --out lifecycle-result-debian.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lifecycle-result-debian, path: lifecycle-result-debian.json }
+
+  fedora:
+    if: ${{ vars.LIFECYCLE_RUNS_ON_FEDORA != '' }}
+    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_FEDORA) }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the packages
+        run: ./scripts/lifecycle/fetch-packages.sh fedora
+      - name: Lifecycle steps
+        run: sudo -E bash templates/lifecycle/os/linux-rpm.sh all | tee lifecycle-steps.txt
+      - name: Write the lane result
+        if: always()
+        run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane fedora --arch x64 --package rpm --steps lifecycle-steps.txt --out lifecycle-result-fedora.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lifecycle-result-fedora, path: lifecycle-result-fedora.json }
+
+  macos:
+    if: ${{ vars.LIFECYCLE_RUNS_ON_MACOS != '' }}
+    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_MACOS) }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Get the packages
+        run: ./scripts/lifecycle/fetch-packages.sh macos
+      - name: Lifecycle steps
+        run: bash templates/lifecycle/os/macos.sh all | tee lifecycle-steps.txt
+      - name: Write the lane result
+        if: always()
+        run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane macos --arch arm64 --package pkg --steps lifecycle-steps.txt --out lifecycle-result-macos.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: lifecycle-result-macos, path: lifecycle-result-macos.json }
+
+  # Fills the results folder and runs the release check. Needs every lane job to have run.
+  release-check:
+    needs: [windows, ubuntu-lts, debian, fedora, macos]
+    if: ${{ always() && startsWith(github.head_ref, 'release') }}
+    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_CHECK) }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { pattern: lifecycle-result-*, path: lifecycle-results, merge-multiple: true }
+      - run: python3 scripts/delivery/lifecycle_release_check.py check --lifecycle "$LIFECYCLE_JSON" --results lifecycle-results --release
