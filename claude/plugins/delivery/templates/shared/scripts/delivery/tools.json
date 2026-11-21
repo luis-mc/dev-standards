@@ -202,5 +202,10 @@
         "bin": "config.cmd"
       }
     }
+  },
+  "lifecycle-conformance": {
+    "kind": "script",
+    "path": "scripts/delivery/lifecycle_conformance.py",
+    "note": "Registered only. Python standard library; no download, no pin."
   }
 }
