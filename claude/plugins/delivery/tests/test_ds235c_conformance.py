@@ -354,9 +354,10 @@ class TemplateTest(unittest.TestCase):
                      "idle.set", "selftest.set", "pair", "audit", "settings"):
             self.assertIn(f"`{verb}`", text)
 
-    def test_tools_json_registers_the_runner(self):
+    def test_tools_json_does_not_list_the_runner(self):
+        # tools.json pins downloaded tools only; the runner ships beside it.
         data = json.loads((RUNNER_DIR / "tools.json").read_text())
-        self.assertIn("lifecycle-conformance", data)
+        self.assertNotIn("lifecycle-conformance", data)
 
 
 if __name__ == "__main__":
