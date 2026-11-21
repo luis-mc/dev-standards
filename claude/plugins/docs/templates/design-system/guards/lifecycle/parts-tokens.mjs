@@ -28,7 +28,7 @@ export function cssProblems(text) {
 export function partProblems(text) {
   const out = [];
   if (!/data-ds-part=/.test(text)) return out;
-  if (!/\bds-part\b/.test(text)) out.push('does not use the shared part class ds-part');
+  if (!/(?<![\w-])ds-part(?![\w-])/.test(text)) out.push('does not use the shared part class ds-part');
   if (/style=\{\{/.test(text) || /\bstyle="/.test(text)) out.push('inline style; use the shared stylesheet');
   if (COLOUR.test(text)) out.push('raw colour');
   if (/\bfont-family\b|fontFamily/.test(text)) out.push('font set in the part');
@@ -39,6 +39,6 @@ if (process.argv[1]?.endsWith('parts-tokens.mjs')) {
   const { flags, rest } = args(); const root = rest[0] || '.';
   const problems = [];
   for (const f of walk(root, /\.tsx$/)) problems.push(...partProblems(read(f)).map((p) => `${rel(root, f)}: ${p}`));
-  for (const f of walk(root, new RegExp(String(flags.css || 'lifecycle-parts\\.css').replace(/\./g, '\\.') + '$'))) problems.push(...cssProblems(read(f)).map((p) => `${rel(root, f)}: ${p}`));
+  for (const f of walk(root, new RegExp(String(flags.css || 'lifecycle-parts.css').replace(/\./g, '\\.') + '$'))) problems.push(...cssProblems(read(f)).map((p) => `${rel(root, f)}: ${p}`));
   finish('parts-tokens', problems);
 }
