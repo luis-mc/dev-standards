@@ -38,4 +38,6 @@ The Rust and Go tests skip with a reason when the toolchain is missing (cargo al
 - DELIVERYSPEC IDs are `DL-LC1` to `DL-LC3` so they cannot collide with numbered DL IDs from other branches.
 - Settled in CONTRACT.md: a remote install needs no click; the install window is a timer while `waiting`.
 
+Branch head before this line: 8d582e8e169cc55194f0ea6b2f4f47d8d7283d54
+
 READY
