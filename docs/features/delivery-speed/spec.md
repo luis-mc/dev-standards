@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.13.0
+version: 0.14.0
 owner: agents
 type: explanation
 code:
@@ -102,7 +102,7 @@ flowchart LR
 
 **R5.16** — A gate step in `gate.json` may carry `paths: KEY`. When `scope_map` maps path prefixes to keys, `plan_step` in `delivery_common.py` skips that step if files changed, every changed file lies under some `scope_map` key, and none lies under KEY. An unmapped file, an unknown key or a missing `scope_map` changes nothing. The rust `gate.json` ships the key `rust` only, so a Rust-only change skips JS steps only in a project that adds a `js` key and marks its JS steps `paths: "js"`. (DS201)
 
-**R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
+**R5.17** — Release assets are named `<Product>-<version>-<os>-<arch>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
 
 **R5.18** — A red release CI run finishes (DL-97, D105, task DL374). The pre-tool hook refuses `gh run cancel` (and the API cancel call) for a release or join branch run that has a failed job and jobs still queued or running. The command comment `# D105: blocks-all` allows it, for a failure that blocks every later job (setup, lockfile, build). If `gh run view` fails, the cancel is allowed with a warning. `cancel_joined_runs.py` skips such runs unless `--blocks-all`.
 
@@ -126,7 +126,7 @@ flowchart LR
 
 **R5.28** — The lifecycle step scripts in `claude/plugins/delivery/templates/lifecycle/os/` (windows msi, linux deb and rpm, macos pkg) and the leftover scanners check install, reinstall, upgrade, rollback, downgrade, remove, purge, tray, boot and pairing against `lifecycle.json` (DELIVERYSPEC DL-109, DL-110; LC-8 to LC-21, LC-29, LC-33). The lanes job template names no runner.
 
-**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names and separate stores for public packages and private data (DL-112; LC-32).
+**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names (`<Product>-<version>-<os>-<arch>.<ext>`) and separate stores for public packages and private data (DL-112; LC-32).
 
 **R5.30** — `lifecycle_optout.py` fails a lifecycle opt-out with no decision ID, no reason or a past review date, prints what each opt-out loses, and the session hook lists the opt-outs in one line (DL-113; LC-27).
 
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.0 | 2026-11-21 | RELEASE-161 | Release assets are named <Product>-<version>-<os>-<arch>.<ext>; the release check requires it per target (DL-96, LC-32). Updaters look for the new name first and the older name second for one transition release. | DL385 |
 | 0.13.0 | 2026-11-21 | RELEASE-160 | Stale trains close instead of nagging: no train without a branch head, no merge advice for a PR-less train, auto-close of merged-elsewhere and branch-gone trains, close and close-stale commands, one grouped Stop line per rule.<br>R5.25, R5.26: the updater test interface contract and the lifecycle conformance runner, with Rust and Go cores that pass it (DL-LC1 to DL-LC3).<br>Lifecycle OS step scripts, release check and opt-out report (R5.25 to R5.27). | DL382, DS235c, DS235d |
 | 0.12.0 | 2026-11-20 | RELEASE-158 | R5.24: delivery_watch cancels an older run only when the newer head has its own run, is not a bot push and the older run has no failed job; each skip is a ci.cancel_skipped ledger event. | DL381 |
 | 0.11.0 | 2026-11-20 | RELEASE-156 | R5.22: ci_watch never cancels a red run by default (D105, DL-97); it waits for every job, then lists every failed job. cancel_on_red cancels only a blocking failure (setup, install, lockfile, build, checkout).<br>R5.23: template jobs time out in 30 minutes or less; artifact prune runs daily, not after every workflow; no mutation pass on pull requests. | DL378, DL379 |

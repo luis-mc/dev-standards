@@ -4,7 +4,7 @@ title: Install, update and remove
 apps: [luismc-docs, luismc-delivery]
 topics: [delivery, docs, testing]
 status: live
-version: 0.1.0
+version: 0.2.0
 owner: agents
 type: explanation
 code:
@@ -84,7 +84,7 @@ stateDiagram-v2
 
 **R1.3** — The updater passes the conformance runner (LC-3 to LC-7, LC-25, LC-26, LC-28).
 
-**R1.4** — Each target in `targets` passes its lane: install, upgrade, broken update and rollback, downgrade refused, remove, purge, leftover scan and package lints (LC-8 to LC-21, LC-29, LC-32, LC-33). A system not in `targets` is not checked.
+**R1.4** — Each target in `targets` passes its lane: install, upgrade, broken update and rollback, downgrade refused, remove, purge, leftover scan and package lints (LC-8 to LC-21, LC-29, LC-32, LC-33). LC-32 requires the artifact name `<Product>-<version>-<os>-<arch>.<ext>` per target. A system not in `targets` is not checked.
 
 **R1.5** — The UI parts use the shared templates and tokens only and render without overlap or clipping (LC-22 to LC-24, LC-30).
 
@@ -101,5 +101,11 @@ stateDiagram-v2
 | R1.6 | `claude/plugins/delivery/tests/test_ds235d_release_optout.py` |
 
 ## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.2.0 | 2026-11-21 | RELEASE-161 | Release assets are named <Product>-<version>-<os>-<arch>.<ext>; the release check requires it per target (DL-96, LC-32). Updaters look for the new name first and the older name second for one transition release. | DL385 |
 
 Written by the release fold. Do not edit by hand.

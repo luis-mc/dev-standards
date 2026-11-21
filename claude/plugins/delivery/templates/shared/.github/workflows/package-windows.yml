@@ -6,7 +6,7 @@ name: Package Windows
 #   - artifact-prune.yml holds `windows-installer` while the newest run of this workflow has not
 #     succeeded (artifact_prune.py --hold windows-installer --hold-workflow package-windows.yml);
 #   - the token request retries a 5xx answer after 1, 2 and 4 seconds (publish_token.py).
-# Release assets carry the version in the file name (DL-96): `<installer_name>_<version>.msi`, and the
+# Release assets carry the version in the file name (DL-96): `<Product>-<version>-win-<arch>.msi`, and the
 # same names in SHA256SUMS. `release_assets.versioned_names: false` in .delivery/config.json keeps the
 # plain names. The CI build artifact `windows-installer` keeps its stable name (DL-22).
 # See claude/plugins/delivery/references/release-asset-names.md.
@@ -51,18 +51,19 @@ jobs:
         run: gh run download "$GITHUB_RUN_ID" --name windows-installer
         env:
           GH_TOKEN: ${{ github.token }}
-      # DL-96: the release asset is `<installer_name>_<version>.msi`; the version is the tag without `v`.
-      # PRODUCT: set INSTALLER_NAME (for example example-app-windows-amd64).
+      # DL-96: the release asset is `<Product>-<version>-win-<arch>.msi`; the version is the tag without `v`.
+      # PRODUCT: set PRODUCT (one word, PascalCase, for example ExampleApp) and ARCH (x64 or arm64).
       - name: Name the release assets
         env:
-          INSTALLER_NAME: example-app-windows-amd64
+          PRODUCT: ExampleApp
+          ARCH: x64
           REF_NAME: ${{ github.ref_name }}
         run: |
           mkdir -p release
           version="${REF_NAME#v}"
           versioned=$(python3 -c "import json,os;c=json.load(open('.delivery/config.json')) if os.path.exists('.delivery/config.json') else {};print(str(c.get('release_assets',{}).get('versioned_names',True)).lower())")
           for f in *.msi; do
-            if [ "$versioned" = "true" ]; then name="${INSTALLER_NAME}_${version}.msi"; else name="${INSTALLER_NAME}.msi"; fi
+            if [ "$versioned" = "true" ]; then name="${PRODUCT}-${version}-win-${ARCH}.msi"; else name="${PRODUCT}-win-${ARCH}.msi"; fi
             cp "$f" "release/$name"
           done
           (cd release && sha256sum * > SHA256SUMS)
