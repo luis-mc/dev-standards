@@ -76,10 +76,10 @@ class Release(unittest.TestCase):
         self.assertEqual(json.loads(out.read_text())["status"], "fail")
 
     def test_artifact_names(self):
-        ok = ["Demo-1.2.0-x64.msi", "Demo-1.2.0-x64.rpm"]
+        ok = ["Demo-1.2.0-win-x64.msi", "Demo-1.2.0-linux-x64.rpm"]
         self.assertEqual(R.check_names("Demo", TARGETS, ok), [])
-        self.assertTrue(R.check_names("Demo", TARGETS, ["Demo_1.2.0_x64.msi", "Demo-1.2.0-x64.rpm"]))
-        self.assertTrue(R.check_names("Demo", TARGETS, ok + ["Demo-1.2.0.deb"]))
+        self.assertTrue(R.check_names("Demo", TARGETS, ["Demo-1.2.0-x64.msi", "Demo-1.2.0-linux-x64.rpm"]))
+        self.assertTrue(R.check_names("Demo", TARGETS, ok + ["Demo-1.2.0-linux-x64.deb"]))
 
     def test_stores_separate(self):
         self.assertTrue(R.check_stores({}))

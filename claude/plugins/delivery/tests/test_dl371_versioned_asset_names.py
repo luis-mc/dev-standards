@@ -24,7 +24,7 @@ class Templates(unittest.TestCase):
             if "Name the release assets" not in t:
                 continue
             found += 1
-            self.assertIn("${INSTALLER_NAME}_${version}.msi", t, p)
+            self.assertIn("${PRODUCT}-${version}-win-${ARCH}.msi", t, p)
             self.assertIn("versioned_names", t, p)
             self.assertIn("SHA256SUMS", t, p)
         self.assertGreaterEqual(found, 1)
@@ -46,7 +46,7 @@ class Templates(unittest.TestCase):
 class Docs(unittest.TestCase):
     def test_reference_covers(self):
         t = REF.read_text().lower()
-        for k in ["fallback", "one release before", "release page", "stable names", "dl-22", "versioned_names"]:
+        for k in ["fallback", "one release before", "<product>-<version>-<os>-<arch>", "release page", "stable names", "dl-22", "versioned_names"]:
             self.assertIn(k, t)
 
     def test_schema_key(self):

@@ -84,7 +84,7 @@ stateDiagram-v2
 
 **R1.3** — The updater passes the conformance runner (LC-3 to LC-7, LC-25, LC-26, LC-28).
 
-**R1.4** — Each target in `targets` passes its lane: install, upgrade, broken update and rollback, downgrade refused, remove, purge, leftover scan and package lints (LC-8 to LC-21, LC-29, LC-32, LC-33). A system not in `targets` is not checked.
+**R1.4** — Each target in `targets` passes its lane: install, upgrade, broken update and rollback, downgrade refused, remove, purge, leftover scan and package lints (LC-8 to LC-21, LC-29, LC-32, LC-33). LC-32 requires the artifact name `<Product>-<version>-<os>-<arch>.<ext>` per target. A system not in `targets` is not checked.
 
 **R1.5** — The UI parts use the shared templates and tokens only and render without overlap or clipping (LC-22 to LC-24, LC-30).
 
