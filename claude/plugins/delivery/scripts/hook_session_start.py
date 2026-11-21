@@ -57,6 +57,24 @@ def merged_catchup(root, ledger):
     return out
 
 
+def _lifecycle_off_line(cfg, root):
+    """DS235d, LC-27: one line naming the lifecycle checks the project turned off; empty when none."""
+    try:
+        import importlib.util
+        here = os.path.dirname(os.path.abspath(__file__))
+        for base in (os.path.join(str(root), 'scripts', 'delivery'),
+                     os.path.join(here, '..', 'templates', 'shared', 'scripts', 'delivery')):
+            path = os.path.join(base, 'lifecycle_optout.py')
+            if os.path.exists(path):
+                spec = importlib.util.spec_from_file_location('lifecycle_optout', path)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                return mod.hook_line(mod.load(os.path.join(str(root), '.delivery', 'config.json')))
+    except Exception:  # noqa: BLE001
+        pass
+    return ''
+
+
 def summary(root, cfg, ledger, at):
     lines = []
     by_state = {}
@@ -88,6 +106,9 @@ def summary(root, cfg, ledger, at):
     fp = [p for p in ledger['publishes'] if p.get('artifact') == 'full-progress']
     age = H.minutes_since(fp[0].get('last_at'), at) if fp else None
     lines.append('Full Progress: ' + ('never published' if age is None else 'published %d min ago' % age))
+    off = _lifecycle_off_line(cfg, root)
+    if off:
+        lines.append(off)
     return lines
 
 

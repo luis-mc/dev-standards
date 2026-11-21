@@ -482,7 +482,7 @@ def log_every_block_appends_time_hook_rule_message():
     lines = read_log(p)
     assert len(lines) == 3, lines
     t, hook, rule, msg = lines[0].split('\t')
-    assert t == '2026-10-14T20:00:00Z' and hook == 'stop' and rule == 'DL-03' and 'is green and not merged' in msg, lines
+    assert t == '2026-10-14T20:00:00Z' and hook == 'stop' and rule == 'DL-03' and 'green and not merged' in msg, lines
     assert lines[2].split('\t')[1:3] == ['pre-tool', 'DL-05'], lines
     p.close()
 

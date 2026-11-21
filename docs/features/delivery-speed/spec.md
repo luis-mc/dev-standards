@@ -4,12 +4,13 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.12.0
+version: 0.13.0
 owner: agents
 type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/delivery/templates/shared/.githooks/pre-push
+  - claude/plugins/delivery/templates/lifecycle/**
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - claude/plugins/delivery/references/release-asset-names.md
   - tools/test_delivery_*.py
@@ -117,6 +118,18 @@ flowchart LR
 
 **R5.24** — `delivery_watch.py` cancels an older run of a train branch only when all hold (D105, task DL381): a run of the same workflow exists for the newer head, the newer head commit's author and committer are not bots (login ending in `[bot]`, or `github-actions`; a push by the workflow token starts no run to replace the cancelled one), and the older run has no failed job yet, unless `ci_watch.cancel_on_red` is true. A failed `gh` lookup cancels nothing. Each skip adds a `ci.cancel_skipped` ledger event with the run id and the reason `no_newer_run`, `bot_head`, `red_run` or `unknown`; a real cancel keeps `ci.cancel_superseded`. `runner_plan.cancel_replaced_runs` still switches the whole step.
 
+**R5.25** — Stale trains in `.delivery/ledger.json` are closed, not nagged about (task DL382). No train is recorded without a branch head: an empty name, `None` or a detached `HEAD` is refused. The Stop hook never tells a PR-less train to merge; one DL-03 line names the PR-less trains and the command `delivery_ledger.py close <id> --reason ...`. When the hook or `delivery_ledger.py show` runs, an open train with no `merged_at` whose PR is merged, or whose branch is gone from the remote with no open PR (and is older than a day), becomes state `closed` with reason `merged-elsewhere` or `branch-gone`. It costs one `gh` call per train, at most five trains per run, and a live result is cached for six hours. If `gh` or `git` fails, nothing changes. `delivery_ledger.py close <id> --reason TEXT` closes one train; `close-stale --before YYYY-MM-DD --reason TEXT [--dry-run]` closes every open train last updated before the date and prints each. The Stop output has at most one line per rule, with a count and the PR numbers, for example `DL-18 not smoke-tested (3): PRs 166, 172, 176`.
+
+**R5.26** — The updater test interface is a contract any stack offers in test builds (DL-LC1, task DS235c): `claude/plugins/delivery/templates/lifecycle/CONTRACT.md`. It names the verbs, the state object, the fake update server and the allowed state moves. It names no language.
+
+**R5.27** — `lifecycle_conformance.py` is a black-box runner (DL-LC2, task DS235c). It starts a fake Ed25519-signed update server and drives the updater through the contract. It checks LC-3, 4, 5, 6, 7, 25, 26 and 28, prints PASS or FAIL with the reason for each, and has `--json`. The Rust and Go cores in `templates/lifecycle/` pass it in their own tests (DL-LC3).
+
+**R5.28** — The lifecycle step scripts in `claude/plugins/delivery/templates/lifecycle/os/` (windows msi, linux deb and rpm, macos pkg) and the leftover scanners check install, reinstall, upgrade, rollback, downgrade, remove, purge, tray, boot and pairing against `lifecycle.json` (DELIVERYSPEC DL-109, DL-110; LC-8 to LC-21, LC-29, LC-33). The lanes job template names no runner.
+
+**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names and separate stores for public packages and private data (DL-112; LC-32).
+
+**R5.30** — `lifecycle_optout.py` fails a lifecycle opt-out with no decision ID, no reason or a past review date, prints what each opt-out loses, and the session hook lists the opt-outs in one line (DL-113; LC-27).
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -152,6 +165,10 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.22 | `claude/plugins/delivery/tests/test_dl378_ci_watch_red_finishes.py` |
 | R5.23 | `claude/plugins/delivery/tests/test_dl379_templates_guardrails.py` |
 | R5.24 | `claude/plugins/delivery/tests/test_dl381_cancel_superseded.py` |
+| R5.25 | `claude/plugins/delivery/tests/test_dl382_ledger_stale.py` |
+| R5.26, R5.27 | `claude/plugins/delivery/tests/test_ds235c_conformance.py` |
+| R5.28 | `claude/plugins/delivery/tests/test_ds235d_os_steps.py` |
+| R5.29, R5.30 | `claude/plugins/delivery/tests/test_ds235d_release_optout.py` |
 
 ## 10. Decisions
 
@@ -188,6 +205,7 @@ Nothing from the plan is open. Late branches ride the next train by design.
 
 Source: claude/plugins/delivery/templates/shared/scripts/delivery/
 Source: claude/plugins/delivery/templates/shared/.githooks/pre-push
+Source: claude/plugins/delivery/templates/lifecycle/
 
 ## Versions
 
@@ -195,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.13.0 | 2026-11-21 | RELEASE-160 | Stale trains close instead of nagging: no train without a branch head, no merge advice for a PR-less train, auto-close of merged-elsewhere and branch-gone trains, close and close-stale commands, one grouped Stop line per rule.<br>R5.25, R5.26: the updater test interface contract and the lifecycle conformance runner, with Rust and Go cores that pass it (DL-LC1 to DL-LC3).<br>Lifecycle OS step scripts, release check and opt-out report (R5.25 to R5.27). | DL382, DS235c, DS235d |
 | 0.12.0 | 2026-11-20 | RELEASE-158 | R5.24: delivery_watch cancels an older run only when the newer head has its own run, is not a bot push and the older run has no failed job; each skip is a ci.cancel_skipped ledger event. | DL381 |
 | 0.11.0 | 2026-11-20 | RELEASE-156 | R5.22: ci_watch never cancels a red run by default (D105, DL-97); it waits for every job, then lists every failed job. cancel_on_red cancels only a blocking failure (setup, install, lockfile, build, checkout).<br>R5.23: template jobs time out in 30 minutes or less; artifact prune runs daily, not after every workflow; no mutation pass on pull requests. | DL378, DL379 |
 | 0.10.0 | 2026-11-20 | RELEASE-155 | R5.18, R5.19: a red release CI run is never cancelled while jobs run (DL-97); no fail-fast on release PR CI (DL-98).<br>R5.20: after a red run a test job reruns the failed tests plus the tests of changed code (rerun_tests.py); ci.jobs.<job-id>.rerun whole opts out.<br>R5.21: test_guardrails.py scans for the seven test guardrails (DL-99); fast_guards.py runs it in warn mode by default, block mode fails on a break. | DL374, DL375, DL376 |
