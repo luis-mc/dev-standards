@@ -6,7 +6,8 @@
 Called by the pre-push hook once per pushed branch. It lists the e2e spec files (gate.json
 "e2e_spec_paths") the push adds or changes: the diff from --base-ref (the remote's old head)
 to --commit, or, for a new branch (--base-ref auto), from the merge base with the branch it
-was cut from. With none, it allows the push. Otherwise .delivery/gate-result.json must be for
+was cut from. Files that came from a merge of the default branch (equal to it at the merge base of the
+new head and origin/<default>, the base branch_gate.py --e2e-only uses) are not counted. With none, it allows the push. Otherwise .delivery/gate-result.json must be for
 exactly --commit and its e2e record must show every changed spec ran and passed (or the whole
 suite ran and passed). If not, it names the specs and the command to run, and exits 1: an e2e
 fix is never pushed unrun.
@@ -38,6 +39,7 @@ def main(argv: list[str] | None = None) -> int:
     if not base or base == "auto":
         base = dc.fork_point_base(root, head, cfg["default_branch"], args.branch)
     names = dc.run_git(["diff", "--name-only", "--diff-filter=d", base + "..." + head], cwd=root, check=False).stdout.split()
+    names = dc.own_changed_files(root, cfg["default_branch"], head, names)  # not what a merge of main brought
     specs = dc.changed_e2e_specs(names, cfg)
     if not specs:
         return dc.EXIT_OK
