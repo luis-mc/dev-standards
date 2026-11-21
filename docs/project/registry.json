@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-21T17:25+00:00",
+  "updated": "2026-11-21T20:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7063,6 +7063,59 @@
       "expected": "21 Nov",
       "changed": "2026-11-21T17:25+00:00",
       "rides": "DS236"
+    },
+    {
+      "id": "DL385",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "One installer name: <Product>-<version>-<os>-<arch>.<ext>",
+      "detail": "Owner 21 Nov: LC-32 and DL-96 disagreed; one rule, os win|linux|macos",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T20:12+00:00",
+      "rides": "DL386",
+      "started": "2026-11-21T18:06+00:00"
+    },
+    {
+      "id": "DL386",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-161: installer name rule",
+      "detail": "CI, merge on green",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T20:12+00:00",
+      "release": 161,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-21T20:10+00:00",
+          "end": "2026-11-21T20:14+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-21T20:14+00:00",
+          "end": "2026-11-21T20:26+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-21T20:26+00:00",
+          "end": "2026-11-21T20:30+00:00"
+        }
+      ],
+      "started": "2026-11-21T20:06+00:00"
+    },
+    {
+      "id": "DL387",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "e2e push check counts specs merged in from main (DL-88 deadlock)",
+      "detail": "crsp 20:06: base must exclude files equal to the default branch / use merge-base",
+      "expected": "21 Nov ~20:40",
+      "changed": "2026-11-21T20:04+00:00",
+      "no_release": "rides next release",
+      "started": "2026-11-21T20:04+00:00"
     },
     {
       "id": "DS1",
