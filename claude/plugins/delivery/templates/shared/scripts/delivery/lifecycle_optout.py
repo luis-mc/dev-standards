@@ -48,6 +48,11 @@ def entries(cfg):
     return off if isinstance(off, dict) else {}
 
 
+def _num(check):
+    digits = "".join(c for c in str(check) if c.isdigit())
+    return (int(digits) if digits else 0, str(check))
+
+
 def parse_day(s):
     try:
         return datetime.date.fromisoformat(str(s))
@@ -58,7 +63,7 @@ def parse_day(s):
 def problems(cfg, today=None):
     today = today or datetime.date.today()
     out = []
-    for check, e in sorted(entries(cfg).items()):
+    for check, e in sorted(entries(cfg).items(), key=lambda kv: _num(kv[0])):
         e = e if isinstance(e, dict) else {}
         if not e.get("decision"):
             out.append("%s: opt-out has no decision ID" % check)
@@ -74,12 +79,12 @@ def problems(cfg, today=None):
 
 def impact_lines(cfg):
     return ["%s off loses: %s" % (c, IMPACT.get(c, "the check named by this ID (no text recorded)"))
-            for c in sorted(entries(cfg))]
+            for c in sorted(entries(cfg), key=_num)]
 
 
 def hook_line(cfg):
     """One line for the session hook; empty when nothing is opted out."""
-    off = sorted(entries(cfg))
+    off = sorted(entries(cfg), key=_num)
     return "Lifecycle checks off: " + ", ".join(off) if off else ""
 
 
