@@ -103,6 +103,10 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 ## 6. Non-functional requirements
 
+**R5.21** — `schemas/lifecycle.schema.json` and the starter `templates/design-system/lifecycle/` (`lifecycle.json`, `words.json`) hold the install, update and remove contract of a project with a local app (DOCSPEC R15.13, R15.14). `lifecycle_check.py validate` runs LC-1; `lifecycle_check.py setup --local-app yes` writes the starter into `next-version/` once and never overwrites; with `no` it writes nothing. The `design-system-setup` skill asks whether the project has a local app and runs it.
+
+**R5.22** — The words-lint guard templates (`words-lint-typescript-vitest`, `words-lint-rust`, `words-lint-go`, `words-lint-python`) check LC-2 and LC-31 against the project's words table (DOCSPEC R15.15).
+
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
 
 **R6.2** — The checks read Markdown, JSON, git and named paths only. They run a project command only for `generated_reference` (DOCSPEC R8.4).
@@ -149,6 +153,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.16, R5.17, R5.18 | `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.19 | `claude/plugins/docs/tests/test_dl331_picker_strict.py` |
 | R5.20 | `claude/plugins/docs/tests/test_du13_install_update.py`, `claude/plugins/docs/tests/test_design_system.py` |
+| R5.21, R5.22 | `claude/plugins/docs/tests/test_ds235a_lifecycle_contract.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.

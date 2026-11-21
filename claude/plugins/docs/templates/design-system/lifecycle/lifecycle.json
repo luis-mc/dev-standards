@@ -1,0 +1,283 @@
+{
+  "schema": "1",
+  "product": {
+    "name": "Product name",
+    "id": "product-id"
+  },
+  "targets": [
+    {
+      "os": "windows",
+      "distro": null,
+      "arch": "x64",
+      "package": "msi"
+    },
+    {
+      "os": "linux",
+      "distro": "ubuntu-lts",
+      "arch": "x64",
+      "package": "deb"
+    }
+  ],
+  "paths": {
+    "windows": {
+      "program": "%ProgramFiles%\\<product>",
+      "data": "%ProgramData%\\<product>",
+      "config": "%ProgramData%\\<product>\\config",
+      "logs": "%ProgramData%\\<product>\\logs",
+      "service": "<product>"
+    },
+    "linux": {
+      "program": "/opt/<product>",
+      "data": "/var/lib/<product>",
+      "config": "/etc/<product>",
+      "logs": "/var/log/<product>",
+      "service": "<product>.service"
+    }
+  },
+  "flows": {
+    "install": {
+      "states": [
+        "install",
+        "started",
+        "setup",
+        "ready",
+        "install_failed"
+      ],
+      "transitions": [
+        {
+          "from": "install",
+          "to": "started"
+        },
+        {
+          "from": "started",
+          "to": "setup"
+        },
+        {
+          "from": "setup",
+          "to": "ready"
+        },
+        {
+          "from": "started",
+          "to": "install_failed"
+        },
+        {
+          "from": "setup",
+          "to": "install_failed"
+        }
+      ]
+    },
+    "update": {
+      "states": [
+        "unpaired",
+        "up_to_date",
+        "available",
+        "review",
+        "waiting",
+        "downloading",
+        "verifying",
+        "refused",
+        "installing",
+        "testing",
+        "updated",
+        "rolling_back",
+        "rolled_back",
+        "skipped"
+      ],
+      "transitions": [
+        {
+          "from": "unpaired",
+          "to": "up_to_date"
+        },
+        {
+          "from": "up_to_date",
+          "to": "available"
+        },
+        {
+          "from": "available",
+          "to": "review"
+        },
+        {
+          "from": "available",
+          "to": "waiting"
+        },
+        {
+          "from": "review",
+          "to": "waiting"
+        },
+        {
+          "from": "review",
+          "to": "skipped"
+        },
+        {
+          "from": "waiting",
+          "to": "downloading"
+        },
+        {
+          "from": "downloading",
+          "to": "verifying"
+        },
+        {
+          "from": "verifying",
+          "to": "refused"
+        },
+        {
+          "from": "verifying",
+          "to": "installing"
+        },
+        {
+          "from": "installing",
+          "to": "testing"
+        },
+        {
+          "from": "testing",
+          "to": "updated"
+        },
+        {
+          "from": "testing",
+          "to": "rolling_back"
+        },
+        {
+          "from": "rolling_back",
+          "to": "rolled_back"
+        },
+        {
+          "from": "rolled_back",
+          "to": "waiting"
+        },
+        {
+          "from": "rolled_back",
+          "to": "skipped"
+        },
+        {
+          "from": "updated",
+          "to": "up_to_date"
+        },
+        {
+          "from": "refused",
+          "to": "up_to_date"
+        },
+        {
+          "from": "skipped",
+          "to": "up_to_date"
+        }
+      ]
+    },
+    "remove": {
+      "states": [
+        "remove",
+        "ask",
+        "keep",
+        "purge",
+        "clean"
+      ],
+      "transitions": [
+        {
+          "from": "remove",
+          "to": "ask"
+        },
+        {
+          "from": "ask",
+          "to": "keep"
+        },
+        {
+          "from": "ask",
+          "to": "purge"
+        },
+        {
+          "from": "keep",
+          "to": "clean"
+        },
+        {
+          "from": "purge",
+          "to": "clean"
+        }
+      ]
+    }
+  },
+  "defaults": {
+    "policy": "automatic_when_idle",
+    "idle_window": null,
+    "check_hours": 6,
+    "check_jitter_pct": 20,
+    "first_check_minutes": [
+      1,
+      10
+    ],
+    "check_backoff_minutes": [
+      1,
+      5,
+      30,
+      120
+    ],
+    "self_test_limit_s": 180,
+    "self_test_poll_s": 2,
+    "wait_for_work_minutes": 60,
+    "retry_hours": [
+      1,
+      4
+    ],
+    "channel": "stable",
+    "console_host": "127.0.0.1",
+    "telemetry": "off"
+  },
+  "words": {
+    "banned": [
+      "OK",
+      "Yes",
+      "No",
+      "Install now",
+      "Later",
+      "daemon",
+      "binary",
+      "payload"
+    ],
+    "states": {
+      "menu": {
+        "check": "Look for updates"
+      },
+      "available": {
+        "title": "Version {version} is ready.",
+        "primary": "Update to version {version}",
+        "secondary": "Not now"
+      },
+      "downloading": {
+        "step": "Downloading"
+      },
+      "verifying": {
+        "step": "Checking the download"
+      },
+      "installing": {
+        "step": "Installing"
+      },
+      "testing": {
+        "step": "Testing"
+      },
+      "updated": {
+        "title": "Updated to version {version}.",
+        "action": "What's new"
+      },
+      "rolled_back": {
+        "title": "The update to {version} failed its test. Version {previous} is running again. We try again at {time}."
+      },
+      "refused": {
+        "title": "The download for {version} did not pass its signature check. Nothing changed."
+      },
+      "remove": {
+        "title": "Remove {product}",
+        "keep": "Keep my data",
+        "purge": "Delete my data too ({size} GB in {path})",
+        "cancel": "Cancel",
+        "confirm": "Remove {product}",
+        "confirm_disabled_until": "keep or purge chosen"
+      }
+    }
+  },
+  "keep_on_remove": [
+    "data"
+  ],
+  "test_interface": {
+    "self_test": "<program> --self-test",
+    "state": "<program> --lifecycle-state",
+    "simulate": "<program> --lifecycle-simulate"
+  }
+}
