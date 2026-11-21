@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-21T20:12+00:00",
+  "updated": "2026-11-21T21:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7109,13 +7109,42 @@
       "id": "DL387",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "e2e push check counts specs merged in from main (DL-88 deadlock)",
       "detail": "crsp 20:06: base must exclude files equal to the default branch / use merge-base",
-      "expected": "21 Nov ~20:40",
-      "changed": "2026-11-21T20:04+00:00",
-      "no_release": "rides next release",
-      "started": "2026-11-21T20:04+00:00"
+      "expected": "21 Nov",
+      "changed": "2026-11-21T21:21+00:00",
+      "started": "2026-11-21T20:04+00:00",
+      "rides": "DL388"
+    },
+    {
+      "id": "DL388",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-162: e2e push check fix (DL387)",
+      "detail": "Owner 21 Nov: ships alone when READY",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T21:21+00:00",
+      "release": 162,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-21T21:15+00:00",
+          "end": "2026-11-21T21:18+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-21T21:18+00:00",
+          "end": "2026-11-21T21:30+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-21T21:30+00:00",
+          "end": "2026-11-21T21:35+00:00"
+        }
+      ],
+      "started": "2026-11-21T21:16+00:00"
     },
     {
       "id": "DS1",
