@@ -907,6 +907,18 @@ def changed_e2e_specs(files: list[str], cfg: dict, root: Path | None = None) -> 
     return [f for f in out if (root / f).is_file()] if root is not None else out
 
 
+def own_changed_files(root: Path, default_branch: str, head: str, pushed: list[str]) -> list[str]:
+    """Of `pushed` (files a push changes), those this branch itself changes: the ones that differ
+    from the merge base of `head` and origin/<default_branch>, the base branch_gate.py uses. A file
+    that arrived with a merge of the default branch is equal to it there, so it is not listed
+    (DL-88). Without that ref, `pushed` is returned unchanged."""
+    mb = run_git(["merge-base", head, "origin/" + default_branch], cwd=root, check=False)
+    if mb.returncode != 0 or not mb.stdout.strip():
+        return pushed
+    own = set(run_git(["diff", "--name-only", "--diff-filter=d", mb.stdout.strip(), head], cwd=root, check=False).stdout.split())
+    return [f for f in pushed if f in own]
+
+
 def ui_files(ctx: Context) -> list[str]:
     """What makes the ui-changed step run: changed files under ui_paths, ui packages a lockfile
     change touches, and changed e2e spec files (DL-86)."""
