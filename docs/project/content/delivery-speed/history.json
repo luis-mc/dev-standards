@@ -1,5 +1,9 @@
 [
   {
+    "date": "21 Nov 15:33",
+    "change": "dropped: folded into RELEASE-160"
+  },
+  {
     "date": "15 Nov 02:20",
     "change": "DL362 item changed from \"Pool start-up task\" to \"Pool KVM loader service and no-KVM fallback\""
   },

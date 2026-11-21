@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-21T15:25+00:00",
+  "updated": "2026-11-21T17:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7033,25 +7033,36 @@
       "id": "DL382",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Ledger: no PR-less trains, auto-close, grouped Stop findings",
       "detail": "Peer report 21 Nov: trains with pr=null give 'gh pr merge None'; repeated DL-18/DL-14 lines; asks a-e",
-      "expected": "21 Nov ~16:25",
-      "changed": "2026-11-21T15:25+00:00",
-      "expected_basis": "cloud agent starts 15:38, setup 5 + work 30 + checks 10",
-      "rides": "DL383",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236",
       "started": "2026-11-21T15:25+00:00"
     },
     {
       "id": "DL383",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "RELEASE-159: DL382 ledger fix",
       "detail": "join, CI, merge on green",
-      "expected": "",
-      "changed": "2026-11-21T15:25+00:00",
-      "release": 159
+      "expected": "21 Nov",
+      "changed": "2026-11-21T15:33+00:00",
+      "release": 159,
+      "dropped_into": "DS236"
+    },
+    {
+      "id": "DL384",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Hook tests read the real machine load (flaky on busy CI)",
+      "detail": "test_questions failed on RELEASE-160 CI: DL-78 load message from real CPU 60.7%; tests must mock load",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236"
     },
     {
       "id": "DS1",
@@ -10861,21 +10872,105 @@
       "id": "DS234",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Dropped",
       "item": "Design-system enforcement A-E",
       "detail": "Rendered-layout guard, raw spacing check, section component, none-yet limit, cited rule names its test; owner yes 21 Nov",
-      "expected": "",
-      "changed": "2026-11-21T13:34+00:00"
+      "expected": "21 Nov",
+      "changed": "2026-11-21T16:10+00:00",
+      "dropped_into": "DS235"
     },
     {
       "id": "DS235",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "Lifecycle kit: install/update/remove standard",
       "detail": "Contract lifecycle.json, shared parts, checks LC-1..33, opt-out; owner decisions D-a..D-h 21 Nov; folds DS234",
-      "expected": "",
-      "changed": "2026-11-21T14:36+00:00"
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236",
+      "started": "2026-11-21T15:29+00:00"
+    },
+    {
+      "id": "DS236",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-160: DS235 lifecycle kit",
+      "detail": "join DS235a-d, CI, merge on green",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "release": 160,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-21T16:45+00:00",
+          "end": "2026-11-21T16:51+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-21T17:19+00:00",
+          "end": "2026-11-21T17:31+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-21T17:31+00:00",
+          "end": "2026-11-21T17:35+00:00"
+        }
+      ],
+      "started": "2026-11-21T16:46+00:00",
+      "risk": {
+        "label": "flaky-test",
+        "minutes": 10
+      }
+    },
+    {
+      "id": "DS237",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DS235a: contract, words, words lint",
+      "detail": "cloud agent, part of DS235",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236",
+      "started": "2026-11-21T15:50+00:00"
+    },
+    {
+      "id": "DS238",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DS235b: UI parts + DS234 guards",
+      "detail": "cloud agent, part of DS235",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236",
+      "started": "2026-11-21T15:50+00:00"
+    },
+    {
+      "id": "DS239",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DS235c: updater conformance kit",
+      "detail": "cloud agent, part of DS235",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236",
+      "started": "2026-11-21T15:50+00:00"
+    },
+    {
+      "id": "DS240",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "DS235d: OS test steps, release check, opt-out",
+      "detail": "cloud agent, part of DS235",
+      "expected": "21 Nov",
+      "changed": "2026-11-21T17:25+00:00",
+      "rides": "DS236",
+      "started": "2026-11-21T15:50+00:00"
     },
     {
       "id": "DU1",
