@@ -10,6 +10,7 @@ type: explanation
 code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/delivery/templates/shared/.githooks/pre-push
+  - claude/plugins/delivery/templates/lifecycle/**
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - claude/plugins/delivery/references/release-asset-names.md
   - tools/test_delivery_*.py
@@ -117,6 +118,10 @@ flowchart LR
 
 **R5.24** — `delivery_watch.py` cancels an older run of a train branch only when all hold (D105, task DL381): a run of the same workflow exists for the newer head, the newer head commit's author and committer are not bots (login ending in `[bot]`, or `github-actions`; a push by the workflow token starts no run to replace the cancelled one), and the older run has no failed job yet, unless `ci_watch.cancel_on_red` is true. A failed `gh` lookup cancels nothing. Each skip adds a `ci.cancel_skipped` ledger event with the run id and the reason `no_newer_run`, `bot_head`, `red_run` or `unknown`; a real cancel keeps `ci.cancel_superseded`. `runner_plan.cancel_replaced_runs` still switches the whole step.
 
+**R5.25** — The updater test interface is a contract any stack offers in test builds (DL-LC1, task DS235c): `claude/plugins/delivery/templates/lifecycle/CONTRACT.md`. It names the verbs, the state object, the fake update server and the allowed state moves. It names no language.
+
+**R5.26** — `lifecycle_conformance.py` is a black-box runner (DL-LC2, task DS235c). It starts a fake Ed25519-signed update server and drives the updater through the contract. It checks LC-3, 4, 5, 6, 7, 25, 26 and 28, prints PASS or FAIL with the reason for each, and has `--json`. The Rust and Go cores in `templates/lifecycle/` pass it in their own tests (DL-LC3).
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -188,6 +193,7 @@ Nothing from the plan is open. Late branches ride the next train by design.
 
 Source: claude/plugins/delivery/templates/shared/scripts/delivery/
 Source: claude/plugins/delivery/templates/shared/.githooks/pre-push
+Source: claude/plugins/delivery/templates/lifecycle/
 
 ## Versions
 
