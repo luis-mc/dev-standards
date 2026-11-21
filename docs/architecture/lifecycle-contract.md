@@ -26,6 +26,8 @@ A project with a local app keeps `docs/design-system/vN/lifecycle.json`. Top-lev
 
 `targets`: a list of `{ "os": "windows"|"linux"|"macos", "distro": "ubuntu-lts"|"fedora"|"debian"|null, "arch": "x64"|"arm64", "package": "msi"|"deb"|"rpm"|"pkg"|"tar" }`. Only targets the project releases for. The release check requires a passing lane per target.
 
+Release artifact name: `<Product>-<version>-<os>-<arch>.<ext>`. `Product` is one PascalCase word, `version` is SemVer without `v`, `os` is `win`, `linux` or `macos`, `arch` is `x64` or `arm64`, `ext` is `msi`, `deb`, `rpm`, `pkg`, `tar.gz` or `zip`. Example: `ExampleApp-2.5.0-win-x64.msi`. An updater looks for this name first and the older `<installer_name>_<version>.<ext>` second during one transition release.
+
 ## States
 
 Install flow: `install`, `started`, `setup`, `ready`, `install_failed`.

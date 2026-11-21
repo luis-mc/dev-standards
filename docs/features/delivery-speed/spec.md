@@ -102,7 +102,7 @@ flowchart LR
 
 **R5.16** — A gate step in `gate.json` may carry `paths: KEY`. When `scope_map` maps path prefixes to keys, `plan_step` in `delivery_common.py` skips that step if files changed, every changed file lies under some `scope_map` key, and none lies under KEY. An unmapped file, an unknown key or a missing `scope_map` changes nothing. The rust `gate.json` ships the key `rust` only, so a Rust-only change skips JS steps only in a project that adds a `js` key and marks its JS steps `paths: "js"`. (DS201)
 
-**R5.17** — Release assets carry the version in the file name, `<installer_name>_<version>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
+**R5.17** — Release assets are named `<Product>-<version>-<os>-<arch>.<ext>`, and SHA256SUMS lists those names (DL-96, task DL371). `release_assets.versioned_names: false` in `.delivery/config.json` keeps plain names. CI build artifacts keep stable names (DL-22). Guidance: `references/release-asset-names.md`.
 
 **R5.18** — A red release CI run finishes (DL-97, D105, task DL374). The pre-tool hook refuses `gh run cancel` (and the API cancel call) for a release or join branch run that has a failed job and jobs still queued or running. The command comment `# D105: blocks-all` allows it, for a failure that blocks every later job (setup, lockfile, build). If `gh run view` fails, the cancel is allowed with a warning. `cancel_joined_runs.py` skips such runs unless `--blocks-all`.
 
@@ -126,7 +126,7 @@ flowchart LR
 
 **R5.28** — The lifecycle step scripts in `claude/plugins/delivery/templates/lifecycle/os/` (windows msi, linux deb and rpm, macos pkg) and the leftover scanners check install, reinstall, upgrade, rollback, downgrade, remove, purge, tray, boot and pairing against `lifecycle.json` (DELIVERYSPEC DL-109, DL-110; LC-8 to LC-21, LC-29, LC-33). The lanes job template names no runner.
 
-**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names and separate stores for public packages and private data (DL-112; LC-32).
+**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names (`<Product>-<version>-<os>-<arch>.<ext>`) and separate stores for public packages and private data (DL-112; LC-32).
 
 **R5.30** — `lifecycle_optout.py` fails a lifecycle opt-out with no decision ID, no reason or a past review date, prints what each opt-out loses, and the session hook lists the opt-outs in one line (DL-113; LC-27).
 

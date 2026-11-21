@@ -6,7 +6,7 @@
 
 `check` reads the targets from lifecycle.json. On a release pull request (--release) it fails unless every
 target has a passing lane result. A target that is not listed is not required. With --artifacts it also checks
-the artifact names `<Product>-<version>-<arch>.<ext>` and, from the config, that public packages and private
+the artifact names `<Product>-<version>-<os>-<arch>.<ext>` and, from the config, that public packages and private
 user data live in separate stores (LC-32). Exit 0 pass, 1 fail, 2 bad input.
 """
 import argparse
@@ -15,7 +15,8 @@ import re
 import sys
 from pathlib import Path
 
-EXT = {"msi": "msi", "deb": "deb", "rpm": "rpm", "pkg": "pkg", "tar": "tar.gz"}
+EXT = {"msi": "msi", "deb": "deb", "rpm": "rpm", "pkg": "pkg", "tar": "tar.gz", "zip": "zip"}
+OS_WORD = {"windows": "win", "linux": "linux", "macos": "macos"}
 LINE = re.compile(r"^(LC-\d+)\s+(PASS|FAIL)\b", re.M)
 
 
@@ -59,22 +60,29 @@ def check_lanes(targets, results):
     return problems
 
 
-def artifact_re(product, arch, package):
-    return re.compile(r"^%s-\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.]+)?-%s\.%s$"
-                      % (re.escape(product), re.escape(arch), re.escape(EXT[package])))
+def os_word(target):
+    return OS_WORD[target["os"]]
+
+
+def artifact_re(product, os_name, arch, package):
+    """os_name is the word in the file name: win, linux or macos."""
+    return re.compile(r"^%s-\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.]+)?-%s-%s\.%s$"
+                      % (re.escape(product), re.escape(os_name), re.escape(arch), re.escape(EXT[package])))
 
 
 def check_names(product, targets, names):
-    """Every target has an artifact named <Product>-<version>-<arch>.<ext>; no artifact has another shape."""
+    """Every target has an artifact named <Product>-<version>-<os>-<arch>.<ext>; no artifact has another shape."""
     problems = []
+    if not re.fullmatch(r"[A-Za-z0-9]+", product or ""):
+        problems.append("product %r must be one word of letters and digits" % product)
     for t in targets:
-        rx = artifact_re(product, t["arch"], t["package"])
+        rx = artifact_re(product, os_word(t), t["arch"], t["package"])
         if not any(rx.match(n) for n in names):
-            problems.append("no artifact named %s-<version>-%s.%s" % (product, t["arch"], EXT[t["package"]]))
+            problems.append("no artifact named %s-<version>-%s-%s.%s" % (product, os_word(t), t["arch"], EXT[t["package"]]))
     exts = tuple("." + e for e in EXT.values())
     for n in names:
-        if n.endswith(exts) and not any(artifact_re(product, t["arch"], t["package"]).match(n) for t in targets):
-            problems.append("artifact %s does not match <Product>-<version>-<arch>.<ext>" % n)
+        if n.endswith(exts) and not any(artifact_re(product, os_word(t), t["arch"], t["package"]).match(n) for t in targets):
+            problems.append("artifact %s does not match <Product>-<version>-<os>-<arch>.<ext>" % n)
     return problems
 
 
