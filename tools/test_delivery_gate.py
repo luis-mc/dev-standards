@@ -1400,6 +1400,63 @@ def sc_e2e_agent(t: T, shared: Path) -> None:
     t.check("the pre-push hook refuses an unrun e2e fix", p.code != 0 and "e2e-push: blocked" in p.err, p.text)
 
 
+def sc_e2e_merge(t: T, shared: Path) -> None:
+    """DL-88: a merge of main into the branch does not make main's e2e specs this push's."""
+    box = Box(shared)
+
+    def hook(base: str) -> R:
+        return box.script("e2e_push_check.py", "--commit", box.g("rev-parse", "HEAD"), "--base-ref", base)
+
+    def main_adds(files: dict) -> None:
+        box.g("checkout", "-q", "main")
+        box.commit(files, "main moves")
+        box.g("push", "-q", "origin", "main")
+
+    # 1. an own spec change is required, and passes once run
+    box.branch("feat/own", {"e2e/own.spec.ts": "t\n"})
+    old = box.g("rev-parse", "origin/main")
+    t.eq("1: an own spec change is held", hook(old).code, 1)
+    box.gate("--e2e-only", "--no-publish")
+    t.eq("1: ... and allowed once run", hook(old).code, 0)
+
+    # 2. a merge that brought 3 specs, no own UI change: nothing required
+    box.branch("feat/m", {"docs/a.txt": "a\n"})
+    box.push("feat/m")
+    old = box.g("rev-parse", "HEAD")
+    main_adds({"e2e/m1.spec.ts": "1\n", "e2e/m2.spec.ts": "2\n", "e2e/m3.spec.ts": "3\n"})
+    box.g("checkout", "-q", "feat/m")
+    box.g("merge", "-q", "--no-ff", "-m", "merge main", "main")
+    box.g("fetch", "-q", "origin")
+    t.eq("2: specs that came with main are not required", hook(old).code, 0)
+    box.clear_log()
+    t.eq("2: --e2e-only agrees: nothing to run", (box.gate("--e2e-only", "--no-publish").code, box.ran()), (0, []))
+
+    # 3. the merge plus one own spec edit: only that spec is required
+    box.commit({"e2e/own2.spec.ts": "x\n"}, "own spec")
+    r = hook(old)
+    t.eq("3: the own spec is held", r.code, 1)
+    t.check("3: ... alone", "own2.spec.ts" in r.err and "m1.spec.ts" not in r.err, r.err)
+    box.gate("--e2e-only", "--no-publish")
+    t.eq("3: ... and allowed once run", hook(old).code, 0)
+
+    # 4. a new branch (auto base) behaves as before
+    box.branch("feat/new", {"e2e/new.spec.ts": "n\n"})
+    t.eq("4: auto base holds an own spec", box.script("e2e_push_check.py", "--commit", box.g("rev-parse", "HEAD"),
+                                                       "--base-ref", "auto", "--branch", "feat/new").code, 1)
+
+    # 5. a spec both edited, differently, still counts
+    box.branch("feat/both", {"e2e/both.spec.ts": "base\n"})
+    box.g("push", "-q", "origin", "feat/both:main")
+    box.g("checkout", "-q", "-B", "feat/both2", "origin/main~1")
+    box.commit({"e2e/both.spec.ts": "mine\n"}, "my edit")
+    old = box.g("rev-parse", "HEAD~1")
+    box.g("merge", "-q", "-X", "ours", "-m", "merge main", "origin/main")
+    box.g("fetch", "-q", "origin")
+    r = hook(old)
+    t.eq("5: a spec edited on both sides still counts", r.code, 1)
+    t.has("5: ... named", r.err, "e2e/both.spec.ts")
+
+
 def advanced_box(shared: Path, gate_json: dict | None = None) -> tuple[Box, str]:
     """A box whose origin/main is behind the remote: another clone added a commit
     to main (apps/api) and pushed feat/x, cut from that commit. The box has the
@@ -3728,6 +3785,7 @@ SCENARIOS = {
     "verify": sc_verify,
     "fast_guards": sc_fast_guards,
     "required_steps": sc_required_steps,
+    "e2e_merge": sc_e2e_merge,
     "push_check": sc_push_check,
     "fast_report": sc_fast_report,
     "parallel": sc_parallel,
