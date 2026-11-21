@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.13.0
+version: 0.14.0
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.0 | 2026-11-21 | RELEASE-161 | Release assets are named <Product>-<version>-<os>-<arch>.<ext>; the release check requires it per target (DL-96, LC-32). Updaters look for the new name first and the older name second for one transition release. | DL385 |
 | 0.13.0 | 2026-11-21 | RELEASE-160 | Stale trains close instead of nagging: no train without a branch head, no merge advice for a PR-less train, auto-close of merged-elsewhere and branch-gone trains, close and close-stale commands, one grouped Stop line per rule.<br>R5.25, R5.26: the updater test interface contract and the lifecycle conformance runner, with Rust and Go cores that pass it (DL-LC1 to DL-LC3).<br>Lifecycle OS step scripts, release check and opt-out report (R5.25 to R5.27). | DL382, DS235c, DS235d |
 | 0.12.0 | 2026-11-20 | RELEASE-158 | R5.24: delivery_watch cancels an older run only when the newer head has its own run, is not a bot push and the older run has no failed job; each skip is a ci.cancel_skipped ledger event. | DL381 |
 | 0.11.0 | 2026-11-20 | RELEASE-156 | R5.22: ci_watch never cancels a red run by default (D105, DL-97); it waits for every job, then lists every failed job. cancel_on_red cancels only a blocking failure (setup, install, lockfile, build, checkout).<br>R5.23: template jobs time out in 30 minutes or less; artifact prune runs daily, not after every workflow; no mutation pass on pull requests. | DL378, DL379 |
