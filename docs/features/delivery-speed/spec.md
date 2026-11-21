@@ -117,6 +117,12 @@ flowchart LR
 
 **R5.24** — `delivery_watch.py` cancels an older run of a train branch only when all hold (D105, task DL381): a run of the same workflow exists for the newer head, the newer head commit's author and committer are not bots (login ending in `[bot]`, or `github-actions`; a push by the workflow token starts no run to replace the cancelled one), and the older run has no failed job yet, unless `ci_watch.cancel_on_red` is true. A failed `gh` lookup cancels nothing. Each skip adds a `ci.cancel_skipped` ledger event with the run id and the reason `no_newer_run`, `bot_head`, `red_run` or `unknown`; a real cancel keeps `ci.cancel_superseded`. `runner_plan.cancel_replaced_runs` still switches the whole step.
 
+**R5.25** — The lifecycle step scripts in `claude/plugins/delivery/templates/lifecycle/os/` (windows msi, linux deb and rpm, macos pkg) and the leftover scanners check install, reinstall, upgrade, rollback, downgrade, remove, purge, tray, boot and pairing against `lifecycle.json` (DELIVERYSPEC DL-109, DL-110; LC-8 to LC-21, LC-29, LC-33). The lanes job template names no runner.
+
+**R5.26** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names and separate stores for public packages and private data (DL-112; LC-32).
+
+**R5.27** — `lifecycle_optout.py` fails a lifecycle opt-out with no decision ID, no reason or a past review date, prints what each opt-out loses, and the session hook lists the opt-outs in one line (DL-113; LC-27).
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
@@ -152,6 +158,8 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 | R5.22 | `claude/plugins/delivery/tests/test_dl378_ci_watch_red_finishes.py` |
 | R5.23 | `claude/plugins/delivery/tests/test_dl379_templates_guardrails.py` |
 | R5.24 | `claude/plugins/delivery/tests/test_dl381_cancel_superseded.py` |
+| R5.25 | `claude/plugins/delivery/tests/test_ds235d_os_steps.py` |
+| R5.26, R5.27 | `claude/plugins/delivery/tests/test_ds235d_release_optout.py` |
 
 ## 10. Decisions
 
@@ -188,6 +196,7 @@ Nothing from the plan is open. Late branches ride the next train by design.
 
 Source: claude/plugins/delivery/templates/shared/scripts/delivery/
 Source: claude/plugins/delivery/templates/shared/.githooks/pre-push
+Source: claude/plugins/delivery/templates/lifecycle/os/
 
 ## Versions
 
