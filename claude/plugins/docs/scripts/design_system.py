@@ -707,7 +707,7 @@ def cmd_init(root: Path, apply: bool) -> int:
         if not src.is_file():
             continue
         rel = src.relative_to(TEMPLATES)
-        if rel.parts[0] in ("guards", "components"):
+        if rel.parts[0] in ("guards", "components", "lifecycle"):
             continue
         dest = ds_dir(root) / rel
         if dest.exists():

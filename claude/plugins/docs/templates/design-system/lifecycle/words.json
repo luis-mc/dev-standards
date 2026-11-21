@@ -1,0 +1,52 @@
+{
+  "banned": [
+    "OK",
+    "Yes",
+    "No",
+    "Install now",
+    "Later",
+    "daemon",
+    "binary",
+    "payload"
+  ],
+  "states": {
+    "menu": {
+      "check": "Look for updates"
+    },
+    "available": {
+      "title": "Version {version} is ready.",
+      "primary": "Update to version {version}",
+      "secondary": "Not now"
+    },
+    "downloading": {
+      "step": "Downloading"
+    },
+    "verifying": {
+      "step": "Checking the download"
+    },
+    "installing": {
+      "step": "Installing"
+    },
+    "testing": {
+      "step": "Testing"
+    },
+    "updated": {
+      "title": "Updated to version {version}.",
+      "action": "What's new"
+    },
+    "rolled_back": {
+      "title": "The update to {version} failed its test. Version {previous} is running again. We try again at {time}."
+    },
+    "refused": {
+      "title": "The download for {version} did not pass its signature check. Nothing changed."
+    },
+    "remove": {
+      "title": "Remove {product}",
+      "keep": "Keep my data",
+      "purge": "Delete my data too ({size} GB in {path})",
+      "cancel": "Cancel",
+      "confirm": "Remove {product}",
+      "confirm_disabled_until": "keep or purge chosen"
+    }
+  }
+}
