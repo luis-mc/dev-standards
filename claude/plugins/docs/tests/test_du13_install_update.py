@@ -30,7 +30,7 @@ class RuleTests(unittest.TestCase):
         self.assertEqual(len(ids), len(set(ids)))
         for n in (62, 63, 64, 65):
             self.assertIn(f"UX-{n}", ids)
-        self.assertEqual(max(int(i[3:]) for i in ids), 65)
+        self.assertEqual(max(int(i[3:]) for i in ids), 68)  # UX-66 to UX-68 added by DS235b
 
     def test_components_cite_the_rules(self):
         text = (NV / "components.md").read_text(encoding="utf-8")

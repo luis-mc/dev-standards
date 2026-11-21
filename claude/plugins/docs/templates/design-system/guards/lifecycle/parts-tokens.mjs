@@ -10,7 +10,7 @@ import { args, walk, read, rel, finish } from '../design-guards/_lib.mjs';
 
 const COLOUR = /#[0-9a-fA-F]{3,8}\b|\b(?:rgba?|hsla?)\(/;
 const LENGTH = /(?<![\w-])-?\d*\.?\d+(?:px|rem|em|pt|vh|vw)\b/;
-const FONT = /font-family\s*:\s*(?!var\()/;
+const FONT = /font-family\s*:\s*(?!var\()\S/;
 
 export function cssProblems(text) {
   const out = [];

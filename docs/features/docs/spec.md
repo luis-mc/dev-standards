@@ -101,6 +101,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.20** — The design-system starter holds the default for install and update windows (DU13, owner decision 18 Nov): rules UX-62 to UX-65, a component "Update window" (35) and a component "Installer artwork" (36), both citing the rules. The templates are in `templates/design-system/components/windows-installer/`: a Node script that reads the token file and writes the two WixUI bitmaps (493x58 and 493x312, token colours only), a WiX snippet that wires them, and a PowerShell update window with a `-LayoutCheck` switch that exits non-zero when a control is clipped or a button is off-window at 100%, 150% and 200% text scale. The update template has no message box and no fixed pixel height on content controls. The `design-system-setup` skill names this default where it lists what the starter holds. The gallery draws both components.
 
+**R5.21** — The design-system templates hold the lifecycle parts (React `UpdateBanner`, `UpdatesCard`, `UpdateHistory`, `RemoteUpdate`, `RemoveDialog`, `FleetRows`; Rust question window and tray menu models) and guards: the DS234 guards A to E (rendered layout at 360, 393, 1300 and 1800 px with focus glow counted, no raw px in margin, padding or gap, one component per layout role, dated `none yet`, a spec that cites a rule names its test) and the lifecycle guards LC-22, LC-23, LC-24 and LC-30 (DOCSPEC R15.22 to R15.24).
+
 ## 6. Non-functional requirements
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
@@ -149,6 +151,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.16, R5.17, R5.18 | `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.19 | `claude/plugins/docs/tests/test_dl331_picker_strict.py` |
 | R5.20 | `claude/plugins/docs/tests/test_du13_install_update.py`, `claude/plugins/docs/tests/test_design_system.py` |
+| R5.21 | `claude/plugins/docs/tests/test_ds235b_guards.py`, `claude/plugins/docs/tests/test_ds235b_parts.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.

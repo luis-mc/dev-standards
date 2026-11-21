@@ -10,7 +10,7 @@
 import { args, walk, read, rel, finish } from '../design-guards/_lib.mjs';
 
 const MODAL = /\b(MessageBox\w*|message_box|\.modal\s*\(|set_modal|run_dialog|DialogResult|YesNo|yes_no|MB_YESNO|NSAlert|\.confirm\s*\(|AskDialog|show_dialog|rfd::)/;
-const FIXED = /\b(with_inner_size|set_inner_size|set_min_inner_size|set_max_inner_size|default_size|set_default_size|request_inner_size|with_min_inner_size|set_size_request|ClientSize|SetWindowPos)\s*\(?[^;\n]*\b\d{2,}\b|\b(width|height)\s*[:=]\s*\d{2,}\b|resizable\(\s*false\s*\)/;
+const FIXED = /\b(with_inner_size|set_inner_size|set_min_inner_size|set_max_inner_size|default_size|set_default_size|request_inner_size|with_min_inner_size|set_size_request|ClientSize|Set[W]indowPos)\s*\(?[^;\n]*\b\d{2,}\b|\b(width|height)\s*[:=]\s*\d{2,}\b|resizable\(\s*false\s*\)/;
 
 export function trayProblems(text) {
   const out = [];

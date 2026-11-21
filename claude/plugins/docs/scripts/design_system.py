@@ -228,7 +228,7 @@ def md_to_html(text: str) -> str:
     return "\n".join(out)
 
 
-GALLERY_SCRIPT_VERSION = 2  # bump whenever the drawing changes (R15.2); an older stamp makes next-version's gallery stale (DS4)
+GALLERY_SCRIPT_VERSION = 3  # bump whenever the drawing changes (R15.2); an older stamp makes next-version's gallery stale (DS4)
 GALLERY_CSS = (
     ":root{--bg:#F5F6F8;--fg:#141A23;--mute:#556070;--line:#D5DAE1;--code:#ECEEF2}"
     "@media(prefers-color-scheme:dark){:root{--bg:#0F141B;--fg:#E7EBF0;--mute:#9AA5B4;--line:#2A3442;--code:#1E2733}}"
@@ -707,7 +707,7 @@ def cmd_init(root: Path, apply: bool) -> int:
         if not src.is_file():
             continue
         rel = src.relative_to(TEMPLATES)
-        if rel.parts[0] in ("guards", "components"):
+        if rel.parts[0] in ("guards", "components", "parts"):
             continue
         dest = ds_dir(root) / rel
         if dest.exists():
