@@ -90,6 +90,10 @@ Three shared components a project can take instead of building its own (DOCSPEC 
 - **Known limits.** The time picker has no `maxHours` (no duration of 24 hours or more), and the keypad has no minus sign (`allowNegative`). The date picker header shows the locale's long date by default; pass `formatValue` for the project's own format.
 - The template folder's `README.md` (`templates/design-system/components/react-typescript/`) has the file list and the props.
 
+## Lifecycle contract (local app only)
+
+Ask once: "Does this project have a local app (one you install on a computer)?" On no, write nothing. On yes, add one line to the plan and run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/lifecycle_check.py" setup --local-app yes --apply`. It copies the starter `lifecycle.json` and `words.json` into `next-version/` and never overwrites. Then edit the product name, targets and paths, run `lifecycle_check.py validate docs/design-system/next-version/lifecycle.json` (LC-1), and add the words-lint guard for the stack from `templates/design-system/guards/words-lint-*` (TypeScript and Vitest, Rust, Go, or the Python scanner for `.wxl` and plain string files). Set its `CONFIG` to the folders that hold lifecycle strings. `promote` copies `lifecycle.json` with the other version files. DOCSPEC R15.13 to R15.15.
+
 ## Existing design system elsewhere
 
 Move it to `docs/design-system/` with `git mv`, rewrite links and guard paths in one task (R15.8), add the earlier approvals to `approvals.json` by hand, then run `check`.

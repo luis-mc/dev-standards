@@ -264,6 +264,38 @@ def d_update_window(d):
             f'<div style="padding:{d.size("space-3", "12px")}">{steps}<p>Now running 1.2.3</p>{d.btn("Close")}</div></div>')
 
 
+def _box(d, inner, extra=""):
+    return (f'<div style="border:1px solid {d.col("color-divider")};border-radius:{d.size("radius-2", "8px")};padding:{d.size("space-3", "12px")};'
+            f'background:{d.col("color-surface")};color:{d.col("color-text")};font:{d.size("size-2")} {d.fam()};{extra}">{inner}</div>')
+
+
+def d_page_sections(d):
+    gap = d.size("space-6", "32px")
+    return (f'<div style="display:flex;flex-direction:column;gap:{gap}">' + "".join(_box(d, f"Section {i}") for i in (1, 2)) + "</div>")
+
+
+def d_card_grid(d):
+    return (f'<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(8rem,1fr));gap:{d.size("space-5", "24px")}">'
+            + "".join(_box(d, f"Card {i}") for i in (1, 2, 3)) + "</div>")
+
+
+def d_form_stack(d):
+    return _box(d, f'<div style="display:flex;flex-direction:column;gap:{d.size("space-4", "16px")}"><span>Label</span>'
+                   f'<span style="border:1px solid {d.col("color-border")};padding:{d.size("space-2", "8px")}">Field</span>{d.btn("Save")}</div>')
+
+
+def d_lifecycle_parts(d):
+    tone = lambda k, w: f'<span style="padding:2px {d.size("space-3", "12px")};background:{d.col("color-" + k + "-tint")};color:{d.col("color-on-" + k + "-tint")}">{w}</span>'
+    return (f'<div style="display:flex;flex-direction:column;gap:{d.size("space-3", "12px")}">'
+            + _box(d, tone("note", "Update ready") + " Version 1.2.3 " + d.btn("Update now"))
+            + _box(d, "Remove: 1.4 GB, the data folder<br>(o) Keep my data &nbsp; ( ) Delete my data too " + d.btn("Remove"))
+            + _box(d, "Office desktop " + tone("done", "Up to date") + "<br>Laptop " + tone("needs-you", "Needs you")) + "</div>")
+
+
+def d_question_window(d):
+    return _box(d, "<b>Updating</b><br>Downloading 40%<br>" + d.btn("Cancel"), "display:inline-block;width:auto")
+
+
 def d_installer_artwork(d):
     return (f'<div style="display:flex;border:1px solid {d.col("color-border")};min-height:{d.size("row", "56px")}">'
             f'<div style="width:33%;background:{d.col("color-primary")}"></div>'
@@ -472,7 +504,7 @@ def d_number_keypad(d):
 DRAWINGS = {
     "page header": d_page_header, "top menu and breadcrumbs": d_top_menu, "tabs": d_tabs, "wizard": d_wizard,
     "sticky action bar": d_action_bar, "action rows": d_action_rows, "buttons": d_buttons,
-    "card, card grid and facts list": d_card, "dialog and sheet": d_dialog, "pager": d_pager, "list toolbar": d_list_toolbar, "change review": d_change_review, "update window": d_update_window, "installer artwork": d_installer_artwork,
+    "card, card grid and facts list": d_card, "dialog and sheet": d_dialog, "pager": d_pager, "list toolbar": d_list_toolbar, "change review": d_change_review, "update window": d_update_window, "installer artwork": d_installer_artwork, "page sections": d_page_sections, "card grid": d_card_grid, "form stack": d_form_stack, "lifecycle parts": d_lifecycle_parts, "question window and tray menu": d_question_window,
     "segmented choices and filter chips": d_segmented, "one-choice list": d_one_choice, "form field family": d_form,
     "tables and list rows": d_tables, "progress bar": d_progress, "badges and counts": d_badges, "messages and banner": d_messages,
     "empty, failed and error states": d_states, "selection bar": d_selection_bar, "search bar and find layout": d_search,

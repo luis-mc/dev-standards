@@ -304,7 +304,7 @@ def retention_days(cfg) -> int:
 
 
 # Finished states: the same sets the hooks treat as closed (hooklib TERMINAL_TRAIN / TERMINAL_AGENT).
-_TRAIN_DONE = ("cleaned", "abandoned")
+_TRAIN_DONE = ("cleaned", "abandoned", "closed")
 _AGENT_DONE = ("done", "empty", "failed", "stopped", "disabled")
 _INSTALL_DONE = ("done", "failed")
 
@@ -553,8 +553,15 @@ def next_train_id(led: dict, prefix: str) -> str:
     return "%s%02d" % (prefix, used + 1)
 
 
+def valid_branch(branch) -> bool:
+    """DL382: a train needs a real branch head; an empty name, 'None' or a detached 'HEAD' is not one."""
+    return isinstance(branch, str) and branch.strip() not in ("", "None", "null", "HEAD")
+
+
 def new_train(led: dict, branch: str, release_no=None, cargo=None, cfg=None, planned=None,
               now: datetime | None = None) -> dict:
+    if not valid_branch(branch):
+        raise LedgerError("no train without a branch head (got %r)" % (branch,))
     now = now or utcnow()
     day = now.astimezone(owner_tz(cfg=cfg or {})).strftime("%Y-%m-%d")
     prefix = "T-%s-" % day
@@ -690,7 +697,7 @@ def record(root, op: str, **kw) -> bool:
                 cands = [t for t in led["trains"] if t.get("state") in ("pushed", "ci") and not hold_active(t)
                          and not (t.get("ci") or {}).get("head_sha")]
                 train = cands[0] if len(cands) == 1 else None
-            if train is None and kw.get("create") and kw.get("branch") and op in ("ci", "train_state", "cargo"):
+            if train is None and kw.get("create") and valid_branch(kw.get("branch")) and op in ("ci", "train_state", "cargo"):
                 # DL138: no train for the branch or the PR head: make it, as `plan --branch` would
                 train = new_train(led, str(kw["branch"]), cfg=load_config(root))
                 if kw.get("pr") is not None:
@@ -1101,6 +1108,7 @@ def eta_summary(led: dict, last: int = 20):
 
 
 def _cmd_show(root, args) -> int:
+    autoclose(root)
     led = load(root)
     if args.json:
         print(json.dumps(led, indent=2, ensure_ascii=False))
@@ -1307,6 +1315,165 @@ def _cmd_link(root, args, run=_run) -> int:
     return 0
 
 
+# --- DL382: close stale trains -------------------------------------------------------------
+
+AUTOCLOSE_MAX_GH = 5          # trains that need `gh` calls per run; the rest wait for the next run
+AUTOCLOSE_CACHE_HOURS = 6     # a train found still live is not asked about again for this long
+AUTOCLOSE_GONE_HOURS = 24     # a young train may not be pushed yet: branch-gone needs this age
+_NOT_OPEN = ("cleaned", "abandoned", "closed")
+
+
+def close_train(led: dict, train: dict, reason: str, by: str = "delivery_ledger", at: str | None = None) -> None:
+    at = at or iso()
+    train["state"], train["closed_at"], train["close_reason"] = "closed", at, reason
+    add_event(led, "train.closed", "%s %s" % (train.get("id"), reason), by)
+
+
+def train_updated(t: dict):
+    """The newest stamp of a train row (the ledger keeps no `updated_at` per row)."""
+    return _latest(t, ("created_at", "joined_at", "pushed_at", "green_at", "merged_at", "live_at", "cleaned_at",
+                       "closed_at"))
+
+
+def _autoclose_cache_path(root) -> Path:
+    return Path(root) / ".delivery" / "state" / "dl382-autoclose.json"
+
+
+def _read_cache(root) -> dict:
+    try:
+        data = json.loads(_autoclose_cache_path(root).read_text(encoding="utf-8"))
+        return data if isinstance(data, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_cache(root, cache: dict) -> None:
+    try:
+        path = _autoclose_cache_path(root)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(cache), encoding="utf-8")
+    except OSError:
+        pass
+
+
+def _stale_verdict(root, t: dict, run, now: datetime):
+    """'merged-elsewhere', 'branch-gone', 'live' or None (unknown: gh or git failed, so change nothing).
+    One `gh` call per train."""
+    branch, pr = t.get("branch"), t.get("pr")
+    if pr:
+        rows = _gh_json(["pr", "view", str(pr), "--json", "state"], root, run)
+        if not isinstance(rows, dict):
+            return None
+        rows = [rows]
+    else:
+        rows = _gh_json(["pr", "list", "--head", str(branch), "--state", "all", "--json", "number,state", "--limit", "20"],
+                        root, run)
+        if not isinstance(rows, list):
+            return None
+    states = {str(r.get("state", "")).upper() for r in rows if isinstance(r, dict)}
+    if "OPEN" in states:
+        return "live"
+    if "MERGED" in states:
+        return "merged-elsewhere"
+    if not valid_branch(branch):
+        return None
+    born = _latest(t, ("created_at", "pushed_at"))
+    if born is None or (now - born).total_seconds() < AUTOCLOSE_GONE_HOURS * 3600:
+        return "live"
+    code, out = run(["git", "ls-remote", "--heads", "origin", str(branch)], root)
+    if code != 0:
+        return None
+    return "live" if out.strip() else "branch-gone"
+
+
+def autoclose(root, run=_run, now: datetime | None = None) -> list:
+    """DL382: close open trains whose PR merged elsewhere or whose branch is gone with no open PR. Returns
+    [(train id, reason)]. Never raises; a failing gh or git changes nothing."""
+    try:
+        now = now or utcnow()
+        led = load(root)
+        cache = _read_cache(root)
+        todo, calls = [], 0
+        for t in led.get("trains", []):
+            if t.get("state") in _NOT_OPEN or t.get("merged_at") or t.get("cleaned_at"):
+                continue
+            if not (t.get("pr") or valid_branch(t.get("branch"))):
+                continue
+            key = "%s|%s|%s" % (t.get("id"), t.get("pr"), t.get("branch"))
+            seen = parse_iso((cache.get(key) or {}).get("at"))
+            if seen and (now - seen).total_seconds() < AUTOCLOSE_CACHE_HOURS * 3600:
+                continue
+            if calls >= AUTOCLOSE_MAX_GH:
+                break
+            calls += 1
+            verdict = _stale_verdict(root, t, run, now)
+            if verdict in ("merged-elsewhere", "branch-gone"):
+                todo.append((t["id"], verdict))
+            elif verdict == "live":
+                cache[key] = {"at": iso(now)}
+        _write_cache(root, cache)
+        if not todo:
+            return []
+        done = []
+
+        def fn(led):
+            for tid, reason in todo:
+                t = next((x for x in led["trains"] if x.get("id") == tid), None)
+                if t is not None and t.get("state") not in _NOT_OPEN:
+                    close_train(led, t, reason)
+                    done.append((tid, reason))
+        update(root, fn)
+        return done
+    except Exception:  # noqa: BLE001 - fail safe: no change
+        return []
+
+
+def _cmd_close(root, args) -> int:
+    reason = (args.reason or "").strip()
+    if not reason:
+        raise LedgerError("close needs --reason TEXT")
+    out = {}
+
+    def fn(led):
+        t = find_train(led, args.train_id)
+        if t is None:
+            raise LedgerError("no train %s in the ledger" % args.train_id)
+        if t.get("state") in _NOT_OPEN:
+            out["already"] = t["state"]
+            return
+        close_train(led, t, reason)
+    update(root, fn)
+    print("train %s already %s" % (args.train_id, out["already"]) if out else "closed train %s (%s)" % (args.train_id, reason))
+    return 0
+
+
+def _cmd_close_stale(root, args) -> int:
+    reason = (args.reason or "").strip()
+    if not reason:
+        raise LedgerError("close-stale needs --reason TEXT")
+    day = datetime.strptime(args.before, "%Y-%m-%d").replace(tzinfo=timezone.utc)
+    hit = []
+
+    def stale(led):
+        return [t for t in led.get("trains", []) if t.get("state") not in _NOT_OPEN
+                and (train_updated(t) is not None and train_updated(t) < day)]
+
+    def fn(led):
+        for t in stale(led):
+            hit.append(t["id"])
+            if not args.dry_run:
+                close_train(led, t, reason)
+    if args.dry_run:
+        fn(load(root))
+    else:
+        update(root, fn)
+    verb = "would close" if args.dry_run else "closed"
+    for tid in hit:
+        print("%s train %s" % (verb, tid))
+    print("%s %d train%s last updated before %s" % (verb, len(hit), "" if len(hit) == 1 else "s", args.before))
+    return 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--root", help="repository root (default: nearest folder with .delivery/ or .git)")
@@ -1335,6 +1502,13 @@ def main(argv=None) -> int:
     p.add_argument("--branch")
     p = sub.add_parser("cleaned")
     p.add_argument("--pr", required=True, type=int)
+    p = sub.add_parser("close")
+    p.add_argument("train_id")
+    p.add_argument("--reason", required=True)
+    p = sub.add_parser("close-stale")
+    p.add_argument("--before", required=True, metavar="YYYY-MM-DD")
+    p.add_argument("--reason", required=True)
+    p.add_argument("--dry-run", action="store_true")
     p = sub.add_parser("agent-eta")
     p.add_argument("agent", help="the agent id (routine or run session) or task of an open agent")
     for k in ("setup", "work", "checks"):
@@ -1360,7 +1534,8 @@ def main(argv=None) -> int:
         return 2
     try:
         return {"plan": _cmd_plan, "hold": _cmd_hold, "measure": _cmd_measure, "show": _cmd_show,
-                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "agent-check": _cmd_agent_check, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned, "link": _cmd_link}[args.cmd](root, args)
+                "agent-eta": _cmd_agent_eta, "agent-done": _cmd_agent_done, "agent-check": _cmd_agent_check, "smoke": _cmd_smoke, "cleaned": _cmd_cleaned, "link": _cmd_link,
+                "close": _cmd_close, "close-stale": _cmd_close_stale}[args.cmd](root, args)
     except LedgerError as exc:
         print("delivery_ledger: %s" % exc, file=sys.stderr)
         return 1

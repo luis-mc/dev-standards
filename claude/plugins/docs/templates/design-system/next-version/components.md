@@ -369,6 +369,46 @@ The body scrolls when the content is taller than the space. The overlay never gr
 - **Rules:** UX-55, UX-62.
 - **Guard:** none yet.
 
+## 37. Page sections
+
+- **Used for:** the top level of every page. It stacks the page's sections with one gap, the section token `--ds-space-6`. A page never sets its own gap.
+- **Looks:** a column of sections. Each section is marked `data-ds-section`.
+- **Source:** `src/ui/layout` (`PageSections`, `Section`; the template is `parts/react-typescript/layout.tsx`)
+- **Rules:** UX-66, UX-2, UX-16.
+- **Guard:** `guards/design-guards/layout-roles.mjs` and `guards/design-guards/rendered-layout.mjs`.
+
+## 38. Card grid
+
+- **Used for:** cards side by side. It wraps from one column on a phone to as many as fit.
+- **Looks:** equal columns with the card gap `--ds-space-5`.
+- **Source:** `src/ui/layout` (`CardGrid`)
+- **Rules:** UX-66, UX-16.
+- **Guard:** `guards/design-guards/layout-roles.mjs`.
+
+## 39. Form stack
+
+- **Used for:** a form: labels, fields and hints, one under another.
+- **Looks:** a column with the form gap `--ds-space-4`.
+- **Source:** `src/ui/layout` (`FormStack`)
+- **Rules:** UX-66, UX-16, UX-56.
+- **Guard:** `guards/design-guards/layout-roles.mjs`.
+
+## 40. Lifecycle parts
+
+- **Used for:** install, update and remove, in the product's own web console and on a phone: `UpdateBanner` (ready, running, done, failed), `UpdatesCard` (policy, time window, channel, wait for running work, last check, admin lock), `UpdateHistory` (audit events), `RemoteUpdate` (phone, 360 to 393 px), `RemoveDialog` (Remove disabled until Keep my data or Delete my data too is chosen) and `FleetRows` (Up to date, Waiting, Needs you). Words come from the lifecycle words table.
+- **Looks:** cards on the shared part class `ds-part`. Tokens only. Every state is a word, never colour alone.
+- **Source:** `parts/react-typescript/` (copy to `src/ui/lifecycle`)
+- **Rules:** UX-67, UX-4, UX-26, UX-16.
+- **Guard:** `guards/lifecycle/parts-tokens.mjs` (LC-23) and `guards/lifecycle/states-render.mjs` (LC-24).
+
+## 41. Question window and tray menu
+
+- **Used for:** the native side of the lifecycle. One question window shows update progress and the remove question. The tray menu only notifies.
+- **Looks:** the window is sized from its content and the text scale, never a fixed size. The tray shows one notice per event per 24 hours.
+- **Source:** `parts/rust/question_window.rs`, `parts/rust/tray_menu.rs`
+- **Rules:** UX-68, UX-63, UX-64, UX-65.
+- **Guard:** `guards/lifecycle/tray-modal.mjs` (LC-22, LC-30) and `guards/lifecycle/states-render.mjs` (LC-30).
+
 ## How to add a component
 
 - Give it the next number.

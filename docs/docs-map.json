@@ -52,6 +52,10 @@
     "claude/plugins/delivery/templates/**": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/templates/lifecycle/**": [
+      "docs/features/delivery-speed/spec.md",
+      "docs/features/lifecycle/spec.md"
+    ],
     "claude/plugins/delivery/templates/runner-pool/**": [
       "docs/features/runner-pool/spec.md"
     ],
@@ -68,6 +72,9 @@
     "claude/plugins/delivery/templates/shared/scripts/delivery/CONTRACT.md": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/templates/shared/scripts/delivery/lifecycle_*.py": [
+      "docs/features/lifecycle/spec.md"
+    ],
     "claude/plugins/delivery/tests/*.py": [
       "docs/features/delivery/spec.md"
     ],
@@ -82,6 +89,9 @@
     ],
     "claude/plugins/docs/rules/**": [
       "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/schemas/lifecycle.schema.json": [
+      "docs/features/lifecycle/spec.md"
     ],
     "claude/plugins/docs/scripts/artifact_*.py": [
       "docs/features/artifacts/spec.md"
@@ -127,6 +137,15 @@
     ],
     "claude/plugins/docs/skills/task-status-update/**": [
       "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/templates/design-system/guards/**": [
+      "docs/features/lifecycle/spec.md"
+    ],
+    "claude/plugins/docs/templates/design-system/lifecycle/**": [
+      "docs/features/lifecycle/spec.md"
+    ],
+    "claude/plugins/docs/templates/design-system/parts/**": [
+      "docs/features/lifecycle/spec.md"
     ],
     "claude/plugins/docs/templates/feature-artifact.html": [
       "docs/features/artifacts/spec.md"

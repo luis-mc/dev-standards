@@ -1,0 +1,539 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "lifecycle.schema.json",
+  "title": "Lifecycle contract (DS235, LC-1)",
+  "type": "object",
+  "required": [
+    "schema",
+    "product",
+    "targets",
+    "paths",
+    "flows",
+    "defaults",
+    "words",
+    "keep_on_remove",
+    "test_interface"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema": {
+      "const": "1"
+    },
+    "product": {
+      "type": "object",
+      "required": [
+        "name",
+        "id"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        }
+      },
+      "additionalProperties": false
+    },
+    "targets": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "os",
+          "distro",
+          "arch",
+          "package"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "os": {
+            "enum": [
+              "windows",
+              "linux",
+              "macos"
+            ]
+          },
+          "distro": {
+            "enum": [
+              "ubuntu-lts",
+              "fedora",
+              "debian",
+              null
+            ]
+          },
+          "arch": {
+            "enum": [
+              "x64",
+              "arm64"
+            ]
+          },
+          "package": {
+            "enum": [
+              "msi",
+              "deb",
+              "rpm",
+              "pkg",
+              "tar"
+            ]
+          }
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": false,
+      "properties": {
+        "windows": {
+          "type": "object",
+          "required": [
+            "program",
+            "data",
+            "config",
+            "logs",
+            "service"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "program": {
+              "type": "string",
+              "minLength": 1
+            },
+            "data": {
+              "type": "string",
+              "minLength": 1
+            },
+            "config": {
+              "type": "string",
+              "minLength": 1
+            },
+            "logs": {
+              "type": "string",
+              "minLength": 1
+            },
+            "service": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "linux": {
+          "type": "object",
+          "required": [
+            "program",
+            "data",
+            "config",
+            "logs",
+            "service"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "program": {
+              "type": "string",
+              "minLength": 1
+            },
+            "data": {
+              "type": "string",
+              "minLength": 1
+            },
+            "config": {
+              "type": "string",
+              "minLength": 1
+            },
+            "logs": {
+              "type": "string",
+              "minLength": 1
+            },
+            "service": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "macos": {
+          "type": "object",
+          "required": [
+            "program",
+            "data",
+            "config",
+            "logs",
+            "service"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "program": {
+              "type": "string",
+              "minLength": 1
+            },
+            "data": {
+              "type": "string",
+              "minLength": 1
+            },
+            "config": {
+              "type": "string",
+              "minLength": 1
+            },
+            "logs": {
+              "type": "string",
+              "minLength": 1
+            },
+            "service": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      }
+    },
+    "flows": {
+      "type": "object",
+      "required": [
+        "install",
+        "update",
+        "remove"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "install": {
+          "type": "object",
+          "required": [
+            "states",
+            "transitions"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "states": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "install",
+                  "started",
+                  "setup",
+                  "ready",
+                  "install_failed"
+                ]
+              }
+            },
+            "transitions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "enum": [
+                      "install",
+                      "started",
+                      "setup",
+                      "ready",
+                      "install_failed"
+                    ]
+                  },
+                  "to": {
+                    "enum": [
+                      "install",
+                      "started",
+                      "setup",
+                      "ready",
+                      "install_failed"
+                    ]
+                  },
+                  "on": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "update": {
+          "type": "object",
+          "required": [
+            "states",
+            "transitions"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "states": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "unpaired",
+                  "up_to_date",
+                  "available",
+                  "review",
+                  "waiting",
+                  "downloading",
+                  "verifying",
+                  "refused",
+                  "installing",
+                  "testing",
+                  "updated",
+                  "rolling_back",
+                  "rolled_back",
+                  "skipped"
+                ]
+              }
+            },
+            "transitions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "enum": [
+                      "unpaired",
+                      "up_to_date",
+                      "available",
+                      "review",
+                      "waiting",
+                      "downloading",
+                      "verifying",
+                      "refused",
+                      "installing",
+                      "testing",
+                      "updated",
+                      "rolling_back",
+                      "rolled_back",
+                      "skipped"
+                    ]
+                  },
+                  "to": {
+                    "enum": [
+                      "unpaired",
+                      "up_to_date",
+                      "available",
+                      "review",
+                      "waiting",
+                      "downloading",
+                      "verifying",
+                      "refused",
+                      "installing",
+                      "testing",
+                      "updated",
+                      "rolling_back",
+                      "rolled_back",
+                      "skipped"
+                    ]
+                  },
+                  "on": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "remove": {
+          "type": "object",
+          "required": [
+            "states",
+            "transitions"
+          ],
+          "additionalProperties": false,
+          "properties": {
+            "states": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "enum": [
+                  "remove",
+                  "ask",
+                  "keep",
+                  "purge",
+                  "clean"
+                ]
+              }
+            },
+            "transitions": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "required": [
+                  "from",
+                  "to"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "from": {
+                    "enum": [
+                      "remove",
+                      "ask",
+                      "keep",
+                      "purge",
+                      "clean"
+                    ]
+                  },
+                  "to": {
+                    "enum": [
+                      "remove",
+                      "ask",
+                      "keep",
+                      "purge",
+                      "clean"
+                    ]
+                  },
+                  "on": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "defaults": {
+      "type": "object",
+      "required": [
+        "policy",
+        "check_hours",
+        "check_jitter_pct",
+        "first_check_minutes",
+        "check_backoff_minutes",
+        "self_test_limit_s",
+        "self_test_poll_s",
+        "wait_for_work_minutes",
+        "retry_hours",
+        "channel",
+        "console_host",
+        "telemetry"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "enum": [
+            "automatic_when_idle",
+            "ask_first"
+          ]
+        },
+        "idle_window": {
+          "type": [
+            "object",
+            "null"
+          ]
+        },
+        "check_hours": {
+          "type": "number"
+        },
+        "check_jitter_pct": {
+          "type": "number"
+        },
+        "first_check_minutes": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": {
+            "type": "number"
+          }
+        },
+        "check_backoff_minutes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number"
+          }
+        },
+        "self_test_limit_s": {
+          "type": "number"
+        },
+        "self_test_poll_s": {
+          "type": "number"
+        },
+        "wait_for_work_minutes": {
+          "type": "number"
+        },
+        "retry_hours": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "number"
+          }
+        },
+        "channel": {
+          "type": "string"
+        },
+        "console_host": {
+          "type": "string"
+        },
+        "telemetry": {
+          "enum": [
+            "off",
+            "on"
+          ]
+        }
+      }
+    },
+    "words": {
+      "type": "object",
+      "required": [
+        "banned",
+        "states"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "banned": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "states": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "keep_on_remove": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "string",
+        "minLength": 1
+      }
+    },
+    "test_interface": {
+      "type": "object",
+      "required": [
+        "self_test",
+        "state",
+        "simulate"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "self_test": {
+          "type": "string"
+        },
+        "state": {
+          "type": "string"
+        },
+        "simulate": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
