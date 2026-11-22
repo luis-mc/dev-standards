@@ -61,6 +61,7 @@ import argparse
 import json
 import os
 import re
+import subprocess
 import sys
 import tempfile
 
@@ -1444,9 +1445,44 @@ def check_plugins(root, cfg):
     return True, "WARN plugins.compat: " + "; ".join(i["detail"] for i in items), items
 
 
+E2E_SPEC_DEFAULT = ["e2e/*.spec.*", "*/e2e/*.spec.*"]
+
+
+def e2e_gate_problem(root):
+    """DL397: a hint when e2e spec files exist but gate.json has no ui-changed (e2e) step, else None."""
+    import fnmatch
+    gate = _read_json(os.path.join(root, "scripts", "delivery", "gate.json"))
+    steps = gate.get("steps")
+    if not isinstance(steps, list):
+        return None
+    if any(isinstance(s, dict) and s.get("scope") == "ui-changed" for s in steps):
+        return None
+    pats = gate.get("e2e_spec_paths")
+    pats = pats if isinstance(pats, list) and pats else E2E_SPEC_DEFAULT
+    try:
+        out = subprocess.run(["git", "ls-files"], cwd=root, capture_output=True, text=True, timeout=30)
+        files = out.stdout.splitlines() if out.returncode == 0 else []
+    except (OSError, subprocess.SubprocessError):
+        return None
+    hit = [f for f in files if any(fnmatch.fnmatchcase(f, str(p)) for p in pats)]
+    if not hit:
+        return None
+    return ("no e2e step in gate.json: %d e2e spec file(s) match e2e_spec_paths (%s) but no step has scope "
+            "\"ui-changed\". Add an e2e step with \"scope\": \"ui-changed\" (the kit's ts template has one), or "
+            "branch_gate.py --e2e-only and the pre-push e2e check cannot pass." % (len(hit), hit[0]))
+
+
+def check_gate_steps(root, cfg):
+    problem = e2e_gate_problem(root)
+    if problem is None:
+        return None
+    return False, problem, [_item("gate.e2e_step", "fail", problem)]
+
+
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust),
-          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("plugins", check_plugins))
+          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("plugins", check_plugins),
+          ("gate-steps", check_gate_steps))
 
 
 def run_checks(root):

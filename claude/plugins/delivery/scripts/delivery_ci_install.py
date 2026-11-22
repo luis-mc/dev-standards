@@ -399,6 +399,28 @@ def merge_changed(items: list, root: str) -> list:
     return out
 
 
+def merge_gate_steps(items: list, root: str) -> list:
+    """DL397: gate.json is project-owned. On update, add the template steps the project lacks, matched by step name.
+    Every project step stays as it is; none is replaced. The file is written only when a step is added."""
+    out = []
+    for rel, src, action in items:
+        if rel == GATE_JSON and action == "differs":
+            dst = os.path.join(root, rel.replace("/", os.sep))
+            proj_text, crlf = _text(dst)
+            proj, tpl = _json_of(dst), _json_of(src)
+            if proj_text is not None and isinstance(proj.get("steps"), list) and isinstance(tpl.get("steps"), list):
+                have = {s.get("name") for s in proj["steps"] if isinstance(s, dict)}
+                added = [s for s in tpl["steps"] if isinstance(s, dict) and s.get("name") not in have]
+                if added:
+                    proj["steps"] = proj["steps"] + added
+                    MERGES[rel] = (json.dumps(proj, indent=2, ensure_ascii=False) + "\n", 0, crlf)
+                    print("gate.json: added step(s) from the template, project steps kept as they are: "
+                          + ", ".join(str(s.get("name")) for s in added))
+                    action = MERGED
+        out.append((rel, src, action))
+    return out
+
+
 def record_bases(items: list, root: str) -> None:
     """Keep a copy of each template as written, so the next update has the merge base (DL201)."""
     for rel, src, action in items:
@@ -1391,6 +1413,7 @@ def main(argv=None) -> int:
     if args.action == "update":
         plan_prune_list(items, root)
         items = merge_changed(items, root)
+        items = merge_gate_steps(items, root)
     managed = {rel for rel, _s, _a in items}
     for rel in sorted((keep | skip) - managed):
         print("warning: %s lists %s, which the plugin does not manage" % (CONFIG, rel))

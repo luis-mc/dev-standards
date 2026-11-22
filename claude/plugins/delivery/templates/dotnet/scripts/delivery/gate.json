@@ -37,7 +37,7 @@
       "name": "guards",
       "scope": "always",
       "pre_push": true,
-      "run": "dotnet test --configuration Release --filter \"Category=Guard\""
+      "run": "dotnet test --configuration Release --filter \"Category=Guard\" --blame-hang-timeout 10s"
     },
     {
       "name": "typecheck",
@@ -48,7 +48,7 @@
     {
       "name": "unit",
       "scope": "changed",
-      "run": "dotnet test --configuration Release --filter \"Category=Unit\""
+      "run": "dotnet test --configuration Release --filter \"Category=Unit\" --blame-hang-timeout 10s"
     }
   ]
 }
