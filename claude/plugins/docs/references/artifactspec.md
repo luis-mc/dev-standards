@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.25.0
+**Version:** 1.26.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.26.0 — 2026-11-22.**
+
+- Numbered phase repeats (ci2, fix2); decisions-migrate fills empty option summaries; task-add warns, not refuses, for decisions asked before 2026-11-14.
 
 **1.25.0 — 2026-11-20.**
 

@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.38.2
+version: 0.39.0
 owner: agents
 type: reference
 code:
@@ -545,6 +545,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.39.0 | 2026-11-22 | RELEASE-163 | agent-check --note, closed-agent exit 0, pre-push skips node checks for a push with no JS file (R5.36, R5.36b) | DL392 |
 | 0.38.2 | 2026-11-21 | RELEASE-162 | The e2e push check no longer counts specs that came with a merge of the default branch; it and branch_gate.py --e2e-only use the same merge base. | DL387 |
 | 0.38.1 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |
 | 0.38.0 | 2026-11-19 | RELEASE-151 | Release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |

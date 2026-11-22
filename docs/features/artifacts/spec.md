@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.16.0
+version: 0.17.0
 owner: agents
 type: reference
 code:
@@ -316,6 +316,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.17.0 | 2026-11-22 | RELEASE-163 | numbered phase repeats; decisions-migrate; task-add warns on legacy empty summaries | DL392 |
 | 0.16.0 | 2026-11-20 | RELEASE-157 | Where it stands in Full Progress section 1 is built from the record: last Live release and open work with IDs, basis and Expected (R5.23). | AR77 |
 | 0.15.0 | 2026-11-19 | RELEASE-154 | A phase list with no dates takes its day from the occurrence nearest now; far phases warn; two refusals name the fix (R5.22). | AR74 |
 | 0.14.0 | 2026-11-19 | RELEASE-153 | Full Progress is published once after a burst of record changes (settle window, default 60 s); an unchanged copy is not asked for (R5.20, R5.21). | AR72 |
