@@ -1,6 +1,6 @@
 # DL399 report: per-job runner variable CRSP_<JOB>
 
-Status: checks done, committing.
+Status: done.
 
 ## Files
 - 37 `runs-on` lines in 15 templates (`claude/plugins/delivery/templates/**`, incl. `lifecycle-lanes.yml`, `pool-check.yml`): `vars.CRSP_<JOB>` first, chain unchanged. `ci-fallback.yml` has a literal hosted label, left alone.
@@ -15,4 +15,8 @@ Status: checks done, committing.
 - `ci_areas.py --branch-advice`: "unreadable diff"; no workflow was started.
 
 ## docs_check
-See last run in the commit step: no errors after the notes.
+`python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors, 0 warnings.
+
+Branch head SHA of the code commit: c54b1bd2c3e4fc1b1d729c78f7a15abb71e34caa (the report commit follows it).
+
+READY
