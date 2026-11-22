@@ -1262,8 +1262,9 @@ def sc_e2e_map(t: T, shared: Path) -> None:
     t.eq("... the result says full", (entry.get("selection"), entry.get("specs")), ("full", []))
 
     r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n", "pnpm-lock.yaml": "lock\nl1\nchanged\n"})
-    t.eq("a widened gate: the whole suite", ran, [["e2e", "FULL"]])
-    t.eq("... the result says full", (entry.get("selection"), entry.get("specs")), ("full", []))
+    t.eq("a widened gate (not --full): still only the mapped spec (DL389)", ran, [["e2e", "e2e/checkout.spec.ts"]])
+    t.eq("... the result says affected", (entry.get("selection"), entry.get("specs")),
+         ("affected", ["e2e/checkout.spec.ts"]))
 
     r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n"}, "--full")
     t.eq("--full: the whole suite", ran, [["e2e", "FULL"]])
@@ -1398,6 +1399,34 @@ def sc_e2e_agent(t: T, shared: Path) -> None:
     box.g("config", "core.hooksPath", ".githooks")
     p = run(["git", "push", "origin", "feat/spec"], cwd=box.work)
     t.check("the pre-push hook refuses an unrun e2e fix", p.code != 0 and "e2e-push: blocked" in p.err, p.text)
+
+
+def sc_e2e_widen(t: T, shared: Path) -> None:
+    """DL389: only an explicit --full widens the e2e step; other widening leaves it to the changed files."""
+    box = Box(shared, gate_json=e2e_gate_json())
+    wide = {"pnpm-lock.yaml": "lock\nl1\nchanged\n", "root.config.txt": "c\n"}
+    specs = {"e2e/one.spec.ts": "1\n", "e2e/two.spec.ts": "2\n"}
+
+    def e2e(files: dict, *args: str):
+        box.branch("release/1", files)
+        box.clear_log()
+        r = box.gate("--no-publish", *args)
+        entry = {s["name"]: s for s in box.result()["steps"]}["e2e"]
+        return r, [x for x in box.ran() if x[0] == "e2e"], entry
+
+    r, ran, entry = e2e({**wide, **specs})
+    t.eq("release head, widened, 2 changed specs: only those run", (r.code, ran),
+         (0, [["e2e", "e2e/one.spec.ts", "e2e/two.spec.ts"]]))
+    t.eq("... recorded as affected", (entry.get("selection"), entry.get("specs")),
+         ("affected", ["e2e/one.spec.ts", "e2e/two.spec.ts"]))
+    r, ran, entry = e2e({**wide, **specs}, "--full")
+    t.eq("the same with --full: the full suite", (r.code, ran), (0, [["e2e", "FULL"]]))
+    r, ran, entry = e2e(wide)
+    t.eq("lockfile and root config only: no e2e, pass", (r.code, ran, entry["outcome"]), (0, [], "skip"))
+    r, ran, entry = e2e({**wide, "packages/ui/b.txt": "b\n"})
+    t.eq("a changed UI file maps to its spec", ran, [["e2e", "e2e/ui.spec.ts"]])
+    r, ran, entry = e2e({"apps/web/checkout/a.txt": "a\n"})
+    t.eq("a normal feature branch: unchanged", ran, [["e2e", "e2e/checkout.spec.ts"]])
 
 
 def sc_e2e_merge(t: T, shared: Path) -> None:
@@ -3092,7 +3121,7 @@ def sc_e2e_graph(t: T, shared: Path) -> None:
     t.eq("one changed ui package uncovered: the whole suite, not just the covered one", ran, [["e2e"]])
 
     r, ran, entry = e2e({"packages/ui/a.txt": "a\n", "package.json": "{\"x\": 1}\n"})
-    t.eq("a widened gate: run_full", ran, [["e2e", "FULL"]])
+    t.eq("a widened gate (not --full): the specs of the changed UI package (DL389)", ran, [["e2e", "apps/web/e2e", "e2e/ui"]])
 
     r, ran, entry = e2e({"packages/ui/a.txt": "a\n"}, "--full")
     t.eq("--full: run_full", ran, [["e2e", "FULL"]])
@@ -3786,6 +3815,7 @@ SCENARIOS = {
     "fast_guards": sc_fast_guards,
     "required_steps": sc_required_steps,
     "e2e_merge": sc_e2e_merge,
+    "e2e_widen": sc_e2e_widen,
     "push_check": sc_push_check,
     "fast_report": sc_fast_report,
     "parallel": sc_parallel,
