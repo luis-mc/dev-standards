@@ -49,6 +49,9 @@ import ci_runs as CR  # noqa: E402
 DEFAULT_INTERVAL = 60
 DEFAULT_CHECK_MIN = 15
 WORKFLOW = "ci.yml"
+NOT_READY_QUIET_MIN = 10     # DL396: a terminal NOT READY closes the row only after this many quiet minutes
+_NOT_READY_FINAL_RE = re.compile(r"^NOT READY(?::\s+\S.*)?$")
+_IN_PROGRESS_RE = re.compile(r"\b(in[ -]progress|wip|working)\b", re.I)
 ACTIVE_CI_STATES = ("pushed", "ci")
 CI_RUNS_MIN_INTERVAL_S = 60
 RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName,startedAt,updatedAt,createdAt"
@@ -318,7 +321,10 @@ class Watcher:
             rc, out, _ = self.read(["git", "show", "%s:%s" % (ref, path)])
             lines = [x.strip() for x in out.splitlines() if x.strip()] if rc == 0 else []
             if lines and lines[-1].startswith("NOT READY"):
-                return "not-ready"
+                last = lines[-1]       # DL396: only a terminal form is final; an in-progress form keeps the row open
+                if _NOT_READY_FINAL_RE.match(last) and not _IN_PROGRESS_RE.search(last):
+                    return "not-ready"
+                return None
             if lines and lines[-1].startswith("READY"):
                 return "ready"
         return None
@@ -348,6 +354,8 @@ class Watcher:
         out = done("report-" + verdict)
         rc, when, _ = self.read(["git", "log", "-1", "--format=%cI", "origin/%s" % branch])   # DL168: the report push
         stamp = L.parse_iso(when.strip()) if rc == 0 and when.strip() else None
+        if verdict == "not-ready" and stamp and (self.now() - stamp).total_seconds() < NOT_READY_QUIET_MIN * 60:
+            return None                                   # DL396: commits still arrive; close on a quiet pass
         out["finished_at"] = L.iso(stamp) if stamp else out["done_at"]
         return out
 
