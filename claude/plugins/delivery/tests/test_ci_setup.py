@@ -201,7 +201,7 @@ class ApplyTests(Base):
         root = make_root({})
         code, out, _e = cli("apply", "--answers", "-", "--root", str(root), "--no-install", "--set-variables", stdin=json.dumps(OPT1))
         self.assertEqual(code, 0)
-        self.assertIn("CI_RUNS_ON: set", out)
+        self.assertIn("CRSP_RUNS_ON_LINUX: set", out)
         self.assertIn("CI_SERIAL: set", out)
 
     def test_confirm_refuses_an_unknown_item(self):
@@ -285,7 +285,7 @@ class Option1DoctorTests(Base):
         self.assertFalse(ok)
         self.assertIn("load-gate:pc1", detail)
         self.assertNotIn("runner:pc1:", detail)
-        self.assertNotIn("var:CI_RUNS_ON:", detail)
+        self.assertNotIn("var:CRSP_RUNS_ON_LINUX:", detail)
         cli("confirm", "load-gate:pc1", "--root", str(root))
         ok, detail = self.ci(root)
         self.assertTrue(ok, detail)
@@ -301,7 +301,7 @@ class Option1DoctorTests(Base):
     def test_wrong_variable_value(self):
         root = self.project(OPT1)
         self.fake({"vars": {"CI_RUNS_ON": '"ubuntu-latest"'}})
-        self.assertIn("CI_RUNS_ON is \"ubuntu-latest\", expected", self.ci(root)[1])
+        self.assertIn("CRSP_RUNS_ON_LINUX is \"ubuntu-latest\", expected", self.ci(root)[1])
 
     def test_a_windows_machine_gets_windows_commands(self):
         a = json.loads(json.dumps(OPT1))
@@ -320,7 +320,7 @@ class Option2DoctorTests(Base):
         self.fake({"api": {"orgs/{owner}/actions/hosted-runners": {"runners": []}}, "vars": {}})
         detail = self.ci(root)[1]
         self.assertIn("no larger runner named ubuntu-4core", detail)
-        self.assertIn("var:CI_RUNS_ON", detail)
+        self.assertIn("var:CRSP_RUNS_ON_LINUX", detail)
         self.assertIn("spending-limit", detail)
         self.fake({"api": {"orgs/{owner}/actions/hosted-runners": {"runners": [{"name": "ubuntu-4core"}, {"name": "windows-latest"}]}},
                    "vars": {"CI_RUNS_ON": '"ubuntu-4core"'}})

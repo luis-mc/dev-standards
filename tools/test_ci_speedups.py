@@ -423,7 +423,7 @@ def nightly_problems(text: str) -> list[str]:
     if '[ "$head" = "$last" ]' not in first or 'echo "run=false"' not in first or 'echo "run=true"' not in first:
         p.append("changed must compare the heads and output run")
     for name, block in jobs.items():
-        if "runs-on:" not in block or not re.search(r"^    runs-on: \$\{\{ fromJSON\(vars\.NIGHTLY_RUNS_ON \|\| vars\.CI_RUNS_ON \|\| '\"ubuntu-latest\"'\) \}\}\s*$", block, re.M):
+        if "runs-on:" not in block or not re.search(r"^    runs-on: \$\{\{ fromJSON\(vars\.NIGHTLY_RUNS_ON \|\| vars\.CRSP_RUNS_ON_LINUX \|\| vars\.CI_RUNS_ON \|\| '\"ubuntu-latest\"'\) \}\}\s*$", block, re.M):
             p.append(f"job {name}: runner must come from the NIGHTLY_RUNS_ON / CI_RUNS_ON variables")
         if name != "changed":
             if not re.search(r"^    needs: changed\s*$", block, re.M):

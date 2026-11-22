@@ -1299,7 +1299,7 @@ E2E_AGGREGATE_COND = (
 # The opt-in run-times job (DS26, DL-82) adds the repository-variable clause.
 RUN_TIMES_CLAUSE = re.compile(r" && vars\.CI_RUN_TIMES == 'true'")
 # DL190: the integration pair adds the pool test: the hosted job runs when it is false, the pool job when true.
-POOL_TEST = "contains(vars.CI_RUNS_ON || '', 'pool-')"
+POOL_TEST = "contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')"
 POOL_CLAUSE = re.compile(r" && (?:!)?" + re.escape(POOL_TEST) + r"(?= \}\}$)")
 
 
@@ -1322,7 +1322,7 @@ REQUIRED_NAMES = {
 }
 
 
-RUNS_ON = "runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}"
+RUNS_ON = "runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}"
 
 CONCURRENCY = (
     "concurrency:\n"
@@ -1596,7 +1596,7 @@ REPORT_JOB = """
     name: run times (report only)
     needs: [decide, verify, integration, e2e]
     if: ${{ !cancelled() && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     steps:
       - run: echo report
 """

@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.14.1
+version: 0.14.2
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.2 | 2026-11-22 | RELEASE-164 | The workflow templates read CRSP_RUNS_ON_LINUX before CI_RUNS_ON (DL394); the pool-check workflow and the template tests follow. | DL394 |
 | 0.14.1 | 2026-11-22 | RELEASE-163 | The e2e step widens to the full suite only on an explicit --full; other widening leaves it to the changed UI files and specs. | DL389 |
 | 0.14.0 | 2026-11-21 | RELEASE-161 | Release assets are named <Product>-<version>-<os>-<arch>.<ext>; the release check requires it per target (DL-96, LC-32). Updaters look for the new name first and the older name second for one transition release. | DL385 |
 | 0.13.0 | 2026-11-21 | RELEASE-160 | Stale trains close instead of nagging: no train without a branch head, no merge advice for a PR-less train, auto-close of merged-elsewhere and branch-gone trains, close and close-stale commands, one grouped Stop line per rule.<br>R5.25, R5.26: the updater test interface contract and the lifecycle conformance runner, with Rust and Go cores that pass it (DL-LC1 to DL-LC3).<br>Lifecycle OS step scripts, release check and opt-out report (R5.25 to R5.27). | DL382, DS235c, DS235d |

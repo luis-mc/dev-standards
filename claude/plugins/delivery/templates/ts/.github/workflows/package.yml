@@ -58,7 +58,7 @@ jobs:
   package:
     name: build, start and smoke-test the packaged program
     if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: package
       # PRODUCT: the build command. DL229: while it is still this placeholder and

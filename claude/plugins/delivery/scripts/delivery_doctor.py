@@ -890,13 +890,16 @@ def machine_items(root, cfg):
         if data is None:
             items.append(_item("machine.runs_on", "warn", "cannot read the repository variables (gh not signed in or no rights): "
                                                           "check CI_RUNS_ON by hand"))
-        elif not any(isinstance(v, dict) and v.get("name") == "CI_RUNS_ON" and str(v.get("value") or "").strip() for v in data):
-            items.append(_item("machine.runs_on", "fail", "an OS is Option 1 but the repository variable CI_RUNS_ON is unset: jobs "
-                                                          "would run on GitHub-hosted runners and may bill minutes. Run "
-                                                          "/delivery-ci-setup, or `gh variable set CI_RUNS_ON --body '%s'`."
+        elif not any(isinstance(v, dict) and v.get("name") in ("CRSP_RUNS_ON_LINUX", "CRSP_RUNS_ON_WINDOWS", "CRSP_RUNS_ON_MACOS", "CI_RUNS_ON")
+                     and str(v.get("value") or "").strip() for v in data):
+            items.append(_item("machine.runs_on", "fail", "an OS is Option 1 but no runner variable is set (CRSP_RUNS_ON_LINUX, or the old "
+                                                          "CI_RUNS_ON): jobs would run on GitHub-hosted runners and may bill "
+                                                          "minutes. Run /delivery-ci-setup, or `gh variable set CRSP_RUNS_ON_LINUX --body '%s'`."
                                                           % json.dumps(SETUP.expected_runs_on(cfg)[0] or ["self-hosted", "linux"])))
         else:
-            items.append(_item("machine.runs_on", "ok", "CI_RUNS_ON is set"))
+            names = sorted(v["name"] for v in data if isinstance(v, dict) and v.get("name") in
+                           ("CRSP_RUNS_ON_LINUX", "CRSP_RUNS_ON_WINDOWS", "CRSP_RUNS_ON_MACOS", "CI_RUNS_ON") and str(v.get("value") or "").strip())
+            items.append(_item("machine.runs_on", "ok", "%s set" % ", ".join(names)))
     try:
         items += workflow_items(root, cfg)  # DL317/DL318: runs-on labels against the online runners
     except Exception as exc:  # noqa: BLE001
@@ -924,6 +927,54 @@ def check_machine(root, cfg):
 # --- workflow labels (DL317, DL318) -----------------------------------------------------------------
 
 GENERIC_VARS = ("CI_RUNS_ON", "CI_RUNS_ON_WINDOWS")
+# DL394: per OS, the variables a workflow reads, first match wins (new runner service variable, then the old one).
+CRSP_RUNS_ON_ORDER = (("linux", ("CRSP_RUNS_ON_LINUX", "CI_RUNS_ON")),
+                 ("windows", ("CRSP_RUNS_ON_WINDOWS", "CI_RUNS_ON_WINDOWS")),
+                 ("macos", ("CRSP_RUNS_ON_MACOS",)))
+
+
+def _same_labels(a, b):
+    """True when two variable values name the same labels (JSON compared, case ignored)."""
+    def norm(v):
+        try:
+            v = json.loads(v)
+        except (TypeError, ValueError):
+            pass
+        return json.dumps(v, sort_keys=True).lower()
+    return norm(a) == norm(b)
+
+
+def resolve_runs_on(variables):
+    """DL394: [(os, variable name or None, value or None, other)] for each OS. `variable` is the first one set; `other` is the
+    old variable when it is set to a different value than the winning new one (the new variable wins), else None."""
+    out = []
+    for o, names in CRSP_RUNS_ON_ORDER:
+        set_ = [(n, str(variables.get(n) or "").strip()) for n in names]
+        set_ = [(n, v) for n, v in set_ if v]
+        if not set_:
+            out.append((o, None, None, None))
+            continue
+        other = None
+        if len(set_) > 1 and not _same_labels(set_[0][1], set_[1][1]):
+            other = set_[1][0]
+        out.append((o, set_[0][0], set_[0][1], other))
+    return out
+
+
+def runs_on_items(variables, tag):
+    """DL394: one item that says which variable each OS resolves to, and a warn when the old and the new variable are both
+    set with different values (the new one wins; delete CRSP_RUNS_ON_* or set it to the old labels to go back)."""
+    if variables is None:
+        return []
+    res = resolve_runs_on(variables)
+    parts = ["%s -> %s" % (o, "%s (%s)" % (n, v) if n else "GitHub-hosted default") for o, n, v, _ in res]
+    items = [_item("workflows.runs_on:" + tag, "ok", "runs-on of %s resolves: %s" % (tag, "; ".join(parts)))]
+    clash = ["%s: %s wins over %s" % (o, n, other) for o, n, _, other in res if other]
+    if clash:
+        items.append(_item("workflows.runs_on_both:" + tag, "warn",
+                           "%s sets the old and the new runner variable to different values (%s). The new variable wins. To go "
+                           "back to the old one, delete CRSP_RUNS_ON_* or set it to the old labels." % (tag, "; ".join(clash))))
+    return items
 HOSTED_PREFIXES = ("ubuntu-", "windows-", "macos-")
 
 
@@ -1033,13 +1084,14 @@ def workflow_items(root, cfg):
                                "every literal runs-on label of %d job(s) in %s is carried by an online runner" % (len(jobs), tag)))
         if loose:
             items.append(_item("workflows.generic:" + tag, "warn", "self-hosted job(s) use a literal label: %s. Use "
-                               "${{ fromJSON(vars.CI_RUNS_ON) }} (Linux) or ${{ fromJSON(vars.CI_RUNS_ON_WINDOWS) }} (Windows)." % "; ".join(loose)))
+                               "${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON) }} (Linux) or ${{ fromJSON(vars.CRSP_RUNS_ON_WINDOWS || vars.CI_RUNS_ON_WINDOWS) }} (Windows)." % "; ".join(loose)))
+        items += runs_on_items(variables, tag)
         has_win = any(r["os"] == "windows" or "windows" in r["labels"] for r in runners or [])
-        if has_win and variables is not None and not variables.get("CI_RUNS_ON_WINDOWS"):
-            items.append(_item("workflows.windows_var:" + tag, "warn", "%s has a Windows self-hosted runner but CI_RUNS_ON_WINDOWS is "
-                               "unset: Windows jobs cannot target the pool. Set it, for example `gh variable set CI_RUNS_ON_WINDOWS "
+        if has_win and variables is not None and not (variables.get("CRSP_RUNS_ON_WINDOWS") or variables.get("CI_RUNS_ON_WINDOWS")):
+            items.append(_item("workflows.windows_var:" + tag, "warn", "%s has a Windows self-hosted runner but CRSP_RUNS_ON_WINDOWS is "
+                               "unset: Windows jobs cannot target the pool. Set it, for example `gh variable set CRSP_RUNS_ON_WINDOWS "
                                "--body '[\"self-hosted\", \"windows\"]'`." % tag))
-        elif has_win and variables is not None and "pool-" not in str(variables.get("CI_RUNS_ON_WINDOWS") or "").lower():
+        elif has_win and variables is not None and not variables.get("CRSP_RUNS_ON_WINDOWS") and "pool-" not in str(variables.get("CI_RUNS_ON_WINDOWS") or "").lower():
             # DL341: the old 3 label value still works; it does not route by pool or repository
             items.append(_item("workflows.windows_pool_labels:" + tag, "warn", "CI_RUNS_ON_WINDOWS of %s has no pool labels. It still "
                                "matches, but the pool cannot route the job. Run the pool setup with --windows-repos: it sets "

@@ -1068,10 +1068,37 @@ def agent_liveness(root, a: dict, last_event_at=None):
     return None, "none"
 
 
+def _agent_reopen(root, args) -> int:
+    """DL396: agent-check --reopen <trigger> puts a closed agent row back to running and logs an event."""
+    key = str(args.reopen)
+    box = {}
+
+    def fn(led):
+        rows = [a for a in led["agents"] if _agent_matches(a, key)]
+        if not rows:
+            raise LedgerError("no agent %s" % key)
+        closed = [a for a in rows if a.get("state") in _AGENT_DONE]
+        if not closed:
+            box["open"] = True
+            return
+        a = closed[-1]
+        a["state"] = "running"
+        for k in ("done_by", "done_at", "finished_at", "result"):
+            a.pop(k, None)
+        a["needs_check"] = False
+        a["last_checked"] = iso()
+        add_event(led, "agent.reopened", str(a.get("task") or a.get("id") or ""), "delivery_ledger")
+    update(root, fn)
+    print("agent %s is already open" % key if box.get("open") else "agent %s reopened" % key)
+    return 0
+
+
 def _cmd_agent_check(root, args) -> int:
     """DL127: record that the session looked at an open agent (sets last_checked), so nobody edits the JSON.
     DL303: also records the agent's liveness time and which source gave it."""
     box = {}
+    if getattr(args, "reopen", None):
+        return _agent_reopen(root, args)
     rows = [a for a in load(root)["agents"] if a.get("state") not in _AGENT_DONE and _agent_matches(a, str(args.agent))]
     live_at, source = agent_liveness(root, rows[0], getattr(args, "last_event_at", None)) if rows else (None, "none")
 
@@ -1538,6 +1565,7 @@ def main(argv=None) -> int:
     p = sub.add_parser("agent-check")
     p.add_argument("agent", help="the agent id or task of an open agent")
     p.add_argument("--note", help="a short note stored on the agent row")
+    p.add_argument("--reopen", metavar="TRIGGER", help="reopen a closed agent row (the trigger id or task); logs a reopen event")
     p.add_argument("--last-event-at", help="the run's last_event_at from RemoteTrigger list_runs (the fallback time)")
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")

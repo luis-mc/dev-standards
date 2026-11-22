@@ -290,7 +290,7 @@ def test_workflows() -> None:
           "contains(needs.*.result, 'failure')" in pw and "contains(needs.*.result, 'cancelled')" in pw
           and "needs: [build, publish]" in pw)
     check("package-windows: the token comes from the retrying script", "publish_token.py" in pw)
-    check("package-windows: the installer is built on Windows", "runs-on: windows-latest" in pw)
+    check("package-windows: the installer is built on Windows", ("runs-on: windows-latest" in pw or "'\"windows-latest\"'" in pw))
     chk = (SHARED / ".github/workflows/windows-msi-check.yml").read_text()
     check("msi check: says check only and uses the recipe", "CHECK ONLY" in chk and "windows-msi-linux.sh" in chk)
     ap = (SHARED / ".github/workflows/artifact-prune.yml").read_text()
