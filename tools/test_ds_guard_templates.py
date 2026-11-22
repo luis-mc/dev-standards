@@ -78,6 +78,8 @@ def base_project(tmp: Path, name: str, versions: int) -> Path:
             changes = proj / "docs" / "design-system" / "next-version" / "CHANGES.md"
             changes.write_text(changes.read_text() + f"- C{n}: fixture change\n")
         promote(proj, n)
+    if versions:  # R15.14: the enforced version needs an implementation approval
+        ds(proj, "approve-implementation", f"v{versions}", "--approved-on", "2026-02-01", "--evidence", "fixture", "--apply")
     (proj / "src").mkdir()
     (proj / "src" / "app.ts").write_text("export const title = 'Home';\n")
     guards = proj / "scripts" / "design"
@@ -207,6 +209,42 @@ def main() -> int:
         install(gap, clean)
         ok &= expect("v1 missing and not archived fails the layout guard", vitest(gap, "no-such-ref"),
                      {"design-system-layout.test.ts": "holds only version folders"})
+
+        # R15.14: no implementation approval fails; --as-live passes
+        noimpl = base_project(tmp, "noimpl", 1)
+        ap = noimpl / "docs" / "design-system" / "approvals.json"
+        data = json.loads(ap.read_text())
+        data["versions"]["v1"]["implementation"] = None
+        ap.write_text(json.dumps(data, indent=2))
+        commit(noimpl, "no implementation approval")
+        install(noimpl, clean)
+        ok &= expect("enforced version without implementation approval fails",
+                     vitest(noimpl, "HEAD"), {"design-system-freeze.test.ts": "implementation approval"})
+        ds(noimpl, "approve-implementation", "v1", "--as-live", "--evidence", "live as-is, owner said so", "--apply")
+        ok &= expect("--as-live implementation approval passes", vitest(noimpl, "HEAD"), None)
+
+        # R15.14: an approval entry that lacks evidence fails
+        noev = base_project(tmp, "noev", 1)
+        ap = noev / "docs" / "design-system" / "approvals.json"
+        data = json.loads(ap.read_text())
+        del data["versions"]["v1"]["approved"]["evidence"]
+        ap.write_text(json.dumps(data, indent=2))
+        commit(noev, "approval without evidence")
+        install(noev, clean)
+        ok &= expect("a numbered version with an incomplete approval record fails",
+                     vitest(noev, "HEAD"), {"design-system-freeze.test.ts": "owner approval"})
+
+        # R15.14: a stale gallery warns on a task branch and fails on a release branch
+        stale = base_project(tmp, "stale", 1)
+        tk = stale / "docs" / "design-system" / "next-version" / "tokens.md"
+        tk.write_text(tk.read_text() + "\n| `--ds-x` | `#123456` | x |\n")
+        commit(stale, "stale gallery")
+        run(["git", "checkout", "-q", "-b", "DS1-task"], stale)
+        install(stale, clean)
+        ok &= expect("stale gallery on a task branch only warns", vitest(stale, "HEAD"), None)
+        run(["git", "checkout", "-q", "-b", "release/1.0"], stale)
+        ok &= expect("stale gallery on a release branch fails", vitest(stale, "HEAD"),
+                     {"design-system-gallery.test.ts": "matches the stamp"})
 
         ok &= raw_inputs_case(tmp, clean)
         ok &= components_case(tmp)

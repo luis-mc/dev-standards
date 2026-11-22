@@ -24,6 +24,7 @@ This folder is the **only home of the project's UX rules, tokens, components and
 ## Who approves, and how
 
 - **Only the owner approves a version**, and its implementation. Nobody else, and no script, does.
+- The guards fail a numbered folder with no complete record (`approved.by`, `approved.date`, `approved.evidence`, `digest`) and a gallery older than its version's files (a failure on a release branch and on the ready pull request, a warning on a task branch). `design_system.py verify` runs the same checks.
 - The approval is recorded by `design_system.py promote --approved-by ... --approved-on ... --evidence ...`: it needs all three.
 - A numbered folder is **read-only once approved**; the digest in `approvals.json` and the guard tests flag any edit. A link-only edit after files move is accepted with `design_system.py relink vN --apply`. Two one-time additions are allowed afterwards: `audit/` (what each app must change) and `visual/` (real screenshots once the implementation is live).
 - **Every change, even a typo, goes into `next-version`.**
@@ -31,7 +32,7 @@ This folder is the **only home of the project's UX rules, tokens, components and
 ## Order of work
 
 1. Apps follow the **current** (highest numbered) version.
-2. UI work for a new version starts only after the owner approves the version and an audit has shown what changes in each app, and the owner approves that implementation (`design_system.py approve-implementation`).
+2. UI work for a new version starts only after the owner approves the version and an audit has shown what changes in each app, and the owner approves that implementation (`design_system.py approve-implementation`). The guards fail while the highest numbered version has no implementation approval. A version that is already live as-is is recorded once with `design_system.py approve-implementation vN --as-live --evidence "where the owner said so" --apply`.
 3. UI bug fixes that restore what the current version already promises are allowed at any time.
 4. A UI PR body states which version and which sections it follows.
 5. Code and comments cite rules by ID without a version or a path (`design system UX-4`), so a new version touches no code.
@@ -45,4 +46,4 @@ This folder is the **only home of the project's UX rules, tokens, components and
 
 ## Tooling
 
-`design_system.py` (the `luismc-docs` plugin) does `init`, `check`, `status`, `styles` (read-only: lists the project's style files), `visuals`, `promote`, `approve-implementation` and `guards`. The guard tests for the stack sit in the project (`scripts/design/`) and read the enforced version through one helper.
+`design_system.py` (the `luismc-docs` plugin) does `init`, `check`, `status`, `styles` (read-only: lists the project's style files), `visuals`, `promote`, `approve-implementation` (`--as-live` for a version already live), `verify` and `guards`. The guard tests for the stack sit in the project (`scripts/design/`) and read the enforced version through one helper.
