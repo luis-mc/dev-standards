@@ -43,6 +43,18 @@ Each project built its own installer, updater, words and remove dialog, and each
 | D-i | Checks run only for the systems and distributions in the project's `targets`. Where test runs execute is the project's choice. |
 | D-j | The design-system guards of DS234 block at once, with no warning period. |
 
+### Open decisions
+
+**O-1 — Where the result of a remove is kept.** After a successful remove the updater cannot write the result to its own history, because the product is gone. The owner has not chosen a rule. The options:
+
+| Option | What keeps the record | Cost |
+|---|---|---|
+| A | The uninstaller writes one line to an OS log that stays after remove: Windows Event Log, journald or the unified log. | Three writers, one per OS. The log has its own retention, so the line can be rotated away. Reading it needs OS tools and rights. |
+| B | A small remove-log file outside the product folders, kept after remove. | It is a leftover by definition: the leftover scan (LC-15, LC-33) needs an exception for it, and a purge must say whether it deletes it. One more path per OS. |
+| C | The fleet or console server records it when the machine reports before the remove. | Records the intent, not the result. A machine that is offline, or that never reports, leaves no record. Needs a paired machine and a server. |
+
+Until the owner decides, a remove writes no history entry and no check requires one.
+
 ### Parts
 
 | Part | Plugin | What it does |
