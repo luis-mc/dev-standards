@@ -1619,7 +1619,13 @@ def swap_steps(text: str, first: str, second: str) -> str:
     return text.replace(v, "".join(parts))
 
 
+RUNS_ON_ANY = re.compile(r"runs-on: \$\{\{ fromJSON\((?:vars\.CRSP_[A-Z0-9_]+ \|\| )?vars\.CRSP_RUNS_ON_LINUX \|\| vars\.CI_RUNS_ON \|\| '\"ubuntu-latest\"'\) \}\}")
+
+
 def mutate(text: str, old: str, new: str, count: int = 1) -> str:
+    if old == RUNS_ON:  # DL399: the runs-on line may carry a per-job CRSP_<JOB> first
+        check(RUNS_ON_ANY.search(text) is not None, "mutation target not found: runs-on")
+        return RUNS_ON_ANY.sub(lambda m: new, text, count)
     check(old in text, f"mutation target not found: {old!r}")
     return text.replace(old, new, count)
 
@@ -1667,7 +1673,7 @@ def shared_workflows_take_their_runner_from_the_variable():
     for name in SHARED_WORKFLOWS:
         text = read(TEMPLATES / "shared/.github/workflows" / name)
         check(not runs_on_problems(text), f"{name}: {runs_on_problems(text)}")
-        check(runs_on_problems(text.replace(RUNS_ON, "runs-on: ubuntu-latest")),
+        check(runs_on_problems(mutate(text, RUNS_ON, "runs-on: ubuntu-latest", 0)),
               f"{name}: a hard-coded runner was not detected")
 
 
