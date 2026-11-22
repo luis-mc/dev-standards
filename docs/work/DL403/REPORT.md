@@ -169,4 +169,6 @@ Not recommended: making the plugin refuse unknown tools (it would block projects
 - Row counts in section 3 are my count of the table, not a tool output.
 - `docs_check.py` is run before the last push; its result is in the commit message.
 
-Branch head SHA: see the last commit of `DL403-stack-assumptions-audit` (written below at stop).
+Branch head SHA with the full report: `c8d51f9925afa068af810e9e84ed003a4be953b0`. The next commit only adds this SHA and the last line. `docs_check.py` reports only W1 (a work file on the branch), which is expected.
+
+READY
