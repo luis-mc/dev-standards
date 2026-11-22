@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.16.0
+version: 0.17.0
 owner: agents
 type: reference
 code:
@@ -225,6 +225,8 @@ flowchart TB
 | A change that adds a finding | Fail closed: write nothing | A record that was valid stays valid. |
 | Content or a task that is invalid | The error names the field and its limit, or the entry and the rule (`item is 93 characters; the limit is 80`). `task-add` and `set-task-status` refuse the replacement character U+FFFD in any free-text option, naming the option and the position; `check` reports one already held in a task or a content file. | The caller can fix it without running `check`. |
 | `edit-content` replaces a content folder | The replace is atomic. The script writes a staging folder, swaps it in, then removes the old one. If the folder is locked it replaces the files in place, or stops with `content/<key> is in use ...; nothing changed`. Invalid content restores the old folder. On any failure the old content stays complete. `retire` sets the folder aside the same way. | A locked folder on Windows must never leave a half-deleted folder that a later commit records as deleted. |
+| `task-add` for a feature whose decisions asked before 2026-11-14 have empty option summaries | Warns and names `decisions-migrate --feature KEY [--fill-from-title] [--dry-run]`, which fills each empty summary from the option label or sets it to `summary missing`. | A newer decision with an empty summary is still refused (R5.14). |
+| `--phase` repeats | `ci2`, `fix2` and so on name a second round of any phase, shown in time order. | Plain `ci` and `fix` may still repeat. |
 | `edit-content` of a `decisions.json` | Prints `run docs_index.py build: docs/architecture/decisions.md is now stale`. | The script does not run `docs_index.py`; the generated index is rebuilt there. |
 
 ## 9. How it is proven
@@ -314,6 +316,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.17.0 | 2026-11-22 | RELEASE-163 | numbered phase repeats; decisions-migrate; task-add warns on legacy empty summaries | DL392 |
 | 0.16.0 | 2026-11-20 | RELEASE-157 | Where it stands in Full Progress section 1 is built from the record: last Live release and open work with IDs, basis and Expected (R5.23). | AR77 |
 | 0.15.0 | 2026-11-19 | RELEASE-154 | A phase list with no dates takes its day from the occurrence nearest now; far phases warn; two refusals name the fix (R5.22). | AR74 |
 | 0.14.0 | 2026-11-19 | RELEASE-153 | Full Progress is published once after a burst of record changes (settle window, default 60 s); an unchanged copy is not asked for (R5.20, R5.21). | AR72 |

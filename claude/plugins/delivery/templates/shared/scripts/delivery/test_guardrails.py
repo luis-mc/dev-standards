@@ -159,7 +159,7 @@ def settings(cfg: dict) -> dict:
             "default_branch": cfg.get("default_branch") if isinstance(cfg.get("default_branch"), str) else None}
 
 
-def test_limits(st: dict, rep: Report) -> dict:
+def limits_for(st: dict, rep: Report) -> dict:
     """The per-kind limits: the defaults, lowered by any ci.jobs.<id>.test_timeout_s; a higher value is a break."""
     limits = dict(TEST_LIMITS_S)
     for job, conf in st["jobs"].items():
@@ -657,7 +657,7 @@ def scan(root: Path, cfg: dict) -> dict:
     st = settings(cfg)
     repo = Repo(root)
     rep = Report()
-    limits = test_limits(st, rep)
+    limits = limits_for(st, rep)
     g1(repo, rep, limits)
     g2(repo, rep, st)
     g3(repo, rep)

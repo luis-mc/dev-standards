@@ -809,6 +809,7 @@ class Context:
     base_fetched: bool = False
     lock_dirs: list[str] = field(default_factory=list)  # packages a lockfile change touches
     package_kinds: dict = field(default_factory=dict)  # package directory -> its kind (DL256)
+    full: bool = False  # an explicit --full: the only thing that widens the e2e step (DL389)
 
 
 def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = False) -> Context:
@@ -851,6 +852,7 @@ def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = Fals
         base_fetched=fetched,
         lock_dirs=lock_dirs,
         package_kinds=kinds,
+        full=full,
     )
 
 
@@ -929,8 +931,8 @@ def ui_files(ctx: Context) -> list[str]:
 
 def _e2e_selection_ui(ctx: Context) -> tuple[str, list[str]]:
     emap = ctx.cfg.get("e2e_map")
-    if not emap or ctx.widened:
-        specs = e2e_derived(ctx) if not emap and not ctx.widened else []
+    if not emap or ctx.full:
+        specs = e2e_derived(ctx) if not emap and not ctx.full else []
         return ("affected", specs) if specs else ("full", [])
     if any(widen_match(f, e) for f in ctx.files for e in emap["full_on"]):
         return "full", []
@@ -948,13 +950,14 @@ def _e2e_selection_ui(ctx: Context) -> tuple[str, list[str]]:
 def e2e_selection(ctx: Context) -> tuple[str, list[str]]:
     """('affected', specs) when gate.json's "e2e_map" covers every changed UI file
     and no changed file is in "full_on"; otherwise ('full', []) (CONTRACT.md, U1).
-    A widened gate is always 'full'. Without a map the specs come from the
+    Only an explicit --full is always 'full'; other reasons that widen the gate do not
+    widen this step (DL389). Without a map the specs come from the
     workspace dependency graph (e2e_derived). A changed e2e spec file is always in
     the specs (a spec fix is run before it is pushed, DL-88); when nothing else
     forces the whole suite, a change of only spec files runs just those."""
     selection, specs = _e2e_selection_ui(ctx)
     own = changed_e2e_specs(ctx.files, ctx.cfg, ctx.root)
-    if not own or ctx.widened:
+    if not own or ctx.full:
         return selection, specs
     emap = ctx.cfg.get("e2e_map")
     if emap and any(widen_match(f, e) for f in ctx.files for e in emap["full_on"]):
@@ -1071,6 +1074,7 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             cmd, why = step["run"], "package changed"
     else:  # ui-changed
         ui = ui_files(ctx)
+        wide = ctx.full  # DL389: only --full widens the e2e step
         if not wide and not ui:
             return False, None, "no ui_paths change"
         cmd = (step.get("run_full") if wide else None) or step["run"]

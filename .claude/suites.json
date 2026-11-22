@@ -51,6 +51,7 @@
     {"name": "ds-guard-templates", "full": "python tools/test_ds_guard_templates.py", "cases": "", "measure": false},
     {"name": "ds-enforcement", "full": "python tools/test_ds_enforcement.py", "cases": ""},
     {"name": "spec-check", "full": "python tools/test_spec_check.py", "cases": ""},
-    {"name": "project-setup-dl263", "full": "python tools/test_dl263_ci_pin.py", "cases": ""}
+    {"name": "project-setup-dl263", "full": "python tools/test_dl263_ci_pin.py", "cases": ""},
+    {"name": "kit-suite-sim", "full": "python tools/test_kit_suite_sim.py", "cases": ""}
   ]
 }

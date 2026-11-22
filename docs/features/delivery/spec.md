@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.38.2
+version: 0.39.0
 owner: agents
 type: reference
 code:
@@ -146,7 +146,9 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.35** — The PreToolUse hook warns, and never blocks, on a `RemoteTrigger` `create` or `update` whose `run_once_at` is under 2 hours ahead while a question is open. A question is open when the ledger holds an `owner_questions` entry with no `answered_at`. The warning is a `systemMessage`. (DL136)
 
-**R5.36** — `delivery_ledger.py agent-check <agent or task>` sets `last_checked` on an open agent and adds an `agent.checked` event. It also records the agent's liveness (`liveness_at`, `liveness_source`): the newer of the branch's last commit time (`git ls-remote`, then `gh api repos/{owner}/{repo}/commits/<branch>`, then a fetch and `git log`) and the run's `last_event_at` (`--last-event-at`, which lags); `last_event_at` alone is used when the branch does not exist yet or the lookups fail. The stop hook's "was not checked for N min" rule counts from the newest of `last_checked` and `liveness_at`. (DL303) The `record` op `agents_done(pr, branches, tasks)` closes (done, ready) the open agents whose task is in the train's cargo or whose branch is in the list. After a clean `cleanup.py --pr N` run, the close-agents step calls it with the train's branches. `delivery_ledger.py show` lists open agents whose task row in `docs/project/*.html` (a `<tr data-task=...>` with a `status-live`, `status-dropped` or `status-built` chip) is finished. An unreadable record adds nothing and never raises. (DL127)
+**R5.36** — `delivery_ledger.py agent-check <agent or task>` sets `last_checked` on an open agent and adds an `agent.checked` event. It also records the agent's liveness (`liveness_at`, `liveness_source`): the newer of the branch's last commit time (`git ls-remote`, then `gh api repos/{owner}/{repo}/commits/<branch>`, then a fetch and `git log`) and the run's `last_event_at` (`--last-event-at`, which lags); `last_event_at` alone is used when the branch does not exist yet or the lookups fail. `agent-check --note TEXT` stores the text on the agent row. `agent-done` or `agent-check` on a closed agent prints `agent <id> is already closed` and exits 0, and the stale-agent flag never fires for a closed row. (DL392) The stop hook's "was not checked for N min" rule counts from the newest of `last_checked` and `liveness_at`. (DL303) The `record` op `agents_done(pr, branches, tasks)` closes (done, ready) the open agents whose task is in the train's cargo or whose branch is in the list. After a clean `cleanup.py --pr N` run, the close-agents step calls it with the train's branches. `delivery_ledger.py show` lists open agents whose task row in `docs/project/*.html` (a `<tr data-task=...>` with a `status-live`, `status-dropped` or `status-built` chip) is finished. An unreadable record adds nothing and never raises. (DL127)
+
+**R5.36b** — The pre-push hook blocks a push from a worktree with no `node_modules` only when the push changes a file the JS checks cover (`.js .jsx .mjs .cjs .ts .tsx .mts .cts`, `package.json`, `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `tsconfig*.json`). Otherwise it prints one note and skips the node checks. An unknown range counts as a JS change. (DL392)
 
 **R5.36a** — `agent-eta` takes `--owns TEXT` or `--brief FILE` (the `owns:` line of the brief's delivery block). It stores the text on the agent row, compares it with the `owns` of every agent that is running or done but not joined, and prints a WARNING to stderr naming each other agent and the overlapping paths. Overlap is the same path, or one path a prefix of the other after parenthetical notes are removed and `<...>` placeholders and globs are cut to their fixed prefix. It never blocks. (DL303)
 
@@ -543,6 +545,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.39.0 | 2026-11-22 | RELEASE-163 | agent-check --note, closed-agent exit 0, pre-push skips node checks for a push with no JS file (R5.36, R5.36b) | DL392 |
 | 0.38.2 | 2026-11-21 | RELEASE-162 | The e2e push check no longer counts specs that came with a merge of the default branch; it and branch_gate.py --e2e-only use the same merge base. | DL387 |
 | 0.38.1 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |
 | 0.38.0 | 2026-11-19 | RELEASE-151 | Release assets carry the version in the file name by default; release_assets.versioned_names: false opts out (DL-96). | DL371 |

@@ -546,6 +546,33 @@ def _is_text(value, limit, empty_ok=False) -> bool:
     return isinstance(value, str) and len(value) <= limit and (empty_ok or bool(value.strip()))
 
 
+LEGACY_SUMMARY_BEFORE = '2026-11-14'     # DL392: the date the option-summary rule shipped (RELEASE-143)
+SUMMARY_MISSING = 'summary missing'
+
+
+def _legacy_empty_summary(decision, option) -> bool:
+    """DL392: an option with no summary in a decision asked before the rule's release date."""
+    if not isinstance(option, dict) or not isinstance(decision, dict):
+        return False
+    value, asked = option.get('summary'), decision.get('asked')
+    return (value is None or (isinstance(value, str) and not value.strip())) and isinstance(asked, str) \
+        and asked < LEGACY_SUMMARY_BEFORE
+
+
+def legacy_empty_summaries(folder: str, key: str) -> list:
+    """DL392: [(decision id, option number)] of legacy options with an empty summary; [] on any read error."""
+    try:
+        data = json.loads(_read(os.path.join(folder, 'decisions.json')))
+        out = []
+        for d in data['decisions']:
+            for n, o in enumerate(d.get('options') or [], 1):
+                if _legacy_empty_summary(d, o):
+                    out.append((d.get('id'), n))
+        return out
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return []
+
+
 def _real_day(value) -> bool:
     if not (isinstance(value, str) and ISO_DAY_RE.match(value)):
         return False
@@ -616,7 +643,8 @@ def load_decisions(folder: str, key: str):
             elif label.strip().casefold() in labels:
                 problems.append('%s: the label %r is used twice; labels are unique (R5.16)' % (otag, label))
             labels.append(label.strip().casefold())
-            if not _is_text(option.get('summary'), DECISION_LIMITS['summary']):
+            if not _is_text(option.get('summary'), DECISION_LIMITS['summary']) \
+                    and not _legacy_empty_summary(raw, option):      # DL392: old decisions only warn
                 problems.append('%s: "summary" must be text of 1 to %d characters (R5.14)' % (otag, DECISION_LIMITS['summary']))
             flag = option.get('recommended', False)
             if not isinstance(flag, bool):
@@ -1361,6 +1389,12 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links:
 
 # ------------------------------------------------------------------ release timeline (R5.42, R5.43)
 RELEASE_PHASES = ('agents', 'join', 'ci', 'fix', 'merge')      # R5.40
+
+
+def _phase_split(name):
+    """DL392: ('ci', '2') for 'ci2'; ('ci', '') for 'ci'; (None, '') for an unknown name."""
+    m = re.match(r'^([a-z]+?)([2-9]|[1-9]\d+)?$', str(name))
+    return (m.group(1), m.group(2) or '') if m and m.group(1) in RELEASE_PHASES else (None, '')
 PHASE_LABELS = {'agents': 'agents', 'join': 'join', 'ci': 'PR CI', 'fix': 'fix round', 'merge': 'merge + cleanup'}
 TL_X0, TL_X1 = 200, 720          # today's axis, in SVG units
 TL_SLOT0, TL_SLOT_STEP = 820, 90
@@ -1411,7 +1445,7 @@ def _release_row(task: dict, ref: datetime, tasks: list):
 
     phases = []
     for p in task.get('phases') or []:
-        if not isinstance(p, dict) or p.get('name') not in RELEASE_PHASES:
+        if not isinstance(p, dict) or _phase_split(p.get('name'))[0] is None:
             continue
         a, b = minutes(p.get('start')), minutes(p.get('end'))
         if a is not None and b is not None and b > a:
@@ -1509,8 +1543,10 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
             out.append('<text class="rt-sub" x="0" y="%d"><title>%s</title>%s</text>' % (y + 25, esc(sub), esc(_cut(sub, 34))))
         if r['today']:
             for name_, a, b in r['phases']:
+                base_, num_ = _phase_split(name_)
                 out.append('<rect class="rt-bar %s" x="%s" y="%d" width="%s" height="22"><title>%s</title></rect>'
-                           % (name_, _n(x(a)), y, _n(x(b) - x(a)), esc('%s %s-%s' % (PHASE_LABELS[name_], _hhmm(a), _hhmm(b)))))
+                           % (base_, _n(x(a)), y, _n(x(b) - x(a)),
+                              esc('%s %s-%s' % ((PHASE_LABELS[base_] + ' ' + num_).strip(), _hhmm(a), _hhmm(b)))))
             ex = x(r['exp_min'])
             if r['worst'] is not None:
                 rx = x(r['worst'])
