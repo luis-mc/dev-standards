@@ -296,7 +296,7 @@ def _first_runner(cfg):
 
 
 def expected_runs_on(cfg):
-    """DL184: (list or str, pool name or None) the CI_RUNS_ON value `cfg` expects. The one function apply, the by-hand list
+    """DL184: (list or str, pool name or None) the RUNS_ON_LINUX value (old name CI_RUNS_ON) `cfg` expects. The one function apply, the by-hand list
     and the doctor use. A pool machine adds the pool's label."""
     first = _first_labels(cfg)
     if not isinstance(first, list):
@@ -386,10 +386,11 @@ def by_hand_items(cfg) -> list:
     first, pool = expected_runs_on(cfg)
     if first and ({"self-hosted", "github-hosted"} & set(opts.values())):
         value = json.dumps(first)
-        out.append({"id": "var:CI_RUNS_ON", "option": 1 if "self-hosted" in opts.values() else 2, "check": "var",
-                    "name": "CI_RUNS_ON", "value": value,
-                    "title": "Set the repository variable CI_RUNS_ON to %s" % value,
-                    "steps": ["gh variable set CI_RUNS_ON --body '%s'" % value]})
+        # DL394: new setups write RUNS_ON_LINUX. The workflows read it first, then the old CI_RUNS_ON (the way back).
+        out.append({"id": "var:RUNS_ON_LINUX", "option": 1 if "self-hosted" in opts.values() else 2, "check": "var",
+                    "name": "RUNS_ON_LINUX", "value": value,
+                    "title": "Set the repository variable RUNS_ON_LINUX to %s" % value,
+                    "steps": ["gh variable set RUNS_ON_LINUX --body '%s'" % value]})
         if pool:
             out[-1]["pool"] = pool
     if "cloud" in opts.values():
@@ -461,12 +462,14 @@ def check_item(root, cfg, item) -> tuple:
                 state, detail = "ok", "runner %s is online with its labels" % name
     elif kind == "var":
         r = H.gh(root, ["variable", "get", item["name"]])
+        if r is not None and r[0] != 0 and item["name"] == "RUNS_ON_LINUX":
+            r = H.gh(root, ["variable", "get", "CI_RUNS_ON"]) or r  # DL394: the old variable, when it already holds the value
         if r is None:
             state, detail = "unknown", "gh cannot run"
         elif r[0] != 0:
             state, detail = "open", "%s is not set" % item["name"]
         elif r[1].strip().lower() == item["value"].lower() or (
-                item["name"] == "CI_RUNS_ON" and item.get("pool") and _pool_mod() is not None
+                item["name"] in ("RUNS_ON_LINUX", "CI_RUNS_ON") and item.get("pool") and _pool_mod() is not None
                 and _pool_mod().runs_on_satisfied(r[1].strip(), json.loads(item["value"]), item["pool"])):  # label case does not matter to GitHub
             state, detail = "ok", "%s is set" % item["name"]
         else:

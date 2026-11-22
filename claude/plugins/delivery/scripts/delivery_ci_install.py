@@ -673,7 +673,7 @@ TRACKS_JOB = """  # ------------------------------------------------------------
     name: 'tracks: which languages this change touches'
     needs: decide
     if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     permissions:
       contents: read
     outputs:

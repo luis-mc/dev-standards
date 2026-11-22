@@ -617,7 +617,7 @@ then runs `gate.json`'s `setup` commands. Idempotent.
   to the decide-aware condition (so a failed or empty plan runs them); the `e2e` summary accepts a planned skip
   and still fails when a shard that ran failed. `verify` is never planned away. The e2e shards run the files
   `shard_balance.py` assigns (fallback: Playwright's `--shard`).
-- ts `nightly-full.yml`: `schedule` + `workflow_dispatch`; runners from `NIGHTLY_RUNS_ON`, else `CI_RUNS_ON`,
+- ts `nightly-full.yml`: `schedule` + `workflow_dispatch`; runners from `NIGHTLY_RUNS_ON`, else `RUNS_ON_LINUX`, else `CI_RUNS_ON`,
   else `ubuntu-latest`; job `changed` (default branch only) compares the default branch head with the
   `head_sha` of the last successful run of this workflow and outputs `run=false` when equal; the integration
   and browser jobs (every file, every spec) need `run == 'true'` and test the compared commit. go, rust and
@@ -852,12 +852,20 @@ values. The shipped `tools.json` carries real values for 8.30.1.
 
 ### U5 / U6 — runners as a setting
 
-Every workflow template's `runs-on` reads a repository variable:
-`runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}` (a JSON string
-or array of labels, e.g. `["self-hosted","linux"]`). Jobs that need a specific
-OS keep their own label. tech-stack-setup asks hosted or self-hosted and sets
-it with `gh variable set CI_RUNS_ON --body '<json>'` (asks before changing an
-existing repository).
+Every workflow template's `runs-on` reads repository variables, in this order:
+the variable of the runner service for its OS (`RUNS_ON_LINUX`, `RUNS_ON_WINDOWS`,
+`RUNS_ON_MACOS`; a Windows job that declares a size reads `RUNS_ON_WINDOWS_<SIZE>`
+first), then the old variable (`CI_RUNS_ON`, `CI_RUNS_ON_WINDOWS`), then the
+GitHub-hosted default:
+`runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}`
+(each value a JSON string or array of labels, e.g. `["self-hosted","linux","x64","example-label"]`).
+An unset variable falls through to the next. When both the new and the old variable
+are set, the new one wins. The way back to the old variable is to delete `RUNS_ON_*`
+(or set it to the old labels). `delivery_doctor.py` reports which variable each OS
+resolves to and warns when both are set to different values. `delivery_ci_setup.py`
+writes `RUNS_ON_LINUX` for a new setup, with `gh variable set RUNS_ON_LINUX --body '<json>'`
+(asks before changing an existing repository). A Windows job reads
+`vars.RUNS_ON_WINDOWS || vars.CI_RUNS_ON_WINDOWS || '"windows-latest"'`.
 
 ### U8 — one ready-PR CI at a time
 
@@ -961,7 +969,7 @@ directories and manifests that feed the packaged program, the workflow itself an
 `scripts/delivery/smoke.json`, followed by the exclusions `'!docs/**'` and
 `'!**/*.md'` (a documentation-only or record-only merge never builds); and
 `workflow_dispatch:` so a build can always be started by hand. The runner is
-`vars.CI_RUNS_ON` like every workflow. Its artifact has one stable name
+`vars.RUNS_ON_LINUX`, then `vars.CI_RUNS_ON`, like every workflow. Its artifact has one stable name
 (`packaged-program`) and `artifact-prune.yml` lists `Package`. A product adjusts
 the `paths:` list to its own layout; a product with no packaged program deletes
 `package.yml` and its `artifact-prune.yml` entry.
