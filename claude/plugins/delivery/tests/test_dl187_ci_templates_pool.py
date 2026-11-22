@@ -6,7 +6,7 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent / "templates"
 RUST = (BASE / "rust" / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
 TS = (BASE / "ts" / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-POOL = "contains(vars.CI_RUNS_ON || '', 'pool-')"
+POOL = "contains(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')"
 DSN = "postgres://postgres:postgres@localhost:5432/app_test"
 
 

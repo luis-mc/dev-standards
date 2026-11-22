@@ -45,7 +45,7 @@ jobs:
   decide:
     name: 'decide: skip a tree already tested'
     if: ${{ github.event_name == 'push' }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 5
     env:
       DELIVERY_SHARD: decide
@@ -75,7 +75,7 @@ jobs:
     needs: decide
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
     if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 15
     env:
       DELIVERY_SHARD: verify
@@ -207,7 +207,7 @@ jobs:
     needs: decide
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
     if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
-    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 30
     services:
       postgres:

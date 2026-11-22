@@ -8,7 +8,7 @@ name: Nightly full
 # area-selected, so it is not repeated here.
 #
 # Runners come from repository variables, not from this file: NIGHTLY_RUNS_ON, else
-# CI_RUNS_ON, else ubuntu-latest. Each is a JSON runner value, e.g. a self-hosted
+# RUNS_ON_LINUX, else CI_RUNS_ON, else ubuntu-latest. Each is a JSON runner value, e.g. a self-hosted
 # label list: ["self-hosted","Linux","X64","my-label"].
 on:
   schedule:
@@ -29,7 +29,7 @@ jobs:
     # A scheduled run uses the default branch; a manual run from another branch
     # does nothing, so a nightly result always describes the default branch.
     if: ${{ github.ref_name == github.event.repository.default_branch }}
-    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: changed
     timeout-minutes: 5
@@ -61,7 +61,7 @@ jobs:
     needs: changed
     # DL147: needs a skipped job to count as a skip; success() is explicit here.
     if: ${{ !cancelled() && needs.changed.result == 'success' && needs.changed.outputs.run == 'true' }}
-    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 30
     services:
       postgres:
@@ -109,7 +109,7 @@ jobs:
     needs: changed
     # DL147: needs a skipped job to count as a skip; success() is explicit here.
     if: ${{ !cancelled() && needs.changed.result == 'success' && needs.changed.outputs.run == 'true' }}
-    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.NIGHTLY_RUNS_ON || vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: e2e
     timeout-minutes: 30
