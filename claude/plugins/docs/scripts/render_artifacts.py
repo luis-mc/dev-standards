@@ -1361,6 +1361,12 @@ def _checklist(tasks: list, kind: str, label: str, ref: datetime, feature_links:
 
 # ------------------------------------------------------------------ release timeline (R5.42, R5.43)
 RELEASE_PHASES = ('agents', 'join', 'ci', 'fix', 'merge')      # R5.40
+
+
+def _phase_split(name):
+    """DL392: ('ci', '2') for 'ci2'; ('ci', '') for 'ci'; (None, '') for an unknown name."""
+    m = re.match(r'^([a-z]+?)([2-9]|[1-9]\d+)?$', str(name))
+    return (m.group(1), m.group(2) or '') if m and m.group(1) in RELEASE_PHASES else (None, '')
 PHASE_LABELS = {'agents': 'agents', 'join': 'join', 'ci': 'PR CI', 'fix': 'fix round', 'merge': 'merge + cleanup'}
 TL_X0, TL_X1 = 200, 720          # today's axis, in SVG units
 TL_SLOT0, TL_SLOT_STEP = 820, 90
@@ -1411,7 +1417,7 @@ def _release_row(task: dict, ref: datetime, tasks: list):
 
     phases = []
     for p in task.get('phases') or []:
-        if not isinstance(p, dict) or p.get('name') not in RELEASE_PHASES:
+        if not isinstance(p, dict) or _phase_split(p.get('name'))[0] is None:
             continue
         a, b = minutes(p.get('start')), minutes(p.get('end'))
         if a is not None and b is not None and b > a:
@@ -1509,8 +1515,10 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
             out.append('<text class="rt-sub" x="0" y="%d"><title>%s</title>%s</text>' % (y + 25, esc(sub), esc(_cut(sub, 34))))
         if r['today']:
             for name_, a, b in r['phases']:
+                base_, num_ = _phase_split(name_)
                 out.append('<rect class="rt-bar %s" x="%s" y="%d" width="%s" height="22"><title>%s</title></rect>'
-                           % (name_, _n(x(a)), y, _n(x(b) - x(a)), esc('%s %s-%s' % (PHASE_LABELS[name_], _hhmm(a), _hhmm(b)))))
+                           % (base_, _n(x(a)), y, _n(x(b) - x(a)),
+                              esc('%s %s-%s' % ((PHASE_LABELS[base_] + ' ' + num_).strip(), _hhmm(a), _hhmm(b)))))
             ex = x(r['exp_min'])
             if r['worst'] is not None:
                 rx = x(r['worst'])

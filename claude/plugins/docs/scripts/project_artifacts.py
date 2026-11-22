@@ -1665,6 +1665,17 @@ def cmd_feature_new(args):
 DROPPED_REASON_MAX = 80      # R5.49: longest `dropped_reason`
 PHASE_NAMES = ('agents', 'join', 'ci', 'fix', 'merge')       # R5.40
 REPEAT_PHASES = ('ci', 'fix')      # R5.40: a red CI and its fix round may come again; the others once
+_PHASE_NUM_RE = re.compile(r'^([a-z]+?)([2-9]|[1-9]\d+)$')
+
+
+def phase_known(name):
+    """DL392: a phase name, or a numbered repeat of one (ci2, fix3)."""
+    if name in PHASE_NAMES:
+        return True
+    m = _PHASE_NUM_RE.match(str(name))
+    return bool(m and m.group(1) in PHASE_NAMES)
+
+
 RISK_LABEL_MAX = 40
 NO_RELEASE_MAX = 80          # R5.47a: longest `no_release` reason
 _POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
@@ -1704,8 +1715,8 @@ def parse_phases(specs, now_dt):
     for spec in specs:
         name, sep, span = str(spec).partition('=')
         name = name.strip()
-        if not sep or name not in PHASE_NAMES:
-            raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM with NAME one of %s' % (spec, ', '.join(PHASE_NAMES)))
+        if not sep or not phase_known(name):
+            raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM with NAME one of %s, or a numbered repeat such as ci2' % (spec, ', '.join(PHASE_NAMES)))
         if name not in REPEAT_PHASES and any(p['name'] == name for p in out):
             raise Fail(1, '--phase: %s is given twice' % name)
         a, sep, b = span.partition('-')
@@ -1871,7 +1882,7 @@ def release_problems(task, by_id):
             for p in phases:
                 a = parse_iso(p.get('start')) if isinstance(p, dict) else None
                 b = parse_iso(p.get('end')) if isinstance(p, dict) else None
-                if not isinstance(p, dict) or p.get('name') not in PHASE_NAMES or a is None or b is None or b <= a:
+                if not isinstance(p, dict) or not phase_known(p.get('name')) or a is None or b is None or b <= a:
                     out.append(('R5.40', 'a phase needs a name (%s) and a start before its end, ISO times with an offset'
                                 % ', '.join(PHASE_NAMES)))
                 elif p['name'] in seen and p['name'] not in REPEAT_PHASES:
