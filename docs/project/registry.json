@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-22T08:08+00:00",
+  "updated": "2026-11-22T12:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7233,6 +7233,184 @@
       "started": "2026-11-22T01:20+00:00"
     },
     {
+      "id": "DL394",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "D307: delivery reads RUNS_ON_LINUX/WINDOWS/MACOS",
+      "detail": "Owner 22 Nov: pool switch to crsp; RUNS_ON_* first, CI_RUNS_ON* fallback",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:45+00:00",
+      "rides": "DL395",
+      "started": "2026-11-22T09:03+00:00"
+    },
+    {
+      "id": "DL395",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-164: RUNS_ON_* variables",
+      "detail": "join, CI, merge on green",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:46+00:00",
+      "release": 164,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-22T11:43+00:00",
+          "end": "2026-11-22T12:01+00:00"
+        },
+        {
+          "name": "fix",
+          "start": "2026-11-22T12:06+00:00",
+          "end": "2026-11-22T12:08+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-22T12:08+00:00",
+          "end": "2026-11-22T12:20+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-22T12:20+00:00",
+          "end": "2026-11-22T12:25+00:00"
+        }
+      ],
+      "started": "2026-11-22T09:03+00:00",
+      "risk": {
+        "label": "ci-freeze",
+        "minutes": 10
+      }
+    },
+    {
+      "id": "DL396",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Ledger closes an agent on an in-progress NOT READY line",
+      "detail": "comiclex 22 Nov 09:20: done_by=report-not-ready while commits still arrive",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:45+00:00",
+      "rides": "DL395",
+      "started": "2026-11-22T09:22+00:00"
+    },
+    {
+      "id": "DL397",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Template sync keeps project gate steps (merge by step name)",
+      "detail": "crsp 22 Nov 11:45 item 1",
+      "expected": "22 Nov ~12:45",
+      "changed": "2026-11-22T12:03+00:00",
+      "rides": "DL404",
+      "started": "2026-11-22T12:03+00:00"
+    },
+    {
+      "id": "DL398",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Built",
+      "item": "Stop hook honours no_attribution (no noreply re-author advice)",
+      "detail": "crsp 22 Nov 11:45 item 2",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:08+00:00",
+      "rides": "DL404",
+      "started": "2026-11-22T12:03+00:00"
+    },
+    {
+      "id": "DL399",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Per-job runner variable CRSP_<JOB> before CRSP_RUNS_ON_<OS>",
+      "detail": "crsp 22 Nov 11:45 item 3",
+      "expected": "22 Nov ~13:27",
+      "changed": "2026-11-22T12:46+00:00",
+      "rides": "DL404",
+      "started": "2026-11-22T12:46+00:00"
+    },
+    {
+      "id": "DL400",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "pre-push skips deleted Go packages (--diff-filter=d)",
+      "detail": "crsp 22 Nov 11:57 item 5",
+      "expected": "22 Nov ~12:45",
+      "changed": "2026-11-22T12:03+00:00",
+      "rides": "DL404",
+      "started": "2026-11-22T12:03+00:00"
+    },
+    {
+      "id": "DL401",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Dropped",
+      "item": "e2e spec defaults cover Cypress and pytest e2e",
+      "detail": "crsp 22 Nov 11:57 item 6",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:03+00:00",
+      "dropped_into": "DL403"
+    },
+    {
+      "id": "DL402",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Dropped",
+      "item": "G1 per-test timeout checks for Cypress, pytest and Go",
+      "detail": "crsp 22 Nov 11:57 item 7",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:03+00:00",
+      "dropped_into": "DL403"
+    },
+    {
+      "id": "DL403",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Audit: stack and tool assumptions in delivery",
+      "detail": "Owner 22 Nov: should delivery enforce tools? read-only study",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T12:11+00:00",
+      "no_release": "read-only study",
+      "started": "2026-11-22T12:03+00:00"
+    },
+    {
+      "id": "DL404",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE-165: crsp kit findings",
+      "detail": "join, CI, merge on green",
+      "expected": "22 Nov ~13:55",
+      "changed": "2026-11-22T12:46+00:00",
+      "release": 165,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-22T12:05+00:00",
+          "end": "2026-11-22T13:27+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-22T13:27+00:00",
+          "end": "2026-11-22T13:35+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-22T13:35+00:00",
+          "end": "2026-11-22T13:50+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-22T13:50+00:00",
+          "end": "2026-11-22T13:55+00:00"
+        }
+      ],
+      "started": "2026-11-22T12:04+00:00"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -11139,6 +11317,18 @@
       "changed": "2026-11-21T17:25+00:00",
       "rides": "DS236",
       "started": "2026-11-21T15:50+00:00"
+    },
+    {
+      "id": "DS241",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "DS guards: approval record, fresh gallery, implementation approval",
+      "detail": "comiclex D306 22 Nov: three habit-only gaps become checks",
+      "expected": "22 Nov ~13:00",
+      "changed": "2026-11-22T12:04+00:00",
+      "rides": "DL404",
+      "started": "2026-11-22T12:04+00:00"
     },
     {
       "id": "DU1",
