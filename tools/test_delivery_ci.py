@@ -1524,8 +1524,10 @@ def runs_on_problems(text: str) -> list[str]:
     lines = re.findall(r"^\s*runs-on:.*$", text, re.M)
     if not lines:
         return ["no runs-on found"]
+    # DL399: an optional per-job `vars.CRSP_<JOB> ||` comes first, then the shared chain.
+    per_job = re.compile(r"^runs-on: \$\{\{ fromJSON\(vars\.CRSP_[A-Z0-9_]+ \|\| vars\.CRSP_RUNS_ON_LINUX \|\| vars\.CI_RUNS_ON \|\| '\"ubuntu-latest\"'\) \}\}$")
     return [f"runs-on is not the CI_RUNS_ON expression: {ln.strip()}"
-            for ln in lines if ln.strip() != RUNS_ON]
+            for ln in lines if ln.strip() != RUNS_ON and not per_job.match(ln.strip())]
 
 
 def jobs_of(text: str) -> dict[str, str]:

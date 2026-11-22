@@ -31,8 +31,14 @@ def _runs_on_values():
                 if isinstance(body, dict) and "runs-on" in body:
                     out.append((path.name, job, body["runs-on"]))
         else:
-            for m in re.finditer(r"^    runs-on:\s*(.+)$", text, re.M):
-                out.append((path.name, "?", m.group(1)))
+            job = "?"  # no PyYAML: the job key is the last two-space key above the runs-on line
+            for line in text.splitlines():
+                k = re.match(r"^  ([A-Za-z0-9_.-]+):\s*$", line)
+                if k:
+                    job = k.group(1)
+                r = re.match(r"^    runs-on:\s*(.+)$", line)
+                if r:
+                    out.append((path.name, job, r.group(1)))
     return out
 
 
