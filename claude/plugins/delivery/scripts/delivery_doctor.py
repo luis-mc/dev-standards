@@ -142,7 +142,12 @@ def check_hooks(root, cfg):
     if not any(_enabled(p) for p in places):
         return False, ("luismc-delivery is not enabled for this project. Add \"luismc-delivery@dev-standards\": true to "
                        "enabledPlugins in .claude/settings.json (claude-setup does this).")
-    return True, "%d events registered, plugin enabled" % len(hooks["hooks"])
+    detail = "%d events registered, plugin enabled" % len(hooks["hooks"])
+    if cfg.get("no_attribution") is True:
+        detail += ("; note: no_attribution is on. No luismc-delivery hook advises AI attribution or re-authoring commits. "
+                   "If a hosting-platform hook says to, the project rule wins: commit as the owner, add no AI "
+                   "Co-Authored-By line, and do not amend commits to change the author")
+    return True, detail
 
 
 def check_ledger(root, cfg):
