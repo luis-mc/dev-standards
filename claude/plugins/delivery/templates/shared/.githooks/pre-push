@@ -83,11 +83,41 @@ if [ ! -d scripts/delivery ]; then
   exit 0
 fi
 
+# True when the push changes a file the JS checks cover (DL392). Unknown ranges count as JS.
+push_touches_js() {
+  js_re='\.(js|jsx|mjs|cjs|ts|tsx|mts|cts)$|(^|/)(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig[^/]*\.json|\.dependency-cruiser\.cjs)$'
+  seen=0
+  while read -r _l lsha rref rsha; do
+    [ -n "$lsha" ] || continue
+    [ "$lsha" = "$zero" ] && continue
+    case "$rref" in refs/heads/*) ;; *) continue ;; esac
+    seen=1
+    base=""
+    if [ "$rsha" != "$zero" ] && git cat-file -e "$rsha^{commit}" 2>/dev/null; then
+      base=$rsha
+    else
+      for b in origin/main main; do
+        base=$(git merge-base "$b" "$lsha" 2>/dev/null) && [ -n "$base" ] && break
+        base=""
+      done
+    fi
+    [ -n "$base" ] || return 0
+    files=$(git diff --name-only "$base" "$lsha" 2>/dev/null) || return 0
+    printf '%s\n' "$files" | grep -Eq "$js_re" && return 0
+  done < "$stdin_file"
+  [ "$seen" -eq 1 ] && return 1
+  return 0
+}
+
 # A fresh worktree of a pnpm project (gate.json runs pnpm) has no node_modules (DL130): say so instead of a cryptic pnpm error.
+# A push that changes no file the JS checks cover skips the node checks with a note (DL392).
 if [ -f package.json ] && [ -f pnpm-lock.yaml ] && [ ! -d node_modules ] &&
    [ -f scripts/delivery/gate.json ] && grep -q 'pnpm ' scripts/delivery/gate.json; then
-  echo "pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here." >&2
-  exit 1
+  if push_touches_js; then
+    echo "pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here." >&2
+    exit 1
+  fi
+  echo "pre-push: node_modules is missing, but this push changes no JS file; node checks skipped." >&2
 fi
 
 # Python 3.11 or newer, as `python3` or `python`.

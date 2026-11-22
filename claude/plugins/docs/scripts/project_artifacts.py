@@ -1665,6 +1665,17 @@ def cmd_feature_new(args):
 DROPPED_REASON_MAX = 80      # R5.49: longest `dropped_reason`
 PHASE_NAMES = ('agents', 'join', 'ci', 'fix', 'merge')       # R5.40
 REPEAT_PHASES = ('ci', 'fix')      # R5.40: a red CI and its fix round may come again; the others once
+_PHASE_NUM_RE = re.compile(r'^([a-z]+?)([2-9]|[1-9]\d+)$')
+
+
+def phase_known(name):
+    """DL392: a phase name, or a numbered repeat of one (ci2, fix3)."""
+    if name in PHASE_NAMES:
+        return True
+    m = _PHASE_NUM_RE.match(str(name))
+    return bool(m and m.group(1) in PHASE_NAMES)
+
+
 RISK_LABEL_MAX = 40
 NO_RELEASE_MAX = 80          # R5.47a: longest `no_release` reason
 _POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
@@ -1704,8 +1715,8 @@ def parse_phases(specs, now_dt):
     for spec in specs:
         name, sep, span = str(spec).partition('=')
         name = name.strip()
-        if not sep or name not in PHASE_NAMES:
-            raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM with NAME one of %s' % (spec, ', '.join(PHASE_NAMES)))
+        if not sep or not phase_known(name):
+            raise Fail(1, '--phase "%s": use NAME=HH:MM-HH:MM with NAME one of %s, or a numbered repeat such as ci2' % (spec, ', '.join(PHASE_NAMES)))
         if name not in REPEAT_PHASES and any(p['name'] == name for p in out):
             raise Fail(1, '--phase: %s is given twice' % name)
         a, sep, b = span.partition('-')
@@ -1871,7 +1882,7 @@ def release_problems(task, by_id):
             for p in phases:
                 a = parse_iso(p.get('start')) if isinstance(p, dict) else None
                 b = parse_iso(p.get('end')) if isinstance(p, dict) else None
-                if not isinstance(p, dict) or p.get('name') not in PHASE_NAMES or a is None or b is None or b <= a:
+                if not isinstance(p, dict) or not phase_known(p.get('name')) or a is None or b is None or b <= a:
                     out.append(('R5.40', 'a phase needs a name (%s) and a start before its end, ISO times with an offset'
                                 % ', '.join(PHASE_NAMES)))
                 elif p['name'] in seen and p['name'] not in REPEAT_PHASES:
@@ -2123,6 +2134,16 @@ def cmd_task_add(args):
 
     res = run_change(ctx, apply)
     emit(args, res, res['id'])
+    legacy = []
+    if args.owner and args.owner != 'project':      # DL392: a warning, never a refusal
+        try:
+            legacy = R.legacy_empty_summaries(str(ctx.record_dir / 'content' / args.owner), args.owner)
+        except Exception:  # noqa: BLE001
+            legacy = []
+    if legacy:
+        warn('feature "%s" has %d decision option(s) recorded before %s with an empty summary; run '
+             '`decisions-migrate --feature %s [--fill-from-title] [--dry-run]` to fill or flag them'
+             % (args.owner, len(legacy), R.LEGACY_SUMMARY_BEFORE, args.owner))
     if res.get('no_release_to_ride'):     # R6.15: a warning, never a refusal
         warn('%s has no release to ride and shows under no release. Make the release with `task-add --release` '
              '(a release row), then set `--rides <release id>` on the task' % res['id'])
@@ -2488,6 +2509,47 @@ def cmd_edit_content(args):
 
     res = run_change(ctx, apply)
     emit(args, res, 'edit-content %s: %s' % (key, 'no change' if res.get('no_change') else short(res)))
+    return 0
+
+
+def cmd_decisions_migrate(args):
+    """DL392: fill each empty option summary of a feature's decisions from the option label (--fill-from-title)
+    or flag it as 'summary missing'. --dry-run lists them and writes nothing."""
+    ctx = make_ctx(args)
+    key = args.feature
+    if not KEY_RE.match(key):
+        raise Fail(1, 'feature must be a feature key')
+
+    def apply(rec):
+        if rec.entry(key) is None:
+            raise Fail(1, 'unknown feature "%s"' % key)
+        f = rec.dir / 'content' / key / 'decisions.json'
+        if not f.is_file():
+            raise Fail(1, 'feature "%s" has no decisions.json' % key)
+        data = json.loads(f.read_text(encoding='utf-8-sig'))
+        fixed = []
+        for d in data.get('decisions') or []:
+            for n, o in enumerate(d.get('options') or [], 1):
+                s = o.get('summary')
+                if isinstance(o, dict) and (s is None or (isinstance(s, str) and not s.strip())):
+                    label = str(o.get('label') or '').strip()
+                    o['summary'] = (label if args.fill_from_title and label else R.SUMMARY_MISSING)[:R.DECISION_LIMITS['summary']]
+                    fixed.append('%s option %d' % (d.get('id'), n))
+        res = {'command': 'decisions-migrate', 'feature': key, 'filled': fixed, 'dry_run': bool(args.dry_run)}
+        if args.dry_run or not fixed:
+            rec.noop = True
+            return res
+        write_text(f, dump_json(data))
+        rec.invalidate()
+        rec.render_keys[key] = 'new'
+        rec.render_keys[FP_NAME] = 'new'
+        rec.message = ctx.rel + ': decisions-migrate %s' % key
+        res['notes'] = ['run docs_index.py build: docs/architecture/decisions.md is now stale']
+        return res
+
+    res = run_change(ctx, apply)
+    emit(args, res, 'decisions-migrate %s: %d option summary(ies) %s' % (
+        key, len(res['filled']), 'would be filled' if args.dry_run else 'filled'))
     return 0
 
 
@@ -3681,6 +3743,11 @@ def build_parser():
     s.add_argument('--to', required=True, metavar='DIR')
     s.set_defaults(func=cmd_export_content)
 
+    s = sub.add_parser('decisions-migrate', parents=[w], help="fill empty option summaries of a feature's decisions (DL392)")
+    s.add_argument('--feature', required=True, help='the feature key')
+    s.add_argument('--fill-from-title', action='store_true', help="copy the option's label; without it the summary becomes 'summary missing'")
+    s.add_argument('--dry-run', action='store_true', help='list the options and write nothing')
+    s.set_defaults(func=cmd_decisions_migrate)
     s = sub.add_parser('edit-content', parents=[w], help="replace an artifact's content files with a folder's")
     s.add_argument('key')
     s.add_argument('--from', dest='from_dir', required=True, metavar='DIR')
