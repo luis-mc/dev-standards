@@ -66,7 +66,7 @@ describe('an approved design-system version is read-only', () => {
     expect(freezeProblems([{ status: 'M', path: `${DESIGN_SYSTEM}/next-version/tokens.md` }])).toEqual([]);
   });
 
-  it('tells a missing approval record from a complete one (R15.14)', () => {
+  it('tells a missing approval record from a complete one (R15.25)', () => {
     const ok: Approval = { digest: 'd', approved: { by: 'owner', date: '2026-01-01', evidence: 'chat' }, implementation: { date: '2026-01-02', evidence: 'chat' } };
     expect(approvalProblems(['v1'], { v1: ok })).toEqual([]);
     expect(approvalProblems(['v1'], {})).toHaveLength(2); // no entry: no approval, no implementation
@@ -76,7 +76,7 @@ describe('an approved design-system version is read-only', () => {
     expect(approvalProblems(['v1'], { v1: { ...ok, implementation: { date: '2026-01-02', evidence: 'live as-is' } } })).toEqual([]);
   });
 
-  it('has a complete owner approval for every numbered version, and an implementation approval for the enforced one (R15.14)', () => {
+  it('has a complete owner approval for every numbered version, and an implementation approval for the enforced one (R15.25)', () => {
     const names = versionNumbers().map((n) => `v${n}`);
     expect(approvalProblems(names, recorded())).toEqual([]);
   });

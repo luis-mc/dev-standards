@@ -851,7 +851,7 @@ def cmd_approve_impl(root: Path, a) -> int:
     return 0
 
 
-# ------------------------------------------------------------------ verify (blocking checks, R15.14)
+# ------------------------------------------------------------------ verify (blocking checks, R15.25)
 def release_context(root: Path) -> bool:
     """True on a release branch (release*, or DESIGN_GATE=release), where a stale gallery fails.
     The ready PR to the default branch is told with --release or DESIGN_GATE=release."""

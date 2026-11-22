@@ -78,7 +78,7 @@ def base_project(tmp: Path, name: str, versions: int) -> Path:
             changes = proj / "docs" / "design-system" / "next-version" / "CHANGES.md"
             changes.write_text(changes.read_text() + f"- C{n}: fixture change\n")
         promote(proj, n)
-    if versions:  # R15.14: the enforced version needs an implementation approval
+    if versions:  # R15.25: the enforced version needs an implementation approval
         ds(proj, "approve-implementation", f"v{versions}", "--approved-on", "2026-02-01", "--evidence", "fixture", "--apply")
     (proj / "src").mkdir()
     (proj / "src" / "app.ts").write_text("export const title = 'Home';\n")
@@ -210,7 +210,7 @@ def main() -> int:
         ok &= expect("v1 missing and not archived fails the layout guard", vitest(gap, "no-such-ref"),
                      {"design-system-layout.test.ts": "holds only version folders"})
 
-        # R15.14: no implementation approval fails; --as-live passes
+        # R15.25: no implementation approval fails; --as-live passes
         noimpl = base_project(tmp, "noimpl", 1)
         ap = noimpl / "docs" / "design-system" / "approvals.json"
         data = json.loads(ap.read_text())
@@ -223,7 +223,7 @@ def main() -> int:
         ds(noimpl, "approve-implementation", "v1", "--as-live", "--evidence", "live as-is, owner said so", "--apply")
         ok &= expect("--as-live implementation approval passes", vitest(noimpl, "HEAD"), None)
 
-        # R15.14: an approval entry that lacks evidence fails
+        # R15.25: an approval entry that lacks evidence fails
         noev = base_project(tmp, "noev", 1)
         ap = noev / "docs" / "design-system" / "approvals.json"
         data = json.loads(ap.read_text())
@@ -234,7 +234,7 @@ def main() -> int:
         ok &= expect("a numbered version with an incomplete approval record fails",
                      vitest(noev, "HEAD"), {"design-system-freeze.test.ts": "owner approval"})
 
-        # R15.14: a stale gallery warns on a task branch and fails on a release branch
+        # R15.25: a stale gallery warns on a task branch and fails on a release branch
         stale = base_project(tmp, "stale", 1)
         tk = stale / "docs" / "design-system" / "next-version" / "tokens.md"
         tk.write_text(tk.read_text() + "\n| `--ds-x` | `#123456` | x |\n")

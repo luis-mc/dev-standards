@@ -114,14 +114,14 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(rec["implementation"]["date"], "2026-11-05")
         self.assertEqual(S.check(d), [])  # approvals.json is not part of any digest
 
-    # --- DS241: blocking checks (R15.14)
+    # --- DS241: blocking checks (R15.25)
     def _verify_codes(self, d, release=False):
         return sorted((x["code"], x["severity"]) for x in S.verify(d, release))
 
-    def test_verify_silent_without_design_system(self):  # R15.14
+    def test_verify_silent_without_design_system(self):  # R15.25
         self.assertEqual(S.verify(project()), [])
 
-    def test_verify_implementation_approval_fails_then_passes(self):  # R15.14
+    def test_verify_implementation_approval_fails_then_passes(self):  # R15.25
         d = ds_repo()
         S.cmd_promote(d, args())
         self.assertEqual(self._verify_codes(d), [("DS8", "error")])
@@ -129,7 +129,7 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05")), 0)
         self.assertEqual(self._verify_codes(d), [])
 
-    def test_verify_as_live_records_once(self):  # R15.14
+    def test_verify_as_live_records_once(self):  # R15.25
         d = ds_repo()
         S.cmd_promote(d, args())
         self.assertEqual(S.cmd_approve_impl(d, args(version="v1", approved_on=None, evidence="", as_live=True)), 2)  # needs evidence
@@ -139,7 +139,7 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(rec["evidence"], "owner: live as-is")
         self.assertEqual(self._verify_codes(d), [])
 
-    def test_verify_incomplete_approval_record_fails(self):  # R15.14
+    def test_verify_incomplete_approval_record_fails(self):  # R15.25
         d = ds_repo()
         S.cmd_promote(d, args())
         S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05"))
@@ -155,7 +155,7 @@ class DesignSystemTests(unittest.TestCase):
         ap.write_text(json.dumps(data))
         self.assertIn("DS7", [x["code"] for x in S.verify(d)])  # no entry at all
 
-    def test_verify_gallery_task_branch_warns_release_fails(self):  # R15.14
+    def test_verify_gallery_task_branch_warns_release_fails(self):  # R15.25
         d = ds_repo()
         S.cmd_promote(d, args())
         S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05"))
@@ -170,7 +170,7 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(self._verify_codes(d, True), [])
         self.assertEqual(S.main(["verify", "--release", "--root", str(d)]), 0)
 
-    def test_verify_release_branch_name_and_env(self):  # R15.14
+    def test_verify_release_branch_name_and_env(self):  # R15.25
         d = ds_repo()
         S.D.git(d, "init", "-q")
         S.D.git(d, "checkout", "-q", "-b", "DS1-task")
@@ -184,7 +184,7 @@ class DesignSystemTests(unittest.TestCase):
         finally:
             del os.environ["DESIGN_GATE"]
 
-    def test_verify_own_generator_hook(self):  # R15.14
+    def test_verify_own_generator_hook(self):  # R15.25
         d = ds_repo()
         S.cmd_promote(d, args())
         S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05"))

@@ -79,7 +79,7 @@ export interface Approval {
 
 const blank = (v: unknown): boolean => typeof v !== 'string' || v.trim() === '';
 
-/** R15.14: a numbered version with no complete approval record, and an enforced version with no implementation approval. */
+/** R15.25: a numbered version with no complete approval record, and an enforced version with no implementation approval. */
 export const approvalProblems = (names: readonly string[], all: Record<string, Approval>): string[] => {
   const out: string[] = [];
   for (const name of names) {

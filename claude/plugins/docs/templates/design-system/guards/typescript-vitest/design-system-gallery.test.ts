@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DESIGN_SYSTEM, DRAFT, enforcedVersion, repoRoot, sourcesDigest, versionNumbers } from './design-system.ts';
 
-// Gallery freshness guard (R15.14): review-visuals/index.html carries `<!-- source-digest: X -->`, the digest of the
+// Gallery freshness guard (R15.25): review-visuals/index.html carries `<!-- source-digest: X -->`, the digest of the
 // version's md files. It must equal a fresh digest. On a release branch, or with DESIGN_GATE=release (the ready PR to
 // the default branch), a stale gallery fails; on a task branch it only warns (the join rebuilds it).
 // A project with its own generator keeps the same stamp, or sets DESIGN_GALLERY_DIGEST_CMD to a command that prints the digest.
@@ -27,7 +27,7 @@ const branchName = (): string => {
   }
 };
 
-describe('the design-system gallery is fresh (R15.14)', () => {
+describe('the design-system gallery is fresh (R15.25)', () => {
   it('tells a stale stamp from a fresh one', () => {
     expect(staleReason('<!-- source-digest: abc -->', 'abc')).toBeNull();
     expect(staleReason('<!-- source-digest: abc -->', 'def')).toContain('older');
