@@ -544,7 +544,7 @@ def sc_widening(t: T, shared: Path) -> None:
     t.eq("lockfile change: run_full used for scoped steps",
          [x for x in log if x[0] in ("typecheck", "lint", "unit")],
          [["typecheck", "FULL"], ["lint", "FULL"], ["unit", "FULL"]])
-    t.check("lockfile change: e2e runs when widened", any(x[0] == "e2e" for x in log))
+    t.check("lockfile change: e2e does not run when widened without --full (DL389)", not any(x[0] == "e2e" for x in log))
     t.eq("lockfile change: result.widened", box.result()["widened"], True)
 
     box.branch("feat/nested", {"apps/web/package.json": "{}\n"})

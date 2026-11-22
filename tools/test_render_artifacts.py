@@ -1576,7 +1576,7 @@ SCHEMA_CASES = [
     ('duplicate labels', lambda: [dec(1, options=[opt('Single page'), opt('Single page')])], 'used twice', 'R5.16'),
     ('duplicate labels differing in case', lambda: [dec(1, options=[opt('Single page'), opt('single PAGE ')])], 'used twice', 'R5.16'),
     ('empty label', lambda: [dec(1, options=[opt(''), opt('B')], chosen='B')], '"label"', 'R5.16'),
-    ('empty summary', lambda: [dec(1, options=[opt('Single page', summary=''), opt('B')])], '"summary"', 'R5.14'),
+    ('empty summary', lambda: [dec(1, asked='2026-11-20', options=[opt('Single page', summary=''), opt('B')])], '"summary"', 'R5.14'),   # DL392: after the legacy cutoff
     ('decided without chosen', lambda: [dec(1, chosen=None)], 'label of one of its options', 'R5.16'),
     ('chosen is not a label', lambda: [dec(1, chosen='Four steps')], 'label of one of its options', 'R5.16'),
     ('decided without a date', lambda: [dec(1, decided=None)], '"decided" must be a date', 'R5.16'),
