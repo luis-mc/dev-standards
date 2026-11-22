@@ -61,6 +61,45 @@ export const treeDigest = (folder: string): string => {
   return createHash('sha256').update(lines.join('\n')).digest('hex');
 };
 
+/** Same as `design_system.py` `sources_digest`: the stamp a gallery carries (`<!-- source-digest: X -->`). */
+export const sourcesDigest = (folder: string): string => {
+  const h = createHash('sha256');
+  for (const name of ['README.md', 'CHANGES.md', 'ux-rules.md', 'components.md', 'tokens.md', 'content.md']) {
+    const p = join(folder, name);
+    h.update(existsSync(p) ? normalised(readFileSync(p)) : Buffer.from('-'));
+  }
+  return h.digest('hex').slice(0, 16);
+};
+
+export interface Approval {
+  digest?: string;
+  approved?: { by?: string; date?: string; evidence?: string };
+  implementation?: { date?: string; evidence?: string } | null;
+}
+
+const blank = (v: unknown): boolean => typeof v !== 'string' || v.trim() === '';
+
+/** R15.14: a numbered version with no complete approval record, and an enforced version with no implementation approval. */
+export const approvalProblems = (names: readonly string[], all: Record<string, Approval>): string[] => {
+  const out: string[] = [];
+  for (const name of names) {
+    const rec = all[name];
+    const missing = rec === undefined ? ['the whole entry'] : [
+      ...(['by', 'date', 'evidence'] as const).filter((k) => blank(rec.approved?.[k])).map((k) => `approved.${k}`),
+      ...(blank(rec.digest) ? ['digest'] : []),
+    ];
+    if (missing.length)
+      out.push(`${name}: no complete owner approval in approvals.json (missing: ${missing.join(', ')}). Fix: design_system.py promote --approved-by WHO --approved-on DATE --evidence TEXT --apply`);
+  }
+  const top = names[names.length - 1];
+  if (top !== undefined) {
+    const imp = all[top]?.implementation;
+    if (!imp || blank(imp.date) || blank(imp.evidence))
+      out.push(`${top}: the enforced version has no implementation approval. Fix: design_system.py approve-implementation ${top} --approved-on DATE --evidence TEXT --apply (already live as-is: design_system.py approve-implementation ${top} --as-live --evidence TEXT --apply)`);
+  }
+  return out;
+};
+
 // Link-only edits (R15.5): after files move, an approved version may change link targets and nothing else.
 const LINK = /(\]\()([^)\s]+)|(<a\b[^>]*?\bhref=")([^"]*)|(`)([^`\s]*\/[^`\s]*)(?=`)/g;
 

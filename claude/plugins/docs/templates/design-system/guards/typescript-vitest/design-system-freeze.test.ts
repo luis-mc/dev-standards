@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { DESIGN_SYSTEM, NUMBERED, ONE_TIME, isArchived, isLinkOnlyChange, repoRoot, treeDigest, versionNumbers } from './design-system.ts';
+import { DESIGN_SYSTEM, NUMBERED, approvalProblems, type Approval, ONE_TIME, isArchived, isLinkOnlyChange, repoRoot, treeDigest, versionNumbers } from './design-system.ts';
 
 // Freeze guard (R15.4, R15.5): an approved version is read-only, and design changes touch only next-version.
 // Two checks: the digest recorded at approval (approvals.json) still matches the folder, and the branch's diff
@@ -47,9 +47,9 @@ const git = (...args: string[]): string | null => {
 };
 
 const approvalsFile = join(repoRoot, DESIGN_SYSTEM, 'approvals.json');
-const recorded = (): Record<string, { digest?: string }> =>
+const recorded = (): Record<string, Approval> =>
   existsSync(approvalsFile)
-    ? (JSON.parse(readFileSync(approvalsFile, 'utf8')) as { versions: Record<string, { digest?: string }> }).versions
+    ? (JSON.parse(readFileSync(approvalsFile, 'utf8')) as { versions: Record<string, Approval> }).versions
     : {};
 
 describe('an approved design-system version is read-only', () => {
@@ -66,11 +66,26 @@ describe('an approved design-system version is read-only', () => {
     expect(freezeProblems([{ status: 'M', path: `${DESIGN_SYSTEM}/next-version/tokens.md` }])).toEqual([]);
   });
 
+  it('tells a missing approval record from a complete one (R15.14)', () => {
+    const ok: Approval = { digest: 'd', approved: { by: 'owner', date: '2026-01-01', evidence: 'chat' }, implementation: { date: '2026-01-02', evidence: 'chat' } };
+    expect(approvalProblems(['v1'], { v1: ok })).toEqual([]);
+    expect(approvalProblems(['v1'], {})).toHaveLength(2); // no entry: no approval, no implementation
+    expect(approvalProblems(['v1'], { v1: { ...ok, approved: { by: 'owner', date: '2026-01-01' } } })[0]).toContain('approved.evidence');
+    expect(approvalProblems(['v1'], { v1: { ...ok, digest: '' } })[0]).toContain('digest');
+    expect(approvalProblems(['v1', 'v2'], { v1: ok, v2: { ...ok, implementation: null } })).toHaveLength(1); // only the highest needs it
+    expect(approvalProblems(['v1'], { v1: { ...ok, implementation: { date: '2026-01-02', evidence: 'live as-is' } } })).toEqual([]);
+  });
+
+  it('has a complete owner approval for every numbered version, and an implementation approval for the enforced one (R15.14)', () => {
+    const names = versionNumbers().map((n) => `v${n}`);
+    expect(approvalProblems(names, recorded())).toEqual([]);
+  });
+
   it('keeps each numbered version equal to its digest at approval', () => {
     const all = recorded();
     for (const n of versionNumbers()) {
       const name = `v${n}`;
-      expect(all[name], `${name}: no recorded owner approval in approvals.json`).toBeDefined();
+      if (all[name] === undefined) continue; // reported with its fix command by the approval check above
       expect(treeDigest(join(repoRoot, DESIGN_SYSTEM, name)), `${name} was edited after its approval`).toBe(all[name]!.digest);
     }
   });
