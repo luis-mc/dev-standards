@@ -546,6 +546,33 @@ def _is_text(value, limit, empty_ok=False) -> bool:
     return isinstance(value, str) and len(value) <= limit and (empty_ok or bool(value.strip()))
 
 
+LEGACY_SUMMARY_BEFORE = '2026-11-14'     # DL392: the date the option-summary rule shipped (RELEASE-143)
+SUMMARY_MISSING = 'summary missing'
+
+
+def _legacy_empty_summary(decision, option) -> bool:
+    """DL392: an option with no summary in a decision asked before the rule's release date."""
+    if not isinstance(option, dict) or not isinstance(decision, dict):
+        return False
+    value, asked = option.get('summary'), decision.get('asked')
+    return (value is None or (isinstance(value, str) and not value.strip())) and isinstance(asked, str) \
+        and asked < LEGACY_SUMMARY_BEFORE
+
+
+def legacy_empty_summaries(folder: str, key: str) -> list:
+    """DL392: [(decision id, option number)] of legacy options with an empty summary; [] on any read error."""
+    try:
+        data = json.loads(_read(os.path.join(folder, 'decisions.json')))
+        out = []
+        for d in data['decisions']:
+            for n, o in enumerate(d.get('options') or [], 1):
+                if _legacy_empty_summary(d, o):
+                    out.append((d.get('id'), n))
+        return out
+    except (OSError, ValueError, KeyError, TypeError, AttributeError):
+        return []
+
+
 def _real_day(value) -> bool:
     if not (isinstance(value, str) and ISO_DAY_RE.match(value)):
         return False
@@ -616,7 +643,8 @@ def load_decisions(folder: str, key: str):
             elif label.strip().casefold() in labels:
                 problems.append('%s: the label %r is used twice; labels are unique (R5.16)' % (otag, label))
             labels.append(label.strip().casefold())
-            if not _is_text(option.get('summary'), DECISION_LIMITS['summary']):
+            if not _is_text(option.get('summary'), DECISION_LIMITS['summary']) \
+                    and not _legacy_empty_summary(raw, option):      # DL392: old decisions only warn
                 problems.append('%s: "summary" must be text of 1 to %d characters (R5.14)' % (otag, DECISION_LIMITS['summary']))
             flag = option.get('recommended', False)
             if not isinstance(flag, bool):

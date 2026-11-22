@@ -2134,6 +2134,16 @@ def cmd_task_add(args):
 
     res = run_change(ctx, apply)
     emit(args, res, res['id'])
+    legacy = []
+    if args.owner and args.owner != 'project':      # DL392: a warning, never a refusal
+        try:
+            legacy = R.legacy_empty_summaries(str(ctx.record_dir / 'content' / args.owner), args.owner)
+        except Exception:  # noqa: BLE001
+            legacy = []
+    if legacy:
+        warn('feature "%s" has %d decision option(s) recorded before %s with an empty summary; run '
+             '`decisions-migrate --feature %s [--fill-from-title] [--dry-run]` to fill or flag them'
+             % (args.owner, len(legacy), R.LEGACY_SUMMARY_BEFORE, args.owner))
     if res.get('no_release_to_ride'):     # R6.15: a warning, never a refusal
         warn('%s has no release to ride and shows under no release. Make the release with `task-add --release` '
              '(a release row), then set `--rides <release id>` on the task' % res['id'])
@@ -2499,6 +2509,47 @@ def cmd_edit_content(args):
 
     res = run_change(ctx, apply)
     emit(args, res, 'edit-content %s: %s' % (key, 'no change' if res.get('no_change') else short(res)))
+    return 0
+
+
+def cmd_decisions_migrate(args):
+    """DL392: fill each empty option summary of a feature's decisions from the option label (--fill-from-title)
+    or flag it as 'summary missing'. --dry-run lists them and writes nothing."""
+    ctx = make_ctx(args)
+    key = args.feature
+    if not KEY_RE.match(key):
+        raise Fail(1, 'feature must be a feature key')
+
+    def apply(rec):
+        if rec.entry(key) is None:
+            raise Fail(1, 'unknown feature "%s"' % key)
+        f = rec.dir / 'content' / key / 'decisions.json'
+        if not f.is_file():
+            raise Fail(1, 'feature "%s" has no decisions.json' % key)
+        data = json.loads(f.read_text(encoding='utf-8-sig'))
+        fixed = []
+        for d in data.get('decisions') or []:
+            for n, o in enumerate(d.get('options') or [], 1):
+                s = o.get('summary')
+                if isinstance(o, dict) and (s is None or (isinstance(s, str) and not s.strip())):
+                    label = str(o.get('label') or '').strip()
+                    o['summary'] = (label if args.fill_from_title and label else R.SUMMARY_MISSING)[:R.DECISION_LIMITS['summary']]
+                    fixed.append('%s option %d' % (d.get('id'), n))
+        res = {'command': 'decisions-migrate', 'feature': key, 'filled': fixed, 'dry_run': bool(args.dry_run)}
+        if args.dry_run or not fixed:
+            rec.noop = True
+            return res
+        write_text(f, dump_json(data))
+        rec.invalidate()
+        rec.render_keys[key] = 'new'
+        rec.render_keys[FP_NAME] = 'new'
+        rec.message = ctx.rel + ': decisions-migrate %s' % key
+        res['notes'] = ['run docs_index.py build: docs/architecture/decisions.md is now stale']
+        return res
+
+    res = run_change(ctx, apply)
+    emit(args, res, 'decisions-migrate %s: %d option summary(ies) %s' % (
+        key, len(res['filled']), 'would be filled' if args.dry_run else 'filled'))
     return 0
 
 
@@ -3692,6 +3743,11 @@ def build_parser():
     s.add_argument('--to', required=True, metavar='DIR')
     s.set_defaults(func=cmd_export_content)
 
+    s = sub.add_parser('decisions-migrate', parents=[w], help="fill empty option summaries of a feature's decisions (DL392)")
+    s.add_argument('--feature', required=True, help='the feature key')
+    s.add_argument('--fill-from-title', action='store_true', help="copy the option's label; without it the summary becomes 'summary missing'")
+    s.add_argument('--dry-run', action='store_true', help='list the options and write nothing')
+    s.set_defaults(func=cmd_decisions_migrate)
     s = sub.add_parser('edit-content', parents=[w], help="replace an artifact's content files with a folder's")
     s.add_argument('key')
     s.add_argument('--from', dest='from_dir', required=True, metavar='DIR')
