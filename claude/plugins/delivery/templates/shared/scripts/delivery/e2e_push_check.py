@@ -43,6 +43,12 @@ def main(argv: list[str] | None = None) -> int:
     specs = dc.changed_e2e_specs(names, cfg)
     if not specs:
         return dc.EXIT_OK
+    if dc.e2e_step(cfg) is None:
+        # DL397: nothing can run these specs. Say what to fix (the doctor reports it too); do not demand a result.
+        dc.eprint("e2e-push: no e2e step in gate.json. This push changes e2e specs, but gate.json has no step with "
+                  "scope \"ui-changed\", so no e2e result can exist. Add that step (delivery_doctor.py self-check shows "
+                  "this hint). Not blocking this push.")
+        return dc.EXIT_OK
     result = None
     try:
         result = dc.read_json(root / dc.GATE_RESULT_PATH)
