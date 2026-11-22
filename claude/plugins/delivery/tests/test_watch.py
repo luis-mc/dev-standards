@@ -661,7 +661,8 @@ class BranchSignalTests(unittest.TestCase):
         a.update(kw)
         return a
 
-    def run_agent(self, agent, remote=SHA, merged=False, report=None, report_path="docs/work/DL9-report.md"):
+    def run_agent(self, agent, remote=SHA, merged=False, report=None, report_path="docs/work/DL9-report.md",
+                  commit_at=None):
         root = make_root()
         seed(root, agents=[agent])
         routes = {
@@ -674,10 +675,28 @@ class BranchSignalTests(unittest.TestCase):
             ("git", "show"): (0, report or ""),
             ("gh", "api"): (1, ""),
         }
+        if commit_at:
+            routes[("git", "log")] = (0, commit_at + "\n")
         sh = FakeShell(routes)
         W.Watcher(root, sh=sh, now=lambda: NOW, out=lambda *_: None).run_once()
         led = L.load(root)
         return led["agents"][0], led, sh
+
+    def test_in_progress_not_ready_keeps_open(self):
+        for last in ("NOT READY (in progress)", "NOT READY: in progress", "NOT READY: WIP", "NOT READY: still working"):
+            a, _, _ = self.run_agent(self.agent(), report="body\n%s\n" % last)
+            self.assertEqual(a["state"], "running", last)
+
+    def test_terminal_not_ready_waits_for_quiet_time(self):
+        fresh = "2026-10-14T11:55:00Z"    # 5 min before NOW
+        a, _, _ = self.run_agent(self.agent(), report="body\nNOT READY: tests fail\n", commit_at=fresh)
+        self.assertEqual(a["state"], "running")
+        a, _, _ = self.run_agent(self.agent(), report="body\nNOT READY\n", commit_at="2026-10-14T11:49:00Z")
+        self.assertEqual((a["state"], a["done_by"], a["needs_check"]), ("done", "report-not-ready", True))
+
+    def test_ready_closes_at_once_even_with_fresh_commit(self):
+        a, _, _ = self.run_agent(self.agent(), report="body\nREADY\n", commit_at="2026-10-14T11:59:00Z")
+        self.assertEqual((a["state"], a["done_by"]), ("done", "report-ready"))
 
     def test_merged_branch_closes_the_row(self):
         a, led, _ = self.run_agent(self.agent(), merged=True)

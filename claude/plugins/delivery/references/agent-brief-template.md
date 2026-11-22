@@ -28,7 +28,7 @@ B. CI gate (a project with `scripts/delivery/agent_ci.py`): CI is the gate. Run 
 
 Held CI is not a failure. The delivery watcher holds branch runs while a release PR's CI runs: it cancels them and re-runs them when that CI ends. A cancelled or `held` branch run in that time is not a failure. Check `gh run view <id> --json conclusion` and the run list for a re-run. If none appeared, wait about 10 minutes and dispatch once more. If it is held or cancelled twice, write READY when every local test passed, and say in the report that CI was held. A docs check W1 on docs/work (your own report) is expected on a branch and is never a reason for NOT READY.
 
-Report: what changed, what you ran, the branch head, last line READY or NOT READY: <why>.
+Report: what changed, what you ran, the branch head, last line `READY`, `NOT READY` or `NOT READY: <reason>`. Write that last line only when you stop, never while you still work. A line with "in progress", WIP or working keeps the row open.
 ````
 
 Cloud create body (DL-93): set `"mcp_connections": []` and `"clear_mcp_connections": true`. Without them the routine attaches all of the account's connectors. List a connector in `mcp_connections` only when the brief needs it. The launch check refuses a create body with neither.
