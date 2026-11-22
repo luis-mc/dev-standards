@@ -271,11 +271,13 @@ class AgentDoneTests(AgentEtaTests):
             self.assertEqual((a["state"], a["done_by"], a["result"], a["needs_check"]), (state, "session", result, check))
             self.assertTrue(any(e["kind"] == "agent." + state and "ag1" not in e["kind"] for e in led["events"]))
 
-    def test_closed_or_unknown_agent_fails_and_changes_nothing(self):
+    def test_closed_agent_exits_zero_unknown_fails_and_nothing_changes(self):
         root, _ = self.seed()
-        for key in ("ag2", "nope"):
-            r = self.run_cli(root, "agent-done", key, "--result", "ready")
-            self.assertEqual(r.returncode, 1)
+        r = self.run_cli(root, "agent-done", "ag2", "--result", "ready")      # DL392: a closed row is not an error
+        self.assertEqual(r.returncode, 0)
+        self.assertIn("already closed", r.stdout)
+        r = self.run_cli(root, "agent-done", "nope", "--result", "ready")
+        self.assertEqual(r.returncode, 1)
         self.assertEqual(L.load(root)["agents"][0]["state"], "running")
 
 

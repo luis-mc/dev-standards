@@ -871,7 +871,7 @@ written as a content section.
   `id`, `question` (1 to 200 characters), `asked` (a date, `YYYY-MM-DD`),
   `status`, `options`, `chosen` and `decided`, and optionally `owner_words`
   (the owner's own words, verbatim), `task` and `replaces`. An option has
-  `label` (1 to 60 characters), `summary` (1 to 400) and optionally
+  `label` (1 to 60 characters), `summary` (1 to 400; for a decision asked before 2026-11-14 an empty summary is a warning on `task-add`, fixed by `decisions-migrate --feature KEY [--fill-from-title] [--dry-run]`) and optionally
   `recommended` (true or false), `preview` and `image`. Other fields are
   refused. The full-progress artifact has no `decisions.json`. The file is part
   of the artifact's content: `export-content` and `edit-content` carry it, and
@@ -1090,7 +1090,7 @@ double-click.
 
   A phase `name` is `agents`, `join`, `ci`, `fix` (a fix round between a red CI
   and the next CI) or `merge` (merge and cleanup). `ci` and `fix` may repeat
-  (agents, join, ci, fix, ci, merge); the others appear at most once; `start` and `end` are ISO times with an offset, `end` after
+  (agents, join, ci, fix, ci, merge); a numbered repeat of any name (`ci2`, `fix2`) is also a phase name and shows in time order; the others appear at most once; `start` and `end` are ISO times with an offset, `end` after
   `start`. With `--phase NAME=HH:MM-HH:MM`, an end earlier than its start is the
   next day (`ci=23:48-00:28`), and the phases given after it continue on that
   day, so give them in time order; an end equal to its start is refused. `risk` is one named risk: a `label` of at most 40 characters and
