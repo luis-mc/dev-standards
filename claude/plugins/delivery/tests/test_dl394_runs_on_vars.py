@@ -43,8 +43,11 @@ class TemplateOrder(unittest.TestCase):
             value = str(value)
             if "vars." not in value:
                 continue  # a literal hosted label (lifecycle lanes, the hosted fallback) is not self-hostable here
-            names = re.findall(r"vars\.([A-Z_]+)", value)
+            names = re.findall(r"vars\.([A-Z0-9_]+)", value)
             names = [n for n in names if not n.startswith("NIGHTLY")]
+            if name != "lifecycle-lanes.yml":  # DL399: the per-job variable comes first
+                self.assertEqual(names[0], DOC.job_var_name(job), "%s %s: %s" % (name, job, value))
+                names = names[1:]
             self.assertIn(tuple(names), (LINUX, WINDOWS), "%s %s: %s" % (name, job, value))
             if name != "pool-check.yml":
                 self.assertRegex(value, r"\|\| '\"(ubuntu|windows)-latest\"'\) \}\}$", "%s %s needs a hosted default" % (name, job))
@@ -54,9 +57,33 @@ class TemplateOrder(unittest.TestCase):
     def test_no_template_reads_only_the_old_variable(self):
         for path in TEMPLATES.rglob("*.yml"):
             for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-                if "runs-on:" in line and "vars.CI_RUNS_ON" in line:
+                if "runs-on:" in line and "vars.CI_RUNS_ON" in line and "vars.CRSP_RUNS_ON_" in line:
                     self.assertTrue("vars.CRSP_RUNS_ON_" in line and line.index("vars.CRSP_RUNS_ON_") < line.index("vars.CI_RUNS_ON"),
                                     "%s:%d" % (path.name, n))
+
+
+class PerJobName(unittest.TestCase):
+    """DL399: CRSP_<JOB>, the job key uppercased with every non-alphanumeric turned into `_`."""
+
+    def test_name_rule(self):
+        for job, want in (("linux-suites", "CRSP_LINUX_SUITES"), ("a.b", "CRSP_A_B"), ("test2", "CRSP_TEST2"),
+                          ("e2e-1.5_x", "CRSP_E2E_1_5_X"), ("lint", "CRSP_LINT")):
+            self.assertEqual(DOC.job_var_name(job), want)
+
+    def test_lifecycle_lanes_read_the_job_variable_first(self):
+        text = (TEMPLATES / "lifecycle" / "os" / "lifecycle-lanes.yml").read_text(encoding="utf-8")
+        n = 0
+        for m in re.finditer(r"^  ([\w.-]+):\n(?:(?!^  \S).*\n)*?    runs-on: (.+)$", text, re.M):
+            self.assertTrue(m.group(2).startswith("${{ fromJSON(vars.%s || vars.LIFECYCLE_RUNS_ON_" % DOC.job_var_name(m.group(1))))
+            n += 1
+        self.assertEqual(n, 6)
+
+    def test_doctor_lists_per_job_overrides(self):
+        v = {"CRSP_LINUX_SUITES": '["self-hosted","a"]', "CRSP_RUNS_ON_LINUX": '["self-hosted","b"]', "OTHER": "x"}
+        self.assertEqual([n for n, _ in DOC.per_job_overrides(v)], ["CRSP_LINUX_SUITES"])
+        d = DOC.runs_on_items(v, "o/r")[0]["detail"]
+        self.assertIn("CRSP_LINUX_SUITES", d)
+        self.assertNotIn("Per-job", DOC.runs_on_items({"CRSP_RUNS_ON_LINUX": '"x"'}, "o/r")[0]["detail"])
 
 
 class DoctorReport(unittest.TestCase):

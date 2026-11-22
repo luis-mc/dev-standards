@@ -212,6 +212,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.63** — Runner variables (DL394). Every `runs-on` in the workflow templates picks, in order, the variable of the runner service for its OS (`CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`, `CRSP_RUNS_ON_MACOS`; a Windows job that declares a size reads `CRSP_RUNS_ON_WINDOWS_<SIZE>` first), then the old variable (`CI_RUNS_ON`, `CI_RUNS_ON_WINDOWS`), then the GitHub-hosted default, as `fromJSON(vars.NEW || vars.OLD || '"ubuntu-latest"')`. An unset variable falls through. When both are set the new one wins; the way back is to delete `CRSP_RUNS_ON_*` or set it to the old labels. `delivery_ci_setup.py` writes `CRSP_RUNS_ON_LINUX` for a new setup. The doctor reports which variable each OS resolves to and warns when the old and the new variable differ. Tests: `claude/plugins/delivery/tests/test_dl394_runs_on_vars.py`.
 
+**R5.64** — Per-job runner variable (DL399). The runner service also writes one variable per job, `CRSP_<JOB>`: the workflow job key uppercased, every non-alphanumeric character turned into `_` (job `linux-suites` reads `CRSP_LINUX_SUITES`). A matrix job keeps its job key. Every `runs-on` in the workflow templates reads it first, then the R5.63 chain unchanged. The doctor's runner report lists the per-job overrides it finds set. The way back is to delete `CRSP_<JOB>` and `CRSP_RUNS_ON_*`. Tests: `claude/plugins/delivery/tests/test_dl394_runs_on_vars.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).

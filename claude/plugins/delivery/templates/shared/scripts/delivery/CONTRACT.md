@@ -853,16 +853,18 @@ values. The shipped `tools.json` carries real values for 8.30.1.
 ### U5 / U6 — runners as a setting
 
 Every workflow template's `runs-on` reads repository variables, in this order:
-the variable of the runner service for its OS (`CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`,
+first the per-job variable `CRSP_<JOB>` (DL399), then the variable of the runner service for its OS (`CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`,
 `CRSP_RUNS_ON_MACOS`; a Windows job that declares a size reads `CRSP_RUNS_ON_WINDOWS_<SIZE>`
 first), then the old variable (`CI_RUNS_ON`, `CI_RUNS_ON_WINDOWS`), then the
 GitHub-hosted default:
-`runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}`
-(each value a JSON string or array of labels, e.g. `["self-hosted","linux","x64","example-label"]`).
+`runs-on: ${{ fromJSON(vars.CRSP_LINT || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}`
+for a job whose key is `lint`. `<JOB>` is the workflow job key uppercased with every non-alphanumeric
+character turned into `_` (job `linux-suites` reads `CRSP_LINUX_SUITES`). A matrix job keeps its job key, not its matrix values.
+The runner service writes one `CRSP_<JOB>` per job with that job's sized labels (each value a JSON string or array of labels, e.g. `["self-hosted","linux","x64","example-label"]`).
 An unset variable falls through to the next. When both the new and the old variable
-are set, the new one wins. The way back to the old variable is to delete `CRSP_RUNS_ON_*`
-(or set it to the old labels). `delivery_doctor.py` reports which variable each OS
-resolves to and warns when both are set to different values. `delivery_ci_setup.py`
+are set, the new one wins. The way back is to delete `CRSP_<JOB>` and `CRSP_RUNS_ON_*`
+(or set them to the old labels). `delivery_doctor.py` reports which variable each OS
+resolves to, lists the per-job `CRSP_<JOB>` overrides it finds set, and warns when both are set to different values. `delivery_ci_setup.py`
 writes `CRSP_RUNS_ON_LINUX` for a new setup, with `gh variable set CRSP_RUNS_ON_LINUX --body '<json>'`
 (asks before changing an existing repository). A Windows job reads
 `vars.CRSP_RUNS_ON_WINDOWS || vars.CI_RUNS_ON_WINDOWS || '"windows-latest"'`.

@@ -961,6 +961,20 @@ def resolve_runs_on(variables):
     return out
 
 
+def job_var_name(job):
+    """DL399: the per-job runner variable of a workflow job key: CRSP_ + the key uppercased, every non-alphanumeric as `_`."""
+    return "CRSP_" + re.sub(r"[^A-Za-z0-9]", "_", str(job)).upper()
+
+
+def per_job_overrides(variables):
+    """DL399: sorted [(name, value)] of the set CRSP_<JOB> variables (every CRSP_ variable except CRSP_RUNS_ON_*)."""
+    out = []
+    for n, v in (variables or {}).items():
+        if str(n).startswith("CRSP_") and not str(n).startswith("CRSP_RUNS_ON_") and str(v or "").strip():
+            out.append((str(n), str(v).strip()))
+    return sorted(out)
+
+
 def runs_on_items(variables, tag):
     """DL394: one item that says which variable each OS resolves to, and a warn when the old and the new variable are both
     set with different values (the new one wins; delete CRSP_RUNS_ON_* or set it to the old labels to go back)."""
@@ -968,7 +982,12 @@ def runs_on_items(variables, tag):
         return []
     res = resolve_runs_on(variables)
     parts = ["%s -> %s" % (o, "%s (%s)" % (n, v) if n else "GitHub-hosted default") for o, n, v, _ in res]
-    items = [_item("workflows.runs_on:" + tag, "ok", "runs-on of %s resolves: %s" % (tag, "; ".join(parts)))]
+    detail = "runs-on of %s resolves: %s" % (tag, "; ".join(parts))
+    jobs = per_job_overrides(variables)
+    if jobs:
+        detail += ". Per-job overrides (win over the OS variable): %s. To go back, delete CRSP_<JOB> and CRSP_RUNS_ON_*" % (
+            "; ".join("%s (%s)" % nv for nv in jobs))
+    items = [_item("workflows.runs_on:" + tag, "ok", detail)]
     clash = ["%s: %s wins over %s" % (o, n, other) for o, n, _, other in res if other]
     if clash:
         items.append(_item("workflows.runs_on_both:" + tag, "warn",

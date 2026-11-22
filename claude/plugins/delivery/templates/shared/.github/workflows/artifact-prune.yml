@@ -37,7 +37,7 @@ permissions:
 jobs:
   prune:
     name: prune build artifacts
-    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    runs-on: ${{ fromJSON(vars.CRSP_PRUNE || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: prune
     timeout-minutes: 10
