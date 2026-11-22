@@ -27,4 +27,6 @@ Gap: the project's 64 failures cannot be reproduced from the kit alone. If its t
 - `python3 tools/ci_areas.py --branch-advice`: light, test locally only.
 - `python3 claude/plugins/docs/scripts/docs_check.py`: 1 error, W1 for `docs/work/DL390/REPORT.md`. This is expected on an agent branch; the join strips `docs/work/`. No other finding.
 
+Branch head (code commit): 53e583c06f1219a81a4159ee2dc1cfaa25112768
+
 READY
