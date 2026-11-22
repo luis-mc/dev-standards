@@ -1,7 +1,7 @@
 # Verify workflow (DL30): one job that takes a machine slot, prints the runner name and passes.
 # Copy to .github/workflows/pool-check.yml. Run it with: gh workflow run pool-check.yml
 # A manual run needs the file on the default branch, so it also runs when a push adds or changes this file (DL77):
-# push a branch with it before RUNS_ON_LINUX or CI_RUNS_ON is set, and the check runs on that branch.
+# push a branch with it before CRSP_RUNS_ON_LINUX or CI_RUNS_ON is set, and the check runs on that branch.
 name: pool-check
 on:
   workflow_dispatch:
@@ -12,7 +12,7 @@ jobs:
   check:
     # Private repositories only (contract section 5).
     if: github.event.repository.private == true
-    runs-on: ${{ fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON) }}
     timeout-minutes: 15
     steps:
       - name: Show where this job runs

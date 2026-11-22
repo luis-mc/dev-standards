@@ -241,7 +241,7 @@ def sc_templates(t: T, shared: Path) -> None:
         t.check("%s: package.yml never runs for docs only" % track, "'!docs/**'" in text and "'!**/*.md'" in text)
         t.check("%s: package.yml runs the packaged-program smoke test" % track, "scripts/delivery/smoke_packaged.py" in text)
         t.check("%s: package.yml skips drafts" % track, "pull_request.draft" in text)
-        t.check("%s: package.yml reads the runner from CI_RUNS_ON" % track, "fromJSON(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '\"ubuntu-latest\"')" in text)
+        t.check("%s: package.yml reads the runner from CI_RUNS_ON" % track, "fromJSON(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '\"ubuntu-latest\"')" in text)
         if "upload-artifact" in text:
             t.check("%s: the artifact has a stable name" % track, re.search(r"name:\s*packaged-program\s*$", text, re.M) is not None)
     prune = (shared / ".github/workflows/artifact-prune.yml").read_text(encoding="utf-8")

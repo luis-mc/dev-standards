@@ -5,7 +5,7 @@ from pathlib import Path
 
 BASE = Path(__file__).resolve().parent.parent / "templates"
 TEXT = {t: (BASE / t / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8") for t in ("rust", "ts")}
-POOL = "contains(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')"
+POOL = "contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')"
 
 
 def job(text, key):

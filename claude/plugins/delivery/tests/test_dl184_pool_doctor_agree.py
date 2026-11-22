@@ -159,15 +159,15 @@ class AgentNameAndRunsOnTests(Base):
         root = self.project(T.OPT1)
         items = {i["id"]: i for i in S.by_hand_items(T.load(root))}
         self.assertIn("Install the GitHub runner", items["runner:pc1"]["title"])
-        self.assertEqual(json.loads(items["var:RUNS_ON_LINUX"]["value"]), ["self-hosted", "linux"])
-        self.assertNotIn("pool", items["var:RUNS_ON_LINUX"])
+        self.assertEqual(json.loads(items["var:CRSP_RUNS_ON_LINUX"]["value"]), ["self-hosted", "linux"])
+        self.assertNotIn("pool", items["var:CRSP_RUNS_ON_LINUX"])
 
     def test_apply_proposes_the_pool_value(self):
         self.make_pool()
         root = self.project(POOL_OPT1)
         items = {i["id"]: i for i in S.by_hand_items(T.load(root))}
-        self.assertEqual(json.loads(items["var:RUNS_ON_LINUX"]["value"]), ["self-hosted", "linux", "pool-main"])
-        self.assertIn("pool-main", items["var:RUNS_ON_LINUX"]["steps"][0])
+        self.assertEqual(json.loads(items["var:CRSP_RUNS_ON_LINUX"]["value"]), ["self-hosted", "linux", "pool-main"])
+        self.assertIn("pool-main", items["var:CRSP_RUNS_ON_LINUX"]["steps"][0])
 
     def test_pool_run_and_apply_use_the_same_value(self):
         self.assertEqual(P.expected_runs_on(["self-hosted", "linux"], "main"), ["self-hosted", "linux", "pool-main"])
@@ -183,7 +183,7 @@ class AgentNameAndRunsOnTests(Base):
         st = self.agents("main-widget")
         st["vars"]["CI_RUNS_ON"] = '["self-hosted","linux"]'
         self.fake(st)
-        self.assertIn("RUNS_ON_LINUX is", self.ci(root)[1])
+        self.assertIn("CRSP_RUNS_ON_LINUX is", self.ci(root)[1])
 
 
 class EndToEndTests(Base):
@@ -199,7 +199,7 @@ class EndToEndTests(Base):
         self.fake(st)
         ok, detail = self.ci(root)
         self.assertNotIn("runner:main", detail.replace("load-gate:main", ""))
-        self.assertNotIn("var:RUNS_ON_LINUX", detail)
+        self.assertNotIn("var:CRSP_RUNS_ON_LINUX", detail)
         files = D._pool_files_items(P, None)
         self.assertEqual([i["status"] for i in files], ["ok"])
         res = {}

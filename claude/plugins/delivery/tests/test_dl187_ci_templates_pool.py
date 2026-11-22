@@ -6,7 +6,7 @@ from pathlib import Path
 BASE = Path(__file__).resolve().parent.parent / "templates"
 RUST = (BASE / "rust" / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
 TS = (BASE / "ts" / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
-POOL = "contains(vars.RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')"
+POOL = "contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')"
 DSN = "postgres://postgres:postgres@localhost:5432/app_test"
 
 
@@ -50,7 +50,7 @@ class PoolBoth(unittest.TestCase):
     def test_non_pool_path_unchanged(self):
         for text in (RUST, TS):
             job = integration(text)
-            self.assertIn("DATABASE_URL: %s\n" % DSN, job)
+            self.assertIn("DATABASE_URL: %s\n" % DSN, job)  # secret-scan:ignore (local test database URL, not a secret)
             self.assertNotIn("DATABASE_URL:", integration(text, "integration-pool"))
             for line in ("POSTGRES_USER: postgres", "POSTGRES_DB: app_test",
                          "ports: ['5432:5432']", "--health-cmd pg_isready"):
