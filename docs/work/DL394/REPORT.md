@@ -22,6 +22,6 @@
 `python3 claude/plugins/docs/scripts/docs_check.py`: 0 errors, 1 warning (tools/test_ci_speedups.py unmapped, existed before).
 
 ## Head
-See `git rev-parse HEAD` on branch DL394-runs-on-vars (the last commit).
+Code and docs commit: 50ad80e61ecf76474956b2551645fab4b9e0c425 (branch DL394-runs-on-vars; a later commit only updates this line).
 
 READY
