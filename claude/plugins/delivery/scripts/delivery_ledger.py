@@ -936,11 +936,16 @@ def _cmd_agent_eta(root, args) -> int:
 
 def _cmd_agent_done(root, args) -> int:
     """DL14: the session's fallback record for a cloud agent whose run it read with RemoteTrigger list_runs."""
+    box = {}
+
     def fn(led):
         key = str(args.agent)
         rows = [a for a in led["agents"] if a.get("state") in ("queued", "running", "pushed", "stalled")
                 and _agent_matches(a, key)]
         if not rows:
+            if any(a.get("state") in _AGENT_DONE and _agent_matches(a, key) for a in led["agents"]):
+                box["closed"] = True      # DL392: a closed row is not an error
+                return
             raise LedgerError("no open agent %s" % key)
         a = rows[0]
         a["state"] = "failed" if args.result == "failed" else "done"
@@ -952,6 +957,8 @@ def _cmd_agent_done(root, args) -> int:
         add_event(led, "agent.%s" % a["state"], "%s by %s (%s)" % (a.get("task") or a.get("id"), args.by, args.result),
                   "delivery_ledger")
     update(root, fn)
+    if box.get("closed"):
+        print("agent %s is already closed" % args.agent)
     return 0
 
 
@@ -1072,15 +1079,23 @@ def _cmd_agent_check(root, args) -> int:
         key = str(args.agent)
         rows = [a for a in led["agents"] if a.get("state") not in _AGENT_DONE and _agent_matches(a, key)]
         if not rows:
+            if any(a.get("state") in _AGENT_DONE and _agent_matches(a, key) for a in led["agents"]):
+                box["closed"] = True      # DL392
+                return
             raise LedgerError("no open agent %s" % key)
         a = rows[0]
         a["last_checked"] = iso()
+        if getattr(args, "note", None):
+            a["note"] = args.note          # DL392
         box["at"] = a["last_checked"]
         a["liveness_source"] = source
         if live_at is not None:
             a["liveness_at"] = iso(live_at)
         add_event(led, "agent.checked", str(a.get("task") or a.get("id") or ""), "delivery_ledger")
     update(root, fn)
+    if box.get("closed"):
+        print("agent %s is already closed" % args.agent)
+        return 0
     print(box["at"] + " liveness=%s source=%s" % (iso(live_at) if live_at else "-", source))
     return 0
 
@@ -1522,6 +1537,7 @@ def main(argv=None) -> int:
     p.add_argument("--result", required=True, choices=("ready", "not-ready", "failed"))
     p = sub.add_parser("agent-check")
     p.add_argument("agent", help="the agent id or task of an open agent")
+    p.add_argument("--note", help="a short note stored on the agent row")
     p.add_argument("--last-event-at", help="the run's last_event_at from RemoteTrigger list_runs (the fallback time)")
     p = sub.add_parser("show")
     p.add_argument("--json", action="store_true")
