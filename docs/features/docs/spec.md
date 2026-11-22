@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.7.0
+version: 1.8.0
 owner: agents
 type: reference
 code:
@@ -109,6 +109,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.22** — The words-lint guard templates (`words-lint-typescript-vitest`, `words-lint-rust`, `words-lint-go`, `words-lint-python`) check LC-2 and LC-31 against the project's words table (DOCSPEC R15.15).
 
+**R5.24** — `design_system.py verify` and the guard templates block from adoption (DOCSPEC R15.25): a numbered version without a complete `approvals.json` record (DS7), an enforced version without an implementation approval (DS8), and a gallery whose source stamp is stale (DS9; an error on a release branch or with `--release` or `DESIGN_GATE=release`, a warning on a task branch). A project's own generator keeps the same stamp or sets `design_gallery_digest_command` in `docs.json`. `approve-implementation vN --as-live --evidence TEXT` records a version that is already live. Each message names its fix command.
+
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
 
 **R6.2** — The checks read Markdown, JSON, git and named paths only. They run a project command only for `generated_reference` (DOCSPEC R8.4).
@@ -157,6 +159,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.20 | `claude/plugins/docs/tests/test_du13_install_update.py`, `claude/plugins/docs/tests/test_design_system.py` |
 | R5.21, R5.22 | `claude/plugins/docs/tests/test_ds235a_lifecycle_contract.py` |
 | R5.23 | `claude/plugins/docs/tests/test_ds235b_guards.py`, `claude/plugins/docs/tests/test_ds235b_parts.py` |
+| R5.24 | `claude/plugins/docs/tests/test_design_system.py`, `tools/test_ds_guard_templates.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
@@ -193,6 +196,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.8.0 | 2026-11-22 | RELEASE-165 | design_system.py verify and the guard templates fail a missing approval record, a missing implementation approval and a stale gallery; approve-implementation --as-live records a live version (DOCSPEC R15.14). | DS241 |
 | 1.7.0 | 2026-11-21 | RELEASE-160 | Lifecycle contract schema, starter, words table and words lint guards for a project with a local app (R5.21, R5.22).<br>Added R5.21: lifecycle parts (React and Rust models), DS234 design-system guards A to E and lifecycle guards LC-22, LC-23, LC-24, LC-30. (section 5) | DS235a, DS235b |
 | 1.6.0 | 2026-11-18 | RELEASE-150 | The design-system starter holds the default install and update windows: rules UX-62 to UX-65, two components and Windows templates (R5.20). | DU13 |
 | 1.5.0 | 2026-11-16 | RELEASE-149 | The design-system starter opens with the binding Core UX Principles (CORE-1 to CORE-7), UX-57 to UX-61 are added, and docs_check warns (DS6) when next-version/ux-rules.md lacks the principles (DOCSPEC R15.12). | ST6 |

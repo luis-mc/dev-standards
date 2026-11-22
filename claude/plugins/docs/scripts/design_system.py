@@ -8,6 +8,11 @@
   design_system.py promote --approved-by WHO --approved-on DATE --evidence TEXT [--apply]
                                                       next-version -> the next numbered folder, only with a recorded approval
   design_system.py approve-implementation VERSION --approved-on DATE --evidence TEXT [--apply]
+  design_system.py approve-implementation VERSION --as-live --evidence TEXT [--apply]
+                                                      one-time: the version is already live as-is; records that with the owner's evidence
+  design_system.py verify [--release] [--json]        blocking checks (exit 1): every numbered version has an owner approval record, the
+                                                      enforced version has an implementation approval, the gallery carries a fresh source
+                                                      stamp (fails on release branches and with --release; warns on task branches)
   design_system.py relink VERSION [--base REF] [--apply]
                                                       accept a link-only edit of an approved version (files moved): every changed
                                                       line differs only in link targets and each new target exists; records the new digest
@@ -828,16 +833,102 @@ def cmd_approve_impl(root: Path, a) -> int:
     if not rec or not rec.get("approved"):
         print(f"refused: {a.version} has no recorded approval", file=sys.stderr)
         return 2
-    if not a.evidence or not _valid_date(a.approved_on):
-        print("refused: --approved-on YYYY-MM-DD and --evidence are required", file=sys.stderr)
+    as_live = bool(getattr(a, "as_live", False))
+    on = a.approved_on or (today() if as_live else None)
+    if not (a.evidence or "").strip() or not _valid_date(on):
+        print("refused: --approved-on YYYY-MM-DD and --evidence are required" + (" (--as-live defaults the date to today)" if as_live else ""), file=sys.stderr)
         return 2
-    print(f"{'recorded' if a.apply else 'would record'}: implementation of {a.version} approved on {a.approved_on}: {a.evidence}")
+    entry = {"date": on, "evidence": a.evidence}
+    if as_live:
+        entry["as_live"] = True
+    what = "implementation of %s is live as-is, approved by the owner" % a.version if as_live else "implementation of %s approved" % a.version
+    print(f"{'recorded' if a.apply else 'would record'}: {what} on {on}: {a.evidence}")
     if a.apply:
-        rec["implementation"] = {"date": a.approved_on, "evidence": a.evidence}
+        rec["implementation"] = entry
         write_approvals(root, appr)
     else:
         print("dry run: add --apply")
     return 0
+
+
+# ------------------------------------------------------------------ verify (blocking checks, R15.25)
+def release_context(root: Path) -> bool:
+    """True on a release branch (release*, or DESIGN_GATE=release), where a stale gallery fails.
+    The ready PR to the default branch is told with --release or DESIGN_GATE=release."""
+    if os.environ.get("DESIGN_GATE", "").strip().lower() == "release":
+        return True
+    try:
+        cur = D.git(root, "symbolic-ref", "--short", "-q", "HEAD")
+    except OSError:
+        return False
+    name = cur.stdout.strip() if cur.returncode == 0 else ""
+    return name == D.load_config(Path(root))["default_branch"] or name.startswith(("release/", "release-", "release"))
+
+
+def gallery_stamp_problem(root: Path, folder: Path) -> str | None:
+    """None when the gallery's `<!-- source-digest: X -->` stamp equals the fresh digest, else why not.
+    A project that builds the gallery with its own generator names a command in docs.json
+    (`design_gallery_digest_command`) that prints the digest the gallery must carry; it replaces the default one."""
+    p = folder / "review-visuals" / "index.html"
+    if not p.is_file():
+        return "no gallery"
+    m = re.search(r"<!-- source-digest: (\w+) -->", p.read_text(encoding="utf-8"))
+    if not m:
+        return "the gallery carries no source-digest stamp"
+    want = sources_digest(folder)
+    cmd = D.load_config(Path(root)).get("design_gallery_digest_command")
+    if cmd:
+        r = subprocess.run(cmd, shell=True, cwd=str(folder), capture_output=True, text=True)
+        want = r.stdout.strip().split()[0] if r.returncode == 0 and r.stdout.strip() else None
+        if want is None:
+            return f"design_gallery_digest_command failed: {cmd}"
+    return None if m.group(1) == want else "the gallery is older than the version's files"
+
+
+def verify(root: Path, release: bool = False) -> list:
+    """Blocking problems (errors) and warnings. Silent in a repo with no design system."""
+    root = Path(root)
+    d = ds_dir(root)
+    out = []
+    if not d.is_dir():
+        return out
+    nums = numbers(root)
+    appr = read_approvals(root).get("versions", {})
+    for n in nums:
+        name = f"v{n}"
+        rec = appr.get(name) or {}
+        ap_ = rec.get("approved") or {}
+        missing = [k for k in ("by", "date", "evidence") if not str(ap_.get(k) or "").strip()]
+        if not rec.get("digest"):
+            missing.append("digest")
+        if missing:
+            out.append(finding(ERR, "DS7", f"{DS_REL}/approvals.json", f"{name}: no complete owner approval record (missing: {', '.join(missing)}). Fix: design_system.py promote --approved-by WHO --approved-on DATE --evidence TEXT --apply"))
+    if nums:
+        top = f"v{nums[-1]}"
+        imp = (appr.get(top) or {}).get("implementation")
+        if not imp or not str(imp.get("evidence") or "").strip() or not str(imp.get("date") or "").strip():
+            out.append(finding(ERR, "DS8", f"{DS_REL}/approvals.json", f"{top}: the enforced version has no implementation approval. Fix: design_system.py approve-implementation {top} --approved-on DATE --evidence TEXT --apply (already live as-is: design_system.py approve-implementation {top} --as-live --evidence TEXT --apply)"))
+    release = release or release_context(root)
+    for name in [DRAFT] + ([f"v{nums[-1]}"] if nums else []):
+        folder = d / name
+        if not (folder / "ux-rules.md").is_file():
+            continue
+        why = gallery_stamp_problem(root, folder)
+        if why and not (NUMBERED.match(name) and (appr.get(name) or {}).get("relinked")):
+            out.append(finding(ERR if release else WARN, "DS9", f"{DS_REL}/{name}/review-visuals/index.html",
+                               f"{why}. Fix: design_system.py visuals (or your own generator, which writes the same stamp)" + ("" if release else " (warning on a task branch; the join rebuilds it)")))
+    return out
+
+
+def cmd_verify(root: Path, a) -> int:
+    res = verify(root, bool(getattr(a, "release", False)))
+    if a.json:
+        print(json.dumps(res, indent=2))
+    else:
+        for x in res:
+            print(f"{x['severity'].upper():7} {x['code']} {x['path']}: {x['message']}")
+        print(f"design_system verify: {len(res)} finding(s)")
+    return 1 if any(x["severity"] == ERR for x in res) else 0
 
 
 def cmd_guards(root: Path, a) -> int:
@@ -1043,7 +1134,7 @@ def cmd_brief(root: Path, apply: bool) -> int:
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief", "relink", "components"])
+    ap.add_argument("command", choices=["init", "status", "check", "visuals", "promote", "approve-implementation", "guards", "styles", "brief", "relink", "components", "verify"])
     ap.add_argument("version", nargs="?")
     ap.add_argument("--root", default=None)
     ap.add_argument("--apply", action="store_true")
@@ -1051,6 +1142,8 @@ def main(argv=None) -> int:
     ap.add_argument("--approved-by")
     ap.add_argument("--approved-on")
     ap.add_argument("--evidence")
+    ap.add_argument("--as-live", dest="as_live", action="store_true", help="approve-implementation: the version is already live as-is")
+    ap.add_argument("--release", action="store_true", help="verify: treat as a release branch or the ready PR (a stale gallery fails)")
     ap.add_argument("--stack", default=None, choices=sorted(set(GUARD_STACKS) | set(COMPONENT_STACKS)),
                     help="guards: default typescript-vitest; components: default react-typescript")
     ap.add_argument("--dest", default=None, help="guards: default scripts/design; components: default src/ui/pickers")
@@ -1069,6 +1162,8 @@ def main(argv=None) -> int:
         return cmd_brief(root, a.apply)
     if a.command == "components":
         return cmd_components(root, a)
+    if a.command == "verify":
+        return cmd_verify(root, a)
     if a.command == "styles":
         return cmd_styles(root, a.json)
     if a.command == "check":

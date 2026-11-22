@@ -103,6 +103,13 @@ class DoctorTests(unittest.TestCase):
         (off / ".claude" / "settings.json").write_text(json.dumps({"enabledPlugins": {"luismc-delivery@x": False}}))
         self.assertFalse(run(off)["hooks"]["ok"])
 
+    def test_hooks_note_project_rule_wins_when_no_attribution(self):
+        on = run(enabled_root({"no_attribution": True}))["hooks"]
+        self.assertTrue(on["ok"])
+        self.assertIn("project rule wins", on["detail"])
+        off = run(enabled_root({"no_attribution": False}))["hooks"]
+        self.assertNotIn("project rule wins", off["detail"])
+
     def test_hooks_json_missing_script_fails(self):
         root = enabled_root()
         with mock.patch.object(D, "HOOK_SCRIPTS", ("hook_nope.py",)):

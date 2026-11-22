@@ -4,7 +4,7 @@ title: Shared runner pool
 apps: [luismc-delivery]
 topics: [delivery, ci, hooks]
 status: live
-version: 0.20.4
+version: 0.20.5
 owner: agents
 type: reference
 code:
@@ -258,6 +258,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.5 | 2026-11-22 | RELEASE-165 | Workflow templates read the per-job variable CRSP_<JOB> first (DL399). | DL399 |
 | 0.20.4 | 2026-11-22 | RELEASE-164 | The workflow templates read CRSP_RUNS_ON_LINUX before CI_RUNS_ON (DL394); the pool-check workflow and the template tests follow. | DL394 |
 | 0.20.3 | 2026-11-15 | RELEASE-148 | R5.65: the pool service maps no /dev/kvm device (cgroup rule c 10:232 rwm); the supervisor makes the node when the host has kvm. | DL369 |
 | 0.20.2 | 2026-11-15 | RELEASE-147 | R5.64: a drain returns at once when the pool container is not running. | DL367 |

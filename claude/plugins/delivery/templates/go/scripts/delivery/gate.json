@@ -33,7 +33,7 @@
       "name": "guards",
       "scope": "always",
       "pre_push": true,
-      "run": "go test -run \"^TestGuard\" ./..."
+      "run": "go test -timeout 10s -run \"^TestGuard\" ./..."
     },
     {
       "name": "lint",
@@ -50,7 +50,7 @@
     {
       "name": "unit",
       "scope": "changed",
-      "run": "go test -short ./..."
+      "run": "go test -short -timeout 10s ./..."
     }
   ]
 }

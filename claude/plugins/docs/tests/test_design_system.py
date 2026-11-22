@@ -114,6 +114,89 @@ class DesignSystemTests(unittest.TestCase):
         self.assertEqual(rec["implementation"]["date"], "2026-11-05")
         self.assertEqual(S.check(d), [])  # approvals.json is not part of any digest
 
+    # --- DS241: blocking checks (R15.25)
+    def _verify_codes(self, d, release=False):
+        return sorted((x["code"], x["severity"]) for x in S.verify(d, release))
+
+    def test_verify_silent_without_design_system(self):  # R15.25
+        self.assertEqual(S.verify(project()), [])
+
+    def test_verify_implementation_approval_fails_then_passes(self):  # R15.25
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        self.assertEqual(self._verify_codes(d), [("DS8", "error")])
+        self.assertIn("approve-implementation v1", S.verify(d)[0]["message"])
+        self.assertEqual(S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05")), 0)
+        self.assertEqual(self._verify_codes(d), [])
+
+    def test_verify_as_live_records_once(self):  # R15.25
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        self.assertEqual(S.cmd_approve_impl(d, args(version="v1", approved_on=None, evidence="", as_live=True)), 2)  # needs evidence
+        self.assertEqual(S.cmd_approve_impl(d, args(version="v1", approved_on=None, evidence="owner: live as-is", as_live=True)), 0)
+        rec = json.loads(r(d, "docs/design-system/approvals.json"))["versions"]["v1"]["implementation"]
+        self.assertTrue(rec["as_live"])
+        self.assertEqual(rec["evidence"], "owner: live as-is")
+        self.assertEqual(self._verify_codes(d), [])
+
+    def test_verify_incomplete_approval_record_fails(self):  # R15.25
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05"))
+        ap = d / "docs/design-system/approvals.json"
+        data = json.loads(ap.read_text())
+        del data["versions"]["v1"]["approved"]["evidence"]
+        ap.write_text(json.dumps(data))
+        res = S.verify(d)
+        self.assertEqual([x["code"] for x in res], ["DS7"])
+        self.assertIn("evidence", res[0]["message"])
+        self.assertIn("promote", res[0]["message"])
+        data["versions"].pop("v1")
+        ap.write_text(json.dumps(data))
+        self.assertIn("DS7", [x["code"] for x in S.verify(d)])  # no entry at all
+
+    def test_verify_gallery_task_branch_warns_release_fails(self):  # R15.25
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05"))
+        self.assertEqual(self._verify_codes(d, True), [])
+        tk = d / "docs/design-system/next-version/tokens.md"
+        tk.write_text(tk.read_text() + "\n| `--ds-x` | `#123456` | x |\n")
+        S.D.git(d, "checkout", "-q", "-b", "DS1-task")
+        self.assertEqual(self._verify_codes(d, False), [("DS9", "warning")])
+        self.assertEqual(self._verify_codes(d, True), [("DS9", "error")])
+        self.assertEqual(S.main(["verify", "--release", "--root", str(d)]), 1)
+        self.assertEqual(S.main(["visuals", "next-version", "--root", str(d)]), 0)
+        self.assertEqual(self._verify_codes(d, True), [])
+        self.assertEqual(S.main(["verify", "--release", "--root", str(d)]), 0)
+
+    def test_verify_release_branch_name_and_env(self):  # R15.25
+        d = ds_repo()
+        S.D.git(d, "init", "-q")
+        S.D.git(d, "checkout", "-q", "-b", "DS1-task")
+        self.assertFalse(S.release_context(d))
+        S.D.git(d, "checkout", "-q", "-b", "release/1.0")
+        self.assertTrue(S.release_context(d))
+        S.D.git(d, "checkout", "-q", "-b", "DS2-task")
+        os.environ["DESIGN_GATE"] = "release"
+        try:
+            self.assertTrue(S.release_context(d))
+        finally:
+            del os.environ["DESIGN_GATE"]
+
+    def test_verify_own_generator_hook(self):  # R15.25
+        d = ds_repo()
+        S.cmd_promote(d, args())
+        S.cmd_approve_impl(d, args(version="v1", approved_on="2026-11-05"))
+        cfg = d / "docs/docs.json"
+        data = json.loads(cfg.read_text()) if cfg.is_file() else {}
+        data["design_gallery_digest_command"] = "echo not-the-stamp"
+        cfg.write_text(json.dumps(data))
+        self.assertEqual(self._verify_codes(d, True), [("DS9", "error"), ("DS9", "error")])
+        data["design_gallery_digest_command"] = "python3 -c \"import re,sys;print(re.search(r'source-digest: (\\w+)',open('review-visuals/index.html').read()).group(1))\""
+        cfg.write_text(json.dumps(data))
+        self.assertEqual(self._verify_codes(d, True), [])
+
     def test_check_warns_on_edit_of_numbered_version(self):  # R15.5 R15.7
         d = ds_repo()
         S.cmd_promote(d, args())

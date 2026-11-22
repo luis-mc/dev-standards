@@ -15,7 +15,7 @@ env:
 jobs:
   windows:
     if: ${{ vars.LIFECYCLE_RUNS_ON_WINDOWS != '' }}
-    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_WINDOWS) }}
+    runs-on: ${{ fromJSON(vars.CRSP_WINDOWS || vars.LIFECYCLE_RUNS_ON_WINDOWS) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -32,7 +32,7 @@ jobs:
 
   ubuntu-lts:
     if: ${{ vars.LIFECYCLE_RUNS_ON_UBUNTU_LTS != '' }}
-    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_UBUNTU_LTS) }}
+    runs-on: ${{ fromJSON(vars.CRSP_UBUNTU_LTS || vars.LIFECYCLE_RUNS_ON_UBUNTU_LTS) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -49,7 +49,7 @@ jobs:
 
   debian:
     if: ${{ vars.LIFECYCLE_RUNS_ON_DEBIAN != '' }}
-    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_DEBIAN) }}
+    runs-on: ${{ fromJSON(vars.CRSP_DEBIAN || vars.LIFECYCLE_RUNS_ON_DEBIAN) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +66,7 @@ jobs:
 
   fedora:
     if: ${{ vars.LIFECYCLE_RUNS_ON_FEDORA != '' }}
-    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_FEDORA) }}
+    runs-on: ${{ fromJSON(vars.CRSP_FEDORA || vars.LIFECYCLE_RUNS_ON_FEDORA) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -83,7 +83,7 @@ jobs:
 
   macos:
     if: ${{ vars.LIFECYCLE_RUNS_ON_MACOS != '' }}
-    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_MACOS) }}
+    runs-on: ${{ fromJSON(vars.CRSP_MACOS || vars.LIFECYCLE_RUNS_ON_MACOS) }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -102,7 +102,7 @@ jobs:
   release-check:
     needs: [windows, ubuntu-lts, debian, fedora, macos]
     if: ${{ always() && startsWith(github.head_ref, 'release') }}
-    runs-on: ${{ fromJSON(vars.LIFECYCLE_RUNS_ON_CHECK) }}
+    runs-on: ${{ fromJSON(vars.CRSP_RELEASE_CHECK || vars.LIFECYCLE_RUNS_ON_CHECK) }}
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4

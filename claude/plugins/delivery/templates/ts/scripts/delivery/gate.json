@@ -36,7 +36,7 @@
       "name": "guards",
       "scope": "always",
       "pre_push": true,
-      "run": "pnpm vitest run --project guard",
+      "run": "pnpm vitest run --project guard --testTimeout=10000",
       "env": {"CI": "true"}
     },
     {
@@ -62,8 +62,8 @@
     {
       "name": "unit",
       "scope": "changed+dependents",
-      "run": "pnpm vitest run --project unit --passWithNoTests {affected_dirs}",
-      "run_full": "pnpm vitest run --project unit",
+      "run": "pnpm vitest run --project unit --testTimeout=10000 --passWithNoTests {affected_dirs}",
+      "run_full": "pnpm vitest run --project unit --testTimeout=10000",
       "env": {"CI": "true"}
     },
     {

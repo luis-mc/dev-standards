@@ -102,7 +102,7 @@ push_touches_js() {
       done
     fi
     [ -n "$base" ] || return 0
-    files=$(git diff --name-only "$base" "$lsha" 2>/dev/null) || return 0
+    files=$(git diff --name-only --diff-filter=d "$base" "$lsha" 2>/dev/null) || return 0
     printf '%s\n' "$files" | grep -Eq "$js_re" && return 0
   done < "$stdin_file"
   [ "$seen" -eq 1 ] && return 1
