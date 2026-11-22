@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-21T21:21+00:00",
+  "updated": "2026-11-22T08:08+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7145,6 +7145,92 @@
         }
       ],
       "started": "2026-11-21T21:16+00:00"
+    },
+    {
+      "id": "DL389",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "e2e push check widens only on --full (release branches)",
+      "detail": "comiclex 22 Nov item 1",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T08:07+00:00",
+      "rides": "DL391",
+      "started": "2026-11-22T01:20+00:00"
+    },
+    {
+      "id": "DL390",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Kit python suite faults on a clean checkout",
+      "detail": "comiclex 22 Nov item 2",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T08:08+00:00",
+      "rides": "DL391",
+      "started": "2026-11-22T01:20+00:00"
+    },
+    {
+      "id": "DL391",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-163: comiclex kit findings",
+      "detail": "join, CI, merge on green",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T08:08+00:00",
+      "release": 163,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-22T07:54+00:00",
+          "end": "2026-11-22T07:55+00:00"
+        },
+        {
+          "name": "fix",
+          "start": "2026-11-22T08:00+00:00",
+          "end": "2026-11-22T08:01+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-22T08:01+00:00",
+          "end": "2026-11-22T08:13+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-22T08:13+00:00",
+          "end": "2026-11-22T08:18+00:00"
+        }
+      ],
+      "started": "2026-11-22T01:20+00:00",
+      "risk": {
+        "label": "second-ci",
+        "minutes": 6
+      }
+    },
+    {
+      "id": "DL392",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Delivery tooling papercuts (five small fixes)",
+      "detail": "comiclex 22 Nov item 4",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T08:08+00:00",
+      "rides": "DL391",
+      "started": "2026-11-22T01:20+00:00"
+    },
+    {
+      "id": "DL393",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Lifecycle adoption guide notes",
+      "detail": "comiclex 22 Nov item 5",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T08:08+00:00",
+      "rides": "DL391",
+      "started": "2026-11-22T01:20+00:00"
     },
     {
       "id": "DS1",
