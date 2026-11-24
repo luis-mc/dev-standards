@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-24T20:46+00:00",
+  "updated": "2026-11-24T20:57+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11948,6 +11948,18 @@
       "changed": "2026-11-24T20:46+00:00",
       "rides": "MP9",
       "started": "2026-11-24T19:38+00:00"
+    },
+    {
+      "id": "MP11",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Live",
+      "item": "RELEASE-n: reword train lines in the delivery guide",
+      "detail": "Replace the word train with release in agent-delivery-details.md (DL-64).",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T20:57+00:00",
+      "release": 172,
+      "started": "2026-11-24T20:56+00:00"
     },
     {
       "id": "SO1",

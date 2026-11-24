@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.14.1
+version: 0.14.2
 owner: agents
 type: reference
 code:
@@ -211,6 +211,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.2 | 2026-11-24 | RELEASE-172 | The shipped delivery guide says release instead of train. Plugin: claude/plugins/project-setup/.claude-plugin/plugin.json. | MP11 |
 | 0.14.1 | 2026-11-24 | RELEASE-171 | Mechanical skills move to the haiku model profile; claude-setup asks overwrite, merge or keep for a differing rules file and copies the delivery guide. Plugin: claude/plugins/project-setup/.claude-plugin/plugin.json. | MP10 |
 | 0.14.0 | 2026-11-24 | RELEASE-169 | claude-setup template: model sonnet, auto-compact window 150000; rule files at project level only; Token cost note. Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP8 |
 | 0.13.3 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |

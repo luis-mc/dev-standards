@@ -21,11 +21,11 @@ The rules a project reads in every session are in `.claude/rules/agents-and-inte
 - No fail-fast on release PR CI: every matrix sets `fail-fast: false` and no suite stops at its first failure (`ci.jobs.<id>.fail_fast`). The sandbox branch gate keeps its cheapest-first stop. <!-- check: DL-98 -->
 - Tests keep guardrails G1-G7: per-test timeout (unit 10 s, integration 60 s, e2e 2 min), job timeout-minutes ≤ 30, no CI retries, no sleeps, ≤ 20 cases per test, mutation off PR CI, test times reported. <!-- check: DL-99 -->
 
-## Trains, deploys and cleanup
-- A train leaves when its cargo is green; late branches ride the next train. <!-- check: DL-01, DL-16 -->
+## Releases, deploys and cleanup
+- A release leaves when its tasks are green; late branches ride the next release. <!-- check: DL-01, DL-16 -->
 - No preview deploys for agent branches. Never merge mid-round to "see it deployed". <!-- check: DL-19 -->
 - Never `vercel env rm` to narrow targets; after an env change re-list Production. <!-- check: DL-20 -->
 - A gate that fails at `setup` means a stale lockfile (regenerate and commit it) or an install killed for memory (exit 137: larger pool cap or fewer parallel jobs). Never install unfrozen. <!-- check: DL-23 -->
-- After the ready PR merges, run `scripts/delivery/cleanup.py --pr <N>`: it removes the train's branches, gate-result refs and worktrees. Leave nothing behind. <!-- check: DL-14 -->
+- After the ready PR merges, run `scripts/delivery/cleanup.py --pr <N>`: it removes the release's branches, gate-result refs and worktrees. Leave nothing behind. <!-- check: DL-14 -->
 - Build artifacts on GitHub (installers such as MSI, bundles, reports): keep only the newest of each name. Give each kind a stable name; `artifact-prune.yml` deletes the older ones once a day. <!-- check: DL-22 -->
 - CI jobs fetch pinned tools through `scripts/delivery/ci_tool.py`: a per-runner cache, sha256-checked, with retries; never a bare download into RUNNER_TEMP. <!-- check: DL-94 -->
