@@ -751,7 +751,9 @@ def check_question(cfg, ledger, data, at):
                 deny('Q-3 a question text is shorter than %d characters. Put the context inside each question text '
                      '(text before the dialog is not seen) so it stands alone.' % minc)
     if H.check_on(cfg, 'Q-4'):
-        todo = ['%s is green and unmerged' % H.release_name(t) for t in H.trains_green_unmerged(ledger, at)]
+        # DL414: a train with no PR and no release number has nothing to merge, so it does not block.
+        todo = ['%s is green and unmerged%s' % (H.release_name(t), H.stale_hint(t))
+                for t in H.trains_green_unmerged(ledger, at) if t.get('pr') or t.get('release_no') is not None]
         todo += ['%s is joined and not pushed' % H.release_name(t) for t in H.trains_joined_unpushed(ledger, at, 0)]
         todo += ['agent %s is queued to launch' % (a.get('task') or a.get('id')) for a in ledger['agents']
                  if a.get('state') == 'queued']

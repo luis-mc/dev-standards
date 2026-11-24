@@ -883,6 +883,21 @@ def q3_short_question_denied():
 
 
 @test
+def q4_stale_and_unnumbered_trains():
+    dead = train(id='T-9', release_no=None, pr=None, branch='origin', state='green', green_at=iso(30))
+    p = Project(ledger(trains=[dead]))
+    expect_pass(p.pre('AskUserQuestion', question(LONG)))
+    p.close()
+    p = Project(ledger(trains=[train(state='green', green_at=iso(30))]))
+    assert 'RELEASE-29' in why(p.pre('AskUserQuestion', question(LONG)))
+    p.close()
+    p = Project(ledger(trains=[train(id='T-9', release_no=None, pr=412, state='green', green_at=iso(30))]))
+    w = why(p.pre('AskUserQuestion', question(LONG)))
+    assert 'Q-4' in w and 'T-9' in w and 'delivery_ledger.py close T-9' in w, w
+    p.close()
+
+
+@test
 def q4_actionable_now_denies_dialog():
     p = Project(ledger(trains=[train(state='green', green_at=iso(30))]))
     r = p.pre('AskUserQuestion', question(LONG))

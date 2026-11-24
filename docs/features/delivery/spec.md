@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.43.0
+version: 0.43.1
 owner: agents
 type: reference
 code:
@@ -559,6 +559,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.43.1 | 2026-11-24 | RELEASE-170 | Q-4 does not count a green train that has no PR and no release number; the deny names an unnumbered train by ledger id and gives the close command. Plugin: claude/plugins/delivery/.claude-plugin/plugin.json. | DL414 |
 | 0.43.0 | 2026-11-24 | RELEASE-167 | Cypress and Selenium guardrails: G1 timeouts, G3 retries, G4 sleeps; both tools are known to stack.tools (R5.67).<br>Cypress rerun: rerun_tests.py reads failed Cypress specs from the job log or JUnit XML and reruns them with one --spec list (R5.68). | DL409, DL410 |
 | 0.42.0 | 2026-11-24 | RELEASE-166 | Declared stack: optional `stack` block in .delivery/config.json, `stack.py`, and doctor check `stack.tools` that fails for an undeclared tool delivery cannot check (R5.66).<br>Default e2e spec paths cover Cypress and pytest layouts; agent_ci.py defaults its base to the repository's default branch (origin/HEAD, else origin/main). | DL406, DL407 |
 | 0.41.0 | 2026-11-22 | RELEASE-165 | update merges gate.json by step name, doctor gate-steps check, e2e push hint, template test timeouts (R13.92b)<br>Doctor hooks row notes that with no_attribution on, no delivery hook advises AI attribution or re-authoring commits, and the project rule wins over a platform hook.<br>Workflow templates read the per-job variable CRSP_<JOB> first (R5.64); the doctor lists per-job overrides.<br>pre-push diff ignores deleted files (R5.36c) | DL397, DL398, DL399, DL400 |

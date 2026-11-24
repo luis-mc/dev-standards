@@ -1,7 +1,7 @@
 # DELIVERYSPEC — Delivery rules
 
 **Status:** Normative
-**Version:** 1.11.0
+**Version:** 1.11.1
 **Applies to:** every project that delivers its work with the `luismc-delivery` plugin, and the plugin itself
 **Audience:** Claude Code sessions and people working in those projects, and the implementers of `luismc-delivery`
 
@@ -340,7 +340,7 @@ These decisions are binding. They override sections 1-4 where they differ.
   - Q-1 ask every open question in one go. There is no 4-question cap when the owner says "ask me questions" (several wizard dialogs in one message).
   - Q-2 always use the questions wizard (AskUserQuestion), never plain-text questions in the terminal. The Stop hook blocks a final reply whose closing part is a numbered or bulleted list of questions to the owner instead of wizard calls.
   - Q-3 put context INSIDE each question's text, because text before a dialog is not seen. PreToolUse denies a dialog whose question texts are too short to stand alone (config min chars).
-  - Q-4 merge, push and launch before asking. PreToolUse denies AskUserQuestion while the ledger has an actionable-now item (green train unmerged, joined train unpushed with previous green, launch queued).
+  - Q-4 merge, push and launch before asking. PreToolUse denies AskUserQuestion while the ledger has an actionable-now item (green train unmerged that has a PR or a release number, joined train unpushed with previous green, launch queued).
   - Q-5 no guessing missing parameters, no trickling. PreToolUse denies AskUserQuestion when this session has running agents (`agents[].launched_by`, state queued/running) and has already asked a question batch (`owner_questions[].asked_at`) within `question_window_min` (default 60) since the owner's last prompt (`owner_prompt.at`, written by the UserPromptSubmit recorder). The message says to park the question until the agents of this wave report, then ask everything at once. Allowed: every running agent has `blocked_on: "owner"`; the owner's latest prompt asked for questions (`owner_prompt.asked_for_questions`, "ask me questions"); dialogs issued within `question_batch_sec` (90) of the previous one (Q-1, several dialogs in one message). Switch off with `checks_off: ["Q-5"]`.
   - `clarifying-questions.md` gains Q-2/Q-3 lines and moves under the delivery plugin's rules. `claude/plugins/delivery/rules/clarifying-questions.md` is the canonical text. The SessionStart hook injects it (tags stripped) every session in an opted-in project. The claude-setup asset is a byte copy, kept equal by a plugin test.
 - D9 ETA rules (DL-30/31; 0.3.0: a sentence that reports a measured duration, a saving or a cost, or lists two or more durations, is not an ETA, and a clock time or dependency anywhere in the same bullet covers its sentences): every agent launch requires a breakdown (`delivery:` block: setup/work/checks minutes). Stop blocks reply text with an ETA that lacks a clock time + dependency, or that says "tomorrow" or "next round" unless computed past midnight. Port `no-tomorrow.mjs` into the plugin and retire the user-level hook.
