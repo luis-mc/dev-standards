@@ -94,7 +94,7 @@ class Repo:
             if ext not in CODE_EXT or "scripts/delivery/" in f:  # the delivery scripts are tools, not tests
                 continue
             base = os.path.basename(f)
-            if (re.search(r"\.(test|spec)\.[a-z]+$", base) or re.match(r"test_.*\.py$", base) or base.endswith("_test.py")
+            if (re.search(r"\.(test|spec|cy)\.[a-z]+$", base) or re.match(r"test_.*\.py$", base) or base.endswith("_test.py")
                     or base.endswith("_test.go") or base == "conftest.py"
                     or (ext == ".rs" and re.search(r"(^|/)tests/", f))):
                 out.append(f)
@@ -182,7 +182,7 @@ def limits_for(st: dict, rep: Report) -> dict:
 
 def kind_of(path: str) -> str:
     p = path.lower()
-    if "e2e" in p or "playwright" in p:
+    if "e2e" in p or "playwright" in p or "cypress" in p or ".cy." in p:
         return "e2e"
     if "integration" in p:
         return "integration"
@@ -256,6 +256,60 @@ def line_of(text: str, idx: int) -> int:
 # ---------------------------------------------------------------- G1
 
 
+CYPRESS_KEYS = ("defaultCommandTimeout", "pageLoadTimeout", "requestTimeout", "responseTimeout", "execTimeout", "taskTimeout")
+JS_EXT = (".js", ".ts", ".tsx", ".jsx", ".mjs", ".cjs")
+
+
+def cypress_g1(repo: Repo, rep: Report, limits: dict):
+    """Cypress has no per-test timeout; defaultCommandTimeout is the per-command bound (DL409)."""
+    lim = limits["e2e"]
+    for f in repo.named(r"(^|/)cypress\.config\.[cm]?[jt]s$"):
+        text = repo.text(f)
+        if not re.search(r"(?<![\w.])defaultCommandTimeout\s*:", text):
+            rep.add("G1", f, 1, "%s has no defaultCommandTimeout (e2e limit %d s)" % (os.path.basename(f), lim))
+        for key in CYPRESS_KEYS:
+            for m in re.finditer(r"(?<![\w.])%s\s*:\s*([^\n,}]+)" % key, text):
+                ms = num(re.sub(r"//.*", "", m.group(1)))
+                if ms is None:
+                    rep.add("G1", f, line_of(text, m.start()), "%s is not a plain number" % key)
+                elif ms > lim * 1000:
+                    rep.add("G1", f, line_of(text, m.start()), "%s %g s is over the e2e limit of %d s" % (key, ms / 1000, lim))
+    for f in repo.test_files():
+        if not re.search(r"\.cy\.[a-z]+$", f):
+            continue
+        for i, line in enumerate(repo.lines(f), 1):
+            if is_comment(line):
+                continue
+            for m in re.finditer(r"\b(?:defaultCommandTimeout|timeout)\s*:\s*(\d[\d_*+\s]*)", line):
+                v = num(m.group(1))
+                if v is not None and v > lim * 1000:
+                    rep.add("G1", f, i, "Cypress timeout %g s is over the e2e limit of %d s" % (v / 1000, lim))
+
+
+def selenium_g1(repo: Repo, rep: Report, limits: dict):
+    """Selenium waits over the e2e limit. Python seconds; JS milliseconds (DL409)."""
+    lim = limits["e2e"]
+    for f in repo.test_files():
+        ext = os.path.splitext(f)[1]
+        py_rx = [r"\bWebDriverWait\s*\(\s*[^,()]+,\s*(\d[\d_.]*)", r"\bimplicitly_wait\s*\(\s*(\d[\d_.]*)",
+                 r"\bset_(?:page_load|script)_timeout\s*\(\s*(\d[\d_.]*)"]
+        js_rx = [r"\bdriver\.wait\s*\([^\n]*,\s*(\d[\d_*+\s]*)\)", r"\.setTimeouts\s*\(\s*\{[^}]*\b(?:implicit|pageLoad|script)\s*:\s*(\d[\d_*+\s]*)"]
+        if ext == ".py":
+            rxs, scale = py_rx, 1
+        elif ext in JS_EXT:
+            rxs, scale = js_rx, 0.001
+        else:
+            continue
+        for i, line in enumerate(repo.lines(f), 1):
+            if is_comment(line):
+                continue
+            for rx in rxs:
+                m = re.search(rx, line)
+                v = num(m.group(1)) if m else None
+                if v is not None and v * scale > lim:
+                    rep.add("G1", f, i, "Selenium wait %g s is over the e2e limit of %d s" % (v * scale, lim))
+
+
 def g1(repo: Repo, rep: Report, limits: dict):
     # vitest / jest / playwright configs
     for f in repo.named(r"(^|/)(vitest|jest|playwright)\.[^/]*config\.[cm]?[jt]s$|(^|/)vite\.config\.[cm]?[jt]s$"):
@@ -303,6 +357,8 @@ def g1(repo: Repo, rep: Report, limits: dict):
                 v = num(m.group(1)) if m else None
                 if v is not None and v > lim:
                     rep.add("G1", f, i, "test timeout %g s is over the %s limit of %d s" % (v / 1000, kind, limits[kind]))
+    cypress_g1(repo, rep, limits)
+    selenium_g1(repo, rep, limits)
     # pytest
     cfgs = [f for f in repo.files if os.path.basename(f) in ("pytest.ini", "tox.ini", "setup.cfg", "pyproject.toml")
             and re.search(r"\[(tool\.)?pytest(\.ini_options)?\]", repo.text(f))]
@@ -439,6 +495,16 @@ def g2(repo: Repo, rep: Report, st: dict):
 
 
 def g3(repo: Repo, rep: Report):
+    for f in repo.named(r"(^|/)cypress\.config\.[cm]?[jt]s$"):
+        text = repo.text(f)
+        for m in re.finditer(r"(?<![\w.])retries\s*:\s*(\{[^}]*\}|[^\n,}]+)", text):
+            body = re.sub(r"//.*", "", m.group(1))
+            if body.lstrip().startswith("{"):
+                r = re.search(r"\brunMode\s*:\s*(\d+)", body)
+            else:
+                r = re.match(r"\s*(\d+)", body)
+            if r and int(r.group(1)) >= 1:
+                rep.add("G3", f, line_of(text, m.start()), "Cypress retries: %s" % m.group(1).strip())
     for f in repo.named(r"(^|/)playwright\.[^/]*config\.[cm]?[jt]s$"):
         for i, ln in enumerate(repo.lines(f), 1):
             m = re.match(r"\s*retries\s*:\s*(.+)", ln)
@@ -464,6 +530,8 @@ def g3(repo: Repo, rep: Report):
         for i, ln in enumerate(repo.lines(f), 1):
             if is_comment(ln):
                 continue
+            if re.search(r"cypress-plugin-retries|\bCypress\.currentRetry\b", ln):
+                rep.add("G3", f, i, "Cypress retries in a test file")
             if re.search(r"\bjest\.retryTimes\s*\(\s*[1-9]", ln) or re.search(r"pytest\.mark\.flaky|@flaky\b", ln):
                 rep.add("G3", f, i, "a retry in a test file")
 
@@ -471,7 +539,7 @@ def g3(repo: Repo, rep: Report):
 # ---------------------------------------------------------------- G4
 
 SLEEP_RX = re.compile(
-    r"\btime\.sleep\s*\(|\basyncio\.sleep\s*\(|\bwaitForTimeout\s*\(|\btime\.Sleep\s*\(|\bthread::sleep\s*\(|"
+    r"\btime\.sleep\s*\(|\bdriver\.sleep\s*\(|\bcy\.wait\s*\(\s*\d[\d_*+\s.]*\)|\basyncio\.sleep\s*\(|\bwaitForTimeout\s*\(|\btime\.Sleep\s*\(|\bthread::sleep\s*\(|"
     r"\btokio::time::sleep\s*\(|\bawait\s+sleep\s*\(|\bnew Promise\([^)]*setTimeout|"
     r"\bsetTimeout\s*\(\s*(?:resolve|res|r|done|\(\)\s*=>\s*(?:resolve|res|r)\b)|^\s*(?:std::)?sleep\s*\(")
 LOOP_RX = re.compile(r"^\s*(?:while\s+True\s*:|while\s*\(\s*true\s*\)|while\s+true\b|loop\s*\{|for\s*\{)")

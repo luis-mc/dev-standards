@@ -41,19 +41,19 @@ class StackTest(unittest.TestCase):
         self.assertTrue(all(i["status"] == "ok" for i in items))
         self.assertEqual({r["status"] for r in S.resolve(str(root), {}).values()}, {"known"})
 
-    def test_cypress_undeclared_fails(self):
-        ok, _, items = run(repo({"cypress.config.ts": ""}))
+    def test_gradle_x_undeclared_fails(self):
+        ok, _, items = run(repo({"build.gradle": ""}))
         self.assertFalse(ok)
-        self.assertIn("cypress found (cypress.config.ts) but delivery cannot check it: declare it under stack in "
+        self.assertIn("gradle found (build.gradle) but delivery cannot check it: declare it under stack in "
                       ".delivery/config.json, or remove it", details(items))
 
     def test_fails_whatever_enforcement_says(self):
-        root = repo({"cypress.config.ts": ""})
+        root = repo({"build.gradle": ""})
         self.assertFalse(run(root, {"enforcement": {"mode": "warn"}})[0])
 
-    def test_cypress_declared_ok(self):
-        cfg = {"stack": {"e2e": ["cypress"]}}
-        ok, _, items = run(repo({"cypress.config.ts": ""}, cfg), cfg)
+    def test_gradle_x_declared_ok(self):
+        cfg = {"stack": {"e2e": ["gradle"]}}
+        ok, _, items = run(repo({"build.gradle": ""}, cfg), cfg)
         self.assertTrue(ok)
         self.assertIn("declared; delivery runs its commands but cannot judge them", items[0]["detail"])
 
@@ -61,8 +61,8 @@ class StackTest(unittest.TestCase):
         root = repo({"pytest.ini": "", "requirements-dev.txt": "pytest\nselenium==4\n"})
         self.assertEqual(S.detect_tools(str(root)), {"pytest": "pytest.ini", "selenium": "requirements-dev.txt"})
         ok, _, items = run(root)
-        self.assertFalse(ok)
-        self.assertTrue(any("selenium found" in d for d in details(items)))
+        self.assertTrue(ok)  # DL409: selenium is known
+        self.assertEqual(S.resolve(str(root), {})["selenium"]["status"], "known")
         cfg = {"stack": {"e2e": ["selenium"], "unit": ["pytest"]}}
         ok, _, items = run(root, cfg)
         self.assertTrue(ok)
