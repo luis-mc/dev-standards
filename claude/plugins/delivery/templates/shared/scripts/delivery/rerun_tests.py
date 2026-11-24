@@ -5,7 +5,7 @@
                    [--changed-file FILE|-] [--scope-config FILE] [--areas FILE] [--test-files FILE|-]
                    [--job-config FILE] [--json]
 
-Runners: pytest (also unittest), vitest (also jest), playwright, go, cargo, nextest.
+Runners: pytest (also unittest), vitest (also jest), playwright, go, cargo, nextest, cypress (per spec file, not per test).
 
 After a red run, the next head's run of a test job runs the tests that failed on that run plus the tests of the
 code changed since that run's head. It runs the whole job when:
@@ -19,13 +19,14 @@ code changed since that run's head. It runs the whole job when:
 After a green previous run (or none) the answer is `current`: the job runs as it does today.
 
 The failure list comes from the previous run's test report when there is one (JUnit XML, Playwright JSON, `go test
--json`), otherwise from the job log (pytest and unittest summary lines, vitest and jest FAIL lines, go test, cargo
-libtest `test X ... FAILED` lines and the `failures:` block, nextest `FAIL [..] id name` lines).
+-json`, and for Cypress a JUnit XML read from its failing `testsuite` `file` attributes), otherwise from the job log (pytest and unittest summary lines, vitest and jest FAIL lines, go test, cargo
+libtest `test X ... FAILED` lines and the `failures:` block, nextest `FAIL [..] id name` lines, Cypress 'Run Finished' table rows marked with a cross and, without the
+table, `Running:  SPEC` headers followed by `N failing`).
 
 Output: {"mode": "narrow"|"whole"|"current", "reason", "invocations": [[runner args], ...], "failed": N,
 "changed_tests": [...]}. One invocation per package (go) or test binary (cargo); the others have one or a few. The
 arguments are what follows the runner command: pytest node ids, vitest `FILE -t REGEX`, Playwright `FILE:LINE` (or
-`FILE --grep REGEX`), go `PKG -run REGEX`, cargo `[-p CRATE] --lib|--test T|--bin B|--doc -- --exact NAMES`, nextest
+`FILE --grep REGEX`), Cypress `--spec FILE1,FILE2` (one comma-joined argument), go `PKG -run REGEX`, cargo `[-p CRATE] --lib|--test T|--bin B|--doc -- --exact NAMES`, nextest
 `-E FILTERSET`.
 
 A narrowed green run is not the merge gate. The ready PR's full CI is.
@@ -46,7 +47,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from area_select import any_match, select  # noqa: E402
 from ci_scope import decide as scope_decide, norm  # noqa: E402
 
-RUNNERS = ("pytest", "vitest", "playwright", "go", "cargo", "nextest")
+RUNNERS = ("pytest", "vitest", "playwright", "go", "cargo", "nextest", "cypress")
 RERUN_DEFAULT = "failed+changed"
 VALVES = [
     "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "bun.lock",
@@ -61,6 +62,7 @@ TEST_FILES = {  # which repo files are tests for a runner
     "vitest": ["**/*.test.*", "**/*.spec.*", "*.test.*"],
     "playwright": ["**/*.spec.*", "*.spec.*"],
     "go": ["**/*_test.go", "*_test.go"],
+    "cypress": ["**/*.cy.*", "*.cy.*", "cypress/e2e/**/*.*"],
 }
 
 
@@ -84,6 +86,8 @@ def _junit(text, runner):
         if not any(c.tag in ("failure", "error") for c in case):
             continue
         cls, name, file = case.get("classname") or "", case.get("name") or "", case.get("file") or ""
+        if runner == "cypress":
+            continue
         if runner == "pytest":
             if not file:
                 parts = cls.split(".")
@@ -99,7 +103,28 @@ def _junit(text, runner):
             out.append(_f(node, file))
         else:  # vitest / jest: classname is the file, name is "suite > test"
             out.append(_f(re.sub(r"\s*>\s*", " ", name), file or cls))
+    if runner == "cypress":  # one entry per failing spec file: the `file` of each testsuite with a failed case
+        for suite in root.iter("testsuite"):
+            file = suite.get("file") or ""
+            if file and any(k.tag in ("failure", "error") for case in suite.iter("testcase") for k in case):
+                out.append(_f(file, file))
     return out
+
+
+def _cypress_log(text):
+    """Failing spec files, in order: rows of the 'Run Finished' table marked with a cross, else `Running:` + `N failing`."""
+    text = re.sub(r"\x1b\[[0-9;?]*[A-Za-z]", "", text)
+    text = re.sub(r"[│║┃|]", " ", text)
+    rows = re.findall(r"^\s*(?:✖|✘|x|X)\s+(\S+\.[A-Za-z0-9]+)(?=\s|$)", text, re.M)
+    if not rows:
+        cur = ""
+        for line in text.splitlines():
+            m = re.match(r"^\s*Running:\s+(\S+)", line)
+            if m:
+                cur = m.group(1)
+            elif cur and re.match(r"^\s*[1-9]\d* failing\s*$", line):
+                rows.append(cur)
+    return [_f(r, r) for r in dict.fromkeys(rows)]
 
 
 def _pytest_log(text):
@@ -241,8 +266,10 @@ def parse_failures(runner, text):
     if not isinstance(text, str) or not text.strip():
         raise Unreadable("empty report")
     body = text.lstrip()
-    if runner in ("pytest", "vitest") and body.startswith("<"):
+    if runner in ("pytest", "vitest", "cypress") and body.startswith("<"):
         found = _junit(text, runner)
+    elif runner == "cypress":
+        found = _cypress_log(text)
     elif runner == "pytest":
         found = _pytest_log(text)
     elif runner == "vitest":
@@ -293,6 +320,9 @@ def build_invocations(runner, failed, extra_files=()):
         inv += [[fl, "-t", _rx(ns)] for fl, ns in by.items()]
         if extra:
             inv.append(extra)
+    elif runner == "cypress":  # per spec file, one comma-joined argument
+        specs = list(dict.fromkeys([f["file"] for f in failed] + extra))
+        inv.append(["--spec", ",".join(specs)])
     elif runner == "playwright":
         spots = [f"{f['file']}:{f['line']}" for f in failed if f["line"] and f["file"] not in extra]
         by = {}
