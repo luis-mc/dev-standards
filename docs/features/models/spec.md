@@ -4,7 +4,7 @@ title: Model and effort profiles
 apps: [luismc-project-setup, luismc-agents]
 topics: [models]
 status: live
-version: 0.1.5
+version: 0.2.0
 owner: agents
 type: reference
 code:
@@ -175,6 +175,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.0 | 2026-11-24 | RELEASE-169 | claude-setup defaults: main session Sonnet (Opus by /model), auto-compact window 150000, rules at project level only, token cost note. Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP8 |
 | 0.1.5 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |
 | 0.1.4 | 2026-11-10 | RELEASE-86 | The claude-setup settings template enables six plugins; luismc-artifacts and luismc-specs are part of luismc-docs. | DS219 |
 | 0.1.3 | 2026-11-04 | RELEASE-38 | The claude-setup settings template also carries a Stop hook (questions_stop.py, user level only); the model split is unchanged. | SO6 |
