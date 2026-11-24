@@ -902,27 +902,14 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.11.0 <span class="gen-flag gen-update">update: 2.14.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.11.0 <span class="gen-flag gen-update">update: 2.15.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-22T12:46+00:00">22 Nov 12:46</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">22 Nov 12:08</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-22T16:05+00:00">22 Nov 16:05</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">22 Nov 21:53</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
-</details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">4 tasks</span></summary>
-<ul>
-<li data-glance-task="DL397"><span class="task-id">DL397</span>Template sync keeps project gate steps (merge by step name) <span class="glance-expected">22 Nov ~12:45</span></li>
-<li data-glance-task="DL400"><span class="task-id">DL400</span>pre-push skips deleted Go packages (--diff-filter=d) <span class="glance-expected">22 Nov ~12:45</span></li>
-<li data-glance-task="DL399"><span class="task-id">DL399</span>Per-job runner variable CRSP_&lt;JOB&gt; before CRSP_RUNS_ON_&lt;OS&gt; <span class="glance-expected">22 Nov ~13:27</span></li>
-<li data-glance-task="DL404"><span class="task-id">DL404</span><span class="release-name">RELEASE-165</span>crsp kit findings <span class="glance-expected">22 Nov ~13:55</span></li>
-</ul>
-</details>
-<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
-<ul>
-<li data-glance-task="DL398"><span class="task-id">DL398</span>Stop hook honours no_attribution (no noreply re-author advice)</li>
-</ul>
 </details>
 <details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">3 tasks</span></summary>
 <ul>
@@ -931,41 +918,41 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">D311: pool project covers every private-repo job (its M2+), then message</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">23 Nov ~15:00</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">15 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">20 tasks</span></summary>
 <ul>
+<li data-glance-task="DL398"><span class="task-id">DL398</span>Stop hook honours no_attribution (no noreply re-author advice)</li>
+<li data-glance-task="DL399"><span class="task-id">DL399</span>Per-job runner variable CRSP_&lt;JOB&gt; before CRSP_RUNS_ON_&lt;OS&gt;</li>
+<li data-glance-task="DL400"><span class="task-id">DL400</span>pre-push skips deleted Go packages (--diff-filter=d)</li>
+<li data-glance-task="DL404"><span class="task-id">DL404</span><span class="release-name">RELEASE-165</span>crsp kit findings</li>
+<li data-glance-task="DL397"><span class="task-id">DL397</span>Template sync keeps project gate steps (merge by step name)</li>
 <li data-glance-task="DL395"><span class="task-id">DL395</span><span class="release-name">RELEASE-164</span>RUNS_ON_* variables</li>
 <li data-glance-task="DL394"><span class="task-id">DL394</span>D307: delivery reads RUNS_ON_LINUX/WINDOWS/MACOS</li>
 <li data-glance-task="DL396"><span class="task-id">DL396</span>Ledger closes an agent on an in-progress NOT READY line</li>
-<li data-glance-task="DL403"><span class="task-id">DL403</span>Audit: stack and tool assumptions in delivery</li>
-<li data-glance-task="DL390"><span class="task-id">DL390</span>Kit python suite faults on a clean checkout</li>
-<li data-glance-task="DL391"><span class="task-id">DL391</span><span class="release-name">RELEASE-163</span>comiclex kit findings</li>
-<li data-glance-task="DL392"><span class="task-id">DL392</span>Delivery tooling papercuts (five small fixes)</li>
-<li data-glance-task="DL393"><span class="task-id">DL393</span>Lifecycle adoption guide notes</li>
-<li class="glance-more">and 7 more</li>
+<li class="glance-more">and 12 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">384</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-running"><div class="count">4</div><div class="label">tasks running</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">11</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">389</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">11</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">8 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL397"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL397</span>Template sync keeps project gate steps (merge by step name)<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:45 item 1</td><td>22 Nov ~12:45</td></tr>
-<tr data-task="DL400"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL400</span>pre-push skips deleted Go packages (--diff-filter=d)<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:57 item 5</td><td>22 Nov ~12:45</td></tr>
-<tr data-task="DL399"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL399</span>Per-job runner variable CRSP_&lt;JOB&gt; before CRSP_RUNS_ON_&lt;OS&gt;<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:45 item 3</td><td>22 Nov ~13:27</td></tr>
-<tr data-task="DL404"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL404</span><span class="release-name">RELEASE-165</span>crsp kit findings</td><td>join, CI, merge on green</td><td>22 Nov ~13:55</td></tr>
 <tr data-task="DL346"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>23 Nov ~12:00<span class="expected-basis">D307: starts when the pool project says its pool is ready for all projects</span></td></tr>
 <tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>23 Nov ~14:00<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
 <tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>23 Nov ~15:00<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
 <tr data-task="DL349"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL349</span>Projects move to the new runs-on contract</td><td>Phase E: each adopting project runs the delivery install update, the separate pool project writes RUNS_ON_*, old CI_RUNS_ON* deleted, first job watched per project.</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 395 live</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">400 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL398"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL398</span>Stop hook honours no_attribution (no noreply re-author advice)<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:45 item 2</td><td>22 Nov</td></tr>
+<tr data-task="DL399"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL399</span>Per-job runner variable CRSP_&lt;JOB&gt; before CRSP_RUNS_ON_&lt;OS&gt;<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:45 item 3</td><td>22 Nov</td></tr>
+<tr data-task="DL400"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL400</span>pre-push skips deleted Go packages (--diff-filter=d)<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:57 item 5</td><td>22 Nov</td></tr>
+<tr data-task="DL404"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL404</span><span class="release-name">RELEASE-165</span>crsp kit findings</td><td>join, CI, merge on green</td><td>22 Nov</td></tr>
+<tr data-task="DL397"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL397</span>Template sync keeps project gate steps (merge by step name)<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:45 item 1</td><td>22 Nov</td></tr>
 <tr data-task="DL395"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL395</span><span class="release-name">RELEASE-164</span>RUNS_ON_* variables</td><td>join, CI, merge on green</td><td>22 Nov</td></tr>
 <tr data-task="DL394"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL394</span>D307: delivery reads RUNS_ON_LINUX/WINDOWS/MACOS<span class="release-line"><span class="release-name">RELEASE-164</span></span></td><td>Owner 22 Nov: pool switch to crsp; RUNS_ON_* first, CI_RUNS_ON* fallback</td><td>22 Nov</td></tr>
 <tr data-task="DL396"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL396</span>Ledger closes an agent on an in-progress NOT READY line<span class="release-line"><span class="release-name">RELEASE-164</span></span></td><td>comiclex 22 Nov 09:20: done_by=report-not-ready while commits still arrive</td><td>22 Nov</td></tr>
 <tr data-task="DL403"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL403</span>Audit: stack and tool assumptions in delivery<span class="no-release-line">ships nothing: read-only study</span></td><td>Owner 22 Nov: should delivery enforce tools? read-only study</td><td>22 Nov</td></tr>
-<tr data-task="DL398"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DL398</span>Stop hook honours no_attribution (no noreply re-author advice)<span class="release-line"><span class="release-name">RELEASE-165</span></span></td><td>crsp 22 Nov 11:45 item 2</td><td>22 Nov</td></tr>
 <tr data-task="DL401"><td><span class="status-chip status-dropped">Dropped</span></td><td><span class="task-id">DL401</span>e2e spec defaults cover Cypress and pytest e2e<span class="dropped-line">dropped: folded into DL403</span></td><td>crsp 22 Nov 11:57 item 6</td><td>22 Nov</td></tr>
 <tr data-task="DL402"><td><span class="status-chip status-dropped">Dropped</span></td><td><span class="task-id">DL402</span>G1 per-test timeout checks for Cypress, pytest and Go<span class="dropped-line">dropped: folded into DL403</span></td><td>crsp 22 Nov 11:57 item 7</td><td>22 Nov</td></tr>
 <tr data-task="DL390"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL390</span>Kit python suite faults on a clean checkout<span class="release-line"><span class="release-name">RELEASE-163</span></span></td><td>comiclex 22 Nov item 2</td><td>22 Nov</td></tr>

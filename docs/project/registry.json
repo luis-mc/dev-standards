@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-22T12:46+00:00",
+  "updated": "2026-11-22T16:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7298,11 +7298,11 @@
       "id": "DL397",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Template sync keeps project gate steps (merge by step name)",
       "detail": "crsp 22 Nov 11:45 item 1",
-      "expected": "22 Nov ~12:45",
-      "changed": "2026-11-22T12:03+00:00",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T16:04+00:00",
       "rides": "DL404",
       "started": "2026-11-22T12:03+00:00"
     },
@@ -7310,11 +7310,11 @@
       "id": "DL398",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Stop hook honours no_attribution (no noreply re-author advice)",
       "detail": "crsp 22 Nov 11:45 item 2",
       "expected": "22 Nov",
-      "changed": "2026-11-22T12:08+00:00",
+      "changed": "2026-11-22T16:05+00:00",
       "rides": "DL404",
       "started": "2026-11-22T12:03+00:00"
     },
@@ -7322,11 +7322,11 @@
       "id": "DL399",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Per-job runner variable CRSP_<JOB> before CRSP_RUNS_ON_<OS>",
       "detail": "crsp 22 Nov 11:45 item 3",
-      "expected": "22 Nov ~13:27",
-      "changed": "2026-11-22T12:46+00:00",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T16:05+00:00",
       "rides": "DL404",
       "started": "2026-11-22T12:46+00:00"
     },
@@ -7334,11 +7334,11 @@
       "id": "DL400",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "pre-push skips deleted Go packages (--diff-filter=d)",
       "detail": "crsp 22 Nov 11:57 item 5",
-      "expected": "22 Nov ~12:45",
-      "changed": "2026-11-22T12:03+00:00",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T16:05+00:00",
       "rides": "DL404",
       "started": "2026-11-22T12:03+00:00"
     },
@@ -7380,32 +7380,32 @@
       "id": "DL404",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE-165: crsp kit findings",
       "detail": "join, CI, merge on green",
-      "expected": "22 Nov ~13:55",
-      "changed": "2026-11-22T12:46+00:00",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T16:05+00:00",
       "release": 165,
       "phases": [
         {
-          "name": "agents",
-          "start": "2026-11-22T12:05+00:00",
-          "end": "2026-11-22T13:27+00:00"
+          "name": "join",
+          "start": "2026-11-22T14:08+00:00",
+          "end": "2026-11-22T14:12+00:00"
         },
         {
-          "name": "join",
-          "start": "2026-11-22T13:27+00:00",
-          "end": "2026-11-22T13:35+00:00"
+          "name": "fix",
+          "start": "2026-11-22T15:46+00:00",
+          "end": "2026-11-22T15:59+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-22T13:35+00:00",
-          "end": "2026-11-22T13:50+00:00"
+          "start": "2026-11-22T15:59+00:00",
+          "end": "2026-11-22T16:14+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-22T13:50+00:00",
-          "end": "2026-11-22T13:55+00:00"
+          "start": "2026-11-22T16:14+00:00",
+          "end": "2026-11-22T16:20+00:00"
         }
       ],
       "started": "2026-11-22T12:04+00:00"
@@ -11322,11 +11322,11 @@
       "id": "DS241",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "DS guards: approval record, fresh gallery, implementation approval",
       "detail": "comiclex D306 22 Nov: three habit-only gaps become checks",
-      "expected": "22 Nov ~13:00",
-      "changed": "2026-11-22T12:04+00:00",
+      "expected": "22 Nov",
+      "changed": "2026-11-22T16:05+00:00",
       "rides": "DL404",
       "started": "2026-11-22T12:04+00:00"
     },
