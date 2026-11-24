@@ -44,6 +44,13 @@ class BaseDefault(unittest.TestCase):
     def test_unset(self):
         self.assertEqual(ac.settings("none.json", "none2.json")["base"], "origin/main")
 
+    def test_only_master_exists(self):
+        subprocess.run(["git", "commit", "-q", "--allow-empty", "-m", "x"], check=True,
+                       env={**__import__("os").environ, "GIT_AUTHOR_NAME": "t", "GIT_AUTHOR_EMAIL": "t@t",
+                            "GIT_COMMITTER_NAME": "t", "GIT_COMMITTER_EMAIL": "t@t"})
+        subprocess.run(["git", "update-ref", "refs/remotes/origin/master", "HEAD"], check=True)
+        self.assertEqual(ac.settings("none.json", "none2.json")["base"], "origin/master")
+
     def test_main(self):
         subprocess.run(["git", "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/main"], check=True)
         self.assertEqual(ac.settings("none.json", "none2.json")["base"], "origin/main")

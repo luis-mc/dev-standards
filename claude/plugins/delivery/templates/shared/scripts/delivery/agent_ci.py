@@ -7,7 +7,7 @@ in its report (default `docs/work/{task}/REPORT.md`, then `docs/work/reports/{ta
 checkout (`git merge-tree --write-tree`), pushes the result as a two-parent commit (the branch head first, the base
 second) to `ci/<task>`, and starts the CI workflow on that ref (`gh workflow run <workflow> --ref ci/<task>`, a
 `workflow_dispatch` run), once per branch head. So the run tests the agent's code on top of the code it will be
-joined with (`--base`, default the repository's default branch: the target of `origin/HEAD`, else `origin/main`; the orchestrator passes `origin/release/<n>`), and a branch cut before
+joined with (`--base`, default the repository's default branch: the target of `origin/HEAD`, else `origin/main`, else `origin/master` when only that exists; the orchestrator passes `origin/release/<n>`), and a branch cut before
 the workflow had `workflow_dispatch` still gets one. A branch that conflicts with its base is reported by file and
 not run. CI plans what the branch brings since the default branch (see ci_scope.py); that run is the agent's gate.
 `cleanup.py --pr N` removes the `ci/<task>` refs of a merged train.
@@ -72,9 +72,15 @@ def git(*args: str) -> str:
 
 
 def default_base() -> str:
-    """The default branch as a ref: the target of refs/remotes/origin/HEAD when set, else origin/main."""
+    """The default branch as a ref: the target of refs/remotes/origin/HEAD when set, else origin/main, else
+    origin/master when only that one exists (a clone of an empty repository has no origin/HEAD)."""
     ref = git("symbolic-ref", "-q", "refs/remotes/origin/HEAD").strip()
-    return ref.removeprefix("refs/remotes/") if ref.startswith("refs/remotes/origin/") else "origin/main"
+    if ref.startswith("refs/remotes/origin/"):
+        return ref.removeprefix("refs/remotes/")
+    for name in ("origin/main", "origin/master"):
+        if git("rev-parse", "-q", "--verify", "refs/remotes/%s" % name).strip():
+            return name
+    return "origin/main"
 
 
 def settings(path: str = CONFIG, delivery: str = DELIVERY_CONFIG) -> dict:
