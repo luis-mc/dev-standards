@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-24T19:43+00:00",
+  "updated": "2026-11-24T20:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11930,23 +11930,22 @@
       "id": "MP9",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-171: agent model tiers, grouping, short rules",
       "detail": "Release of the model-tier rules, the delivery guide split, the claude-setup overwrite/merge/keep prompt, haiku mechanical skills and the DL-41/DL-303 merge hint.",
-      "expected": "24 Nov ~23:00",
-      "changed": "2026-11-24T19:38+00:00",
-      "expected_basis": "edits ~1 h, tests ~15 min, then join and CI ~30 min",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T20:46+00:00",
       "release": 171
     },
     {
       "id": "MP10",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Built",
+      "status": "Live",
       "item": "Edit rules asset, guide, claude-setup prompt, haiku skills, DL-41 hint",
       "detail": "Short agents-and-integration rule with model tiers and grouping line; delivery guide; overwrite/merge/keep step; seven skills to haiku; DL-41 and DL-303 messages offer merge.",
       "expected": "24 Nov",
-      "changed": "2026-11-24T19:43+00:00",
+      "changed": "2026-11-24T20:46+00:00",
       "rides": "MP9",
       "started": "2026-11-24T19:38+00:00"
     },
