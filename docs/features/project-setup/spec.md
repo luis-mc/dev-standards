@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.13.3
+version: 0.14.0
 owner: agents
 type: reference
 code:
@@ -211,6 +211,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.14.0 | 2026-11-24 | RELEASE-169 | claude-setup template: model sonnet, auto-compact window 150000; rule files at project level only; Token cost note. Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP8 |
 | 0.13.3 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |
 | 0.13.2 | 2026-11-19 | RELEASE-151 | Tech-stack invariants note that release assets carry the version in the file name (DL-96). | DL371 |
 | 0.13.1 | 2026-11-14 | RELEASE-143 | The pre-commit hook matches secret-shaped names the way gitleaks does, so typed names and Rust paths no longer block a commit (R5.25). | DL358 |
