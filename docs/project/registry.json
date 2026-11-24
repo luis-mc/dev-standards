@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-24T07:40+00:00",
+  "updated": "2026-11-24T09:54+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7479,6 +7479,75 @@
       "started": "2026-11-24T07:15+00:00"
     },
     {
+      "id": "DL408",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "RELEASE-167: Cypress and pytest/Selenium adapters (D316 step 2)",
+      "detail": "Join DL409 and DL410, fold, CI, merge on green.",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T09:54+00:00",
+      "release": 167,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-24T09:24+00:00",
+          "end": "2026-11-24T09:47+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-24T09:47+00:00",
+          "end": "2026-11-24T09:53+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-24T09:53+00:00",
+          "end": "2026-11-24T09:58+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-24T09:58+00:00",
+          "end": "2026-11-24T10:02+00:00"
+        }
+      ],
+      "started": "2026-11-24T09:24+00:00"
+    },
+    {
+      "id": "DL409",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "Guardrails read Cypress and Selenium (G1, G3, G4); stack KNOWN",
+      "detail": "test_guardrails.py: cypress.config timeouts and retries, cy.wait(number); Selenium WebDriverWait/implicitly_wait/page-load timeouts; kind_of cypress=e2e; stack.py KNOWN cypress, selenium. Spec R5.67.",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T09:54+00:00",
+      "rides": "DL408",
+      "started": "2026-11-24T09:20+00:00"
+    },
+    {
+      "id": "DL410",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Live",
+      "item": "rerun_tests.py: Cypress runner (failed specs from log, --spec)",
+      "detail": "Add cypress to RUNNERS: parse failed spec files from Cypress run output, rerun with npx cypress run --spec. Spec R5.68.",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T09:54+00:00",
+      "rides": "DL408",
+      "started": "2026-11-24T09:20+00:00"
+    },
+    {
+      "id": "DL411",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-168: notification rule (DU15)",
+      "detail": "Join DU15, fold, CI, merge on green. luismc-docs minor.",
+      "expected": "",
+      "changed": "2026-11-24T09:48+00:00",
+      "release": 168
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -11638,6 +11707,19 @@
           "end": "2026-11-18T19:45+00:00"
         }
       ]
+    },
+    {
+      "id": "DU15",
+      "owner": "design-field-updates",
+      "app": "luismc-docs",
+      "status": "Running",
+      "item": "Rule: notifications have no buttons; a click opens the page with the actions",
+      "detail": "Peer request (owner D210 there, 24 Nov). New UX rule in design-system templates next to UX-68 and an LC rule; tray guard (tray-modal.mjs) flags notification action buttons. Rides RELEASE-167 (luismc-docs minor).",
+      "expected": "24 Nov ~10:12",
+      "changed": "2026-11-24T09:48+00:00",
+      "expected_basis": "cloud agent launched 09:50, setup 3 + work 12 + checks 5 min",
+      "rides": "DL411",
+      "started": "2026-11-24T09:48+00:00"
     },
     {
       "id": "MP1",
