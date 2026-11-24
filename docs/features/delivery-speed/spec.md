@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.14.3
+version: 0.15.0
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.15.0 | 2026-11-24 | RELEASE-167 | rerun_tests.py accepts the runner cypress: failed spec files are rerun with one --spec list (delivery R5.68). | DL410 |
 | 0.14.3 | 2026-11-22 | RELEASE-165 | Workflow templates read the per-job variable CRSP_<JOB> first (DL399). | DL399 |
 | 0.14.2 | 2026-11-22 | RELEASE-164 | The workflow templates read CRSP_RUNS_ON_LINUX before CI_RUNS_ON (DL394); the pool-check workflow and the template tests follow. | DL394 |
 | 0.14.1 | 2026-11-22 | RELEASE-163 | The e2e step widens to the full suite only on an explicit --full; other widening leaves it to the changed UI files and specs. | DL389 |
