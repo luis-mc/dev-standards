@@ -1,9 +1,9 @@
 {
-  "model": "opus",
+  "model": "sonnet",
   "outputStyle": "Caveman",
   "effortLevel": "medium",
   "env": {
-    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "500000",
+    "CLAUDE_CODE_AUTO_COMPACT_WINDOW": "150000",
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "permissions": {

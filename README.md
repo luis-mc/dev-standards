@@ -91,8 +91,10 @@ Sets up:
   no project scope; an existing binding is never changed, and a chord bound to
   something else is shown as a conflict for you to decide
 
-**Model split:** the main session runs on Opus and does the thinking and
-planning. Subagents run on Sonnet and write the code. Every project gets the
+**Model split:** the main session runs on Sonnet. Switch to Opus with `/model`
+for planning or a risky review only. Subagents run on Sonnet and write the code.
+The auto-compact window is 150000 tokens, and the rule files go to the project
+only, never to both `~/.claude/rules` and the project. Every project gets the
 split. The skill asks whether to enforce it for all your projects too. Each run
 it also asks whether each model should run at medium or high effort. Medium is
 preselected for both Opus and the code agents (Sonnet). The skill writes your

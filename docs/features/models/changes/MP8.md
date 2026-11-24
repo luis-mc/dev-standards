@@ -1,0 +1,5 @@
+---
+change: minor
+task: MP8
+---
+claude-setup defaults: main session Sonnet (Opus by /model), auto-compact window 150000, rules at project level only, token cost note. Touches claude/plugins/project-setup/.claude-plugin/plugin.json.

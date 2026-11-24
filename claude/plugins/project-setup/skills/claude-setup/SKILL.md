@@ -1,5 +1,5 @@
 ---
-description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Opus-plans/Sonnet-codes model split with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 6 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), turns on luismc-transcript-folds in the project like the other five and binds its two chords in ~/.claude/keybindings.json, defaults every config file to the project's .claude/, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
+description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Sonnet-by-default model split (Opus by `/model` for planning only) with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 6 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), turns on luismc-transcript-folds in the project like the other five and binds its two chords in ~/.claude/keybindings.json, defaults every config file to the project's .claude/, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
 model: sonnet
 effort: medium
 ---
@@ -29,11 +29,36 @@ run plans them, whatever target was picked (see "The transcript-folds pieces" in
 step 2). Step 3 shows them in the confirmation, like every other write outside
 the repo.
 
+## Rules live at one level
+
+The three rule files (`agents-and-integration.md`, `clarifying-questions.md`,
+`delivery-timing.md`) go to the **project's `.claude/rules/` only**. Never
+install the same rules file at both `~/.claude/rules` and the project's
+`.claude/rules`: Claude loads both, so every request pays for the text twice.
+Write to `~/.claude/rules/` only when the target is not a project (no repository
+to hold `.claude/`). When the owner picks **user** or **both** inside a project,
+the rule files still go to the project only. If `~/.claude/rules/` already holds
+a copy of one of these files and the project gets it, queue the user copy as a
+**removal** the owner confirms in step 3; never delete it silently.
+
+## Token cost
+
+- A recurring loop or cron must not wake Claude more often than hourly.
+- For anything faster, use a zero-token script poller that runs outside Claude
+  and exits on a state change, so Claude wakes once, when there is news.
+- Never install the same rules file at both user and project level.
+- Keep the claude-in-chrome extension off by default; turn it on for a task
+  that needs a browser, and off again.
+- The settings keep the auto-compact window at `150000`, so one request never
+  re-reads a very large context.
+
 ## The model split this skill enforces
 
 Every project this skill touches gets the same division of labour. The **main
-session runs on Opus** and does the thinking: understanding, planning,
-designing, reviewing. **Subagents run on Sonnet** and write the code. Each
+session runs on Sonnet**. The owner switches it to **Opus with `/model`**, only
+for planning or a risky review, and back afterwards. **Subagents run on Sonnet**
+and write the code. Opus is the default for no session: it costs several times
+more per token, and a session re-reads its whole context on every request. Each
 model also gets an **effort level**, **medium** or **high**, chosen by the user
 on every run. The owner's default is **medium for both**, Opus and Sonnet. The
 question below preselects it, and the shipped files carry it. Six pieces carry
@@ -41,7 +66,7 @@ the split, and all are needed:
 
 | Piece | Enforces |
 |---|---|
-| `settings.json` `model: "opus"` | the main loop's model |
+| `settings.json` `model: "sonnet"` | the main loop's model |
 | `settings.json` `env.CLAUDE_CODE_SUBAGENT_MODEL: "sonnet"` | the default model of every subagent that does not pin its own |
 | `settings.json` `modelSettings.<Opus ID>.effortLevel` | the main loop's effort |
 | `settings.json` `modelSettings.<Sonnet ID>.effortLevel` | the Sonnet effort for the session itself; subagent effort comes from the rule file, because the docs do not say this entry reaches subagents |
@@ -49,8 +74,8 @@ the split, and all are needed:
 | `.claude/hooks/effort_drift.py` | the warning when a model has no saved effort (see "The alias-drift warning") |
 | `~/.claude/hooks/questions_stop.py` | the Stop hook that enforces Q-1 and Q-2, user level only (see "The questions Stop hook") |
 
-Settings alone pick only models and effort. Without the rule, the Opus session
-still writes all the code itself, and the Sonnet default is rarely used. The
+Settings alone pick only models and effort. Without the rule, the main session
+still writes all the code itself, and the subagent default is rarely used. The
 rule alone is advice with nothing behind it. An agent whose definition pins a
 model (e.g. `luismc-agents:architect` → `opus`) keeps it. A frontmatter `model`
 takes precedence over `CLAUDE_CODE_SUBAGENT_MODEL`. This is intended:
@@ -84,7 +109,7 @@ those by hand.
 
 The shipped settings also carry a top-level `"effortLevel": "medium"`. A
 per-model `modelSettings` entry beats it, so the main session runs at the
-effort chosen for Opus. The top-level key applies to sessions whose model has no
+effort chosen for its model. The top-level key applies to sessions whose model has no
 entry, such as cloud agents. Cloud agents run Opus, so they get the Opus
 default, medium.
 
@@ -187,8 +212,8 @@ reasons:
 Then, **whatever target was picked**, ask a second question: should the model
 split also be enforced **for all projects** — i.e. written to
 `~/.claude/settings.json` (`model`, `env.CLAUDE_CODE_SUBAGENT_MODEL`, the two
-effort entries, the drift-hook registration), `~/.claude/hooks/effort_drift.py`
-and `~/.claude/rules/agents-and-integration.md`? Ask it even when the user
+effort entries, the drift-hook registration) and `~/.claude/hooks/effort_drift.py`?
+Rule files are never part of it (see "Rules live at one level"). Ask it even when the user
 chose **project** only. The project target always gets the split. This
 question asks whether every other repo on the machine gets it too. A "yes" adds
 just those pieces to the user target (not the statusline, output style or
@@ -200,8 +225,8 @@ because the split is then applied there anyway.
 
 Then ask the **effort question**, once for each model of the split:
 
-- the **main session (Opus)** — medium or high? **Recommend medium**: the
-  owner's default is Opus at medium effort.
+- the **main session (Sonnet by default, Opus when switched)** — medium or
+  high? **Recommend medium**: the owner's default is medium for both models.
 - the **code-writing subagents (Sonnet)** — medium or high? **Recommend
   medium**: the owner's default is Sonnet at medium effort, so code agents run
   at medium unless the user picks high.
@@ -255,9 +280,9 @@ The keys, and what each is for:
 | Key | Value | Why |
 |---|---|---|
 | `statusLine` | see path note below | points at the script from step 2 |
-| `env.CLAUDE_CODE_AUTO_COMPACT_WINDOW` | `"500000"` | raises the auto-compact threshold |
+| `env.CLAUDE_CODE_AUTO_COMPACT_WINDOW` | `"150000"` | compacts early, so a request never re-reads a huge context (see "Token cost") |
 | `outputStyle` | `"Caveman"` | terse replies, same technical content |
-| `model` | `"opus"` | main loop thinks and plans on Opus |
+| `model` | `"sonnet"` | main loop runs on Sonnet; Opus by `/model` for planning only |
 | `env.CLAUDE_CODE_SUBAGENT_MODEL` | `"sonnet"` | subagents write code on Sonnet |
 | `modelSettings.<Opus ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the main loop's effort |
 | `modelSettings.<Sonnet ID>.effortLevel` | the step 1 answer, `"medium"` or `"high"` | the Sonnet effort for the session itself (subagents: see the rule file below) |
@@ -293,10 +318,9 @@ environment, tell them where to unset it) or keep it.
 
 **`model` and `env.CLAUDE_CODE_SUBAGENT_MODEL` are the exception to "never
 change an existing value"** — they are policy, not tuning. If one already holds
-a conforming value, leave it. Any Opus alias or ID (`opus`, `opus[1m]`,
-`claude-opus-…`) satisfies `model`. Any Sonnet one satisfies the subagent key.
-Do not rewrite `opus[1m]` to `opus`, which loses the 1M context. If one holds a
-non-conforming value (e.g. `model: "sonnet"`), queue it as a **conflict**: show
+a conforming value, leave it. Any Sonnet alias or ID (`sonnet`, `sonnet[1m]`,
+`claude-sonnet-…`) satisfies `model` and the subagent key. If one holds a
+non-conforming value (e.g. `model: "opus"` or `opus[1m]`), queue it as a **conflict**: show
 the current and policy values and let the user choose per key in step 3 whether
 to replace it. Never replace silently, never skip silently.
 
@@ -515,8 +539,7 @@ this in the report.
 
 ### `rules/agents-and-integration.md` — overwrite unconditionally
 
-`.claude/rules/agents-and-integration.md` (project) or
-`~/.claude/rules/agents-and-integration.md` (user). Claude Code loads every
+`.claude/rules/agents-and-integration.md` (project; `~/.claude/rules/` only when the target is not a project, see "Rules live at one level"). Claude Code loads every
 `.md` under `rules/` as instructions alongside `CLAUDE.md`. The agent and
 integration behaviour lives here, not in `CLAUDE.md`, because a rule file
 reaches projects whose `CLAUDE.md` already exists and must not be touched. Like
@@ -547,8 +570,7 @@ project target has no `scripts/delivery/` directory.
 
 ### `rules/clarifying-questions.md` — overwrite unconditionally
 
-`.claude/rules/clarifying-questions.md` (project) or
-`~/.claude/rules/clarifying-questions.md` (user). Part of the standard setup.
+`.claude/rules/clarifying-questions.md` (project; user level only when the target is not a project). Part of the standard setup.
 Write it to every target this skill applies, new or existing, on every install
 and every re-run, with no question asked. It tells Claude to gather every
 clarifying question it needs and ask them all at once, in the questions
@@ -559,8 +581,7 @@ is drift, and the fix belongs in the template. No placeholders.
 
 ### `rules/delivery-timing.md` — overwrite unconditionally
 
-`.claude/rules/delivery-timing.md` (project) or `~/.claude/rules/delivery-timing.md`
-(user). Plugin-owned like the two rule files above. Write it on every run, with
+`.claude/rules/delivery-timing.md` (project; user level only when the target is not a project). Plugin-owned like the two rule files above. Write it on every run, with
 no question asked and no placeholders. It carries the ETA and train-timing rules (ETA =
 real start + typical duration with the dependency named; the next train is joined
 during CI and pushed at green; waits are gaps; trains leave when green at any
@@ -707,11 +728,11 @@ Apply what was confirmed. Then check the result. Do not assume it worked:
   that were not applied.
 - `statusline.sh` is executable.
 - The path in `statusLine.command` resolves for the target you wrote.
-- Every target that got the model split has `model` resolving to Opus,
+- Every target that got the model split has `model` resolving to Sonnet,
   `env.CLAUDE_CODE_SUBAGENT_MODEL` resolving to Sonnet, and
   `rules/agents-and-integration.md` present — or the conflicting key is
   listed as declined. A project `model` key shadows the user one, so a project
-  left on a declined non-Opus value defeats a user-level enforcement. Say so.
+  left on a declined non-Sonnet value defeats a user-level enforcement. Say so.
 - Every target that got the split has both `modelSettings` entries, under the
   canonical IDs, with the value `medium` or `high`.
 - The target's settings contain a top-level `effortLevel` (unless an existing
@@ -761,7 +782,7 @@ therefore left alone. That list matters, because "already set" and "just set by
 me" look identical afterwards. Report what the user declined, including any
 model-split conflict left in place. Say whether the model split is now enforced
 for this project only or for all projects. Give the effort chosen for each model
-(Opus main session, Sonnet subagents) and where it was written, and the
+(Sonnet main session, Opus by `/model`, Sonnet subagents) and where it was written, and the
 top-level `effortLevel` (added as `medium`, or the existing value left alone)
 that cloud agents fall back to. Say which of the 6 plugins were enabled for the
 project, which were installed, and which install commands the owner still has to
@@ -808,8 +829,8 @@ only the plugins that are enabled in this project.
 | `luismc-agents` | the `architect` agent for hard design calls | ask the `architect` agent to compare two designs |
 | `luismc-transcript-folds` | long diffs and shell commands fold to one line; chords `ctrl+x d` and `ctrl+x f` | press `ctrl+x d` to toggle syntax highlighting |
 
-Add the model split (Opus plans, Sonnet codes; `/model` switches the current
-session now) and, for each offer that ran, what it now enforces.
+Add the model split (Sonnet by default, Opus by `/model` for planning only;
+`/model` switches the current session now) and, for each offer that ran, what it now enforces.
 
 ### Enforcement report — after "Left for you"
 

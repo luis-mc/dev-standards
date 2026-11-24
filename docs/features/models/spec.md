@@ -21,7 +21,7 @@ artifact: feature-model-and-effort-profiles.html
 
 ## 1. In one paragraph
 
-Every project set up by `claude-setup` runs its main session on Opus and its code agents on Sonnet, both at medium effort. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
+Every project set up by `claude-setup` runs its main session on Sonnet (Opus by `/model` for planning or a risky review only) and its code agents on Sonnet, both at medium effort. The auto-compact window is 150000 tokens. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
 
 ## 2. Why
 
@@ -41,7 +41,7 @@ Non-goals: choosing the model for a user's own prompt, and overriding the built-
 
 ```mermaid
 flowchart TB
-  main[Main session: Opus, medium] --> code[Code agents: Sonnet, medium]
+  main[Main session: Sonnet, medium] --> code[Code agents: Sonnet, medium]
   main --> arch[luismc-agents architect: Opus, medium]
   main --> tri[Log triage: Haiku]
   main --> ex[Explore, Plan, fork: main session's model]
@@ -71,7 +71,7 @@ The docs do not say that `modelSettings` reaches subagents. So the effort is als
 
 | Who | Does | Model | Effort |
 |---|---|---|---|
-| Main session | Plans, writes contracts, decides, reviews risky diffs | Opus | medium |
+| Main session | Plans, writes contracts, decides, reviews risky diffs (Opus only when switched in with `/model`) | Sonnet | medium |
 | Code agents | Write code, fix lint, resolve conflicts a script cannot | Sonnet | medium |
 | Merges and checks | Join branches, run gates | none: scripts | none |
 | Log triage | Read CI logs, name the failure | Haiku | default |
