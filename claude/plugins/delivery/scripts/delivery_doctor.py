@@ -1555,10 +1555,49 @@ def check_gate_steps(root, cfg):
     return False, problem, [_item("gate.e2e_step", "fail", problem)]
 
 
+def _stack_module():
+    """stack.py of the shipped templates (DL406)."""
+    import importlib.util
+    path = os.path.join(PLUGIN, "templates", "shared", "scripts", "delivery", "stack.py")
+    if not os.path.exists(path):
+        return None
+    spec = importlib.util.spec_from_file_location("delivery_stack", path)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def check_stack(root, cfg):
+    """DL406 (R5.66): `stack.tools`. A tool found in the files that is neither known nor declared FAILS at once,
+    whatever enforcement.mode says."""
+    st = _stack_module()
+    if st is None:
+        return False, "stack.py is missing from the plugin templates", [_item("stack.tools", "fail", "stack.py is missing")]
+    items, bad = [], []
+    for msg in st.problems(cfg):
+        bad.append(msg)
+        items.append(_item("stack.tools", "fail", msg))
+    for tool, r in sorted(st.resolve(root, cfg).items()):
+        where = " (%s)" % r["evidence"] if r["evidence"] else ""
+        if r["status"] == "known":
+            items.append(_item("stack.tools", "ok", "%s%s: known" % (tool, where)))
+        elif r["status"] == "declared":
+            note = "declared" if r["judged"] else "declared; delivery runs its commands but cannot judge them"
+            items.append(_item("stack.tools", "ok", "%s%s: %s" % (tool, where, note)))
+        else:
+            msg = ("%s found (%s) but delivery cannot check it: declare it under stack in .delivery/config.json, "
+                   "or remove it" % (tool, r["evidence"]))
+            bad.append(msg)
+            items.append(_item("stack.tools", "fail", msg))
+    if bad:
+        return False, "; ".join(bad[:3]), items
+    return True, "%d tool(s), none unchecked" % len(items), items
+
+
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("runner", check_runner), ("ci", check_ci), ("machine", check_machine), ("rust", check_rust),
           ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("plugins", check_plugins),
-          ("gate-steps", check_gate_steps))
+          ("gate-steps", check_gate_steps), ("stack", check_stack))
 
 
 def run_checks(root):
