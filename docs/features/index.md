@@ -29,7 +29,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.8.0 | 2026-11-01 |
+| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.9.0 | 2026-11-01 |
 | [Install, update and remove](lifecycle/spec.md) | luismc-docs, luismc-delivery | delivery, docs, testing | live | 0.3.1 | 2026-11-21 |
 | [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.17.0 | 2026-11-01 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.0 | 2026-11-01 |
@@ -97,7 +97,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.8.0 | 2026-11-01 |
+| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.9.0 | 2026-11-01 |
 | [Install, update and remove](lifecycle/spec.md) | luismc-docs, luismc-delivery | delivery, docs, testing | live | 0.3.1 | 2026-11-21 |
 
 ### hooks
@@ -105,7 +105,7 @@
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.43.0 | 2026-11-01 |
-| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.8.0 | 2026-11-01 |
+| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.9.0 | 2026-11-01 |
 | [Shared runner pool](runner-pool/spec.md) | luismc-delivery | delivery, ci, hooks | live | 0.20.5 | 2026-11-10 |
 | [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.2.1 | 2026-11-01 |
 
@@ -154,7 +154,7 @@
 | [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-09 |
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.43.0 | 2026-11-01 |
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.15.0 | 2026-11-08 |
-| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.8.0 | 2026-11-01 |
+| [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.9.0 | 2026-11-01 |
 | [Install, update and remove](lifecycle/spec.md) | luismc-docs, luismc-delivery | delivery, docs, testing | live | 0.3.1 | 2026-11-21 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.1.5 | 2026-11-08 |
 | [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.17.0 | 2026-11-01 |

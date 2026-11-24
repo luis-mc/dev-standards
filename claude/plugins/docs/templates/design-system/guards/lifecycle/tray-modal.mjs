@@ -1,8 +1,12 @@
 #!/usr/bin/env node
 /**
- * LC-22 and the static half of LC-30. Scans native (Rust) code of the tray and the question window.
+ * LC-22, LC-34 and the static half of LC-30. Scans native (Rust) code of the tray and the question window.
  *  - Tray files (names with `tray`): no modal, no message box, no Yes/No dialog; a notice window of 24 hours
  *    (`NOTICE_WINDOW_SECS` equal to 86400, written 24 * 60 * 60 or 86400) so one notice per event per 24 h.
+ *  - Tray and notification files (names with `tray` or `notif`): no notification action buttons (notify-rust
+ *    `.action(`, tauri `actions:` / `action_type_id` / `register_action_types`, Windows toast `ToastButton` /
+ *    `AddButton` / `<actions>` / `<action `, `with_actions`, macOS `UNNotificationAction`). A click opens an app
+ *    page that holds the actions (LC-34, UX-69).
  *  - Window files (names with `window`): no fixed size, no literal width and height passed to a size call; the
  *    window is sized from its content.
  * Usage: node tray-modal.mjs <dir>
@@ -23,6 +27,14 @@ export function trayProblems(text) {
   return out;
 }
 
+const ACTION_BTN = /(\.\s*action\s*\(|\bactions\s*:|\baction_type_id\b|\bregister_action_types\b|\bToastButton\w*|\bAddButton\b|<actions>|<action\s|\bwith_actions\b|\bUNNotificationAction\b)/;
+
+export function notifProblems(text) {
+  const code = text.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '');
+  const m = code.match(ACTION_BTN);
+  return m ? [`notification has action buttons (${m[0].trim()}); a click opens the app page that holds the actions (LC-34)`] : [];
+}
+
 export function windowProblems(text) {
   const code = text.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '').replace(/#\[cfg\(test\)\][\s\S]*$/, '');
   const m = code.match(FIXED);
@@ -35,6 +47,7 @@ if (process.argv[1]?.endsWith('tray-modal.mjs')) {
   for (const f of walk(root, /\.rs$/)) {
     const name = f.split('/').pop();
     if (/tray/i.test(name)) problems.push(...trayProblems(read(f)).map((p) => `${rel(root, f)}: ${p}`));
+    if (/tray|notif/i.test(name)) problems.push(...notifProblems(read(f)).map((p) => `${rel(root, f)}: ${p}`));
     if (/window/i.test(name)) problems.push(...windowProblems(read(f)).map((p) => `${rel(root, f)}: ${p}`));
   }
   finish('tray-modal', problems);

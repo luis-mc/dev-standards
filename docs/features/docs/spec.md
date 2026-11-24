@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.8.0
+version: 1.9.0
 owner: agents
 type: reference
 code:
@@ -101,7 +101,7 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.20** — The design-system starter holds the default for install and update windows (DU13, owner decision 18 Nov): rules UX-62 to UX-65, a component "Update window" (35) and a component "Installer artwork" (36), both citing the rules. The templates are in `templates/design-system/components/windows-installer/`: a Node script that reads the token file and writes the two WixUI bitmaps (493x58 and 493x312, token colours only), a WiX snippet that wires them, and a PowerShell update window with a `-LayoutCheck` switch that exits non-zero when a control is clipped or a button is off-window at 100%, 150% and 200% text scale. The update template has no message box and no fixed pixel height on content controls. The `design-system-setup` skill names this default where it lists what the starter holds. The gallery draws both components.
 
-**R5.23** — The design-system templates hold the lifecycle parts (React `UpdateBanner`, `UpdatesCard`, `UpdateHistory`, `RemoteUpdate`, `RemoveDialog`, `FleetRows`; Rust question window and tray menu models) and guards: the DS234 guards A to E (rendered layout at 360, 393, 1300 and 1800 px with focus glow counted, no raw px in margin, padding or gap, one component per layout role, dated `none yet`, a spec that cites a rule names its test) and the lifecycle guards LC-22, LC-23, LC-24 and LC-30 (DOCSPEC R15.22 to R15.24).
+**R5.23** — The design-system templates hold the lifecycle parts (React `UpdateBanner`, `UpdatesCard`, `UpdateHistory`, `RemoteUpdate`, `RemoveDialog`, `FleetRows`; Rust question window and tray menu models) and guards: the DS234 guards A to E (rendered layout at 360, 393, 1300 and 1800 px with focus glow counted, no raw px in margin, padding or gap, one component per layout role, dated `none yet`, a spec that cites a rule names its test) and the lifecycle guards LC-22, LC-23, LC-24, LC-30 and LC-34 (DOCSPEC R15.22 to R15.24; LC-34 with UX-69: a notification has no action buttons).
 
 ## 6. Non-functional requirements
 
@@ -196,6 +196,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.9.0 | 2026-11-24 | RELEASE-168 | Design-system rule UX-69 and lifecycle check LC-34: a notification has no action buttons and a click opens an app page that holds the actions; the tray-modal guard flags action buttons. | DU15 |
 | 1.8.0 | 2026-11-22 | RELEASE-165 | design_system.py verify and the guard templates fail a missing approval record, a missing implementation approval and a stale gallery; approve-implementation --as-live records a live version (DOCSPEC R15.14). | DS241 |
 | 1.7.0 | 2026-11-21 | RELEASE-160 | Lifecycle contract schema, starter, words table and words lint guards for a project with a local app (R5.21, R5.22).<br>Added R5.21: lifecycle parts (React and Rust models), DS234 design-system guards A to E and lifecycle guards LC-22, LC-23, LC-24, LC-30. (section 5) | DS235a, DS235b |
 | 1.6.0 | 2026-11-18 | RELEASE-150 | The design-system starter holds the default install and update windows: rules UX-62 to UX-65, two components and Windows templates (R5.20). | DU13 |

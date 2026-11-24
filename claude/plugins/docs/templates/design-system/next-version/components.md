@@ -404,10 +404,10 @@ The body scrolls when the content is taller than the space. The overlay never gr
 ## 41. Question window and tray menu
 
 - **Used for:** the native side of the lifecycle. One question window shows update progress and the remove question. The tray menu only notifies.
-- **Looks:** the window is sized from its content and the text scale, never a fixed size. The tray shows one notice per event per 24 hours.
+- **Looks:** the window is sized from its content and the text scale, never a fixed size. The tray shows one notice per event per 24 hours. A notification carries a title, a short body and one click target (a page URL of the local app or the web app), and no buttons. The page it opens holds the actions.
 - **Source:** `parts/rust/question_window.rs`, `parts/rust/tray_menu.rs`
-- **Rules:** UX-68, UX-63, UX-64, UX-65.
-- **Guard:** `guards/lifecycle/tray-modal.mjs` (LC-22, LC-30) and `guards/lifecycle/states-render.mjs` (LC-30).
+- **Rules:** UX-68, UX-69, UX-63, UX-64, UX-65.
+- **Guard:** `guards/lifecycle/tray-modal.mjs` (LC-22, LC-30, LC-34) and `guards/lifecycle/states-render.mjs` (LC-30).
 
 ## How to add a component
 

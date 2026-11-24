@@ -181,6 +181,23 @@ class LC22(unittest.TestCase):
         d = tmp({"tray_menu.rs": "fn f() {}\n"})
         self.assertEqual(node(LG / "tray-modal.mjs", d)[0], 1)
 
+    def test_notification_action_fails(self):
+        d = tmp({"tray_menu.rs": self.OK + 'fn n() { Notification::new().summary("x").action("pair", "Pair again").show(); }\n'})
+        rc, out = node(LG / "tray-modal.mjs", d)
+        self.assertEqual(rc, 1)
+        self.assertIn("LC-34", out)
+
+    def test_toast_button_fails(self):
+        d = tmp({"notify_win.rs": "fn t() { let b = ToastButton::new(); }\n"})
+        rc, out = node(LG / "tray-modal.mjs", d)
+        self.assertEqual(rc, 1)
+        self.assertIn("LC-34", out)
+
+    def test_click_opens_page_passes(self):
+        d = tmp({"tray_menu.rs": self.OK + 'fn n() { Notification::new().summary("x").body("y").on_click_open("http://127.0.0.1:8080/pair"); }\n'})
+        rc, out = node(LG / "tray-modal.mjs", d)
+        self.assertEqual(rc, 0, out)
+
     def test_shipped_rust_templates_pass(self):
         rc, out = node(LG / "tray-modal.mjs", GUARDS.parent / "parts" / "rust")
         self.assertEqual(rc, 0, out)
