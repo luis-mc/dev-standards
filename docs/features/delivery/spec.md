@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.42.0
+version: 0.43.0
 owner: agents
 type: reference
 code:
@@ -217,6 +217,10 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.64** — Per-job runner variable (DL399). The runner service also writes one variable per job, `CRSP_<JOB>`: the workflow job key uppercased, every non-alphanumeric character turned into `_` (job `linux-suites` reads `CRSP_LINUX_SUITES`). A matrix job keeps its job key. Every `runs-on` in the workflow templates reads it first, then the R5.63 chain unchanged. The doctor's runner report lists the per-job overrides it finds set. The way back is to delete `CRSP_<JOB>` and `CRSP_RUNS_ON_*`. Tests: `claude/plugins/delivery/tests/test_dl394_runs_on_vars.py`.
 
 **R5.66** — Declared stack (DL406, owner decision D316). `.delivery/config.json` may carry an optional `stack` block with a closed field list: `e2e`, `unit`, `build` (tool names), `package_manager`, `e2e_spec_globs`, `test_globs`. `scripts/delivery/stack.py` finds the tools of a repository from its files (`detect_tools`), reads the block (`declared`) and says for each tool whether it is known (the plugin's checks handle it: playwright, vitest, jest, pytest, go, cargo, dotnet, pnpm), declared, or unchecked (`resolve`); the declaration wins over detection, and with no block the track preset (ts, go, rust, dotnet) stands as the declaration, so a default project sees no change. `delivery_doctor.py` check `stack.tools` prints `ok` for each known tool and `ok` for each declared tool (a declared tool that is not known reads `declared; delivery runs its commands but cannot judge them`), and FAILS for a detected tool that is neither known nor declared: `<tool> found (<evidence>) but delivery cannot check it: declare it under stack in .delivery/config.json, or remove it`. It blocks at once, whatever `enforcement.mode` says. An unknown field under `stack` also fails.
+
+**R5.67** — Cypress and Selenium guardrails (DL409, owner decision D316). `test_guardrails.py` judges both, and `stack.py` KNOWN lists them, so `stack.tools` no longer fails on them. Cypress: a path with `cypress` or a `*.cy.*` file is e2e. G1: `cypress.config.*` must set `defaultCommandTimeout` (Cypress has no per-test timeout); each of `defaultCommandTimeout`, `pageLoadTimeout`, `requestTimeout`, `responseTimeout`, `execTimeout`, `taskTimeout` that is set must be a plain number within the e2e limit; a `*.cy.*` override over the limit breaks. G3: `retries` of 1 or more (or `runMode` of 1 or more), `cypress-plugin-retries` and `Cypress.currentRetry` break. G4: `cy.wait(<number>)` is a sleep; `cy.wait('@alias')` is not. Selenium: G1 breaks on `WebDriverWait`, `implicitly_wait`, `set_page_load_timeout` and `set_script_timeout` (seconds) or `driver.wait` and `setTimeouts` (ms) over the e2e limit; G4 catches `time.sleep` and `driver.sleep`. Selenium under pytest keeps the pytest G1 once.
+
+**R5.68** — Cypress rerun (DL410, owner decision D316). `rerun_tests.py` accepts the runner `cypress`. It reads the failed spec files from the job log: the rows of the `Run Finished` table marked with a cross, or, when there is no table, each `Running:  <spec>` header followed by `N failing` (ANSI colour codes and table borders are stripped). It also reads a JUnit XML report: the `file` attribute of each `testsuite` that holds a failed case. The rerun is per spec file, not per test: the arguments are one `--spec <file1>,<file2>` (comma-joined), with the spec files of changed code added. Default test globs: `**/*.cy.*`, `cypress/e2e/**/*.*`. A log with no failing spec is unreadable, so the whole job runs.
 
 ## 6. Non-functional requirements
 
@@ -555,6 +559,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.43.0 | 2026-11-24 | RELEASE-167 | Cypress and Selenium guardrails: G1 timeouts, G3 retries, G4 sleeps; both tools are known to stack.tools (R5.67).<br>Cypress rerun: rerun_tests.py reads failed Cypress specs from the job log or JUnit XML and reruns them with one --spec list (R5.68). | DL409, DL410 |
 | 0.42.0 | 2026-11-24 | RELEASE-166 | Declared stack: optional `stack` block in .delivery/config.json, `stack.py`, and doctor check `stack.tools` that fails for an undeclared tool delivery cannot check (R5.66).<br>Default e2e spec paths cover Cypress and pytest layouts; agent_ci.py defaults its base to the repository's default branch (origin/HEAD, else origin/main). | DL406, DL407 |
 | 0.41.0 | 2026-11-22 | RELEASE-165 | update merges gate.json by step name, doctor gate-steps check, e2e push hint, template test timeouts (R13.92b)<br>Doctor hooks row notes that with no_attribution on, no delivery hook advises AI attribution or re-authoring commits, and the project rule wins over a platform hook.<br>Workflow templates read the per-job variable CRSP_<JOB> first (R5.64); the doctor lists per-job overrides.<br>pre-push diff ignores deleted files (R5.36c) | DL397, DL398, DL399, DL400 |
 | 0.40.0 | 2026-11-22 | RELEASE-164 | Workflow templates read CRSP_RUNS_ON_<OS> first, then CI_RUNS_ON[_WINDOWS], then the hosted default. Setup writes CRSP_RUNS_ON_LINUX. The doctor reports which variable each OS resolves to and warns when old and new differ (R5.63).<br>A NOT READY report line closes an agent row only in its final form and after 10 quiet minutes; agent-check --reopen reopens a closed row. | DL394, DL396 |

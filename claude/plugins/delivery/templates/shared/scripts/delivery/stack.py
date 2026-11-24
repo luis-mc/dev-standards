@@ -24,6 +24,8 @@ KNOWN = {
     "playwright": "test_guardrails.py G1 (config timeout) and the retry check, e2e_push_check.py",
     "vitest": "test_guardrails.py G1 (vitest.config timeout)",
     "jest": "test_guardrails.py G1 (testTimeout in jest config or package.json), retryTimes",
+    "cypress": "test_guardrails.py G1 (cypress.config defaultCommandTimeout and the other timeouts), G3 (retries), G4 (cy.wait(N))",
+    "selenium": "test_guardrails.py G1 (WebDriverWait, implicitly_wait, page-load and script timeouts), G4 (time.sleep, driver.sleep)",
     "pytest": "test_guardrails.py G1 (pytest-timeout), reruns, parametrize; rerun_tests.py",
     "go": "delivery_common.py package kind go-modules; rerun_tests.py",
     "cargo": "test_guardrails.py (cargo test timeout), delivery_common.py cargo-workspace, rust_ci.py",
