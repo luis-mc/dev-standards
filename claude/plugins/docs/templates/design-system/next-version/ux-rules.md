@@ -93,6 +93,7 @@ Every rule has an ID. A feature spec and the code cite the ID (`design system UX
 | UX-66 | **A page's top level uses one component per layout role.** Page sections, card grid and form each have one shared component. A page never sets its own gap. The gap between sections is the section token. Rendered at 360, 393, 1300 and 1800 px, no box overlaps a neighbour, counting focus outline, glow and shadow with each field focused. No fixed px or rem in margin, padding or gap outside the token files. | none yet |
 | UX-67 | **Install, update and remove screens use the shared lifecycle parts.** They use tokens only and the words of the lifecycle words table. Every state renders without clipping or overlap at 100% to 200% text scale and at 360 px. Remove stays disabled until the user chooses Keep my data or Delete my data too. | none yet |
 | UX-68 | **The tray only notifies.** It never opens a modal or a Yes/No dialog, and shows one notice per event per 24 hours. A question goes to the one native question window, which is sized from its content. | none yet |
+| UX-69 | **Notifications can open pages on the local server or the web app; those app pages have the actions.** A tray or OS notification has no action buttons. It carries a title, a short body and one click target. A click opens the right page of the local app or the web app, and that page holds the actions (for example "Pair again" and "Not now"). | `guards/lifecycle/tray-modal.mjs` (LC-34) |
 <!-- rule-table:end -->
 
 ## How to add a rule

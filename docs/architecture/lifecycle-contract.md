@@ -45,6 +45,7 @@ Remove flow: `remove`, `ask`, `keep`, `purge`, `clean`.
 - Remove asks every time with no default; Remove stays disabled until keep or delete is chosen. Silent remove keeps data; `PURGE=1`, `apt purge` or `--delete-data` deletes it.
 - Trust: Ed25519-signed manifest, SHA-256 and build provenance; OS code signing per product by owner decision.
 - Web first; one native window for progress and questions; the tray only notifies.
+- A notification has no action buttons (LC-34, UX-69). It carries a title, a short body and one click target. A click opens a page of the local app or the web app, and that page holds the actions. LC-34 relates to UX-69 as LC-22 relates to UX-68.
 - Checks are on by default; an opt-out needs an owner decision ID, a reason and a review date.
 - Where test runs execute is the project's choice.
 
@@ -54,4 +55,4 @@ Check every 6 h ± 20%, first check 1-10 min after start; failed-check backoff 1
 
 ## Check IDs
 
-DS235a: LC-1, 2, 31. DS235b: LC-22, 23, 24, 30 and the design-system guards A-E (DS234). DS235c: LC-3 to 7, 25, 26, 28. DS235d: LC-8 to 21, 27, 29, 32, 33.
+DS235a: LC-1, 2, 31. DS235b: LC-22, 23, 24, 30 and the design-system guards A-E (DS234). DS235c: LC-3 to 7, 25, 26, 28. DS235d: LC-8 to 21, 27, 29, 32, 33. DU15: LC-34.
