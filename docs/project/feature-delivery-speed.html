@@ -902,14 +902,20 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.11.0 <span class="gen-flag gen-update">update: 2.15.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.13.0 <span class="gen-flag gen-update">update: 2.15.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-22T16:05+00:00">22 Nov 16:05</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-24T07:17+00:00">24 Nov 07:17</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">22 Nov 21:53</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">2 tasks</span></summary>
+<ul>
+<li data-glance-task="DL407"><span class="task-id">DL407</span>Stack fixes: Cypress/pytest e2e spec defaults, agent_ci base branch (D316) <span class="glance-expected">24 Nov ~07:57</span><span class="glance-basis">cloud agent setup 12 min + ~15 min work</span></li>
+<li data-glance-task="DL406"><span class="task-id">DL406</span>Declared stack in .delivery/config.json and doctor stack.tools check (D316) <span class="glance-expected">24 Nov ~08:12</span><span class="glance-basis">cloud agent setup 12 min + ~40 min work and tests</span></li>
+</ul>
 </details>
 <details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">3 tasks</span></summary>
 <ul>
@@ -918,27 +924,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">D311: pool project covers every private-repo job (its M2+), then message</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">23 Nov ~15:00</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">20 tasks</span></summary>
-<ul>
-<li data-glance-task="DL398"><span class="task-id">DL398</span>Stop hook honours no_attribution (no noreply re-author advice)</li>
-<li data-glance-task="DL399"><span class="task-id">DL399</span>Per-job runner variable CRSP_&lt;JOB&gt; before CRSP_RUNS_ON_&lt;OS&gt;</li>
-<li data-glance-task="DL400"><span class="task-id">DL400</span>pre-push skips deleted Go packages (--diff-filter=d)</li>
-<li data-glance-task="DL404"><span class="task-id">DL404</span><span class="release-name">RELEASE-165</span>crsp kit findings</li>
-<li data-glance-task="DL397"><span class="task-id">DL397</span>Template sync keeps project gate steps (merge by step name)</li>
-<li data-glance-task="DL395"><span class="task-id">DL395</span><span class="release-name">RELEASE-164</span>RUNS_ON_* variables</li>
-<li data-glance-task="DL394"><span class="task-id">DL394</span>D307: delivery reads RUNS_ON_LINUX/WINDOWS/MACOS</li>
-<li data-glance-task="DL396"><span class="task-id">DL396</span>Ledger closes an agent on an in-progress NOT READY line</li>
-<li class="glance-more">and 12 more</li>
-</ul>
-</details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">389</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div><div class="status-count-tile status-dropped"><div class="count">11</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">389</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">2</div><div class="label">tasks running</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">11</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">4 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">7 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DL346"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>23 Nov ~12:00<span class="expected-basis">D307: starts when the pool project says its pool is ready for all projects</span></td></tr>
 <tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>23 Nov ~14:00<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
 <tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>23 Nov ~15:00<span class="expected-basis">D311: pool project covers every private-repo job (its M2+), then message</span></td></tr>
+<tr data-task="DL407"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL407</span>Stack fixes: Cypress/pytest e2e spec defaults, agent_ci base branch (D316)<span class="release-line"><span class="release-name">RELEASE-166</span></span></td><td>DL403 rows 1 and 48: e2e spec defaults add **/*.cy.*, tests/e2e/test_*.py, **/e2e/**/*.spec.*; agent_ci base default is the configured default branch, not master.</td><td>24 Nov ~07:57<span class="expected-basis">cloud agent setup 12 min + ~15 min work</span></td></tr>
+<tr data-task="DL406"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL406</span>Declared stack in .delivery/config.json and doctor stack.tools check (D316)<span class="release-line"><span class="release-name">RELEASE-166</span></span></td><td>Optional stack block (e2e, unit, package manager, build, test globs); doctor detects tools from files; declared or known tools ok, a detected tool neither declared nor known fails (block at once); default projects keep their track preset.</td><td>24 Nov ~08:12<span class="expected-basis">cloud agent setup 12 min + ~40 min work and tests</span></td></tr>
+<tr data-task="DL405"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL405</span><span class="release-name">RELEASE-166</span>stack declaration and doctor check, small stack fixes (D316 step 1)</td><td>Join DL-stack and DL-fixes, fold, ready PR, merge on green.</td><td>24 Nov ~08:40</td></tr>
 <tr data-task="DL349"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL349</span>Projects move to the new runs-on contract</td><td>Phase E: each adopting project runs the delivery install update, the separate pool project writes RUNS_ON_*, old CI_RUNS_ON* deleted, first job watched per project.</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
@@ -1379,6 +1375,70 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D319">
+<h3 class="decision-head"><span class="decision-id">D319</span> <span class="decision-question">Old pool: fix jobs that fail after ~30 min waiting for a free slot, or leave it since the old pool retires after the switch to crsp?</span></h3>
+<p class="decision-meta">Asked 22 Nov · Decided 22 Nov · Task DL404</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 22 Nov</span></div>
+<p class="decision-summary">The repos move to crsp; no change to a pool about to retire.</p>
+<blockquote class="decision-words">&ldquo;Leave it (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Fix it now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Cap the hold and requeue with the reason.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D318">
+<h3 class="decision-head"><span class="decision-id">D318</span> <span class="decision-question">DS241: does the missing implementation approval block existing projects at once (one-time approve-implementation --as-live)?</span></h3>
+<p class="decision-meta">Asked 22 Nov · Decided 22 Nov · Task DS241</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Block at once</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 22 Nov</span></div>
+<p class="decision-summary">Matches the block-at-once rule; one command per project.</p>
+<blockquote class="decision-words">&ldquo;Block at once (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn for one release</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Projects record --as-live before it blocks.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D317">
+<h3 class="decision-head"><span class="decision-id">D317</span> <span class="decision-question">DS241: does the default branch count as a release context for the gallery freshness check (a stale gallery fails on main)?</span></h3>
+<p class="decision-meta">Asked 22 Nov · Decided 22 Nov · Task DS241</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, fail on main too</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 22 Nov</span></div>
+<p class="decision-summary">Main never carries a stale gallery.</p>
+<blockquote class="decision-words">&ldquo;Yes, fail on main too (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, warn on main</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Only release branches and the ready PR fail.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D316">
+<h3 class="decision-head"><span class="decision-id">D316</span> <span class="decision-question">Stack audit DL403: which direction for the stack assumptions in luismc-delivery (56 found: 17 silent, 14 wrong, 8 block)?</span></h3>
+<p class="decision-meta">Asked 22 Nov · Decided 22 Nov · Task DL403</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">C: declared tools</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 22 Nov</span></div>
+<p class="decision-summary">Project declares its tools in .delivery/config.json; every check reads it; adapters fill in (Cypress, pytest/Selenium e2e, npm/yarn, JUnit/xUnit); unknown tool blocks at once with a clear message; default projects keep auto-detected defaults.</p>
+<blockquote class="decision-words">&ldquo;C: declared tools (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">B: adapters only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Add the four adapters; other hard-coded spots stay.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">A: document only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">No code change; the 8 blockers stay.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D315">
 <h3 class="decision-head"><span class="decision-id">D315</span> <span class="decision-question">Which follow-ups (ci_watch red-run cancel, template prune and timeouts, dev-standards spec-lint guardrails) ride RELEASE-155?</span></h3>
 <p class="decision-meta">Asked 20 Nov · Decided 20 Nov · Task DL377</p>

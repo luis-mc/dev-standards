@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-22T16:05+00:00",
+  "updated": "2026-11-24T07:17+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7409,6 +7409,65 @@
         }
       ],
       "started": "2026-11-22T12:04+00:00"
+    },
+    {
+      "id": "DL405",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE-166: stack declaration and doctor check, small stack fixes (D316 step 1)",
+      "detail": "Join DL-stack and DL-fixes, fold, ready PR, merge on green.",
+      "expected": "24 Nov ~08:40",
+      "changed": "2026-11-24T07:17+00:00",
+      "release": 166,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-24T07:20+00:00",
+          "end": "2026-11-24T08:12+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-24T08:12+00:00",
+          "end": "2026-11-24T08:20+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-24T08:20+00:00",
+          "end": "2026-11-24T08:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-24T08:35+00:00",
+          "end": "2026-11-24T08:40+00:00"
+        }
+      ]
+    },
+    {
+      "id": "DL406",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Declared stack in .delivery/config.json and doctor stack.tools check (D316)",
+      "detail": "Optional stack block (e2e, unit, package manager, build, test globs); doctor detects tools from files; declared or known tools ok, a detected tool neither declared nor known fails (block at once); default projects keep their track preset.",
+      "expected": "24 Nov ~08:12",
+      "changed": "2026-11-24T07:17+00:00",
+      "expected_basis": "cloud agent setup 12 min + ~40 min work and tests",
+      "rides": "DL405",
+      "started": "2026-11-24T07:15+00:00"
+    },
+    {
+      "id": "DL407",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Stack fixes: Cypress/pytest e2e spec defaults, agent_ci base branch (D316)",
+      "detail": "DL403 rows 1 and 48: e2e spec defaults add **/*.cy.*, tests/e2e/test_*.py, **/e2e/**/*.spec.*; agent_ci base default is the configured default branch, not master.",
+      "expected": "24 Nov ~07:57",
+      "changed": "2026-11-24T07:17+00:00",
+      "expected_basis": "cloud agent setup 12 min + ~15 min work",
+      "rides": "DL405",
+      "started": "2026-11-24T07:15+00:00"
     },
     {
       "id": "DS1",

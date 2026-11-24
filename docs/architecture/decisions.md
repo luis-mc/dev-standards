@@ -304,6 +304,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D313 | Should the guardrails guard block a push when a guardrail fails, or only warn? | Warn now, block later | decided | 2026-11-20 |
 | delivery-speed | D314 | Should each project get its own fix list from the CI study as a message to its session? | Yes, message each | decided | 2026-11-20 |
 | delivery-speed | D315 | Which follow-ups (ci_watch red-run cancel, template prune and timeouts, dev-standards spec-lint guardrails) ride RELEASE-155? | None, ship now; rest next | decided | 2026-11-20 |
+| delivery-speed | D316 | Stack audit DL403: which direction for the stack assumptions in luismc-delivery (56 found: 17 silent, 14 wrong, 8 block)? | C: declared tools | decided | 2026-11-22 |
+| delivery-speed | D317 | DS241: does the default branch count as a release context for the gallery freshness check (a stale gallery fails on main)? | Yes, fail on main too | decided | 2026-11-22 |
+| delivery-speed | D318 | DS241: does the missing implementation approval block existing projects at once (one-time approve-implementation --as-live)? | Block at once | decided | 2026-11-22 |
+| delivery-speed | D319 | Old pool: fix jobs that fail after ~30 min waiting for a free slot, or leave it since the old pool retires after the switch to crsp? | Leave it | decided | 2026-11-22 |
 | delivery-speed | D32 | Machine-wide CI queue: ship the limits-file path fix (G2) and slot-wait-counts-for-fallback fix (G6) inside DL27? | Yes, in DL27 | decided | 2026-11-04 |
 | delivery-speed | D33 | Who owns dev-standards draft PR #140 (shared runner pool research) from here? | This session | decided | 2026-11-04 |
 | delivery-speed | D34 | Should Claude cloud sessions running CI (Option 3 main or Option 4 fallback) have a limit on how many run at once? | Yes, one limit for both roles | decided | 2026-11-04 |
