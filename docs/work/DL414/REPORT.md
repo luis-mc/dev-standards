@@ -21,6 +21,6 @@ So the filter is in the Q-4 block, not in `trains_green_unmerged`.
 
 Close command used in the message: `delivery_ledger.py close <id> --reason "stale"`. Use `close-stale --before DATE` for many entries.
 
-Branch head SHA: see the last commit on DL414-q4-stale-entries.
+Branch head SHA: df9e8bc (code commit; the report-only commit follows it).
 
 CODE DONE
