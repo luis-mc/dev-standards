@@ -10,4 +10,7 @@ Files:
 time.sleep was already caught by G4 for test files; driver.sleep and cy.wait(N) added.
 
 Tests (all OK): test_dl409_guardrails_cypress_selenium, test_dl376_test_guardrails, test_dl379_templates_guardrails, test_dl406_stack.
-docs_check: M1 for delivery-speed spec cleared by `Docs: none` in the commit message (see below for final run).
+docs_check: M1 for delivery-speed spec cleared by `Docs: none` in the commit message ; the only remaining error is W1 (docs/work report on the branch, stripped before the join, as AGENTS.md allows).
+Branch head: HEAD_PLACEHOLDER
+
+READY
