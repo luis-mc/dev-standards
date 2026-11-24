@@ -634,6 +634,19 @@
         }
       }
     },
+    "stack": {
+      "type": "object",
+      "description": "DL406 (owner decision D316): the project's declared tools. A tool found in the files that delivery cannot check, and that is not listed here, fails `delivery_doctor.py` (check stack.tools) at once, whatever enforcement.mode says. A declared tool the plugin cannot judge is ok; delivery runs its commands but does not judge them. Closed list of fields. With no block, the track preset (ts, go, rust, dotnet) stands as the declaration.",
+      "properties": {
+        "e2e": {"type": "array", "items": {"type": "string", "pattern": "[^ ]"}, "description": "End-to-end tools, for example [\"cypress\"]."},
+        "unit": {"type": "array", "items": {"type": "string", "pattern": "[^ ]"}, "description": "Unit-test tools, for example [\"pytest\"]."},
+        "build": {"type": "array", "items": {"type": "string", "pattern": "[^ ]"}, "description": "Build tools, for example [\"gradle\"]."},
+        "package_manager": {"type": "string", "description": "The package manager, for example yarn."},
+        "e2e_spec_globs": {"type": "array", "items": {"type": "string", "pattern": "[^ ]"}, "description": "Globs of the e2e spec files, for example [\"cypress/e2e/**/*.cy.*\"]."},
+        "test_globs": {"type": "array", "items": {"type": "string", "pattern": "[^ ]"}, "description": "Globs of the other test files, for example [\"src/test/**/*.java\"]."}
+      },
+      "additionalProperties": false
+    },
     "local_heavy": {
       "type": "integer",
       "minimum": 1,

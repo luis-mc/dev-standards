@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.41.0
+version: 0.42.0
 owner: agents
 type: reference
 code:
@@ -215,6 +215,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.63** — Runner variables (DL394). Every `runs-on` in the workflow templates picks, in order, the variable of the runner service for its OS (`CRSP_RUNS_ON_LINUX`, `CRSP_RUNS_ON_WINDOWS`, `CRSP_RUNS_ON_MACOS`; a Windows job that declares a size reads `CRSP_RUNS_ON_WINDOWS_<SIZE>` first), then the old variable (`CI_RUNS_ON`, `CI_RUNS_ON_WINDOWS`), then the GitHub-hosted default, as `fromJSON(vars.NEW || vars.OLD || '"ubuntu-latest"')`. An unset variable falls through. When both are set the new one wins; the way back is to delete `CRSP_RUNS_ON_*` or set it to the old labels. `delivery_ci_setup.py` writes `CRSP_RUNS_ON_LINUX` for a new setup. The doctor reports which variable each OS resolves to and warns when the old and the new variable differ. Tests: `claude/plugins/delivery/tests/test_dl394_runs_on_vars.py`.
 
 **R5.64** — Per-job runner variable (DL399). The runner service also writes one variable per job, `CRSP_<JOB>`: the workflow job key uppercased, every non-alphanumeric character turned into `_` (job `linux-suites` reads `CRSP_LINUX_SUITES`). A matrix job keeps its job key. Every `runs-on` in the workflow templates reads it first, then the R5.63 chain unchanged. The doctor's runner report lists the per-job overrides it finds set. The way back is to delete `CRSP_<JOB>` and `CRSP_RUNS_ON_*`. Tests: `claude/plugins/delivery/tests/test_dl394_runs_on_vars.py`.
+
+**R5.66** — Declared stack (DL406, owner decision D316). `.delivery/config.json` may carry an optional `stack` block with a closed field list: `e2e`, `unit`, `build` (tool names), `package_manager`, `e2e_spec_globs`, `test_globs`. `scripts/delivery/stack.py` finds the tools of a repository from its files (`detect_tools`), reads the block (`declared`) and says for each tool whether it is known (the plugin's checks handle it: playwright, vitest, jest, pytest, go, cargo, dotnet, pnpm), declared, or unchecked (`resolve`); the declaration wins over detection, and with no block the track preset (ts, go, rust, dotnet) stands as the declaration, so a default project sees no change. `delivery_doctor.py` check `stack.tools` prints `ok` for each known tool and `ok` for each declared tool (a declared tool that is not known reads `declared; delivery runs its commands but cannot judge them`), and FAILS for a detected tool that is neither known nor declared: `<tool> found (<evidence>) but delivery cannot check it: declare it under stack in .delivery/config.json, or remove it`. It blocks at once, whatever `enforcement.mode` says. An unknown field under `stack` also fails.
 
 ## 6. Non-functional requirements
 
@@ -553,6 +555,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.42.0 | 2026-11-24 | RELEASE-166 | Declared stack: optional `stack` block in .delivery/config.json, `stack.py`, and doctor check `stack.tools` that fails for an undeclared tool delivery cannot check (R5.66).<br>Default e2e spec paths cover Cypress and pytest layouts; agent_ci.py defaults its base to the repository's default branch (origin/HEAD, else origin/main). | DL406, DL407 |
 | 0.41.0 | 2026-11-22 | RELEASE-165 | update merges gate.json by step name, doctor gate-steps check, e2e push hint, template test timeouts (R13.92b)<br>Doctor hooks row notes that with no_attribution on, no delivery hook advises AI attribution or re-authoring commits, and the project rule wins over a platform hook.<br>Workflow templates read the per-job variable CRSP_<JOB> first (R5.64); the doctor lists per-job overrides.<br>pre-push diff ignores deleted files (R5.36c) | DL397, DL398, DL399, DL400 |
 | 0.40.0 | 2026-11-22 | RELEASE-164 | Workflow templates read CRSP_RUNS_ON_<OS> first, then CI_RUNS_ON[_WINDOWS], then the hosted default. Setup writes CRSP_RUNS_ON_LINUX. The doctor reports which variable each OS resolves to and warns when old and new differ (R5.63).<br>A NOT READY report line closes an agent row only in its final form and after 10 quiet minutes; agent-check --reopen reopens a closed row. | DL394, DL396 |
 | 0.39.0 | 2026-11-22 | RELEASE-163 | agent-check --note, closed-agent exit 0, pre-push skips node checks for a push with no JS file (R5.36, R5.36b) | DL392 |

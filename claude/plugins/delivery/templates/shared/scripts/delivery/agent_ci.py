@@ -7,7 +7,7 @@ in its report (default `docs/work/{task}/REPORT.md`, then `docs/work/reports/{ta
 checkout (`git merge-tree --write-tree`), pushes the result as a two-parent commit (the branch head first, the base
 second) to `ci/<task>`, and starts the CI workflow on that ref (`gh workflow run <workflow> --ref ci/<task>`, a
 `workflow_dispatch` run), once per branch head. So the run tests the agent's code on top of the code it will be
-joined with (`--base`, default `origin/master`; the orchestrator passes `origin/release/<n>`), and a branch cut before
+joined with (`--base`, default the repository's default branch: the target of `origin/HEAD`, else `origin/main`, else `origin/master` when only that exists; the orchestrator passes `origin/release/<n>`), and a branch cut before
 the workflow had `workflow_dispatch` still gets one. A branch that conflicts with its base is reported by file and
 not run. CI plans what the branch brings since the default branch (see ci_scope.py); that run is the agent's gate.
 `cleanup.py --pr N` removes the `ci/<task>` refs of a merged train.
@@ -32,7 +32,7 @@ A stuck run: `gh run cancel` can stall on a queued run. The force-cancel API wor
 Settings (flags, or the `agent_ci` object of scripts/delivery/ci-scope.json, then that of .delivery/config.json,
 which wins):
     workflow       ci.yml
-    base           origin/master      ref each branch is merged onto
+    base           origin/HEAD target, else origin/main   ref each branch is merged onto
     branch_prefix  claude/            agent branches are origin/<prefix>*
     ci_prefix      ci/                the merged ref is <ci_prefix><task>
     report         docs/work/{task}/REPORT.md        then docs/work/reports/{task}.md; {task} = the branch name after the prefix, up to the first '-'
@@ -60,7 +60,7 @@ import sys
 import time
 from pathlib import Path
 
-DEFAULTS = {"workflow": "ci.yml", "base": "origin/master", "branch_prefix": "claude/", "ci_prefix": "ci/",
+DEFAULTS = {"workflow": "ci.yml", "base": "", "branch_prefix": "claude/", "ci_prefix": "ci/",
             "report": ["docs/work/{task}/REPORT.md", "docs/work/reports/{task}.md", "docs/work/agents/reports/{task}.md", "docs/agents/reports/{task}.md"],
             "marker": r"^\s*(?:(?:[-*+]|\d+\.)\s+)?(?:\[[xX]\]\s*)?CODE DONE\b", "require_e2e": True}
 CONFIG = "scripts/delivery/ci-scope.json"
@@ -69,6 +69,18 @@ DELIVERY_CONFIG = ".delivery/config.json"
 
 def git(*args: str) -> str:
     return subprocess.run(["git", *args], capture_output=True, text=True, encoding="utf-8").stdout
+
+
+def default_base() -> str:
+    """The default branch as a ref: the target of refs/remotes/origin/HEAD when set, else origin/main, else
+    origin/master when only that one exists (a clone of an empty repository has no origin/HEAD)."""
+    ref = git("symbolic-ref", "-q", "refs/remotes/origin/HEAD").strip()
+    if ref.startswith("refs/remotes/origin/"):
+        return ref.removeprefix("refs/remotes/")
+    for name in ("origin/main", "origin/master"):
+        if git("rev-parse", "-q", "--verify", "refs/remotes/%s" % name).strip():
+            return name
+    return "origin/main"
 
 
 def settings(path: str = CONFIG, delivery: str = DELIVERY_CONFIG) -> dict:
@@ -81,6 +93,8 @@ def settings(path: str = CONFIG, delivery: str = DELIVERY_CONFIG) -> dict:
             continue
         if isinstance(found, dict):
             out.update(found)
+    if not out.get("base"):
+        out["base"] = default_base()
     return out
 
 

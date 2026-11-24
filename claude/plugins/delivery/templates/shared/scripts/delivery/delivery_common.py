@@ -58,7 +58,8 @@ PACKAGE_KINDS = ("pnpm-workspace", "go-modules", "cargo-workspace", "dotnet-sln"
 LOCKFILE_SCOPES = ("widen", "pnpm-importers", "per-package")
 DEFAULT_INERT_PATHS = ["docs/**"]  # gate.json "inert_paths" when absent
 # Files that are end-to-end specs (DL-86): gate.json "e2e_spec_paths" when absent.
-DEFAULT_E2E_SPEC_PATHS = ["e2e/*.spec.*", "*/e2e/*.spec.*"]
+# Matched by fnmatch, where `*` also crosses `/` and `**` acts like `*`: so "**/x" needs a directory before x.
+DEFAULT_E2E_SPEC_PATHS = ["e2e/*.spec.*", "*/e2e/*.spec.*", "**/*.cy.*", "tests/e2e/test_*.py", "**/e2e/**/*.spec.*"]
 PNPM_LOCK = "pnpm-lock.yaml"
 
 DELIVERY_DIR = ".delivery"
