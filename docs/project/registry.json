@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-24T07:17+00:00",
+  "updated": "2026-11-24T07:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -6334,9 +6334,9 @@
       "status": "Waiting",
       "item": "Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json",
       "detail": "Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.",
-      "expected": "23 Nov ~12:00",
-      "changed": "2026-11-16T12:28+00:00",
-      "expected_basis": "D307: starts when the pool project says its pool is ready for all projects",
+      "expected": "24 Nov ~17:00",
+      "changed": "2026-11-24T07:21+00:00",
+      "expected_basis": "waits on crsp running every repo's jobs (D307); recheck 17:00",
       "waits_on": "work"
     },
     {
@@ -6346,9 +6346,9 @@
       "status": "Waiting",
       "item": "Remove the runner pool from dev-standards",
       "detail": "Phase C (D299): on the owner's go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.",
-      "expected": "23 Nov ~14:00",
-      "changed": "2026-11-17T00:28+00:00",
-      "expected_basis": "D311: pool project covers every private-repo job (its M2+), then message",
+      "expected": "24 Nov ~17:00",
+      "changed": "2026-11-24T07:21+00:00",
+      "expected_basis": "waits on crsp running every repo's jobs (D307); recheck 17:00",
       "waits_on": "work"
     },
     {
@@ -6358,9 +6358,9 @@
       "status": "Waiting",
       "item": "Tear down this machine's pool and runners",
       "detail": "Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.",
-      "expected": "23 Nov ~15:00",
-      "changed": "2026-11-17T00:28+00:00",
-      "expected_basis": "D311: pool project covers every private-repo job (its M2+), then message",
+      "expected": "24 Nov ~17:00",
+      "changed": "2026-11-24T07:21+00:00",
+      "expected_basis": "waits on crsp running every repo's jobs (D307); recheck 17:00",
       "waits_on": "work"
     },
     {
@@ -7414,45 +7414,55 @@
       "id": "DL405",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Live",
       "item": "RELEASE-166: stack declaration and doctor check, small stack fixes (D316 step 1)",
       "detail": "Join DL-stack and DL-fixes, fold, ready PR, merge on green.",
-      "expected": "24 Nov ~08:40",
-      "changed": "2026-11-24T07:17+00:00",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T07:40+00:00",
       "release": 166,
       "phases": [
         {
           "name": "agents",
           "start": "2026-11-24T07:20+00:00",
-          "end": "2026-11-24T08:12+00:00"
+          "end": "2026-11-24T07:24+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-24T08:12+00:00",
-          "end": "2026-11-24T08:20+00:00"
+          "start": "2026-11-24T07:24+00:00",
+          "end": "2026-11-24T07:27+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-24T08:20+00:00",
-          "end": "2026-11-24T08:35+00:00"
+          "start": "2026-11-24T07:27+00:00",
+          "end": "2026-11-24T07:31+00:00"
+        },
+        {
+          "name": "fix",
+          "start": "2026-11-24T07:31+00:00",
+          "end": "2026-11-24T07:36+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-24T07:36+00:00",
+          "end": "2026-11-24T07:50+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-24T08:35+00:00",
-          "end": "2026-11-24T08:40+00:00"
+          "start": "2026-11-24T07:50+00:00",
+          "end": "2026-11-24T07:53+00:00"
         }
-      ]
+      ],
+      "started": "2026-11-24T07:28+00:00"
     },
     {
       "id": "DL406",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Declared stack in .delivery/config.json and doctor stack.tools check (D316)",
       "detail": "Optional stack block (e2e, unit, package manager, build, test globs); doctor detects tools from files; declared or known tools ok, a detected tool neither declared nor known fails (block at once); default projects keep their track preset.",
-      "expected": "24 Nov ~08:12",
-      "changed": "2026-11-24T07:17+00:00",
-      "expected_basis": "cloud agent setup 12 min + ~40 min work and tests",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T07:39+00:00",
       "rides": "DL405",
       "started": "2026-11-24T07:15+00:00"
     },
@@ -7460,12 +7470,11 @@
       "id": "DL407",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Stack fixes: Cypress/pytest e2e spec defaults, agent_ci base branch (D316)",
       "detail": "DL403 rows 1 and 48: e2e spec defaults add **/*.cy.*, tests/e2e/test_*.py, **/e2e/**/*.spec.*; agent_ci base default is the configured default branch, not master.",
-      "expected": "24 Nov ~07:57",
-      "changed": "2026-11-24T07:17+00:00",
-      "expected_basis": "cloud agent setup 12 min + ~15 min work",
+      "expected": "24 Nov",
+      "changed": "2026-11-24T07:40+00:00",
       "rides": "DL405",
       "started": "2026-11-24T07:15+00:00"
     },
