@@ -1,5 +1,13 @@
 [
   {
+    "date": "24 Nov 10:30",
+    "change": "PR #268 merged 24 Nov 10:30 UTC; carried agent PR #267; smoke passed"
+  },
+  {
+    "date": "24 Nov 10:26",
+    "change": "PR #266 merged 24 Nov 10:13 UTC after UX-69 guard-cell fix; luismc-docs 2.16.0"
+  },
+  {
     "date": "22 Nov 12:03",
     "change": "dropped: folded into DL403"
   },

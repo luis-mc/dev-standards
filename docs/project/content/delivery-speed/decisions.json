@@ -7248,6 +7248,26 @@
       "chosen": "Leave it",
       "decided": "2026-11-22",
       "owner_words": "Leave it (Recommended)"
+    },
+    {
+      "id": "D320",
+      "question": "Until delivery supports npm and yarn, should doctor stack.tools block or only warn on a project that uses them without declaring them under stack?",
+      "asked": "2026-11-24",
+      "status": "decided",
+      "task": "DL406",
+      "options": [
+        {
+          "label": "Block, as now",
+          "summary": "Unknown tool blocks at once (D316); one line under stack fixes it; support comes next."
+        },
+        {
+          "label": "Warn until supported",
+          "summary": "npm/yarn only warn until their adapters ship, then block."
+        }
+      ],
+      "chosen": "Block, as now",
+      "decided": "2026-11-24",
+      "owner_words": "Block, as now (Recommended)"
     }
   ]
 }

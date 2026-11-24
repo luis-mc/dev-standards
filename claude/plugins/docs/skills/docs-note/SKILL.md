@@ -1,7 +1,7 @@
 ---
 name: docs-note
 description: Record a change to a binding doc (a feature spec or an architecture spec) as a one-line change note, and fold notes at release. Use whenever a task changes the behaviour a spec describes, when the Stop hook says code changed without docs, or when a release branch must fold notes into one version row per doc.
-model: sonnet
+model: haiku
 effort: medium
 ---
 

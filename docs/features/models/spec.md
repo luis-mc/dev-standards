@@ -82,7 +82,8 @@ The docs do not say that `modelSettings` reaches subagents. So the effort is als
 | Kind of skill | Skills | Model | Effort |
 |---|---|---|---|
 | judgment | spec-new, security-audit, performance-audit, compliance-audit, tech-stack-setup, auth-setup, feature-artifact-new, feature-spec-new | Opus | medium |
-| mechanical | spec-check, project-artifact-check, task-add, task-status-update, full-progress-artifact-new, docs-setup, docs-index, docs-check, docs-note | Sonnet | medium |
+| mechanical | full-progress-artifact-new, docs-setup, design-system-setup | Sonnet | medium |
+| haiku | spec-check, project-artifact-check, task-add, task-status-update, docs-index, docs-note, docs-check | Haiku | medium |
 | setup | claude-setup | Sonnet | medium |
 
 ## 4. Screens and states
@@ -115,7 +116,7 @@ There is no screen. `claude-setup` shows its change plan once. It asks for confi
 
 ## 7. Design
 
-- `model-profiles.json` maps three kinds (judgment, mechanical, setup) to a model, an effort and a list of skills. It is the single table.
+- `model-profiles.json` maps four kinds (judgment, mechanical, haiku, setup) to a model, an effort and a list of skills. It is the single table.
 - Effort is saved under the full model ID (`modelSettings.<model ID>.effortLevel`), but the model is chosen by alias. When an alias moves to a newer ID, nothing matches, and the model runs at its default. Medium is saved for both models, so the fallback is the same value. A drift changes nothing until someone chooses a higher effort.
 - `effort_drift.py` reads the SessionStart JSON. When `model` is absent (after `/clear`), it checks `ANTHROPIC_DEFAULT_OPUS_MODEL` and `ANTHROPIC_DEFAULT_SONNET_MODEL`.
 

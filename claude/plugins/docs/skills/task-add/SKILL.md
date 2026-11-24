@@ -1,7 +1,7 @@
 ---
 name: task-add
 description: Add a task to a project's artifacts — a unit of work with an ID, a status and an owner (a feature artifact or the project). Use before starting any piece of work that should be tracked, when the user says "add a task", "track this", or names new work for a feature, and whenever a branch needs a task ID to start its name with. Never edit the task registry by hand.
-model: sonnet
+model: haiku
 effort: medium
 ---
 

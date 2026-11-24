@@ -921,20 +921,37 @@ figure.diagram figcaption b{color:var(--ink)}
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.13.0 <span class="gen-flag gen-update">update: 2.15.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.15.0 <span class="gen-flag gen-update">update: 2.16.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-24T07:13+00:00">24 Nov 07:13</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">24 Nov 09:50</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-24T19:43+00:00">24 Nov 19:43</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">24 Nov 19:44</a> (Lisbon)</p>
 <p class="lede">The default is Opus at medium and Sonnet at medium everywhere, released in luismc-project-setup 13.0.0 (MP7, 11 October).</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="MP10"><span class="task-id">MP10</span>Edit rules asset, guide, claude-setup prompt, haiku skills, DL-41 hint</li>
+</ul>
+</details>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="MP8"><span class="task-id">MP8</span>claude-setup: Sonnet main, 150k compact, token-cost, rules project-only</li>
+</ul>
+</details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">9</div><div class="label">tasks live</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">10</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">9 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="MP9"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">MP9</span><span class="release-name">RELEASE-171</span>agent model tiers, grouping, short rules</td><td>Release of the model-tier rules, the delivery guide split, the claude-setup overwrite/merge/keep prompt, haiku mechanical skills and the DL-41/DL-303 merge hint.</td><td>24 Nov ~23:00<span class="expected-basis">edits ~1 h, tests ~15 min, then join and CI ~30 min</span></td></tr>
+</tbody></table></div>
+</details>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 10 live</span></summary>
+<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="MP10"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">MP10</span>Edit rules asset, guide, claude-setup prompt, haiku skills, DL-41 hint<span class="release-line"><span class="release-name">RELEASE-171</span></span></td><td>Short agents-and-integration rule with model tiers and grouping line; delivery guide; overwrite/merge/keep step; seven skills to haiku; DL-41 and DL-303 messages offer merge.</td><td>24 Nov</td></tr>
+<tr data-task="MP8"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP8</span>claude-setup: Sonnet main, 150k compact, token-cost, rules project-only<span class="release-line"><span class="release-name">RELEASE-169</span></span></td><td>Agent PR #267 (was DL412, unregistered).</td><td>24 Nov</td></tr>
 <tr data-task="MP7"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP7</span>Defaults: Opus at medium, Sonnet at high</td><td>Released in STACKSPEC 7.0.0 (#27, 137e0d0, 00:31). Opus and Sonnet at medium effort everywhere: skill profiles, claude-setup&#x27;s preselected answers, top-level effort, the architect agent and the rule&#x27;s agent lines (specs 1.2.0, audits 1.2.0, agents 1.1.0, artifacts 1.1.2). Your ~/.claude already uses medium for both.</td><td>11 Oct</td></tr>
 <tr data-task="MP1"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP1</span>Inventory of models per agent type</td><td>Checked against the Claude Code docs; corrects the first answer (Explore and Plan run on the main session’s model). Figure 1.</td><td>10 Oct</td></tr>
 <tr data-task="MP2"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP2</span>Profile decisions</td><td>Explore and Plan stay on Opus; skills profiled by kind of work; a session-start warning for alias drift. Section 7.</td><td>10 Oct</td></tr>
@@ -1086,6 +1103,7 @@ figure.diagram figcaption b{color:var(--ink)}
 </section>
 <section id="s8"><h2><span class="section-number">&sect; 8</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>24 Nov 10:30</td><td>Shipped in RELEASE-169 (luismc-project-setup 1.14.0), merged 24 Nov 10:30 UTC</td></tr>
 <tr><td>11 Oct 01:10</td><td>MP7 released in luismc-project-setup 13.0.0 with STACKSPEC 7.0.0 (00:31): Opus at medium and Sonnet at medium everywhere, replacing the earlier high defaults. The owner first asked for Sonnet at high, then confirmed medium; his own ~/.claude and the installed plugins were updated.</td></tr>
 <tr><td>10 Oct 23:30</td><td>Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26).</td></tr>
 <tr><td>10 Oct 13:40</td><td>MP3 to MP6 live: released in luismc-project-setup 12.0.0 (#10, 12:56); the alias-drift hook also installed in the owner’s ~/.claude.</td></tr>

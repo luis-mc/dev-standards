@@ -537,14 +537,28 @@ Turn it off with `CLAUDE_QUESTIONS_STOP=off` in the settings `env` block or the
 shell, or `"questionsStop": "off"` in `~/.claude/settings.json`. Tell the owner
 this in the report.
 
-### `rules/agents-and-integration.md` — overwrite unconditionally
+### `rules/agents-and-integration.md` — add if missing; when it differs, the user chooses
 
 `.claude/rules/agents-and-integration.md` (project; `~/.claude/rules/` only when the target is not a project, see "Rules live at one level"). Claude Code loads every
 `.md` under `rules/` as instructions alongside `CLAUDE.md`. The agent and
 integration behaviour lives here, not in `CLAUDE.md`, because a rule file
 reaches projects whose `CLAUDE.md` already exists and must not be touched. Like
-the statusline, this file is plugin-owned policy, so replace it without asking.
-A local edit to it is drift, and the fix belongs in the template.
+the statusline, this file is plugin-owned policy, so a missing file is written
+without asking. When the target already has the file and it differs from the
+template (after the placeholder is filled), do not replace it silently. Ask
+once per target, with AskUserQuestion, in the step 3 round:
+**overwrite** (take the shipped file whole), **merge** (take the shipped text
+for every rule line whose `check:` tag ID is in the template, keep the local
+lines that carry no shipped tag ID, and list what changed), or **keep** (leave
+the file; report that it differs). The user chooses; there is no default. A
+file identical to the template needs no question.
+
+The template points to `docs/guides/agent-delivery-details.md` for the
+CI-gate path, join, CI scope, watching CI and cleanup. Copy
+`assets/docs/guides/agent-delivery-details.md` to the target's
+`docs/guides/` when it is missing; when it differs, ask the same
+overwrite / merge / keep question. For the user target there is no `docs/`, so
+skip the guide and say so in the step 5 report.
 
 The template contains the placeholder `{{SUBAGENT_EFFORT}}`. When writing the
 file, substitute the Sonnet effort chosen in step 1 (`medium` or `high`) for
@@ -900,10 +914,11 @@ it off, set the variable.
 ## Per-skill model profiles
 
 `assets/model-profiles.json` is the single source of truth for which model and
-effort each skill in this marketplace runs at. It has three groups: `judgment`
+effort each skill in this marketplace runs at. It has four groups: `judgment`
 (Opus, medium: specs, audits, stack setup, auth, writing a feature artifact),
-`mechanical` (Sonnet, medium: checks and task bookkeeping, the other artifacts
-skills) and `setup` (Sonnet, medium: this skill). Every profile is medium, the
+`mechanical` (Sonnet, medium: the other artifacts skills), `haiku` (Haiku, medium:
+spec-check, project-artifact-check, task-add, task-status-update, docs-index,
+docs-note, docs-check) and `setup` (Sonnet, medium: this skill). Every profile is medium, the
 owner's default for both models. Every skill's `model:` and `effort:`
 frontmatter must match its group. This skill's own frontmatter does.
 `tools/test_model_profiles.py` enforces that, so change the JSON first and the

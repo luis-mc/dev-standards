@@ -1,7 +1,7 @@
 ---
 name: task-status-update
 description: Change a task's status in a project's artifacts and, at the end of the turn, publish Full Progress once. Use when work starts, finishes, fails, waits or is blocked on the owner, when a pull request is opened, ready or merged, when CI passes or fails, when a deploy goes live, when a hook reports queued status events or pending artifacts, or when the user asks to mark, update or move a task. The only way to change a status; never type a status row by hand.
-model: sonnet
+model: haiku
 effort: medium
 ---
 

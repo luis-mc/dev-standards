@@ -897,7 +897,7 @@ def owns_warnings(led: dict, me: dict, owns) -> list:
             continue
         hit = owns_overlap(owns, o["owns"])
         if hit:
-            out.append("WARNING: agent %s (%s, %s) already owns %s; this brief may repeat its slice"
+            out.append("WARNING: agent %s (%s, %s) already owns %s; this brief may repeat its slice; consider merging these tasks into that agent's brief"
                        % (o.get("task") or o.get("id"), o.get("id") or "-", o.get("state"), ", ".join(hit)))
     return out
 

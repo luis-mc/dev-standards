@@ -902,10 +902,10 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.13.0 <span class="gen-flag gen-update">update: 2.15.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.15.0 <span class="gen-flag gen-update">update: 2.16.0</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-24T09:54+00:00">24 Nov 09:54</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">24 Nov 09:50</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-24T19:39+00:00">24 Nov 19:39</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">24 Nov 19:44</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -913,35 +913,44 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </details>
 <details class="glance-group glance-waiting" data-glance="waiting" open><summary><span class="glance-label">Waiting for other work</span><span class="fold-count">3 tasks</span></summary>
 <ul>
-<li data-glance-task="DL346"><span class="task-id">DL346</span><span class="glance-dep">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span> Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json <span class="glance-expected">24 Nov ~17:00</span></li>
-<li data-glance-task="DL347"><span class="task-id">DL347</span><span class="glance-dep">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span> Remove the runner pool from dev-standards <span class="glance-expected">24 Nov ~17:00</span></li>
-<li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">24 Nov ~17:00</span></li>
+<li data-glance-task="DL346"><span class="task-id">DL346</span><span class="glance-dep">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span> Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json <span class="glance-expected">25 Nov ~17:00</span></li>
+<li data-glance-task="DL347"><span class="task-id">DL347</span><span class="glance-dep">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span> Remove the runner pool from dev-standards <span class="glance-expected">25 Nov ~17:00</span></li>
+<li data-glance-task="DL348"><span class="task-id">DL348</span><span class="glance-dep">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span> Tear down this machine&#x27;s pool and runners <span class="glance-expected">25 Nov ~17:00</span></li>
 </ul>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">6 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">12 tasks</span></summary>
 <ul>
+<li data-glance-task="DL413"><span class="task-id">DL413</span><span class="release-name">RELEASE-170</span>RELEASE: Q-4 names stale releases and skips dead entries (DL414)</li>
+<li data-glance-task="DL414"><span class="task-id">DL414</span>Q-4: name unnumbered entries; skip ones with no PR and no number</li>
+<li data-glance-task="DL416"><span class="task-id">DL416</span>Recreate runner pool main again</li>
+<li data-glance-task="DL415"><span class="task-id">DL415</span>Recreate runner pool main after disk error</li>
+<li data-glance-task="DL412"><span class="task-id">DL412</span><span class="release-name">RELEASE-169</span>claude-setup token-cost defaults (MP8)</li>
+<li data-glance-task="DL411"><span class="task-id">DL411</span><span class="release-name">RELEASE-168</span>notification rule (DU15)</li>
 <li data-glance-task="DL408"><span class="task-id">DL408</span><span class="release-name">RELEASE-167</span>Cypress and pytest/Selenium adapters (D316 step 2)</li>
 <li data-glance-task="DL409"><span class="task-id">DL409</span>Guardrails read Cypress and Selenium (G1, G3, G4); stack KNOWN</li>
-<li data-glance-task="DL410"><span class="task-id">DL410</span>rerun_tests.py: Cypress runner (failed specs from log, --spec)</li>
-<li data-glance-task="DL405"><span class="task-id">DL405</span><span class="release-name">RELEASE-166</span>stack declaration and doctor check, small stack fixes (D316 step 1)</li>
-<li data-glance-task="DL407"><span class="task-id">DL407</span>Stack fixes: Cypress/pytest e2e spec defaults, agent_ci base branch (D316)</li>
-<li data-glance-task="DL406"><span class="task-id">DL406</span>Declared stack in .delivery/config.json and doctor stack.tools check (D316)</li>
+<li class="glance-more">and 4 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">395</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">11</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">401</div><div class="label">tasks live</div></div><div class="status-count-tile status-waiting"><div class="count">3</div><div class="label">tasks waiting</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div><div class="status-count-tile status-dropped"><div class="count">11</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
 <details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">5 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL346"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>24 Nov ~17:00<span class="expected-basis">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span></td></tr>
-<tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>24 Nov ~17:00<span class="expected-basis">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span></td></tr>
-<tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>24 Nov ~17:00<span class="expected-basis">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span></td></tr>
+<tr data-task="DL346"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL346</span>Delivery runs-on reads RUNS_ON_* per OS; guard reads limits.json</td><td>Phase A of the pool move (D300, D301): templates read RUNS_ON_LINUX/WINDOWS/MACOS with a temporary CI_RUNS_ON fallback; load guard on its own limits.json; cloud fallback drops the slot-wait trigger; pid_alive to a shared module; generic ci_watch memory text.</td><td>25 Nov ~17:00<span class="expected-basis">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span></td></tr>
+<tr data-task="DL347"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL347</span>Remove the runner pool from dev-standards</td><td>Phase C (D299): on the owner&#x27;s go, delete pool-only files and tests, cut shared files, retire runner-pool spec IDs R5.1-R5.57 (incl. duplicated R5.17-19), drop the CI_RUNS_ON fallback, delivery major version.</td><td>25 Nov ~17:00<span class="expected-basis">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span></td></tr>
+<tr data-task="DL348"><td><span class="status-chip status-waiting">Waiting</span></td><td><span class="task-id">DL348</span>Tear down this machine&#x27;s pool and runners</td><td>Phase D (D299): drain, unregister runners with remove tokens, delete repo variables, compose down -v, delete services/accounts/group/rights/scheduled task (admin script), delete runner and tool folders, compact the Docker disk.</td><td>25 Nov ~17:00<span class="expected-basis">waits on crsp running every repo&#x27;s jobs (D307); recheck 17:00</span></td></tr>
 <tr data-task="DL349"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL349</span>Projects move to the new runs-on contract</td><td>Phase E: each adopting project runs the delivery install update, the separate pool project writes RUNS_ON_*, old CI_RUNS_ON* deleted, first job watched per project.</td><td>Not scheduled</td></tr>
-<tr data-task="DL411"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL411</span><span class="release-name">RELEASE-168</span>notification rule (DU15)</td><td>Join DU15, fold, CI, merge on green. luismc-docs minor.</td><td>Not scheduled</td></tr>
+<tr data-task="DL417"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DL417</span>Pool recreate: re-register lost agents; refresh makes a missing container</td><td>pool-add-agent says &#x27;already added&#x27; when /agents/&lt;slug&gt; is missing (lost agents volume), so runners stay unregistered; pool-refresh --yes builds but does not create a missing container (&#x27;could not compare the image ids&#x27;). Found 24 Nov recreating pool main.</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">406 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">412 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL413"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL413</span><span class="release-name">RELEASE-170</span>RELEASE: Q-4 names stale releases and skips dead entries (DL414)</td><td>Join DL414, fold, ready PR, CI, merge on green, record Live, announce versions.</td><td>24 Nov</td></tr>
+<tr data-task="DL414"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL414</span>Q-4: name unnumbered entries; skip ones with no PR and no number<span class="release-line"><span class="release-name">RELEASE-170</span></span></td><td>Owner (24 Nov): Q-4 blocked claude-setup questions in a project over a 13-day-old ledger entry with no PR, no release number, no cargo; message said only &#x27;the train&#x27;. Fix: the deny names the entry and the close command; entries with no PR and no release number do not block.</td><td>24 Nov</td></tr>
+<tr data-task="DL416"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL416</span>Recreate runner pool main again<span class="no-release-line">ships nothing: machine maintenance, ships no code</span></td><td>Owner asked for a second recreate; containers were removed. Load KVM, compose up, check runners online.</td><td>24 Nov</td></tr>
+<tr data-task="DL415"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL415</span>Recreate runner pool main after disk error<span class="no-release-line">ships nothing: machine maintenance, ships no code</span></td><td>Owner deleted the pool containers; rebuild with pool-refresh, load KVM, check runners online.</td><td>24 Nov</td></tr>
+<tr data-task="DL412"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL412</span><span class="release-name">RELEASE-169</span>claude-setup token-cost defaults (MP8)</td><td>Mark PR #267 ready, fix task ID, CI, merge on green (owner request via peer session). luismc-project-setup minor.</td><td>24 Nov</td></tr>
+<tr data-task="DL411"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL411</span><span class="release-name">RELEASE-168</span>notification rule (DU15)</td><td>Join DU15, fold, CI, merge on green. luismc-docs minor.</td><td>24 Nov</td></tr>
 <tr data-task="DL408"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL408</span><span class="release-name">RELEASE-167</span>Cypress and pytest/Selenium adapters (D316 step 2)</td><td>Join DL409 and DL410, fold, CI, merge on green.</td><td>24 Nov</td></tr>
 <tr data-task="DL409"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL409</span>Guardrails read Cypress and Selenium (G1, G3, G4); stack KNOWN<span class="release-line"><span class="release-name">RELEASE-167</span></span></td><td>test_guardrails.py: cypress.config timeouts and retries, cy.wait(number); Selenium WebDriverWait/implicitly_wait/page-load timeouts; kind_of cypress=e2e; stack.py KNOWN cypress, selenium. Spec R5.67.</td><td>24 Nov</td></tr>
 <tr data-task="DL410"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL410</span>rerun_tests.py: Cypress runner (failed specs from log, --spec)<span class="release-line"><span class="release-name">RELEASE-167</span></span></td><td>Add cypress to RUNNERS: parse failed spec files from Cypress run output, rerun with npx cypress run --spec. Spec R5.68.</td><td>24 Nov</td></tr>
@@ -1383,6 +1392,21 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D320">
+<h3 class="decision-head"><span class="decision-id">D320</span> <span class="decision-question">Until delivery supports npm and yarn, should doctor stack.tools block or only warn on a project that uses them without declaring them under stack?</span></h3>
+<p class="decision-meta">Asked 24 Nov · Decided 24 Nov · Task DL406</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Block, as now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 24 Nov</span></div>
+<p class="decision-summary">Unknown tool blocks at once (D316); one line under stack fixes it; support comes next.</p>
+<blockquote class="decision-words">&ldquo;Block, as now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn until supported</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">npm/yarn only warn until their adapters ship, then block.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D319">
 <h3 class="decision-head"><span class="decision-id">D319</span> <span class="decision-question">Old pool: fix jobs that fail after ~30 min waiting for a free slot, or leave it since the old pool retires after the switch to crsp?</span></h3>
 <p class="decision-meta">Asked 22 Nov · Decided 22 Nov · Task DL404</p>
@@ -6978,6 +7002,8 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>24 Nov 10:30</td><td>PR #268 merged 24 Nov 10:30 UTC; carried agent PR #267; smoke passed</td></tr>
+<tr><td>24 Nov 10:26</td><td>PR #266 merged 24 Nov 10:13 UTC after UX-69 guard-cell fix; luismc-docs 2.16.0</td></tr>
 <tr><td>22 Nov 12:03</td><td>dropped: folded into DL403</td></tr>
 <tr><td>22 Nov 12:03</td><td>dropped: folded into DL403</td></tr>
 <tr><td>21 Nov 15:33</td><td>dropped: folded into RELEASE-160</td></tr>

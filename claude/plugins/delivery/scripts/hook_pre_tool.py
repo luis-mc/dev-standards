@@ -735,8 +735,8 @@ def check_launch(cfg, ledger, data, where):
                 for theirs in a.get('owns') or []:
                     info = overlap_info(mine, theirs) if isinstance(theirs, str) else None
                     if info:
-                        deny('DL-41 files "%s" overlap "%s" owned by running agent %s (%s). Split by file ownership or '
-                             'wait for that agent to finish.' % (mine, theirs, a.get('task') or a.get('id'), info))
+                        deny('DL-41 files "%s" overlap "%s" owned by running agent %s (%s). Split by file ownership, wait for that agent to finish, or merge '
+                             'these tasks into that agent brief (SendMessage).' % (mine, theirs, a.get('task') or a.get('id'), info))
 
 
 # --- AskUserQuestion -------------------------------------------------------------------------

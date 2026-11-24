@@ -1,7 +1,7 @@
 ---
 name: project-artifact-check
 description: Check a project's artifacts and record against ARTIFACTSPEC and explain every finding with its requirement ID. Use when the user asks whether the project's artifacts are right, up to date or conform, after any change to the record or the plugin, before a release, or when an artifact looks wrong or out of step with the registry.
-model: sonnet
+model: haiku
 effort: medium
 ---
 
