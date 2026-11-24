@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.41.0
+version: 0.42.0
 owner: agents
 type: reference
 code:
@@ -555,6 +555,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.42.0 | 2026-11-24 | RELEASE-166 | Declared stack: optional `stack` block in .delivery/config.json, `stack.py`, and doctor check `stack.tools` that fails for an undeclared tool delivery cannot check (R5.66).<br>Default e2e spec paths cover Cypress and pytest layouts; agent_ci.py defaults its base to the repository's default branch (origin/HEAD, else origin/main). | DL406, DL407 |
 | 0.41.0 | 2026-11-22 | RELEASE-165 | update merges gate.json by step name, doctor gate-steps check, e2e push hint, template test timeouts (R13.92b)<br>Doctor hooks row notes that with no_attribution on, no delivery hook advises AI attribution or re-authoring commits, and the project rule wins over a platform hook.<br>Workflow templates read the per-job variable CRSP_<JOB> first (R5.64); the doctor lists per-job overrides.<br>pre-push diff ignores deleted files (R5.36c) | DL397, DL398, DL399, DL400 |
 | 0.40.0 | 2026-11-22 | RELEASE-164 | Workflow templates read CRSP_RUNS_ON_<OS> first, then CI_RUNS_ON[_WINDOWS], then the hosted default. Setup writes CRSP_RUNS_ON_LINUX. The doctor reports which variable each OS resolves to and warns when old and new differ (R5.63).<br>A NOT READY report line closes an agent row only in its final form and after 10 quiet minutes; agent-check --reopen reopens a closed row. | DL394, DL396 |
 | 0.39.0 | 2026-11-22 | RELEASE-163 | agent-check --note, closed-agent exit 0, pre-push skips node checks for a push with no JS file (R5.36, R5.36b) | DL392 |
