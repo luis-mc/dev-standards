@@ -228,6 +228,14 @@ def release_name(train):
     return 'RELEASE-%s' % n if n is not None else 'the train'
 
 
+def stale_hint(train):
+    """For a train with no release number: its ledger id and the command that closes a stale entry (DL414)."""
+    if train.get('release_no') is not None:
+        return ''
+    return (' (ledger id %s; if it is dead, close it: python claude/plugins/delivery/scripts/delivery_ledger.py '
+            'close %s --reason "stale")' % (train.get('id'), train.get('id')))
+
+
 def trains_green_unmerged(ledger, at):
     return [t for t in ledger['trains']
             if t.get('green_at') and not t.get('merged_at') and t.get('state') in ('green', 'ci', 'pushed', None)
