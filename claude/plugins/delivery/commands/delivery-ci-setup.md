@@ -74,3 +74,7 @@ Show the numbered by-hand list as printed. Say that some doctor lines fail until
 ## Runner variables (DL394)
 
 The workflows read the per-job `CRSP_<JOB>` first (job key uppercased, non-alphanumerics as `_`, e.g. `CRSP_LINUX_SUITES`; one per job, sized labels), then `CRSP_RUNS_ON_LINUX` / `CRSP_RUNS_ON_WINDOWS` / `CRSP_RUNS_ON_MACOS` first (JSON label arrays written by the runner service, e.g. `["self-hosted","linux","x64","example-label"]`), then the old `CI_RUNS_ON` / `CI_RUNS_ON_WINDOWS`, then the GitHub-hosted default. A new setup writes `CRSP_RUNS_ON_LINUX`. When both the new and the old variable are set, the new one wins. The way back is to delete `CRSP_<JOB>` and `CRSP_RUNS_ON_*` (or set it to the old labels). The doctor says which variable each OS resolves to and warns when the two differ.
+
+## Stack (DL406)
+
+If the project uses a test, build or package tool outside playwright, vitest, jest, pytest, go, cargo, dotnet and pnpm (for example Cypress, Selenium, Gradle, Maven or yarn), ask the owner to declare it under `stack` in `.delivery/config.json`: `e2e`, `unit`, `build` (tool names), `package_manager`, `e2e_spec_globs`, `test_globs`. `delivery_doctor.py` check `stack.tools` fails for an undeclared tool it cannot check, whatever the enforcement mode says. A declared tool is run, not judged.

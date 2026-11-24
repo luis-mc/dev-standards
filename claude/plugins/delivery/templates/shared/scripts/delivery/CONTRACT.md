@@ -1117,3 +1117,10 @@ is not configured and writes `"gate": "not configured"` to `join-result.json`.
   `ci.jobs.<id>.test_timeout_s.{unit,integration,e2e}` (G1; lowers a limit, a higher value is a break).
 - `fast_guards.py` runs it after the gate steps and the project's always-on guards, every push, no matter which
   files changed. In `warn` mode it never fails the run; in `block` mode a break fails it.
+
+## Declared stack (DL406, DELIVERYSPEC R5.66)
+
+- `stack.py` (stdlib only, importable by the other scripts) reads the optional `stack` block of `.delivery/config.json`: `e2e`, `unit`, `build` (arrays of tool names), `package_manager` (string), `e2e_spec_globs`, `test_globs` (arrays of globs). Any other field is a fault.
+- `detect_tools(root) -> {tool: evidence_path}` reads files up to two folders deep (not `node_modules`, `target`, `.git`, `vendor`, build folders). `declared(cfg)` returns the block. `resolve(root, cfg)` gives each tool `known`, `declared` or `unchecked`; the declaration wins over detection.
+- `KNOWN` lists the tools the checks handle today, each with the code that handles it: playwright, vitest, jest, pytest (`test_guardrails.py`), go, dotnet, pnpm (`delivery_common.py` package kinds), cargo (`test_guardrails.py`, `delivery_common.py`). With no `stack` block, the track preset (`PRESETS`: ts, go, rust, dotnet) stands as the declaration, so a default project sees no change.
+- `delivery_doctor.py` check `stack.tools` fails at once, whatever `enforcement.mode` says, for a detected tool that is neither known nor declared. A declared tool that is not known is ok and prints `declared; delivery runs its commands but cannot judge them`.
