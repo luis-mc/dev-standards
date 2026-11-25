@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T17:14+00:00",
+  "updated": "2026-11-25T17:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7869,11 +7869,11 @@
       "id": "DP16",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "Merge mode setting: auto (merge on green) default, manual option",
       "detail": "Delivery config key plus setup question; code enforces it: watcher/join merge a green PR in auto mode, never in manual. Owner 25 Nov.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T17:14+00:00",
+      "changed": "2026-11-25T17:39+00:00",
       "rides": "DS248"
     },
     {
@@ -11894,12 +11894,11 @@
       "id": "DS248",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: merge mode (DP16)",
       "detail": "Join, CI, merge and fold of DP16",
-      "expected": "25 Nov ~17:45",
-      "changed": "2026-11-25T17:14+00:00",
-      "expected_basis": "CI 3-5 min after push",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T17:39+00:00",
       "release": 176,
       "started": "2026-11-25T17:14+00:00"
     },
