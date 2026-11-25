@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.14.3
+version: 0.15.0
 owner: agents
 type: reference
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.15.0 | 2026-11-25 | RELEASE-182 | A SessionStart hook offers to apply the new project config when the luismc plugins changed since the project was last set up (R5.26). | SO9 |
 | 0.14.3 | 2026-11-25 | RELEASE-175 | The tooling README no longer describes the runner_plan script. Plugin file claude/plugins/project-setup/.claude-plugin/plugin.json. | DS246 |
 | 0.14.2 | 2026-11-24 | RELEASE-172 | The shipped delivery guide says release instead of train. Plugin: claude/plugins/project-setup/.claude-plugin/plugin.json. | MP11 |
 | 0.14.1 | 2026-11-24 | RELEASE-171 | Mechanical skills move to the haiku model profile; claude-setup asks overwrite, merge or keep for a differing rules file and copies the delivery guide. Plugin: claude/plugins/project-setup/.claude-plugin/plugin.json. | MP10 |

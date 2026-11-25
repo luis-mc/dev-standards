@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T23:15+00:00",
+  "updated": "2026-11-25T23:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11834,12 +11834,11 @@
       "id": "DS244",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Carry wizard step-bar rule C127 into design-system template and guard tests",
       "detail": "Comiclex rule C127 (PR 2021): '+ 1 more' must not replace the one hidden step. Add to the shared design-system template and guard tests. Starts after PR 2021 is reviewed.",
-      "expected": "28 Nov",
-      "changed": "2026-11-25T23:15+00:00",
-      "expected_basis": "waits on comiclex PR 2021 review",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:33+00:00",
       "rides": "DS255",
       "started": "2026-11-25T23:15+00:00"
     },
@@ -11980,11 +11979,11 @@
       "id": "DS255",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release SO9 and DS244",
       "detail": "Join, CI, merge, fold and smoke for SO9 (plugin update offer) and DS244 (wizard step-bar rule).",
-      "expected": "26 Nov ~00:55",
-      "changed": "2026-11-25T23:15+00:00",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:33+00:00",
       "release": 182,
       "phases": [
         {
@@ -12478,12 +12477,11 @@
       "id": "SO9",
       "owner": "setup-offers",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "On plugin update, offer to apply the new project config",
       "detail": "Owner 25 Nov: when a plugin updates in a project, ask the user if they want to configure all new updates (CI workflow, settings, docs) there, instead of waiting for them to know what to run. Design first: hook at session start after a version change, list what is new, one yes applies all. DP14 may fold in: setup re-writes the workflow and pin.",
-      "expected": "28 Nov",
-      "changed": "2026-11-25T23:15+00:00",
-      "expected_basis": "design first; DP14 scope to agree",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:33+00:00",
       "rides": "DS255",
       "started": "2026-11-25T23:15+00:00"
     },

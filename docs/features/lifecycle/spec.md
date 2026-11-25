@@ -4,7 +4,7 @@ title: Install, update and remove
 apps: [luismc-docs, luismc-delivery]
 topics: [delivery, docs, testing]
 status: live
-version: 0.3.1
+version: 0.3.2
 owner: agents
 type: explanation
 code:
@@ -118,6 +118,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.2 | 2026-11-25 | RELEASE-182 | The design-system wizard guard kit gains the step-bar-more-for-one rule (specified in the docs feature, R5.25). | DS244 |
 | 0.3.1 | 2026-11-22 | RELEASE-165 | Workflow templates read the per-job variable CRSP_<JOB> first (DL399). | DL399 |
 | 0.3.0 | 2026-11-22 | RELEASE-163 | Adds the lifecycle adoption guide (retire no-timer tests, verify needs list, VM runner and opt-out) and records the removal-history decision as open (O-1). | DL393 |
 | 0.2.0 | 2026-11-21 | RELEASE-161 | Release assets are named <Product>-<version>-<os>-<arch>.<ext>; the release check requires it per target (DL-96, LC-32). Updaters look for the new name first and the older name second for one transition release. | DL385 |
