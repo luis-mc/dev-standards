@@ -220,6 +220,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.69** — Watcher death and post-merge steps (DP6, D1). (a) A watcher counts as dead when no `delivery_watch` row has a heartbeat newer than `watcher_min` minutes (default 20). SessionStart then stops any stale row's pid (never by name) and starts the installed watcher; it asks the owner to start one only when the start fails. (b) After the watcher merges a PR it runs the project's `cleanup_command`, then its `smoke_command` (`{pr}` is the PR number; an unset command is skipped) and records `post_merge.ok` per command. If one fails it records `post_merge.failed`, skips the second command and pushes no next train: the agent stops. The merge step is one function, `maybe_merge`; the post-merge step is `after_merge`.
 
+**R5.70** — Warn-mode report (DP8, owner decision D3). With `enforcement.mode` `warn`, the Stop and PreToolUse hooks log each finding they would have blocked to `.delivery/blocks.log` as `time<TAB>stop:warn|pre-tool:warn<TAB>rule<TAB>message`, whatever `log_every_block` says. `delivery_report.py [--root DIR] [--since ISO] [--json] [--write]` counts those lines per rule and prints `would have blocked N times` for the project and for each rule. In block mode it says there is no report. `--write` also writes `.delivery/warn-report.json` (schema 1: `mode`, `total`, `rules`, `first`, `last`). Full Progress, on its publish copy, reads that file and adds one section, `Warn mode`, with one summary line (`render_artifacts.warn_report_line`); a project not in warn mode, or with no file, gets no section. The command never edits the ledger or the log. Tests: `tools/test_delivery_report.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -285,6 +287,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.7, R5.8 | `claude/plugins/delivery/tests/test_watch.py` |
 | R5.61 | `claude/plugins/delivery/tests/test_dl329_rust_target_link.py` |
 | R5.62 | `claude/plugins/delivery/tests/test_dl336_ci_watch_default_head.py` |
+| R5.70 | `tools/test_delivery_report.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |

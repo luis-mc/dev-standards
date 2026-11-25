@@ -1696,6 +1696,24 @@ def _history(rows: list) -> str:
             '<tbody>\n%s\n</tbody></table></div>\n' % body)
 
 
+# ------------------------------------------------------------------ Warn mode section (delivery R5.70, owner decision D3)
+WARN_TITLE = 'Warn mode'
+
+
+def warn_report_line(data):
+    """The one summary line of the warn-mode report, from the parsed .delivery/warn-report.json; None unless the
+    project runs the delivery rules in warn mode. Same data, same bytes."""
+    if not isinstance(data, dict) or data.get('mode') != 'warn':
+        return None
+    total, rules = data.get('total'), data.get('rules')
+    total = total if isinstance(total, int) and not isinstance(total, bool) and total >= 0 else 0
+    nrules = len(rules) if isinstance(rules, dict) else 0
+    if not total:
+        return 'Delivery rules in warn mode: nothing would have been blocked.'
+    return 'Delivery rules in warn mode: would have blocked %d time%s across %d rule%s.' % (
+        total, '' if total == 1 else 's', nrules, '' if nrules == 1 else 's')
+
+
 # ------------------------------------------------------------------ CI runs section (R5.51, owner decision D48)
 CI_RUNS_TITLE = 'CI runs'
 CI_KINDS = {'pool': 'Linux pool', 'windows': 'Windows service', 'hosted': 'GitHub-hosted', 'cloud': 'Claude cloud'}
@@ -2137,7 +2155,7 @@ def feature_links_of(manifest: dict, links=None) -> dict:
 
 
 def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, plugin_dir: str,
-                    record_dir: str, stamp_text: str, stamp_iso: str, links=None, ci_runs=None) -> str:
+                    record_dir: str, stamp_text: str, stamp_iso: str, links=None, ci_runs=None, warn_report=None) -> str:
     """The artifact's HTML: a complete document for a feature artifact (R5.27), a fragment beginning
     with <title> for the full-progress artifact (R5.29). Same inputs, same bytes (R7.4).
 
@@ -2145,7 +2163,10 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     publish copy passes {feature key: (href, path text)} (R5.31).
 
     `ci_runs` is the parsed .delivery/ci-runs.json (R5.51). Full Progress draws the CI runs section from it as its
-    last section; with None, or a file of the wrong shape, it draws nothing."""
+    last section; with None, or a file of the wrong shape, it draws nothing.
+
+    `warn_report` is the parsed .delivery/warn-report.json (delivery R5.70). When the project runs the delivery rules
+    in warn mode, Full Progress adds one section with one summary line; otherwise nothing."""
     kind, entry = _kind_entry(manifest, key)
     problems = []
     title = str(entry.get('title', ''))
@@ -2205,6 +2226,8 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     sections += [(s['title'], s['html']) for s in content['sections']]
     if kind == 'full-progress' and ci_runs_valid(ci_runs):
         sections.append((CI_RUNS_TITLE, ci_runs_section(ci_runs, moment.tzinfo or timezone.utc)))
+    if kind == 'full-progress' and warn_report_line(warn_report):
+        sections.append((WARN_TITLE, '<p>%s</p>\n' % esc(warn_report_line(warn_report))))
     if kind == 'feature':
         if decisions:
             sections.append(('Decisions', _decisions(decisions)))

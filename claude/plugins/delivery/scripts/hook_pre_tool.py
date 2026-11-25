@@ -843,6 +843,7 @@ def main():
                 check_trickle(cfg, ledger, data, at)
     except Deny as d:
         if H.C.enforcement(cfg)['mode'] == 'warn':      # enforcement.mode warn: say it, let the call through
+            H.log_block(root, cfg, 'pre-tool:warn', str(d), force=True)   # R5.70: counted by delivery_report.py
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + str(d)}))
         else:
             denied = True
