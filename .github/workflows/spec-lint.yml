@@ -89,6 +89,7 @@ jobs:
       profiles: ${{ steps.areas.outputs.profiles }}
       transcript-folds: ${{ steps.areas.outputs.transcript-folds }}
       docs: ${{ steps.areas.outputs.docs }}
+      docs_check: ${{ steps.areas.outputs.docs_check }}
       mutants: ${{ steps.areas.outputs.mutants }}
       mutants_gate: ${{ steps.areas.outputs.mutants_gate }}
       mutants_cleanup: ${{ steps.areas.outputs.mutants_cleanup }}
@@ -574,10 +575,15 @@ jobs:
           python3 claude/plugins/delivery/templates/shared/scripts/delivery/change_notes.py pending \
             --config tools/change-notes.json
 
-  # Not an area: this repository's own docs follow DOCSPEC (DS109). Runs on
-  # every push and pull request; the full history feeds the map check (M1).
+  # Not an area: this repository's own docs follow DOCSPEC (DS109). The full
+  # history feeds the map check (M1). DP5: it waits for `areas` and runs when
+  # the change touches docs/, AGENTS.md or the code roots it maps (tools/,
+  # claude/, workflows), on every push to main, a dispatch of docs or specs,
+  # and any run that cannot read its range; not on a draft pull request.
   docs-check:
     name: docs check
+    needs: areas
+    if: needs.areas.outputs.docs_check == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
