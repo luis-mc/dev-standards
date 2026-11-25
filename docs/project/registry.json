@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T15:13+00:00",
+  "updated": "2026-11-25T15:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7803,12 +7803,11 @@
       "id": "DP13",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "Refuse --no-release reasons that say the task ships",
       "detail": "Guard: a no-release reason naming ship/ride/release is a contradiction",
-      "expected": "25 Nov ~17:30",
-      "changed": "2026-11-25T15:13+00:00",
-      "expected_basis": "small script change plus test",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T15:20+00:00",
       "rides": "DS247",
       "started": "2026-11-25T15:13+00:00"
     },
