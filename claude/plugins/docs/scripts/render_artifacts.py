@@ -918,7 +918,10 @@ def release_groups(tasks: list, ref: datetime) -> list:
     """R5.46: [(group key, title, shown, folded)] of the full-progress checklist: a group per open release (the
     release row, then the tasks riding it), Not in a release yet, Needs you, failed or on hold, Live or built."""
     opens = [t for t in tasks if is_release(t) and t.get('status') in OPEN_STATUSES]
-    opens.sort(key=lambda t: (_soonest(t, ref), release_number(t) or 0, _id_key(t)))
+    def eta(t):
+        row = _release_row(t, ref, tasks) if t.get('release_waits_on') else None     # R5.56
+        return (0, row['exp_dt']) if row is not None else _soonest(t, ref)
+    opens.sort(key=lambda t: (eta(t), release_number(t) or 0, _id_key(t)))
     open_ids = {t['id'] for t in opens}
     out, placed = [], set()
     for rel in opens:
@@ -1432,8 +1435,27 @@ def open_releases(tasks: list) -> list:
     return [t for t in tasks if is_release(t) and t.get('status') in OPEN_STATUSES]
 
 
-def _release_row(task: dict, ref: datetime, tasks: list):
-    """The facts of one open release, or None when its Expected does not parse."""
+def _after_waits(task, tasks, ref, exp_dt, exp_min, timed, midnight, seen):
+    """R5.56: lift a release's Expected to the latest Expected of the open releases it waits on."""
+    deps = task.get('release_waits_on')
+    if not isinstance(deps, list) or task.get('id') in seen:
+        return exp_dt, exp_min, timed
+    seen = tuple(seen) + (task.get('id'),)
+    by_id = {t.get('id'): t for t in tasks if isinstance(t, dict)}
+    for d in deps:
+        dep = by_id.get(d)
+        if dep is None or not is_release(dep) or dep.get('status') not in OPEN_STATUSES:
+            continue
+        row = _release_row(dep, ref, tasks, seen)
+        if row is not None and row['exp_dt'] > exp_dt:
+            exp_dt, exp_min = row['exp_dt'], row['exp_min']
+            timed = timed or row['timed']
+    return exp_dt, exp_min, timed
+
+
+def _release_row(task: dict, ref: datetime, tasks: list, _seen=()):
+    """The facts of one open release, or None when its Expected does not parse. R5.56: a release that waits on
+    others is never live before them."""
     midnight = datetime.combine(ref.date(), datetime.min.time())
     local = ref.tzinfo
 
@@ -1465,6 +1487,9 @@ def _release_row(task: dict, ref: datetime, tasks: list):
     worst = None
     if risk and isinstance(risk.get('minutes'), int) and risk['minutes'] > 0 and timed:
         worst = exp_min + risk['minutes']
+    exp_dt, exp_min, timed = _after_waits(task, tasks, ref, exp_dt, exp_min, timed, midnight, _seen)
+    if worst is not None:
+        worst = max(worst, exp_min)
     riders = [t['id'] for t in tasks if t.get('rides') == task['id']]
     return {'task': task, 'phases': phases, 'exp_dt': exp_dt, 'exp_min': exp_min, 'timed': timed,
             'today': timed and abs(exp_dt - ref.replace(tzinfo=None)) <= timedelta(hours=24), 'risk': risk if worst is not None else None,
@@ -1505,9 +1530,201 @@ def _cut(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[:limit - 1].rstrip() + '…'
 
 
+# ------------------------------------------------------------------ release tree (R5.55 to R5.58)
+TREE_W, TREE_ROW, TREE_TOP = 880, 52, 36
+TREE_AX0, TREE_AX1 = 190, 800
+
+
+def tree_mode(tasks: list) -> bool:
+    """R5.55: true when an open release names a carrier PR or waits on another release; else the older figure."""
+    return any(t.get('pr') or t.get('release_waits_on') for t in open_releases(tasks))
+
+
+def _depth(task, by_id, seen=()):
+    """The longest chain of open releases this one waits on, so a dependency sorts first on a tie."""
+    if task['id'] in seen:
+        return 0
+    deps = [by_id[d] for d in task.get('release_waits_on') or [] if d in by_id and by_id[d].get('status') in OPEN_STATUSES]
+    return 1 + max(_depth(d, by_id, seen + (task['id'],)) for d in deps) if deps else 0
+
+
+def tree_rows(tasks: list, ref: datetime) -> list:
+    """R5.55, R5.56: [{'pr': N or None, 'rows': [release rows]}] sorted by Live ETA; a PR sits at its first release's ETA."""
+    by_id = {t['id']: t for t in tasks}
+    rows = [r for r in (_release_row(t, ref, tasks) for t in open_releases(tasks)) if r is not None]
+    for r in rows:
+        r['depth'] = _depth(r['task'], by_id)
+    rows.sort(key=lambda r: (r['exp_dt'], r['depth'], release_number(r['task']) or 0, r['task']['id']))
+    groups, by_pr = [], {}
+    for r in rows:
+        pr = r['task'].get('pr')
+        if pr and pr in by_pr:
+            by_pr[pr]['rows'].append(r)
+            continue
+        g = {'pr': pr or None, 'rows': [r]}
+        if pr:
+            by_pr[pr] = g
+        groups.append(g)
+    return groups
+
+
+def _eta_text(r) -> str:
+    if r['timed']:
+        return '~%s' % _hhmm(r['exp_min'])
+    return '%02d %s' % (r['exp_dt'].day, MONTHS[r['exp_dt'].month - 1])
+
+
+def _dep_text(r, by_row) -> str:
+    names = []
+    for d in r['task'].get('release_waits_on') or []:
+        row = by_row.get(d)
+        if row is not None:
+            names.append('%s (%s)' % (release_name(row['task']), _eta_text(row)))
+    return ' and '.join(names) if names else 'nothing'
+
+
+def release_tree_table(groups: list) -> str:
+    """R5.57: the table under the figure: Item, Live ETA, CI, Waits on, Status. A PR row, then its releases."""
+    by_row = {r['task']['id']: r for g in groups for r in g['rows']}
+    out = []
+
+    def cells(item, sub, eta, ci, waits, status):
+        return ('<td>%s <span class="n">%s</span></td><td>%s</td><td>%s</td><td>%s</td><td class="st">%s</td>'
+                % (item, esc(sub), esc(eta), ci, esc(waits), esc(status)))
+
+    for g in groups:
+        rows = g['rows']
+        if g['pr']:
+            first = rows[0]
+            ids = ', '.join(r['task']['id'] for r in rows)
+            out.append('<tr class="pr">%s</tr>' % cells(
+                'PR %s' % g['pr'], 'carrier · %s · carries %d release%s, listed below' % (ids, len(rows), '' if len(rows) == 1 else 's'),
+                _eta_text(first), '<span class="ci-note">see CI runs</span>', 'nothing', first['task'].get('status', '')))
+        for i, r in enumerate(rows):
+            t = r['task']
+            sub = '%s · in PR %s' % (t['id'], g['pr']) if g['pr'] else t['id']
+            cls = ('ch last' if i == len(rows) - 1 else 'ch') if g['pr'] else 'rel'
+            ci = '<span class="ci-note">via PR %s</span>' % g['pr'] if g['pr'] else '<span class="ci-note">own run</span>'
+            out.append('<tr class="%s">%s</tr>' % (cls, cells(
+                '<b>%s</b>' % esc(release_name(t)), sub, _eta_text(r), ci, _dep_text(r, by_row), t.get('status', ''))))
+    return ('<div class="timeline-scroll"><table class="release-tree"><thead><tr><th>Item</th><th>Live ETA</th><th>CI</th>'
+            '<th>Waits on</th><th>Status</th></tr></thead><tbody>\n%s\n</tbody></table></div>' % '\n'.join(out))
+
+
+def release_tree(tasks: list, ref: datetime, label: str) -> str:
+    """R5.58: the release timeline as a tree: a PR row with its releases hung under a trunk, dashed arrows from a
+    release to the release it waits on, then the table. Bounded: 880 wide, 52 per row."""
+    groups = tree_rows(tasks, ref)
+    if not groups:
+        return ''
+    flat = [r for g in groups for r in g['rows']]
+    timed = [r for r in flat if r['timed']]
+    now_min = ref.hour * 60 + ref.minute
+    lo = min([a for r in timed for _, a, _ in r['phases']] + [r['exp_min'] for r in timed] + [now_min]) if timed else now_min
+    hi = max([r['worst'] or r['exp_min'] for r in timed] + [now_min]) if timed else now_min + 60
+    t0, t1 = int(lo // 30 * 30), int(-(-hi // 30) * 30)
+    if t1 <= t0:
+        t1 = t0 + 30
+    x = lambda m: TREE_AX0 + (m - t0) * (TREE_AX1 - TREE_AX0) / (t1 - t0)
+    midnight = datetime.combine(ref.date(), datetime.min.time())
+    out, aria, pos, y = [], [], {}, TREE_TOP
+    diamond = lambda cx, cy: '<polygon class="rt-expected" points="%s,%d %s,%d %s,%d %s,%d"/>' % (
+        _n(cx), cy - 11, _n(cx + 9), cy, _n(cx), cy + 11, _n(cx - 9), cy)
+    for g in groups:
+        top = y
+        if g['pr']:
+            first = g['rows'][0]
+            mid = y + 24
+            ex = x(first['exp_min']) if first['timed'] else TREE_AX0
+            starts = [a for r in g['rows'] for _, a, _ in r['phases']]
+            bx = x(min(starts)) if starts and first['timed'] else TREE_AX0
+            out.append('<text class="rt-pr-tag" x="14" y="%d">carrier PR</text><text class="rt-name" x="14" y="%d">PR %s</text>'
+                       % (mid - 9, mid + 8, g['pr']))
+            if first['timed']:
+                out.append('<rect class="rt-bar ci" x="%s" y="%d" width="%s" height="16"><title>%s</title></rect>'
+                           % (_n(bx), mid - 8, _n(max(ex - bx, 4)), esc('PR %s until its first release is live' % g['pr'])))
+            out.append(diamond(ex, mid))
+            out.append('<text class="rt-live-label" style="text-anchor:start" x="%s" y="%d">carries %d release%s, below</text>'
+                       % (_n(ex + 14), mid + 4, len(g['rows']), '' if len(g['rows']) == 1 else 's'))
+            y += TREE_ROW
+        marks = []
+        for r in g['rows']:
+            t = r['task']
+            mid = y + 24
+            name = release_name(t) if release_number(t) is not None else t['id']
+            sub = _cut(', '.join(r['riders']) or shown_item(t), 22)
+            out.append('<text class="rt-name" x="46" y="%d"><title>%s</title>%s</text><text class="rt-sub" x="46" y="%d">%s</text>'
+                       % (mid + 2, esc('%s · %s' % (name, shown_item(t))), esc(name), mid + 16, esc(sub)))
+            if r['timed']:
+                for name_, a, b in r['phases']:
+                    base_, num_ = _phase_split(name_)
+                    out.append('<rect class="rt-bar %s" x="%s" y="%d" width="%s" height="20"><title>%s</title></rect>'
+                               % (base_, _n(x(a)), mid - 10, _n(x(b) - x(a)),
+                                  esc('%s %s-%s' % ((PHASE_LABELS[base_] + ' ' + num_).strip(), _hhmm(a), _hhmm(b)))))
+                begin = _parse_iso(t.get('release_start'))
+                if not r['phases'] and begin is not None:
+                    a = (begin.astimezone(ref.tzinfo).replace(tzinfo=None) - midnight).total_seconds() / 60
+                    if a < r['exp_min']:
+                        out.append('<rect class="rt-bar merge" x="%s" y="%d" width="%s" height="20"><title>%s</title></rect>'
+                                   % (_n(x(a)), mid - 10, _n(x(r['exp_min']) - x(a)), esc('release %s-%s' % (_hhmm(a), _hhmm(r['exp_min'])))))
+                ex = x(r['exp_min'])
+                out.append(diamond(ex, mid))
+                out.append('<text class="rt-live-label" style="text-anchor:start" x="%s" y="%d">live %s</text>' % (_n(ex + 14), mid + 4, _eta_text(r)))
+                said = 'expected live about %s' % _hhmm(r['exp_min'])
+            else:
+                ex = TREE_AX0
+                out.append('<polygon class="rt-day" points="%d,%d %d,%d %d,%d %d,%d"/><text class="rt-day-label" x="%d" y="%d">expected %s</text>'
+                           % (ex, mid - 11, ex + 9, mid, ex, mid + 11, ex - 9, mid, ex + 16, mid + 4, _eta_text(r)))
+                said = 'expected %s' % _eta_text(r)
+            pos[t['id']] = (ex, mid)
+            marks.append(mid)
+            aria.append('%s (%s) %s%s' % (t['id'], shown_item(t), said, ', in PR %s' % g['pr'] if g['pr'] else ''))
+            y += TREE_ROW
+        if g['pr']:
+            out.append('<rect class="rt-pr-bar" x="4" y="%d" width="4" height="%d"/><line class="rt-trunk" x1="22" x2="22" y1="%d" y2="%d"/>'
+                       % (top + 4, y - top - 8, top + 36, marks[-1]))
+            out.extend('<line class="rt-trunk" x1="22" x2="40" y1="%d" y2="%d"/>' % (m, m) for m in marks)
+    height = y + 34
+    out.insert(0, '<defs><marker id="rt-arrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">'
+                  '<path class="rt-arrow-head" d="M0 0L8 4L0 8z"/></marker></defs>')
+    for r in flat:                                                   # R5.58: release-waits-on-release arrows, dashed
+        for d in r['task'].get('release_waits_on') or []:
+            if d in pos and r['task']['id'] in pos:
+                (dx, dy), (ex, ey) = pos[d], pos[r['task']['id']]
+                x0 = dx + 4
+                path = 'M%s %d V%d H%s' % (_n(x0), dy + (11 if ey > dy else -11), ey, _n(max(ex - 12, x0 + 4)))
+                out.append('<path class="rt-dep" d="%s" marker-end="url(#rt-arrow)"/>' % path)
+    grid, step = [], 30 if t1 - t0 <= 240 else 60
+    m = -(-t0 // step) * step
+    ticks = []
+    while m <= t1:
+        ticks.append(m)
+        m += step
+    for m in thin_ticks(ticks, x, _hhmm):
+        grid.append('<line class="rt-grid" x1="%s" y1="30" x2="%s" y2="%d"/><text x="%s" y="22">%s</text>'
+                    % (_n(x(m)), _n(x(m)), height - 24, _n(x(m)), _hhmm(m)))
+    now = ''
+    if t0 <= now_min <= t1:
+        now = ('<line class="rt-now" x1="%s" y1="30" x2="%s" y2="%d"/><text class="rt-now-label" x="%s" y="%d">now %s</text>'
+               % (_n(x(now_min)), _n(x(now_min)), height - 20, _n(x(now_min)), height - 6, _hhmm(now_min)))
+    legend = ('<p class="timeline-legend">A PR is the carrier; a release is the unit that goes live. Rows are sorted by Live ETA, '
+              'and a release is never live before the releases it waits on. Dashed arrows: a release waits on another release. '
+              'Filled diamond: the end of the last phase.</p>')
+    return ('<figure class="release-timeline release-tree-figure">\n<figcaption>Next releases (%s)</figcaption>\n'
+            '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:640px;max-width:%dpx">'
+            '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n%s\n</figure>\n'
+            % (esc(label), TREE_W, height, esc('Next releases: ' + '; '.join(aria) + '.'), TREE_W,
+               ''.join(grid), '\n'.join(out), now, legend, release_tree_table(groups)))
+
+
 def release_timeline(tasks: list, ref: datetime, label: str) -> str:
     """R5.42, R5.43: the release timeline figure of section 0, '' when no release is open. Deterministic:
-    `ref` (the render stamp) is "now", never the wall clock."""
+    `ref` (the render stamp) is "now", never the wall clock. R5.58: with a carrier PR or a release dependency
+    the figure is the release tree."""
+    if tree_mode(tasks):
+        tree = release_tree(tasks, ref, label)
+        if tree:
+            return tree
     rows = [r for r in (_release_row(t, ref, tasks) for t in open_releases(tasks)) if r is not None]
     others = [r for r in (_other_row(t, ref) for t in tasks) if r is not None]
     if not rows and not others:
