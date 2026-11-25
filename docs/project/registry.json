@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T16:40+00:00",
+  "updated": "2026-11-25T16:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7877,6 +7877,17 @@
       "expected": "26 Nov",
       "changed": "2026-11-25T16:35+00:00",
       "expected_basis": "starts after DP6 joins; same watcher files"
+    },
+    {
+      "id": "DP17",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Warn report: count once per session, not per turn end",
+      "detail": "Owner D7. Follow-up to DP8; dedupe by rule and session in delivery_report.py.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T16:42+00:00",
+      "expected_basis": "after DP8 joins"
     },
     {
       "id": "DS1",

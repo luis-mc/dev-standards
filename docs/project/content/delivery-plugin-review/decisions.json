@@ -116,6 +116,48 @@
       "chosen": "Auto: merge on green",
       "decided": "2026-11-25",
       "owner_words": "The default rule, set in the delivery plugin should be \"merge on green\"; in setup offer \"auto: merge on green\" and \"manual: user merges\" options; then enforce, not by memory note, but actual code;"
+    },
+    {
+      "id": "D6",
+      "question": "Should DP16 also change this repo's AGENTS.md to allow merge on green?",
+      "asked": "2026-11-25",
+      "status": "decided",
+      "task": "DP16",
+      "options": [
+        {
+          "label": "Yes, update AGENTS.md",
+          "summary": "This repo uses auto mode; AGENTS.md matches the setting.",
+          "recommended": true
+        },
+        {
+          "label": "No, keep manual here",
+          "summary": "Plugin default auto; this repo sets manual."
+        }
+      ],
+      "chosen": "Yes, update AGENTS.md",
+      "decided": "2026-11-25",
+      "owner_words": "Yes, update AGENTS.md (Recommended)"
+    },
+    {
+      "id": "D7",
+      "question": "Count a warn-mode finding once per turn end, or once per session?",
+      "asked": "2026-11-25",
+      "status": "decided",
+      "task": "DP8",
+      "options": [
+        {
+          "label": "Once per session",
+          "summary": "Dedupe by rule and session.",
+          "recommended": true
+        },
+        {
+          "label": "Per turn end",
+          "summary": "Keep as built."
+        }
+      ],
+      "chosen": "Once per session",
+      "decided": "2026-11-25",
+      "owner_words": "Once per session (Recommended)"
     }
   ]
 }

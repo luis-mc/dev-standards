@@ -68,6 +68,8 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-plugin-review | D3 | Where does the owner read the warn-mode report? | Command plus a line in Full Progress | decided | 2026-11-25 |
 | delivery-plugin-review | D4 | How do DP6, DP7 and DP8 start while PR 270 is open? | Wait for merge | decided | 2026-11-25 |
 | delivery-plugin-review | D5 | What is the default merge rule in the delivery plugin, and how is it enforced? | Auto: merge on green | decided | 2026-11-25 |
+| delivery-plugin-review | D6 | Should DP16 also change this repo's AGENTS.md to allow merge on green? | Yes, update AGENTS.md | decided | 2026-11-25 |
+| delivery-plugin-review | D7 | Count a warn-mode finding once per turn end, or once per session? | Once per session | decided | 2026-11-25 |
 | delivery-speed | D1 | Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6? | Rewrite and queue | decided | 2026-10-11 |
 | delivery-speed | D10 | dev-standards is public: create a public GitHub release per train for the delivery log? | Yes, public releases | decided | 2026-10-11 |
 | delivery-speed | D100 | Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04's Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps? | Official Node 22 LTS tarball, sha256-checked | decided | 2026-11-05 |
