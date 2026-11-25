@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T15:03+00:00",
+  "updated": "2026-11-25T15:13+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7702,11 +7702,11 @@
       "id": "DP4",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Running",
       "item": "Find the PostToolUse 'boom' crash cause",
       "detail": "12 crashes 31 Oct to 11 Nov in this repo. Find the cause or confirm test noise, then fix or remove.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T15:03+00:00",
+      "changed": "2026-11-25T15:13+00:00",
       "started": "2026-11-25T14:37+00:00",
       "rides": "DS247"
     },
@@ -7714,11 +7714,11 @@
       "id": "DP5",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Running",
       "item": "spec-lint paths filter in this repo",
       "detail": "Skip the 21 spec-lint jobs when no doc or spec path changed. Release PR still runs all.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T15:03+00:00",
+      "changed": "2026-11-25T15:13+00:00",
       "started": "2026-11-25T14:37+00:00",
       "rides": "DS247"
     },
@@ -7798,6 +7798,19 @@
       "expected": "27 Nov",
       "changed": "2026-11-25T14:35+00:00",
       "expected_basis": "reading the mod API, about 15 min"
+    },
+    {
+      "id": "DP13",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "Refuse --no-release reasons that say the task ships",
+      "detail": "Guard: a no-release reason naming ship/ride/release is a contradiction",
+      "expected": "25 Nov ~17:30",
+      "changed": "2026-11-25T15:13+00:00",
+      "expected_basis": "small script change plus test",
+      "rides": "DS247",
+      "started": "2026-11-25T15:13+00:00"
     },
     {
       "id": "DS1",
