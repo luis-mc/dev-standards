@@ -44,7 +44,7 @@ def mode_of(root):
 
 def count(root, since=None):
     """{'rules': {rule: n}, 'total': n, 'first': time|None, 'last': time|None} over the warn lines of blocks.log."""
-    rules, first, last = {}, None, None
+    rules, first, last, seen = {}, None, None, set()
     try:
         with open(os.path.join(root, LOG_REL), encoding='utf-8', errors='replace') as f:
             lines = f.read().splitlines()
@@ -56,6 +56,10 @@ def count(root, since=None):
             continue
         if since and parts[0] < since:
             continue
+        if len(parts) >= 5 and parts[4]:        # DP17: one count per rule and session
+            if (parts[2], parts[4]) in seen:
+                continue
+            seen.add((parts[2], parts[4]))
         rules[parts[2]] = rules.get(parts[2], 0) + 1
         first = first or parts[0]
         last = parts[0]

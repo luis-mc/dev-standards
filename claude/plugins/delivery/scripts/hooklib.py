@@ -527,13 +527,14 @@ def rule_id(message):
     return m.group(1) if m else 'other'
 
 
-def log_block(root, cfg, hook, message, force=False):
+def log_block(root, cfg, hook, message, force=False, sid=None):
     """enforcement.log_every_block: append `time<TAB>hook<TAB>rule<TAB>message` to .delivery/blocks.log (for the
-    owner's review). `force` logs whatever the setting says (warn mode, R5.70). Never raises."""
+    owner's review). `force` logs whatever the setting says (warn mode, R5.70). `sid` adds a fifth column, the session,
+    so the warn report counts a rule once per session (DP17). Never raises."""
     if not force and not C.enforcement(cfg)['log_every_block']:
         return
     line = '\t'.join([now().strftime('%Y-%m-%dT%H:%M:%SZ'), hook, rule_id(message),
-                      ' '.join(str(message).split())])
+                      ' '.join(str(message).split())] + ([str(sid)] if sid else []))
     try:
         with open(os.path.join(root, BLOCK_LOG_REL), 'a', encoding='utf-8') as f:
             f.write(line + '\n')
