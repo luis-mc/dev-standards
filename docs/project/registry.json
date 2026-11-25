@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T17:42+00:00",
+  "updated": "2026-11-25T17:47+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7880,11 +7880,11 @@
       "id": "DP17",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "Warn report: count once per session, not per turn end",
       "detail": "Owner D7. Follow-up to DP8; dedupe by rule and session in delivery_report.py.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T17:42+00:00",
+      "changed": "2026-11-25T17:47+00:00",
       "rides": "DS249"
     },
     {
@@ -11906,12 +11906,11 @@
       "id": "DS249",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: DP17 warn once per session",
       "detail": "Release row for DP17",
-      "expected": "25 Nov ~19:00",
-      "changed": "2026-11-25T17:42+00:00",
-      "expected_basis": "join, CI 3-5 min, merge on green, fold",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T17:47+00:00",
       "release": 177,
       "started": "2026-11-25T17:42+00:00"
     },
