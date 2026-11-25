@@ -6,11 +6,6 @@
     delivery_ci_setup.py checklist [--root DIR] [--json]
     delivery_ci_setup.py confirm   ITEM...  [--root DIR]
     template_adopt.py status | diff PATH | adopt PATH|--all [--dry-run] [--write-conflicts]   (DL308: adopt template changes, see its docstring)
-    delivery_ci_setup.py pool-detect | pool-plan | pool-run | pool-refresh | pool-status | pool-remove --runner NAME  --repos o/a,o/b [--windows-repos o/c] [--only windows|linux] [--pool NAME] [--yes] [--yes-delete NAMES]
-
-`pool-*` is the guided path for Option 1 (DL30): detect what exists, show one plan, remove old runners and build clean,
-run each step after a yes. Deleting needs `--yes-delete` naming exactly what goes. It follows contract section 13:
-plan first, one line per step, then Done / Left for you / What you can do now. Safe to run again.
 
 The command file (`commands/delivery-ci-setup.md`) asks the owner every question and writes the answers as JSON.
 There is no default at any question: `apply` refuses (exit 1, lists each missing answer) when one is absent. A
@@ -269,21 +264,6 @@ RUNNER_STEPS = {
 }
 
 
-def _pool_mod():
-    """The pool module, which holds the shared rules (DL184); None when it cannot be imported."""
-    try:
-        import delivery_runner_pool as P
-        return P
-    except ImportError:
-        return None
-
-
-def _pool_name(name):
-    """The pool this machine name is, or None. A machine is a pool when a pool folder of that name exists."""
-    P = _pool_mod()
-    return name if (P is not None and name and P.pool_exists(name)) else None
-
-
 def _first_runner(cfg):
     """(labels, machine name) of the first self-hosted runner in OS order; ([], None) when there is none."""
     opts = C.ci_options(cfg)
@@ -296,15 +276,9 @@ def _first_runner(cfg):
 
 
 def expected_runs_on(cfg):
-    """DL184: (list or str, pool name or None) the CRSP_RUNS_ON_LINUX value (old name CI_RUNS_ON) `cfg` expects. The one function apply, the by-hand list
-    and the doctor use. A pool machine adds the pool's label."""
-    first = _first_labels(cfg)
-    if not isinstance(first, list):
-        return first, None
-    labels, name = _first_runner(cfg)
-    pool = _pool_name(name) if labels and labels == first else None
-    P = _pool_mod()
-    return (P.expected_runs_on(first, pool) if P is not None and pool else first), pool
+    """(list or str, None) the CRSP_RUNS_ON_LINUX value (old name CI_RUNS_ON) `cfg` expects. The one function apply, the by-hand list
+    and the doctor use. The second item stays None (it was the pool name)."""
+    return _first_labels(cfg), None
 
 
 def _first_labels(cfg):
@@ -340,15 +314,9 @@ def by_hand_items(cfg) -> list:
                 sub = {"name": r["name"], "labels": ",".join(labels)}
                 steps = [s % sub for s in RUNNER_STEPS[o]]
                 lim = (ci.get("load_limits") or {}).get(r["name"]) or {}
-                pool = _pool_name(r["name"])
-                if pool:  # DL184: the pool's agents are named <pool>-<repo>; the pool setup installs them
-                    out.append({"id": "runner:%s" % r["name"], "option": 1, "check": "runner", "labels": labels, "pool": pool,
-                                "title": "Add the pool agent for this repository to pool %s (labels %s)" % (pool, ", ".join(labels)),
-                                "steps": ["python3 scripts/delivery_ci_setup.py pool-run --pool %s --repos OWNER/NAME --yes" % pool]})
-                else:
-                    out.append({"id": "runner:%s" % r["name"], "option": 1, "check": "runner", "labels": labels,
-                                "title": "Install the GitHub runner on %s (%s) with the labels %s" % (r["name"], o, ", ".join(labels)),
-                                "steps": steps})
+                out.append({"id": "runner:%s" % r["name"], "option": 1, "check": "runner", "labels": labels,
+                            "title": "Install the GitHub runner on %s (%s) with the labels %s" % (r["name"], o, ", ".join(labels)),
+                            "steps": steps})
                 out.append({"id": "load-gate:%s" % r["name"], "option": 1, "check": "confirm",
                             "title": "On %s set the load ceilings and the runner hook" % r["name"],
                             "steps": ["In ~/.claude/luismc-delivery-machine.json on %s set \"load_limits\": {\"memory_pct\": %s, \"cpu_pct\": %s}."
@@ -383,7 +351,7 @@ def by_hand_items(cfg) -> list:
                     "steps": ["GitHub Settings > Billing and plans > Budgets and alerts: set a limit for Actions. This is the hard stop on cost; the fallback caps are only the second brake, and they are optional.",
                               "The doctor cannot read billing. Run `delivery_ci_setup.py confirm spending-limit` when it is set."
                               + (" (Your minutes cap is %s a month.)" % cap if cap else " (You set no minutes cap.)")]})
-    first, pool = expected_runs_on(cfg)
+    first, _ = expected_runs_on(cfg)
     if first and ({"self-hosted", "github-hosted"} & set(opts.values())):
         value = json.dumps(first)
         # DL394: new setups write CRSP_RUNS_ON_LINUX. The workflows read it first, then the old CI_RUNS_ON (the way back).
@@ -391,8 +359,6 @@ def by_hand_items(cfg) -> list:
                     "name": "CRSP_RUNS_ON_LINUX", "value": value,
                     "title": "Set the repository variable CRSP_RUNS_ON_LINUX to %s" % value,
                     "steps": ["gh variable set CRSP_RUNS_ON_LINUX --body '%s'" % value]})
-        if pool:
-            out[-1]["pool"] = pool
     if "cloud" in opts.values():
         cl = C.ci_cloud(cfg)
         env = cl["status_token_env"] or "TOKEN_VARIABLE"
@@ -442,17 +408,9 @@ def check_item(root, cfg, item) -> tuple:
             state, detail = "unknown", "cannot list runners (%s)" % (why or "no runner list")
         else:
             name = item["id"].split(":", 1)[1]
-            repo = _repo_name(root) if item.get("pool") else ""
-            P = _pool_mod() if item.get("pool") else None
-            if item.get("pool") and (not repo or P is None):
-                name = None  # DL184: a pool agent is named <pool>-<repo>; without the repository it cannot be looked up
-            elif item.get("pool"):
-                name = P.pool_agent_name(item["pool"], repo)
             mine = [r for r in data["runners"] if isinstance(r, dict) and r.get("name") == name]
             have = {str(l.get("name")).lower() for r in mine for l in r.get("labels", []) if isinstance(l, dict)}  # GitHub labels are case-insensitive
-            if name is None:
-                state, detail = "unknown", "cannot tell this repository's name, so its pool agent cannot be looked up"
-            elif not mine:
+            if not mine:
                 state, detail = "open", "no runner named %s is registered" % name
             elif not any(r.get("status") == "online" for r in mine):
                 state, detail = "open", "runner %s is registered but offline" % name
@@ -468,9 +426,7 @@ def check_item(root, cfg, item) -> tuple:
             state, detail = "unknown", "gh cannot run"
         elif r[0] != 0:
             state, detail = "open", "%s is not set" % item["name"]
-        elif r[1].strip().lower() == item["value"].lower() or (
-                item["name"] in ("CRSP_RUNS_ON_LINUX", "CI_RUNS_ON") and item.get("pool") and _pool_mod() is not None
-                and _pool_mod().runs_on_satisfied(r[1].strip(), json.loads(item["value"]), item["pool"])):  # label case does not matter to GitHub
+        elif r[1].strip().lower() == item["value"].lower():  # label case does not matter to GitHub
             state, detail = "ok", "%s is set" % item["name"]
         else:
             state, detail = "open", "%s is %s, expected %s" % (item["name"], r[1].strip(), item["value"])
@@ -638,265 +594,15 @@ def cmd_apply(args, root, path) -> int:
     return 0
 
 
-# --- the guided path for Option 1 (DL30, D26, D44) and the section 13 pattern ---------------------------------------------
-
-def render_plan(pl, found) -> list:
-    """Section 13, part 1: one plan before anything changes. Paths, outside changes, what needs the owner, how long."""
-    from delivery_runner_pool import pool_dir
-    lines = ["Plan (nothing has changed yet):"]
-    gh = found["github"]
-    lines.append("Found: %d repositories you administer, %d runner services, %d runner folders, %d containers."
-                 % (len(gh["repos"]), len(found["services"]), len(found["folders"]), len(found["containers"])))
-    if gh.get("error"):
-        lines.append("  GitHub could not be read: %s" % gh["error"])
-    for r in gh["repos"]:
-        if r["error"]:
-            lines.append("  %s: runners not readable (%s)" % (r["repo"], r["error"]))
-    cap = pl.get("cap")
-    if cap and cap.get("ok"):
-        m = cap.get("measured") or {}
-        if cap.get("source") == "kept":
-            mc = cap.get("measured_cap") or {}
-            how = ("kept from the pool's .env; measured now: %s GiB, %s CPUs; --resize uses the measured cap"
-                   % (mc.get("mem_gib"), mc.get("cpus")))
-        else:
-            how = "measured on this machine unless you gave a number" if m else "from the numbers you gave"
-        lines.append("Pool cap: %s GiB memory, %s CPUs (%s)." % (cap["mem_gib"], cap["cpus"], how))
-        if m:
-            lines.append("  Sizing inputs: total %s GiB; used outside WSL %s GiB (median of %s samples); %d%% budget %s GiB; "
-                         "room %s GiB; Docker ceiling %s." % (
-                             m.get("total_gib"), m.get("used_gib"), m.get("samples") or 1, 85, m.get("budget_gib"),
-                             m.get("room_gib"), ("%s GiB" % m["docker_gib"]) if m.get("docker_gib") is not None else "not set"))
-            if m.get("vm_gib") is not None:
-                lines.append("  Sizing inputs (DL177): WSL VM %s GiB (working set %s, private bytes %s, containers use %s; the "
-                             "largest counts); host-load file %s%s; decided by: %s." % (
-                                 m.get("vm_gib"), m.get("working_set_gib"), m.get("private_gib"), m.get("containers_gib"),
-                                 m.get("load_file") or "missing",
-                                 (" (%s GiB used outside WSL)" % m["load_used_gib"]) if m.get("load_used_gib") is not None else "",
-                                 m.get("decided_by") or "median"))
-        if cap.get("reason"):
-            lines.append("  Cap changed: %s." % cap["reason"])
-    if pl.get("derived") and not pl.get("blocked"):
-        import delivery_runner_pool as P
-        lin, win = P.derive_repos(found)
-        lines.append("Repositories (none named, taken from GitHub): Linux: %s; Windows: %s."
-                     % (", ".join(lin) or "none", ", ".join(win) or "none"))
-    for step in pl["steps"]:
-        mark = "already set" if step["state"] == "already" else ("you run it" if step["elevated"] else
-                                                                  ("asks a second yes (deletes)" if step["delete"] else "I run it"))
-        lines.append("  - %s [%s]" % (step["title"], mark))
-    for r in pl["refused"]:
-        lines.append("  ! %s" % r["reason"])
-    pin = next((st["pin_problem"] for st in pl["steps"] if st.get("pin_problem") and st["state"] != "already"), None)
-    if pin:
-        lines.append("  ! %s" % pin)
-    if any(st["action"] == "windows-runner-script" and st["state"] != "already" for st in pl["steps"]):
-        lines.append("  This shell is not an administrator. I write one PowerShell script per Windows runner (no secret in it); "
-                     "you run it once in an administrator PowerShell. In an administrator shell I do every step myself.")
-    if pl.get("blocked"):
-        lines.append("  ! %s" % pl["blocked"])
-    lines.append("Writes in this repository: nothing. Writes on this machine: %s" % pool_dir(pl["pool"]))
-    lines.append("Changes outside the repository: GitHub runner registrations, repository variables, Docker, the machine config, and for a Windows runner: a local account, the group luismc-ci-runners and folder rights.")
-    lines.append("Needs you: %s." % "; ".join(pl["needs"]))
-    lines.append("About %d minutes." % pl["minutes"])
-    return lines
-
-
-def render_summary(done, left, can_do) -> list:
-    """Section 13, part 4: Done, Left for you (numbered, exact steps), What you can do now."""
-    lines = ["Done"]
-    lines += ["  - %s" % d for d in done] or ["  - nothing changed (everything was already set)"]
-    lines.append("Left for you")
-    lines += ["  %d. %s" % (i, x) for i, x in enumerate(left, 1)] or ["  nothing"]
-    lines.append("What you can do now")
-    lines += ["  - %s" % c for c in can_do]
-    return lines
-
-
-def can_do_now(pool) -> list:
-    return ["`python3 scripts/delivery_ci.py slots`: who holds each CI slot and who waits.",
-            "`gh workflow run pool-check.yml`: run one test job through pool \"%s\"." % pool,
-            "`python3 scripts/delivery_doctor.py`: check the machine, the pool and the runners.",
-            "`/delivery-ci-setup`: run again; it says what is already set and changes only what is missing."]
-
-
-def cmd_pool_remove(args, P, probe) -> int:
-    """DL341: unregister one Windows runner of the pool registry (remove token, as the setup does), then drop its entry.
-    Other entries are never touched. Without --yes it only says what it would do."""
-    if not args.runner:
-        print("delivery_ci_setup: pool-remove needs --runner NAME (a Windows entry of the pool registry)", file=sys.stderr)
-        return 1
-    entries, _data = P.registry_read(probe, args.pool)
-    ent = next((a for a in entries or [] if P.entry_kind(a) == "service" and a.get("name") == args.runner), None)
-    if ent is None:
-        print("delivery_ci_setup: no Windows runner %s in the registry of pool %s" % (args.runner, args.pool), file=sys.stderr)
-        return 1
-    step = {"id": "win-remove:%s" % args.runner, "action": "windows-runner-remove", "pool": args.pool, "runner": args.runner,
-            "repo": ent.get("repo"), "folder": ent.get("folder")}
-    print("Remove Windows runner %s of %s: unregister it with a remove token, then drop its registry entry. No other entry changes."
-          % (args.runner, ent.get("repo")))
-    if not args.yes:
-        print("Nothing changed. Add --yes to do it.")
-        return 0
-    ok, detail = P.Executor(probe).run(step)
-    print(("done: " if ok else "failed: ") + detail)
-    return 0 if ok else 1
-
-
-def cmd_pool(args, root) -> int:
-    import delivery_runner_pool as P
-    probe = P.Probe()
-    found = P.detect(probe)
-    split = lambda v: [x for x in (v or "").split(",") if x]  # noqa: E731
-    if args.action == "pool-detect":
-        print(json.dumps(found, indent=2))
-        return 0
-    if args.action == "pool-refresh":
-        return cmd_pool_refresh(args, root, P, probe)
-    if args.action == "pool-remove":
-        return cmd_pool_remove(args, P, probe)
-    found["pool_env"] = P.read_pool_env(probe, args.pool)
-    cap = P.resolve_cap(found, args.total_gib, args.used_gib, args.cpus, args.docker_gib, args.largest_shard_gib,
-                        getattr(args, "resize", False), getattr(args, "shrink", False), getattr(args, "pool_gib", None),
-                        getattr(args, "pool_cpus", None))
-    if cap is None:
-        print("delivery_ci_setup: this machine's memory or CPUs could not be measured. Give --total-gib and --cpus.",
-              file=sys.stderr)
-        return 1
-    if not cap["ok"]:
-        print("delivery_ci_setup: %s" % cap["message"], file=sys.stderr)
-        return 1
-    if getattr(args, "playwright", None) and not P.valid_playwright_version(args.playwright):
-        print("delivery_ci_setup: --playwright needs a version like 1.62.1", file=sys.stderr)
-        return 2
-    pl = P.plan(found, split(args.repos), split(args.windows_repos), args.pool, cap, repo_paths=[root], probe=probe,
-                browsers=getattr(args, "browsers", None), playwright_version=getattr(args, "playwright", None),
-                drop_layers=getattr(args, "drop_layer", None) or (), drop_apt=getattr(args, "drop_apt", None) or (),
-                only=getattr(args, "only", None))
-    print("\n".join(render_plan(pl, found)))
-    for note in pl.get("notes") or []:
-        print("Note: %s" % note)
-    host, why = P.host_kvm(probe, args.pool)  # DL274: KVM is optional and off by default
-    print("KVM on this host: %s (%s). It stays off unless you run pool-refresh --kvm on."
-          % ("yes" if host else "no" if host is False else "unknown", why))
-    wsl_warn = P.wslconfig_nested_warning(probe, P.read_pool_env(probe, args.pool))  # DL343
-    if wsl_warn:
-        print("Warning: %s" % wsl_warn)
-    if args.action == "pool-plan":
-        return 0
-    if pl.get("blocked"):
-        return 1
-    yes_delete = set(split(args.yes_delete))
-
-    def check(step):
-        """The step's own check: a service step looks for the service; the rest use the pool module's check."""
-        if step["action"] == "windows-service":
-            return any(step["slug"] in (x["name"] or "") for x in P.detect_services(probe))
-        return P.default_check(step, probe)
-    result = P.run(pl, ask=lambda st: bool(args.yes), ask_delete=lambda st: all(n in yes_delete for n in st["names"]),
-                   execute=P.Executor(probe).run, check=check,
-                   guard=lambda st: P.migration_guard(probe, st))
-    left = []
-    if result["failed"]:
-        left.append("Fix this and run the setup again: %s." % result["failed"]["title"])
-    for sid in result["left"]:
-        if not result["failed"] or sid != result["failed"]["id"]:
-            left.append("Not run yet: %s" % sid)
-    print("\n".join(render_summary(result["done"], left, can_do_now(args.pool))))
-    return 1 if result["failed"] or result["left"] else 0
-
-
-def pool_refresh_source(args, root):
-    """DL155: the repo that asks: the first --repos entry, else OWNER/NAME of the origin remote, else the folder name."""
-    first = [x.strip() for x in (getattr(args, "repos", None) or "").split(",") if x.strip()]
-    if first:
-        return first[0]
-    try:
-        out = subprocess.run(["git", "-C", root, "remote", "get-url", "origin"], capture_output=True, text=True, timeout=10).stdout.strip()
-        m = re.search(r"([\w.-]+/[\w.-]+?)(?:\.git)?/?$", out)
-        if m:
-            return m.group(1)
-    except (OSError, subprocess.SubprocessError):
-        pass
-    return os.path.basename(root)
-
-
-def _plugin_version() -> str:
-    try:
-        with open(os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".claude-plugin", "plugin.json"), encoding="utf-8") as f:
-            return str(json.load(f).get("version") or "?")
-    except (OSError, ValueError):
-        return "?"
-
-
-def cmd_pool_refresh(args, root, P, probe) -> int:
-    """B14: rewrite RUNNER_SHA256, POOL_BROWSERS and PLAYWRIGHT_VERSION in the pool's .env and rebuild. The cap stays."""
-    if getattr(args, "playwright", None) and not P.valid_playwright_version(args.playwright):
-        print("delivery_ci_setup: --playwright needs a version like 1.62.1", file=sys.stderr)
-        return 2
-    rp = P.refresh_plan(probe, args.pool, [root], getattr(args, "browsers", None), getattr(args, "playwright", None),
-                        pool_refresh_source(args, root), getattr(args, "drop_layer", None) or (), getattr(args, "drop_apt", None) or (),
-                        getattr(args, "kvm", None))
-    if rp.get("error"):
-        print("delivery_ci_setup: %s" % rp["error"], file=sys.stderr)
-        return 1
-    lines = ["Refresh plan for pool \"%s\" (the cap and every other line stay):" % args.pool]
-    for k, (old, new) in sorted(rp["changes"].items()):
-        if k == "RUNNER_SHA256" and rp.get("sha_reason"):
-            lines.append("  - %s: %s -> %s (%s)" % (k, P.short_sha(old), P.short_sha(new), rp["sha_reason"]))
-        else:
-            lines.append("  - %s: %s -> %s" % (k, old or "unset", "removed" if new is None else new))
-    ver = _plugin_version()
-    lines += ["  - %s: differs from luismc-delivery %s" % (f, ver) for f in rp.get("files", [])]
-    lines += ["  - layer %s%s" % (n, " (asked by %s)" % who if who else "") for n, who in rp.get("layers", [])]
-    lines += ["  - %s" % n for n in rp.get("notes", [])]
-    if not rp["changes"] and not rp.get("files"):
-        lines.append("  - nothing to change in %s" % rp["path"])
-    elif rp.get("why"):
-        lines.append("  %s" % rp["why"])
-    lines.append("  - then build the image, drain the pool (running jobs finish), and recreate the container")
-    print("\n".join(lines))
-    if not getattr(args, "yes", False):
-        return 0
-    ok, detail = P.Executor(probe).refresh(rp, force=getattr(args, "force", False),
-                                           drain_timeout=getattr(args, "drain_timeout", None) or P.DRAIN_TIMEOUT_SEC)
-    print(detail)
-    return 0 if ok else 1
-
-
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="delivery_ci_setup.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm", "pool-detect", "pool-plan", "pool-run",
-                                           "pool-refresh", "pool-status", "pool-remove"])
+    ap.add_argument("action", choices=["facts", "apply", "checklist", "confirm"])
     ap.add_argument("items", nargs="*", help="confirm: the item ids")
     ap.add_argument("--answers", help="apply: a JSON file of answers, or - for stdin")
     ap.add_argument("--root", default=".")
     ap.add_argument("--no-install", action="store_true")
     ap.add_argument("--set-variables", action="store_true", help="apply: run `gh variable set` for the repository variables")
     ap.add_argument("--json", action="store_true")
-    ap.add_argument("--repos", help="pool-*: Linux repositories, OWNER/NAME comma separated")
-    ap.add_argument("--windows-repos", help="pool-*: repositories that test on Windows")
-    ap.add_argument("--pool", default="main")
-    ap.add_argument("--total-gib", type=float)
-    ap.add_argument("--used-gib", type=float, help="pool-*: memory used outside WSL, in GiB (default: measured). Not the PC's whole use")
-    ap.add_argument("--cpus", type=float, help="pool-*: this machine's CPU count (default: measured). Not the pool's CPUs")
-    ap.add_argument("--docker-gib", type=float)
-    ap.add_argument("--largest-shard-gib", type=float)
-    ap.add_argument("--resize", action="store_true", help="pool-plan/run: use the measured cap, not the one in the pool .env")
-    ap.add_argument("--shrink", action="store_true", help="pool-plan/run: allow --resize to lower POOL_MEM or POOL_CPUS")
-    ap.add_argument("--pool-gib", type=float, help="pool-plan/run: the pool's memory you want, in GiB (used as given if it fits the budgets)")
-    ap.add_argument("--pool-cpus", type=float, help="pool-plan/run: the pool's CPUs you want (used as given if it fits the budgets)")
-    ap.add_argument("--browsers", choices=["none", "chromium"], help="pool-plan/run/refresh: set POOL_BROWSERS (default: keep the .env value; detection may raise none to chromium)")
-    ap.add_argument("--drop-layer", action="append", metavar="NAME", help="pool-plan/run/refresh: remove this layer from the pool (repeatable)")
-    ap.add_argument("--drop-apt", action="append", metavar="NAME", help="pool-plan/run/refresh: remove this apt package from the pool (repeatable)")
-    ap.add_argument("--playwright", metavar="X", help="pool-plan/run/refresh: set PLAYWRIGHT_VERSION exactly (may lower it)")
-    ap.add_argument("--kvm", choices=["on", "off"], help="pool-refresh: turn POOL_KVM on or off (on is refused when the host has no usable KVM)")
-    ap.add_argument("--force", action="store_true", help="pool-refresh: rebuild even while a pool runner is busy (warns)")
-    ap.add_argument("--drain-timeout", type=float, default=None, metavar="SEC", help="pool-refresh: seconds to wait for running jobs to finish before the recreate (default 2700)")
-    ap.add_argument("--only", choices=["windows", "linux"], help="pool-plan/run: plan and run only this OS's steps (host-load stays in both)")
-    ap.add_argument("--runner", help="pool-remove: the name of the Windows runner in the pool registry to unregister and drop")
-    ap.add_argument("--yes", action="store_true", help="pool-run/refresh: the owner said yes to the plan shown (not to deletions)")
-    ap.add_argument("--yes-delete", help="pool-run: what the owner agreed to delete, named exactly, comma separated")
     args = ap.parse_args(argv)
     root = os.path.abspath(args.root)
     if not os.path.isdir(os.path.join(root, ".delivery")):
@@ -911,13 +617,6 @@ def main(argv=None) -> int:
     if args.action == "facts":
         print(json.dumps(facts(root), indent=2))
         return 0
-    if args.action == "pool-status":  # DL341: read only, one report of every runner across OSes
-        import pool_status as PS
-        rep = PS.collect(pool=args.pool if "--pool" in (argv if argv is not None else sys.argv) else None)
-        print(json.dumps(rep, indent=2) if args.json else PS.render_text(rep))
-        return 0
-    if args.action.startswith("pool-"):
-        return cmd_pool(args, root)
     if args.action == "apply":
         if not args.answers:
             print("delivery_ci_setup: apply needs --answers FILE|-", file=sys.stderr)

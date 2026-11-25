@@ -1,6 +1,6 @@
 # VM checks on a kvm runner
 
-Use this to test a package in a clean distro VM, for example a Fedora VM with SELinux Enforcing. It needs a pool runner with the `kvm` label (see the runner-pool spec, R5.28, R5.29).
+Use this to test a package in a clean distro VM, for example a Fedora VM with SELinux Enforcing. It needs a self-hosted runner with the `kvm` label.
 
 ## Workflow example
 
@@ -33,7 +33,7 @@ vm_check.py prune --keep 1                 # newest image, base and snapshot per
 
 ## What it costs
 
-Measured on a real pool with KVM, Fedora 45 Cloud Base, 1 GiB, 2 CPUs.
+Measured on a real runner with KVM, Fedora 45 Cloud Base, 1 GiB, 2 CPUs.
 
 | Step | Time | When |
 |---|---|---|
@@ -47,9 +47,9 @@ Measured on a real pool with KVM, Fedora 45 Cloud Base, 1 GiB, 2 CPUs.
 
 - `run -- CMD...` runs one program with its arguments. For a shell line, pass `-- sh -c 'a; b'`.
 - When the checksum file cannot be read (no network), the newest cached image of the distro is used.
-- First real run on a pool (13 Nov): Fedora 45, SELinux check with an rpm and a module: about 27 s cold, about 20 s with `--resume`; Enforcing, 0 AVC.
+- First real run on a runner (13 Nov): Fedora 45, SELinux check with an rpm and a module: about 27 s cold, about 20 s with `--resume`; Enforcing, 0 AVC.
 
 - A seed that powers off ends the VM before login. The snapshot base uses an idle seed.
 - Two jobs on one cache wait on a lock, they do not build twice.
-- The VM counts against the pool memory (`POOL_MEM`). The script warns when less than the VM size plus 1 GiB is free.
+- The VM counts against the runner's memory. The script warns when less than the VM size plus 1 GiB is free.
 - A snapshot is tied to the qemu version, the host CPU model, the memory and the CPU count. If one changes, the next `--resume` run builds a new one.

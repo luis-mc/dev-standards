@@ -179,22 +179,8 @@ SETUP_STALL_SECONDS = 25 * 60  # "about 30 minutes"
 
 
 def pool_cap_text() -> str:
-    """The live pool container's memory and CPU cap (`docker inspect`), or 'unknown'."""
-    try:
-        names = subprocess.run(["docker", "ps", "--filter", "label=dev.luismc.runner-pool", "--format", "{{.Names}}"],
-                               capture_output=True, text=True, timeout=30)
-        name = next((n for n in names.stdout.split() if n), "") if names.returncode == 0 else ""
-        if not name:
-            return "unknown"
-        out = subprocess.run(["docker", "inspect", "--format", "{{.HostConfig.Memory}} {{.HostConfig.NanoCpus}}", name],
-                             capture_output=True, text=True, timeout=30)
-        mem, cpu = out.stdout.split()
-        if out.returncode != 0 or not (mem.isdigit() and cpu.isdigit()):
-            return "unknown"
-    except (OSError, subprocess.SubprocessError, ValueError):
-        return "unknown"
-    mem_text = "no memory limit" if int(mem) == 0 else "%.1f GiB memory" % (int(mem) / 2 ** 30)
-    return "%s, %.1f CPUs" % (mem_text, int(cpu) / 1e9)
+    """The runner container cap is not known here (the pool left this plugin)."""
+    return "unknown"
 
 
 def diagnose(job: dict, log_tail: str, cap: str | None = None) -> str | None:

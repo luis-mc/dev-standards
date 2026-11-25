@@ -22,7 +22,7 @@ def _runs_on_values():
     """[(file, job, runs-on string)] of every workflow template."""
     out = []
     for path in sorted(TEMPLATES.rglob("*.yml")):
-        if "workflows" not in path.parts and path.name != "pool-check.yml":
+        if "workflows" not in path.parts:
             continue
         text = path.read_text(encoding="utf-8")
         if yaml is not None:
@@ -55,8 +55,7 @@ class TemplateOrder(unittest.TestCase):
                 self.assertEqual(names[0], DOC.job_var_name(job), "%s %s: %s" % (name, job, value))
                 names = names[1:]
             self.assertIn(tuple(names), (LINUX, WINDOWS), "%s %s: %s" % (name, job, value))
-            if name != "pool-check.yml":
-                self.assertRegex(value, r"\|\| '\"(ubuntu|windows)-latest\"'\) \}\}$", "%s %s needs a hosted default" % (name, job))
+            self.assertRegex(value, r"\|\| '\"(ubuntu|windows)-latest\"'\) \}\}$", "%s %s needs a hosted default" % (name, job))
             seen += 1
         self.assertGreater(seen, 25)
 

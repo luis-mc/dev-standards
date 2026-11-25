@@ -10,9 +10,7 @@ from unittest import mock
 
 ROOT = Path(__file__).resolve().parent.parent / "templates"
 sys.path.insert(0, str(ROOT / "shared" / "scripts" / "delivery"))
-sys.path.insert(0, str(ROOT / "runner-pool"))
 import vm_check as V  # noqa: E402
-import pool_supervisor as S  # noqa: E402
 
 BSD = "SHA256 (img-1.qcow2) = %s\n"
 SPEC = {"base_url": "http://x/", "checksum_url": "http://x/SUM", "checksum_format": "bsd", "algo": "sha256",
@@ -291,21 +289,6 @@ class MemoryTests(Tmp):
         self.assertIsNone(V.warn_memory(512, self.cache))
         Path(self.cache, "memory.max").write_text("max")
         self.assertIsNone(V.warn_memory(1024, self.cache))
-
-
-class PrepareKvmCacheTests(unittest.TestCase):
-    def test_cache_dir_has_group_and_mode(self):
-        runs = []
-        S.prepare_kvm({"user": "r-a"}, {"POOL_KVM": "1"}, run=runs.append, gid_of=lambda: 108,
-                      group_name=lambda g: "kvm", isdir=lambda p: True, vm_cache=True)
-        self.assertIn(["install", "-d", "-o", "root", "-g", "kvm", "-m", "2775", "/ci-tools/vm-cache"], runs)
-        self.assertIn(["chmod", "2775", "/ci-tools/vm-cache"], runs)
-
-    def test_no_volume_no_folder(self):
-        runs = []
-        S.prepare_kvm({"user": "r-a"}, {"POOL_KVM": "1"}, run=runs.append, gid_of=lambda: 108,
-                      group_name=lambda g: "kvm", isdir=lambda p: False, vm_cache=True)
-        self.assertEqual(runs, [["usermod", "-aG", "kvm", "r-a"]])
 
 
 @unittest.skipUnless(os.environ.get("VM_CHECK_REAL") == "1", "needs real /dev/kvm; set VM_CHECK_REAL=1")

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-24T20:57+00:00",
+  "updated": "2026-11-25T11:50+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11591,6 +11591,42 @@
       "expected": "24 Nov",
       "changed": "2026-11-24T19:00+00:00",
       "no_release": "pool operation, ships nothing"
+    },
+    {
+      "id": "DS243",
+      "owner": "project",
+      "app": "pool",
+      "status": "Live",
+      "item": "Linux pool disk fault: repair Docker data disk, recreate pool-main_agents",
+      "detail": "Docker data disk fsck-clean after 3 passes; dev-standards pool and all runners removed; new pool is crsp's. Hardware (memtest) unproven, owner watches dmesg/WHEA.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T10:45+00:00",
+      "no_release": "Pool repair; ships nothing"
+    },
+    {
+      "id": "DS244",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Carry wizard step-bar rule C127 into design-system template and guard tests",
+      "detail": "Comiclex rule C127 (PR 2021): '+ 1 more' must not replace the one hidden step. Add to the shared design-system template and guard tests. Starts after PR 2021 is reviewed.",
+      "expected": "28 Nov",
+      "changed": "2026-11-25T09:44+00:00",
+      "expected_basis": "waits on comiclex PR 2021 review",
+      "no_release": "Design-system template change rides the next plugin release when started"
+    },
+    {
+      "id": "DS245",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Remove the runner pool code from dev-standards; keep a pool-only backup",
+      "detail": "Owner order 25 Nov: delete pool scripts, templates, tests, docs and references; backup of pool code only at C:\\dev-standards-pool-back with notes for crsp.",
+      "expected": "26 Nov ~12:00",
+      "changed": "2026-11-25T11:50+00:00",
+      "expected_basis": "owner-run removal, tests, release fold",
+      "release": 173,
+      "started": "2026-11-25T11:50+00:00"
     },
     {
       "id": "DU1",

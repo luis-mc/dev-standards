@@ -705,8 +705,7 @@ class DoctorMachine(unittest.TestCase):
             self.assertTrue(ok, detail)
             self.assertEqual((by["machine.config"]["status"], by["machine.slots"]["status"], by["machine.hostload"]["status"],
                               by["machine.runs_on"]["status"]), ("ok", "ok", "ok", "ok"))
-            pool = [i for i in items if i["id"] == "pool" or i["id"].startswith("pool.")]
-            self.assertTrue(pool and all(i["status"] == "skip" for i in pool), pool)  # no pool on this machine
+            self.assertFalse([i for i in items if i["id"] == "pool" or i["id"].startswith("pool.")])  # the pool left the plugin
             lock = MS.take_slot(ident("a"))
             rec = json.loads(Path(MS.slot_path(lock["slot"])).read_text())
             rec["pid"] = dead_pid()
@@ -743,18 +742,6 @@ class DoctorMachine(unittest.TestCase):
                     mock.patch.object(D.H, "gh", return_value=(0, "[]")):
                 items = D.machine_items(make_root(), self.cfg())
             self.assertEqual({i["id"]: i for i in items}["machine.hooks:%s" % r]["status"], "ok")
-
-    def test_pool_checks_are_called_when_the_module_imports(self):
-        with machine(DELIVERY_RUNNER_DIRS=""):
-            MS.write_machine_config({})
-            fake = mock.Mock()
-            fake.doctor_checks.return_value = [{"id": "pool.main", "status": "warn", "detail": "cap near the ceiling"},
-                                               {"id": "pool.x", "status": "weird", "detail": "?"}]
-            with mock.patch.dict(sys.modules, {"delivery_runner_pool": fake}), mock.patch.object(D.H, "gh", return_value=(0, "[]")):
-                items = D.machine_items(make_root(), self.cfg())
-            by = {i["id"]: i for i in items}
-            self.assertEqual((by["pool.main"]["status"], by["pool.x"]["status"]), ("warn", "warn"))
-            fake.doctor_checks.assert_called_once()
 
     def test_disk_warning_and_clean_work(self):
         with machine():

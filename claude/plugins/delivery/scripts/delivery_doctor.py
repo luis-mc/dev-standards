@@ -33,8 +33,8 @@ Eight checks (a ninth, `rust`, appears only on the rust track: see below), each 
            account), its .env has CI_TOOLS_DIR, RUSTUP_HOME and CARGO_HOME, and it reads the same machine.json as the pool;
            a dry-run push of a ci-wait test ref from each runner's kept checkout WARNs when it fails (the runner account
            needs git credentials); no slot is stale and no queue ticket is older than
-           `slot_stale_min`; host-load.json is under 60 s old; the pool checks of delivery_runner_pool.doctor_checks(root)
-           when that module imports (else skip); an Option 1 project with the repository variable CI_RUNS_ON unset FAILS
+           `slot_stale_min`; host-load.json is under 60 s old; the runner checks;
+           an Option 1 project with the repository variable CI_RUNS_ON unset FAILS
            (it would run on hosted runners and may bill minutes); the size of every runner's _work folder (a large total
            is a warning; `delivery_doctor.py clean-work` lists, `--yes` cleans runners with no job running).
            The JSON output carries the single items (id, status ok|warn|fail|skip, detail) as `items`.
@@ -76,24 +76,6 @@ import machine_slots as MS  # noqa: E402
 PLUGIN = os.path.dirname(HERE)
 HOOK_SCRIPTS = ("hook_pre_tool.py", "hook_post_tool.py", "hook_stop.py", "hook_session_start.py")
 SETTINGS = (os.path.join(".claude", "settings.json"), os.path.join(".claude", "settings.local.json"))
-
-
-def _pool_files_items(POOL, root):
-    """DL162: one check per pool, `pool.<name>.files-current`: warns when a pool file differs from the plugin's template."""
-    out = []
-    try:
-        pools = POOL._pools_dir(root)
-        names = sorted(n for n in os.listdir(pools) if os.path.isfile(os.path.join(pools, n, "compose.yaml")))
-    except (OSError, TypeError, AttributeError):   # no pools folder, or a pool module without these helpers
-        return out
-    for n in names:
-        try:
-            kind, detail = POOL.pool_files_state(os.path.join(pools, n))
-        except (OSError, TypeError, AttributeError) as exc:
-            out.append(_item("pool.%s.files-current" % n, "warn", "could not compare the pool files: %s" % exc))
-            continue
-        out.append(_item("pool.%s.files-current" % n, "ok" if kind == "ok" else "warn", detail))
-    return out
 
 
 def check_config(root, cfg):
@@ -872,19 +854,6 @@ def machine_items(root, cfg):
                                                        "load.py --write every 15 s is not running." % (age, MS.HOST_LOAD_MAX_AGE)))
     else:
         items.append(_item("machine.hostload", "ok", "host-load.json is %d s old" % age))
-    try:
-        import delivery_runner_pool as POOL  # noqa: PLC0415 - built on another branch (DL30)
-    except ImportError:
-        items.append(_item("pool", "skip", "delivery_runner_pool is not installed"))
-    else:
-        try:
-            items += _pool_files_items(POOL, root)
-            for r in POOL.doctor_checks(root, repo_paths=[root]):
-                if isinstance(r, dict) and r.get("id"):
-                    items.append(_item(str(r["id"]), r.get("status") if r.get("status") in ("ok", "warn", "fail", "skip")
-                                       else "warn", str(r.get("detail") or "")))
-        except Exception as exc:  # noqa: BLE001
-            items.append(_item("pool", "fail", "pool checks crashed (%s: %s)" % (type(exc).__name__, exc)))
     if "self-hosted" in opts.values():
         r = H.gh(root, ["variable", "list", "--json", "name,value"])
         data = None

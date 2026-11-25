@@ -96,7 +96,7 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 
 **R5.14** — A branch that changes UI code or e2e specs runs the e2e specs of the screens it changed before it is done (DL-86). `branch_gate.py` records them in `gate-result.json` (`e2e`), `branch_gate.py --e2e-only` does it alone for an agent on the CI-gate path, `gate_verify.py` and `agent_ci.py` refuse a UI branch without a passing record for the head (DL-87), `e2e_push_check.py` in the pre-push hook refuses a push of changed e2e specs that were not run and passed (DL-88; a spec that came with a merge of the default branch is not counted, because both scripts diff from the merge base with `origin/<default>`), and the launch check requires the brief to say so (DL-89). The `CODE DONE` line that starts the CI-gate run (DL-81) may be a plain line, a list item (`- `, `* `, `+ `, `1. `) or a ticked checkbox (`- [x] CODE DONE`); an unticked `- [ ] CODE DONE` or a mention inside a sentence does not count. A project's own configured `marker` is used as written (DL309).
 
-The template's `playwright install` step picks by runner (DL230). On GitHub-hosted runners (`RUNNER_ENVIRONMENT=github-hosted`) it runs `playwright install --with-deps chromium`. On self-hosted pool runners, which have no sudo, it runs `playwright install chromium` and prints that the system libraries come from the pool's `POOL_BROWSERS=chromium` layer. Both `ci.yml` and `nightly-full.yml` do this.
+The template's `playwright install` step picks by runner (DL230). On GitHub-hosted runners (`RUNNER_ENVIRONMENT=github-hosted`) it runs `playwright install --with-deps chromium`. On self-hosted runners that have no sudo, it runs `playwright install chromium` and prints that the system libraries must come from the runner image. Both `ci.yml` and `nightly-full.yml` do this.
 
 The TS template's e2e step downloads Chromium unless `E2E_CHROMIUM_PATH` points at an existing executable (DL89). `agent_setup.sh` sets it for the session when a sandbox has a Chromium preinstalled under `/opt/pw-browsers`. A project that wants this sets the path in `playwright.config`:
 
@@ -120,7 +120,7 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.22** — `cancel_joined_runs.py --into <INTEGRATION> [--remote origin] [--repo OWNER/NAME] [--yes]` finds the active CI runs (queued, waiting, requested, pending, in progress) of branches already merged into the integration branch whose head commit the integration branch contains. A branch pushed again after the join is left alone. Runs of the integration branch, the default branch and unmerged branches are never touched. It is a dry run by default and prints one `cancel <id> <branch> <workflow> <url>` line per run. With `--yes` it runs `gh run cancel` for each run. It exits 0 when done, 1 when a cancel fails, and 2 on a usage error, a missing integration branch, or gh missing or failing. `DELIVERY_GH` names another gh program. Run it after a join so the ready PR's CI gets the runner. (DL113)
 
-**R5.23** — CI jobs keep pinned tools on the runner's own disk. `scripts/delivery/ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>` prints the path of a verified file in the per-runner cache. The cache is `CI_TOOLS_DIR`, else `C:/ci-tools` on Windows and `~/.cache/ci-tools` elsewhere, laid out as `<tool>/<version>/<file>`. It is never `$RUNNER_TEMP` or the workspace. A cached file is used only when its SHA-256 matches the pin; a mismatch is deleted and fetched again. A fetch makes 5 attempts (waits of 10, 20, 30 and 40 s; `CI_TOOL_RETRY_DELAY` sets the base) with a 20 s timeout. It downloads to a `.partial` file, verifies it, then renames it. `ci_tool.py gitleaks [--platform P]` does the same for the gitleaks pin in `tools.json` and prints the binary's path. Exit 0 prints the path, 1 is a failure (one stderr line with the URL, the attempts and the last error), 2 is a usage error. The shipped `ci.yml` gitleaks steps use it, and the runner pool keeps the cache on a `ci-tools` volume at `/ci-tools`. (DL115)
+**R5.23** — CI jobs keep pinned tools on the runner's own disk. `scripts/delivery/ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>` prints the path of a verified file in the per-runner cache. The cache is `CI_TOOLS_DIR`, else `C:/ci-tools` on Windows and `~/.cache/ci-tools` elsewhere, laid out as `<tool>/<version>/<file>`. It is never `$RUNNER_TEMP` or the workspace. A cached file is used only when its SHA-256 matches the pin; a mismatch is deleted and fetched again. A fetch makes 5 attempts (waits of 10, 20, 30 and 40 s; `CI_TOOL_RETRY_DELAY` sets the base) with a 20 s timeout. It downloads to a `.partial` file, verifies it, then renames it. `ci_tool.py gitleaks [--platform P]` does the same for the gitleaks pin in `tools.json` and prints the binary's path. Exit 0 prints the path, 1 is a failure (one stderr line with the URL, the attempts and the last error), 2 is a usage error. The shipped `ci.yml` gitleaks steps use it. (DL115)
 
 **R5.24** — DL-94: a workflow step that downloads a release asset or binary (curl, wget, Invoke-WebRequest, iwr or urllib, on a `/releases/download/` URL or a `.zip`, `.tar.gz`, `.tgz`, `.exe`, `.msi` or `.xz` file) is flagged when it does not go through `ci_tool.py`, writes into `RUNNER_TEMP`, or has no SHA-256 check. `workflow_fetch_check.py [FILES...]` reports each finding as `<file>:<line>: DL-94 <what> (<fix>)` and exits 0 when clean, 1 on findings and 2 on a usage error. The PreToolUse hook runs the same check on a Write, Edit or MultiEdit of `.github/workflows/*.yml` and blocks a finding. It fails open on its own errors. A reviewed exception ends the line with `# ci-tool: ok <reason>`. (DL116)
 
@@ -466,30 +466,6 @@ flowchart LR
 
 **R13.59** — **Windows.** The Windows-only test set is a table (`windows-real`) with a guard, and the shard table gets `os: windows` shards that name only that set. Installer pieces may be built on Linux (an optional recipe). A Linux-built MSI is a **CI check only** (owner answer 10); the shipped MSI is built on Windows. Installer artifacts are kept until publish succeeds. Option 3 does not cover Windows.
 
-**R13.60** — Moved to the [runner-pool spec, requirement 1 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.61** — Moved to the [runner-pool spec, requirement 2 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.62** — Moved to the [runner-pool spec, requirement 3 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.63** — Moved to the [runner-pool spec, requirement 4 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.64** — Moved to the [runner-pool spec, requirement 5 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.65** — Moved to the [runner-pool spec, requirement 6 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.66** — Moved to the [runner-pool spec, requirement 7 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.67** — Moved to the [runner-pool spec, requirement 8 of section 5](../runner-pool/spec.md#51-machine-config-slots-and-load).
-
-**R13.68** — Moved to the [runner-pool spec, requirement 9 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
-**R13.69** — Moved to the [runner-pool spec, requirement 10 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
-**R13.70** — Moved to the [runner-pool spec, requirement 17 of section 5](../runner-pool/spec.md#53-pool-doctor-checks-and-setup).
-
-**R13.71** — Moved to the [runner-pool spec, requirement 18 of section 5](../runner-pool/spec.md#53-pool-doctor-checks-and-setup).
-
 **R13.72** — **Install keeps the prune workflow list** (DL150). After `delivery_ci_install.py update` rewrites `artifact-prune.yml` from the template, it runs `scripts/delivery/artifact_prune.py --sync-workflow` in the project. The project's `artifact_prune.workflows` list is applied and does not revert. When the sync fails, the update prints the error and the fix. It does not undo the update. (DL255) Before the sync, `update` applies one list rule to the file's `workflows:` line, whether the file is overwritten, merged or in conflict on that line: the project's list wins; names the template added since the stored base are appended once; names the project removed stay removed. All other lines take the normal 3-way result. The run prints `artifact-prune list: kept N project name(s)` and the names added.
 
 **R13.73** — **Install checks time zone data** (DL157). Windows Python has no time zone data, so `zoneinfo` cannot load a zone such as `Europe/Lisbon` and the delivery scripts fall back to UTC. The installer, and the install step of the claude-setup skill, load the `tz` of `.delivery/config.json`. When that fails, they run `python -m pip install --user tzdata`, ask first when interactive, say what they did, and check again. The doctor keeps its own `tz` check.
@@ -504,25 +480,13 @@ flowchart LR
 
 **R13.78** — **Secret scan reads the pushed commit's ignore files** (DL154, D156). The pre-push `gitleaks` step gets `.gitleaksignore` from the pushed commit (`git show <sha>:.gitleaksignore` into a temp file, passed with `--gitleaks-ignore-path`; an empty file when the commit has none) and `.gitleaks.toml` with `--config` when the commit has one. The working tree's copies do not apply, whether the pushed commit is `HEAD` or not, and whether the tree is dirty or not. The `run` string in `gate.json` stays unchanged.
 
-**R13.79** — Moved to the [runner-pool spec, requirement 11 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
-**R13.80** — Moved to the [runner-pool spec, requirement 12 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
 **R13.81** — **Mock handler guard** (DL146, D152). `mock_handler_guard.py` is a fast guard in the ts template. It reads only what the branch adds since its base (`git diff BASE...HEAD`). For each new exported function in an API client file that calls a route written as a string literal, it checks that the shared e2e mock has a default handler for that route (MSW `http.get('/api/x', ...)` or `rest.post(...)`). A miss fails with the route, the client function and the mock file to add the handler to. Both file sets are set in `.delivery/config.json` as `e2e_mock`: `{"client": [globs], "mock": [globs]}`; the defaults are `**/api/client.ts`, `**/api-client.ts`, `**/lib/api.ts` and `**/mocks/handlers.ts`, `**/mocks/handlers/*.ts`. With no client file or no mock file found, it passes with a one-line note. Limits: only string-literal paths are seen (a path built in code is not); parameters (`:id`, `${id}`) match any value; the method is compared only when both sides show one; a handler made in a loop is not seen; a unit-test mock does not count, only the shared mock.
 
 **R13.82** — **TS tests that run a Rust binary** (DS208, D157). The `rust` track ships `test/rust-binaries.global-setup.ts`, a vitest globalSetup. For each crate in `RUST_TEST_CRATES` it runs `cargo build --locked -p <crate>` once and sets `<CRATE>_BIN` to the exe path. It fails with a clear message when cargo is missing. The JS `ci.yml` unit job installs the pinned Rust toolchain only when `scripts/delivery/rust_ci.py` exists.
 
 **R13.83** — **Owns overlap** (DL158). The DL-41 launch check compares `owns` entries path by path, not by the text before the first wildcard. A trailing `(note)` is cut off before the compare and shown in the message. Commas inside the note do not split the entry. An entry with no `/` and no `.` is prose and is ignored. Two entries overlap when one path can match both: `*` and `?` match a segment by `fnmatch` in either direction, `**` matches any number of segments, and a plain directory entry owns everything under it. The same file named twice is an overlap and is denied, and the message shows both notes. One exception: when both entries name the same file and both notes say `only` and name disjoint requirement IDs (such as `R13.72` and `R5.48`), the launch is allowed.
 
-**R13.84** — Moved to the [runner-pool spec, requirement 13 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
 **R13.85** — **Train ids on every path** (DL163). Every path that makes a train row takes the next free id of the day: `plan`, the CI record with `create`, the join script (which records its `into` branch with `create`), the post-tool hook and `link`. `link` for a PR and branch that no open row has makes a new row; it never attaches the PR to another branch's row. The write guard counts copies, so a ledger that already holds a duplicate id still loads, but a write cannot add another copy. `show` prints a warning for each duplicate id and says how to fix it.
-
-**R13.86** — Moved to the [runner-pool spec, requirement 14 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
-**R13.87** — Moved to the [runner-pool spec, requirement 15 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
-
-**R13.88** — Moved to the [runner-pool spec, requirement 16 of section 5](../runner-pool/spec.md#52-pool-image-and-refresh).
 
 **R13.89** — **ETAs from measured history** (DL168). The ledger records `finished_at` for an agent when it is marked done (the report commit time when the watcher reads the READY line) and the start and end of each CI run on the train row (`ci.run_started_at`, `ci.run_completed_at`). Old rows without them still load. `delivery_eta.py --kind agent|ci|join|pool-refresh` prints the median and p75 in minutes and the sample size, and says `no history` with fewer than 3 samples. The launch check (DL-30) refuses a brief whose `eta:` total is more than 50 % above the measured p75 for that kind and place, when there are at least 5 samples. The message names the median and p75. The fix is a lower eta or an `eta-reason: <why>` line in the delivery block. `delivery_ledger.py show` prints `eta <N> min, took <M> min` for done agents and one `cloud agents: eta median ... vs actual median ...` line.
 

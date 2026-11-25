@@ -37,27 +37,12 @@
     "claude/plugins/delivery/scripts/*.py": [
       "docs/features/delivery/spec.md"
     ],
-    "claude/plugins/delivery/scripts/delivery_runner_pool.py": [
-      "docs/features/runner-pool/spec.md"
-    ],
-    "claude/plugins/delivery/scripts/machine_slots.py": [
-      "docs/features/runner-pool/spec.md"
-    ],
-    "claude/plugins/delivery/scripts/runner_job_done.*": [
-      "docs/features/runner-pool/spec.md"
-    ],
-    "claude/plugins/delivery/scripts/runner_load_gate.*": [
-      "docs/features/runner-pool/spec.md"
-    ],
     "claude/plugins/delivery/templates/**": [
       "docs/features/delivery/spec.md"
     ],
     "claude/plugins/delivery/templates/lifecycle/**": [
       "docs/features/delivery-speed/spec.md",
       "docs/features/lifecycle/spec.md"
-    ],
-    "claude/plugins/delivery/templates/runner-pool/**": [
-      "docs/features/runner-pool/spec.md"
     ],
     "claude/plugins/delivery/templates/rust/scripts/delivery/*.py": [
       "docs/features/delivery-speed/spec.md"
