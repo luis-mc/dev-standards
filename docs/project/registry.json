@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T16:42+00:00",
+  "updated": "2026-11-25T16:46+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7738,12 +7738,11 @@
       "id": "DP7",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "Default ETA table and warn-once on past-due rows",
       "detail": "ETA defaults by task type; past-due rows warn once then move to Needs you. DL-64 and DL-32 stay blocking (owner choice).",
-      "expected": "25 Nov ~17:25",
-      "changed": "2026-11-25T16:34+00:00",
-      "expected_basis": "local agent ~45 min",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:46+00:00",
       "rides": "DP15",
       "started": "2026-11-25T16:35+00:00"
     },
