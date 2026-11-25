@@ -151,8 +151,10 @@ def stop_hint(pid):
 
 
 def spawn_watcher(root):
-    """Start the installed plugin's watcher, detached."""
+    """Start the installed plugin's watcher, detached. DELIVERY_NO_SPAWN=1 starts nothing (tests)."""
     import subprocess
+    if os.environ.get('DELIVERY_NO_SPAWN') == '1':
+        return False
     script = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'delivery_watch.py')
     kw = {'stdin': subprocess.DEVNULL, 'stdout': subprocess.DEVNULL, 'stderr': subprocess.DEVNULL}
     if os.name == 'nt':
@@ -166,6 +168,20 @@ def spawn_watcher(root):
         return True
     except OSError:
         return False
+
+
+def restart_dead_watcher(root, ledger, at, watcher_min):
+    """DP6 (D1): a watcher is dead when no delivery_watch row has a heartbeat newer than watcher_min minutes
+    (default 20). A stale row whose pid still runs is a hung watcher: it is stopped by pid, never by name. Then
+    the installed watcher is started. Returns (message or None, started)."""
+    rows = [w for w in ledger['watchers'] if w.get('kind') == 'delivery_watch']
+    if any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < watcher_min for w in rows):
+        return None, False
+    for w in rows:
+        stop_pid(w.get('pid'))
+    if spawn_watcher(root):
+        return 'no delivery_watch heartbeat for %d min: started the installed delivery_watch' % watcher_min, True
+    return None, False
 
 
 class Rearmed(list):
@@ -245,6 +261,14 @@ def main():
     parts += list(getattr(gone, 'warnings', []))
     fresh = any((H.minutes_since(w.get('heartbeat_at'), at) or 1e9) < cfg['watcher_min'] for w in ledger['watchers']
                 if w.get('pid') not in gone) or bool(gone and rearm and rearm[-1].startswith('started'))
+    if not fresh:
+        try:
+            dead_msg, fresh = restart_dead_watcher(root, ledger, at, cfg['watcher_min'])
+        except Exception as exc:     # fail open
+            H.warn('watcher restart skipped (%s: %s)' % (type(exc).__name__, exc))
+            dead_msg, fresh = None, False
+        if dead_msg:
+            parts.append('Watcher restarted (DP6): ' + dead_msg + '.')
     if not fresh:
         parts.append('No watcher heartbeat in the last %d min: start delivery_watch.py in the background '
                      '(run_in_background) before launching work.' % cfg['watcher_min'])
