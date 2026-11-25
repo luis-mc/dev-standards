@@ -33,6 +33,7 @@ import argparse
 import json
 import os
 import re
+import shlex
 import subprocess
 import sys
 import time
@@ -877,7 +878,29 @@ class Watcher:
                                              "delivery_watch"))
             return False
         self._set_train(train, "merged")
-        self.push_next(exclude=train["id"])
+        if self.after_merge(train):      # DP6: cleanup and smoke first; a failure stops the next push
+            self.push_next(exclude=train["id"])
+        return True
+
+    def after_merge(self, train: dict) -> bool:
+        """DP6 (D1): after a PR merge run the project's cleanup_command, then smoke_command ({pr} is the PR number).
+        An unset command is skipped. True when both passed or were skipped. A failure is recorded as a
+        post_merge.failed event and the watcher starts nothing new for that train: the agent stops."""
+        for key in ("cleanup_command", "smoke_command"):
+            cmd = (self.cfg.get(key) or "").strip()
+            if not cmd:
+                continue
+            try:
+                argv = shlex.split(cmd.replace("{pr}", str(train["pr"])), posix=os.name != "nt")
+            except ValueError as exc:
+                rc, out, err = 2, "", "bad %s: %s" % (key, exc)
+            else:
+                rc, out, err = self.act(argv)
+            if rc != 0:
+                self.mut(lambda led: L.add_event(led, "post_merge.failed", "%s %s rc=%s %s" % (
+                    train["id"], key, rc, (err or out).strip()[:120]), "delivery_watch"))
+                return False
+            self.mut(lambda led: L.add_event(led, "post_merge.ok", "%s %s" % (train["id"], key), "delivery_watch"))
         return True
 
     def pr_body(self, train) -> str:

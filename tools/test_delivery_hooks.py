@@ -63,7 +63,7 @@ class Project:
         # CPU of the PC and the machine file in ~/.claude, so a busy PC made unrelated tests fail (DSY148).
         e = dict(os.environ, DELIVERY_NOW=NOW, DELIVERY_LOCAL_HEAVY_DIR=os.path.join(self.dir, 'local-heavy'),
                  DELIVERY_LOAD='10,10', DELIVERY_MACHINE_CONFIG=os.path.join(self.dir, 'machine-none.json'),
-                 DELIVERY_LOAD_CACHE=os.path.join(self.dir, 'load-cache.json'), PYTHONUTF8='1')
+                 DELIVERY_LOAD_CACHE=os.path.join(self.dir, 'load-cache.json'), PYTHONUTF8='1', DELIVERY_NO_SPAWN='1')
         for k in ('CLAUDE_DELIVERY_HOOKS', 'DELIVERY_FREE_GB', 'DELIVERY_GH', 'DELIVERY_PS', 'DELIVERY_IN_CONTAINER',
                   'DELIVERY_CGROUP_DIR'):
             e.pop(k, None)
@@ -947,6 +947,27 @@ def session_start_fresh_watcher_no_prompt_and_no_gh():
     ctx = r[1]['hookSpecificOutput']['additionalContext']
     assert 'start delivery_watch.py' not in ctx and 'Trains: none open' in ctx, ctx
     p.close()
+
+
+@test
+def session_start_restarts_watcher_dead_after_20_min():
+    sys.path.insert(0, SCRIPTS)
+    import hook_session_start as S
+    from datetime import datetime, timezone
+    at = datetime(2026, 11, 25, 12, 0, tzinfo=timezone.utc)
+    def beat(m):
+        return {'watchers': [{'pid': 7, 'kind': 'delivery_watch',
+                              'heartbeat_at': (at - __import__('datetime').timedelta(minutes=m)).strftime('%Y-%m-%dT%H:%M:%SZ')}]}
+    calls = []
+    S.spawn_watcher = lambda root: calls.append('spawn') or True
+    S.stop_pid = lambda pid: calls.append('stop%s' % pid)
+    msg, ok = S.restart_dead_watcher('r', beat(19), at, 20)
+    assert (msg, ok, calls) == (None, False, []), (msg, calls)
+    msg, ok = S.restart_dead_watcher('r', beat(21), at, 20)
+    assert ok and calls == ['stop7', 'spawn'] and '20 min' in msg, (msg, calls)
+    calls.clear()
+    msg, ok = S.restart_dead_watcher('r', {'watchers': []}, at, 20)
+    assert ok and calls == ['spawn'], calls
 
 
 # --- wiring ---------------------------------------------------------------------------------------

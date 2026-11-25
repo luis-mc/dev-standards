@@ -218,6 +218,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.68** — Cypress rerun (DL410, owner decision D316). `rerun_tests.py` accepts the runner `cypress`. It reads the failed spec files from the job log: the rows of the `Run Finished` table marked with a cross, or, when there is no table, each `Running:  <spec>` header followed by `N failing` (ANSI colour codes and table borders are stripped). It also reads a JUnit XML report: the `file` attribute of each `testsuite` that holds a failed case. The rerun is per spec file, not per test: the arguments are one `--spec <file1>,<file2>` (comma-joined), with the spec files of changed code added. Default test globs: `**/*.cy.*`, `cypress/e2e/**/*.*`. A log with no failing spec is unreadable, so the whole job runs.
 
+**R5.69** — Watcher death and post-merge steps (DP6, D1). (a) A watcher counts as dead when no `delivery_watch` row has a heartbeat newer than `watcher_min` minutes (default 20). SessionStart then stops any stale row's pid (never by name) and starts the installed watcher; it asks the owner to start one only when the start fails. (b) After the watcher merges a PR it runs the project's `cleanup_command`, then its `smoke_command` (`{pr}` is the PR number; an unset command is skipped) and records `post_merge.ok` per command. If one fails it records `post_merge.failed`, skips the second command and pushes no next train: the agent stops. The merge step is one function, `maybe_merge`; the post-merge step is `after_merge`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -275,6 +277,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | Requirement | Test |
 |---|---|
 | R5.1, R5.4, R5.5 | `claude/plugins/delivery/tests/test_stop.py`, `claude/plugins/delivery/tests/test_pre_tool.py`, `tools/test_delivery_hooks.py` |
+| R5.69 | `tools/test_delivery_watch_post_merge.py`, `tools/test_delivery_hooks.py` |
 | R5.2, R5.11 | `claude/plugins/delivery/tests/test_ledger.py` |
 | R5.3 | `claude/plugins/delivery/tests/test_recording.py`, `claude/plugins/delivery/tests/test_post_tool.py` |
 | R5.5 (questions) | `claude/plugins/delivery/tests/test_questions.py` |
