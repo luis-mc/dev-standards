@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T17:47+00:00",
+  "updated": "2026-11-25T17:48+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7691,12 +7691,12 @@
       "id": "DP3",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Built",
       "item": "Drop schema: ledger jobs/held_runs and 4 empty config keys",
       "detail": "Remove ledger jobs and held_runs and config keys long_pole_globs, measure_globs, update_state_files, heavy_commands. Keep checks_off. Waits on DS246 (same files).",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "runs after DS246 merges; about 15 min agent"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T17:48+00:00",
+      "rides": "DS250"
     },
     {
       "id": "DP4",
@@ -11913,6 +11913,19 @@
       "changed": "2026-11-25T17:47+00:00",
       "release": 177,
       "started": "2026-11-25T17:42+00:00"
+    },
+    {
+      "id": "DS250",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: DP3 drop dead config keys",
+      "detail": "Release row for DP3",
+      "expected": "25 Nov ~19:30",
+      "changed": "2026-11-25T17:48+00:00",
+      "expected_basis": "join, CI 3-5 min, merge on green, fold",
+      "release": 178,
+      "started": "2026-11-25T17:48+00:00"
     },
     {
       "id": "DU1",

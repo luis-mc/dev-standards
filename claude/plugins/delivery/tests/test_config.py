@@ -60,6 +60,11 @@ class ValidateTests(unittest.TestCase):
         cfg = {"watcher": {"merge_method": "merge"}, "runner_plan": {"cancel_replaced_runs": False}}
         self.assertEqual(C.validate_config(cfg), ([], []))
 
+    def test_dp3_dropped_keys_warn_never_fail(self):
+        e, w = C.validate_config({"long_pole_globs": [], "update_state_files": []})
+        self.assertEqual(e, [])
+        self.assertEqual(sorted(w), ["long_pole_globs: unknown key (ignored)", "update_state_files: unknown key (ignored)"])
+
     def test_unknown_keys_warn_comments_do_not(self):
         e, w = C.validate_config({"bogus": 1, "_note": 2, "watcher": {"merge_on_gren": True}, "runners": [{"name": "a", "x": 1}]})
         self.assertEqual(e, [])
