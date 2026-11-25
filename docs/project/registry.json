@@ -7762,12 +7762,14 @@
       "id": "DP9",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Running",
       "item": "Gate and CI reuse pass records for the same tree",
       "detail": "branch_gate and CI skip setup and secret scan when pass_records.py holds a pass for the same tree.",
       "expected": "27 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "after Group 2; about 15 min agent"
+      "changed": "2026-11-25T21:11+00:00",
+      "expected_basis": "after Group 2; about 15 min agent",
+      "rides": "DS254",
+      "started": "2026-11-25T21:11+00:00"
     },
     {
       "id": "DP10",
@@ -11961,6 +11963,19 @@
       "changed": "2026-11-25T21:11+00:00",
       "release": 180,
       "started": "2026-11-25T21:10+00:00"
+    },
+    {
+      "id": "DS254",
+      "owner": "project",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "RELEASE: tree-hash pass reuse (DP9)",
+      "detail": "Rides DP9.",
+      "expected": "25 Nov ~23:45",
+      "changed": "2026-11-25T21:11+00:00",
+      "expected_basis": "one agent-sized change, CI 5 min",
+      "release": 181,
+      "started": "2026-11-25T21:11+00:00"
     },
     {
       "id": "DU1",
