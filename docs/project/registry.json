@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T15:42+00:00",
+  "updated": "2026-11-25T15:43+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7812,6 +7812,17 @@
       "changed": "2026-11-25T15:20+00:00",
       "rides": "DS247",
       "started": "2026-11-25T15:13+00:00"
+    },
+    {
+      "id": "DP14",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "One reusable standards-check workflow for the three repos that copy it",
+      "detail": "CRSP deferred it past its current wave: needs a version pin and work in three repos. Plan here first, then ask CRSP.",
+      "expected": "28 Nov",
+      "changed": "2026-11-25T15:43+00:00",
+      "expected_basis": "after CRSP wave merges; about 1 day"
     },
     {
       "id": "DS1",
