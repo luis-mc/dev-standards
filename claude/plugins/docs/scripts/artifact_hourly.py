@@ -155,6 +155,44 @@ def overdue_text(task):
         task.get('id'), task.get('item', ''), task.get('status'), task.get('expected'))
 
 
+# DP7 (D2): the default Expected, in minutes after a task starts, by task type. Used when a task gets no --expected.
+DEFAULT_ETA_MINUTES = {'agent': 15, 'ci': 5, 'join': 10, 'test': 10, 'docs': 15, 'study': 20, 'release': 30, 'other': 30}
+OVERDUE_MOVE_MINUTES = 60    # DP7 (D2): a Running or Waiting row this long past due moves to Needs you
+OVERDUE_NO_WARN = ('Needs you',)
+
+
+def default_eta_minutes(kind):
+    return DEFAULT_ETA_MINUTES.get(str(kind or 'other').strip().lower(), DEFAULT_ETA_MINUTES['other'])
+
+
+def default_expected(manifest, kind=None, now=None):
+    """DP7: 'DD Mon ~HH:MM' = now plus the default ETA of `kind`, rounded up to 5 minutes, in the project's zone."""
+    when = local_now(manifest, now) + timedelta(minutes=default_eta_minutes(kind))
+    when = when.replace(second=0, microsecond=0)
+    when += timedelta(minutes=(-when.minute) % 5)
+    return '%02d %s ~%02d:%02d' % (when.day, MONTHS[when.month - 1], when.hour, when.minute)
+
+
+def overdue_split(tasks, manifest, now=None):
+    """DP7 (D2): (warn, move) from the overdue rows. A Needs you row is already with the owner and is left out.
+    `move` holds Running and Waiting rows more than OVERDUE_MOVE_MINUTES past due; `warn` holds the rest."""
+    ref = local_now(manifest, now)
+    warn, move = [], []
+    for t, when in overdue_tasks(tasks, manifest, now):
+        if t.get('status') in OVERDUE_NO_WARN:
+            continue
+        late = (ref - when).total_seconds() / 60.0
+        if t.get('status') in ('Running', 'Waiting') and late > OVERDUE_MOVE_MINUTES:
+            move.append((t, when))
+        else:
+            warn.append((t, when))
+    return warn, move
+
+
+def overdue_key(task):
+    return '%s|%s' % (task.get('id'), task.get('expected'))
+
+
 def settle_sec(root):
     """R9.13: `full_progress.settle_sec` of <root>/.delivery/config.json; 60 when unset or not a number >= 0.
     Seam for tests: CLAUDE_ARTIFACTS_SETTLE_SEC overrides it."""

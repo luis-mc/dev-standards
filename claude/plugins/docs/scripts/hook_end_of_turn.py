@@ -380,12 +380,45 @@ def build_stale_reason(script, stale):
             'than the record.' % ('; '.join(stale), py, py))
 
 
+def split_overdue_once(state_path, manifest, overdue):
+    """DP7 (D2): (rows to block on, message). A row past its Expected is told once, in a message and no block.
+    A Running or Waiting row more than H.OVERDUE_MOVE_MINUTES past due blocks once, to run `overdue-sweep`.
+    Each row is told once per Expected value; a row no longer overdue is forgotten. Fails open."""
+    if H is None:
+        return [], ''
+    try:
+        state = read_state(state_path)
+        entry = state.get('overdue') if isinstance(state.get('overdue'), dict) else {}
+        warn_rows, move_rows = H.overdue_split([t for t, _w in overdue], manifest)
+        live = {H.overdue_key(t) for t, _w in warn_rows + move_rows}
+        warned = {k for k in entry.get('warned') or [] if k in live}
+        moved = {k for k in entry.get('moved') or [] if k in live}
+        new_warn = [(t, w) for t, w in warn_rows if H.overdue_key(t) not in warned]
+        new_move = [(t, w) for t, w in move_rows if H.overdue_key(t) not in moved]
+        warned |= {H.overdue_key(t) for t, _w in new_warn}
+        moved |= {H.overdue_key(t) for t, _w in new_move}
+        fresh = {'warned': sorted(warned), 'moved': sorted(moved)}
+        if fresh != {'warned': sorted(entry.get('warned') or []), 'moved': sorted(entry.get('moved') or [])}:
+            state.pop('overdue', None)         # keeps the key last, clear of the session pruning
+            state['overdue'] = fresh
+            write_state(state_path, state)
+        text = ''
+        if new_warn:
+            text = 'luismc-docs: past Expected, told once: %s. Set the real status or a new Expected; a Running or '                    'Waiting row moves to Needs you %d minutes after it is due.' % (
+                       '; '.join(H.overdue_text(t) for t, _w in new_warn), H.OVERDUE_MOVE_MINUTES)
+        return new_move, text
+    except Exception as exc:
+        warn('overdue check skipped (%s: %s)' % (type(exc).__name__, exc))
+        return [], ''
+
+
 def build_overdue_reason(script, overdue):
     py = 'python "%s"' % script
     rows = '; '.join(H.overdue_text(t) for t, _w in overdue)
-    return ('Open rows are past their Expected time: %s. Set the real status or a new Expected for each (%s '
-            'set-task-status <ID> <status> --expected "DD Mon ~HH:MM"), then publish Full Progress if pending lists it.'
-            % (rows, py))
+    return ('Open rows are more than %d minutes past their Expected time: %s. Move them to Needs you with one command '
+            '(%s overdue-sweep), or set the real status or a new Expected (%s set-task-status <ID> <status> '
+            '--expected "DD Mon ~HH:MM"), then publish Full Progress if pending lists it.'
+            % (H.OVERDUE_MOVE_MINUTES, rows, py, py))
 
 
 def build_background_reason(script):
@@ -427,6 +460,7 @@ def main():
         stale, overdue = [], []
     state_path = os.path.join(root, STATE_NAME)
     sid = str(data.get('session_id') or 'default')
+    overdue, overdue_told = split_overdue_once(state_path, manifest, overdue)      # DP7: warn once; DL-63 now blocks only to move
     try:
         plan = plan_untasked(root, manifest, sid)
     except Exception as exc:
@@ -466,7 +500,7 @@ def main():
     except Exception as exc:
         warn('deferred publish not listed (%s: %s)' % (type(exc).__name__, exc))
         told_deferred = ''
-    told = '\n'.join(part for part in (told, told_deferred) if part)
+    told = '\n'.join(part for part in (told, told_deferred, overdue_told) if part)
     if not artifacts and not queue and not background and not migration and not stale and not overdue and not plan:
         state = read_state(state_path)
         if sid in state:
