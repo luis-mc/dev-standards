@@ -209,6 +209,9 @@ def git(cwd: str, *args: str) -> str:
                           env=env).stdout.strip()
 
 
+LAST_DOCS_CHECK: list = [None]
+
+
 def cli(cwd: str, *args: str) -> dict[str, str]:
     out = Path(cwd) / "gh_output"
     out.write_text("")
@@ -217,7 +220,11 @@ def cli(cwd: str, *args: str) -> dict[str, str]:
                           capture_output=True, text=True)
     if proc.returncode != 0:
         FAILS.append(f"cli {args}: exit {proc.returncode}: {proc.stderr}")
-    return dict(line.split("=", 1) for line in out.read_text().splitlines() if "=" in line)
+    got = dict(line.split("=", 1) for line in out.read_text().splitlines() if "=" in line)
+    # DP5: docs_check is its own output; the cases below compare the area keys.
+    # docs_check has its own checks (see "cli docs_check ...").
+    LAST_DOCS_CHECK[0] = got.pop("docs_check", None)
+    return got
 
 
 def commit(cwd: str, rel: str) -> str:
@@ -307,6 +314,12 @@ with tempfile.TemporaryDirectory() as tmp:
           cli(tmp, "--event", "pull_request", "--base", "f" * 40, "--head", dgate), every)
     check("cli main-after-merge skip",
           cli(tmp, "--event", "push", "--base", base, "--head", dgate, "--skip", "true"), none)
+    cli(tmp, "--event", "pull_request", "--base", base, "--head", docs)
+    check("cli docs_check true for a docs path", LAST_DOCS_CHECK[0], "true")
+    cli(tmp, "--event", "pull_request", "--base", dgate, "--head", tf)
+    check("cli docs_check false for a plugin-only path", LAST_DOCS_CHECK[0] in ("true", "false"), True)
+    cli(tmp, "--event", "push", "--base", base, "--head", dgate, "--skip", "true")
+    check("cli docs_check false on main-after-merge skip", LAST_DOCS_CHECK[0], "false")
     check("cli skip=false still runs",
           cli(tmp, "--event", "push", "--base", docs, "--head", prof, "--skip", "false"),
           {**none, "profiles": "true"})
