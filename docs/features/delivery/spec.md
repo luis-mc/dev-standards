@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.43.2
+version: 0.44.0
 owner: agents
 type: reference
 code:
@@ -517,6 +517,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.44.0 | 2026-11-25 | RELEASE-175 | Test fix: the post-tool crash test logged its injected 'boom' crash into the real .delivery/blocks.log; it now logs under a temp root. Plugin file: claude/plugins/delivery/.claude-plugin/plugin.json (no version edit).<br>R5.69: the watcher counts as dead after 20 min with no heartbeat and SessionStart restarts it; after a merge it runs cleanup_command and smoke_command and stops the next push if one fails.<br>Warn-mode report: delivery_report.py counts what the rules would have blocked per rule; Full Progress shows one summary line (R5.70).<br>The runner pool left the plugin: delivery_runner_pool.py, pool_status.py, templates/runner-pool and the pool-* steps of delivery_ci_setup.py are removed, with the pool IDs R13.60 to R13.71, R13.79, R13.80, R13.84, R13.86 to R13.88 (the pool is built by its own project). The code is kept in a pool-only backup. Changes claude/plugins/delivery/.claude-plugin/plugin.json.<br>Removed the machine layer: the load guard, CI slots, runner hooks, the machine config and the runner_plan script. Rules DL-77, DL-78, DL-79, DL-90 and DL-91 and requirements R5.9, R5.10 and R6.5 are removed. Another project owns machine limits. Plugin file `claude/plugins/delivery/.claude-plugin/plugin.json`: the plugin no longer ships load.py, load_guard.py, machine_slots.py, runner_load_gate or runner_job_done. | DP4, DP6, DP8, DS245, DS246 |
 | 0.43.2 | 2026-11-24 | RELEASE-171 | The DL-41 deny and DL-303 warning also offer merging the tasks into the running agent's brief. Plugin: claude/plugins/delivery/.claude-plugin/plugin.json. | MP10 |
 | 0.43.1 | 2026-11-24 | RELEASE-170 | Q-4 does not count a green train that has no PR and no release number; the deny names an unnumbered train by ledger id and gives the close command. Plugin: claude/plugins/delivery/.claude-plugin/plugin.json. | DL414 |
 | 0.43.0 | 2026-11-24 | RELEASE-167 | Cypress and Selenium guardrails: G1 timeouts, G3 retries, G4 sleeps; both tools are known to stack.tools (R5.67).<br>Cypress rerun: rerun_tests.py reads failed Cypress specs from the job log or JUnit XML and reruns them with one --spec list (R5.68). | DL409, DL410 |

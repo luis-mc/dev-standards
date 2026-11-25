@@ -4,7 +4,7 @@ title: Test and validation cost
 apps: [luismc-project-setup, luismc-docs]
 topics: [ci, testing]
 status: live
-version: 0.2.2
+version: 0.3.0
 owner: agents
 type: explanation
 code:
@@ -233,6 +233,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.0 | 2026-11-25 | RELEASE-175 | spec-lint's docs-check job runs only when a change touches docs, AGENTS.md, tools, claude or the workflows (docs_check output of tools/ci_areas.py).<br>spec-lint workflow runs the new DP7 suite tools/test_artifacts_dp7.py.<br>The delivery-runner CI job and suite now run only the shared-fixes test file. | DP5, DP7, DS246 |
 | 0.2.2 | 2026-11-03 | RELEASE-36 | New suite tools/test_delivery_windows.py is mapped to the delivery area and run in spec-lint. | DL25 |
 | 0.2.1 | 2026-11-02 | RELEASE-34 | The gate mutants now guard files under luismc-delivery templates/shared/scripts/delivery. The measurements are unchanged. | DL15 |
 | 0.2.0 | 2026-11-01 | RELEASE-27 | Agents run the e2e specs of the screens they change: the gate records and verifies them, a pre-push check refuses an unrun e2e spec fix, and briefs say so (DELIVERYSPEC DL-86 to DL-89). | DS35 |

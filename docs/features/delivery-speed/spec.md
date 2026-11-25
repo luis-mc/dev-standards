@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.15.0
+version: 0.15.1
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.15.1 | 2026-11-25 | RELEASE-175 | ci_watch no longer reads the pool container cap from Docker; the cap text is unknown. Changes claude/plugins/delivery/.claude-plugin/plugin.json.<br>R5.6, R5.9 and R5.10 no longer cite the removed runner test file. | DS245, DS246 |
 | 0.15.0 | 2026-11-24 | RELEASE-167 | rerun_tests.py accepts the runner cypress: failed spec files are rerun with one --spec list (delivery R5.68). | DL410 |
 | 0.14.3 | 2026-11-22 | RELEASE-165 | Workflow templates read the per-job variable CRSP_<JOB> first (DL399). | DL399 |
 | 0.14.2 | 2026-11-22 | RELEASE-164 | The workflow templates read CRSP_RUNS_ON_LINUX before CI_RUNS_ON (DL394); the pool-check workflow and the template tests follow. | DL394 |

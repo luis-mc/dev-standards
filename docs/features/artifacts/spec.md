@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.17.1
+version: 0.18.0
 owner: agents
 type: reference
 code:
@@ -323,6 +323,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.18.0 | 2026-11-25 | RELEASE-175 | A --no-release reason that names shipping or a release is refused (R5.47a); work that ships rides a release. Plugin: claude/plugins/docs/.claude-plugin/plugin.json<br>Default Expected by task type (R5.24); an open row past its Expected warns once, then overdue-sweep moves it to Needs you after 60 minutes (R5.25). Plugin files changed: claude/plugins/docs/.claude-plugin/plugin.json.<br>Full Progress adds a Warn mode section with one line when a project runs the delivery rules in warn mode (reads .delivery/warn-report.json). | DP13, DP7, DP8 |
 | 0.17.1 | 2026-11-24 | RELEASE-171 | Two checking skills move to the haiku model profile. Plugin: claude/plugins/docs/.claude-plugin/plugin.json. | MP10 |
 | 0.17.0 | 2026-11-22 | RELEASE-163 | numbered phase repeats; decisions-migrate; task-add warns on legacy empty summaries | DL392 |
 | 0.16.0 | 2026-11-20 | RELEASE-157 | Where it stands in Full Progress section 1 is built from the record: last Live release and open work with IDs, basis and Expected (R5.23). | AR77 |

@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.9.1
+version: 1.10.0
 owner: agents
 type: reference
 code:
@@ -196,6 +196,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.10.0 | 2026-11-25 | RELEASE-175 | set-task-status and task-add refuse a --no-release reason that names shipping or a release (R5.47a); work that ships must ride a release. Plugin: claude/plugins/docs/.claude-plugin/plugin.json<br>Docs plugin scripts gain the default Expected and overdue-sweep (see features/artifacts R5.24, R5.25); claude/plugins/docs/.claude-plugin/plugin.json.<br>Full Progress adds a Warn mode section with one line when a project runs the delivery rules in warn mode (reads .delivery/warn-report.json).<br>docs_check reports R1 when a delivery project cites a removed delivery rule ID. The fix guide is docs/guides/removed-delivery-ids.md. Plugin file claude/plugins/docs/.claude-plugin/plugin.json. | DP13, DP7, DP8, DS246 |
 | 1.9.1 | 2026-11-24 | RELEASE-171 | Mechanical skills move to the haiku model profile; claude-setup asks overwrite, merge or keep for a differing rules file and copies the delivery guide. Plugin: claude/plugins/docs/.claude-plugin/plugin.json. | MP10 |
 | 1.9.0 | 2026-11-24 | RELEASE-168 | Design-system rule UX-69 and lifecycle check LC-34: a notification has no action buttons and a click opens an app page that holds the actions; the tray-modal guard flags action buttons. | DU15 |
 | 1.8.0 | 2026-11-22 | RELEASE-165 | design_system.py verify and the guard templates fail a missing approval record, a missing implementation approval and a stale gallery; approve-implementation --as-live records a live version (DOCSPEC R15.14). | DS241 |

@@ -1,6 +1,7 @@
 ---
 title: Set up CI for a project
 type: how-to
+version: 0.1.0
 ---
 # Set up CI for a project
 
@@ -68,3 +69,11 @@ Do the steps that match your option. The doctor re-checks them.
 1. The doctor's `ci` check passes.
 2. Open a pull request. Each required context shows a status.
 3. Stop the main runner, wait X minutes (Option 4). The fallback posts the status.
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.0 | 2026-11-25 | RELEASE-175 | The guided shared-CI section is removed with the pool. | DS245 |

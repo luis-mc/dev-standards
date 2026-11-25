@@ -1,3 +1,6 @@
+---
+version: 0.1.0
+---
 # Testing in dev-standards
 
 The shipped agents rule ("Agents test only what they touch") applies here too. How it maps onto this repository:
@@ -11,3 +14,11 @@ The shipped agents rule ("Agents test only what they touch") applies here too. H
 **Plugin smoke.** dev-standards deploys nothing, so the `Plugin smoke` workflow (`.github/workflows/plugin-smoke.yml`, run on every push to `main`) is its DL-18 smoke. It runs `python tools/plugin_smoke.py`, which checks each plugin under `claude/plugins/`: the manifest, the hook scripts, that scripts compile and answer `--help`, and the skill front matter. `.delivery/config.json` names it in `smoke_workflow`.
 
 **The docs-check job.** It waits for the `areas` job. `tools/ci_areas.py` sets its `docs_check` output when a change touches `docs/`, `AGENTS.md`, `CLAUDE.md`, `tools/`, `claude/` or `.github/workflows/`. A change only under `.claude/`, or a draft pull request, skips it. A push to main, a manual run of docs or specs, and an unreadable range run it.
+
+## Versions
+
+Written by the release fold. Do not edit by hand.
+
+| Version | Date | Release | What changed | Tasks |
+|---|---|---|---|---|
+| 0.1.0 | 2026-11-25 | RELEASE-175 | spec-lint's docs-check job now waits for the areas job and runs only when a change touches docs/, AGENTS.md, tools/, claude/ or the workflows; tools/ci_areas.py emits a docs_check output. | DP5 |
