@@ -386,11 +386,16 @@ class MainProcessTests(unittest.TestCase):
         self.assertEqual(L.load(root)["trains"][0]["state"], "joined")
 
     def test_internal_error_still_exits_zero(self):
+        # DP4: the crash is logged under a temp root, never the real repository's .delivery/blocks.log.
+        root = make_root()
+        payload = json.dumps({"cwd": str(root)}).encode()
         with mock.patch.object(H, "handle", side_effect=RuntimeError("boom")), \
-                mock.patch.object(sys, "stdin", io.TextIOWrapper(io.BytesIO(b"{}"))):
+                mock.patch.object(sys, "stdin", io.TextIOWrapper(io.BytesIO(payload))):
             with mock.patch("sys.stderr", new_callable=io.StringIO) as err:
                 self.assertEqual(H.main(), 0)
             self.assertIn("boom", err.getvalue())
+        with open(os.path.join(str(root), H.H.BLOCK_LOG_REL), encoding="utf-8") as f:
+            self.assertIn("RuntimeError: boom", f.read())
 
 
 # --- CO688: the delivery hook missed PR and push records ------------------------------------------------------
