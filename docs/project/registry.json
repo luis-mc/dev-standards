@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T16:35+00:00",
+  "updated": "2026-11-25T16:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7726,12 +7726,11 @@
       "id": "DP6",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "Watcher runs smoke and cleanup, restarts dead watcher",
       "detail": "Watcher runs cleanup.py and the smoke command after merge; stops the agent only on failure. SessionStart restarts a stale watcher.",
-      "expected": "25 Nov ~17:25",
-      "changed": "2026-11-25T16:34+00:00",
-      "expected_basis": "local agent ~45 min",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:39+00:00",
       "rides": "DP15",
       "started": "2026-11-25T16:35+00:00"
     },
