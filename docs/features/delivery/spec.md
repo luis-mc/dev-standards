@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.47.0
+version: 0.48.0
 owner: agents
 type: reference
 code:
@@ -526,6 +526,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.48.0 | 2026-11-25 | RELEASE-179 | R5.73: /delivery-onboard writes warn-mode config and ledger for a project with none; asks the merge mode, no default. | DP10 |
 | 0.47.0 | 2026-11-25 | RELEASE-178 | R5.72: long_pole_globs and update_state_files leave the config schema and the shipped config; old files warn and are ignored. | DP3 |
 | 0.46.0 | 2026-11-25 | RELEASE-177 | R5.70: the warn report counts a rule once per session; blocks.log lines carry the session as a fifth column. | DP17 |
 | 0.45.0 | 2026-11-25 | RELEASE-176 | Merge mode: watcher.merge_mode auto (default, merge on green) or manual (the owner merges); the hook refuses an agent merge in manual; /delivery-ci-setup asks it (R5.71). | DP16 |

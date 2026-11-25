@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T17:55+00:00",
+  "updated": "2026-11-25T18:07+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7773,11 +7773,11 @@
       "id": "DP10",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "One-command onboarding: turn on delivery in warn mode",
       "detail": "A step that writes .delivery with safe defaults for a project with none.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T17:55+00:00",
+      "changed": "2026-11-25T18:07+00:00",
       "rides": "DS251"
     },
     {
@@ -11930,12 +11930,11 @@
       "id": "DS251",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: DP10 onboarding in warn mode",
       "detail": "Release row for DP10",
-      "expected": "25 Nov ~20:00",
-      "changed": "2026-11-25T17:55+00:00",
-      "expected_basis": "join, CI 3-5 min, merge on green, fold",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T18:07+00:00",
       "release": 179,
       "started": "2026-11-25T17:55+00:00"
     },
