@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T14:28+00:00",
+  "updated": "2026-11-25T14:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7688,6 +7688,116 @@
       "started": "2026-11-25T13:22+00:00"
     },
     {
+      "id": "DP3",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Drop schema: ledger jobs/held_runs and 4 empty config keys",
+      "detail": "Remove ledger jobs and held_runs and config keys long_pole_globs, measure_globs, update_state_files, heavy_commands. Keep checks_off. Waits on DS246 (same files).",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "runs after DS246 merges; about 15 min agent"
+    },
+    {
+      "id": "DP4",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Find the PostToolUse 'boom' crash cause",
+      "detail": "12 crashes 31 Oct to 11 Nov in this repo. Find the cause or confirm test noise, then fix or remove.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "small, runs first; about 15 min agent"
+    },
+    {
+      "id": "DP5",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "spec-lint paths filter in this repo",
+      "detail": "Skip the 21 spec-lint jobs when no doc or spec path changed. Release PR still runs all.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "workflow file only, parallel with DS246; about 15 min agent"
+    },
+    {
+      "id": "DP6",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Watcher runs smoke and cleanup, restarts dead watcher",
+      "detail": "Watcher runs cleanup.py and the smoke command after merge; stops the agent only on failure. SessionStart restarts a stale watcher.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "after Group 1 merges; agent plus real-run watch"
+    },
+    {
+      "id": "DP7",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Default ETA table and warn-once on past-due rows",
+      "detail": "ETA defaults by task type; past-due rows warn once then move to Needs you. DL-64 and DL-32 stay blocking (owner choice).",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "after Group 1 merges; about 15 min agent"
+    },
+    {
+      "id": "DP8",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Warn-mode report: would have blocked N times",
+      "detail": "Per-project report so the owner can choose warn to block.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "after Group 1 merges; about 15 min agent"
+    },
+    {
+      "id": "DP9",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Gate and CI reuse pass records for the same tree",
+      "detail": "branch_gate and CI skip setup and secret scan when pass_records.py holds a pass for the same tree.",
+      "expected": "27 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "after Group 2; about 15 min agent"
+    },
+    {
+      "id": "DP10",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "One-command onboarding: turn on delivery in warn mode",
+      "detail": "A step that writes .delivery with safe defaults for a project with none.",
+      "expected": "27 Nov",
+      "changed": "2026-11-25T14:34+00:00",
+      "expected_basis": "after Group 2; about 15 min agent"
+    },
+    {
+      "id": "DP11",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Send CI findings to CRSP",
+      "detail": "Draft one findings file (prune schedule, paths filters, standards-check fix, concurrency, nightly) and send it to the CRSP session on the owner's yes.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T14:35+00:00",
+      "expected_basis": "draft by me, about 10 min"
+    },
+    {
+      "id": "DP12",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Study: can transcript-folds fold hook feedback text?",
+      "detail": "Owner asked if the transcripts plugin can hide repeated Stop-hook text like it folds diffs. Check whether the mod API reaches hook-feedback rows.",
+      "expected": "27 Nov",
+      "changed": "2026-11-25T14:35+00:00",
+      "expected_basis": "reading the mod API, about 15 min"
+    },
+    {
       "id": "DS1",
       "owner": "project",
       "app": "luismc-project-setup",
@@ -11659,9 +11769,9 @@
       "app": "",
       "status": "To do",
       "item": "DS246 Remove load/slot layer from delivery (CRSP owns limits)",
-      "detail": "Stage 2: gate, slots, machine, load, runner_plan, doctor checks; keep tasks, RELEASE-n, CI flow",
+      "detail": "Stage 2: gate, slots, machine, load, runner_plan, doctor checks; keep tasks, RELEASE-n, CI flow. Removed IDs: hard docs-check fail plus a fix guide (owner choice 25 Nov).",
       "expected": "",
-      "changed": "2026-11-25T13:19+00:00",
+      "changed": "2026-11-25T14:35+00:00",
       "rides": "DS245"
     },
     {
