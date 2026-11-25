@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T21:27+00:00",
+  "updated": "2026-11-25T22:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7821,11 +7821,11 @@
       "id": "DP14",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Waiting",
       "item": "One reusable standards-check workflow for the three repos that copy it",
       "detail": "CRSP deferred it past its current wave: needs a version pin and work in three repos. Plan here first, then ask CRSP.",
       "expected": "28 Nov",
-      "changed": "2026-11-25T15:43+00:00",
+      "changed": "2026-11-25T22:14+00:00",
       "expected_basis": "after CRSP wave merges; about 1 day"
     },
     {
@@ -11834,11 +11834,11 @@
       "id": "DS244",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Waiting",
       "item": "Carry wizard step-bar rule C127 into design-system template and guard tests",
       "detail": "Comiclex rule C127 (PR 2021): '+ 1 more' must not replace the one hidden step. Add to the shared design-system template and guard tests. Starts after PR 2021 is reviewed.",
       "expected": "28 Nov",
-      "changed": "2026-11-25T09:44+00:00",
+      "changed": "2026-11-25T22:14+00:00",
       "expected_basis": "waits on comiclex PR 2021 review",
       "no_release": "Design-system template change rides the next plugin release when started"
     },
