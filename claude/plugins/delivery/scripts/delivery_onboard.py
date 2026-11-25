@@ -20,6 +20,14 @@ PLUGIN = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TEMPLATE = os.path.join(PLUGIN, "templates", "shared", ".delivery")
 
 
+EMPTY_LEDGER = {
+    "schema": 1,
+    "config_ref": ".delivery/config.json",
+    "trains": [], "agents": [], "jobs": [], "installs": [], "publishes": [],
+    "runners": [], "watchers": [], "owner_questions": [], "events": [],
+}
+
+
 def _load(name):
     with open(os.path.join(TEMPLATE, name), encoding="utf-8") as f:
         return json.load(f)
@@ -44,7 +52,7 @@ def onboard(root, merge_mode):
     led_path = os.path.join(d, "ledger.json")
     if not os.path.exists(led_path):
         with open(led_path, "w", encoding="utf-8", newline="\n") as f:
-            json.dump(_load("ledger.json"), f, indent=2)
+            json.dump(EMPTY_LEDGER, f, indent=2)
             f.write("\n")
         written.append(led_path)
     return written
