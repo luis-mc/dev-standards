@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T22:14+00:00",
+  "updated": "2026-11-25T22:54+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12438,6 +12438,17 @@
       "changed": "2026-11-11T09:12+00:00",
       "dropped_into": "SO7",
       "dropped_reason": "duplicate of SO7"
+    },
+    {
+      "id": "SO9",
+      "owner": "setup-offers",
+      "app": "",
+      "status": "To do",
+      "item": "On plugin update, offer to apply the new project config",
+      "detail": "Owner 25 Nov: when a plugin updates in a project, ask the user if they want to configure all new updates (CI workflow, settings, docs) there, instead of waiting for them to know what to run. Design first: hook at session start after a version change, list what is new, one yes applies all. DP14 may fold in: setup re-writes the workflow and pin.",
+      "expected": "28 Nov",
+      "changed": "2026-11-25T22:54+00:00",
+      "expected_basis": "design first; DP14 scope to agree"
     },
     {
       "id": "ST1",
