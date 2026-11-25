@@ -131,6 +131,46 @@ class KeyTests(unittest.TestCase):
         self.assertIn("uncommitted", why)
 
 
+class TreeKeyTests(unittest.TestCase):
+    """DP9 (D9, R13.12): a shard with "tree": true keys on the git tree hash, so the same tree on another branch hits."""
+    TABLE = {"shards": [{"id": "gate", "tree": True}, {"id": "scan", "tree": True, "os": "Linux"}]}
+
+    def setUp(self):
+        self.work, self.remote = make_project()
+        self.root = str(self.work)
+
+    def test_same_tree_other_branch_same_key(self):
+        k1, _ = P.inputs_key(self.root, self.TABLE, "gate")
+        self.assertEqual(len(k1), 64)
+        git(self.work, "checkout", "-q", "-b", "other")
+        self.assertEqual(P.inputs_key(self.root, self.TABLE, "gate")[0], k1)
+
+    def test_any_change_changes_key(self):
+        k1, _ = P.inputs_key(self.root, self.TABLE, "gate")
+        commit_file(self.work, "other/b.txt", "b2")
+        self.assertNotEqual(P.inputs_key(self.root, self.TABLE, "gate")[0], k1)
+
+    def test_shard_and_os_are_in_the_key(self):
+        self.assertNotEqual(P.inputs_key(self.root, self.TABLE, "gate")[0], P.inputs_key(self.root, self.TABLE, "scan")[0])
+
+    def test_dirty_tree_has_no_key(self):
+        (self.work / "other/b.txt").write_text("dirty")
+        key, why = P.inputs_key(self.root, self.TABLE, "gate")
+        self.assertIsNone(key)
+        self.assertIn("uncommitted", why)
+
+    def test_record_written_on_one_branch_hits_on_the_base_reader(self):
+        key, _ = P.inputs_key(self.root, self.TABLE, "gate")
+        rec = P.make_record("gate", key, "success", "abc", "main", 1.0)
+        ok, _ = P.write(self.root, "origin", P.RECORDS_BRANCH, "main", rec)
+        self.assertTrue(ok)
+        git(self.work, "checkout", "-q", "-b", "task")
+        recs = P.Records(self.root, current="task", base="main")
+        k2, hit, _ = recs.consult(self.TABLE, "gate")
+        self.assertEqual(k2, key)
+        self.assertEqual(hit["state"], "success")
+
+
 class SkipTests(unittest.TestCase):
     def setUp(self):
         self.work, self.remote = make_project()

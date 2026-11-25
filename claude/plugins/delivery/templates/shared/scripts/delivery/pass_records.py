@@ -10,7 +10,8 @@ Inputs key. A shard lists what it depends on in the shard table: `inputs` (paths
 example its workspaces and their dependencies) and, for the whole table, `root_files` (files that change every
 key, such as the lock file). The key is a SHA-256 of the shard id, its OS, its expanded commands and the git
 blob id of every file under those paths at HEAD. Change one byte of one such file and the key changes.
-A shard with no `inputs`, a path that matches nothing, or uncommitted changes under its paths has NO key: it
+A shard with `"tree": true` instead keys on the git tree hash of HEAD alone (DP9): the same tree, the same
+key, on any branch. Use it for setup and the secret scan. A shard with no `inputs`, a path that matches nothing, or uncommitted changes under its paths has NO key: it
 always runs. A missing key never skips.
 
 Pass records. Records live on one orphan branch (default `ci-pass-records`), one file per
@@ -101,11 +102,26 @@ def tree_entries(root, paths: list[str]):
     return sorted(set(entries), key=lambda e: e[1]), None
 
 
+def tree_key(root, shard_id: str, os_name=None):
+    """(key, reason) from the git tree hash of HEAD (DP9, D9): the same tree gives the same key on any branch,
+    so a pass for a shard that does not depend on the branch name (setup, secret scan) is reused. No key when
+    the working tree has uncommitted changes."""
+    if git(root, "status", "--porcelain", "--untracked-files=all").stdout.strip():
+        return None, "uncommitted changes in the working tree"
+    r = git(root, "rev-parse", "HEAD^{tree}")
+    if r.returncode or not r.stdout.strip():
+        return None, "git rev-parse HEAD^{tree} failed"
+    blob = {"v": SCHEMA, "shard": shard_id, "os": os_name, "tree": r.stdout.strip()}
+    return hashlib.sha256(json.dumps(blob, sort_keys=True, separators=(",", ":")).encode()).hexdigest(), None
+
+
 def inputs_key(root, table: dict, shard_id: str):
     """(key, reason). key is a 64-character hex string, or None with the reason there is no key."""
     shard = next((s for s in table.get("shards", []) if isinstance(s, dict) and s.get("id") == shard_id), None)
     if shard is None:
         return None, "no shard %r in the table" % shard_id
+    if shard.get("tree") is True:
+        return tree_key(root, shard_id, shard.get("os"))
     inputs = shard.get("inputs")
     if not isinstance(inputs, list) or not inputs or not all(isinstance(p, str) and p for p in inputs):
         return None, "shard %r lists no `inputs`, so it always runs" % shard_id
