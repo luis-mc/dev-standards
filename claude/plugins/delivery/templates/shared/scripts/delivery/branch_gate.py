@@ -207,6 +207,19 @@ def ignore_untracked_work(root, dirty):
     return [p for p in out if not (p.startswith("docs/work/") and p in untracked)]
 
 
+TREE_TABLE = {"shards": [{"id": "branch-gate", "tree": True}]}
+
+
+def tree_records(root, branch, base_ref):
+    """pass_records.Records for the gate, or None when the helper is absent (DP9, D9)."""
+    try:
+        import pass_records as pr
+    except ImportError:
+        return None
+    base = base_ref.split("/", 1)[-1] if base_ref else "main"
+    return pr.Records(root, branch=pr.RECORDS_BRANCH, base=base, current=branch or base)
+
+
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="branch_gate.py", description=__doc__.split("\n\n")[0])
     ap.add_argument("--base-ref", help="branch this one will join (default origin/<default_branch>)")
@@ -219,6 +232,8 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--e2e-only", action="store_true",
                     help="run only the e2e step (the specs of the screens this branch changes) and publish the "
                          "record; for an agent on the CI-gate path (DL-86, DL-87)")
+    ap.add_argument("--no-tree-reuse", action="store_true",
+                    help="run the gate even when a pass record exists for this git tree (DP9)")
     ap.add_argument("--no-setup", action="store_true", help="skip the install from the lockfile; the run is partial")
     ap.add_argument("--timeout-minutes", type=float, metavar="N",
                     help="wall-clock limit for the whole run (default: gate.json timeout_minutes, 30)")
@@ -269,17 +284,34 @@ def main(argv: list[str] | None = None) -> int:
     minutes = args.timeout_minutes if args.timeout_minutes is not None else cfg["timeout_minutes"]
     print("limit   : %g min" % minutes)
 
+    # A UI change needs its e2e record, which a pass record does not carry: run the gate then.
+    recs = None if (partial or args.no_tree_reuse or not branch or dc.ui_files(ctx)) else tree_records(root, branch, ctx.base_ref)
+    reused = None
+    if recs is not None:
+        try:
+            _key, hit, _why = recs.consult(TREE_TABLE, "branch-gate")
+        except Exception:  # records are an optimisation: any failure means run the gate
+            _key, hit = None, None
+        if hit and hit.get("state") == "success":
+            reused = hit
+            print("reuse   : this git tree already passed the gate (%s on %s); no step runs" % (
+                str(hit.get("sha", ""))[:8], hit.get("branch", "?")))
+
     started = dc.utc_now()
-    entries, timed_out = dc.execute_steps(
-        steps,
-        ctx,
-        selected=selected,
-        keep_going=args.keep_going,
-        setup_cmds=cfg["setup"],
-        no_setup=args.no_setup,
-        limit_seconds=minutes * 60,
-        required_steps=cfg["required_steps"],
-    )
+    if reused:
+        entries, timed_out = [{"name": "tree-reuse", "outcome": "pass", "seconds": 0.0,
+                               "command": "pass record %s" % str(reused.get("sha", ""))[:8]}], False
+    else:
+        entries, timed_out = dc.execute_steps(
+            steps,
+            ctx,
+            selected=selected,
+            keep_going=args.keep_going,
+            setup_cmds=cfg["setup"],
+            no_setup=args.no_setup,
+            limit_seconds=minutes * 60,
+            required_steps=cfg["required_steps"],
+        )
     finished = dc.utc_now()
     normalize_logs(root, entries)
     restored = restore_gate_outputs(root)
@@ -287,7 +319,7 @@ def main(argv: list[str] | None = None) -> int:
         print("restored: %d file(s) the gate wrote under %s" % (len(restored), ", ".join(GATE_OUTPUT_DIRS)))
 
     cs_warnings, cs_failures = ([], [])
-    if only is None and not skip:
+    if only is None and not skip and not reused:
         cs_warnings, cs_failures = csharp_check(root, ctx.files)
     for msg in cs_failures:
         entries.append({"name": "csharp-build", "outcome": "fail", "seconds": 0.0, "command": "dotnet build",
@@ -305,7 +337,7 @@ def main(argv: list[str] | None = None) -> int:
         "widened": ctx.widened,
         "changed_dirs": ctx.changed_dirs,
         "steps": entries,
-        "required_steps": cfg["required_steps"],
+        "required_steps": [] if reused else cfg["required_steps"],
         "pass": ok,
         "timed_out": timed_out,
         "partial": partial,
@@ -316,6 +348,8 @@ def main(argv: list[str] | None = None) -> int:
         "finished_at": finished,
         "tool": "branch_gate.py %d" % dc.TOOL_VERSION,
     }
+    if reused:
+        result["reused_from"] = {"sha": reused.get("sha"), "branch": reused.get("branch")}
     if cs_warnings:
         result["warnings"] = cs_warnings  # only present when a C# change was not compiled (DL141)
     result_file = root / dc.GATE_RESULT_PATH
@@ -334,6 +368,13 @@ def main(argv: list[str] | None = None) -> int:
     print("\nresult  : %s -> %s" % ("PASS" if ok else "FAIL", dc.GATE_RESULT_PATH))
 
     exit_code = dc.EXIT_OK if ok else dc.EXIT_TIMEOUT if timed_out else dc.EXIT_FAIL
+    if ok and recs is not None and not reused:
+        try:
+            key, _hit, _why = recs.consult(TREE_TABLE, "branch-gate")
+            recs.save({"shard": "branch-gate", "inputs_key": key, "state": "success", "sha": ctx.head,
+                       "commands": [{"seconds": 0}]})
+        except Exception as exc:  # never fail a pass because the record could not be written
+            print("note    : pass record not written: %s" % exc)
     rec = result["e2e"]
     if rec["required"]:
         print("e2e     : %s (%s: %s)" % (rec["outcome"], rec["selection"], ", ".join(rec["specs"]) or "whole suite"))
