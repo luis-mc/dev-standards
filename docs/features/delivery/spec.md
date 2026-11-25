@@ -298,6 +298,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.72 | `claude/plugins/delivery/tests/test_config.py` |
 | R5.73 | `claude/plugins/delivery/tests/test_dp10_onboard.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
+| R13.36 | `tools/test_delivery_records.py` (TreeKeyTests) |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |
 
@@ -411,6 +412,8 @@ flowchart TD
 
 **R13.35** — Caps are counted on the pass-records branch (`fallback-counter.json`) before a fallback starts, with the shard timeout as the worst case for hosted minutes, and settled to the real minutes after. A cap that would be passed pauses the fallback with one line (`fallback paused: daily cap` or `fallback paused: monthly cap`). A cap is never overrun, also with two watchers at once.
 
+**R13.36** — Pass reuse by git tree (DP9, D9). A shard with `"tree": true` instead of `inputs` is keyed on the git tree hash of HEAD, its id and its OS: the same tree on any branch gives the same key, and there is no key while the working tree is dirty. `branch_gate.py` uses it for one shard, `branch-gate`: before setup it looks for a `success` record for this tree and, on a hit, runs no step, prints `reuse`, and publishes a passing result that names the record (`reused_from`). After a full pass it writes the record. It never reuses for a partial run, for a branch that changes UI paths or e2e specs (the record carries no e2e result), or with `--no-tree-reuse`. The read rule of R13.11 still holds.
+
 ### Option 4 fallback launchers (DL24)
 
 When Option 4 is chosen, a shard that waits too long for its own runner may start on a fallback. The core's settings are `ci.fallback` in `.delivery/config.json` (`options` per OS, `after_min` = X with no default, optional caps). The launchers add their own keys (`cloud.fire_url`, `cloud.token_env`; `hosted.workflow`, `hosted.ref`). Caps are optional.
@@ -518,7 +521,7 @@ Failure modes:
 | A new push moves the branch | Results and claims of the old sha are ignored. |
 | Nobody has a session open | The hourly routine starts the fallback, up to an hour late. |
 | The speed probe is above 3 on a fallback runner | The shard reports `error`, not `success`. |
-| The records branch cannot be reached | No shard is skipped; every shard runs (R13.10). |
+| The records branch cannot be reached | No shard is skipped; every shard runs (R13.10). The gate runs in full (R13.36). |
 
 ## Versions
 
