@@ -1,0 +1,16 @@
+{
+  "description": "luismc-project-setup: SessionStart offers to apply the new project config when the luismc plugins have changed since the project was last set up (SO9). Opt-in by the project: nothing happens in a directory that turns on no luismc plugin. The hook only prints text; the stamp is written by the script on a yes or a no.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v python3 >/dev/null 2>&1; then python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/plugin_update_offer.py\" hook; else python \"${CLAUDE_PLUGIN_ROOT}/scripts/plugin_update_offer.py\" hook; fi",
+            "timeout": 15
+          }
+        ]
+      }
+    ]
+  }
+}

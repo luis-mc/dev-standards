@@ -115,6 +115,8 @@ The hook reads only the current turn from the end of the transcript, in 1 MiB bl
 
 **R5.25** — The shipped pre-commit hook matches secret-shaped names with case: an UPPER_CASE `*_KEY`, `*_TOKEN`, `*_SECRET` or `*_PASS` name matches `=` or `:` then a value; a lower- or mixed-case name matches only the way `.gitleaks.toml` does, `=` then a value or `:` then a quoted value. Typed names (`path_key: &str`), Rust paths (`path_key::Name`) and CSS selectors pass; a quoted or assigned value is still blocked. `DATABASE_URL` keeps its wider shape. (DL358)
 
+**R5.26** — A SessionStart hook of the plugin (`hooks/hooks.json`, `scripts/plugin_update_offer.py`) offers to apply the new project config when the luismc plugins changed. It acts only in a project that turns on a luismc plugin in `.claude/settings.json`. It compares the plugin versions of the installed marketplace checkout with `applied` in the project's `.claude/plugin-versions.json` (no stamp: every plugin counts as new). When a version differs it prints the changes and tells the agent to ask the owner once with AskUserQuestion. On a yes the agent runs `claude-setup` and then `plugin_update_offer.py apply`; on a no, `plugin_update_offer.py decline`, which stops the offer for those versions. `status` prints the same text with no write, and `claude-setup status` lists it. The hook only prints; it writes nothing, never commits and fails open. (SO9)
+
 ## 6. Non-functional requirements
 
 **R6.1** — `claude-setup` asks which target before reading or writing, and applies one batch after one confirmation.
