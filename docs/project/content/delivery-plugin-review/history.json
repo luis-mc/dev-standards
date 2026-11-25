@@ -1,5 +1,13 @@
 [
   {
+    "date": "25 Nov 15:36",
+    "change": "Findings file drafted in scratchpad; send on owner yes"
+  },
+  {
+    "date": "25 Nov 15:36",
+    "change": "Study done: transcript-folds cannot fold hook feedback; no ui.render component carries it"
+  },
+  {
     "date": "25 Nov 13:21",
     "change": "Feature artifact created."
   }
