@@ -277,19 +277,14 @@ class Option1DoctorTests(Base):
         self.fake({"api": {"repos/{owner}/{repo}/actions/runners": self.runners(labels=["self-hosted"])}})
         self.assertIn("lacks the labels linux", self.ci(root)[1])
 
-    def test_everything_done_still_needs_the_machine_confirmations(self):
+    def test_everything_done_passes(self):
         root = self.project(OPT1)
         self.fake({"api": {"repos/{owner}/{repo}/actions/runners": self.runners()},
                    "vars": {"CI_RUNS_ON": '["self-hosted", "linux"]', "CI_SERIAL": "true"}})
         ok, detail = self.ci(root)
-        self.assertFalse(ok)
-        self.assertIn("load-gate:pc1", detail)
-        self.assertNotIn("runner:pc1:", detail)
-        self.assertNotIn("var:CRSP_RUNS_ON_LINUX:", detail)
-        cli("confirm", "load-gate:pc1", "--root", str(root))
-        ok, detail = self.ci(root)
         self.assertTrue(ok, detail)
-        self.assertIn("confirmed by the owner", detail)
+        self.assertNotIn("load-gate", detail)
+        self.assertNotIn("runner:pc1:", detail)
 
     def test_cannot_list_runners_is_unknown_until_confirmed(self):
         root = self.project(OPT1)

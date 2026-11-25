@@ -172,7 +172,7 @@ def waiting_shards(runs: list[dict], shards: list[dict], repo: str | None, now: 
     by the one-at-a-time setting has none, and a shard with any started job has its runner. A job with a
     GitHub-hosted label is the platform's wait and is left out here.
 
-    DL-90 (G6): `wait_marker(shard_id)` gives the `ci-wait` marker of a shard whose job is held for a machine slot, and
+    G6: `wait_marker(shard_id)` gives the `ci-wait` marker of a shard whose job is held for a machine slot, and
     `claimed(shard_id)` says whether a claim exists. A marker without a claim counts as waiting, from its time."""
     base = "repos/%s" % repo if repo else "repos/{owner}/{repo}"
     jobs_of: dict[str, tuple[dict, list[dict], str]] = {}
@@ -367,7 +367,7 @@ def _launch(sha: str, waiting: list[dict], deps: Deps, st: dict, scoped: bool = 
         if deps.settled(sha, sid, st["prefix"]):
             launched.add((sha, sid))
             continue
-        if kind == "cloud":  # DL-91: never an 11th cloud CI session; wait and retry on the next poll
+        if kind == "cloud":  # never an 11th cloud CI session; wait and retry on the next poll
             limit = ci_fallback.cloud_ci_limit(st["cfg"])
             try:
                 busy = int(deps.cloud_sessions()) + deps.state.get("cloud_started", 0)

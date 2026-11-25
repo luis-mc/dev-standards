@@ -63,16 +63,9 @@ def seconds(a, b):
 
 
 def machine_dir() -> str:
-    """The machine layer's folder; asks machine_slots when it exists (section 12.2)."""
+    """The folder that holds the slot log, when something writes one: DELIVERY_MACHINE_DIR, else the default."""
     env = os.environ.get("DELIVERY_MACHINE_DIR")
-    if env:
-        return env
-    try:
-        sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-        import machine_slots  # type: ignore  # noqa: WPS433
-        return str(machine_slots.machine_dir())
-    except Exception:  # noqa: BLE001 - the module may not exist yet
-        return DEFAULT_MACHINE_DIR.get(os.name, "/etc/luismc-delivery")
+    return env or DEFAULT_MACHINE_DIR.get(os.name, "/etc/luismc-delivery")
 
 
 # --- slot log (section 12.2) ---------------------------------------------------------------------------------------

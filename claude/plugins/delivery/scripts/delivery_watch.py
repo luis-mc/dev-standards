@@ -17,11 +17,9 @@ DELIVERYSPEC section 4(a) and owner decisions D5, D6. Each pass, against .delive
   installs  configured update-state files (install_state_files: [{product, path}]).
   runners   `gh api repos/{owner}/{repo}/actions/runners`.
   watchers  a heartbeat row.
-  runners   the CI runner guard (D6a): `runner_plan.py runners` is launched by this loop, once, and
-            relaunched when it exits, so the project does not have to start it.
 
 .delivery/config.json decides what is allowed (delivery_config.py): `watcher.push_trains`,
-`watcher.open_prs`, `watcher.merge_on_green`, `watcher.manage_runners`, `runner_plan.cancel_replaced_runs`,
+`watcher.open_prs`, `watcher.merge_on_green`, `runner_plan.cancel_replaced_runs`,
 `runner_plan.hold_dependabot_during_train`. All default to true, which is the 0.1.0 behaviour. A merge
 runs only when the PR head is still the commit whose CI was green: `gh pr merge N --merge
 --match-head-commit SHA`, never --auto.
@@ -45,6 +43,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import delivery_ledger as L  # noqa: E402
 import delivery_config as C  # noqa: E402
 import ci_runs as CR  # noqa: E402
+import hooklib as H  # noqa: E402
 
 DEFAULT_INTERVAL = 60
 DEFAULT_CHECK_MIN = 15
@@ -199,9 +198,6 @@ class Watcher:
         self.cfg = L.load_config(self.root)
         self.flags = C.watcher_flags(self.cfg)
         self.rp = C.runner_plan_flags(self.cfg)
-        self.runner_child = None
-        self._guard_missing_logged = False
-        self._guard_start_logged = False
         self._bad_ci_logged: set = set()
         self._extras_logged: set = set()
         self._extra_required: list = []
@@ -1004,50 +1000,6 @@ class Watcher:
                 "checked_at": at} for r in data.get("runners", [])]
         self.mut(fn)
 
-    def runner_script(self):
-        rp = self.cfg.get("runner_plan") if isinstance(self.cfg.get("runner_plan"), dict) else {}
-        for c in (os.environ.get("DELIVERY_RUNNER_PLAN"), rp.get("script"), os.path.join("scripts", "delivery", "runner_plan.py")):
-            if c:
-                path = c if os.path.isabs(c) else str(self.root / c)
-                if not os.path.isfile(path):
-                    continue
-                real, base = os.path.realpath(path), os.path.realpath(str(self.root))
-                if real != base and not real.startswith(base + os.sep):
-                    self.out(f"delivery_watch: refusing runner_plan script {c!r}: it resolves outside the repository root")
-                    continue
-                return path
-        return None
-
-    def pass_runner_guard(self) -> None:
-        """D6a: keep `runner_plan.py runners` running; it reports an offline runner, repairs it every
-        retry_seconds and re-runs the CI the outage cost. Not launched without runners[] in the config."""
-        if not self.flags["manage_runners"] or not self.cfg.get("runners"):
-            return
-        if self.runner_child is not None:
-            code = self.runner_child.poll()
-            if code is None:
-                return
-            if code != 0:
-                self.mut(lambda led: L.add_event(led, "runner.guard_exit", "exit %s" % code, "delivery_watch"))
-            self.runner_child = None
-        script = self.runner_script()
-        if script is None:
-            if not self._guard_missing_logged:
-                self._guard_missing_logged = True
-                self.out("delivery_watch: runners[] is configured but runner_plan.py was not found "
-                         "(scripts/delivery/runner_plan.py or runner_plan.script)")
-                self.mut(lambda led: L.add_event(led, "runner.guard_missing", "runner_plan.py not found", "delivery_watch"))
-            return
-        argv = [sys.executable, script, "runners", "--root", str(self.root), *self.repo_args]
-        self.actions.append(argv)
-        if self.dry:
-            self.out("dry-run: " + " ".join(argv))
-            return
-        self.runner_child = self.sh.spawn(argv, cwd=str(self.root))
-        if not self._guard_start_logged:         # CO688: it exits at once while the runners are online and is
-            self._guard_start_logged = True      # relaunched every pass: one event, not 239 of the 500 kept
-            self.mut(lambda led: L.add_event(led, "runner.guard_started", os.path.basename(script), "delivery_watch"))
-
     def pass_ci_runs(self) -> None:
         """D48: refresh .delivery/ci-runs.json for the Full Progress CI runs section, at most once a minute.
         A failure leaves the old file and never fails the tick."""
@@ -1071,14 +1023,13 @@ class Watcher:
             led["watchers"] = [w for w in led["watchers"] if w.get("pid") != pid]
             led["watchers"].append({"pid": pid, "kind": "delivery_watch", "started": started, "heartbeat_at": at,
                                     "version": WATCHER_VERSION})
-            import machine_slots as M
-            L.prune_watchers(led, self.now(), M.pid_alive)      # DL118
+            L.prune_watchers(led, self.now(), H.pid_alive)      # DL118
         self.mut(fn)
 
     def run_once(self, started: str | None = None) -> list[list[str]]:
         self.actions = []
         for step in (self.pass_agents, self.pass_checks, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners,
-                     self.pass_runner_guard, self.pass_ci_runs):
+                     self.pass_ci_runs):
             try:
                 step()
             except Exception as exc:  # noqa: BLE001 - one failing pass never stops the others
@@ -1101,8 +1052,7 @@ def _stamp(led, train_id, state, now):
 def live_peer(led, interval: float, now=None, pid=None, alive=None):
     """DL109: another delivery_watch for this root that is still running: its pid is alive, its heartbeat is newer than
     three intervals, and its plugin version is not older than ours. A second watcher then exits."""
-    import machine_slots as M
-    alive = alive or M.pid_alive
+    alive = alive or H.pid_alive
     pid = pid or os.getpid()
     now = now or L.utcnow()
     mine = L.version_key(WATCHER_VERSION)

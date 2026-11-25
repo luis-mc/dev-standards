@@ -320,18 +320,13 @@ that enforces it.
 `/luismc-project-setup:claude-setup` enables it for a project, writes
 `.delivery/config.json` (caps, work root, time zone, label patterns, ETA
 table, outbound deny list, `no_attribution`, `runners[]` with their repair
-commands) and git-ignores `.delivery/`. When a CI runner the project uses goes
-offline, `runner_plan.py runners` reports it at once, then every 5 minutes
-repairs the runner (restart its service or container), re-checks it and only
-then re-runs the CI that needed it; every step is in the ledger (D6a). The
-plugin is built in `claude/plugins/delivery`.
+commands) and git-ignores `.delivery/`. The plugin is built in `claude/plugins/delivery`.
 
 The config is checked by `delivery_config.py validate` (a JSON Schema in the
 plugin; unknown keys warn) and `delivery_doctor.py` self-checks the setup (config,
 gh sign-in, time zone, hooks, ledger). From 0.2.0 the watcher obeys the config
 (`watcher.push_trains|open_prs|merge_on_green`, `runner_plan.cancel_replaced_runs|
-hold_dependabot_during_train|heavy_jobs_yield`) and starts the runner guard
-itself, and `enforcement` sets the mode (`block`/`warn`), the block ceiling and an
+hold_dependabot_during_train`), and `enforcement` sets the mode (`block`/`warn`), the block ceiling and an
 optional `.delivery/blocks.log`. From 0.3.0 a train is green only when every
 `watcher.ci_workflows` run succeeded on the PR head, DL-31 skips measured
 durations, and DL-76 (`pr_proven_jobs`) enforces one CI per release. See `claude/plugins/delivery/README.md` and

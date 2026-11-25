@@ -19,7 +19,7 @@ In priority order:
 
 ## Constraints
 
-- **Machine load.** Heavy work does not start while memory is above 85% or CPU above 60% (DL-77). Running work is never killed.
+- **Machine load.** Heavy work does not start while memory is above 85% or CPU above 60%. Running work is never killed.
 - **No git writes by plugins.** Plugins do not commit, push or merge. The project does that when it chooses.
 - **IDs kept stable.** A rewrite changes layout and wording only. Requirement IDs, section numbers and `**Version:**` lines stay.
 - **Change notes, not version edits.** A branch adds a note. Only the release fold writes versions.

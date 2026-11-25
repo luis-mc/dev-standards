@@ -108,7 +108,7 @@ class SettingsAndWaitTests(unittest.TestCase):
         old = dict(q, created_at="2026-11-03T09:30:00Z")
         self.assertEqual(F.shard_wait_minutes([q, old], T0), 30.0)
 
-    def test_wait_marker_without_claim_counts_as_waiting(self):       # DL-90, G6
+    def test_wait_marker_without_claim_counts_as_waiting(self):  # G6
         run = {"status": "in_progress", "started_at": "2026-11-03T09:50:00Z"}
         marker = {"at": "2026-11-03T09:45:00Z"}
         self.assertEqual(F.shard_wait_minutes([run], T0, wait_marker=marker), 15.0)
@@ -304,7 +304,7 @@ class CapTests(Base):
 
 
 class WaitMarkerTests(Base):
-    """DL-90: the ci-wait marker of a held job, and the claim-lost exit of a held job."""
+    """The ci-wait marker of a held job, and the claim-lost exit of a held job."""
 
     def test_marker_roundtrip_and_clear(self):
         w = self.clones["main"]

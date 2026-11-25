@@ -773,27 +773,6 @@ class RunnersInstallsHeartbeatTests(unittest.TestCase):
         self.assertEqual(len(L.load(root)["watchers"]), 1)
 
 
-class RunnerScriptPathTests(unittest.TestCase):
-    def test_inside_outside_and_absolute_outside(self):
-        import tempfile
-        msgs = []
-        inside = make_root({"runner_plan": {"script": "tools/rp.py"}})
-        (inside / "tools").mkdir()
-        (inside / "tools" / "rp.py").write_text("")
-        w = W.Watcher(inside, sh=FakeShell(), now=lambda: NOW, out=lambda *a: msgs.append(" ".join(map(str, a))))
-        self.assertEqual(w.runner_script(), str(inside / "tools" / "rp.py"))
-        self.assertEqual(msgs, [])
-        outside_dir = tempfile.mkdtemp(prefix="dl-out-")
-        script = os.path.join(outside_dir, "rp.py")
-        open(script, "w").close()
-        for value in (os.path.relpath(script, str(inside)), script):
-            msgs.clear()
-            root = make_root({"runner_plan": {"script": value}})
-            w = W.Watcher(root, sh=FakeShell(), now=lambda: NOW, out=lambda *a: msgs.append(" ".join(map(str, a))))
-            self.assertIsNone(w.runner_script())
-            self.assertIn("outside the repository root", msgs[0])
-
-
 # --- CO688: reconcile what the hook could not see ------------------------------------------------------------
 
 def pr_list_route(branch, number=847, head=SHA, draft=False):
@@ -852,26 +831,6 @@ class ReconcileTests(unittest.TestCase):
                   ("gh", "run", "list", "--commit"): (0, "[]")}
         watcher(root, FakeShell(routes)).run_once()
         self.assertEqual(L.load(root)["trains"][0]["ci"]["head_sha"], SHA)
-
-    def test_guard_started_is_logged_once_not_every_pass(self):
-        root = make_root({"runners": [{"name": "r1"}], "watcher": {"manage_runners": True}})
-        script = root / "scripts" / "delivery"
-        script.mkdir(parents=True)
-        (script / "runner_plan.py").write_text("")
-
-        class Child:
-            def poll(self):
-                return 0
-
-        class Shell(FakeShell):
-            def spawn(self, argv, cwd=None):
-                return Child()
-        w = watcher(root, Shell())
-        for _ in range(5):
-            w.pass_runner_guard()
-        kinds = [e["kind"] for e in L.load(root)["events"]]
-        self.assertEqual(kinds.count("runner.guard_started"), 1, kinds)
-        self.assertEqual(len([a for a in w.actions if "runners" in a]), 5, "it is still relaunched every pass")
 
 
 def iso_ago(minutes):

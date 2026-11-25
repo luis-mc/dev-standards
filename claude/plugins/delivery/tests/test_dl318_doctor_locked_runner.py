@@ -1,4 +1,4 @@
-"""DL318: locked Windows runner folders and workflow runs-on labels in the doctor. Runs on Linux (all mocked)."""
+"""DL318: workflow runs-on labels in the doctor. Runs on Linux (all mocked)."""
 import json
 import os
 import shutil
@@ -8,47 +8,6 @@ from unittest import mock
 
 import _helpers  # noqa: F401
 import delivery_doctor as DOC
-
-SVC = [{"Name": "actions.runner.o-r.win1", "PathName": '"C:\\actions-runners\\win1\\bin\\RunnerService.exe"',
-        "StartName": ".\\ci-win1"},
-       {"Name": "Spooler", "PathName": "x", "StartName": "LocalSystem"}]
-
-
-class Locked(unittest.TestCase):
-    def setUp(self):
-        self.rows = DOC.service_rows(SVC)
-
-    def test_service_rows(self):
-        self.assertEqual(len(self.rows), 1)
-        self.assertEqual(self.rows[0]["folder"], "C:\\actions-runners\\win1")
-        self.assertEqual(self.rows[0]["account"], ".\\ci-win1")
-
-    def test_locked_folder_is_found_and_warns(self):
-        with mock.patch.object(DOC, "_folder_locked", return_value=True), \
-                mock.patch.object(DOC, "_account_in_group", side_effect=lambda a, g: g == DOC.WIN_GROUP):
-            items = DOC.windows_runner_items([], self.rows)
-        by = {i["id"].split(":")[-1]: i for i in items}
-        self.assertEqual(by["account"]["status"], "ok")
-        for k in (".env", "CI_TOOLS_DIR", "RUSTUP_HOME", "CARGO_HOME"):
-            self.assertEqual(by[k]["status"], "warn")
-            self.assertIn(DOC.NEEDS_ADMIN, by[k]["detail"])
-        self.assertFalse(any("no self-hosted" in i["detail"] for i in items))
-
-    def test_permission_error_reads_as_locked(self):
-        with mock.patch("builtins.open", side_effect=PermissionError):
-            self.assertTrue(DOC._folder_locked("/x"))
-
-    def test_hook_check_never_says_no_runner(self):
-        with mock.patch.object(DOC, "_runner_dirs", return_value=[]), \
-                mock.patch.object(DOC, "_windows_services", return_value=self.rows), \
-                mock.patch.object(DOC, "_folder_locked", return_value=True), \
-                mock.patch.dict(os.environ, {}, clear=False):
-            os.environ.pop(DOC.HOOK_VAR, None)
-            ok, detail = DOC._check_runner_hook("/r", {})
-        self.assertTrue(ok)
-        self.assertNotIn("no self-hosted runner found", detail)
-        self.assertIn(DOC.NEEDS_ADMIN, detail)
-
 
 WF = """name: ci
 jobs:
