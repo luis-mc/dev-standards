@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T21:11+00:00",
+  "updated": "2026-11-25T21:25+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7762,12 +7762,11 @@
       "id": "DP9",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Live",
       "item": "Gate and CI reuse pass records for the same tree",
       "detail": "branch_gate and CI skip setup and secret scan when pass_records.py holds a pass for the same tree.",
-      "expected": "27 Nov",
-      "changed": "2026-11-25T21:11+00:00",
-      "expected_basis": "after Group 2; about 15 min agent",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T21:25+00:00",
       "rides": "DS254",
       "started": "2026-11-25T21:11+00:00"
     },
@@ -11968,12 +11967,11 @@
       "id": "DS254",
       "owner": "project",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: tree-hash pass reuse (DP9)",
       "detail": "Rides DP9.",
-      "expected": "25 Nov ~23:45",
-      "changed": "2026-11-25T21:11+00:00",
-      "expected_basis": "one agent-sized change, CI 5 min",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T21:25+00:00",
       "release": 181,
       "started": "2026-11-25T21:11+00:00"
     },
