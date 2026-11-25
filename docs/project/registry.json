@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T14:35+00:00",
+  "updated": "2026-11-25T14:37+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7702,23 +7702,27 @@
       "id": "DP4",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Running",
       "item": "Find the PostToolUse 'boom' crash cause",
       "detail": "12 crashes 31 Oct to 11 Nov in this repo. Find the cause or confirm test noise, then fix or remove.",
       "expected": "26 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "small, runs first; about 15 min agent"
+      "changed": "2026-11-25T14:37+00:00",
+      "expected_basis": "small, runs first; about 15 min agent",
+      "no_release": "bug find; fix rides next release",
+      "started": "2026-11-25T14:37+00:00"
     },
     {
       "id": "DP5",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Running",
       "item": "spec-lint paths filter in this repo",
       "detail": "Skip the 21 spec-lint jobs when no doc or spec path changed. Release PR still runs all.",
       "expected": "26 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "workflow file only, parallel with DS246; about 15 min agent"
+      "changed": "2026-11-25T14:37+00:00",
+      "expected_basis": "workflow file only, parallel with DS246; about 15 min agent",
+      "no_release": "CI filter; ships with next release",
+      "started": "2026-11-25T14:37+00:00"
     },
     {
       "id": "DP6",
@@ -11767,12 +11771,14 @@
       "id": "DS246",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "DS246 Remove load/slot layer from delivery (CRSP owns limits)",
       "detail": "Stage 2: gate, slots, machine, load, runner_plan, doctor checks; keep tasks, RELEASE-n, CI flow. Removed IDs: hard docs-check fail plus a fix guide (owner choice 25 Nov).",
-      "expected": "",
-      "changed": "2026-11-25T14:35+00:00",
-      "rides": "DS245"
+      "expected": "25 Nov ~16:00",
+      "changed": "2026-11-25T14:37+00:00",
+      "rides": "DS245",
+      "expected_basis": "agent 35 min work plus CI",
+      "started": "2026-11-25T14:37+00:00"
     },
     {
       "id": "DU1",
