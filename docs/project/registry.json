@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T16:39+00:00",
+  "updated": "2026-11-25T16:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7751,12 +7751,11 @@
       "id": "DP8",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "Warn-mode report: would have blocked N times",
       "detail": "Per-project report so the owner can choose warn to block.",
-      "expected": "25 Nov ~17:25",
-      "changed": "2026-11-25T16:34+00:00",
-      "expected_basis": "local agent ~45 min",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:40+00:00",
       "rides": "DP15",
       "started": "2026-11-25T16:35+00:00"
     },
