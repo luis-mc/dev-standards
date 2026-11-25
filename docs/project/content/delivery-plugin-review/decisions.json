@@ -1,0 +1,100 @@
+{
+ "decisions": [
+  {
+   "id": "D1",
+   "question": "When does the watcher count as dead?",
+   "asked": "2026-11-25",
+   "status": "decided",
+   "task": "DP6",
+   "options": [
+    {
+     "label": "No heartbeat for 20 min",
+     "summary": "Matches the 20-minute watcher check.",
+     "recommended": true
+    },
+    {
+     "label": "No heartbeat for 10 min",
+     "summary": "Sooner, risk of a double watcher."
+    },
+    {
+     "label": "Process gone only",
+     "summary": "Misses a hung watcher."
+    }
+   ],
+   "chosen": "No heartbeat for 20 min",
+   "decided": "2026-11-25",
+   "owner_words": "No heartbeat for 20 min (Recommended)"
+  },
+  {
+   "id": "D2",
+   "question": "How long past due before a row warns, then moves to Needs you?",
+   "asked": "2026-11-25",
+   "status": "decided",
+   "task": "DP7",
+   "options": [
+    {
+     "label": "Warn at due, Needs you after 30 min",
+     "summary": "One warning, then Needs you after 30 min.",
+     "recommended": true
+    },
+    {
+     "label": "Warn at due, Needs you after 60 min",
+     "summary": "More slack for slow agents."
+    },
+    {
+     "label": "Warn at due, never move",
+     "summary": "Warns only."
+    }
+   ],
+   "chosen": "Warn at due, Needs you after 60 min",
+   "decided": "2026-11-25",
+   "owner_words": "Warn at due, Needs you after 60 min"
+  },
+  {
+   "id": "D3",
+   "question": "Where does the owner read the warn-mode report?",
+   "asked": "2026-11-25",
+   "status": "decided",
+   "task": "DP8",
+   "options": [
+    {
+     "label": "Command plus a line in Full Progress",
+     "summary": "A report command and one summary line per project.",
+     "recommended": true
+    },
+    {
+     "label": "Command only",
+     "summary": "Nothing added to Full Progress."
+    },
+    {
+     "label": "Full Progress only",
+     "summary": "A section, no command."
+    }
+   ],
+   "chosen": "Command plus a line in Full Progress",
+   "decided": "2026-11-25",
+   "owner_words": "Command plus a line in Full Progress (Recommended)"
+  },
+  {
+   "id": "D4",
+   "question": "How do DP6, DP7 and DP8 start while PR 270 is open?",
+   "asked": "2026-11-25",
+   "status": "decided",
+   "task": "DP6",
+   "options": [
+    {
+     "label": "Wait for merge",
+     "summary": "Start when PR 270 shows merged.",
+     "recommended": true
+    },
+    {
+     "label": "Branch from the PR branch now",
+     "summary": "Faster, may need a rebase."
+    }
+   ],
+   "chosen": "Wait for merge",
+   "decided": "2026-11-25",
+   "owner_words": "Wait for merge (Recommended)"
+  }
+ ]
+}

@@ -63,6 +63,10 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery | D3 | [Do findings block or warn?](../features/delivery/spec.md) | Block, with a ceiling | decided | 2026-10-14 |
 | delivery | D4 | [Local or cloud agents?](../features/delivery/spec.md) | Cloud first | decided | 2026-10-14 |
 | delivery | D5 | [Machine limits?](../features/delivery/spec.md) | 85% memory, 60% CPU, hold new work only (MADR 0031) | decided | 2026-10-14 |
+| delivery-plugin-review | D1 | When does the watcher count as dead? | No heartbeat for 20 min | decided | 2026-11-25 |
+| delivery-plugin-review | D2 | How long past due before a row warns, then moves to Needs you? | Warn at due, Needs you after 60 min | decided | 2026-11-25 |
+| delivery-plugin-review | D3 | Where does the owner read the warn-mode report? | Command plus a line in Full Progress | decided | 2026-11-25 |
+| delivery-plugin-review | D4 | How do DP6, DP7 and DP8 start while PR 270 is open? | Wait for merge | decided | 2026-11-25 |
 | delivery-speed | D1 | Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6? | Rewrite and queue | decided | 2026-10-11 |
 | delivery-speed | D10 | dev-standards is public: create a public GitHub release per train for the delivery log? | Yes, public releases | decided | 2026-10-11 |
 | delivery-speed | D100 | Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04's Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps? | Official Node 22 LTS tarball, sha256-checked | decided | 2026-11-05 |

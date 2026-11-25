@@ -920,10 +920,10 @@ figure.diagram figcaption b{color:var(--ink)}
 </style>
 </head>
 <body>
-<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What the plugin is</a><a href="#s2"><b>2</b>Features, enforcement and benefit</a><a href="#s3"><b>3</b>How it fits with the other plugins</a><a href="#s4"><b>4</b>What real usage shows</a><a href="#s5"><b>5</b>Gaps to fill</a><a href="#s6"><b>6</b>What to remove or simplify</a><a href="#s7"><b>7</b>CI speedups without losing quality</a><a href="#s8"><b>8</b>Proposed next tasks</a><a href="#s9"><b>9</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
+<div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What the plugin is</a><a href="#s2"><b>2</b>Features, enforcement and benefit</a><a href="#s3"><b>3</b>How it fits with the other plugins</a><a href="#s4"><b>4</b>What real usage shows</a><a href="#s5"><b>5</b>Gaps to fill</a><a href="#s6"><b>6</b>What to remove or simplify</a><a href="#s7"><b>7</b>CI speedups without losing quality</a><a href="#s8"><b>8</b>Proposed next tasks</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.17.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery plugin: features, fit and gaps</h1><p>What the delivery plugin offers, what it enforces, how projects use it, and what to add, cut or speed up.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-25T15:43+00:00">25 Nov 15:43</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-25T16:24+00:00">25 Nov 16:24</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">25 Nov 16:06</a> (Lisbon)</p>
 <p class="lede">Usage comes from one read-only pass over six other projects on this PC, left unnamed. (seen) = evidence in files; (guess) = estimate.</p>
 <div class="at-a-glance">
@@ -1160,7 +1160,83 @@ figure.diagram figcaption b{color:var(--ink)}
 </ol>
 <p>None of these is started. Each needs an owner decision first.</p>
 </section>
-<section id="s9"><h2><span class="section-number">&sect; 9</span>History</h2>
+<section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
+<div class="decision-list">
+<article class="decision decision-decided" data-decision="D4">
+<h3 class="decision-head"><span class="decision-id">D4</span> <span class="decision-question">How do DP6, DP7 and DP8 start while PR 270 is open?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP6</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Wait for merge</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">Start when PR 270 shows merged.</p>
+<blockquote class="decision-words">&ldquo;Wait for merge (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Branch from the PR branch now</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Faster, may need a rebase.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D3">
+<h3 class="decision-head"><span class="decision-id">D3</span> <span class="decision-question">Where does the owner read the warn-mode report?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP8</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Command plus a line in Full Progress</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">A report command and one summary line per project.</p>
+<blockquote class="decision-words">&ldquo;Command plus a line in Full Progress (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Command only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Nothing added to Full Progress.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Full Progress only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">A section, no command.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D2">
+<h3 class="decision-head"><span class="decision-id">D2</span> <span class="decision-question">How long past due before a row warns, then moves to Needs you?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP7</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn at due, Needs you after 30 min</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">One warning, then Needs you after 30 min.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Warn at due, Needs you after 60 min</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">More slack for slow agents.</p>
+<blockquote class="decision-words">&ldquo;Warn at due, Needs you after 60 min&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Warn at due, never move</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Warns only.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D1">
+<h3 class="decision-head"><span class="decision-id">D1</span> <span class="decision-question">When does the watcher count as dead?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP6</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">No heartbeat for 20 min</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">Matches the 20-minute watcher check.</p>
+<blockquote class="decision-words">&ldquo;No heartbeat for 20 min (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No heartbeat for 10 min</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Sooner, risk of a double watcher.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Process gone only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Misses a hung watcher.</p>
+</div>
+</div>
+</article>
+</div>
+</section>
+<section id="s10"><h2><span class="section-number">&sect; 10</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
 <tr><td>25 Nov 15:42</td><td>Findings sent to the CRSP session on owner&#x27;s go; awaiting its reply</td></tr>
 <tr><td>25 Nov 15:36</td><td>Findings file drafted in scratchpad; send on owner yes</td></tr>
