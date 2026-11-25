@@ -226,6 +226,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.72** — Dead config keys (DP3, owner decision D8). The config schema and the shipped `.delivery/config.json` no longer list `long_pole_globs` or `update_state_files`; nothing read them. A project that still has them gets the `unknown key (ignored)` warning, never an error, and the keys go on the next write of the file. `measure_globs` (read by the watcher), the ledger `jobs` list (read by the ETA table) and `held_runs` (read by the watcher) stay. Tests: `claude/plugins/delivery/tests/test_config.py`.
 
+**R5.73** — One-command onboarding (DP10, owner decision D10). `/delivery-onboard` (engine `delivery_onboard.py --merge-mode auto|manual [--root DIR]`) turns the rules on in a project with no `.delivery/config.json`. It writes the config from the plugin template with `enforcement.mode` `warn` and the chosen `watcher.merge_mode`, drops the template's `_` comment keys, and writes `.delivery/ledger.json` when missing. There is no default merge mode: without `--merge-mode` it exits 2 and writes nothing. An existing config is never touched (exit 1). It never commits or pushes. Tests: `claude/plugins/delivery/tests/test_dp10_onboard.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -294,6 +296,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.70 | `tools/test_delivery_report.py` |
 | R5.71 | `claude/plugins/delivery/tests/test_dp16_merge_mode.py` |
 | R5.72 | `claude/plugins/delivery/tests/test_config.py` |
+| R5.73 | `claude/plugins/delivery/tests/test_dp10_onboard.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |

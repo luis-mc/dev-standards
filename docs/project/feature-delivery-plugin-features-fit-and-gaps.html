@@ -923,12 +923,17 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What the plugin is</a><a href="#s2"><b>2</b>Features, enforcement and benefit</a><a href="#s3"><b>3</b>How it fits with the other plugins</a><a href="#s4"><b>4</b>What real usage shows</a><a href="#s5"><b>5</b>Gaps to fill</a><a href="#s6"><b>6</b>What to remove or simplify</a><a href="#s7"><b>7</b>CI speedups without losing quality</a><a href="#s8"><b>8</b>Proposed next tasks</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.17.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery plugin: features, fit and gaps</h1><p>What the delivery plugin offers, what it enforces, how projects use it, and what to add, cut or speed up.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-25T17:54+00:00">25 Nov 17:54</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-25T17:55+00:00">25 Nov 17:55</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">25 Nov 16:37</a> (Lisbon)</p>
 <p class="lede">Usage comes from one read-only pass over six other projects on this PC, left unnamed. (seen) = evidence in files; (guess) = estimate.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
+</details>
+<details class="glance-group glance-built" data-glance="built"><summary><span class="glance-label">Built, not released</span><span class="fold-count">1 task</span></summary>
+<ul>
+<li data-glance-task="DP10"><span class="task-id">DP10</span>One-command onboarding: turn on delivery in warn mode</li>
+</ul>
 </details>
 <details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">14 tasks</span></summary>
 <ul>
@@ -944,17 +949,17 @@ figure.diagram figcaption b{color:var(--ink)}
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">14</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">3</div><div class="label">tasks to do</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">14</div><div class="label">tasks live</div></div><div class="status-count-tile status-built"><div class="count">1</div><div class="label">task built</div></div><div class="status-count-tile status-to-do"><div class="count">2</div><div class="label">tasks to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">2 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
 <tr data-task="DP9"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DP9</span>Gate and CI reuse pass records for the same tree</td><td>branch_gate and CI skip setup and secret scan when pass_records.py holds a pass for the same tree.</td><td>27 Nov<span class="expected-basis">after Group 2; about 15 min agent</span></td></tr>
-<tr data-task="DP10"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DP10</span>One-command onboarding: turn on delivery in warn mode</td><td>A step that writes .delivery with safe defaults for a project with none.</td><td>27 Nov<span class="expected-basis">after Group 2; about 15 min agent</span></td></tr>
 <tr data-task="DP14"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">DP14</span>One reusable standards-check workflow for the three repos that copy it</td><td>CRSP deferred it past its current wave: needs a version pin and work in three repos. Plan here first, then ask CRSP.</td><td>28 Nov<span class="expected-basis">after CRSP wave merges; about 1 day</span></td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">14 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">1 built, 14 live</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DP10"><td><span class="status-chip status-built">Built</span></td><td><span class="task-id">DP10</span>One-command onboarding: turn on delivery in warn mode<span class="release-line"><span class="release-name">RELEASE-179</span></span></td><td>A step that writes .delivery with safe defaults for a project with none.</td><td>25 Nov</td></tr>
 <tr data-task="DP3"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DP3</span>Drop schema: ledger jobs/held_runs and 4 empty config keys<span class="release-line"><span class="release-name">RELEASE-178</span></span></td><td>Remove ledger jobs and held_runs and config keys long_pole_globs, measure_globs, update_state_files, heavy_commands. Keep checks_off. Waits on DS246 (same files).</td><td>25 Nov</td></tr>
 <tr data-task="DP17"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DP17</span>Warn report: count once per session, not per turn end<span class="release-line"><span class="release-name">RELEASE-177</span></span></td><td>Owner D7. Follow-up to DP8; dedupe by rule and session in delivery_report.py.</td><td>25 Nov</td></tr>
 <tr data-task="DP16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DP16</span>Merge mode setting: auto (merge on green) default, manual option<span class="release-line"><span class="release-name">RELEASE-176</span></span></td><td>Delivery config key plus setup question; code enforces it: watcher/join merge a green PR in auto mode, never in manual. Owner 25 Nov.</td><td>25 Nov</td></tr>
