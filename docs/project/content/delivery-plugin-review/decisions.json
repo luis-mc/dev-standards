@@ -158,6 +158,69 @@
       "chosen": "Once per session",
       "decided": "2026-11-25",
       "owner_words": "Once per session (Recommended)"
+    },
+    {
+      "id": "D8",
+      "question": "How should DP3 drop the unused ledger lists and config keys?",
+      "asked": "2026-11-25",
+      "status": "decided",
+      "task": "DP3",
+      "options": [
+        {
+          "label": "Ignore on read, drop on next write",
+          "summary": "Old ledgers load; keys vanish on next write.",
+          "recommended": true
+        },
+        {
+          "label": "Hard remove, reject old keys",
+          "summary": "Old ledgers fail validation."
+        }
+      ],
+      "chosen": "Ignore on read, drop on next write",
+      "decided": "2026-11-25",
+      "owner_words": "Ignore on read, drop on next write (Recommended)"
+    },
+    {
+      "id": "D9",
+      "question": "What counts as the same tree for DP9 pass-record reuse?",
+      "asked": "2026-11-25",
+      "status": "decided",
+      "task": "DP9",
+      "options": [
+        {
+          "label": "Same git tree hash",
+          "summary": "Exact content match.",
+          "recommended": true
+        },
+        {
+          "label": "Same tree plus same check config",
+          "summary": "Also hashes the check definition."
+        }
+      ],
+      "chosen": "Same git tree hash",
+      "decided": "2026-11-25",
+      "owner_words": "Same git tree hash (Recommended)"
+    },
+    {
+      "id": "D10",
+      "question": "Should DP10 onboarding also ask the merge mode?",
+      "asked": "2026-11-25",
+      "status": "decided",
+      "task": "DP10",
+      "options": [
+        {
+          "label": "Yes, ask merge mode in setup",
+          "summary": "Writes merge_mode; default auto.",
+          "recommended": true
+        },
+        {
+          "label": "No, onboarding stays warn-only",
+          "summary": "Merge mode set later."
+        }
+      ],
+      "chosen": "Yes, ask merge mode in setup",
+      "decided": "2026-11-25",
+      "owner_words": "Yes, ask merge mode in setup (Recommended)"
     }
   ]
 }

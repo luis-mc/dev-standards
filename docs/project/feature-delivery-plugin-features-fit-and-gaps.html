@@ -923,7 +923,7 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What the plugin is</a><a href="#s2"><b>2</b>Features, enforcement and benefit</a><a href="#s3"><b>3</b>How it fits with the other plugins</a><a href="#s4"><b>4</b>What real usage shows</a><a href="#s5"><b>5</b>Gaps to fill</a><a href="#s6"><b>6</b>What to remove or simplify</a><a href="#s7"><b>7</b>CI speedups without losing quality</a><a href="#s8"><b>8</b>Proposed next tasks</a><a href="#s9"><b>9</b>Decisions</a><a href="#s10"><b>10</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.17.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery plugin: features, fit and gaps</h1><p>What the delivery plugin offers, what it enforces, how projects use it, and what to add, cut or speed up.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-25T16:42+00:00">25 Nov 16:42</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-25T16:45+00:00">25 Nov 16:45</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">25 Nov 16:37</a> (Lisbon)</p>
 <p class="lede">Usage comes from one read-only pass over six other projects on this PC, left unnamed. (seen) = evidence in files; (guess) = estimate.</p>
 <div class="at-a-glance">
@@ -1169,6 +1169,51 @@ figure.diagram figcaption b{color:var(--ink)}
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D10">
+<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">Should DP10 onboarding also ask the merge mode?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP10</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, ask merge mode in setup</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">Writes merge_mode; default auto.</p>
+<blockquote class="decision-words">&ldquo;Yes, ask merge mode in setup (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No, onboarding stays warn-only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Merge mode set later.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D9">
+<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">What counts as the same tree for DP9 pass-record reuse?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP9</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Same git tree hash</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">Exact content match.</p>
+<blockquote class="decision-words">&ldquo;Same git tree hash (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Same tree plus same check config</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Also hashes the check definition.</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">How should DP3 drop the unused ledger lists and config keys?</span></h3>
+<p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP3</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Ignore on read, drop on next write</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 25 Nov</span></div>
+<p class="decision-summary">Old ledgers load; keys vanish on next write.</p>
+<blockquote class="decision-words">&ldquo;Ignore on read, drop on next write (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Hard remove, reject old keys</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Old ledgers fail validation.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D7">
 <h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Count a warn-mode finding once per turn end, or once per session?</span></h3>
 <p class="decision-meta">Asked 25 Nov · Decided 25 Nov · Task DP8</p>
