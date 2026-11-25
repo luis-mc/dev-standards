@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T15:43+00:00",
+  "updated": "2026-11-25T16:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11807,33 +11807,23 @@
       "id": "DS247",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Needs you",
       "item": "RELEASE: remove load/slot layer, boom test fix, docs-check scope",
       "detail": "PR 270 joins DS245, DS246, DP4, DP5. CI then merge then release fold.",
-      "expected": "25 Nov ~16:00",
-      "changed": "2026-11-25T15:03+00:00",
-      "expected_basis": "CI 3-5 min plus fold",
+      "expected": "25 Nov ~16:45",
+      "changed": "2026-11-25T16:05+00:00",
+      "expected_basis": "owner merges PR 270 (CI green), then live about 15 min later",
       "release": 174,
       "phases": [
         {
-          "name": "agents",
-          "start": "2026-11-25T14:37+00:00",
-          "end": "2026-11-25T15:05+00:00"
-        },
-        {
-          "name": "join",
-          "start": "2026-11-25T15:05+00:00",
-          "end": "2026-11-25T15:15+00:00"
-        },
-        {
           "name": "ci",
-          "start": "2026-11-25T15:15+00:00",
-          "end": "2026-11-25T15:45+00:00"
+          "start": "2026-11-25T16:00+00:00",
+          "end": "2026-11-25T16:05+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-25T15:45+00:00",
-          "end": "2026-11-25T16:00+00:00"
+          "start": "2026-11-25T16:05+00:00",
+          "end": "2026-11-25T16:45+00:00"
         }
       ],
       "started": "2026-11-25T15:03+00:00"
