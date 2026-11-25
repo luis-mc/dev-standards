@@ -86,6 +86,24 @@ class CommandTests(unittest.TestCase):
         self.assertIn("No .delivery/", out)
 
 
+class OncePerSessionTests(unittest.TestCase):
+    """DP17 (D7): a rule counts once per session, however many turns end with it."""
+
+    def test_same_rule_same_session_counts_once(self):
+        log = ["2026-11-25T10:00:00Z	stop:warn	DL-31	DL-31 x	s1",
+               "2026-11-25T10:05:00Z	stop:warn	DL-31	DL-31 x	s1",
+               "2026-11-25T10:06:00Z	stop:warn	DL-31	DL-31 x	s2",
+               "2026-11-25T10:07:00Z	stop:warn	DL-93	DL-93 y	s1"]
+        rep = DR.build(str(project(log=log)))
+        self.assertEqual(rep["rules"], {"DL-31": 2, "DL-93": 1})
+
+    def test_hook_log_writes_the_session(self):
+        d = project(log=None)
+        for _ in range(3):
+            H.log_block(str(d), {}, "stop:warn", "DL-31 x", force=True, sid="s9")
+        self.assertEqual(DR.build(str(d))["rules"], {"DL-31": 1})
+
+
 class HookLogTests(unittest.TestCase):
     def test_force_logs_even_when_log_every_block_is_off(self):
         d = project(log=None)
