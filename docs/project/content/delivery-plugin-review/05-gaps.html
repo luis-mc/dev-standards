@@ -1,0 +1,11 @@
+<!-- title: Gaps to fill -->
+<p>Ranked by how many stops or hours the evidence shows.</p>
+<ol>
+<li><strong>Watcher does post-merge smoke and cleanup itself.</strong> About 280 stops in project A come from smoke and cleanup left to the agent. The watcher already merges. It should run <code>cleanup.py</code> and the smoke when the project has a smoke command, and stop the agent only on failure. Benefit: fewer stops, no uncleaned merges. Quality kept: same checks, same ledger writers.</li>
+<li><strong>Stale watcher detection and restart.</strong> 4 of 6 heartbeats are days old. SessionStart should restart a dead watcher, not only say so.</li>
+<li><strong>Default ETA by task type.</strong> 102 no-ETA stops in A, 64 and 76 events in C and E. A table of defaults (docs change, small fix, feature) removes the stop. The agent states a figure only when it differs.</li>
+<li><strong>One-command onboarding.</strong> Two projects have nothing. <code>delivery-ci-setup</code> exists; a "turn on delivery here" step with safe defaults (warn mode) would close this.</li>
+<li><strong>"Waiting past Expected" rows.</strong> Warn once and move the row to "Needs you", instead of stopping each turn.</li>
+<li><strong>Runner-offline back-off.</strong> Repair loops of 8 to 18 cycles show no back-off. After DS246 this belongs to CRSP. Delivery should only report "CI cannot start" and wait.</li>
+<li><strong>Warn-to-block path.</strong> Three of six projects sit in warn mode with no path to block. A report "would have blocked N times" lets the owner choose.</li>
+</ol>

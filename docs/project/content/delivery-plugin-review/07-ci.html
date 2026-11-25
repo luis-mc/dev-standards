@@ -1,0 +1,16 @@
+<!-- title: CI speedups without losing quality -->
+<p>Minutes are estimates (guess) from the workflow and run data. Each row says why quality is kept.</p>
+<table>
+<thead><tr><th>#</th><th>Change</th><th>Saves</th><th>Why quality is kept</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>Project A: the artifact-prune workflow runs after every workflow run (16 of 20 runs, 4 failed). Run it on a schedule only.</td><td>about 100 min of runner time a day</td><td>Pruning does not judge code.</td></tr>
+<tr><td>2</td><td>Project A: paths-ignore for docs and record files in <code>ci.yml</code>. Skip the 25 min Windows Rust job unless Rust or installer paths change.</td><td>up to 25 min on docs-only PRs</td><td>A release PR still runs the full suite (DL-80).</td></tr>
+<tr><td>3</td><td>Project D: add a paths filter. Skip e2e on PRs with no UI path.</td><td>10 to 15 min on docs and infra PRs</td><td>DL-86 keeps the e2e rule for UI branches. The release PR stays full.</td></tr>
+<tr><td>4</td><td>Project E: the standards check fails in 0.3 min in 9 of 12 runs; fix the cause. Add <code>concurrency</code> to cancel superseded runs.</td><td>about 15 min per superseded run</td><td>Only a run that a newer push replaced is cancelled. Release runs finish (DL-97).</td></tr>
+<tr><td>5</td><td>Gate versus CI: the branch gate re-runs setup and secret scan that CI also runs. Skip a check when <code>pass_records.py</code> already holds a pass for the same tree.</td><td>1 to 2 min per PR</td><td>Same tree, same result. The record names the tree.</td></tr>
+<tr><td>6</td><td>Project C: nightly full failed 8 of 10. Fix it, or run weekly until fixed.</td><td>about 2 min a night, fewer false alarms</td><td>A nightly that always fails tells nothing.</td></tr>
+<tr><td>7</td><td>This repo: use paths to skip spec-lint's 21 jobs on non-doc changes.</td><td>about 3 min</td><td>Doc and spec changes still run all of them.</td></tr>
+<tr><td>8</td><td>One reusable workflow for the standards check that three projects copy.</td><td>maintenance, not minutes</td><td>One definition, no drift.</td></tr>
+</tbody>
+</table>
+<p>Not recommended: dropping shards or the release full run. The data shows no job that is both slow and useless.</p>

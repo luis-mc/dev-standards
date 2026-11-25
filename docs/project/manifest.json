@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "d56b7a7619a2ca6f60fb375901fd32e88be00008d6b4f96c21490e5f15d20634",
-    "published_at": "2026-11-25T11:05+00:00",
-    "published_fingerprint": "d2a04fae8f70ea9faf84c324d0fea75e7e79ba19afd292390b3f3077a509a030",
+    "published_sha256": "6b5df83356da51fdcd7e19270d1548524433eff18b26fa9b1c1c1aa41f9d24bf",
+    "published_at": "2026-11-25T13:24+00:00",
+    "published_fingerprint": "c7ff398c149c42645015f4a17ec4fe2b397ae592a3c1d84c967bdbccafaeb205",
     "local_path": "C:\\GitHub\\dev-standards\\.claude\\artifacts-publish\\full-progress\\dev-standards\\full-progress-dev-standards.html",
     "local_opened": true
   },
@@ -106,12 +106,22 @@
         "luismc-docs"
       ],
       "updated": "2026-11-25T11:04+00:00"
+    },
+    {
+      "key": "delivery-plugin-review",
+      "title": "Feature: Delivery plugin: features, fit and gaps",
+      "file": "feature-delivery-plugin-features-fit-and-gaps.html",
+      "prefix": "DP",
+      "apps": [
+        "luismc-delivery"
+      ],
+      "updated": "2026-11-25T13:27+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-25T13:19+00:00",
+  "updated": "2026-11-25T13:27+00:00",
   "retired": [],
   "deleted": [
     {

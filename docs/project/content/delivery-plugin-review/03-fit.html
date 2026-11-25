@@ -1,0 +1,13 @@
+<!-- title: How it fits with the other plugins -->
+<table>
+<thead><tr><th>Plugin or piece</th><th>Link to delivery</th></tr></thead>
+<tbody>
+<tr><td><code>luismc-docs</code></td><td>Owns the project record and Full Progress. Delivery rules DL-60 to 66 say when to publish it. The release PR folds spec change notes (DL-10, DL-24). <code>docs_check.py</code> runs in CI.</td></tr>
+<tr><td><code>luismc-project-setup</code></td><td><code>claude-setup</code> offers to turn delivery on. <code>tech-stack-setup</code> calls the delivery installer to write CI and shared scripts; it holds no copy of its own.</td></tr>
+<tr><td>Agent and model profiles</td><td>Model and effort rules; delivery enforces them on agent launch (DL-37).</td></tr>
+<tr><td><code>luismc-audits</code></td><td>Audits run as agents under the same ETA, brief and ownership rules.</td></tr>
+<tr><td><code>luismc-transcript-folds</code></td><td>Independent. Shares only the hook mechanism.</td></tr>
+<tr><td>CRSP (own project, later)</td><td>Will own machine limits, slots and runners. Delivery keeps one question: is CI done, on which head.</td></tr>
+</tbody>
+</table>
+<p>A project turns delivery on with a <code>.delivery/</code> folder and a <code>config.json</code>. The docs and setup plugins work without it. Delivery needs the record from the docs plugin.</p>

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T13:19+00:00",
+  "updated": "2026-11-25T13:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7660,6 +7660,30 @@
       "detail": "pool-add-agent says 'already added' when /agents/<slug> is missing (lost agents volume), so runners stay unregistered; pool-refresh --yes builds but does not create a missing container ('could not compare the image ids'). Found 24 Nov recreating pool main.",
       "expected": "",
       "changed": "2026-11-24T14:58+00:00"
+    },
+    {
+      "id": "DP1",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "Live",
+      "item": "Research usage of the delivery plugin in projects",
+      "detail": "Agent reads ledgers, workflows, CI runs of the projects on this PC; evidence for gaps, removals, CI speedups.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T13:27+00:00",
+      "no_release": "study, ships nothing",
+      "started": "2026-11-25T13:22+00:00"
+    },
+    {
+      "id": "DP2",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "Live",
+      "item": "Write the delivery plugin feature page",
+      "detail": "Features, enforcement, benefits, fit with the other plugins, gaps and CI speedups.",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T13:27+00:00",
+      "no_release": "study, ships nothing",
+      "started": "2026-11-25T13:22+00:00"
     },
     {
       "id": "DS1",
