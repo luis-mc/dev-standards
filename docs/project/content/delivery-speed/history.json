@@ -1,5 +1,25 @@
 [
   {
+    "date": "25 Nov 14:28",
+    "change": "dropped: folded into RELEASE-173: Superseded: owner removed the whole pool now; DS245 did it"
+  },
+  {
+    "date": "25 Nov 14:28",
+    "change": "dropped: folded into RELEASE-173: Superseded: owner removed the whole pool now; DS245 did it"
+  },
+  {
+    "date": "25 Nov 14:28",
+    "change": "dropped: folded into RELEASE-173: Superseded: owner removed the whole pool now; DS245 did it"
+  },
+  {
+    "date": "25 Nov 14:28",
+    "change": "dropped: Moot: the pool is removed from this PC"
+  },
+  {
+    "date": "25 Nov 14:28",
+    "change": "dropped: Superseded: the pool is removed here; CRSP will define its own runner contract"
+  },
+  {
     "date": "24 Nov 10:30",
     "change": "PR #268 merged 24 Nov 10:30 UTC; carried agent PR #267; smoke passed"
   },
