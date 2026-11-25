@@ -462,14 +462,14 @@ def block_ceiling_comes_from_config():
 
 
 @test
-def warn_mode_never_blocks_and_logs_nothing():
+def warn_mode_never_blocks_and_logs_only_warn_lines():
     cfg = {'enforcement': {'mode': 'warn', 'log_every_block': True}}
     p = Project(ledger(trains=[train(state='green', green_at=iso(30))]), config=cfg)
     r = p.stop('')
     assert r[1] and 'decision' not in r[1] and 'warn mode' in r[1]['systemMessage'] and 'DL-03' in r[1]['systemMessage'], r
     r = p.pre('Bash', {'command': 'gh pr merge 5 --auto'})
     assert r[1] and 'hookSpecificOutput' not in r[1] and 'DL-05' in r[1]['systemMessage'], r
-    assert read_log(p) == []
+    assert read_log(p) and all(':warn' in l for l in read_log(p)), read_log(p)   # DP8: warn lines only
     p.close()
 
 

@@ -426,6 +426,12 @@ jobs:
       - name: Prove the delivery hooks still block and allow what DELIVERYSPEC says
         run: python3 -I tools/test_delivery_hooks.py
 
+      - name: Prove the watcher post-merge steps still hold (DP6)
+        run: python3 -I tools/test_delivery_watch_post_merge.py
+
+      - name: Prove the warn-mode report still holds (DP8)
+        run: python3 -I tools/test_delivery_report.py
+
   delivery-smoke:
     name: delivery - packaged-program smoke test
     needs: areas
