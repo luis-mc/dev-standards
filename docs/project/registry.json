@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T23:33+00:00",
+  "updated": "2026-11-25T23:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12008,6 +12008,19 @@
         }
       ],
       "started": "2026-11-25T23:15+00:00"
+    },
+    {
+      "id": "DS256",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Full Progress: release-tree design for PR carriers and releases",
+      "detail": "Peer ask from the shared-pool session: draw releases under their carrier PR as a tree, rows sorted by Live ETA, a dependent release never before what it waits on; new release fields start, waits-on-release, PR link.",
+      "expected": "26 Nov ~02:30",
+      "changed": "2026-11-25T23:40+00:00",
+      "expected_basis": "renderer change, tests and one CI run, about 2h",
+      "release": 183,
+      "started": "2026-11-25T23:40+00:00"
     },
     {
       "id": "DU1",
