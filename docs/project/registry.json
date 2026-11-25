@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T11:50+00:00",
+  "updated": "2026-11-25T13:19+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11619,14 +11619,24 @@
       "id": "DS245",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Remove the runner pool code from dev-standards; keep a pool-only backup",
-      "detail": "Owner order 25 Nov: delete pool scripts, templates, tests, docs and references; backup of pool code only at C:\\dev-standards-pool-back with notes for crsp.",
-      "expected": "26 Nov ~12:00",
-      "changed": "2026-11-25T11:50+00:00",
-      "expected_basis": "owner-run removal, tests, release fold",
+      "detail": "Pool code removed, pushed 9d1c381f; backup in c:\\dev-standards-pool-back; release fold next",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T13:19+00:00",
       "release": 173,
       "started": "2026-11-25T11:50+00:00"
+    },
+    {
+      "id": "DS246",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "DS246 Remove load/slot layer from delivery (CRSP owns limits)",
+      "detail": "Stage 2: gate, slots, machine, load, runner_plan, doctor checks; keep tasks, RELEASE-n, CI flow",
+      "expected": "",
+      "changed": "2026-11-25T13:19+00:00",
+      "rides": "DS245"
     },
     {
       "id": "DU1",
