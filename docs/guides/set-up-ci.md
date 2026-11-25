@@ -46,10 +46,9 @@ Do the steps that match your option. The doctor re-checks them.
 5. **Token (Option 3 and a cloud fallback).** Create a fine-grained token with only `commit statuses: write`. Put it in the cloud environment under the variable name you gave. Do not put it in a file.
 6. **Ruleset: "Any source".** Required checks are commit statuses. In the repository ruleset, set each required check to accept **Any source**. The doctor cannot see or change this. If you skip it, the checks stay missing.
 7. **Cloud access (Option 3 and a cloud fallback).** Give the cloud sessions access to the repository.
-8. **Runner hooks (Option 1 and 4).** In each runner folder's `.env` set `ACTIONS_RUNNER_HOOK_JOB_STARTED` to `scripts/runner_load_gate.ps1` and `ACTIONS_RUNNER_HOOK_JOB_COMPLETED` to `scripts/runner_job_done.ps1` on Windows (`.sh` on Linux and macOS). The runner accepts only `.sh`, `.ps1` and `.js`: a `.cmd` hook fails every job with "not a valid path to a script". The doctor fails a `.cmd` hook.
-9. **Shard names.** The hook sees the job key, not the job's `env:`. Name each job's key after its shard in `ci-shards.json` (the templates do). Set `DELIVERY_SHARD` in the runner's `.env` only to override. Matrix legs share the key of their job.
-10. **Git credentials for the runner account (Option 4).** The wait marker is pushed from the kept checkout with the runner account's git credentials. A service account such as `NETWORK SERVICE` has none. Store a fine-grained token for that account with contents write on the repository, or use the runner pool. The doctor tries a dry-run push from each runner's checkout and warns when it fails.
-11. Run `python3 claude/plugins/delivery/scripts/delivery_doctor.py` and fix what it names.
+8. **Shard names.** Name each job's key after its shard in `ci-shards.json` (the templates do). Matrix legs share the key of their job.
+9. **Git credentials for the runner account (Option 4).** The wait marker is pushed from the kept checkout with the runner account's git credentials. A service account such as `NETWORK SERVICE` has none. Store a fine-grained token for that account with contents write on the repository, or use the runner pool. The doctor tries a dry-run push from each runner's checkout and warns when it fails.
+10. Run `python3 claude/plugins/delivery/scripts/delivery_doctor.py` and fix what it names.
 
 ## Good to know
 

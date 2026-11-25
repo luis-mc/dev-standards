@@ -155,7 +155,7 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 |---|---|
 | R5.1, R5.2, R5.3, R5.5 | `tools/test_delivery_gate.py` |
 | R5.4, R5.8 | `tools/test_smoke_packaged.py`, `tools/template_build_check.py` |
-| R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py`, `tools/test_delivery_runner.py` |
+| R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
 | R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |

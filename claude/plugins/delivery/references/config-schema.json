@@ -75,7 +75,7 @@
     "train_branch_re": {
       "type": "string",
       "format": "regex",
-      "description": "Head branches that are trains (runner_plan.train_branch_regex falls back to it); default release/<n> or a name ending -integration."
+      "description": "Head branches that are trains; default release/<n> or a name ending -integration."
     },
     "brief_markers": {
       "type": "array",
@@ -113,14 +113,6 @@
         },
         "minItems": 2
       }
-    },
-    "heavy_commands": {
-      "type": "array",
-      "items": {
-        "type": "string",
-        "format": "regex"
-      },
-      "description": "DL-77: extra case-insensitive regexes; a Bash/PowerShell command matching one is heavy and is held while the machine is over its limits."
     },
     "outbound_deny": {
       "type": "array",
@@ -306,11 +298,6 @@
           "default": true,
           "description": "Documentation of D5; `gh pr merge --auto` is never run whatever this says (false is an error)."
         },
-        "manage_runners": {
-          "type": "boolean",
-          "default": true,
-          "description": "Launch `runner_plan.py runners` on the loop (D6a)."
-        },
         "ci_workflows": {
           "type": "array",
           "items": {
@@ -374,26 +361,8 @@
     },
     "runner_plan": {
       "type": "object",
+      "description": "Watcher flags only: which CI runs the watcher cancels and re-runs.",
       "properties": {
-        "retry_seconds": {
-          "type": "number",
-          "minimum": 1,
-          "default": 300
-        },
-        "runner_max_retries": {
-          "type": "integer",
-          "minimum": 0,
-          "default": 0
-        },
-        "report_command": {
-          "type": "string",
-          "description": "Gets the report text in $DELIVERY_REPORT."
-        },
-        "rerun_cancelled": {
-          "type": "boolean",
-          "default": false,
-          "description": "The runner guard also re-runs CI runs that ended cancelled (usually cancelled on purpose); failed, timed-out and startup-failed runs on the branch's current head are always re-run."
-        },
         "cancel_replaced_runs": {
           "type": "boolean",
           "default": true,
@@ -403,57 +372,6 @@
           "type": "boolean",
           "default": true,
           "description": "Watcher cancels and later re-runs non-train CI runs while a train's CI runs."
-        },
-        "heavy_jobs_yield": {
-          "type": "boolean",
-          "default": true,
-          "description": "runner_plan.py run waits for train CI before starting a heavy job."
-        },
-        "heavy_local_jobs_yield": {
-          "type": "boolean",
-          "default": true,
-          "description": "Alias of heavy_jobs_yield (alternative name)."
-        },
-        "min_free_mb": {
-          "type": "integer",
-          "minimum": 0
-        },
-        "pause_service": {
-          "type": "string"
-        },
-        "train_branch_regex": {
-          "type": "string",
-          "format": "regex"
-        },
-        "poll_seconds": {
-          "type": "number",
-          "minimum": 0
-        },
-        "max_wait_minutes": {
-          "type": "number",
-          "minimum": 0
-        },
-        "repo": {
-          "type": "string"
-        },
-        "affinity": {
-          "type": "array",
-          "items": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "priority": {
-          "type": "string",
-          "enum": [
-            "low",
-            "below-normal",
-            "normal"
-          ]
-        },
-        "script": {
-          "type": "string",
-          "description": "Path of runner_plan.py for the watcher (default scripts/delivery/runner_plan.py under the repository root)."
         }
       }
     },
@@ -528,7 +446,7 @@
             },
             "after_min": {"type": "number", "minimum": 0, "description": "X: minutes a shard waits for a runner before the fallback may start. No default."},
             "after_min_if_offline": {"type": "number", "minimum": 0, "description": "X when no online runner carries the labels. Absent means the same as after_min."},
-            "cloud_ci_sessions": {"type": "integer", "minimum": 1, "description": "DL-91: Claude cloud sessions that may run CI at once for this project. It can only lower the machine limit `cloud_ci_sessions` of machine.json (default 10), never raise it."},
+            "cloud_ci_sessions": {"type": "integer", "minimum": 1, "description": "Claude cloud sessions that may run CI at once for this project. It can only lower the machine limit `cloud_ci_sessions` of machine.json (default 10), never raise it."},
             "only_for": {"type": "string", "enum": ["all"], "description": "Which runs may use the fallback. Only `all` (every run)."},
             "max_shards_per_day": {"description": "Optional cap on fallback shards per UTC day: a whole number, or null for no cap."},
             "max_minutes_per_month": {"description": "Optional cap on hosted fallback minutes per UTC month: a number, or null for no cap."},
@@ -646,25 +564,6 @@
         "test_globs": {"type": "array", "items": {"type": "string", "pattern": "[^ ]"}, "description": "Globs of the other test files, for example [\"src/test/**/*.java\"]."}
       },
       "additionalProperties": false
-    },
-    "local_heavy": {
-      "type": "integer",
-      "minimum": 1,
-      "description": "DL-91: how many heavy local calls (tests, builds, installs, local agents) may run at once for this project. It can only lower the machine limit `local_heavy` of machine.json (default 2), never raise it."
-    },
-    "load_limits": {
-      "type": "object",
-      "description": "DL-77: machine load limits for this project. It can only lower the machine limits (machine.json in the machine folder, DL-90; the old ~/.claude/luismc-delivery-machine.json when machine.json has none), never raise them. Defaults memory 85, CPU 60. Values are percent, 1..100.",
-      "properties": {
-        "memory_pct": {
-          "type": "number",
-          "minimum": 1
-        },
-        "cpu_pct": {
-          "type": "number",
-          "minimum": 1
-        }
-      }
     }
   }
 }

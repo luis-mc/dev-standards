@@ -16,6 +16,9 @@ Checks (each finding has a code):
   G2  generated reference (docs.json "generated_reference") equals the committed copy
   M1  code mapped to a doc changed on this branch but no doc, change note or `Docs: none` did
   W1  the branch adds files under docs/work/ (branch-only, D9)
+  R1  a project that uses delivery (`.delivery/`) cites a removed delivery rule ID (DL-77, DL-78, DL-79,
+      DL-90, DL-91): an error that names the ID and says to delete the citation; the fix is in
+      docs/guides/removed-delivery-ids.md
   U1  rule-like text in a feature's screens section without a design-system citation (D10);
       a WARNING for now, it becomes an error later (owner decision); put <!-- ux-ok --> on the line to allow it
   T1  last_verified missing or older than stale_days (warning); T2 code newer than doc (warning)
@@ -290,6 +293,51 @@ def check_map(root: Path, cfg: dict, base: str | None) -> list[Finding]:
     return out
 
 
+# R1: delivery rule IDs that were removed. The text says what to do about each one.
+REMOVED_DELIVERY_IDS = {
+    "DL-77": "removed, delete the citation",
+    "DL-78": "removed, delete the citation",
+    "DL-79": "removed, delete the citation",
+    "DL-90": "removed, delete the citation",
+    "DL-91": "removed, delete the citation",
+}
+REMOVED_ID_RE = re.compile(r"\b(" + "|".join(REMOVED_DELIVERY_IDS) + r")(?!\d)")
+R1_SUFFIXES = {".md", ".py", ".ts", ".tsx", ".js", ".mjs", ".json", ".yml", ".yaml", ".sh", ".ps1", ".toml"}
+R1_SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "dist", "build"}
+# Records of the past or generated files: they may name a removed ID.
+R1_SKIP_PREFIXES = ("docs/archive/", "docs/work/", "docs/project/", "docs/reference/", "docs/architecture/changes/",
+                    "docs/features/index.md", "docs/architecture/decisions.md", "docs/index.html", "docs/llms.txt",
+                    "docs/docs-map.json", "docs/architecture/DELIVERYSPEC.md", "docs/guides/removed-delivery-ids.md",
+                    "claude/plugins/docs/scripts/docs_check.py", "claude/plugins/docs/tests/test_ds246_removed_ids.py")
+
+
+def check_removed_ids(root: Path) -> list[Finding]:
+    """R1: a delivery project must not cite a removed delivery rule ID. Version table rows, the change notes
+    and the spec that lists the removed IDs are history and are skipped."""
+    if not (root / ".delivery").is_dir():
+        return []
+    out = []
+    for dp, dns, fns in os.walk(root):
+        dns[:] = [d for d in dns if d not in R1_SKIP_DIRS]
+        for fn in fns:
+            if Path(fn).suffix not in R1_SUFFIXES:
+                continue
+            path = Path(dp) / fn
+            if D.posix(path.relative_to(root)).startswith(R1_SKIP_PREFIXES) or Path(dp).name == "changes":
+                continue
+            try:
+                lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+            except OSError:
+                continue
+            rel = D.posix(path.relative_to(root))
+            for n, line in enumerate(lines, 1):
+                if re.match(r"\|\s*\d+\.\d+\.\d+\s*\|", line):
+                    continue
+                for m in sorted(set(REMOVED_ID_RE.findall(line))):
+                    out.append(f(ERR, "R1", f"{rel}:{n}", f"cites {m}: {REMOVED_DELIVERY_IDS[m]}. See docs/guides/removed-delivery-ids.md"))
+    return out
+
+
 def check_work_guard(root: Path, base: str | None) -> list[Finding]:
     if not base:
         return []
@@ -357,6 +405,7 @@ def run_checks(root: Path, base: str | None, reference: bool = True) -> list[Fin
         res.append(f(WARN, "M1", "docs/docs.json", f"no base ref found (tried origin/{cfg['default_branch']} and {cfg['default_branch']}): the map check (M1) and the work guard (W1) were skipped. Set default_branch in docs/docs.json or pass --base"))
     res += check_map(root, cfg, base)
     res += check_work_guard(root, base)
+    res += check_removed_ids(root)
     res += check_freshness(root, cfg)
     res += check_design_system(root, base)
     return res

@@ -1,67 +1,19 @@
 # luismc-delivery
 
-Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/architecture/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing, **except the machine load guard (below), which is on in every project where the plugin is enabled**. It protects the machine, not the project.
+Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/architecture/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing.
 
 | Script | What it does |
 |---|---|
 | `hook_*.py` | Stop, PreToolUse, PostToolUse, SessionStart hooks (registered by `hooks/hooks.json`) |
 | `delivery_ledger.py` | the ledger `.delivery/ledger.json` |
-| `delivery_watch.py` | background watcher: pushes the next train, opens its PR (or adopts the one open PR of a train pushed by hand), merges at green, tidies CI runs, keeps the runner guard running |
+| `delivery_watch.py` | background watcher: pushes the next train, opens its PR (or adopts the one open PR of a train pushed by hand), merges at green, tidies CI runs |
 | `rules/clarifying-questions.md` | the canonical question rules (Q-1..Q-5); SessionStart injects them every session |
 | `delivery_config.py validate` | checks `.delivery/config.json` against `references/config-schema.json` |
-| `delivery_doctor.py` | self-check: config valid, gh signed in, tz loads, hooks registered, ledger writable, runner load-gate hook set (DL-79) |
-| `load.py`, `load_guard.py` | machine memory/CPU measurement and the load guard (DL-77, DL-78) |
-| `runner_load_gate.py` (+ `.ps1`, `.sh`) | self-hosted runner job-start hook (DL-79, DL-90) |
-| `runner_job_done.py` (+ `.ps1`, `.sh`) | self-hosted runner job-completed hook: frees the slot, empties the work folder (DL-90) |
-| `machine_slots.py` | machine config, CI slots, queue tickets, slot log (DL-90) |
+| `delivery_doctor.py` | self-check: config valid, gh signed in, tz loads, hooks registered, ledger writable |
 
-## Machine load guard (DL-77, DL-78, DL-79)
+## Machine limits
 
-Owner rule: **no memory above 85%, no CPU above 60%**. Run as many jobs as fit inside that. The guard only holds NEW work. It never kills, suspends or lowers the priority of anything. It is on in every project where the plugin is enabled, **even without `.delivery/`**.
-
-- **Measure** (`load.py`, standard library only): Windows `GlobalMemoryStatusEx` + `GetSystemTimes`; Linux `/proc/meminfo` + `/proc/stat`; macOS `vm_stat` + `top -l 2` (load average fallback). CPU is measured over ~1 s. The last sample is cached 10 s in the temp folder. CPU is the mean of the last up to 3 samples within 30 s, so one spike does not decide.
-- **Limits**, per key: project `.delivery/config.json` `load_limits` over the machine file `~/.claude/luismc-delivery-machine.json` over 85/60.
-
-  ```json
-  {"load_limits": {"memory_pct": 85, "cpu_pct": 60}}
-  ```
-- **PreToolUse** (`Bash|PowerShell|Agent|Workflow`): over a limit, a HEAVY call is refused with exit 2. The message gives the numbers, the limits, the top processes (names), and what to do. Heavy: test runners (vitest, jest, pytest, playwright, mocha, `python -m pytest|unittest`); `pnpm|npm|yarn|bun` `test`, `e2e`, `check*`, `build*` (also via `run`, `exec`, `dlx`); turbo/nx; `tsc -b`; next/vite/webpack builds; cargo, dotnet, go, mvn, gradle, msbuild; docker build and compose up/build; ffmpeg; installs (`install|add|ci`) **unless `--offline`** (an install unpacks thousands of files: the crash trigger); background jobs that are not plainly light; a local Agent launch; a Workflow; plus your `heavy_commands` regexes. Light and never refused: git, gh, ls, cat, grep, rtk-wrapped reads, python one-liners, lint. RemoteTrigger and `Agent` with `isolation` remote/cloud are never refused. If the machine cannot be measured the call is allowed with a warning on stderr.
-- **Stop / SessionStart**: when over a limit, the hook gives one non-blocking notice per turn with the numbers (SessionStart also puts it in the model's context).
-- **Switches**: `checks_off: ["DL-77"]` / `["DL-78"]` per project; `enforcement.mode: "warn"` shows the refusal as a message; `CLAUDE_DELIVERY_HOOKS=off` disables all hooks.
-- **`python3 scripts/load.py`** prints the current numbers (exit 0 under, 1 over, 2 unmeasurable).
-
-### CI runner gate (DL-79)
-
-`scripts/runner_load_gate.py` waits until the machine is under the limits. It polls every 15 s, up to 30 min. It logs what it waited for (stdout and `~/.claude/luismc-delivery-runner-gate.log`), then lets the job start. At the maximum it exits 1, so the job fails with a clear log line and can be re-run (`--on-timeout run` lets it go instead). Settings: flags, env `DELIVERY_GATE_MAX_WAIT_MIN`, `DELIVERY_GATE_POLL_SEC`, `DELIVERY_GATE_ON_TIMEOUT`, or `runner_gate` in the machine file. The plugin changes no runner configuration. You install the hook:
-
-- **Linux / macOS runner (systemd service)**: in the runner folder add to `.env`
-  `ACTIONS_RUNNER_HOOK_JOB_STARTED=/path/to/luismc-delivery/scripts/runner_load_gate.sh`, then `sudo ./svc.sh stop && sudo ./svc.sh start`. The runner in WSL/Hyper-V needs the plugin folder inside that VM.
-- **Windows runner (service)**: add the same line to the runner folder's `.env` with `...\scripts\runner_load_gate.ps1` (and `runner_job_done.ps1` for `ACTIONS_RUNNER_HOOK_JOB_COMPLETED`). The runner accepts only `.sh`, `.ps1` and `.js` hooks; a `.cmd` hook fails every job with "not a valid path to a script", so the plugin ships no `.cmd` wrapper and the doctor fails a runner whose hook ends in `.cmd`. Then restart the service (`Restart-Service "actions.runner.*"`). The runner starts a `.ps1` hook with Windows PowerShell 5.1 (when `pwsh` is absent) as exactly `C:\WINDOWS\System32\WindowsPowerShell\v1.0\powershell.EXE -command ". 'C:\actions-runner\...runner_load_gate.ps1'"`, as the service's account (often `NT AUTHORITY\NETWORK SERVICE`). Two things must hold for that account, or the script never starts and **every job fails** (the gate's fail-open path cannot run): (1) its PowerShell execution policy must allow the script. The machine default (Restricted) refuses it with a `PSSecurityException`. Set `RemoteSigned` for that account only, from an elevated shell: string value `ExecutionPolicy` = `RemoteSigned` under `HKEY_USERS\S-1-5-20\Software\Microsoft\PowerShell\1\ShellIds\Microsoft.PowerShell` (`S-1-5-20` is NETWORK SERVICE; another service account has its own SID). (2) It needs read and execute on the Python install the script calls (Python must also be on its PATH). Test it exactly as the runner runs it: a scheduled task whose principal is the service account (`NT AUTHORITY\NETWORK SERVICE`) with that same Execute and Arguments, never `-ExecutionPolicy Bypass` (it passes and hides the problem). Then watch the first real job's log. The doctor reads the policy for the service account and FAILS on Restricted, AllSigned or undefined; it runs nothing and changes nothing.
-- Check with `python3 scripts/delivery_doctor.py`: the `runner` line is ok with no runner on the machine, FAIL if a runner folder (`actions-runner*`, `DELIVERY_RUNNER_DIRS`, or `runner_dirs` in the machine file) lacks the hook, or (Windows, `.ps1` hook) the service account's execution policy would refuse it.
-
-## Shared CI on one machine: the machine layer (DL-90, DL-91)
-
-One folder per machine holds the limits, the CI slots and the queue for every runner on it. Design: `docs/features/delivery/shared-self-hosted-runners.md`. Rules: spec section 13, R13.60 to R13.67.
-
-- **Machine folder** (`machine_slots.machine_dir()`): `C:\ProgramData\luismc-delivery\` on Windows, `/etc/luismc-delivery/` elsewhere, `/machine` in the pool. `DELIVERY_MACHINE_DIR` overrides it. It holds `machine.json`, `slots/`, `queue/`, `slot-log.jsonl` and `host-load.json`. Every runner account needs modify rights on it.
-- **`machine.json`** (written through `machine_slots.write_machine_config`, never by hand from setup code):
-
-  ```json
-  {"load_limits": {"memory_pct": 85, "cpu_pct": 60}, "ci_slots": 2, "light_slots": 1, "local_heavy": 2, "cloud_ci_sessions": 10,
-   "slot_stale_min": 120, "runner_gate": {"max_wait_min": 30, "poll_sec": 15, "light_jobs": ["smoke", "prune-*"]}, "runner_dirs": ["C:/Work/runners"]}
-  ```
-
-  `light_slots` (default 1, 0 turns it off) gives short jobs their own slot (`slots/light-N.lock`), so a smoke test or a prune job does not wait behind two long builds. `runner_gate.light_jobs` lists the job keys or shard names that count as light (exact or glob, matched against `GITHUB_JOB` and `DELIVERY_SHARD`; default `smoke`, `prune`, `prune-*`, `cleanup`, `remove-train`, `decide`, `delete-*`, `runners`). A light job with every light slot busy waits for a CI slot in the normal queue.
-
-  A project's `.delivery/config.json` can lower `load_limits`, `local_heavy` and `ci.fallback.cloud_ci_sessions`, never raise them.
-- **Two hooks per runner**, in the runner folder's `.env`:
-  `ACTIONS_RUNNER_HOOK_JOB_STARTED=.../scripts/runner_load_gate.sh` (`.ps1` on Windows) takes a queue ticket and then a slot.
-  `ACTIONS_RUNNER_HOOK_JOB_COMPLETED=.../scripts/runner_job_done.sh` frees the slot and empties the job's `_work` folder.
-- **Host load file**: schedule `python load.py --write` every 15 seconds on the host. Readers in WSL or the pool use `host-load.json` while it is under 60 seconds old.
-- **See it**: `python3 scripts/delivery_ci.py slots` shows who holds each slot, the queue and each wait. `python3 scripts/machine_slots.py free-stale` frees dead holders by hand.
-- **Workflows**: the shard of a job is `DELIVERY_SHARD` when the hook sees it (the runner's own `.env`; a job-level `env:` value does **not** reach the job-started hook), else the job key (`GITHUB_JOB`). So name each sharded job's key after its shard in `ci-shards.json` (the templates do; matrix legs share their job's key). A held job writes the git branch `ci-wait/<sha>/<shard>`, so the Option 4 fallback counts it as waiting. The marker needs a git checkout: the kept `.git` of the last job, or `DELIVERY_MARKER_ROOT` in the runner's `.env` (a clone the runner account may push from). The hook loads `ci_fallback.py` from the checkout, else from the plugin's own copy, and logs one line whenever it writes no marker and why. The runner account needs git credentials that can push (a fine-grained token with contents write on the repository); the doctor tries a dry-run push and warns.
-- **Local heavy work**: at most `local_heavy` (2) heavy local calls at once, counted from PreToolUse to PostToolUse (agents from the ledger). `checks_off: ["DL-91"]` turns it off.
-- **Doctor**: `delivery_doctor.py` has a `machine` check. `delivery_doctor.py clean-work` lists the `_work` folders that can be emptied; `--yes` empties those of runners with no job running.
+The plugin no longer owns machine limits, runner hooks or CI slots. Another project owns them. The plugin keeps tasks, trains, when a CI run starts, how finished CI is detected, merge, the watcher and the Stop hook.
 
 ## `.delivery/config.json`
 
@@ -78,15 +30,13 @@ New in 0.2.0:
 {
   "tz": "Europe/Lisbon",
   "enforcement": { "mode": "block", "block_ceiling": 3, "log_every_block": true },
-  "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true, "manage_runners": true },
-  "runner_plan": { "cancel_replaced_runs": true, "hold_dependabot_during_train": true, "heavy_jobs_yield": true }
+  "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true },
+  "runner_plan": { "cancel_replaced_runs": true, "hold_dependabot_during_train": true }
 }
 ```
 
 | Key | Default | Effect |
 |---|---|---|
-| `load_limits.memory_pct`, `load_limits.cpu_pct` | 85, 60 | project override of the machine load limits (DL-77) |
-| `heavy_commands` | `[]` | extra regexes (plain text also matches) that make a command heavy (DL-77) |
 | `enforcement.mode` | `block` | `warn` shows findings and denials as a message and blocks nothing |
 | `enforcement.block_ceiling` | 3 | the same findings block a session this many times, then the turn ends |
 | `stop_repeat_limit` | `block_ceiling` | the Stop hook stops blocking a finding after it blocked this many turn ends in a row with no change to the ledger fields it depends on; 0 = never limit |
@@ -96,12 +46,10 @@ New in 0.2.0:
 | `watcher.push_trains` | true | push the next joined train |
 | `watcher.open_prs` | true | open its ready PR; the body carries `.delivery/docs-summaries.md` (written by `join.py`) when present |
 | `watcher.merge_on_green` | true | `gh pr merge N --merge --match-head-commit SHA`, never `--auto`, only when the head is unchanged since the green run |
-| `watcher.manage_runners` | true | launch `runner_plan.py runners` on the loop (needs `runners[]`; D6a) |
 | `runner_plan.cancel_replaced_runs` | true | cancel CI runs of a head a newer push replaced |
 | `runner_plan.hold_dependabot_during_train` | true | cancel, then re-run, non-train CI runs while a train's CI runs |
-| `runner_plan.heavy_jobs_yield` | true | `runner_plan.py run` waits for train CI (`heavy_local_jobs_yield` is accepted too) |
 
-Accepted alternative spellings: `watcher.merge_method: "merge"` or `merge_flag: "--merge"` (plus `never_auto_merge: true`) and `heavy_local_jobs_yield`. The plugin's earlier names (`caps`, `runners[]`, `runner_plan.retry_seconds`, `watcher_interval_s`, ...) are unchanged.
+Accepted alternative spellings: `watcher.merge_method: "merge"` or `merge_flag: "--merge"` (plus `never_auto_merge: true`). The plugin's earlier names (`caps`, `runners[]`, `runner_plan.retry_seconds`, `watcher_interval_s`, ...) are unchanged.
 
 **Recording the smoke and the cleanup (DL-14, DL-18).** The Stop hook reads `cleaned_at` and `smoke.state` of the train row, which only the ledger writes. Project scripts (`cleanup.py`, `delivery_log.py live`) may not write them, so the plugin has its own commands. The DL-14 and DL-18 messages name the project's configured command, then these:
 
@@ -182,7 +130,7 @@ python3 scripts/ci_runs.py collect --root . [--repo owner/name] [--slot-log PATH
 - **Runs and steps** come from `gh api` (`actions/runs`, `actions/runs/{id}/jobs`). Finished runs are kept in the file, so only new runs cost a jobs call.
 - **Why** is the trigger: ready PR, push to the default branch, agent branch, schedule, re-run, or a fallback with its wait.
 - **Where** is the runner kind (`pool`, `windows`, `hosted`, `cloud`) and its name. For a cloud fallback the name is the holder of the `ci-claim` marker.
-- **Slot wait** comes from the machine layer's `slot-log.jsonl` (the folder of `DELIVERY_MACHINE_DIR`, else `machine_slots.machine_dir()`). A missing log means a wait of 0.
+- **Slot wait** comes from the machine layer's `slot-log.jsonl` (the folder of `DELIVERY_MACHINE_DIR`, else the machine default). A missing log means a wait of 0.
 - **Fallback in** uses `ci.fallback.after_min` in `.delivery/config.json`. Without it the file says the time is unknown.
 - `delivery_watch.py` runs the collector each tick, at most once a minute. A failure leaves the old file and never fails the tick.
 - Schema: `docs/features/delivery/shared-self-hosted-runners.md` section 12.5. One optional field is added to a finished run: `slot_start_s`, and `fallback: true` for a run that lost its claim.
@@ -196,8 +144,7 @@ python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugi
 python3 -I tools/test_delivery_hooks.py
 ```
 
-`tests/test_load.py` covers the load guard (parsers per OS, cache, limits precedence, heavy/light/cloud table, refusal, fail-open, notices, runner gate, doctor).
 
 ## Trust
 
-`.delivery/config.json`, `gate.json` and `smoke.json` are code: they choose scripts and shell commands that run with your rights. Trust them only after review. The watcher refuses a `runner_plan.script` that resolves outside the repository.
+`.delivery/config.json`, `gate.json` and `smoke.json` are code: they choose scripts and shell commands that run with your rights. Trust them only after review.

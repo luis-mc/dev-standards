@@ -132,8 +132,7 @@ def stop_pid(pid):
     STOP_FAILED.pop(pid, None)
     if not isinstance(pid, int) or pid <= 1 or pid == os.getpid() or not _cmdline_ok(pid):
         return False
-    import machine_slots as M
-    if not M.pid_alive(pid):          # DL118: OpenProcess + GetExitCodeProcess on Windows
+    if not H.pid_alive(pid):          # DL118: OpenProcess + GetExitCodeProcess on Windows
         return False
     try:
         os.kill(pid, signal.SIGTERM)
@@ -259,8 +258,7 @@ def main():
 
 if __name__ == '__main__':
     try:
-        import load_guard as G
-        code = G.with_notice(main, 'SessionStart')     # DL-78: tell the session to hold new heavy work
+        code = main()
     except Exception as exc:   # fail open
         H.warn('session-start hook skipped (%s: %s)' % (type(exc).__name__, exc))
         code = 0

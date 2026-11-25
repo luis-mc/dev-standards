@@ -59,7 +59,7 @@ class Project:
         return os.path.join(self.dir, 'gh_stub.py')
 
     def run(self, script, data, env=None):
-        # Hermetic: no reading of this machine. The load guard (DL-77, DL-78) would otherwise judge the real memory and
+        # Hermetic: no reading of this machine. The load guard would otherwise judge the real memory and
         # CPU of the PC and the machine file in ~/.claude, so a busy PC made unrelated tests fail (DSY148).
         e = dict(os.environ, DELIVERY_NOW=NOW, DELIVERY_LOCAL_HEAVY_DIR=os.path.join(self.dir, 'local-heavy'),
                  DELIVERY_LOAD='10,10', DELIVERY_MACHINE_CONFIG=os.path.join(self.dir, 'machine-none.json'),
@@ -652,7 +652,7 @@ def dl23_unfrozen_installs():
     expect_pass(bash(p, 'npm install left-pad'))              # not a gate context
     expect_pass(bash(p, 'pnpm install --frozen-lockfile && python branch_gate.py'))
     p.close()
-    p = Project(ledger())                                      # DL-91: two installs above are still running here
+    p = Project(ledger())                                      # two installs above are still running here
     expect_pass(bash(p, 'npm ci'))
     p.close()
 

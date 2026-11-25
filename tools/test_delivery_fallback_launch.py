@@ -60,7 +60,7 @@ class Rec:
     def __init__(self, caps_ok=True, ready=True, settled=False):
         self.cloud, self.hosted, self.out, self.reserved, self.released, self.gated = [], [], [], [], [], []
         self.caps_ok, self.ready, self.settled = caps_ok, ready, settled
-        self.cloud_busy, self.markers, self.claims = 0, {}, set()   # DL-90, DL-91
+        self.cloud_busy, self.markers, self.claims = 0, {}, set()
 
     def gate(self, st, os_name, waited):
         self.gated.append(os_name)
@@ -106,7 +106,7 @@ class Hook(unittest.TestCase):
         self.assertEqual(len(rec.gated), 2)  # caps are counted once per started shard
         self.assertEqual(len([l for l in rec.out if "started" in l]), 2)
 
-    def test_cloud_limit_never_starts_an_extra_session(self):    # DL-91: 10 cloud CI sessions at most
+    def test_cloud_limit_never_starts_an_extra_session(self):    # 10 cloud CI sessions at most
         rec = Rec()
         rec.cloud_busy = 9
         got = self.go(rec, SPEC_TWO_LATE)
@@ -122,7 +122,7 @@ class Hook(unittest.TestCase):
         self.go(rec, SPEC_TWO_LATE, settings("github-hosted"))
         self.assertEqual(sorted(rec.hosted), ["int-linux", "unit-linux"])
 
-    def test_held_job_with_a_wait_marker_counts_as_waiting(self):     # DL-90, G6
+    def test_held_job_with_a_wait_marker_counts_as_waiting(self):  # G6
         rec = Rec()
         started = [("unit (linux)", "in_progress", 12, ["self-hosted", "linux"])]
         self.assertEqual(self.go(rec, started), [])                     # started on GitHub, no marker: not waiting

@@ -28,7 +28,7 @@ Related: [delivery speed](../delivery-speed/spec.md), [test cost](../test-cost/s
 
 ## 1. In one paragraph
 
-`luismc-delivery` keeps a release train moving without the owner watching it. A ledger records trains, agents and questions. Hooks block a turn that leaves work half done. A background watcher pushes the next train, opens its pull request and merges it at green CI. A load guard keeps the machine under its memory and CPU limits. The shared delivery scripts do the gate, join, CI watch and cleanup. They live in `luismc-delivery` (`templates/`), and its installer writes them into a product; `luismc-project-setup` only calls the installer. The owner picks where CI runs, per OS (section 13).
+`luismc-delivery` keeps a release train moving without the owner watching it. A ledger records trains, agents and questions. Hooks block a turn that leaves work half done. A background watcher pushes the next train, opens its pull request and merges it at green CI. The shared delivery scripts do the gate, join, CI watch and cleanup. They live in `luismc-delivery` (`templates/`), and its installer writes them into a product; `luismc-project-setup` only calls the installer. The owner picks where CI runs, per OS (section 13).
 
 ## 2. Why
 
@@ -66,7 +66,7 @@ flowchart LR
 
 ## 5. Functional requirements
 
-**R5.1** — With no `.delivery/` folder, every delivery hook does nothing except the machine load guard.
+**R5.1** — With no `.delivery/` folder, every delivery hook does nothing.
 
 **R5.2** — The ledger `.delivery/ledger.json` is written only through `delivery_ledger.py`. The write is atomic, runs under a lock and carries `schema: 1`. Hooks never edit it by hand.
 
@@ -83,10 +83,6 @@ The ledger lives in the main checkout. A command or hook run from a git worktree
 **R5.7** — The watcher pushes the next joined train, opens its ready PR (or adopts the one open PR of a train pushed by hand), and merges only when the PR head is the commit whose required workflows (`watcher.ci_workflows`) all succeeded, and every other `pull_request` workflow with a run on that head (not those in `watcher.ignore_workflows`) succeeded too. Runs made while the PR was a draft do not count, and a draft PR is never green. A `hold` stops it.
 
 **R5.8** — When `runner_plan` allows it, the watcher cancels CI runs that a newer push replaced. It also holds non-train CI runs while a train's CI runs.
-
-**R5.9** — The load guard refuses a new heavy command with exit 2 while memory is above 85% or CPU above 60% (project file over machine file over defaults). It never touches a running process. If the machine cannot be measured, it allows the call with a warning.
-
-**R5.10** — The runner hook `runner_load_gate.py` waits until the machine is under the limits, up to 30 minutes, then exits 1 (or lets the job run with `--on-timeout run`).
 
 **R5.11** — `delivery_ledger.py smoke` and `cleaned` are the only writers of `smoke`, `live_at` and `cleaned_at`. `cleaned` records nothing while a train or cargo branch or worktree is left.
 
@@ -232,8 +228,6 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R6.4** — `.delivery/` is git-ignored. The ledger keeps events only as long as the project keeps the folder.
 
-**R6.5** — The load measurement is cached for 10 seconds. CPU is the mean of up to 3 samples in 30 seconds, so one spike decides nothing.
-
 ## 7. Design
 
 ```mermaid
@@ -243,7 +237,6 @@ flowchart TB
     lib[hooklib.py]
     led[delivery_ledger.py]
     w[delivery_watch.py]
-    lg[load.py, load_guard.py, runner_load_gate.py]
     cfg[delivery_config.py, delivery_doctor.py]
   end
   subgraph shared[delivery templates/shared/scripts/delivery]
@@ -289,7 +282,6 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.7, R5.8 | `claude/plugins/delivery/tests/test_watch.py` |
 | R5.61 | `claude/plugins/delivery/tests/test_dl329_rust_target_link.py` |
 | R5.62 | `claude/plugins/delivery/tests/test_dl336_ci_watch_default_head.py` |
-| R5.9, R5.10, R6.5 | `claude/plugins/delivery/tests/test_load.py`, `tools/test_delivery_runner.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |
@@ -318,7 +310,7 @@ Source: claude/plugins/delivery/scripts/
 Source: claude/plugins/delivery/templates/shared/scripts/delivery/
 Source: claude/plugins/delivery/templates/
 
-The plugin holds hooks, ledger, watcher, load guard, doctor, the CI option command and the installer. The templates folder holds the shared scripts (gate, join, CI watch, cleanup, the cloud shard runner and status poster), `CONTRACT.md`, the workflow files and each track's `gate.json` and `smoke.json`.
+The plugin holds hooks, ledger, watcher, doctor, the CI option command and the installer. The templates folder holds the shared scripts (gate, join, CI watch, cleanup, the cloud shard runner and status poster), `CONTRACT.md`, the workflow files and each track's `gate.json` and `smoke.json`.
 
 ## 13. CI options
 
@@ -512,10 +504,6 @@ Failure modes:
 | Nobody has a session open | The hourly routine starts the fallback, up to an hour late. |
 | The speed probe is above 3 on a fallback runner | The shard reports `error`, not `success`. |
 | The records branch cannot be reached | No shard is skipped; every shard runs (R13.10). |
-| A job crashes while it holds a slot | A dead holder process frees the slot at once; any slot is freed after `slot_stale_min` (R13.62). |
-| The machine folder cannot be written by the runner account | The hook says so and falls back to the load check only; the doctor fails `machine.config`. |
-| A job is held for a slot while the fallback runs its shard | The held job gets its slot, finds the claim taken, ends with exit 3 and frees the slot (R13.64). |
-| Ten cloud CI sessions already run | The launcher starts no more and retries on the next poll (R13.66). |
 
 ## Versions
 

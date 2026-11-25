@@ -7,7 +7,7 @@ rule, with a one-line reason that names the DL id and the fix, as
 Reads the ledger and .delivery/config.json read-only. A project without .delivery/ is
 untouched; an error in the hook allows the call (fail open).
 
-Checks: DL-77 (load guard, exit 2), DL-97 (no cancel of a red release run), DL-94 (workflow tool downloads), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
+Checks: DL-97 (no cancel of a red release run), DL-94 (workflow tool downloads), DL-11 (no branch gate on a join), DL-05 06 07 20 23 36 37 38 41 42 53 55 73 74 75, D4 (PC-bound), Q-3, Q-4.
 """
 import fnmatch
 import json
@@ -19,7 +19,6 @@ import sys
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import hooklib as H  # noqa: E402
-import load_guard as G  # noqa: E402
 
 ATTRIBUTION_RE = re.compile(r'co-authored-by|generated with \[?claude|claude code|noreply@anthropic\.com|'
                             r'\U0001F916 generated|written by claude|\bclaude-session\b', re.I)
@@ -815,23 +814,8 @@ def main():
         return 0
     data = H.read_input()
     root = H.find_root(data)
-    # DL-77: the load guard protects the machine, so it runs in every project, with or without .delivery/
     ledger0 = H.load_ledger(root) if root else None
-    held = G.check_call(data, G.project_cfg(root), ledger0, local=False)
-    if held:
-        if root and H.C.enforcement(H.load_config(root))['mode'] == 'warn':
-            print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + held}))
-        else:
-            if root:
-                H.log_block(root, H.load_config(root), 'pre-tool', held)
-            print(held, file=sys.stderr)
-            return 2
     if not root:
-        held = G.check_local(data, G.project_cfg(root), ledger0)
-        if held:
-            print(held, file=sys.stderr)
-            return 2
-        G.heavy_begin(data, G.project_cfg(root))
         return 0
     cfg = H.load_config(root)
     ledger = ledger0
@@ -865,16 +849,6 @@ def main():
             H.log_block(root, cfg, 'pre-tool', str(d))
             print(json.dumps({'hookSpecificOutput': {'hookEventName': 'PreToolUse', 'permissionDecision': 'deny',
                                                      'permissionDecisionReason': str(d)}}))
-    if not denied:
-        held = G.check_local(data, G.project_cfg(root), ledger)   # DL-91 last: a project rule's refusal is more specific
-        if held:
-            if H.C.enforcement(cfg)['mode'] == 'warn':
-                print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, call allowed): ' + held}))
-            else:
-                H.log_block(root, cfg, 'pre-tool', held)
-                print(held, file=sys.stderr)
-                return 2
-        G.heavy_begin(data, cfg)                         # DL-91: counted until its PostToolUse
     return 0
 
 

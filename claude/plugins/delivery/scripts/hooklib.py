@@ -55,11 +55,32 @@ DEFAULTS = {
     'install_stale_min': 90,                  # DL-55 an install older than this no longer blocks
     'pr_proven_jobs': [],                     # DL-76 job names (globs ok) that must not re-run on the default branch
     'checks_off': [],                         # ids switched off, e.g. ["DL-64"]
-    'load_limits': {},                        # DL-77 {"memory_pct": 85, "cpu_pct": 60}; over the machine file, over defaults
-    'heavy_commands': [],                     # DL-77 extra regexes (case-insensitive) that make a command heavy
 }
 TERMINAL_TRAIN = ('cleaned', 'abandoned')
 TERMINAL_AGENT = ('done', 'empty', 'failed', 'stopped')
+
+
+def pid_alive(pid):
+    """True when a process with this pid exists. Unknown pids (0, None) count as alive: never free on a guess."""
+    if not isinstance(pid, int) or pid <= 0:
+        return True
+    if sys.platform.startswith('win'):
+        import ctypes
+        k = ctypes.windll.kernel32
+        h = k.OpenProcess(0x1000, False, pid)           # PROCESS_QUERY_LIMITED_INFORMATION
+        if not h:
+            return ctypes.GetLastError() == 5            # access denied: it exists
+        code = ctypes.c_ulong()
+        k.GetExitCodeProcess(h, ctypes.byref(code))
+        k.CloseHandle(h)
+        return code.value == 259                         # STILL_ACTIVE
+    try:
+        os.kill(pid, 0)
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+    return True
 
 
 def hooks_off():
