@@ -886,6 +886,15 @@ def read_ci_runs(root):
     return raw if schema_gate('ci-runs', raw, CI_RUNS_SCHEMA, required=False) else None
 
 
+def read_warn_report(root):
+    """The parsed .delivery/warn-report.json (written by delivery_report.py --write), or None when missing or unreadable."""
+    try:
+        raw = json.loads((Path(root) / '.delivery' / 'warn-report.json').read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return None
+    return raw if isinstance(raw, dict) else None
+
+
 def render_one(rec, key, stamp_t, stamp_i, links=None, root=None):
     """Render one artifact; `links` ({feature key: (href, path text)}) is only for the publish copy."""
     try:
@@ -895,6 +904,7 @@ def render_one(rec, key, stamp_t, stamp_i, links=None, root=None):
         extra = {} if links is None else {'links': links}
         if links is not None and root is not None and key == (rec.manifest.get('full_progress_artifact') or {}).get('key', 'full-progress'):
             extra['ci_runs'] = read_ci_runs(root)      # R5.51: the publish copy only; the committed render never reads it
+            extra['warn_report'] = read_warn_report(root)   # delivery R5.69: same
         return R.render_artifact(rec.manifest, rec.registry, rec.render_contents(), key, PLUGIN_DIR,
                                  rec.dir, stamp_t, stamp_i, **extra)
     except Fail:

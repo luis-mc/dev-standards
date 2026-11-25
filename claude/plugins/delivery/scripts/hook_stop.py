@@ -666,6 +666,8 @@ def main():
     enf = H.C.enforcement(cfg)
     if enf['mode'] == 'warn':
         if found:
+            for _, m in found:
+                H.log_block(root, cfg, 'stop:warn', m, force=True)   # R5.69
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, nothing blocked): '
                               + '; '.join(m for _, m in found)}))
         return 0

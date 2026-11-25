@@ -527,10 +527,10 @@ def rule_id(message):
     return m.group(1) if m else 'other'
 
 
-def log_block(root, cfg, hook, message):
+def log_block(root, cfg, hook, message, force=False):
     """enforcement.log_every_block: append `time<TAB>hook<TAB>rule<TAB>message` to .delivery/blocks.log (for the
-    owner's review). Never raises."""
-    if not C.enforcement(cfg)['log_every_block']:
+    owner's review). `force` logs whatever the setting says (warn mode, R5.69). Never raises."""
+    if not force and not C.enforcement(cfg)['log_every_block']:
         return
     line = '\t'.join([now().strftime('%Y-%m-%dT%H:%M:%SZ'), hook, rule_id(message),
                       ' '.join(str(message).split())])
