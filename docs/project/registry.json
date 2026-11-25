@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T14:37+00:00",
+  "updated": "2026-11-25T14:55+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11771,13 +11771,12 @@
       "id": "DS246",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "DS246 Remove load/slot layer from delivery (CRSP owns limits)",
       "detail": "Stage 2: gate, slots, machine, load, runner_plan, doctor checks; keep tasks, RELEASE-n, CI flow. Removed IDs: hard docs-check fail plus a fix guide (owner choice 25 Nov).",
-      "expected": "25 Nov ~16:00",
-      "changed": "2026-11-25T14:37+00:00",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T14:55+00:00",
       "rides": "DS245",
-      "expected_basis": "agent 35 min work plus CI",
       "started": "2026-11-25T14:37+00:00"
     },
     {
