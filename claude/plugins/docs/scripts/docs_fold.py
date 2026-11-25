@@ -209,6 +209,28 @@ def fold(root: Path, release: str, date: str, dry: bool) -> list[dict]:
     return plan
 
 
+def full_progress_stale(root: Path) -> bool:
+    """True when `project_artifacts.py pending` lists Full Progress as changed since its last publish.
+    Any failure (no record, no script) answers False: the notice is advice, never a reason to fail a fold."""
+    import json
+    import subprocess
+    script = Path(__file__).resolve().parent / "project_artifacts.py"
+    if not script.is_file() or not (root / "docs" / "project").exists():
+        return False
+    try:
+        out = subprocess.run([sys.executable, str(script), "pending", "--json"], cwd=str(root),
+                             capture_output=True, text=True, timeout=60)
+        data = json.loads(out.stdout or "{}")
+    except (OSError, ValueError, subprocess.SubprocessError):
+        return False
+    return any(a.get("key") == "full-progress" for a in data.get("artifacts", []))
+
+
+STALE_NOTICE = ("Full Progress is stale: this release changed the record. Wait 60 s after the last record change, "
+                "then run `project_artifacts.py pending --json --refresh`, publish the path it prints, run "
+                "`mark-published full-progress --url <URL>`, and commit the record.")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -275,6 +297,8 @@ def main(argv=None) -> int:
             print(f"ERROR {p['doc']}: {p['error']}")
             continue
         print(f"{'would fold' if a.dry_run else 'folded'} {p['doc']}: {p['old']} -> {p['new']} ({p['kind']}, {len(p['files'])} note(s))")
+    if not bad and not a.dry_run and full_progress_stale(root):
+        print(STALE_NOTICE)
     return 2 if bad else 0
 
 
