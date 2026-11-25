@@ -44,7 +44,8 @@ export type WizardRule =
   | 'loading-action-live'
   | 'loading-wait-not-once'
   | 'loading-back-missing'
-  | 'loading-done-shown';
+  | 'loading-done-shown'
+  | 'step-bar-more-for-one';
 
 export interface WizardStep {
   readonly name: string;
@@ -75,6 +76,8 @@ export interface WizardSnapshot {
   readonly done?: { readonly text: string; readonly counts: number };
   /** How many lines say the step data is still being read (read in the loading state: exactly one wanted). */
   readonly waitLines?: number;
+  /** The step bar when it collapses steps: how many steps it hides behind a "+ N more" label. Omit when it shows every step. */
+  readonly stepBar?: { readonly hidden: number; readonly moreLabel?: string };
 }
 
 export interface WizardProblem {
@@ -102,6 +105,9 @@ export function checkWizard(s: WizardSnapshot): WizardProblem[] {
     add('done-empty', 'Done shows no result (text and counts are needed)');
   for (const b of s.buttons)
     if (b.requestOpen && !b.disabled) add('busy-not-disabled', `"${b.label}" starts a request and is still pressable while it runs`);
+  // A "+ 1 more" label takes the room of the one step it hides: show that step instead (it fits).
+  if (s.stepBar && s.stepBar.hidden === 1 && (s.stepBar.moreLabel ?? '').trim())
+    add('step-bar-more-for-one', `the step bar says "${s.stepBar.moreLabel}" for a single hidden step (show the step; "+ N more" is for two or more)`);
   if (s.state === 'loading') {
     // The step own data is still being read: actions stay, locked; one wait line; Back free; no Done text.
     if (primaries.length === 0) add('loading-action-hidden', 'the primary action is hidden while loading (it must be shown, locked)');

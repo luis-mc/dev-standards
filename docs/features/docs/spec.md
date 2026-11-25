@@ -113,6 +113,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.24** — `design_system.py verify` and the guard templates block from adoption (DOCSPEC R15.25): a numbered version without a complete `approvals.json` record (DS7), an enforced version without an implementation approval (DS8), and a gallery whose source stamp is stale (DS9; an error on a release branch or with `--release` or `DESIGN_GATE=release`, a warning on a task branch). A project's own generator keeps the same stamp or sets `design_gallery_digest_command` in `docs.json`. `approve-implementation vN --as-live --evidence TEXT` records a version that is already live. Each message names its fix command.
 
+**R5.25** — The wizard behaviour guard (`wizard-behaviour.ts`) has the rule `step-bar-more-for-one`: a step bar that collapses steps never says "+ 1 more" for a single hidden step, because the one step fits where the label sits. The driver reads `stepBar: { hidden, moreLabel }` from the DOM; "+ 2 more" and up pass. The harness self-test plants the breach (DS244).
+
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
 
 **R6.2** — The checks read Markdown, JSON, git and named paths only. They run a project command only for `generated_reference` (DOCSPEC R8.4).

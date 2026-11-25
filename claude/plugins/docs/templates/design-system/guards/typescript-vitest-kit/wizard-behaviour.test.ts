@@ -73,6 +73,26 @@ describe('wizard behaviour', () => {
     });
   });
 
+  describe('the step bar (DS244)', () => {
+    const bar: WizardSnapshot = {
+      state: 'running',
+      steps: [{ name: 'Run', standing: 'now', pressable: true }],
+      buttons: [{ label: 'Start', primary: true, disabled: false }],
+      job: { canStop: false, canPause: false },
+    };
+    const rules = (s: WizardSnapshot): string[] => checkWizard(s).map((p) => p.rule);
+    it('passes a bar that shows every step, and a "+ 2 more" for two', () => {
+      expect(rules(bar)).toEqual([]);
+      expect(rules({ ...bar, stepBar: { hidden: 2, moreLabel: '+ 2 more' } })).toEqual([]);
+    });
+    it('fails a "+ 1 more" that replaces the one hidden step', () => {
+      expect(rules({ ...bar, stepBar: { hidden: 1, moreLabel: '+ 1 more' } })).toEqual(['step-bar-more-for-one']);
+    });
+    it('passes one hidden step with no label', () => {
+      expect(rules({ ...bar, stepBar: { hidden: 1 } })).toEqual([]);
+    });
+  });
+
   describe('the loading state (D244)', () => {
     const loading: WizardSnapshot = {
       state: 'loading',
