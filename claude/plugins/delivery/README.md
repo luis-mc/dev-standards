@@ -102,6 +102,7 @@ CI can run in four ways (the owner's Option 1 to 4). The owner picks one for eac
 | 3 | `cloud` | Claude cloud sessions (no Actions, no webhooks) |
 | 4 | `self-hosted` plus `ci.fallback` | Own runners first, a fallback after X minutes of runner wait (`ci.fallback`: `options`, `after_min`, optional caps, `cloud`, `hosted`) |
 
+0. Onboarding: in a project with no `.delivery/`, run `/delivery-onboard` (engine `scripts/delivery_onboard.py --merge-mode auto|manual`). It writes the config in warn mode, so nothing is blocked, and the ledger. It never overwrites a config.
 1. Guided: run `/delivery-ci-setup` (engine `scripts/delivery_ci_setup.py`). It writes `ci.options`, `ci.fallback`, `ci.limits`, the runners and the files, and prints the by-hand list. By hand: ask the owner, per OS. Record it: `python3 scripts/delivery_ci.py set --os linux --option 1|2|3` (`show`, `unset` also exist). It writes `ci.options` in `.delivery/config.json`.
 2. Write the CI and delivery files: `python3 scripts/delivery_ci_install.py install --track ts|go|rust|dotnet --root .` (`update` later). The files come from `templates/`. tech-stack-setup calls this at the end of its setup. The command never commits.
 3. The product gives a shard table, `scripts/delivery/ci-shards.json` (format: `ci-shards.example.json`).
