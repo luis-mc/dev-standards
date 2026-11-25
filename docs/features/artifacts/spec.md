@@ -185,6 +185,12 @@ flowchart LR
 
 **R5.25** — The end-of-turn hook tells once about an open row past its Expected, in a message that does not block. It tells again only when the row gets a new Expected. A Running or Waiting row more than 60 minutes past due blocks once, naming `overdue-sweep`, which moves it to Needs you. A Needs you row is not named. The hourly fail-safe and the other blocking stops are unchanged. (DP7, owner decision D2, ARTIFACTSPEC R6.14)
 
+**R5.26** — A release is the main unit and a pull request is its carrier. `task-add` and `set-task-status` take `--pr N` (or `#N`), `--release-start TIME` and `--release-waits-on RELEASE-n[,RELEASE-m]`; an empty value clears one. The fields sit on a release only. A waits-on entry must name another existing release, with no cycle. Without `pr` and `release-waits-on` on any open release, the timeline keeps its older look. (DS256, ARTIFACTSPEC R5.55)
+
+**R5.27** — A release that waits on others is never live before them: its Live ETA is the latest of its own and theirs. The timeline and the table are sorted by that ETA; a dependency comes first on a tie. (DS256, ARTIFACTSPEC R5.56)
+
+**R5.28** — The timeline is a tree: a PR row with a 4px left bar and a trunk at x=22, an 18px elbow into each of its releases, dashed arrows from a release to the release it waits on, and no dashed box. It is at most 880 wide, about 52 per row, uses the page font and the CSS colour variables. Under it a table lists Item, Live ETA, CI, Waits on and Status: a `tr.pr` row, then `tr.ch` rows (the last `tr.ch.last`) with the sub-line `<task id> · in PR N`. (DS256, ARTIFACTSPEC R5.57, R5.58)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -262,6 +268,9 @@ flowchart TB
 | R5.23 | `claude/plugins/docs/tests/test_ar77_where_it_stands.py` (Live part, ranges, Running release, fallback, length, fingerprint, stale-lede warning); `section_one_never_blank` in `tools/test_render_artifacts.py` |
 | R5.24 | `dp7_default_eta_table_and_format`, `dp7_task_add_without_expected_takes_the_default_for_its_type`, `dp7_set_task_status_running_without_expected_takes_the_default` in `tools/test_artifacts_dp7.py` |
 | R5.25 | `dp7_overdue_sweep_moves_only_rows_over_an_hour_past_due` in `tools/test_artifacts_dp7.py`; `stop_warns_once_on_open_rows_past_their_expected_time`, `stop_blocks_once_to_move_a_row_over_an_hour_past_due_and_leaves_needs_you_alone`, `stop_still_blocks_on_the_other_noisy_checks_with_an_overdue_row_present` in `tools/test_project_artifacts_hooks.py` |
+| R5.26 | `validation_rules`, `cli_options_store_and_refuse`, `old_look_without_fields` in `tools/test_artifacts_ds256.py` |
+| R5.27 | `eta_rule_lifts_dependent` in `tools/test_artifacts_ds256.py` |
+| R5.28 | `tree_draws_pr_rows_and_arrows`, `whole_artifact_checks_clean` in `tools/test_artifacts_ds256.py` |
 | R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
 | R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `tools/test_project_artifacts_hooks.py` |
 | R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `tools/test_project_artifacts_hooks.py` |

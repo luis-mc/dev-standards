@@ -1913,6 +1913,7 @@ def release_problems(task, by_id):
             out.append(('R5.40', 'rides names %s, which is not a release task' % rides))
         elif target.get('status') == 'Dropped' and task.get('status') not in ('Live', 'Built', 'Dropped'):
             out.append(('R5.49', 'rides %s, a dropped release; move the task with --rides to the release that took the cargo' % rides))
+    out.extend(tree_problems(task, by_id))
     if good and task.get('status') in OPEN_STATUSES and isinstance(task.get('expected'), str):
         end = max(good)
         want = '%02d %s ~%02d:%02d' % (end.day, MONTHS[end.month - 1], end.hour, end.minute)
@@ -1921,6 +1922,78 @@ def release_problems(task, by_id):
             out.append(('R5.41', 'Expected is "%s" but the last phase ends at %s: a release\'s Expected is the end of its last '
                                  'phase (name a risk with --risk instead of padding)' % (have, want)))
     return out
+
+
+TREE_FIELDS = ('pr', 'release_start', 'release_waits_on')
+
+
+def tree_problems(task, by_id):
+    """R5.55: [(requirement, message)] for the release-tree fields: `pr` (a positive whole number), `release_start`
+    (ISO time with offset) and `release_waits_on` (task IDs of other existing releases, no cycle). Release rows only."""
+    out = []
+    present = [k for k in TREE_FIELDS if k in task]
+    if not present:
+        return out
+    if not is_release(task):
+        return [('R5.55', '%s belong to a release task (--release)' % ', '.join(present))]
+    if 'pr' in task and not (isinstance(task['pr'], int) and not isinstance(task['pr'], bool) and task['pr'] > 0):
+        out.append(('R5.55', 'pr must be a positive whole number (the carrier pull request)'))
+    if 'release_start' in task and (not isinstance(task['release_start'], str) or parse_iso(task['release_start']) is None):
+        out.append(('R5.55', 'release_start must be an ISO time with an offset'))
+    if 'release_waits_on' in task:
+        deps = task['release_waits_on']
+        if not isinstance(deps, list) or not deps or not all(isinstance(d, str) for d in deps) or len(set(deps)) != len(deps):
+            out.append(('R5.55', 'release_waits_on must be a non-empty list of different release task IDs'))
+        else:
+            graph = {task.get('id'): deps}
+            for d in deps:
+                target = by_id.get(d)
+                if d == task.get('id'):
+                    out.append(('R5.55', 'a release cannot wait on itself'))
+                elif target is None or not is_release(target):
+                    out.append(('R5.55', 'release_waits_on names %r, which is not a release task' % d))
+                elif target.get('status') == 'Dropped':
+                    out.append(('R5.55', 'release_waits_on names %s, a dropped release' % d))
+            seen, stack = set(), [(task.get('id'), [task.get('id')])]
+            while stack and not any('cycle' in m for _, m in out):
+                node, path = stack.pop()
+                nxt = graph.get(node) if node in graph else (by_id.get(node) or {}).get('release_waits_on')
+                for d in nxt if isinstance(nxt, list) else []:
+                    if d == task.get('id'):
+                        out.append(('R5.55', 'release_waits_on makes a cycle: %s' % ' -> '.join(path + [d])))
+                        break
+                    if d not in seen:
+                        seen.add(d)
+                        stack.append((d, path + [d]))
+    return out
+
+
+def apply_tree_fields(task, by_id, args, now_dt):
+    """R5.55: set or clear `pr`, `release_start` and `release_waits_on` from --pr, --release-start and
+    --release-waits-on ('' clears each)."""
+    pr = getattr(args, 'pr', None)
+    if pr is not None:
+        text = str(pr).strip().lstrip('#')
+        if not text:
+            task.pop('pr', None)
+        elif text.isdigit() and int(text) > 0:
+            task['pr'] = int(text)
+        else:
+            raise Fail(1, '--pr %r: use the pull request number, for example 435 ("" clears it)' % pr)
+    start = getattr(args, 'release_start', None)
+    if start is not None:
+        text = str(start).strip().replace('~', '').strip()
+        if text:
+            task['release_start'] = _phase_point(text, now_dt, start, '--release-start').isoformat(timespec='minutes')
+        else:
+            task.pop('release_start', None)
+    waits = getattr(args, 'release_waits_on', None)
+    if waits is not None:
+        names = [x.strip() for x in str(waits).split(',') if x.strip()]
+        if names:
+            task['release_waits_on'] = [resolve_rides(n, by_id) for n in names]
+        else:
+            task.pop('release_waits_on', None)
 
 
 def resolve_rides(text, by_id):
@@ -2015,6 +2088,7 @@ def apply_release_fields(task, by_id, args, now_dt, root=None, expected_given=Tr
             task['rides'] = resolve_rides(args.rides.strip(), by_id)
         else:
             task.pop('rides', None)
+    apply_tree_fields(task, by_id, args, now_dt)
     apply_dropped_fields(task, by_id, args)
     if not expected_given and task.get('status') in OPEN_STATUSES and isinstance(task.get('expected'), str):
         want = phase_expected(task) if is_release(task) else None
@@ -2703,7 +2777,7 @@ def cmd_render(args):
 
 
 FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release',
-                           'waits_on', 'started', 'dropped_into', 'dropped_reason')
+                           'waits_on', 'started', 'dropped_into', 'dropped_reason', 'pr', 'release_start', 'release_waits_on')
 
 
 def publish_fingerprint(rec):
@@ -3771,6 +3845,9 @@ def build_parser():
                    help='a release phase (agents, join, ci, fix, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
+    s.add_argument('--pr', metavar='N', help='the pull request that carries this release (a release only); "" clears it (R5.55)')
+    s.add_argument('--release-start', metavar='"DD Mon ~HH:MM"|HH:MM', help='when this release starts, in the project time zone (a release only); "" clears it (R5.55)')
+    s.add_argument('--release-waits-on', metavar='ID[,ID]', help='the releases this one waits on, task IDs or RELEASE-n, comma separated; each must exist and there must be no cycle (a release only); "" clears it (R5.55)')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
     s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')
@@ -3792,6 +3869,9 @@ def build_parser():
                    help='a release phase (agents, join, ci, fix, merge), repeatable; "" clears them')
     s.add_argument('--risk', metavar='LABEL=MINUTES', help='the named risk of a release, for example "+1 fix round=10"; "" clears it')
     s.add_argument('--rides', metavar='ID', help='the release this task rides, its task ID or RELEASE-n (a Running or Built task needs one, R5.47); "" clears it')
+    s.add_argument('--pr', metavar='N', help='the pull request that carries this release (a release only); "" clears it (R5.55)')
+    s.add_argument('--release-start', metavar='"DD Mon ~HH:MM"|HH:MM', help='when this release starts, in the project time zone (a release only); "" clears it (R5.55)')
+    s.add_argument('--release-waits-on', metavar='ID[,ID]', help='the releases this one waits on, task IDs or RELEASE-n, comma separated; each must exist and there must be no cycle (a release only); "" clears it (R5.55)')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
     s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')

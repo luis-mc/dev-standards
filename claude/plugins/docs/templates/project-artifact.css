@@ -804,3 +804,21 @@ a .release-name { color: var(--signal); }
 .release-line .release-name { margin-right: 0; }
 .dropped-line, .no-release-line { display: block; font-size: .72rem; letter-spacing: .05em; color: var(--ink-muted); padding-top: .15em; }
 details.status-fold.release-group > summary { color: var(--ink); }
+
+/* DS256, R5.57 and R5.58: the release tree (a PR carries its releases) */
+.release-timeline .rt-pr-bar { fill: var(--ink); }
+.release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
+.release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
+.release-timeline .rt-arrow-head { fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
+.release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
+.release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
+.release-tree .st { font-weight: 700; }
+.release-tree .ci-note { color: var(--ink-muted); }
+.release-tree tr.pr td { background: var(--paper); border-top: 2px solid var(--ink); font-weight: 600; }
+.release-tree tr.pr td:first-child { border-left: 4px solid var(--ink); }
+.release-tree tr.ch td:first-child { position: relative; padding-left: 44px; border-left: 4px solid var(--ink); }
+.release-tree tr.ch td:first-child::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; border-left: 2px solid var(--ink-muted); }
+.release-tree tr.ch.last td:first-child::before { bottom: 50%; }
+.release-tree tr.ch td:first-child::after { content: ""; position: absolute; left: 20px; top: 50%; width: 16px; border-top: 2px solid var(--ink-muted); }

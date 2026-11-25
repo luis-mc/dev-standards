@@ -1369,6 +1369,18 @@ double-click.
 - **R5.54** — The cell is at most about 220 characters. When it is longer, whole clauses
   are dropped from the front (the Live part first); an ID is never cut. A single clause
   that is still too long has its basis shortened with an ellipsis.
+- **R5.55** — A release may carry `pr` (a positive number), `release_start` (a time with
+  offset) and `release_waits_on` (a list of other existing release IDs, no cycle). They
+  are set with `--pr`, `--release-start` and `--release-waits-on` on `task-add` and
+  `set-task-status`, and only on a release. They are in the publish fingerprint.
+- **R5.56** — A release that waits on others is never live before them: its Live ETA is
+  the latest of its own and theirs. Rows are sorted by that ETA.
+- **R5.57** — When an open release has `pr` or `release_waits_on`, a table follows the
+  timeline: Item, Live ETA, CI, Waits on, Status. A `tr.pr` row per PR, its releases as
+  `tr.ch` rows (the last `tr.ch.last`), each with the sub-line `<task id> · in PR N`.
+- **R5.58** — In the same case the timeline is a tree: a left bar, a trunk at x=22, 18px
+  elbows into each release, labels at x=46, dashed arrows for release-waits-on-release,
+  no dashed box. The figure is at most 880 wide, about 52 per release row.
 
 ---
 
