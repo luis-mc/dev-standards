@@ -9,3 +9,5 @@ The shipped agents rule ("Agents test only what they touch") applies here too. H
 - Suites, areas and the path map: `tools/ci_areas.py`. Measurements behind these choices: `docs/project/feature-test-and-validation-cost.html`.
 
 **Plugin smoke.** dev-standards deploys nothing, so the `Plugin smoke` workflow (`.github/workflows/plugin-smoke.yml`, run on every push to `main`) is its DL-18 smoke. It runs `python tools/plugin_smoke.py`, which checks each plugin under `claude/plugins/`: the manifest, the hook scripts, that scripts compile and answer `--help`, and the skill front matter. `.delivery/config.json` names it in `smoke_workflow`.
+
+**The docs-check job.** It waits for the `areas` job. `tools/ci_areas.py` sets its `docs_check` output when a change touches `docs/`, `AGENTS.md`, `CLAUDE.md`, `tools/`, `claude/` or `.github/workflows/`. A change only under `.claude/`, or a draft pull request, skips it. A push to main, a manual run of docs or specs, and an unreadable range run it.
