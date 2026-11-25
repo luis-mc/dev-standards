@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T22:54+00:00",
+  "updated": "2026-11-25T23:15+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7821,12 +7821,12 @@
       "id": "DP14",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Waiting",
+      "status": "Dropped",
       "item": "One reusable standards-check workflow for the three repos that copy it",
       "detail": "CRSP deferred it past its current wave: needs a version pin and work in three repos. Plan here first, then ask CRSP.",
-      "expected": "28 Nov",
-      "changed": "2026-11-25T22:14+00:00",
-      "expected_basis": "after CRSP wave merges; about 1 day"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T23:13+00:00",
+      "dropped_into": "SO9"
     },
     {
       "id": "DP15",
@@ -11834,13 +11834,14 @@
       "id": "DS244",
       "owner": "project",
       "app": "",
-      "status": "Waiting",
+      "status": "Running",
       "item": "Carry wizard step-bar rule C127 into design-system template and guard tests",
       "detail": "Comiclex rule C127 (PR 2021): '+ 1 more' must not replace the one hidden step. Add to the shared design-system template and guard tests. Starts after PR 2021 is reviewed.",
       "expected": "28 Nov",
-      "changed": "2026-11-25T22:14+00:00",
+      "changed": "2026-11-25T23:15+00:00",
       "expected_basis": "waits on comiclex PR 2021 review",
-      "no_release": "Design-system template change rides the next plugin release when started"
+      "rides": "DS255",
+      "started": "2026-11-25T23:15+00:00"
     },
     {
       "id": "DS245",
@@ -11974,6 +11975,40 @@
       "changed": "2026-11-25T21:25+00:00",
       "release": 181,
       "started": "2026-11-25T21:11+00:00"
+    },
+    {
+      "id": "DS255",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release SO9 and DS244",
+      "detail": "Join, CI, merge, fold and smoke for SO9 (plugin update offer) and DS244 (wizard step-bar rule).",
+      "expected": "26 Nov ~00:55",
+      "changed": "2026-11-25T23:15+00:00",
+      "release": 182,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-25T23:20+00:00",
+          "end": "2026-11-26T00:10+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-26T00:10+00:00",
+          "end": "2026-11-26T00:25+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-26T00:25+00:00",
+          "end": "2026-11-26T00:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-26T00:45+00:00",
+          "end": "2026-11-26T00:55+00:00"
+        }
+      ],
+      "started": "2026-11-25T23:15+00:00"
     },
     {
       "id": "DU1",
@@ -12443,12 +12478,14 @@
       "id": "SO9",
       "owner": "setup-offers",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "On plugin update, offer to apply the new project config",
       "detail": "Owner 25 Nov: when a plugin updates in a project, ask the user if they want to configure all new updates (CI workflow, settings, docs) there, instead of waiting for them to know what to run. Design first: hook at session start after a version change, list what is new, one yes applies all. DP14 may fold in: setup re-writes the workflow and pin.",
       "expected": "28 Nov",
-      "changed": "2026-11-25T22:54+00:00",
-      "expected_basis": "design first; DP14 scope to agree"
+      "changed": "2026-11-25T23:15+00:00",
+      "expected_basis": "design first; DP14 scope to agree",
+      "rides": "DS255",
+      "started": "2026-11-25T23:15+00:00"
     },
     {
       "id": "ST1",

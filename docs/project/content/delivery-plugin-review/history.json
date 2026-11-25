@@ -1,5 +1,9 @@
 [
   {
+    "date": "25 Nov 23:13",
+    "change": "dropped: folded into SO9"
+  },
+  {
     "date": "25 Nov 16:34",
     "change": "PR 270 merged 25 Nov 16:33 UTC"
   },
