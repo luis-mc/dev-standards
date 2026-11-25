@@ -1969,6 +1969,9 @@ def apply_release_fields(task, by_id, args, now_dt, root=None, expected_given=Tr
         if getattr(args, 'release', None) or (args.rides is not None and args.rides.strip()):
             raise Fail(1, '--no-release says the task ships nothing; it cannot be given with --release or --rides')
         reason = ' '.join(no_release.split())
+        if re.search(r'\b(ships?|shipping|rides?|riding|release[sd]?)\b', reason, re.I):    # DP13
+            raise Fail(1, '--no-release says the task ships nothing, but "%s" talks of shipping or a release; '
+                       'work that ships rides a release: use --rides RELEASE-n' % reason)
         if len(reason) > NO_RELEASE_MAX:
             raise Fail(1, '--no-release is %d characters; at most %d' % (len(reason), NO_RELEASE_MAX))
         task['no_release'] = reason
