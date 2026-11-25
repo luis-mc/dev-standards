@@ -14,22 +14,6 @@ import delivery_doctor as D
 import delivery_config as C
 
 
-_NO_RUNNERS = mock.patch.dict(os.environ, {"DELIVERY_RUNNER_DIRS": tempfile.mkdtemp(prefix="no-runners-"),
-                                            "ACTIONS_RUNNER_HOOK_JOB_STARTED": ""})
-_NO_REGISTRY = mock.patch.object(D, "_windows_env_hook", lambda: None)
-
-
-def setUpModule():
-    # The checks must not depend on the machine running them: no real runner folder, no registry value.
-    _NO_RUNNERS.start()
-    _NO_REGISTRY.start()
-
-
-def tearDownModule():
-    _NO_REGISTRY.stop()
-    _NO_RUNNERS.stop()
-
-
 def stub_gh(rc):
     d = Path(tempfile.mkdtemp(prefix="ghstub-"))
     (d / "gh.py").write_text("import sys\nsys.exit(%d)\n" % rc)
@@ -53,7 +37,7 @@ class DoctorTests(unittest.TestCase):
     def test_all_ok(self):
         res = run(enabled_root({"tz": "Europe/Lisbon"}))
         self.assertTrue(all(r["ok"] for r in res.values()), res)
-        self.assertEqual(set(res), {"config", "gh", "tz", "hooks", "ledger", "runner", "ci", "machine", "stack"})
+        self.assertEqual(set(res), {"config", "gh", "tz", "hooks", "ledger", "ci", "stack"})
 
     def test_invalid_config_fails(self):
         res = run(enabled_root({"enforcement": {"mode": "stop"}}))
@@ -143,59 +127,3 @@ class DoctorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
-
-class RunnerExecutionPolicyTests(unittest.TestCase):
-    """DS84: on Windows the .ps1 hook needs an execution policy that lets the service account run it."""
-
-    def runner(self, hook=r"C:\gate\scripts\runner_load_gate.ps1"):
-        d = Path(tempfile.mkdtemp(prefix="actions-runner-"))
-        (d / ".runner").write_text("{}")
-        (d / ".env").write_text("%s=%s\n" % (D.HOOK_VAR, hook))
-        return str(d)
-
-    def check(self, d, account=r"NT AUTHORITY\NETWORK SERVICE", policy=("Undefined", "nowhere"), windows=True, exc=None):
-        eff = mock.Mock(return_value=policy, side_effect=exc)
-        with mock.patch.dict(os.environ, {"DELIVERY_RUNNER_DIRS": d}), \
-                mock.patch.object(D, "_is_windows", lambda: windows), \
-                mock.patch.object(D, "_service_account", lambda _d: ("actions.runner.x", account)), \
-                mock.patch.object(D, "_effective_policy", eff):
-            return D.check_runner(None, {}), eff
-
-    def test_restricted_fails_and_names_fix(self):
-        (ok, detail), eff = self.check(self.runner(), policy=("Undefined", "nowhere"))
-        self.assertFalse(ok)
-        self.assertIn("RemoteSigned", detail)
-        self.assertIn("S-1-5-20", detail)
-        eff.assert_called_once_with("S-1-5-20")
-
-    def test_all_signed_fails(self):
-        self.assertFalse(self.check(self.runner(), policy=("AllSigned", "LocalMachine"))[0][0])
-
-    def test_remote_signed_ok(self):
-        self.assertTrue(self.check(self.runner(), policy=("RemoteSigned", "CurrentUser"))[0][0])
-
-    def test_local_service_sid(self):
-        _, eff = self.check(self.runner(), account=r"NT AUTHORITY\LocalService", policy=("Bypass", "x"))
-        eff.assert_called_once_with("S-1-5-19")
-
-    def test_unreadable_is_not_a_failure(self):
-        (ok, detail), _ = self.check(self.runner(), exc=PermissionError("denied"))
-        self.assertTrue(ok)
-        self.assertIn("cannot check", detail)
-
-    def test_unresolvable_account_is_not_a_failure(self):
-        with mock.patch.object(D, "_account_sid", lambda a: None):
-            (ok, detail), _ = self.check(self.runner(), account=r"HOST\someone")
-        self.assertTrue(ok)
-        self.assertIn("cannot check", detail)
-
-    def test_not_windows_or_not_ps1_skips(self):
-        self.assertTrue(self.check(self.runner(), windows=False)[0][0])
-        (ok, _), eff = self.check(self.runner(hook="/x/runner_load_gate.cmd"))
-        self.assertTrue(ok)
-        eff.assert_not_called()
-
-    def test_well_known_sids(self):
-        self.assertEqual(D._account_sid(r"NT AUTHORITY\NETWORK SERVICE"), "S-1-5-20")
-        self.assertEqual(D._account_sid("LocalSystem"), "S-1-5-18")

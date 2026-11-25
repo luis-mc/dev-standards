@@ -89,6 +89,7 @@ jobs:
       profiles: ${{ steps.areas.outputs.profiles }}
       transcript-folds: ${{ steps.areas.outputs.transcript-folds }}
       docs: ${{ steps.areas.outputs.docs }}
+      docs_check: ${{ steps.areas.outputs.docs_check }}
       mutants: ${{ steps.areas.outputs.mutants }}
       mutants_gate: ${{ steps.areas.outputs.mutants_gate }}
       mutants_cleanup: ${{ steps.areas.outputs.mutants_cleanup }}
@@ -388,10 +389,9 @@ jobs:
       - name: Prove artifact pruning keeps exactly the newest of each name
         run: python3 tools/test_artifact_prune.py
 
-  # DELIVERYSPEC DL-50: runner_plan.py waits for train CI, takes one heavy job
-  # at a time, keeps a memory floor and always resumes the paused runner.
+  # DELIVERYSPEC: shared delivery script fixes (scope, guard, change notes).
   delivery-runner:
-    name: delivery - runner plan
+    name: delivery - shared script fixes
     needs: areas
     if: needs.areas.outputs.delivery == 'true'
     runs-on: ubuntu-latest
@@ -403,10 +403,7 @@ jobs:
         with:
           python-version: '3.13'
 
-      - name: Prove the heavy-job wrapper yields to CI and always resumes the runner
-        run: python3 tools/test_delivery_runner.py
-
-      - name: Prove the shared delivery script fixes (scope, guard, change notes, lock)
+      - name: Prove the shared delivery script fixes (scope, guard, change notes)
         run: python3 tools/test_delivery_shared_fixes.py
 
   # DELIVERYSPEC: the luismc-delivery plugin: ledger, post-tool recorder, watcher and the hooks.
@@ -574,10 +571,15 @@ jobs:
           python3 claude/plugins/delivery/templates/shared/scripts/delivery/change_notes.py pending \
             --config tools/change-notes.json
 
-  # Not an area: this repository's own docs follow DOCSPEC (DS109). Runs on
-  # every push and pull request; the full history feeds the map check (M1).
+  # Not an area: this repository's own docs follow DOCSPEC (DS109). The full
+  # history feeds the map check (M1). DP5: it waits for `areas` and runs when
+  # the change touches docs/, AGENTS.md or the code roots it maps (tools/,
+  # claude/, workflows), on every push to main, a dispatch of docs or specs,
+  # and any run that cannot read its range; not on a draft pull request.
   docs-check:
     name: docs check
+    needs: areas
+    if: needs.areas.outputs.docs_check == 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

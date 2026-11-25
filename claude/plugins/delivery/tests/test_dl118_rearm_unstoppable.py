@@ -24,7 +24,7 @@ class UnstoppableTests(unittest.TestCase):
     def rearm(self, rows, kill=denied, alive=True, installed="1.12.0"):
         root = make_root()
         L.update(root, lambda led: led["watchers"].extend(rows))
-        with mock.patch("os.kill", side_effect=kill), mock.patch("machine_slots.pid_alive", return_value=alive), \
+        with mock.patch("os.kill", side_effect=kill), mock.patch("hooklib.pid_alive", return_value=alive), \
                 mock.patch.object(SS, "_cmdline_ok", return_value=True), \
                 mock.patch.object(SS, "spawn_watcher", return_value=True) as spawn:
             msgs, gone = SS.rearm_old_watchers(str(root), H.load_ledger(str(root)), installed, L.utcnow(), 10)
@@ -67,7 +67,7 @@ class UnstoppableTests(unittest.TestCase):
         L.update(root, lambda led: led["watchers"].append(row(4242, None)))
         for _ in range(2):
             buf = io.StringIO()
-            with mock.patch("os.kill", side_effect=denied), mock.patch("machine_slots.pid_alive", return_value=True), \
+            with mock.patch("os.kill", side_effect=denied), mock.patch("hooklib.pid_alive", return_value=True), \
                     mock.patch.object(SS, "_cmdline_ok", return_value=True), \
                     mock.patch.object(SS, "spawn_watcher", return_value=True), \
                     mock.patch.object(SS.H, "read_input", return_value={"cwd": str(root)}), \
@@ -81,7 +81,7 @@ class UnstoppableTests(unittest.TestCase):
         root = make_root()
         L.update(root, lambda led: led["watchers"].extend([row(11, None, age_h=48), row(12, "9.0.0")]))
         buf = io.StringIO()
-        with mock.patch("machine_slots.pid_alive", return_value=False), \
+        with mock.patch("hooklib.pid_alive", return_value=False), \
                 mock.patch.object(SS.H, "read_input", return_value={"cwd": str(root)}), \
                 mock.patch.object(SS.H, "find_root", return_value=str(root)), \
                 mock.patch.object(L, "plugin_version", return_value="9.0.0"), redirect_stdout(buf):
@@ -108,7 +108,7 @@ class PruneTests(unittest.TestCase):
         L.update(root, lambda led: led["watchers"].extend([row(11, None, 30), row(12, "1.0.0", 0.1)]))
         w = W.Watcher(root) if hasattr(W, "Watcher") else None
         self.assertIsNotNone(w)
-        with mock.patch("machine_slots.pid_alive", return_value=False):
+        with mock.patch("hooklib.pid_alive", return_value=False):
             w.heartbeat(L.iso())
         pids = [x["pid"] for x in L.load(root)["watchers"]]
         self.assertNotIn(11, pids)

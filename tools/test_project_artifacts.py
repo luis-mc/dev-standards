@@ -778,6 +778,17 @@ def test_migration_numbers_old_releases(env):
 
 
 @case
+def test_no_release_reason_may_not_say_it_ships(env):
+    """DP13: a --no-release reason that names shipping or a release contradicts itself; refused."""
+    p = env.baseline()
+    before = p.head()
+    for reason in ('ships with next release', 'fix rides next release', 'part of the release'):
+        r = p.run('set-task-status', 'SI1', 'Running', '--no-release', reason, '--expected', '14 Oct', rides=False)
+        assert r.code == 1 and 'ships' in r.err, (reason, r.all)
+    assert p.head() == before
+
+
+@case
 def test_running_and_built_must_ride_a_release(env):
     """R5.47: Running and Built tasks (not releases) need --rides; refused otherwise; old findings do not freeze."""
     p = env.baseline()
@@ -806,15 +817,15 @@ def test_no_release_tasks_may_run_without_a_release(env):
     no release, goes Live when finished, shows `ships nothing` in Full Progress, and check is clean."""
     p = env.baseline()
     p.ok('task-add', '--owner', 'artifacts', '--item', 'Publish limit study', '--detail', 'Read only.',
-         '--expected', '14 Oct', '--status', 'Running', '--no-release', 'a study, nothing to ship')
-    assert p.task('AR3')['no_release'] == 'a study, nothing to ship' and 'rides' not in p.task('AR3')
+         '--expected', '14 Oct', '--status', 'Running', '--no-release', 'a study, nothing to deliver')
+    assert p.task('AR3')['no_release'] == 'a study, nothing to deliver' and 'rides' not in p.task('AR3')
     for status in ('Waiting', 'Needs you', 'To do', 'Running'):
         p.ok('set-task-status', 'AR3', status, rides=False)
-        assert p.task('AR3')['no_release'] == 'a study, nothing to ship'
+        assert p.task('AR3')['no_release'] == 'a study, nothing to deliver'
     fp = p.man()['full_progress_artifact']['file']
     page = p.show('docs/artifacts/' + fp)
     row = page[page.index('<tr data-task="AR3">'):]
-    assert '<span class="no-release-line">ships nothing: a study, nothing to ship</span>' in row[:row.index('</tr>')]
+    assert '<span class="no-release-line">ships nothing: a study, nothing to deliver</span>' in row[:row.index('</tr>')]
     assert 'Not in a release yet' in page[:page.index('<tr data-task="AR3">')]
     assert p.run('check').code == 0, p.run('check').all
     p.ok('set-task-status', 'AR3', 'Live', rides=False)
@@ -844,7 +855,7 @@ def test_no_release_refusals(env):
                        (['set-task-status', 'SI2', 'Waiting', '--no-release', 'r', '--rides', 'DS1'], '--rides'),
                        (['set-task-status', 'SI2', 'Waiting', '--no-release', 'x' * 81], '80'),
                        (['set-task-status', 'SI2', 'Built'], 'never Built'),
-                       (['set-task-status', 'AR1', 'Waiting', '--no-release', 'it rides'], 'rides none')):
+                       (['set-task-status', 'AR1', 'Waiting', '--no-release', 'a cleanup'], 'rides none')):
         r = p.run(*argv, rides=False)
         assert r.code == 1 and word in r.err, (argv, r.all)
     assert p.head() == before

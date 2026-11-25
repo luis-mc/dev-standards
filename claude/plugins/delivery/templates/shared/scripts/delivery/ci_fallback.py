@@ -18,7 +18,7 @@ Config (`.delivery/config.json`):
 Markers (branches on the remote, created by a push that creates them; a second create is refused by git):
     ci-claim/<sha>/<shard>/<attempt>    who runs the shard (first claim wins, nobody is pre-empted)
     ci-posted/<sha>/<shard>/<attempt>   who posted the one status of that attempt (never two)
-    ci-wait/<sha>/<shard>               a runner job of the shard is held for a machine slot (DL-90): the shard
+    ci-wait/<sha>/<shard>               a runner job of the shard is held for a machine slot: the shard
                                         counts as waiting until the fallback claims it
 Counters live in `fallback-counter.json` on the records branch.
 
@@ -35,8 +35,8 @@ Public functions (all return plain dicts, lists, bools or None; none prints):
     reserve(root, remote, settings, now, kind, est_minutes=0) -> dict
     settle(root, remote, settings, now, kind, reserved_minutes, actual_minutes) -> None
     fallback_gate(root, remote, cfg, os_name, waited_min, offline, now, timeout_min) -> dict
-    mark_wait / clear_wait / read_wait / claim_taken (the ci-wait marker, DL-90)
-    cloud_ci_sessions / cloud_ci_limit (the cloud CI session limit, DL-91)
+    mark_wait / clear_wait / read_wait / claim_taken (the ci-wait marker)
+    cloud_ci_sessions / cloud_ci_limit (the cloud CI session limit)
 Exit codes of the CLI: 0 done, 1 refused, 2 error, 3 claim lost (not an error: end without work).
 """
 from __future__ import annotations
@@ -222,7 +222,7 @@ def shard_wait_minutes(jobs: list, now, run_status: str = "", wait_marker=None, 
     and started_at is empty. A run in status pending/waiting (the CI_SERIAL queue) or with no jobs yet returns
     None. If any job of the shard has started, the shard has a runner: None.
 
-    G6 (DL-90): a job held for a machine slot has started on GitHub, but it has no runner yet. `wait_marker` is the
+    G6: a job held for a machine slot has started on GitHub, but it has no runner yet. `wait_marker` is the
     `ci-wait` marker of the shard (a dict with `at`, or an ISO string, or None). While it exists and the shard has no
     claim (`claimed` is False) the shard counts as waiting, from the time on the marker. Otherwise the oldest wait."""
     now = _utc(_now(now))
@@ -294,7 +294,7 @@ def wait_ref(sha: str, shard: str) -> str:
 
 
 def mark_wait(root: str, remote: str, sha: str, shard: str, holder: str, now=None) -> bool:
-    """Write the wait marker of a held job (DL-90). Same method as a claim: a push that creates the branch. True when
+    """Write the wait marker of a held job. Same method as a claim: a push that creates the branch. True when
     the marker exists after the call (made now, or made by an earlier try of the same shard)."""
     try:
         if _create_branch(root, remote, wait_ref(sha, shard), {

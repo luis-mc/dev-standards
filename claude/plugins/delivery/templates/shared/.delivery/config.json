@@ -18,7 +18,6 @@
     "medium": [35, 60],
     "large": [60, 120]
   },
-  "heavy_commands": [],
   "outbound_deny": [
     "gh issue create",
     "gh issue comment",
@@ -31,18 +30,14 @@
   "watcher_interval_s": 600,
   "runners": [],
   "enforcement": { "mode": "warn", "block_ceiling": 3, "log_every_block": false },
-  "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true, "manage_runners": true, "ci_workflows": ["ci.yml"] },
-  "runner_plan": {
-    "retry_seconds": 300, "runner_max_retries": 0, "report_command": "",
-    "cancel_replaced_runs": true, "hold_dependabot_during_train": true, "heavy_jobs_yield": true
-  },
+  "watcher": { "push_trains": true, "open_prs": true, "merge_on_green": true, "ci_workflows": ["ci.yml"] },
+  "runner_plan": { "cancel_replaced_runs": true, "hold_dependabot_during_train": true },
   "_example_windows_monorepo": {
     "caps": { "cloud": 50, "local": 3, "total": 53 },
     "work_root": "C:\\Work",
     "tz": "Europe/Lisbon",
     "release_branch_re": "^release/\\d+[a-z]?$",
     "no_attribution": true,
-    "heavy_commands": ["pnpm test:full", "pnpm build:installer"],
     "long_pole_globs": ["packages/catalogue/**"],
     "measure_globs": ["packages/matching/**", "packages/catalogue/**"],
     "runners": [

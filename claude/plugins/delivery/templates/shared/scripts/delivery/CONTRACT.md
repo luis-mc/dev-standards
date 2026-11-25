@@ -30,7 +30,6 @@ hook, language guard tests). tech-stack-setup and claude-setup carry no CI or de
 | `.github/workflows/ci-fallback.yml` | `templates/shared/.github/workflows/ci-fallback.yml` (hosted fallback, started only by `workflow_dispatch`) | ci |
 | `routines/ci-fallback-watch.json` | `templates/shared/routines/` (template of the hourly safety-net routine; never created by a script) | ci |
 | `scripts/delivery/runner_health.py` | same (runner labels against online runners; used by `join.py` and `ci_watch.py`) | gate |
-| `scripts/delivery/runner_plan.py` | same (heavy-job wrapper: waits for train CI, one heavy job at a time, memory floor, pauses and always resumes the local runner; `runners` subcommand reports offline CI runners, repairs them with the project's `runners[].repair` commands every 5 minutes and re-runs the CI they cancelled; DELIVERYSPEC DL-50, D6, D6a) | gate |
 | `scripts/delivery/train_freeze.py` | same (called by the `pre-push` hook) | gate |
 | `scripts/delivery/ci_skip_check.py` | same | ci |
 | `scripts/delivery/reach_check.py` | same | ci |

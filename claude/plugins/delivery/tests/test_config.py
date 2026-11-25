@@ -23,8 +23,8 @@ SAMPLE_PROJECT = {
     "runners": [{"name": "build-pc", "os": "Windows", "repair": ["powershell -Command x"]},
                 {"name": "build-pc-linux", "os": "Linux", "repair": [["docker", "restart", "c"]]},
                 {"name": "NUC8-linux", "os": "Linux", "repair": []}],
-    "runner_plan": {"retry_seconds": 300, "runner_max_retries": 0, "cancel_replaced_runs": True,
-                    "hold_dependabot_during_train": True, "heavy_local_jobs_yield": True, "report_command": "x"},
+    "runner_plan": {"cancel_replaced_runs": True,
+                    "hold_dependabot_during_train": True},
 }
 
 
@@ -52,12 +52,12 @@ class ValidateTests(unittest.TestCase):
 
     def test_0_1_0_config_and_empty_config_stay_valid(self):
         old = {"caps": {"cloud": 8, "local": 3}, "tz": "UTC", "runners": [], "watcher_interval_s": 600,
-               "runner_plan": {"retry_seconds": 300, "report_command": ""}, "_doc": "x"}
+               "runner_plan": {}, "_doc": "x"}
         self.assertEqual(C.validate_config(old), ([], []))
         self.assertEqual(C.validate_config({}), ([], []))
 
     def test_task_spelling_merge_method_and_heavy_jobs_yield(self):
-        cfg = {"watcher": {"merge_method": "merge"}, "runner_plan": {"heavy_jobs_yield": False}}
+        cfg = {"watcher": {"merge_method": "merge"}, "runner_plan": {"cancel_replaced_runs": False}}
         self.assertEqual(C.validate_config(cfg), ([], []))
 
     def test_unknown_keys_warn_comments_do_not(self):
@@ -116,8 +116,6 @@ class ValidateTests(unittest.TestCase):
                          {"mode": "block", "block_ceiling": 3, "log_every_block": False})
         self.assertEqual(C.enforcement({"enforcement": {"mode": "warn", "block_ceiling": 5}})["block_ceiling"], 5)
         self.assertTrue(all(C.watcher_flags({}).values()))
-        self.assertFalse(C.runner_plan_flags({"runner_plan": {"heavy_local_jobs_yield": False}})["heavy_jobs_yield"])
-        self.assertFalse(C.runner_plan_flags({"runner_plan": {"heavy_jobs_yield": False, "heavy_local_jobs_yield": True}})["heavy_jobs_yield"])
 
     def test_load_tz_failure_is_loud(self):
         with self.assertRaises(ValueError) as cm:
@@ -223,64 +221,3 @@ class WatcherObeysConfigTests(unittest.TestCase):
         watcher(root, sh).run_once()
         self.assertTrue(any(c[:3] == ["gh", "run", "cancel"] for c in sh.calls))
         self.assertEqual(len(self.merges(sh)), 1)
-
-
-class RunnerGuardTests(unittest.TestCase):
-    def script(self, root):
-        p = Path(root) / "scripts" / "delivery"
-        p.mkdir(parents=True)
-        (p / "runner_plan.py").write_text("# stub")
-        return str(p / "runner_plan.py")
-
-    def test_watcher_launches_runner_guard_once_and_relaunches_after_exit(self):
-        root = cfg_root()
-        script = self.script(root)
-        sh = SpawnShell({("gh", "api"): (1, "")})
-        w = watcher(root, sh, repo="o/r")
-        w.run_once()
-        w.run_once()
-        self.assertEqual(len(sh.spawned), 1)
-        self.assertEqual(sh.spawned[0][1:], [script, "runners", "--root", str(root), "--repo", "o/r"])
-        sh.exit = 5
-        w.run_once()
-        self.assertEqual(len(sh.spawned), 2)
-        kinds = [e["kind"] for e in L.load(root)["events"]]
-        self.assertIn("runner.guard_started", kinds)
-        self.assertIn("runner.guard_exit", kinds)
-
-    def test_not_launched_without_runners_or_when_switched_off(self):
-        for cfg in ({}, {"runners": [{"name": "r1"}], "watcher": {"manage_runners": False}}):
-            root = make_root(cfg)
-            self.script(root)
-            sh = SpawnShell({("gh", "api"): (1, "")})
-            watcher(root, sh).run_once()
-            self.assertEqual(sh.spawned, [])
-
-    def test_missing_script_is_reported_once(self):
-        root = cfg_root()
-        lines = []
-        sh = SpawnShell({("gh", "api"): (1, "")})
-        w = W_watcher(root, sh, lines)
-        w.run_once()
-        w.run_once()
-        self.assertEqual(sh.spawned, [])
-        self.assertEqual(len([l for l in lines if "runner_plan.py was not found" in l]), 1)
-
-    def test_dry_run_only_prints(self):
-        root = cfg_root()
-        self.script(root)
-        sh = SpawnShell({("gh", "api"): (1, "")})
-        lines = []
-        import delivery_watch as W
-        W.Watcher(root, sh=sh, dry_run=True, now=lambda: NOW, out=lines.append).run_once()
-        self.assertEqual(sh.spawned, [])
-        self.assertTrue(any(l.startswith("dry-run: ") and "runners" in l for l in lines))
-
-
-def W_watcher(root, sh, lines):
-    import delivery_watch as W
-    return W.Watcher(root, sh=sh, now=lambda: NOW, out=lines.append)
-
-
-if __name__ == "__main__":
-    unittest.main()

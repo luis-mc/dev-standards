@@ -6,6 +6,7 @@ reads the changed paths and writes GitHub outputs (appended to $GITHUB_OUTPUT,
 and printed):
 
     specs, delivery, artifacts, profiles, transcript-folds, docs   true | false
+    docs_check                             true | false  (DP5: the docs-check job; see docs_check_flag)
     mutants                                true | false  (any suite below)
     mutants_gate, mutants_cleanup, mutants_notes   true | false  (TC7, one per suite)
 
@@ -172,7 +173,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
     (re.escape(TS) + r"/assets/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged|test_ci_speedups|test_shard_guard)\.py",
+    (r"tools/(test_delivery_[a-z_]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged|test_ci_speedups|test_shard_guard)\.py",
      frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]
@@ -281,6 +282,28 @@ def advice(paths: list[str], branch: str = "<branch>") -> str:
             f"--ref {branch} -f areas={','.join(touched)}`")
 
 
+# DP5: docs_check.py reads docs/, AGENTS.md and the code roots in docs/docs.json
+# (code-to-doc map). A change outside them, such as .claude/ settings, cannot
+# change its result, so the docs-check job skips it.
+DOCS_CHECK_PREFIXES = ("docs/", "claude/", "tools/", ".github/workflows/")
+DOCS_CHECK_FILES = ("AGENTS.md", "CLAUDE.md")
+
+
+def docs_check_flag(paths: list[str] | None, *, skip: bool = False,
+                    chosen: list[str] | None = None) -> bool:
+    """Does the docs-check job run? Not on a DS44 skip; always on an unreadable
+    range or the default branch (paths None); on a dispatch override only when a
+    doc or spec area is chosen; otherwise when a changed path is one it reads."""
+    if skip:
+        return False
+    if chosen is not None:
+        return bool({"docs", "specs"} & set(chosen))
+    if paths is None:
+        return True
+    return any(norm(p).startswith(DOCS_CHECK_PREFIXES) or norm(p) in DOCS_CHECK_FILES
+               for p in paths)
+
+
 def emit(out: dict[str, bool], note: str) -> None:
     lines = [f"{k}={'true' if v else 'false'}" for k, v in out.items()]
     print(f"ci_areas: {note}")
@@ -333,19 +356,21 @@ def main(argv: list[str] | None = None) -> int:
             return 2
         out = {a: a in chosen for a in AREAS}
         out.update(mutant_flags([], force, out["delivery"]))
+        out["docs_check"] = docs_check_flag(None, chosen=chosen)
         emit(out, f"dispatch override: {','.join(chosen)}")
         return 0
     if not skip and args.event == "workflow_dispatch":
         paths = branch_paths(args.default_branch, args.head or "HEAD")
     if skip:
-        emit(classify([], skip=True),
+        emit({**classify([], skip=True), "docs_check": docs_check_flag(None, skip=True)},
              "skipped, main differs from the tested PR head only in ignored paths")
     elif paths is None:
-        emit(classify([], run_all=True, force_mutants=force),
+        emit({**classify([], run_all=True, force_mutants=force), "docs_check": True},
              f"event {args.event or '?'} (or an unreadable range, or the default "
              "branch) runs every area")
     else:
-        emit(classify(paths, force_mutants=force), f"{len(paths)} changed path(s)")
+        emit({**classify(paths, force_mutants=force), "docs_check": docs_check_flag(paths)},
+             f"{len(paths)} changed path(s)")
     return 0
 
 

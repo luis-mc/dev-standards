@@ -25,7 +25,6 @@ import area_select as asel  # noqa: E402
 import change_notes as cn  # noqa: E402
 import ci_scope as cs  # noqa: E402
 import delivery_common as dc  # noqa: E402
-import runner_plan as rp  # noqa: E402
 import session_guard as sg  # noqa: E402
 
 CASES = []
@@ -113,33 +112,6 @@ def f14_removed_rule_line_is_reported():
     removed, added = cn.changed_lines(d, "base", "s.md")
     assert (7, "---") in removed, removed
     assert (9, "more") in removed and added, (removed, added)
-
-
-def bare_plan(label: str, alive: bool):
-    root = tempfile.mkdtemp(prefix="dl56-lock-")
-    plan = rp.Plan.__new__(rp.Plan)
-    plan.lock_path = os.path.join(root, ".delivery", rp.LOCK_NAME)
-    plan.alive = lambda pid: alive
-    plan.label, plan.job_id, plan.have_lock = label, label + "-1", False
-    return plan
-
-
-@case
-def f15_half_written_lock_is_not_dead():
-    plan = bare_plan("b", alive=False)
-    os.makedirs(os.path.dirname(plan.lock_path))
-    open(plan.lock_path, "w").close()          # A created it, has not written yet
-    why = plan.lock_blocker()
-    assert why and not plan.have_lock, (why, plan.have_lock)
-    assert os.path.exists(plan.lock_path)
-
-
-@case
-def f15_lock_is_complete_when_visible():
-    plan = bare_plan("a", alive=True)
-    assert plan.lock_blocker() is None and plan.have_lock
-    assert json.load(open(plan.lock_path))["job"] == "a-1"
-    assert os.listdir(os.path.dirname(plan.lock_path)) == [rp.LOCK_NAME]
 
 
 def guard_repo(branch="T1-feature") -> Path:
