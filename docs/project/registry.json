@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T14:55+00:00",
+  "updated": "2026-11-25T15:03+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7702,27 +7702,25 @@
       "id": "DP4",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "Find the PostToolUse 'boom' crash cause",
       "detail": "12 crashes 31 Oct to 11 Nov in this repo. Find the cause or confirm test noise, then fix or remove.",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T14:37+00:00",
-      "expected_basis": "small, runs first; about 15 min agent",
-      "no_release": "bug find; fix rides next release",
-      "started": "2026-11-25T14:37+00:00"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T15:03+00:00",
+      "started": "2026-11-25T14:37+00:00",
+      "rides": "DS247"
     },
     {
       "id": "DP5",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Built",
       "item": "spec-lint paths filter in this repo",
       "detail": "Skip the 21 spec-lint jobs when no doc or spec path changed. Release PR still runs all.",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T14:37+00:00",
-      "expected_basis": "workflow file only, parallel with DS246; about 15 min agent",
-      "no_release": "CI filter; ships with next release",
-      "started": "2026-11-25T14:37+00:00"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T15:03+00:00",
+      "started": "2026-11-25T14:37+00:00",
+      "rides": "DS247"
     },
     {
       "id": "DP6",
@@ -11763,9 +11761,10 @@
       "item": "Remove the runner pool code from dev-standards; keep a pool-only backup",
       "detail": "Pool code removed, pushed 9d1c381f; backup in c:\\dev-standards-pool-back; release fold next",
       "expected": "25 Nov",
-      "changed": "2026-11-25T13:19+00:00",
+      "changed": "2026-11-25T15:03+00:00",
       "release": 173,
-      "started": "2026-11-25T11:50+00:00"
+      "started": "2026-11-25T11:50+00:00",
+      "rides": "DS247"
     },
     {
       "id": "DS246",
@@ -11775,9 +11774,44 @@
       "item": "DS246 Remove load/slot layer from delivery (CRSP owns limits)",
       "detail": "Stage 2: gate, slots, machine, load, runner_plan, doctor checks; keep tasks, RELEASE-n, CI flow. Removed IDs: hard docs-check fail plus a fix guide (owner choice 25 Nov).",
       "expected": "25 Nov",
-      "changed": "2026-11-25T14:55+00:00",
-      "rides": "DS245",
+      "changed": "2026-11-25T15:03+00:00",
+      "rides": "DS247",
       "started": "2026-11-25T14:37+00:00"
+    },
+    {
+      "id": "DS247",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: remove load/slot layer, boom test fix, docs-check scope",
+      "detail": "PR 270 joins DS245, DS246, DP4, DP5. CI then merge then release fold.",
+      "expected": "25 Nov ~16:00",
+      "changed": "2026-11-25T15:03+00:00",
+      "expected_basis": "CI 3-5 min plus fold",
+      "release": 174,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-25T14:37+00:00",
+          "end": "2026-11-25T15:05+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-25T15:05+00:00",
+          "end": "2026-11-25T15:15+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-25T15:15+00:00",
+          "end": "2026-11-25T15:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-25T15:45+00:00",
+          "end": "2026-11-25T16:00+00:00"
+        }
+      ],
+      "started": "2026-11-25T15:03+00:00"
     },
     {
       "id": "DU1",
