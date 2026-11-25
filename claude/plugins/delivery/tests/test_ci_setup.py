@@ -42,14 +42,14 @@ sys.exit(1)
 '''
 
 MACHINE = {"name": "pc1", "os": "linux", "labels": ["self-hosted", "linux"]}
-OPT1 = {"track": "ts", "options": {"linux": 1},
+OPT1 = {"track": "ts", "merge_mode": "auto", "options": {"linux": 1},
         "self_hosted": {"machines": [MACHINE, {"name": "win1", "os": "windows", "labels": ["self-hosted", "windows"]}],
                         "serial": True, "wait_min": 10,
                         "limits": {"pc1": {"memory_pct": 85, "cpu_pct": 60}, "win1": {"memory_pct": 80, "cpu_pct": 50}}}}
-OPT2 = {"track": "ts", "options": {"linux": 2, "windows": 2},
+OPT2 = {"track": "ts", "merge_mode": "auto", "options": {"linux": 2, "windows": 2},
         "github_hosted": {"runner": {"linux": "ubuntu-4core", "windows": "windows-latest"}, "larger": True,
                           "monthly_minutes_cap": None, "windows_small_set_only": True}}
-OPT3 = {"track": "ts", "options": {"linux": 3},
+OPT3 = {"track": "ts", "merge_mode": "auto", "options": {"linux": 3},
         "cloud": {"repo": "o/r", "branches": ["release/*"], "shard_timeout_min": 30, "status_token_env": "CI_STATUS_TOKEN",
                   "max_sessions_per_day": 4}}
 TABLE = {"schema": 1, "shards": [{"id": "unit", "os": "linux", "commands": ["echo ok"], "context": "unit (linux)"}]}

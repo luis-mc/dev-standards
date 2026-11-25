@@ -13,6 +13,10 @@ Set up where CI runs, one OS at a time. You are the guide; the engine is `script
 
 Run `python3 <plugin>/scripts/delivery_ci_setup.py facts` (the plugin folder is next to this file). It lists the track, whether a shard table and an installer workflow exist, which OS the shards use, and the options already chosen. Say what you found in two lines. Ask for the track if it is null. It is a multi-select: one or more of `ts`, `go`, `rust`, `dotnet`. A project with a Rust workspace and a pnpm workspace picks `rust` and `ts`. With several tracks the installer takes them comma-separated (`--track rust,ts`) and writes one `ci.yml`, one `gate.json` and one `ci-scope.json` that cover all of them. `facts` lists every track it finds in `tracks`. Put the answer in the answers file as `"track": ["rust", "ts"]` (a plain string still works for one track). `delivery_ci_setup.py apply` passes every track to the installer and prints them, so there is no need to run the installer yourself.
 
+## 1a. Ask the merge mode (DP16)
+
+Ask once: "When CI is green for a pull request, who merges it? **auto: merge on green** (the watcher merges it, and nothing else does) or **manual: user merges** (the watcher never merges, and the hooks refuse an agent's `gh pr merge`)?" Put the answer in the answers file as `"merge_mode": "auto"` or `"manual"`. The engine refuses without it and writes `watcher.merge_mode`. The delivery plugin's own default, when nothing is set, is `auto`.
+
 ## 2. Show the table, then ask per OS
 
 Show this table once:

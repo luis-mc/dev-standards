@@ -222,6 +222,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.70** — Warn-mode report (DP8, owner decision D3). With `enforcement.mode` `warn`, the Stop and PreToolUse hooks log each finding they would have blocked to `.delivery/blocks.log` as `time<TAB>stop:warn|pre-tool:warn<TAB>rule<TAB>message`, whatever `log_every_block` says. `delivery_report.py [--root DIR] [--since ISO] [--json] [--write]` counts those lines per rule and prints `would have blocked N times` for the project and for each rule. In block mode it says there is no report. `--write` also writes `.delivery/warn-report.json` (schema 1: `mode`, `total`, `rules`, `first`, `last`). Full Progress, on its publish copy, reads that file and adds one section, `Warn mode`, with one summary line (`render_artifacts.warn_report_line`); a project not in warn mode, or with no file, gets no section. The command never edits the ledger or the log. Tests: `tools/test_delivery_report.py`.
 
+**R5.71** — Merge mode (DP16, owner decision D5). `watcher.merge_mode` is `auto` (the default: merge on green) or `manual` (the owner merges). In `auto` the watcher merges a PR whose CI is green for its current head, as before. In `manual` the watcher never merges (`watcher_flags` forces `merge_on_green` off) and the PreToolUse hook refuses an agent's `gh pr merge` under DL-05. Any other value reads as `auto`. `/delivery-ci-setup` asks the question, with no default, and `delivery_ci_setup.py apply` refuses without `merge_mode` and writes it. Tests: `claude/plugins/delivery/tests/test_dp16_merge_mode.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -288,6 +290,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.61 | `claude/plugins/delivery/tests/test_dl329_rust_target_link.py` |
 | R5.62 | `claude/plugins/delivery/tests/test_dl336_ci_watch_default_head.py` |
 | R5.70 | `tools/test_delivery_report.py` |
+| R5.71 | `claude/plugins/delivery/tests/test_dp16_merge_mode.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |

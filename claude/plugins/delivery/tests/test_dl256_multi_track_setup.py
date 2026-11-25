@@ -62,12 +62,12 @@ class Detect(Base):
 
 class Validate(unittest.TestCase):
     def test_forms(self):
-        self.assertEqual(S.validate({"track": "rust", "options": OPTIONS, "github_hosted": HOSTED}), [])
-        self.assertEqual(S.validate({"track": ["rust", "ts"], "options": OPTIONS, "github_hosted": HOSTED}), [])
+        self.assertEqual(S.validate({"track": "rust", "merge_mode": "auto", "options": OPTIONS, "github_hosted": HOSTED}), [])
+        self.assertEqual(S.validate({"track": ["rust", "ts"], "merge_mode": "auto", "options": OPTIONS, "github_hosted": HOSTED}), [])
 
     def test_bad_names_and_empty(self):
-        self.assertTrue(S.validate({"track": ["rust", "php"], "options": OPTIONS, "github_hosted": HOSTED}))
-        self.assertTrue(S.validate({"track": [], "options": OPTIONS, "github_hosted": HOSTED}))
+        self.assertTrue(S.validate({"track": ["rust", "php"], "merge_mode": "auto", "options": OPTIONS, "github_hosted": HOSTED}))
+        self.assertTrue(S.validate({"track": [], "merge_mode": "auto", "options": OPTIONS, "github_hosted": HOSTED}))
         self.assertTrue(S.validate({"track": 3, "options": OPTIONS, "github_hosted": HOSTED}))
 
 
@@ -75,7 +75,7 @@ class Apply(Base):
     def run_apply(self, track):
         write(self.tmp, ".delivery/config.json", "{}")
         ans = os.path.join(self.tmp, "answers.json")
-        write(self.tmp, "answers.json", json.dumps({"track": track, "options": OPTIONS, "github_hosted": HOSTED}))
+        write(self.tmp, "answers.json", json.dumps({"track": track, "merge_mode": "auto", "options": OPTIONS, "github_hosted": HOSTED}))
         out = StringIO()
         with mock.patch.object(INS, "plan", return_value=[]) as plan, mock.patch.object(INS, "apply"), \
                 mock.patch("delivery_doctor.run_checks", return_value=[]), \

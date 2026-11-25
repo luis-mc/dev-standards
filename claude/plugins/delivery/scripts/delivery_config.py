@@ -52,9 +52,17 @@ def _flag(section, names, default):
     return default
 
 
+def merge_mode(cfg) -> str:
+    """`auto` (merge on green, the default) or `manual` (the owner merges). Any other value is `auto`."""
+    return "manual" if _section(cfg, "watcher").get("merge_mode") == "manual" else "auto"
+
+
 def watcher_flags(cfg) -> dict:
     w = _section(cfg, "watcher")
-    return {k: _flag(w, (k,), d) for k, d in WATCHER_DEFAULTS.items()}
+    out = {k: _flag(w, (k,), d) for k, d in WATCHER_DEFAULTS.items()}
+    if merge_mode(cfg) == "manual":
+        out["merge_on_green"] = False
+    return out
 
 
 def ci_workflows(cfg) -> list:
