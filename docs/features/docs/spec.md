@@ -75,6 +75,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.9** — `docs_fold.py fold` bumps each doc's version once per release, using the highest change. It writes one version row and deletes the folded notes. `--dry-run` changes nothing (DOCSPEC R7.3, R7.4).
 
+**R5.23** — After a real fold (not `--dry-run`, no error), `docs_fold.py fold` runs `project_artifacts.py pending --json`. If Full Progress is listed, it prints the publish steps (settle, `pending --json --refresh`, publish, `mark-published`, commit). A failed check stays quiet and never fails the fold (DS252).
+
 **R5.9a** — A doc with a `**Version:** X.Y.Z` line and no `version:` front matter is folded in place. The fold bumps that line, adds a row only to an existing `## Versions` or `## Change log` table, and adds no front matter. A doc with both a front matter `version:` and a `**Version:**` line is refused. Test: `claude/plugins/docs/tests/test_dl243_version_line.py`.
 
 **R5.10** — `docs_check.py` reports layout, front matter, link, image, `Source:`, test-path, version-table, generated-file, map and `docs/work/` findings. It exits 1 on any error (DOCSPEC R8.1).
@@ -149,6 +151,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.1, R5.2, R5.3, R5.4 | `claude/plugins/docs/tests/test_setup.py` |
 | R5.5, R5.6, R5.7 | `claude/plugins/docs/tests/test_index.py` |
 | R5.8, R5.9 | `claude/plugins/docs/tests/test_fold.py` |
+| R5.23 | `claude/plugins/docs/tests/test_ds252_fold_stale_notice.py` |
 | R5.10, R5.11 | `claude/plugins/docs/tests/test_check.py` |
 | R5.12 | `claude/plugins/docs/tests/test_work.py` |
 | R5.13 | `claude/plugins/docs/tests/test_hooks.py` |

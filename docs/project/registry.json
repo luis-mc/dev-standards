@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T18:07+00:00",
+  "updated": "2026-11-25T21:06+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -11937,6 +11937,19 @@
       "changed": "2026-11-25T18:07+00:00",
       "release": 179,
       "started": "2026-11-25T17:55+00:00"
+    },
+    {
+      "id": "DS252",
+      "owner": "project",
+      "app": "luismc-docs",
+      "status": "Running",
+      "item": "Release fold says when Full Progress is stale",
+      "detail": "docs_fold.py fold checks pending after a real fold and prints the publish steps when Full Progress changed, so a long run cannot skip the publish.",
+      "expected": "25 Nov ~22:30",
+      "changed": "2026-11-25T21:06+00:00",
+      "expected_basis": "one script, one test, CI 5 min",
+      "no_release": "small docs-plugin change, rides the next RELEASE",
+      "started": "2026-11-25T21:06+00:00"
     },
     {
       "id": "DU1",
