@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T16:46+00:00",
+  "updated": "2026-11-25T17:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7726,11 +7726,11 @@
       "id": "DP6",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "Watcher runs smoke and cleanup, restarts dead watcher",
       "detail": "Watcher runs cleanup.py and the smoke command after merge; stops the agent only on failure. SessionStart restarts a stale watcher.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T16:39+00:00",
+      "changed": "2026-11-25T17:10+00:00",
       "rides": "DP15",
       "started": "2026-11-25T16:35+00:00"
     },
@@ -7738,11 +7738,11 @@
       "id": "DP7",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "Default ETA table and warn-once on past-due rows",
       "detail": "ETA defaults by task type; past-due rows warn once then move to Needs you. DL-64 and DL-32 stay blocking (owner choice).",
       "expected": "25 Nov",
-      "changed": "2026-11-25T16:46+00:00",
+      "changed": "2026-11-25T17:11+00:00",
       "rides": "DP15",
       "started": "2026-11-25T16:35+00:00"
     },
@@ -7750,11 +7750,11 @@
       "id": "DP8",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "Warn-mode report: would have blocked N times",
       "detail": "Per-project report so the owner can choose warn to block.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T16:40+00:00",
+      "changed": "2026-11-25T17:11+00:00",
       "rides": "DP15",
       "started": "2026-11-25T16:35+00:00"
     },
@@ -7831,12 +7831,11 @@
       "id": "DP15",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: watcher cleanup, default ETAs, warn-mode report",
       "detail": "Rides DP6, DP7, DP8.",
-      "expected": "25 Nov ~18:25",
-      "changed": "2026-11-25T16:34+00:00",
-      "expected_basis": "3 local agents ~45 min, then join, CI, owner merge",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T17:11+00:00",
       "release": 175,
       "phases": [
         {
@@ -7870,12 +7869,12 @@
       "id": "DP16",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Built",
       "item": "Merge mode setting: auto (merge on green) default, manual option",
       "detail": "Delivery config key plus setup question; code enforces it: watcher/join merge a green PR in auto mode, never in manual. Owner 25 Nov.",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T16:35+00:00",
-      "expected_basis": "starts after DP6 joins; same watcher files"
+      "expected": "25 Nov",
+      "changed": "2026-11-25T17:14+00:00",
+      "rides": "DS248"
     },
     {
       "id": "DP17",
@@ -11890,6 +11889,19 @@
         }
       ],
       "started": "2026-11-25T15:03+00:00"
+    },
+    {
+      "id": "DS248",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: merge mode (DP16)",
+      "detail": "Join, CI, merge and fold of DP16",
+      "expected": "25 Nov ~17:45",
+      "changed": "2026-11-25T17:14+00:00",
+      "expected_basis": "CI 3-5 min after push",
+      "release": 176,
+      "started": "2026-11-25T17:14+00:00"
     },
     {
       "id": "DU1",

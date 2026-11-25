@@ -18,6 +18,7 @@ import sys
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+import delivery_config as C  # noqa: E402
 import hooklib as H  # noqa: E402
 
 ATTRIBUTION_RE = re.compile(r'co-authored-by|generated with \[?claude|claude code|noreply@anthropic\.com|'
@@ -78,7 +79,10 @@ def run_state(root, repo, head):
     return 'green' if all(x.get('conclusion') in ('success', 'skipped') for x in runs) else 'red'
 
 
-def check_merge(root, seg, ledger):
+def check_merge(root, seg, ledger, cfg=None):
+    if cfg is not None and C.merge_mode(cfg) == 'manual':
+        deny('DL-05 merge mode is manual (watcher.merge_mode in .delivery/config.json): the owner merges. '
+             'Leave the PR ready and say it is green. To let green PRs merge, set watcher.merge_mode to "auto".')
     if flag(seg, '--auto'):
         deny('DL-05 gh pr merge --auto is never used. Wait for ci_watch.py to pass for the current head, then run '
              'gh pr merge without --auto.')
@@ -386,7 +390,7 @@ def check_bash(root, cfg, ledger, data, at):
         if H.check_on(cfg, 'DL-11') and runs_branch_gate(seg):
             check_join_gate(seg, cfg, branch if branch is not None else current_branch(cwd))
         if H.starts_with(seg, ['gh', 'pr', 'merge']) and H.check_on(cfg, 'DL-05'):
-            check_merge(root, seg, ledger)
+            check_merge(root, seg, ledger, cfg)
         if H.starts_with(seg, ['gh', 'pr', 'checks']) and flag(seg, '--watch') and H.check_on(cfg, 'DL-07'):
             deny('DL-07 do not watch the PR check list. Watch the workflow runs of the head commit: ci_watch.py <sha>.')
         if H.starts_with(seg, ['gh', 'run', 'watch']) and H.check_on(cfg, 'DL-95'):

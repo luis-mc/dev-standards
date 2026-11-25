@@ -7,6 +7,7 @@ Standing rules for every agent working in this repository. `CLAUDE.md` imports t
 - Work happens on `main`. An agent works on a short-lived task branch named `<task-id>-<slug>`, pushes only that branch, and never pushes to `main`, merges, or opens a ready pull request.
 - A branch never edits a spec's `**Version:**` line, its change log, or a plugin's `"version"`. It adds a change note in `docs/architecture/changes/`; the release fold writes versions. A change to a plugin's files needs a note naming that plugin's `plugin.json`.
 - Requirement IDs, section numbers and `**Version:**` lines in the shipped specs stay where they are. Projects, hooks and tests cite them.
+- Merge mode (`watcher.merge_mode` in `.delivery/config.json`): `auto` (the default) means the delivery watcher merges a green pull request; `manual` means the owner merges. Agents never run `gh pr merge` in either mode; the hook refuses it in `manual`.
 - Plugins write files in the working tree. They never commit, push or merge.
 - Name no other project in any file or commit message. Only dev-standards and its plugins.
 - Keep tests light: `python tools/ci_areas.py --branch-advice` says what to run. Run no mutation passes and no Docker unless the task says so. See `docs/guides/testing.md`.

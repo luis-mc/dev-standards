@@ -101,6 +101,8 @@ def validate(a) -> list:
         errors.append("options: Option 3 (cloud sessions) runs on Linux only; pick Option 1 or 2 for the other OS")
     if a.get("track") is not None:
         errors += track_errors(a["track"])
+    if a.get("merge_mode") not in ("auto", "manual"):
+        errors.append("merge_mode: choose auto (merge on green) or manual (the owner merges)")
     if "self-hosted" in chosen.values():
         sh = a.get("self_hosted") if isinstance(a.get("self_hosted"), dict) else {}
         machines = sh.get("machines")
@@ -203,6 +205,9 @@ def validate_fallback(a, chosen) -> list:
 
 def apply_answers(cfg: dict, a: dict) -> dict:
     chosen = {o: option_of(v) for o, v in a["options"].items()}
+    w = cfg.get("watcher") if isinstance(cfg.get("watcher"), dict) else {}
+    w["merge_mode"] = a["merge_mode"]
+    cfg["watcher"] = w
     ci = cfg.get("ci") if isinstance(cfg.get("ci"), dict) else {}
     ci["options"] = chosen
     ci["guided"] = True

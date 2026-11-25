@@ -269,6 +269,15 @@
           "default": true,
           "description": "Open the ready PR of a pushed train that has none."
         },
+        "merge_mode": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "manual"
+          ],
+          "default": "auto",
+          "description": "auto: merge on green (the watcher merges a green PR). manual: the owner merges; the watcher never merges and the hooks refuse an agent's gh pr merge (DP16)."
+        },
         "merge_on_green": {
           "type": "boolean",
           "default": true,
