@@ -77,7 +77,8 @@ def ar65_to_do_and_on_hold_need_no_expected():
     html = (p.clone / 'docs' / 'artifacts' / 'full-progress.html')
     files = [f for f in (p.clone / 'docs' / 'artifacts').glob('*.html')]
     assert any('Not scheduled' in f.read_text(encoding='utf-8') for f in files)
-    assert p.run('task-add', '--owner', 'artifacts', '--item', 'R', '--detail', 'd', '--status', 'Running').code != 0
+    # DP7 (D2): a Running row with no --expected takes the default ETA instead of being refused
+    assert p.run('task-add', '--owner', 'artifacts', '--item', 'R', '--detail', 'd', '--status', 'Running').code == 0
 
 
 @case
@@ -93,8 +94,9 @@ def ar65_running_and_waiting_need_an_expected():
     p = ENV.baseline()
     a = p.ok('task-add', '--owner', 'artifacts', '--item', 'No date', '--detail', 'd').out.strip()
     for st in ('Running', 'Waiting'):
-        r = p.run('set-task-status', a, st)
-        assert r.code != 0 and 'needs an Expected' in r.err, r.all
+        r = p.run('set-task-status', a, st)       # DP7 (D2): the default ETA fills it in
+        assert r.code == 0 and p.task(a)['expected'], r.all
+        p.ok('set-task-status', a, 'To do', '--expected', '')
     p.ok('set-task-status', a, 'Waiting', '--expected', '20 Oct ~10:00')
     assert p.task(a)['expected'] == '20 Oct ~10:00'
 

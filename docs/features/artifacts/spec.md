@@ -19,6 +19,7 @@ code:
   - claude/plugins/docs/scripts/plan_rows_check.py
   - claude/plugins/docs/scripts/hook_after_command.py
   - claude/plugins/docs/scripts/hook_end_of_turn.py
+  - tools/test_artifacts_dp7.py
   - claude/plugins/docs/skills/feature-artifact-new/**
   - claude/plugins/docs/skills/full-progress-artifact-new/**
   - claude/plugins/docs/skills/project-artifact-check/**
@@ -180,6 +181,10 @@ flowchart LR
 
 **R5.23** — In Full Progress section 1 the `Where it stands` cell is built from the record on every render: `Live: RELEASE-n (DD Mon)` and the version when named, then one clause per open status with the task IDs (ranges when consecutive), what they wait on and the Expected date, as `Waiting: DL346-DL348 on the new pool (~23 Nov)`. It stays near 220 characters, dropping the oldest detail first. A feature with no tasks keeps its lede's first sentence. The cell is in the publish fingerprint. `check` also warns on a lede that names a train label or `#NN` (R5.37a). (AR77, ARTIFACTSPEC R5.53, R5.54)
 
+**R5.24** — A task with no `--expected` gets a default Expected by task type. `task-add` and `set-task-status` take `--type agent|ci|join|test|docs|study|release|other`; the default is `other`. The minutes are 15, 5, 10, 10, 15, 20, 30 and 30. The time is now plus those minutes, rounded up to 5 minutes, in the project's zone, and the basis reads `default ETA, <type>: <n> min`. An explicit `--expected` wins; a To do or On hold row stays `Not scheduled`. (DP7, owner decision D2)
+
+**R5.25** — The end-of-turn hook tells once about an open row past its Expected, in a message that does not block. It tells again only when the row gets a new Expected. A Running or Waiting row more than 60 minutes past due blocks once, naming `overdue-sweep`, which moves it to Needs you. A Needs you row is not named. The hourly fail-safe and the other blocking stops are unchanged. (DP7, owner decision D2, ARTIFACTSPEC R6.14)
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -255,6 +260,8 @@ flowchart TB
 | R5.21 | `test_unchanged_copy_is_not_asked_for_outside_the_hourly_failsafe`, `test_hourly_failsafe_fires_at_60_minutes` in `claude/plugins/docs/tests/test_ar72_publish_settle.py`; `test_pending_refresh_lists_an_unchanged_full_progress` in `tools/test_project_artifacts.py` |
 | R5.22 | `test_next_morning_keeps_the_evening_before`, `test_evening_chains_to_next_day`, `test_same_day_stays_today`, `test_dated_phases_keep_their_date`, `test_far_phase_warns_and_succeeds`, `test_clear_with_others_hint`, `test_waiting_expected_with_old_phases_hint` in `claude/plugins/docs/tests/test_ar74_phase_dates.py` |
 | R5.23 | `claude/plugins/docs/tests/test_ar77_where_it_stands.py` (Live part, ranges, Running release, fallback, length, fingerprint, stale-lede warning); `section_one_never_blank` in `tools/test_render_artifacts.py` |
+| R5.24 | `dp7_default_eta_table_and_format`, `dp7_task_add_without_expected_takes_the_default_for_its_type`, `dp7_set_task_status_running_without_expected_takes_the_default` in `tools/test_artifacts_dp7.py` |
+| R5.25 | `dp7_overdue_sweep_moves_only_rows_over_an_hour_past_due` in `tools/test_artifacts_dp7.py`; `stop_warns_once_on_open_rows_past_their_expected_time`, `stop_blocks_once_to_move_a_row_over_an_hour_past_due_and_leaves_needs_you_alone`, `stop_still_blocks_on_the_other_noisy_checks_with_an_overdue_row_present` in `tools/test_project_artifacts_hooks.py` |
 | R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
 | R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `tools/test_project_artifacts_hooks.py` |
 | R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `tools/test_project_artifacts_hooks.py` |

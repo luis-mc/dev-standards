@@ -2051,6 +2051,40 @@ def normalise_expected(text):
     return '%s ~%s:%s%s' % (m.group(1), m.group(2), m.group(3), '; ' + note[1:].strip() if note and note[1:].strip() else '')
 
 
+def default_eta_basis(kind):
+    k = str(kind or 'other').strip().lower()
+    return 'default ETA, %s: %d min' % (k if k in H.DEFAULT_ETA_MINUTES else 'other', H.default_eta_minutes(k))
+
+
+def cmd_overdue_sweep(args):
+    """DP7 (D2): a Running or Waiting row more than 60 minutes past its Expected moves to Needs you."""
+    ctx = make_ctx(args)
+
+    def apply(rec):
+        if H is None:
+            raise Fail(1, 'artifact_hourly.py is missing; nothing swept')
+        now = rec.now()
+        _warn, move = H.overdue_split(rec.tasks(), rec.manifest, now.dt)
+        moved = []
+        for t, _when in move:
+            t['status'] = 'Needs you'
+            t['changed'] = now.iso
+            t.pop('waits_on', None)
+            moved.append(t['id'])
+            if t.get('owner') not in (None, 'project'):
+                rec.render_keys[t['owner']] = 'new'
+        if moved:
+            rec.render_keys[FP_NAME] = 'new'
+        rec.message = ctx.rel + ': overdue-sweep ' + (' '.join(moved) or 'nothing')
+        return {'command': 'overdue-sweep', 'moved': moved}
+
+    res = run_change(ctx, apply)
+    emit(args, res, ' '.join(res['moved']))
+    if not args.json_out:
+        print('project_artifacts: %s moved to Needs you' % (', '.join(res['moved']) or 'no row'), file=sys.stderr)
+    return 0
+
+
 def cmd_task_add(args):
     ctx = make_ctx(args)
     refuse_replacement_char(item=args.item, detail=args.detail, expected=args.expected, basis=args.basis,
@@ -2065,10 +2099,14 @@ def cmd_task_add(args):
     if not expected_given and status in ('To do', 'On hold') and not phased_release:
         args.expected = ''           # R6.6: Expected is optional here; it shows as "Not scheduled"
         expected_given = True
+    default_eta = False
     if not expected_given:
-        if not (getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase)):
+        if getattr(args, 'release', False) and args.phase and any(str(x).strip() for x in args.phase):
+            args.expected = 'pending'
+        elif status in ('Running', 'Waiting', 'Needs you') and H is not None:
+            default_eta = True       # DP7 (D2): no --expected, so the default ETA of the task type fills it in apply
+        else:
             raise Fail(1, '--expected is required (only a --release task with --phase may leave it out: Expected is then the end of the last phase)')
-        args.expected = 'pending'
     args.item = clean_item(args.item) if args.item is not None else args.item
     waits_on = clean_waits_on(args.waits_on) if args.waits_on is not None else ''
     if waits_on and status not in ('Waiting', 'On hold'):
@@ -2115,6 +2153,10 @@ def cmd_task_add(args):
                 if ID_RE.match(str(t.get('id', ''))) and ID_RE.match(t['id']).group(1) == pfx]
         tid = '%s%d' % (pfx, max(nums, default=0) + 1)
         now = rec.now()
+        nonlocal basis
+        if default_eta:
+            args.expected = H.default_expected(m, getattr(args, 'task_type', None), now.dt)
+            basis = basis or default_eta_basis(getattr(args, 'task_type', None))
         row = {'id': tid, 'owner': owner, 'app': app, 'status': status,
                'item': args.item, 'detail': args.detail, 'expected': args.expected,
                'changed': now.iso}
@@ -2122,7 +2164,7 @@ def cmd_task_add(args):
             row['expected_basis'] = basis
         if waits_on:
             row['waits_on'] = waits_on
-        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt, ctx.root, expected_given=expected_given)
+        apply_release_fields(row, {t.get('id'): t for t in rec.tasks()}, args, now.dt, ctx.root, expected_given=expected_given or default_eta)
         apply_started(row, args, now.dt)
         no_release_row = not any(is_release(t) and t.get('status') in OPEN_STATUSES for t in rec.tasks())
         reg['tasks'].append(row)
@@ -2250,6 +2292,10 @@ def cmd_set_task_status(args):
             task['expected'] = args.expected
         elif status in ('Live', 'Built', 'Dropped'):
             task['expected'] = now.date          # R6.8
+        if status in ('Running', 'Waiting') and not str(task.get('expected', '')).strip() and H is not None:
+            task['expected'] = H.default_expected(rec.manifest, getattr(args, 'task_type', None), now.dt)     # DP7 (D2)
+            if not basis and not task.get('expected_basis'):
+                task['expected_basis'] = default_eta_basis(getattr(args, 'task_type', None))
         if status in ('Running', 'Waiting') and not str(task.get('expected', '')).strip():
             raise Fail(1, '%s: a %s row needs an Expected (R6.6); add --expected "DD Mon ~HH:MM"' % (args.id, status))
         if status not in OPEN_STATUSES:
@@ -3718,6 +3764,8 @@ def build_parser():
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
     s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
     s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')
+    s.add_argument('--type', dest='task_type', choices=sorted(H.DEFAULT_ETA_MINUTES) if H is not None else None,
+                   help='task type for the default Expected when --expected is not given: agent 15 min, ci 5, join 10, test 10, docs 15, study 20, release 30, other 30 (DP7)')
     s.set_defaults(func=cmd_task_add)
 
     s = sub.add_parser('set-task-status', parents=[w], help='change one task')
@@ -3739,7 +3787,12 @@ def build_parser():
     s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')
     s.add_argument('--into', metavar='ID', help='with Dropped: the task that took the work, its task ID or RELEASE-n; required for a release (R5.49)')
     s.add_argument('--reason', help='with Dropped: why, at most 80 characters; needed when --into is not given (R5.49)')
+    s.add_argument('--type', dest='task_type', choices=sorted(H.DEFAULT_ETA_MINUTES) if H is not None else None,
+                   help='task type for the default Expected when --expected is not given: agent 15 min, ci 5, join 10, test 10, docs 15, study 20, release 30, other 30 (DP7)')
     s.set_defaults(func=cmd_set_task_status)
+
+    s = sub.add_parser('overdue-sweep', parents=[w], help='move Running and Waiting rows over 60 minutes past Expected to Needs you (DP7)')
+    s.set_defaults(func=cmd_overdue_sweep)
 
     s = sub.add_parser('export-content', parents=[j], help="copy an artifact's content files out of the record")
     s.add_argument('key')

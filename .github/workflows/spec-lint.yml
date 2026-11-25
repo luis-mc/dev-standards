@@ -679,6 +679,10 @@ jobs:
       - name: Prove the AR67 artifact fix still holds
         run: python3 -I tools/test_artifacts_ar67.py
 
+      # DP7 (D2): default Expected by task type; the overdue sweep.
+      - name: Prove the DP7 default Expected and overdue sweep still hold
+        run: python3 -I tools/test_artifacts_dp7.py
+
       # DS219 (D182): the record defaults to docs/project when nothing says.
       - name: Prove the record default still holds
         run: python3 -I tools/test_artifacts_ds219.py
