@@ -1591,19 +1591,48 @@ def stop_blocks_when_a_release_task_changed_since_the_publish():
 
 
 @test
-def stop_blocks_on_open_rows_past_their_expected_time():
+def stop_warns_once_on_open_rows_past_their_expected_time():
+    # DP7 (D2): one message, no block; the same row is silent at the next stop; Live and not-yet-due rows are not named
     rows = [{'id': 'AR33', 'status': 'Running', 'expected': '14 Oct ~10:15'},
             {'id': 'AR34', 'status': 'Live', 'expected': '14 Oct ~10:15'},
             {'id': 'AR35', 'status': 'Waiting', 'expected': '14 Oct ~23:00'},
             {'id': 'AR36', 'status': 'To do', 'expected': '13 Oct'}]
     work = published_repo(rows)
-    res = parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1])
-    assert res.get('decision') == 'block', res
-    r = res['reason']
+    env = at(work, '2026-10-14T10:30:00+01:00')
+    res = parse_stop(stop(work, env)[1])
+    assert res.get('decision') is None, res
+    r = res['systemMessage']
     assert 'AR33' in r and 'AR36' in r and 'AR34' not in r and 'AR35' not in r and '"14 Oct ~10:15" has passed' in r, r
-    # once the rows are fixed the hook is silent
+    assert parse_stop(stop(work, env, session='s2')[1]) == {}      # told once
+    # a new Expected on the same row is told again when it passes
     work = published_repo([dict(rows[0], expected='14 Oct ~12:00'), rows[1], rows[2]])
     assert parse_stop(stop(work, at(work, '2026-10-14T10:30:00+01:00'))[1]) == {}
+
+
+@test
+def stop_blocks_once_to_move_a_row_over_an_hour_past_due_and_leaves_needs_you_alone():
+    # DP7 (D2): 60 minutes past due, a Running row blocks once, naming overdue-sweep; a Needs you row is never named
+    rows = [{'id': 'AR37', 'status': 'Running', 'expected': '14 Oct ~09:00'},
+            {'id': 'AR38', 'status': 'Needs you', 'expected': '14 Oct ~09:00'}]
+    work = published_repo(rows)
+    env = at(work, '2026-10-14T10:05:00+01:00')
+    res = parse_stop(stop(work, env)[1])
+    assert res.get('decision') == 'block', res
+    assert 'AR37' in res['reason'] and 'AR38' not in res['reason'] and 'overdue-sweep' in res['reason'], res
+    again = parse_stop(stop(work, env, session='s2')[1])
+    assert again.get('decision') is None and 'AR37' not in json.dumps(again), again
+    # at exactly 60 minutes it is still only a warning
+    work = published_repo(rows[:1])
+    res = parse_stop(stop(work, at(work, '2026-10-14T10:00:00+01:00'))[1])
+    assert res.get('decision') is None and 'AR37' in res['systemMessage'], res
+
+
+@test
+def stop_still_blocks_on_the_other_noisy_checks_with_an_overdue_row_present():
+    # DP7 (D2): the hourly fail-safe (R9.8) blocks as before while an overdue row is only warned about
+    work = published_repo([{'id': 'AR39', 'status': 'Running', 'expected': '14 Oct ~10:15'}])
+    res = parse_stop(stop(work, at(work, '2026-10-14T11:20:00+01:00'))[1])
+    assert res.get('decision') == 'block' and 'hourly fail-safe' in res['reason'], res
 
 
 @test
@@ -1613,11 +1642,11 @@ def stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceili
     env = at(work, '2026-10-20T10:00:00+01:00')
     assert parse_stop(stop(work, env)[1]) == {}
     # the 3-block ceiling applies: the fourth stop with no change lets the turn end with a message
-    work = published_repo([{'id': 'AR40', 'status': 'Running', 'expected': '14 Oct ~10:15'}])
-    env = at(work, '2026-10-14T10:30:00+01:00')
+    work = published_repo([{'id': 'AR40', 'status': 'Running', 'expected': '14 Oct ~23:00'}])
+    env = at(work, '2026-10-14T11:30:00+01:00')
     outs = [parse_stop(stop(work, env)[1]) for _ in range(4)]
     assert [o.get('decision') for o in outs] == ['block', 'block', 'block', None], outs
-    assert 'AR40' in outs[3]['systemMessage'], outs[3]
+    assert 'last published' in outs[3]['systemMessage'], outs[3]
     # hooks off
     off = dict(env, CLAUDE_ARTIFACTS_HOOKS='off')
     assert stop(work, off, session='other')[1].strip() == ''
