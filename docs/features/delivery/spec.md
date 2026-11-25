@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.46.0
+version: 0.47.0
 owner: agents
 type: reference
 code:
@@ -523,6 +523,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.47.0 | 2026-11-25 | RELEASE-178 | R5.72: long_pole_globs and update_state_files leave the config schema and the shipped config; old files warn and are ignored. | DP3 |
 | 0.46.0 | 2026-11-25 | RELEASE-177 | R5.70: the warn report counts a rule once per session; blocks.log lines carry the session as a fifth column. | DP17 |
 | 0.45.0 | 2026-11-25 | RELEASE-176 | Merge mode: watcher.merge_mode auto (default, merge on green) or manual (the owner merges); the hook refuses an agent merge in manual; /delivery-ci-setup asks it (R5.71). | DP16 |
 | 0.44.0 | 2026-11-25 | RELEASE-175 | Test fix: the post-tool crash test logged its injected 'boom' crash into the real .delivery/blocks.log; it now logs under a temp root. Plugin file: claude/plugins/delivery/.claude-plugin/plugin.json (no version edit).<br>R5.69: the watcher counts as dead after 20 min with no heartbeat and SessionStart restarts it; after a merge it runs cleanup_command and smoke_command and stops the next push if one fails.<br>Warn-mode report: delivery_report.py counts what the rules would have blocked per rule; Full Progress shows one summary line (R5.70).<br>The runner pool left the plugin: delivery_runner_pool.py, pool_status.py, templates/runner-pool and the pool-* steps of delivery_ci_setup.py are removed, with the pool IDs R13.60 to R13.71, R13.79, R13.80, R13.84, R13.86 to R13.88 (the pool is built by its own project). The code is kept in a pool-only backup. Changes claude/plugins/delivery/.claude-plugin/plugin.json.<br>Removed the machine layer: the load guard, CI slots, runner hooks, the machine config and the runner_plan script. Rules DL-77, DL-78, DL-79, DL-90 and DL-91 and requirements R5.9, R5.10 and R6.5 are removed. Another project owns machine limits. Plugin file `claude/plugins/delivery/.claude-plugin/plugin.json`: the plugin no longer ships load.py, load_guard.py, machine_slots.py, runner_load_gate or runner_job_done. | DP4, DP6, DP8, DS245, DS246 |
