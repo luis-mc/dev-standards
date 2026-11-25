@@ -132,13 +132,6 @@
       "type": "boolean",
       "description": "DL-74: refuse AI attribution in commits and PR text."
     },
-    "long_pole_globs": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": ""
-    },
     "measure_globs": {
       "type": "array",
       "items": {
@@ -166,9 +159,6 @@
         "type": "string"
       },
       "description": ""
-    },
-    "update_state_files": {
-      "type": "array"
     },
     "install_state_files": {
       "type": "array",

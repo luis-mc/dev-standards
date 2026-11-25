@@ -24,9 +24,7 @@
     "gh pr comment"
   ],
   "no_attribution": false,
-  "long_pole_globs": [],
   "measure_globs": [],
-  "update_state_files": [],
   "watcher_interval_s": 600,
   "runners": [],
   "enforcement": { "mode": "warn", "block_ceiling": 3, "log_every_block": false },
@@ -38,7 +36,6 @@
     "tz": "Europe/Lisbon",
     "release_branch_re": "^release/\\d+[a-z]?$",
     "no_attribution": true,
-    "long_pole_globs": ["packages/catalogue/**"],
     "measure_globs": ["packages/matching/**", "packages/catalogue/**"],
     "runners": [
       { "name": "win-runner-1", "repair": ["sc stop actions.runner.org-repo.win-runner-1 & sc start actions.runner.org-repo.win-runner-1"] },
