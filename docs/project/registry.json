@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-25T16:05+00:00",
+  "updated": "2026-11-25T16:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7702,11 +7702,11 @@
       "id": "DP4",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Live",
       "item": "Find the PostToolUse 'boom' crash cause",
       "detail": "12 crashes 31 Oct to 11 Nov in this repo. Find the cause or confirm test noise, then fix or remove.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T15:13+00:00",
+      "changed": "2026-11-25T16:34+00:00",
       "started": "2026-11-25T14:37+00:00",
       "rides": "DS247"
     },
@@ -7714,11 +7714,11 @@
       "id": "DP5",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Running",
+      "status": "Live",
       "item": "spec-lint paths filter in this repo",
       "detail": "Skip the 21 spec-lint jobs when no doc or spec path changed. Release PR still runs all.",
       "expected": "25 Nov",
-      "changed": "2026-11-25T15:13+00:00",
+      "changed": "2026-11-25T16:34+00:00",
       "started": "2026-11-25T14:37+00:00",
       "rides": "DS247"
     },
@@ -7726,34 +7726,40 @@
       "id": "DP6",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Running",
       "item": "Watcher runs smoke and cleanup, restarts dead watcher",
       "detail": "Watcher runs cleanup.py and the smoke command after merge; stops the agent only on failure. SessionStart restarts a stale watcher.",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "after Group 1 merges; agent plus real-run watch"
+      "expected": "25 Nov ~17:25",
+      "changed": "2026-11-25T16:34+00:00",
+      "expected_basis": "local agent ~45 min",
+      "rides": "DP15",
+      "started": "2026-11-25T16:35+00:00"
     },
     {
       "id": "DP7",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Running",
       "item": "Default ETA table and warn-once on past-due rows",
       "detail": "ETA defaults by task type; past-due rows warn once then move to Needs you. DL-64 and DL-32 stay blocking (owner choice).",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "after Group 1 merges; about 15 min agent"
+      "expected": "25 Nov ~17:25",
+      "changed": "2026-11-25T16:34+00:00",
+      "expected_basis": "local agent ~45 min",
+      "rides": "DP15",
+      "started": "2026-11-25T16:35+00:00"
     },
     {
       "id": "DP8",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "To do",
+      "status": "Running",
       "item": "Warn-mode report: would have blocked N times",
       "detail": "Per-project report so the owner can choose warn to block.",
-      "expected": "26 Nov",
-      "changed": "2026-11-25T14:34+00:00",
-      "expected_basis": "after Group 1 merges; about 15 min agent"
+      "expected": "25 Nov ~17:25",
+      "changed": "2026-11-25T16:34+00:00",
+      "expected_basis": "local agent ~45 min",
+      "rides": "DP15",
+      "started": "2026-11-25T16:35+00:00"
     },
     {
       "id": "DP9",
@@ -7805,11 +7811,11 @@
       "id": "DP13",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
-      "status": "Built",
+      "status": "Live",
       "item": "Refuse --no-release reasons that say the task ships",
       "detail": "Guard: a no-release reason naming ship/ride/release is a contradiction",
       "expected": "25 Nov",
-      "changed": "2026-11-25T15:20+00:00",
+      "changed": "2026-11-25T16:34+00:00",
       "rides": "DS247",
       "started": "2026-11-25T15:13+00:00"
     },
@@ -7823,6 +7829,56 @@
       "expected": "28 Nov",
       "changed": "2026-11-25T15:43+00:00",
       "expected_basis": "after CRSP wave merges; about 1 day"
+    },
+    {
+      "id": "DP15",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "Running",
+      "item": "RELEASE: watcher cleanup, default ETAs, warn-mode report",
+      "detail": "Rides DP6, DP7, DP8.",
+      "expected": "25 Nov ~18:25",
+      "changed": "2026-11-25T16:34+00:00",
+      "expected_basis": "3 local agents ~45 min, then join, CI, owner merge",
+      "release": 175,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-25T16:40+00:00",
+          "end": "2026-11-25T17:25+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-25T17:25+00:00",
+          "end": "2026-11-25T17:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-25T17:40+00:00",
+          "end": "2026-11-25T17:45+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-25T17:45+00:00",
+          "end": "2026-11-25T18:25+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-25T16:34+00:00"
+    },
+    {
+      "id": "DP16",
+      "owner": "delivery-plugin-review",
+      "app": "luismc-delivery",
+      "status": "To do",
+      "item": "Merge mode setting: auto (merge on green) default, manual option",
+      "detail": "Delivery config key plus setup question; code enforces it: watcher/join merge a green PR in auto mode, never in manual. Owner 25 Nov.",
+      "expected": "26 Nov",
+      "changed": "2026-11-25T16:35+00:00",
+      "expected_basis": "starts after DP6 joins; same watcher files"
     },
     {
       "id": "DS1",
@@ -11807,12 +11863,11 @@
       "id": "DS247",
       "owner": "project",
       "app": "",
-      "status": "Needs you",
+      "status": "Live",
       "item": "RELEASE: remove load/slot layer, boom test fix, docs-check scope",
       "detail": "PR 270 joins DS245, DS246, DP4, DP5. CI then merge then release fold.",
-      "expected": "25 Nov ~16:45",
-      "changed": "2026-11-25T16:05+00:00",
-      "expected_basis": "owner merges PR 270 (CI green), then live about 15 min later",
+      "expected": "25 Nov",
+      "changed": "2026-11-25T16:34+00:00",
       "release": 174,
       "phases": [
         {
