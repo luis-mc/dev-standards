@@ -283,7 +283,7 @@ Finished rows (closed trains, finished or disabled agents, finished installs, ev
 
 Commit the shared contract to the integration branch before any part is built. The contract is section 2 of this file
 as `claude/plugins/delivery/references/ledger-schema.json` (JSON Schema) and the config shape
-`.delivery/config.json` (caps, work_root, tz, brief_markers, train_label_re, long_pole_globs,
+`.delivery/config.json` (caps, work_root, tz, brief_markers, train_label_re,
 measure_globs, eta_table, outbound_deny). The home is the plugin
 `claude/plugins/delivery/` (`luismc-delivery`), so the artifacts plugin keeps to ARTIFACTSPEC.
 

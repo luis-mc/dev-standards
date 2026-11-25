@@ -224,6 +224,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.71** — Merge mode (DP16, owner decision D5). `watcher.merge_mode` is `auto` (the default: merge on green) or `manual` (the owner merges). In `auto` the watcher merges a PR whose CI is green for its current head, as before. In `manual` the watcher never merges (`watcher_flags` forces `merge_on_green` off) and the PreToolUse hook refuses an agent's `gh pr merge` under DL-05. Any other value reads as `auto`. `/delivery-ci-setup` asks the question, with no default, and `delivery_ci_setup.py apply` refuses without `merge_mode` and writes it. Tests: `claude/plugins/delivery/tests/test_dp16_merge_mode.py`.
 
+**R5.72** — Dead config keys (DP3, owner decision D8). The config schema and the shipped `.delivery/config.json` no longer list `long_pole_globs` or `update_state_files`; nothing read them. A project that still has them gets the `unknown key (ignored)` warning, never an error, and the keys go on the next write of the file. `measure_globs` (read by the watcher), the ledger `jobs` list (read by the ETA table) and `held_runs` (read by the watcher) stay. Tests: `claude/plugins/delivery/tests/test_config.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -291,6 +293,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.62 | `claude/plugins/delivery/tests/test_dl336_ci_watch_default_head.py` |
 | R5.70 | `tools/test_delivery_report.py` |
 | R5.71 | `claude/plugins/delivery/tests/test_dp16_merge_mode.py` |
+| R5.72 | `claude/plugins/delivery/tests/test_config.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
 | R5.13, R5.14 | `tools/test_delivery_gate.py`, `tools/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `tools/test_session_guard.py` |
