@@ -1406,6 +1406,41 @@ double-click.
 - **R5.60** — The release table (R5.57) shows below the timeline figure whenever any release is open;
   the figure is the tree (R5.58) only with a carrier PR or a dependency. A release with no PR is a row of its own, CI "own run".
   Verified by `test_artifacts_ds256`.
+- **R5.61** — In the full-progress artifact, section 0 holds, in this order: the stamp, a
+  `div.status-badges` row, a `div.what-happens` block (R5.62), the status key and the checklist.
+  It has no `At a glance` block (R5.33 to R5.35, R6.13 apply to feature artifacts only), no lede
+  and no count tiles (R5.8 applies to feature artifacts only). The row is full width
+  (`width: 100%`, no `max-width`) and holds `span.status-badge` chips, each with a
+  `badge-label` and a `badge-value`, `data-badge` naming the kind: `needs-you` (always shown;
+  Needs you, Failed, owner waits and open decisions; class `badge-alert` when above 0),
+  `running`, `built`, `waiting`, `to-do` and `live-24h` (shown only above 0; the same counts as
+  the glance groups of R5.34), one `release` badge for each active release (at most 4, then one
+  badge `N more`) reading its R5.46 heading (`RELEASE-n · live ~HH:MM`), `pr` (the carrier PRs),
+  `ci` (R5.63; class `badge-fail` with a failed run), `agents` (the agents running in the
+  ledger) and `last-live` (the newest Live release and when). The colours are the existing
+  tokens, light and dark. Verified by `test_artifacts_dl429`.
+- **R5.62** — `div.what-happens` holds a `What is happening` title and a list of 1 to 8 bullets, generated
+  on every render, never typed: one for each open release, then one for each of the last 3 Live
+  releases, in that order. With 9 or more, the 8th bullet reads `And N more.`. With no open
+  release the first bullet reads `No release is active.`. A bullet starts with `RELEASE-n`
+  and its PR (`RELEASE-n (PR #N):`), never a train label, then plain sentences in this order:
+  what went wrong (CI failed in the named jobs, fix rounds, a hold and its reason, what needs
+  you, a wait on another release, merged but not cleaned up, not smoke-tested), what is being
+  done (an agent running on the release or a task riding it, CI running again, or `Nothing is
+  running on the fix yet.`) and what went well (CI passed on the first run, a failed run
+  followed by a pass, `Merged green on the first CI run, live DD Mon HH:MM.`, `Smoke test
+  passed.`, the Live ETA of an open release). A bullet with something wrong has class
+  `happen-fail`, the others `happen-ok`. Full Progress renders no lede; the `lede` field stays for
+  feature artifacts. `check` finds a bullet that names a train label, and a list that is empty
+  or longer than 8. Verified by `test_artifacts_dl429`.
+- **R5.63** — Inputs are read-only. `ci` reads `.delivery/ci-runs.json` (R5.51): a finished or
+  active run belongs to a release when its `why` names the release's PR as `#N`, or its `run_id`
+  is in the train's `ci.run_ids`. The badge counts the runs of the active releases and the last
+  Live release: `N: x passed, y failed, z running`; when none maps to a release it counts the
+  whole file. With no file, or one of the wrong shape, there is no `ci` badge. The PR, the agents,
+  the hold, the fix rounds and the smoke state come from `.delivery/ledger.json`: the train whose
+  branch is `<TASK-ID>-integration` belongs to that release (R5.59). With no ledger those parts
+  are left out. Verified by `test_artifacts_dl429`.
 
 ---
 

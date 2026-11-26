@@ -177,6 +177,9 @@
     "tools/test_artifacts_ar*.py": [
       "docs/features/artifacts/spec.md"
     ],
+    "tools/test_artifacts_dl429.py": [
+      "docs/features/artifacts/spec.md"
+    ],
     "tools/test_artifacts_dp7.py": [
       "docs/features/artifacts/spec.md"
     ],

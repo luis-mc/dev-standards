@@ -1929,6 +1929,219 @@ def _history(rows: list) -> str:
             '<tbody>\n%s\n</tbody></table></div>\n' % body)
 
 
+# ------------------------------------------------------------------ Status badges and What is happening (R5.61 to R5.63)
+HAPPEN_MAX = 8                  # R5.62: bullets
+HAPPEN_LIVE_RELEASES = 3        # R5.62: last Live releases
+BADGE_RELEASES_MAX = 4          # R5.61: active-release badges
+NAME_MAX, NAMES_MAX = 50, 3     # R5.62: one failed job name, and how many names a bullet lists
+HAPPEN_NONE = 'No release is active.'
+BADGE_COUNTS = (('you', 'needs-you', 'Needs you'), ('running', 'running', 'Running'), ('built', 'built', 'Built'),
+                ('waiting', 'waiting', 'Waiting'))
+
+
+def _pr_number(task, train):
+    """The carrier PR of a release: its own `pr` (a number or `#N`), else the train's."""
+    for value in (task.get('pr'), (train or {}).get('pr')):
+        if isinstance(value, bool):
+            continue
+        match = re.search(r'\d+', str(value if value is not None else ''))
+        if match and int(match.group()) > 0:
+            return int(match.group())
+    return None
+
+
+def _ci_pr_runs(ci_runs, pr, train) -> tuple:
+    """([finished runs oldest first], [active runs]) of the CI runs of one PR: a run whose `why` names `#N`, or
+    whose id the train lists."""
+    if not ci_runs_valid(ci_runs):
+        return [], []
+    ids = set((train or {}).get('ci', {}).get('run_ids') or []) if isinstance((train or {}).get('ci'), dict) else set()
+
+    def mine(entry):
+        return isinstance(entry, dict) and (entry.get('run_id') in ids or (
+            pr is not None and re.search(r'#%d(?!\d)' % pr, str(entry.get('why') or '')) is not None))
+    finished = [e for e in ci_runs.get('finished', []) if mine(e)]
+    finished.sort(key=lambda e: str(e.get('completed_at') or ''))
+    return finished, [e for e in ci_runs.get('active', []) if mine(e)]
+
+
+def _failed_names(runs: list) -> list:
+    """The jobs that failed in the failed runs, by name, in order; a run with no failed step names its workflow."""
+    names = []
+    for run in runs:
+        if run.get('conclusion') != 'failure':
+            continue
+        found = [str(s.get('job') or '') for s in run.get('steps') or []
+                 if isinstance(s, dict) and s.get('conclusion') == 'failure' and s.get('job')]
+        for name in found or [str(run.get('workflow') or 'a CI run')]:
+            name = _cut(_norm(name), NAME_MAX)
+            if name not in names:
+                names.append(name)
+    return names
+
+
+def _names_text(names: list) -> str:
+    shown = ', '.join(names[:NAMES_MAX])
+    return shown + (' and %d more' % (len(names) - NAMES_MAX) if len(names) > NAMES_MAX else '')
+
+
+def _ids_text(ids: list) -> str:
+    return ', '.join(ids[:NAMES_MAX]) + (' and %d more' % (len(ids) - NAMES_MAX) if len(ids) > NAMES_MAX else '')
+
+
+def _when(task: dict, train, ref: datetime) -> str:
+    """`DD Mon HH:MM` of when a release went Live, in the stamp's zone: the train's `live_at`, else the row's `changed`."""
+    moment = _parse_iso((train or {}).get('live_at')) or _parse_iso(task.get('changed'))
+    return _fmt_stamp(moment.astimezone(ref.tzinfo)) if moment is not None else ''
+
+
+def _release_bullet(rel: dict, tasks: list, trains: dict, agents: list, ci_runs, ref: datetime) -> tuple:
+    """R5.62: (class, text) of the one bullet of a release: what went wrong, what is being done, what went well."""
+    train = trains.get(rel['id'])
+    pr = _pr_number(rel, train)
+    by_id = {t['id']: t for t in tasks}
+    riders = [t for t in tasks if t.get('rides') == rel['id'] and t['id'] != rel['id']]
+    mine = {rel['id']} | {t['id'] for t in riders}
+    open_ = rel.get('status') in OPEN_STATUSES
+    live = rel.get('status') == 'Live'
+    head = release_name(rel) + (' (PR #%d)' % pr if pr else '') + ':'
+    wrong, doing, well = [], [], []
+    finished, active = _ci_pr_runs(ci_runs, pr, train)
+    failed = [r for r in finished if r.get('conclusion') == 'failure']
+    names = _failed_names(failed)
+    working = [a for a in agents if a.get('state') == 'running' and a.get('task') in mine]
+    if failed and finished[-1].get('conclusion') == 'failure':
+        wrong.append('CI failed in %s.' % _names_text(names))
+    elif failed:
+        well.append('CI failed in %s, then the latest run passed.' % _names_text(names))
+    elif not finished and isinstance(train, dict) and isinstance(train.get('ci'), dict) and train['ci'].get('state') == 'failure':
+        wrong.append('CI failed.')
+    elif finished and finished[-1].get('conclusion') == 'success':
+        well.append('CI passed on the first run.' if len(finished) == 1 else 'CI passed (%d runs).' % len(finished))
+    if active:
+        doing.append('CI is running%s.' % (' again' if failed else ''))
+    rounds = sum(1 for src in (rel.get('phases') or [], ((train or {}).get('phases') or {}).get('actual') or [])
+                 for p in src if isinstance(p, dict) and _phase_split(p.get('name'))[0] == 'fix')
+    if rounds:
+        wrong.append('%d fix round%s.' % (rounds, '' if rounds == 1 else 's'))
+    hold = (train or {}).get('hold')
+    if isinstance(hold, dict) and hold.get('reason'):
+        wrong.append('Held: %s.' % _cut(_norm(hold['reason']).rstrip('.'), 90))
+    you = [t['id'] for t in [rel] + riders if t.get('status') in ('Needs you', 'Failed') or waits_on_owner(t)]
+    if you:
+        wrong.append('Needs you: %s.' % _ids_text(you))
+    waits = [release_name(by_id[i]) for i in rel.get('release_waits_on') or [] if i in by_id]
+    if waits and open_:
+        wrong.append('Waits on %s.' % ', '.join(waits))
+    state = (train or {}).get('state')
+    if live and isinstance(train, dict):
+        if state in ('merged', 'live'):
+            wrong.append('Merged, not cleaned up yet.')
+        smoke = (train.get('smoke') or {}).get('state') if isinstance(train.get('smoke'), dict) else None
+        if smoke == 'pass':
+            well.append('Smoke test passed.')
+        elif smoke in (None, ''):
+            wrong.append('Not smoke-tested.')
+        else:
+            wrong.append('Smoke test failed.')
+    if working:
+        doing.append('An agent is running on %s.' % _ids_text(sorted({a['task'] for a in working})))
+    elif wrong and open_ and not active:
+        doing.append('Nothing is running on the fix yet.')
+    if open_:
+        tail = _release_heading(rel, ref, tasks).split(' · ', 1)[-1]
+        well.append('Expected: %s.' % tail)
+    if live:
+        when = _when(rel, train, ref)
+        clean = not wrong and not failed and finished and not rounds
+        well.insert(0, ('Merged green on the first CI run, live %s.' if clean else 'Live %s.') % when if when else 'Live.')
+    return ('happen-fail' if wrong else 'happen-ok'), ' '.join([head] + wrong + doing + well)
+
+
+def what_is_happening(tasks: list, ledger: dict, ci_runs, ref: datetime) -> list:
+    """R5.62: [(class, text)] bullets, at most HAPPEN_MAX: one per active release, then one per each of the last
+    HAPPEN_LIVE_RELEASES Live releases. With no release active the first bullet says so."""
+    trains, agents = (ledger or {}).get('trains') or {}, (ledger or {}).get('agents') or []
+    floor = datetime.min.replace(tzinfo=timezone.utc)
+    opens = sorted(open_releases(tasks), key=lambda t: (_release_number_key(t), _id_key(t)))
+    lives = sorted([t for t in tasks if is_release(t) and t.get('status') == 'Live'],
+                   key=lambda t: _parse_iso(t.get('changed'), floor), reverse=True)[:HAPPEN_LIVE_RELEASES]
+    out = [_release_bullet(r, tasks, trains, agents, ci_runs, ref) for r in opens]
+    if not opens:
+        out.append(('happen-ok', HAPPEN_NONE))
+    out += [_release_bullet(r, tasks, trains, agents, ci_runs, ref) for r in lives]
+    if len(out) > HAPPEN_MAX:
+        out = out[:HAPPEN_MAX - 1] + [('happen-ok', 'And %d more.' % (len(out) - HAPPEN_MAX + 1))]
+    return out
+
+
+def _release_number_key(task):
+    return release_number(task) or 0
+
+
+def _happening_html(bullets: list) -> str:
+    items = '\n'.join('<li class="%s">%s</li>' % (cls, esc(text)) for cls, text in bullets)
+    return ('<div class="what-happens"><p class="happen-title">What is happening</p>\n<ul>\n%s\n</ul></div>' % items)
+
+
+def _badge(key: str, label: str, value, cls: str = '') -> str:
+    return ('<span class="status-badge %s%s" data-badge="%s"><span class="badge-label">%s</span>'
+            '<span class="badge-value">%s</span></span>' % ('badge-' + key, (' ' + cls) if cls else '', esc(key), esc(label), esc(value)))
+
+
+def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) -> str:
+    """R5.61: the badge row of Full Progress: counts by status, the active releases with their Live ETA, the carrier
+    PRs, the CI runs, the agents running and the last Live release. A needs-you or failing badge is marked."""
+    trains, agents = (ledger or {}).get('trains') or {}, (ledger or {}).get('agents') or []
+    counts = {}
+    for gkey, _label, shown, found, more in glance_groups(tasks, decisions, ref):
+        counts[gkey] = len(shown) + len(found) + more
+    out = []
+    for gkey, key, label in BADGE_COUNTS:
+        n = counts.get(gkey, 0)
+        if gkey == 'you' or n:
+            out.append(_badge(key, label, n, 'badge-alert' if gkey == 'you' and n else ''))
+    todo = sum(1 for t in tasks if t['status'] == 'To do')
+    if todo:
+        out.append(_badge('to-do', 'To do', todo))
+    if counts.get('live'):
+        out.append(_badge('live-24h', 'Live in 24 h', counts['live']))
+    opens = sorted(open_releases(tasks), key=lambda t: (_release_number_key(t), _id_key(t)))
+    for rel in opens[:BADGE_RELEASES_MAX]:
+        out.append(_badge('release', 'Active release', _release_heading(rel, ref, tasks)))
+    if len(opens) > BADGE_RELEASES_MAX:
+        out.append(_badge('release', 'Active releases', '%d more' % (len(opens) - BADGE_RELEASES_MAX)))
+    prs = [p for p in (_pr_number(r, trains.get(r['id'])) for r in opens) if p]
+    if prs:
+        out.append(_badge('pr', 'Carrier PR', ', '.join('#%d' % p for p in prs)))
+    lives = sorted([t for t in tasks if is_release(t) and t.get('status') == 'Live'],
+                   key=lambda t: _parse_iso(t.get('changed'), datetime.min.replace(tzinfo=timezone.utc)), reverse=True)
+    watched = opens + lives[:1]
+    if ci_runs_valid(ci_runs):
+        seen, runs, running = set(), [], 0
+        for rel in watched:
+            fin, act = _ci_pr_runs(ci_runs, _pr_number(rel, trains.get(rel['id'])), trains.get(rel['id']))
+            for run in fin:
+                if run.get('run_id') not in seen:
+                    seen.add(run.get('run_id'))
+                    runs.append(run)
+            running += sum(1 for a in act if a.get('run_id') not in seen and not seen.add(a.get('run_id')))
+        if not watched or not (runs or running):
+            runs = [e for e in ci_runs.get('finished', []) if isinstance(e, dict)]
+            running = len([e for e in ci_runs.get('active', []) if isinstance(e, dict)])
+        bad = sum(1 for r in runs if r.get('conclusion') == 'failure')
+        ok = sum(1 for r in runs if r.get('conclusion') == 'success')
+        parts = ['%d passed' % ok, '%d failed' % bad, '%d running' % running]
+        out.append(_badge('ci', 'CI runs', '%d: %s' % (len(runs) + running, ', '.join(parts)), 'badge-fail' if bad else ''))
+    busy = sum(1 for a in agents if a.get('state') == 'running')
+    if agents:
+        out.append(_badge('agents', 'Agents running', busy))
+    if lives:
+        when = _when(lives[0], trains.get(lives[0]['id']), ref)
+        out.append(_badge('last-live', 'Last Live', '%s%s' % (release_name(lives[0]), (', ' + when) if when else '')))
+    return '<div class="status-badges">\n%s\n</div>' % '\n'.join(out)
+
+
 # ------------------------------------------------------------------ Warn mode section (delivery R5.70, owner decision D3)
 WARN_TITLE = 'Warn mode'
 
@@ -2448,7 +2661,9 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     meta = content['meta']
 
     decisions = content.get('decisions') or []
-    lede = '<p class="lede">%s</p>\n' % meta['lede'] if meta['lede'] else ''
+    fp = kind == 'full-progress'
+    lede = '<p class="lede">%s</p>\n' % meta['lede'] if meta['lede'] and not fp else ''     # R5.62: Full Progress has none
+    ledger = ledger_links.read(record_dir) if fp and record_dir else {}
 
     sections = []  # (title, inner html) for sections 1..N
     if kind == 'full-progress':
@@ -2486,8 +2701,10 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'stamp': '<time datetime="%s">%s</time> (%s)' % (esc(stamp_iso), esc(stamp_text), esc(label)),
         'published': _published_line(manifest, label) if kind == 'feature' else '',
         'lede': lede,
-        'glance': _at_a_glance(mine, decisions, moment, kind),
-        'tiles': _tiles(mine),
+        'glance': (status_badges(mine, decisions, ledger, ci_runs, moment) + '\n'
+                   + _happening_html(what_is_happening(mine, ledger, ci_runs, moment))) if fp
+                  else _at_a_glance(mine, decisions, moment, kind),
+        'tiles': '' if fp else _tiles(mine),
         'key': _key(label),
         'timeline': ('\n' + timeline.rstrip('\n')) if timeline else '',
         'checklist': _checklist(mine, kind, label, ref, feature_links, tasks, registry_path_of(record_dir)),
@@ -2756,10 +2973,16 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             % (info[0]['title'] if info else None))
     if s0 is not None:
         order = [n for n in elements(s0)]
-        parts = [('stamp', find(s0, 'p', 'last-update')), ('at a glance', find(s0, 'div', 'at-a-glance')),
-                 ('tiles', find(s0, 'div', 'status-count-tiles')), ('status key', find(s0, 'p', 'note')),
-                 ('checklist', find(s0, 'table', 'status-checklist'))]
-        lede_node = find(s0, 'p', 'lede')       # optional (R5.7): the session's note
+        if kind == 'full-progress':     # R5.61, R5.62: the badges and What is happening replace lede, glance and tiles
+            parts = [('stamp', find(s0, 'p', 'last-update')), ('status badges', find(s0, 'div', 'status-badges')),
+                     ('what is happening', find(s0, 'div', 'what-happens')), ('status key', find(s0, 'p', 'note')),
+                     ('checklist', find(s0, 'table', 'status-checklist'))]
+            lede_node = None
+        else:
+            parts = [('stamp', find(s0, 'p', 'last-update')), ('at a glance', find(s0, 'div', 'at-a-glance')),
+                     ('tiles', find(s0, 'div', 'status-count-tiles')), ('status key', find(s0, 'p', 'note')),
+                     ('checklist', find(s0, 'table', 'status-checklist'))]
+            lede_node = find(s0, 'p', 'lede')       # optional (R5.7): the session's note
         missing = [name for name, node in parts if node is None]
         if missing:
             add('R5.3', 'section 0 lacks: %s' % ', '.join(missing))
@@ -2767,7 +2990,9 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             wanted_order = parts[:1] + ([('lede', lede_node)] if lede_node is not None else []) + parts[1:]
             positions = [order.index(node) for _, node in wanted_order]
             if positions != sorted(positions):
-                add('R5.3', 'section 0 must hold the stamp, the lede (if any), at a glance, tiles, status key and checklist in that order')
+                add('R5.3', 'section 0 must hold the stamp, %s, status key and checklist in that order'
+                    % ('the status badges and What is happening' if kind == 'full-progress'
+                       else 'the lede (if any), at a glance, tiles'))
         key_node = parts[3][1]
         if key_node is not None and [text_of(c) for c in find_all(key_node, 'span', 'status-chip')] != list(STATUSES):
             add('R5.3', 'the status key must show the eight statuses in order')
@@ -2900,6 +3125,36 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                     add('R5.35', 'the %r group must list %s%s; it lists %s%s' % (
                         gkey, ids, (' and "%s"' % want_more) if want_more else '', h[1],
                         (' and "%s"' % h[3]) if h[3] else ''))
+
+    # R5.61 and R5.62 the status badges and What is happening of Full Progress
+    if kind == 'full-progress' and s0 is not None:
+        if glance is not None or find(s0, 'p', 'lede') is not None or find_all(s0, 'details', 'glance-group') \
+                or find(s0, 'div', 'status-count-tiles') is not None:
+            add('R5.61', 'Full Progress has no At a glance block, lede or count tiles; the status badges and What is happening replace them')
+        badges = find(s0, 'div', 'status-badges')
+        if badges is not None:
+            shown = {b.attrs.get('data-badge', ''): b for b in find_all(badges, 'span', 'status-badge')}
+            if 'needs-you' not in shown or any(find(b, 'span', 'badge-label') is None or find(b, 'span', 'badge-value') is None
+                                               for b in shown.values()):
+                add('R5.61', 'the status badges need a Needs you badge, and every badge a label and a value')
+            valid = [t for t in mine if t.get('status') in STATUSES]
+            want = {}
+            for gkey, _label, g_shown, g_found, g_more in glance_groups(valid, decisions, ref):
+                want[dict((g, k) for g, k, _l in BADGE_COUNTS).get(gkey, 'live-24h')] = len(g_shown) + len(g_found) + g_more
+            want['to-do'] = sum(1 for t in valid if t['status'] == 'To do')
+            for key, n in want.items():
+                got = shown.get(key)
+                if (n or key == 'needs-you') and (got is None or text_of(find(got, 'span', 'badge-value')) != str(n)):
+                    add('R5.61', 'the %r badge must show %d' % (key, n))
+                elif not n and got is not None and key != 'needs-you':
+                    add('R5.61', 'the %r badge must not show when its count is 0' % key)
+        happens = find(s0, 'div', 'what-happens')
+        if happens is not None:
+            items = find_all(happens, 'li')
+            if not items or len(items) > HAPPEN_MAX:
+                add('R5.62', 'What is happening must hold 1 to %d bullets; it holds %d' % (HAPPEN_MAX, len(items)))
+            if any(re.search(r'\bT-\d{4}-\d{2}-\d{2}', text_of(li)) for li in items):
+                add('R5.62', 'What is happening names a release as RELEASE-n, never by a train label')
 
     # checklist tables
     tables = find_all(root, 'table', 'status-checklist')
@@ -3095,7 +3350,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
                            [c for c in tile.attrs.get('class', '').split() if c.startswith('status-') and c != 'status-count-tile']))
     want_tiles = [(tile_label(s, sum(1 for t in mine if t.get('status') == s)), str(sum(1 for t in mine if t.get('status') == s)),
                    [status_class(s)]) for s in STATUSES if any(t.get('status') == s for t in mine)]
-    if have_tiles != want_tiles:
+    if have_tiles != want_tiles and kind != 'full-progress':        # R5.61: Full Progress shows count badges instead
         add('R5.8', 'the tiles read %s; the registry needs %s' % (
             [(a, b) for a, b, _ in have_tiles], [(a, b) for a, b, _ in want_tiles]))
 
