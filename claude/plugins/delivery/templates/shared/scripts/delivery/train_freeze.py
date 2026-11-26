@@ -13,6 +13,9 @@ the run are named. Allowed (exit 0):
   * every run of the head commit has completed, passed or failed (fix forward works),
   * GitHub cannot be reached, `gh` is missing or answers with an error: the push goes
     through with a warning, because the ready PR's CI still decides the merge (D4),
+  * the old runs were cancelled on request: `python scripts/delivery/cancel_old_run.py --pr N`
+    cancels the in-progress runs of the pull request's head and records them (DL424); a run it
+    cancelled no longer freezes the branch, even while GitHub still shows it ending,
   * DELIVERY_FREEZE_OVERRIDE=1 is set: the push goes through and the output says the
     running CI will restart (D9).
 
@@ -32,7 +35,18 @@ import shutil
 import subprocess
 import sys
 
+sys.dont_write_bytecode = True
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+
 DEFAULT_TIMEOUT = 8.0
+
+
+def cancelled_run_ids() -> set[str]:
+    try:
+        import delivery_common as dc
+        return dc.cancelled_run_ids()
+    except Exception:  # noqa: BLE001 - the freeze never fails on its own helper
+        return set()
 
 
 class GhError(Exception):
@@ -76,7 +90,9 @@ def find_freeze(branch: str, timeout: float) -> dict | None:
                     "--json", "databaseId,workflowName,status,conclusion"], timeout)
     if not isinstance(runs, list):
         raise GhError("gh run list did not return a list")
-    running = [r for r in runs if isinstance(r, dict) and r.get("status") != "completed"]
+    cancelled = cancelled_run_ids()  # DL424: runs cancel_old_run.py cancelled; they may still show as running
+    running = [r for r in runs if isinstance(r, dict) and r.get("status") != "completed"
+               and str(r.get("databaseId")) not in cancelled]
     if not running:
         return None
     return {"pr": pr, "sha": sha, "running": running}
@@ -106,9 +122,11 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     print("pre-push: blocked. %s is frozen: %s." % (args.branch, what), file=sys.stderr)
     print("  Wait for the run (python scripts/delivery/ci_watch.py %s); once it finishes, passed or\n"
-          "  failed, pushing is allowed and a fix goes forward. A branch that is late rides the next\n"
-          "  train. To push now and restart that CI on purpose: DELIVERY_FREEZE_OVERRIDE=1 git push"
-          % frozen["sha"][:10], file=sys.stderr)
+          "  failed, pushing is allowed and a fix goes forward. To drop the old run and push the fix now:\n"
+          "  python scripts/delivery/cancel_old_run.py --pr %s   (cancels it, records it, lifts the freeze).\n"
+          "  A branch that is late rides the next train. To push now and restart that CI on purpose:\n"
+          "  DELIVERY_FREEZE_OVERRIDE=1 git push"
+          % (frozen["sha"][:10], pr.get("number")), file=sys.stderr)
     return 1
 
 

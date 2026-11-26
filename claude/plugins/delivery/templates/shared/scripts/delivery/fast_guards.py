@@ -13,7 +13,9 @@ its output, so a blocked push says which check failed and why. Step logs are in
 gate.json "always_on_guards" (DL307): each {name, command, inputs: [globs]} whose
 inputs match a file changed since the base, one at a time; the others are skipped
 with one line each, and "**" always runs. A failed guard fails the run with its
-name and output tail. Never writes or
+name and output tail. A push that
+changes only docs, markdown, config or .delivery/ files (gate.json "inert_paths" plus those) skips the
+typecheck and lint steps (DL425); a push with code runs them. Never writes or
 publishes a gate result; the pre-push hook calls it once per pushed ref.
 
 --commit SHA names the commit to check (the hook passes the one being pushed).
@@ -217,6 +219,9 @@ def run_guards(root: Path, work: Path, args: argparse.Namespace) -> int:
         raise dc.DeliveryError("gate.json has no step with \"pre_push\": true")
 
     ctx = dc.build_context(work, cfg, args.base_ref)
+    if dc.docs_config_only(ctx.files, cfg["inert_paths"]):
+        ctx.docs_config_only = True  # DL425: no typecheck/lint (and no node_modules needed) for docs and config
+        print("fast_guards: this push changes only docs and config; typecheck and lint skipped.", flush=True)
     tmp = Path(tempfile.mkdtemp(prefix="fast-guards-"))
     try:
         steps = with_pushed_gitleaks(steps, work, ctx.head, tmp)

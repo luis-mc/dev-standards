@@ -8,7 +8,8 @@ Called by the pre-push hook once per pushed branch. It lists the e2e spec files 
 to --commit, or, for a new branch (--base-ref auto), from the merge base with the branch it
 was cut from. Files that came from a merge of the default branch (equal to it at the merge base of the
 new head and origin/<default>, the base branch_gate.py --e2e-only uses) are not counted. With none, it allows the push. Otherwise .delivery/gate-result.json must be for
-exactly --commit and its e2e record must show every changed spec ran and passed (or the whole
+exactly --commit (the file of this checkout, or the newest one in another worktree of the repository
+whose head is --commit: a gate run in a worktree need not be copied by hand, DL426) and its e2e record must show every changed spec ran and passed (or the whole
 suite ran and passed). If not, it names the specs and the command to run, and exits 1: an e2e
 fix is never pushed unrun.
 
@@ -49,11 +50,7 @@ def main(argv: list[str] | None = None) -> int:
                   "scope \"ui-changed\", so no e2e result can exist. Add that step (delivery_doctor.py self-check shows "
                   "this hint). Not blocking this push.")
         return dc.EXIT_OK
-    result = None
-    try:
-        result = dc.read_json(root / dc.GATE_RESULT_PATH)
-    except (OSError, ValueError):
-        pass
+    result = dc.find_gate_result(root, head)  # DL426: also the other worktrees of this repository
     problems = (
         dc.e2e_problems(result, head, specs)
         if isinstance(result, dict)
