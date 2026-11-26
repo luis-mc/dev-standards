@@ -4,7 +4,7 @@ title: Model and effort profiles
 apps: [luismc-project-setup, luismc-agents]
 topics: [models]
 status: live
-version: 0.3.0
+version: 0.4.0
 owner: agents
 type: reference
 code:
@@ -176,6 +176,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.0 | 2026-11-26 | RELEASE-185 | claude-setup default auto-compact window 350000 (was 150000). Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP12 |
 | 0.3.0 | 2026-11-24 | RELEASE-171 | Seven checking and bookkeeping skills move to the haiku profile. The shipped agents rule is shorter, tells the orchestrator to group tasks into one agent, and moves delivery detail to docs/guides/agent-delivery-details.md. claude-setup asks overwrite, merge or keep when the rules file differs. The DL-41 and DL-303 messages offer merging tasks into the running agent's brief. Plugins: claude/plugins/docs/.claude-plugin/plugin.json, claude/plugins/project-setup/.claude-plugin/plugin.json, claude/plugins/delivery/.claude-plugin/plugin.json. | MP10 |
 | 0.2.0 | 2026-11-24 | RELEASE-169 | claude-setup defaults: main session Sonnet (Opus by /model), auto-compact window 150000, rules at project level only, token cost note. Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP8 |
 | 0.1.5 | 2026-11-20 | RELEASE-155 | DL374: red release run finishes (DL-97), no fail-fast on release PR CI (DL-98); detail in delivery-speed R5.18, R5.19. | DL374 |
