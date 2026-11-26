@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:59+00:00",
+  "updated": "2026-11-26T10:09+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7667,12 +7667,11 @@
       "id": "DL418",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "DL-runner-out: delivery holds no runner rules",
       "detail": "Remove DL-50/DL-51, runner_health and runner/heavy-job fields from delivery; hand rules to the pool project.",
-      "expected": "26 Nov ~12:00",
-      "changed": "2026-11-26T09:36+00:00",
-      "expected_basis": "agent relaunched 09:40, ~15 min plus CI 5 min plus release",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T10:09+00:00",
       "release": 184,
       "started": "2026-11-26T07:19+00:00"
     },
