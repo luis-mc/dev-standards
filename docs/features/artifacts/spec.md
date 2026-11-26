@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.22.1
+version: 0.23.0
 owner: agents
 type: reference
 code:
@@ -346,6 +346,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.23.0 | 2026-11-26 | RELEASE-194 | Full Progress shows a CI waste badge from the CI runs file (R5.34). | DS258 |
 | 0.22.1 | 2026-11-26 | RELEASE-193 | The Agents badge shows running and total agents, each split into local and cloud (R5.31).<br>The CI badge flags only failures no later run fixed (R5.31). | DS265, DS266 |
 | 0.22.0 | 2026-11-26 | RELEASE-191 | Full Progress section 0 shows full-width status badges and a generated What is happening list instead of the At a glance lines, tiles and lede (R5.31 to R5.33). | DL429 |
 | 0.21.0 | 2026-11-26 | RELEASE-189 | The release tree and table show whenever any release is open (R5.30). Touches claude/plugins/docs/.claude-plugin/plugin.json. | DL428 |

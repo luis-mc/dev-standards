@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T12:02+00:00",
+  "updated": "2026-11-26T12:14+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12205,12 +12205,11 @@
       "id": "DS258",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "CI findings S14: CI waste in Full Progress",
       "detail": "From the leaner-CI review (S14): show green rate, minutes per merged PR, cancelled minutes per week as a badge and a line in Full Progress. Docs plugin.",
-      "expected": "27 Nov",
-      "changed": "2026-11-26T12:02+00:00",
-      "expected_basis": "one agent, about 15 min each, after the owner picks the order",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T12:14+00:00",
       "release": 194,
       "started": "2026-11-26T12:02+00:00"
     },

@@ -4,7 +4,7 @@ title: Test and validation cost
 apps: [luismc-project-setup, luismc-docs]
 topics: [ci, testing]
 status: live
-version: 0.3.1
+version: 0.3.2
 owner: agents
 type: explanation
 code:
@@ -233,6 +233,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.3.2 | 2026-11-26 | RELEASE-194 | Declares tools/test_artifacts_ds258.py in the spec-lint workflow. | DS258 |
 | 0.3.1 | 2026-11-26 | RELEASE-184 | ci_areas no longer lists runner_health.py among the delivery gate files. | DL418 |
 | 0.3.0 | 2026-11-25 | RELEASE-175 | spec-lint's docs-check job runs only when a change touches docs, AGENTS.md, tools, claude or the workflows (docs_check output of tools/ci_areas.py).<br>spec-lint workflow runs the new DP7 suite tools/test_artifacts_dp7.py.<br>The delivery-runner CI job and suite now run only the shared-fixes test file. | DP5, DP7, DS246 |
 | 0.2.2 | 2026-11-03 | RELEASE-36 | New suite tools/test_delivery_windows.py is mapped to the delivery area and run in spec-lint. | DL25 |
