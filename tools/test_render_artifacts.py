@@ -2924,7 +2924,7 @@ def check_finds_a_row_in_the_wrong_release_group(fx):
             t['rides'] = 'DS53'
     out = fx.render('full-progress', registry=registry)
     expect(fx, move_row(out, 'AR6', 'data-group="release-2"'), 'full-progress', ['R5.46'], registry=registry)
-    expect(fx, sub1(out, 'RELEASE-1 · live ~18:00 · worst ~18:10', 'RELEASE-1 · live ~18:00'), 'full-progress', ['R5.46'], registry=registry)
+    expect(fx, sub1(out, '<strong>RELEASE-1 · live ~18:00 · worst ~18:10</strong>', '<strong>RELEASE-1 · live ~18:00</strong>'), 'full-progress', ['R5.46'], registry=registry)
     expect(fx, sub1(out, '<span class="release-line"><span class="release-name">RELEASE-3</span></span>', ''), 'full-progress', ['R5.46'], registry=registry)
     expect(fx, sub1(out, '<span class="task-id">DS52</span><span class="release-name">RELEASE-2</span>', '<span class="task-id">DS52</span>'),
            'full-progress', ['R5.45'], registry=registry)
