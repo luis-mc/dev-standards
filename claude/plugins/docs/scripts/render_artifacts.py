@@ -33,6 +33,7 @@ PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_badge as BADGE  # noqa: E402
 import ledger_links  # noqa: E402
+import pr_links as PRL  # noqa: E402
 
 STATUSES = ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed', 'Dropped')
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')  # R6.6
@@ -1598,14 +1599,14 @@ def _dep_text(r, by_row) -> str:
     return ' and '.join(names) if names else 'nothing'
 
 
-def release_tree_table(groups: list) -> str:
+def release_tree_table(groups: list, pr_links=None) -> str:
     """R5.57: the table under the figure: Item, Live ETA, CI, Waits on, Status. A PR row, then its releases."""
     by_row = {r['task']['id']: r for g in groups for r in g['rows']}
     out = []
 
     def cells(item, sub, eta, ci, waits, status):
         return ('<td>%s <span class="n">%s</span></td><td>%s</td><td>%s</td><td>%s</td><td class="st">%s</td>'
-                % (item, esc(sub), esc(eta), ci, esc(waits), esc(status)))
+                % (item, sub, esc(eta), ci, esc(waits), esc(status)))
 
     for g in groups:
         rows = g['rows']
@@ -1613,20 +1614,21 @@ def release_tree_table(groups: list) -> str:
             first = rows[0]
             ids = ', '.join(r['task']['id'] for r in rows)
             out.append('<tr class="pr">%s</tr>' % cells(
-                'PR %s' % g['pr'], 'carrier · %s · carries %d release%s, listed below' % (ids, len(rows), '' if len(rows) == 1 else 's'),
+                PRL.link('PR %s' % g['pr'], g['pr'], pr_links),
+                esc('carrier · %s · carries %d release%s, listed below' % (ids, len(rows), '' if len(rows) == 1 else 's')),
                 _eta_text(first), '<span class="ci-note">see CI runs</span>', 'nothing', first['task'].get('status', '')))
         for i, r in enumerate(rows):
             t = r['task']
-            sub = '%s · in PR %s' % (t['id'], g['pr']) if g['pr'] else t['id']
+            sub = esc('%s · in ' % t['id']) + PRL.link('PR %s' % g['pr'], g['pr'], pr_links) if g['pr'] else esc(t['id'])
             cls = ('ch last' if i == len(rows) - 1 else 'ch') if g['pr'] else 'rel'
-            ci = '<span class="ci-note">via PR %s</span>' % g['pr'] if g['pr'] else '<span class="ci-note">own run</span>'
+            ci = '<span class="ci-note">via %s</span>' % PRL.link('PR %s' % g['pr'], g['pr'], pr_links) if g['pr'] else '<span class="ci-note">own run</span>'
             out.append('<tr class="%s">%s</tr>' % (cls, cells(
                 '<b>%s</b>' % esc(release_name(t)), sub, _eta_text(r), ci, _dep_text(r, by_row), t.get('status', ''))))
     return ('<div class="timeline-scroll"><table class="release-tree"><thead><tr><th>Item</th><th>Live ETA</th><th>CI</th>'
             '<th>Waits on</th><th>Status</th></tr></thead><tbody>\n%s\n</tbody></table></div>' % '\n'.join(out))
 
 
-def release_tree(tasks: list, ref: datetime, label: str) -> str:
+def release_tree(tasks: list, ref: datetime, label: str, pr_links=None) -> str:
     """R5.58: the release timeline as a tree: a PR row with its releases hung under a trunk, dashed arrows from a
     release to the release it waits on, then the table. Bounded: 880 wide, 52 per row."""
     groups = tree_rows(tasks, ref)
@@ -1653,8 +1655,8 @@ def release_tree(tasks: list, ref: datetime, label: str) -> str:
             ex = x(first['exp_min']) if first['timed'] else TREE_AX0
             starts = [a for r in g['rows'] for _, a, _ in r['phases']]
             bx = x(min(starts)) if starts and first['timed'] else TREE_AX0
-            out.append('<text class="rt-pr-tag" x="14" y="%d">carrier PR</text><text class="rt-name" x="14" y="%d">PR %s</text>'
-                       % (mid - 9, mid + 8, g['pr']))
+            out.append('<text class="rt-pr-tag" x="14" y="%d">carrier PR</text><text class="rt-name" x="14" y="%d">%s</text>'
+                       % (mid - 9, mid + 8, PRL.link('PR %s' % g['pr'], g['pr'], pr_links)))
             if first['timed']:
                 out.append('<rect class="rt-bar ci" x="%s" y="%d" width="%s" height="16"><title>%s</title></rect>'
                            % (_n(bx), mid - 8, _n(max(ex - bx, 4)), esc('PR %s until its first release is live' % g['pr'])))
@@ -1729,15 +1731,15 @@ def release_tree(tasks: list, ref: datetime, label: str) -> str:
             '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:640px;max-width:%dpx">'
             '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n%s\n</figure>\n'
             % (esc(label), TREE_W, height, esc('Next releases: ' + '; '.join(aria) + '.'), TREE_W,
-               ''.join(grid), '\n'.join(out), now, legend, release_tree_table(groups)))
+               ''.join(grid), '\n'.join(out), now, legend, release_tree_table(groups, pr_links)))
 
 
-def release_timeline(tasks: list, ref: datetime, label: str) -> str:
+def release_timeline(tasks: list, ref: datetime, label: str, pr_links=None) -> str:
     """R5.42, R5.43: the release timeline figure of section 0, '' when no release is open. Deterministic:
     `ref` (the render stamp) is "now", never the wall clock. R5.58: with a carrier PR or a release dependency
     the figure is the release tree."""
     if tree_mode(tasks):
-        tree = release_tree(tasks, ref, label)
+        tree = release_tree(tasks, ref, label, pr_links)
         if tree:
             return tree
     rows = [r for r in (_release_row(t, ref, tasks) for t in open_releases(tasks)) if r is not None]
@@ -1875,7 +1877,7 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
             '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n%s\n</figure>\n'
             % (esc(label), width, height, esc(('Next releases: ' + '; '.join(aria) + '.' if aria else '') + ((' ' if aria else '') + OTHER_TITLE + ': ' + '; '.join(aria_other) + '.' if aria_other else '')), max(360, round(width * 640 / 900)), width,
                ''.join(grid), '\n'.join(out), now, legend,
-               release_tree_table(tree_rows(tasks, ref)) if rows else ''))
+               release_tree_table(tree_rows(tasks, ref), pr_links) if rows else ''))
 
 
 # ------------------------------------------------------------------ State column (R5.44)
@@ -2079,14 +2081,25 @@ def _release_number_key(task):
     return release_number(task) or 0
 
 
-def _happening_html(bullets: list) -> str:
-    items = '\n'.join('<li class="%s">%s</li>' % (cls, esc(text)) for cls, text in bullets)
+_HEAD_PR_RE = re.compile(r'^(RELEASE-\d+ \()(PR #(\d+))(\):)')
+
+
+def _bullet_html(text: str, pr_links) -> str:
+    """R5.65: the `(PR #N)` in the head of a bullet is a link; the rest is escaped text."""
+    m = _HEAD_PR_RE.match(text)
+    if not m:
+        return esc(text)
+    return esc(m.group(1)) + PRL.link(m.group(2), int(m.group(3)), pr_links) + esc(m.group(4)) + esc(text[m.end():])
+
+
+def _happening_html(bullets: list, pr_links=None) -> str:
+    items = '\n'.join('<li class="%s">%s</li>' % (cls, _bullet_html(text, pr_links)) for cls, text in bullets)
     return ('<div class="what-happens"><p class="happen-title">What is happening</p>\n<ul>\n%s\n</ul></div>' % items)
 
 
-def _badge(key: str, label: str, value, cls: str = '') -> str:
+def _badge(key: str, label: str, value, cls: str = '', raw: bool = False) -> str:
     return ('<span class="status-badge %s%s" data-badge="%s"><span class="badge-label">%s</span>'
-            '<span class="badge-value">%s</span></span>' % ('badge-' + key, (' ' + cls) if cls else '', esc(key), esc(label), esc(value)))
+            '<span class="badge-value">%s</span></span>' % ('badge-' + key, (' ' + cls) if cls else '', esc(key), esc(label), value if raw else esc(value)))
 
 
 def ci_waste_value(ci_runs, tasks: list, trains: dict, ref: datetime):
@@ -2117,7 +2130,7 @@ def ci_waste_value(ci_runs, tasks: list, trains: dict, ref: datetime):
     return '%d%% green · %s · %d min cancelled (7 d)' % (green, per_pr, round(cancelled / 60))
 
 
-def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) -> str:
+def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime, pr_links=None) -> str:
     """R5.61: the badge row of Full Progress: counts by status, the active releases with their Live ETA, the carrier
     PRs, the CI runs, the agents running and the last Live release. A needs-you or failing badge is marked."""
     trains, agents = (ledger or {}).get('trains') or {}, (ledger or {}).get('agents') or []
@@ -2141,7 +2154,7 @@ def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) 
         out.append(_badge('release', 'Active releases', '%d more' % (len(opens) - BADGE_RELEASES_MAX)))
     prs = [p for p in (_pr_number(r, trains.get(r['id'])) for r in opens) if p]
     if prs:
-        out.append(_badge('pr', 'Carrier PR', ', '.join('#%d' % p for p in prs)))
+        out.append(_badge('pr', 'Carrier PR', ', '.join(PRL.link('#%d' % p, p, pr_links) for p in prs), raw=True))
     lives = sorted([t for t in tasks if is_release(t) and t.get('status') == 'Live'],
                    key=lambda t: _parse_iso(t.get('changed'), datetime.min.replace(tzinfo=timezone.utc)), reverse=True)
     watched = opens + lives[:1]
@@ -2694,6 +2707,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
 
     mine = _tasks_of(kind, key, tasks)
     feature_links = feature_links_of(manifest, links)
+    pr_links = manifest.get('pr_links')     # R5.65: an input, never read from git here
     project = str(manifest.get('project', ''))
     meta = content['meta']
 
@@ -2722,7 +2736,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     nav = ''.join('<a href="#s%d"><b>%d</b>%s</a>' % (i, i, esc(t)) for i, t in enumerate(all_titles))
     body = '\n'.join(_section(i, t, inner) for i, (t, inner) in enumerate(sections, 1))
     ref = moment
-    timeline = release_timeline(tasks, moment, label) if kind == 'full-progress' else ''
+    timeline = release_timeline(tasks, moment, label, pr_links) if kind == 'full-progress' else ''
 
     values = {
         'title': esc(title),
@@ -2738,8 +2752,8 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
         'stamp': '<time datetime="%s">%s</time> (%s)' % (esc(stamp_iso), esc(stamp_text), esc(label)),
         'published': _published_line(manifest, label) if kind == 'feature' else '',
         'lede': lede,
-        'glance': (status_badges(mine, decisions, ledger, ci_runs, moment) + '\n'
-                   + _happening_html(what_is_happening(mine, ledger, ci_runs, moment))) if fp
+        'glance': (status_badges(mine, decisions, ledger, ci_runs, moment, pr_links) + '\n'
+                   + _happening_html(what_is_happening(mine, ledger, ci_runs, moment), pr_links)) if fp
                   else _at_a_glance(mine, decisions, moment, kind),
         'tiles': '' if fp else _tiles(mine),
         'key': _key(label),
@@ -3073,7 +3087,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
 
     # R5.42, R5.43 the release timeline: present exactly when a release is open, between the key and the checklist
     if kind == 'full-progress' and s0 is not None:
-        want_fig = release_timeline(all_tasks, ref, label)
+        want_fig = release_timeline(all_tasks, ref, label, manifest.get('pr_links'))
         figs = find_all(s0, 'figure', 'release-timeline')
         if not want_fig:
             if figs:
