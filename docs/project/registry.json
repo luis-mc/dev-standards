@@ -7739,34 +7739,40 @@
       "id": "DL424",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Allow cancelling old run during freeze",
       "detail": "Train freeze blocks a fix push during gh run rerun --failed; documented cancel of the old run or watcher cancels; peer finding 4",
       "expected": "26 Nov ~18:00",
-      "changed": "2026-11-26T08:30+00:00",
-      "expected_basis": "queued behind RELEASE-184, ~1 h per task"
+      "changed": "2026-11-26T10:09+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "release": 192,
+      "started": "2026-11-26T10:09+00:00"
     },
     {
       "id": "DL425",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "New worktree pre-push without node_modules",
       "detail": "Skip typecheck for docs and config-only pushes, or install in the worktree helper; peer finding 5",
       "expected": "26 Nov ~18:00",
-      "changed": "2026-11-26T08:30+00:00",
-      "expected_basis": "queued behind RELEASE-184, ~1 h per task"
+      "changed": "2026-11-26T10:09+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "rides": "DL424",
+      "started": "2026-11-26T10:09+00:00"
     },
     {
       "id": "DL426",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "DL-88 reads gate result from worktree",
       "detail": "A gate run in a worktree needs no hand copy of gate-result.json; peer finding 6",
       "expected": "26 Nov ~18:00",
-      "changed": "2026-11-26T08:30+00:00",
-      "expected_basis": "queued behind RELEASE-184, ~1 h per task"
+      "changed": "2026-11-26T10:09+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "rides": "DL424",
+      "started": "2026-11-26T10:09+00:00"
     },
     {
       "id": "DL427",
