@@ -5,7 +5,6 @@ export type FoldOptions = {
   foldAbove: number
   marker: string
   compactCounts: boolean
-  foldHooksAbove: number
 }
 
 export const DEFAULT_MARKER = '»'
@@ -14,7 +13,6 @@ export const DEFAULT_OPTIONS: FoldOptions = {
   foldAbove: 5,
   marker: DEFAULT_MARKER,
   compactCounts: false,
-  foldHooksAbove: 40,
 }
 
 /**
@@ -29,10 +27,7 @@ export function normalizeOptions(raw: Readonly<Record<string, unknown>> | undefi
     typeof n === 'number' && Number.isFinite(n) ? Math.max(0, Math.floor(n)) : DEFAULT_OPTIONS.foldAbove
   const marker = typeof src.marker === 'string' ? src.marker : DEFAULT_OPTIONS.marker
   const compactCounts = typeof src.compactCounts === 'boolean' ? src.compactCounts : DEFAULT_OPTIONS.compactCounts
-  const h = src.foldHooksAbove
-  const foldHooksAbove =
-    typeof h === 'number' && Number.isFinite(h) ? Math.max(0, Math.floor(h)) : DEFAULT_OPTIONS.foldHooksAbove
-  return { foldAbove, marker, compactCounts, foldHooksAbove }
+  return { foldAbove, marker, compactCounts }
 }
 
 /** The marker followed by a space, or nothing when the marker is empty. */

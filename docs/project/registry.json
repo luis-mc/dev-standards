@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T16:26+00:00",
+  "updated": "2026-11-26T17:32+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12523,6 +12523,53 @@
       ],
       "started": "2026-11-26T15:59+00:00",
       "pr": 303
+    },
+    {
+      "id": "DS279",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: shorter Stop hook message, drop hooks fold",
+      "detail": "Folds DS279 and DS280 into delivery and transcript-folds versions",
+      "expected": "26 Nov ~17:45",
+      "changed": "2026-11-26T17:29+00:00",
+      "expected_basis": "own work 30 min, then CI run 15 min",
+      "release": 204,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-26T17:00+00:00",
+          "end": "2026-11-26T17:30+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-26T17:30+00:00",
+          "end": "2026-11-26T17:45+00:00"
+        }
+      ],
+      "started": "2026-11-26T17:29+00:00"
+    },
+    {
+      "id": "DS280",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "Delivery: shorten the Stop hook user message",
+      "detail": "Group repeated findings; the model-facing block reason stays full",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T17:32+00:00",
+      "rides": "DS279"
+    },
+    {
+      "id": "DS281",
+      "owner": "project",
+      "app": "",
+      "status": "Built",
+      "item": "transcript-folds: remove the dead hooks fold",
+      "detail": "Engine draws hook rows with no component; drop switch, button, /fold-hooks",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T17:32+00:00",
+      "rides": "DS279"
     },
     {
       "id": "DU1",

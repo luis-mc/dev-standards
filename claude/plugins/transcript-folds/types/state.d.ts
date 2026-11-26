@@ -1,5 +1,5 @@
 // The state luismc-transcript-folds keeps for the session ($.state), declared
-// as a contract. The three switches start folded in every session; a toggle
+// as a contract. The two switches start folded in every session; a toggle
 // lasts for that session only.
 
 export type TranscriptFoldsTally = {
@@ -9,13 +9,6 @@ export type TranscriptFoldsTally = {
   extra: number
   added: number
   removed: number
-}
-
-export type TranscriptFoldsHookEntry = { component: string; head: string; words: number }
-
-export type TranscriptFoldsHookDiag = {
-  matched: TranscriptFoldsHookEntry[]
-  missed: TranscriptFoldsHookEntry[]
 }
 
 /** What a finished call changed, by tool_use_id. */
@@ -41,9 +34,6 @@ declare module 'claude-code' {
     'luismc-transcript-folds': {
       diffsFolded: boolean
       commandsFolded: boolean
-      hooksFolded: boolean
-      /** What `/fold-hooks diag` prints: the last messages the matcher saw. */
-      hookDiag: TranscriptFoldsHookDiag
       tally: TranscriptFoldsTally
       /** The project root at session start; paths are shown relative to it. */
       root: string
