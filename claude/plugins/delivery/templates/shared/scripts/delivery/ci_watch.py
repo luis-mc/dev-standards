@@ -39,11 +39,10 @@ Pinned repository (DL247): at start the watch resolves the repository once (--re
 `gh repo view --json nameWithOwner`) and passes it to every later gh call, so it survives its working
 directory going away. When the repository cannot be resolved it exits 2 at once.
 
-Runner health (DL7, warnings only): while it waits, a job that has been queued for
-more than 10 minutes (--queue-warn-seconds) is reported once, when no online runner
-carries its labels, or, when the runners cannot be listed (that needs admin rights),
-as "queued 10+ min". It never changes the exit code. GitHub-hosted labels are not
-checked: a queued hosted job is the platform's wait, not a missing runner.
+Queued jobs (warnings only): while it waits, a job that has been queued for more than
+10 minutes (--queue-warn-seconds) is reported once as "queued 10+ min". It never changes
+the exit code. GitHub-hosted labels are not reported: a queued hosted job is the
+platform's wait.
 
 Slowest job (TC8, information only): once every run is complete, one summary lists each run's
 wall time (first job start to last job end), its slowest job with that job's share of the
@@ -110,7 +109,6 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))  # -I leaves the script dir off sys.path
 try:
-    import runner_health  # noqa: E402
     import fallback_launch  # noqa: E402
 except ModuleNotFoundError as _exc:
     _name = _exc.name or "a module"
@@ -332,11 +330,8 @@ def queued_age(job: dict, now: float) -> float | None:
 
 def warn_queued_jobs(pending: list[dict], repo: str | None, warned: set, threshold: float,
                      now: float | None = None) -> None:
-    """Warn once per job queued over `threshold` seconds with no online runner for its
-    labels (or, when runners cannot be listed, say it has been queued that long)."""
+    """Warn once per job queued over `threshold` seconds (hosted labels are skipped)."""
     now = time.time() if now is None else now
-    runners: list | None | str = "unlisted"
-    why = ""
     for run in pending:
         base = f"repos/{repo}" if repo else "repos/{owner}/{repo}"
         try:
@@ -351,20 +346,11 @@ def warn_queued_jobs(pending: list[dict], repo: str | None, warned: set, thresho
             if age is None or age < threshold:
                 continue
             labels = [str(x) for x in job.get("labels") or []]
-            if labels and runner_health.is_hosted(labels):
+            if labels and fallback_launch.is_hosted(labels):
                 continue
-            if runners == "unlisted":
-                runners, why = runner_health.list_online_runners(repo)
             minutes = int(age // 60)
             name = f"{run.get('workflowName')} / {job.get('name')}"
-            if runners is None:
-                print(f"ci_watch: WARNING: job {name} has been queued 10+ min ({minutes} min); "
-                      f"the online runners could not be listed ({why})", flush=True)
-            elif labels and not any(runner_health.runner_carries(r, labels) for r in runners):
-                print(f"ci_watch: WARNING: job {name} has been queued {minutes} min and no online "
-                      f"runner carries its labels [{', '.join(labels)}]", flush=True)
-            else:
-                continue  # a runner exists; the job is waiting its turn
+            print(f"ci_watch: WARNING: job {name} has been queued 10+ min ({minutes} min)", flush=True)
             warned.add(jid)
 
 

@@ -550,7 +550,6 @@ def in_flight(ledger):
     items = ['agent %s' % (a.get('task') or a.get('id')) for a in ledger['agents'] if a.get('state') == 'running']
     items += ['%s CI' % H.release_name(t) for t in ledger['trains'] if t.get('state') in ('pushed', 'ci')]
     items += ['install %s' % i.get('product') for i in ledger['installs'] if i.get('state') == 'installing']
-    items += ['job %s' % j.get('id') for j in ledger['jobs'] if j.get('state') in ('running', 'waiting-ci')]
     return items
 
 

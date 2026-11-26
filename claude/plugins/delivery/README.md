@@ -51,7 +51,7 @@ New in 0.2.0:
 | `runner_plan.cancel_replaced_runs` | true | cancel CI runs of a head a newer push replaced |
 | `runner_plan.hold_dependabot_during_train` | true | cancel, then re-run, non-train CI runs while a train's CI runs |
 
-Accepted alternative spellings: `watcher.merge_method: "merge"` or `merge_flag: "--merge"` (plus `never_auto_merge: true`). The plugin's earlier names (`caps`, `runners[]`, `runner_plan.retry_seconds`, `watcher_interval_s`, ...) are unchanged.
+Accepted alternative spellings: `watcher.merge_method: "merge"` or `merge_flag: "--merge"` (plus `never_auto_merge: true`). The plugin's earlier names (`caps`, `runners[]`, `watcher_interval_s`, ...) are unchanged.
 
 **Recording the smoke and the cleanup (DL-14, DL-18).** The Stop hook reads `cleaned_at` and `smoke.state` of the train row, which only the ledger writes. Project scripts (`cleanup.py`, `delivery_log.py live`) may not write them, so the plugin has its own commands. The DL-14 and DL-18 messages name the project's configured command, then these:
 

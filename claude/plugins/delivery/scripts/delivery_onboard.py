@@ -23,8 +23,8 @@ TEMPLATE = os.path.join(PLUGIN, "templates", "shared", ".delivery")
 EMPTY_LEDGER = {
     "schema": 1,
     "config_ref": ".delivery/config.json",
-    "trains": [], "agents": [], "jobs": [], "installs": [], "publishes": [],
-    "runners": [], "watchers": [], "owner_questions": [], "events": [],
+    "trains": [], "agents": [], "installs": [], "publishes": [],
+    "watchers": [], "owner_questions": [], "events": [],
 }
 
 

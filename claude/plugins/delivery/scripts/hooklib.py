@@ -196,7 +196,7 @@ def load_ledger(root):
     """The ledger as a dict with every list present; empty lists when missing or unreadable."""
     raw = read_json(os.path.join(root, '.delivery', 'ledger.json'))
     ledger = raw if isinstance(raw, dict) else {}
-    for key in ('trains', 'agents', 'jobs', 'installs', 'publishes', 'runners', 'watchers', 'owner_questions',
+    for key in ('trains', 'agents', 'installs', 'publishes', 'watchers', 'owner_questions',
                 'events'):
         v = ledger.get(key)
         ledger[key] = [x for x in v if isinstance(x, dict)] if isinstance(v, list) else []

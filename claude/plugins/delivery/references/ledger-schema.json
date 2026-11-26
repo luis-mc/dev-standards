@@ -8,10 +8,8 @@
     "updated_at",
     "trains",
     "agents",
-    "jobs",
     "installs",
     "publishes",
-    "runners",
     "watchers",
     "owner_questions",
     "events"
@@ -562,72 +560,6 @@
         "additionalProperties": true
       }
     },
-    "jobs": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "cmd": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "heavy": {
-            "type": "boolean"
-          },
-          "pid": {
-            "type": [
-              "integer",
-              "null"
-            ]
-          },
-          "log_path": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "started": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "ISO-8601 UTC timestamp"
-          },
-          "typical_step_min": {
-            "type": [
-              "number",
-              "null"
-            ]
-          },
-          "last_checked": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "ISO-8601 UTC timestamp"
-          },
-          "state": {
-            "type": "string",
-            "enum": [
-              "running",
-              "done",
-              "failed",
-              "waiting-ci"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "state"
-        ],
-        "additionalProperties": true
-      }
-    },
     "installs": {
       "type": "array",
       "items": {
@@ -729,49 +661,6 @@
         },
         "required": [
           "artifact"
-        ],
-        "additionalProperties": true
-      }
-    },
-    "runners": {
-      "type": "array",
-      "items": {
-        "type": "object",
-        "properties": {
-          "name": {
-            "type": "string"
-          },
-          "labels": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "online": {
-            "type": "boolean"
-          },
-          "busy": {
-            "type": "boolean"
-          },
-          "local": {
-            "type": "boolean"
-          },
-          "paused_by": {
-            "type": [
-              "string",
-              "null"
-            ]
-          },
-          "checked_at": {
-            "type": [
-              "string",
-              "null"
-            ],
-            "description": "ISO-8601 UTC timestamp"
-          }
-        },
-        "required": [
-          "name"
         ],
         "additionalProperties": true
       }

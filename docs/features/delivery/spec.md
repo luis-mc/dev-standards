@@ -252,7 +252,7 @@ flowchart TB
   subgraph shared[delivery templates/shared/scripts/delivery]
     gate[branch_gate, gate_verify, fast_guards]
     j[join, train_freeze]
-    c[ci_watch, ci_scope, runner_health]
+    c[ci_watch, ci_scope]
     cl[cleanup, delivery_log]
   end
   hooks --> lib --> led
