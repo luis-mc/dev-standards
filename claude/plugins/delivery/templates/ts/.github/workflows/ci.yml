@@ -110,7 +110,7 @@ jobs:
   copy-records:
     name: 'copy pass records to main'
     needs: decide
-    if: ${{ !cancelled() && github.event_name == 'push' && needs.decide.outputs.skip == 'true' }}
+    if: ${{ !cancelled() && needs.decide.result == 'success' && github.event_name == 'push' && needs.decide.outputs.skip == 'true' }}
     runs-on: ${{ fromJSON(vars.CRSP_DECIDE || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 5
     permissions:
