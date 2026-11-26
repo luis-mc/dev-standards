@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T12:58+00:00",
+  "updated": "2026-11-26T13:26+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12313,12 +12313,11 @@
       "id": "DS267",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Count local agents in the Agents badge",
       "detail": "Owner: tasks run but the Agents badge shows 0. Local agents started with the Agent tool are not all recorded in the delivery ledger. Record every local agent at launch and mark it done at its hand-back, so Full Progress counts it; also set a task Built when its agent reports READY.",
-      "expected": "27 Nov",
-      "changed": "2026-11-26T12:50+00:00",
-      "expected_basis": "one agent, about 15 min",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T13:25+00:00",
       "release": 197,
       "started": "2026-11-26T12:50+00:00"
     },
@@ -12326,12 +12325,11 @@
       "id": "DS268",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Transcript folds: third fold for hook messages",
       "detail": "Owner: fold long 'Stop says:' hook feedback lines (and similar hook messages) as the plugin folds diffs and commands: one dim line, a chord and a slash command, a switch in the band. First find which render component draws these messages (RenderComponent has InfoNotice, ToolResult, CommandOutput; none is named for hooks).",
-      "expected": "27 Nov",
-      "changed": "2026-11-26T12:58+00:00",
-      "expected_basis": "one agent, about 20 min, after a check of the component",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T13:26+00:00",
       "release": 198,
       "started": "2026-11-26T12:50+00:00",
       "rides": "DS267"
