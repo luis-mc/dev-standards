@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T14:48+00:00",
+  "updated": "2026-11-26T14:51+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12383,6 +12383,18 @@
       "expected_basis": "cloud agent ~10 min + CI ~5 + fold",
       "release": 201,
       "started": "2026-11-26T14:48+00:00"
+    },
+    {
+      "id": "DS273",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Test one PR carrying several releases (display, ledger, cleanup, fold)",
+      "detail": "sandbox run with two releases on one PR; propose fixes",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T14:51+00:00",
+      "no_release": "a test of the display and the ledger",
+      "started": "2026-11-26T14:50+00:00"
     },
     {
       "id": "DU1",
