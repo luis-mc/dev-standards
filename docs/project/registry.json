@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T13:26+00:00",
+  "updated": "2026-11-26T13:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12333,6 +12333,30 @@
       "release": 198,
       "started": "2026-11-26T12:50+00:00",
       "rides": "DS267"
+    },
+    {
+      "id": "DS269",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "A PR proves only the targets its changes affect (spec, mapping, CI, checks)",
+      "detail": "New decision replacing the every-target reading of DL-112; lifecycle.json inputs per target; affected_targets.py; lane matrix and release check use it; doctor check; fixture test; migration scaffold; Full Progress shows covered vs ran",
+      "expected": "27 Nov",
+      "changed": "2026-11-26T13:27+00:00",
+      "expected_basis": "spec + 3 code parts, ~3 agent rounds",
+      "release": 199
+    },
+    {
+      "id": "DS270",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Cloud-first and one-agent-per-area: check what the plugin enforces",
+      "detail": "D4 denies local without a PC-bound line; DL-40 bundling is advice only; decide whether to enforce",
+      "expected": "27 Nov",
+      "changed": "2026-11-26T13:27+00:00",
+      "expected_basis": "read + one change, ~1 agent round",
+      "rides": "DS269"
     },
     {
       "id": "DU1",
