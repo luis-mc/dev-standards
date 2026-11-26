@@ -49,7 +49,7 @@ a copy of one of these files and the project gets it, queue the user copy as a
 - Never install the same rules file at both user and project level.
 - Keep the claude-in-chrome extension off by default; turn it on for a task
   that needs a browser, and off again.
-- The settings keep the auto-compact window at `150000`, so one request never
+- The settings keep the auto-compact window at `350000`, so one request never
   re-reads a very large context.
 
 ## The model split this skill enforces
@@ -283,7 +283,7 @@ The keys, and what each is for:
 | Key | Value | Why |
 |---|---|---|
 | `statusLine` | see path note below | points at the script from step 2 |
-| `env.CLAUDE_CODE_AUTO_COMPACT_WINDOW` | `"150000"` | compacts early, so a request never re-reads a huge context (see "Token cost") |
+| `env.CLAUDE_CODE_AUTO_COMPACT_WINDOW` | `"350000"` | compacts early, so a request never re-reads a huge context (see "Token cost") |
 | `outputStyle` | `"Caveman"` | terse replies, same technical content |
 | `model` | `"sonnet"` | main loop runs on Sonnet; Opus by `/model` for planning only |
 | `env.CLAUDE_CODE_SUBAGENT_MODEL` | `"sonnet"` | subagents write code on Sonnet |

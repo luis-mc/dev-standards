@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T00:07+00:00",
+  "updated": "2026-11-26T07:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7664,6 +7664,19 @@
       "dropped_reason": "Moot: the pool is removed from this PC"
     },
     {
+      "id": "DL418",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "DL-runner-out: delivery holds no runner rules",
+      "detail": "Remove DL-50/DL-51, runner_health and runner/heavy-job fields from delivery; hand rules to the pool project.",
+      "expected": "26 Nov ~09:30",
+      "changed": "2026-11-26T07:19+00:00",
+      "expected_basis": "agent ~15 min, CI ~5 min, release ~10 min",
+      "release": 184,
+      "started": "2026-11-26T07:19+00:00"
+    },
+    {
       "id": "DP1",
       "owner": "delivery-plugin-review",
       "app": "luismc-delivery",
@@ -12389,6 +12402,19 @@
       "changed": "2026-11-24T20:57+00:00",
       "release": 172,
       "started": "2026-11-24T20:56+00:00"
+    },
+    {
+      "id": "MP12",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Running",
+      "item": "Auto-compact default 350000",
+      "detail": "claude-setup default CLAUDE_CODE_AUTO_COMPACT_WINDOW goes from 150000 to 350000, owner request 26 Nov",
+      "expected": "26 Nov ~10:30",
+      "changed": "2026-11-26T07:21+00:00",
+      "expected_basis": "small edit, then CI 3-5 min",
+      "release": 185,
+      "started": "2026-11-26T07:21+00:00"
     },
     {
       "id": "SO1",
