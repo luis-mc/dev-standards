@@ -65,6 +65,17 @@ def watcher_flags(cfg) -> dict:
     return out
 
 
+DEPLOY_DEFAULTS = {"serial": False}
+
+
+def deploy(cfg) -> dict:
+    """deploy.serial (default false): releases deploy one after another."""
+    d, out = _section(cfg, "deploy"), dict(DEPLOY_DEFAULTS)
+    if isinstance(d.get("serial"), bool):
+        out["serial"] = d["serial"]
+    return out
+
+
 def ci_workflows(cfg) -> list:
     """watcher.ci_workflows: the workflow files that must all succeed on the PR head before a train is green."""
     v = _section(cfg, "watcher").get("ci_workflows")

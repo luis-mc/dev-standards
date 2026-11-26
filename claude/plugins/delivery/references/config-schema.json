@@ -496,6 +496,17 @@
         }
       }
     },
+    "deploy": {
+      "type": "object",
+      "description": "How this project deploys. The docs plugin reads it to order releases on Full Progress.",
+      "properties": {
+        "serial": {
+          "type": "boolean",
+          "default": false,
+          "description": "true: releases deploy one after another, so a release waits on every earlier open release whose train merged first. A project with serial deploys sets it once."
+        }
+      }
+    },
     "release_assets": {
       "type": "object",
       "description": "DL-96: release asset naming.",

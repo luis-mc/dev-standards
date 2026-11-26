@@ -85,6 +85,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.11a** — The "code newer than its doc" warning (T2) gives the same result on a developer machine, in CI and on a pull request merge ref. It compares UTC dates of the last non-merge commit for the code and for the doc, so a commit's time zone and a merge commit dated "now" change nothing. On a shallow clone the dates are wrong, so T2 is skipped and one info line goes to stderr; fetch full history to run it.
 
+**R5.11b** — `docs_fold.py note` sets the doc's `last_verified` to today, because a change note says the author checked the doc. That clears T2 for a change that touched only shared code. Proof: `claude/plugins/docs/tests/test_dl421_dl422.py`.
+
 **R5.12** — `docs_work.py guard` exits 1 when a branch adds files under `docs/work/`. `strip` and `summaries` serve the join step (DOCSPEC R10.2, R10.3).
 
 **R5.13** — The Stop hook prints a warning, never a block, when mapped code changed without docs. The SessionStart hook adds the docs rule. Both do nothing without `docs/docs.json`. Both fail open on error (DOCSPEC R8.7).
@@ -114,6 +116,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 **R5.24** — `design_system.py verify` and the guard templates block from adoption (DOCSPEC R15.25): a numbered version without a complete `approvals.json` record (DS7), an enforced version without an implementation approval (DS8), and a gallery whose source stamp is stale (DS9; an error on a release branch or with `--release` or `DESIGN_GATE=release`, a warning on a task branch). A project's own generator keeps the same stamp or sets `design_gallery_digest_command` in `docs.json`. `approve-implementation vN --as-live --evidence TEXT` records a version that is already live. Each message names its fix command.
 
 **R5.25** — The wizard behaviour guard (`wizard-behaviour.ts`) has the rule `step-bar-more-for-one`: a step bar that collapses steps never says "+ 1 more" for a single hidden step, because the one step fits where the label sits. The driver reads `stepBar: { hidden, moreLabel }` from the DOM; "+ 2 more" and up pass. The harness self-test plants the breach (DS244).
+
+**R5.26** — `design_system.py visuals` prints, for each UX or CORE rule a feature spec cites with no existing test on its line or on a `Proof:` line, the line to add: `Proof: UX-n <test path>`. It is the same check as the citation guard, so the author fixes it before CI does. Proof: `claude/plugins/docs/tests/test_dl421_dl422.py`.
 
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
 

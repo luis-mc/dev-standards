@@ -32,6 +32,7 @@ SPEC = 'ARTIFACTSPEC 1.0.0'
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_badge as BADGE  # noqa: E402
+import ledger_links  # noqa: E402
 
 STATUSES = ('Live', 'Built', 'Running', 'Needs you', 'Waiting', 'To do', 'On hold', 'Failed', 'Dropped')
 OPEN_STATUSES = ('Running', 'Waiting', 'To do', 'Needs you', 'On hold')  # R6.6
@@ -858,8 +859,22 @@ def _kind_entry(manifest: dict, key: str):
     raise ContentError('artifact key %r is not in the manifest' % (key,))
 
 
-def _tasks(registry: dict) -> list:
+def _tasks(registry: dict, record_dir: str = '') -> list:
     problems, tasks = [], list(registry.get('tasks') or [])
+    links = ledger_links.links(open_releases(tasks), record_dir) if record_dir else {}
+    if links:
+        # R5.59: an open release with no `pr` or `release_waits_on` takes the ledger's; the row's own value wins.
+        filled = []
+        for t in tasks:
+            got = links.get(t.get('id'))
+            if got:
+                t = dict(t)
+                if got['pr'] and not t.get('pr'):
+                    t['pr'] = got['pr']
+                if got['waits'] and not t.get('release_waits_on'):
+                    t['release_waits_on'] = got['waits']
+            filled.append(t)
+        tasks = filled
     for task in tasks:
         if task.get('status') not in STATUSES:
             problems.append('task %s has status %r; the eight statuses are %s (R6.1)'
@@ -1530,13 +1545,13 @@ def _cut(text: str, limit: int) -> str:
     return text if len(text) <= limit else text[:limit - 1].rstrip() + '…'
 
 
-# ------------------------------------------------------------------ release tree (R5.55 to R5.58)
+# ------------------------------------------------------------------ release tree (R5.55 to R5.59)
 TREE_W, TREE_ROW, TREE_TOP = 880, 52, 36
 TREE_AX0, TREE_AX1 = 190, 800
 
 
 def tree_mode(tasks: list) -> bool:
-    """R5.55: true when an open release names a carrier PR or waits on another release; else the older figure."""
+    """R5.55, R5.59: true when an open release names a carrier PR (its own or the ledger's) or waits on another release; else the older figure."""
     return any(t.get('pr') or t.get('release_waits_on') for t in open_releases(tasks))
 
 
@@ -2405,7 +2420,7 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     if content is None:
         problems.append('no content loaded for %r' % key)
     try:
-        tasks = _tasks(registry)
+        tasks = _tasks(registry, record_dir)
     except ContentError as exc:
         problems += exc.problems
         tasks = []
@@ -2682,7 +2697,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
         return [('R4.2', p) for p in exc.problems]
     label = str(manifest.get('timezone_label', ''))
     try:
-        all_tasks = _tasks(registry)
+        all_tasks = _tasks(registry, record_dir)
     except ContentError as exc:
         return [('R6.1' if 'status' in p else 'R4.7', p) for p in exc.problems]
     mine = _tasks_of(kind, key, all_tasks)

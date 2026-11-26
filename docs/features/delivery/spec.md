@@ -20,7 +20,7 @@ code:
   - tools/test_delivery_*.py
   - claude/plugins/delivery/tests/*.py
   - tools/test_delivery_cloud.py
-last_verified: 2026-11-01
+last_verified: 2026-11-26
 ---
 # Delivery guard rails
 

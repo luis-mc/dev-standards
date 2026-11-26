@@ -47,6 +47,7 @@ New in 0.2.0:
 | `watcher.open_prs` | true | open its ready PR; the body carries `.delivery/docs-summaries.md` (written by `join.py`) when present |
 | `watcher.merge_mode` | `auto` | `auto`: merge on green. `manual`: the owner merges; the watcher never merges and the hooks refuse an agent's `gh pr merge` (DP16) |
 | `watcher.merge_on_green` | true | `gh pr merge N --merge --match-head-commit SHA`, never `--auto`, only when the head is unchanged since the green run |
+| `deploy.serial` | false | releases deploy one after another; Full Progress then shows a release waiting on every earlier open release whose train merged first. A project with serial deploys sets it once |
 | `runner_plan.cancel_replaced_runs` | true | cancel CI runs of a head a newer push replaced |
 | `runner_plan.hold_dependabot_during_train` | true | cancel, then re-run, non-train CI runs while a train's CI runs |
 
