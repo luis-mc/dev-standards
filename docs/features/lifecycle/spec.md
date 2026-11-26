@@ -14,7 +14,7 @@ code:
   - claude/plugins/docs/templates/design-system/guards/**
   - claude/plugins/delivery/templates/lifecycle/**
   - claude/plugins/delivery/templates/shared/scripts/delivery/lifecycle_*.py
-last_verified: 2026-11-21
+last_verified: 2026-11-26
 ---
 # Install, update and remove
 
