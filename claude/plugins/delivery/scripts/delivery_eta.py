@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DL168: measured durations from the delivery ledger, for sizing an ETA.
 
-  python delivery_eta.py --root . --kind agent|ci|join|pool-refresh [--where cloud|local] [--last 20] [--json]
+  python delivery_eta.py --root . --kind agent|ci|join [--where cloud|local] [--last 20] [--json]
 
 Prints the median and p75 in minutes, the sample size, and 'no history' with fewer than 3 samples.
 Importable: estimate(root, kind, where=None, last=20) -> dict.
@@ -16,7 +16,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 
-KINDS = ("agent", "ci", "join", "pool-refresh")
+KINDS = ("agent", "ci", "join")
 MIN_SAMPLES = 3
 
 
@@ -70,8 +70,6 @@ def _rows(led, kind, where):
                     out.append(got)
     elif kind == "join":
         add(led.get("trains"), "joined_at", ("pushed_at",))
-    elif kind == "pool-refresh":
-        add(led.get("jobs"), "started", ("ended", "finished_at"), lambda r: r.get("kind") == "pool-refresh")
     return out
 
 

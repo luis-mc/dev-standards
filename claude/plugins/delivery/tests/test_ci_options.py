@@ -50,7 +50,7 @@ class ConfigTests(unittest.TestCase):
         root = make_root({"ci": {"options": {"linux": "docker"}}})
         errors, _w, _s = C.validate_file(C.config_file(root))
         self.assertTrue(any("linux" in e for e in errors), errors)
-        ok = make_root({"runners": [{"name": "r", "os": "windows"}], "local_runners": ["r"]})
+        ok = make_root({"runners": [{"name": "r", "os": "windows"}]})
         self.assertEqual(C.validate_file(C.config_file(ok))[0], [])
         good = make_root({"ci": {"options": {"linux": "cloud"}, "cloud": {"repo": "o/r", "status_token_env": "TOK", "branches": ["release/*"]}}})
         self.assertEqual(C.validate_file(C.config_file(good))[0], [])

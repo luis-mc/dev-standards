@@ -1,5 +1,5 @@
 {
-  "_doc": "Per-project config for the luismc-delivery plugin, written to .delivery/config.json by claude-setup (never overwritten once present). Keys starting with _ are ignored. A `brief_markers` entry that is a list is satisfied by any one string in it. `runners[]` lists the CI runners the project uses: `name` (as GitHub shows it) and `repair` (commands run in order when the runner is offline: a string runs through the shell, a list is an argv; D6a). `runner_plan.report_command` is the project's report channel (gets the text in $DELIVERY_REPORT). Validate with delivery_config.py validate (unknown keys warn). enforcement, watcher and runner_plan flags are described in DELIVERYSPEC section 6. Neutral defaults; _example_windows_monorepo shows values for a Windows monorepo.",
+  "_doc": "Per-project config for the luismc-delivery plugin, written to .delivery/config.json by claude-setup (never overwritten once present). Keys starting with _ are ignored. A `brief_markers` entry that is a list is satisfied by any one string in it. `runners[]` lists the CI runners the project uses: `name` (as GitHub shows it) and `repair` (commands run in order when the runner is offline: a string runs through the shell, a list is an argv; D6a). Validate with delivery_config.py validate (unknown keys warn). enforcement, watcher and runner_plan flags are described in DELIVERYSPEC section 6. Neutral defaults; _example_windows_monorepo shows values for a Windows monorepo.",
   "caps": { "cloud": 50, "local": 3, "total": 53 },
   "work_root": "",
   "tz": "UTC",
@@ -40,7 +40,6 @@
     "runners": [
       { "name": "win-runner-1", "repair": ["sc stop actions.runner.org-repo.win-runner-1 & sc start actions.runner.org-repo.win-runner-1"] },
       { "name": "linux-runner-1", "repair": [["ssh", "linux-host", "sudo", "systemctl", "restart", "actions.runner.org-repo.linux-runner-1"]] }
-    ],
-    "runner_plan": { "retry_seconds": 300, "report_command": "python scripts/notify.py \"$DELIVERY_REPORT\"" }
+    ]
   }
 }

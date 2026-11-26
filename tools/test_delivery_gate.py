@@ -3147,11 +3147,11 @@ def sc_e2e_graph(t: T, shared: Path) -> None:
 
 
 # --------------------------------------------------------------------------
-# scenarios: quick join check, train freeze, runner health (DL2, DL6, DL7)
+# scenarios: quick join check, train freeze (DL2, DL6)
 # --------------------------------------------------------------------------
 
-# The two scripts of DL6 and DL7 are copied into every box.
-for _name in ("runner_health.py", "train_freeze.py"):
+# The script of DL6 is copied into every box.
+for _name in ("train_freeze.py",):
     if _name not in SCRIPT_FILES:
         SCRIPT_FILES.append(_name)
 
@@ -3174,15 +3174,6 @@ if argv[:2] == ["pr", "list"]:
     print(json.dumps([{k: v for k, v in p.items() if k not in ("headRefName", "state")} for p in rows]))
 elif argv[:2] == ["run", "list"]:
     print(json.dumps(fx.get("runs", [])))
-elif argv[:1] == ["api"]:
-    if fx.get("runners_error"):
-        fail("HTTP 403: Must have admin rights to Repository.")
-    print(json.dumps({"runners": fx.get("runners", [])}))
-elif argv[:2] == ["variable", "get"]:
-    v = fx.get("vars", {}).get(argv[2])
-    if v is None:
-        fail("could not find variable")
-    print(v)
 else:
     fail("stub gh: unexpected call " + " ".join(argv))
 '''
@@ -3416,69 +3407,6 @@ def sc_freeze(t: T, shared: Path) -> None:
     box.g("tag", "v1")
     r = push(box, stub, "origin", "v1")
     t.eq("a tag push does not ask GitHub", (r.code, stub.calls()), (0, []))
-
-
-def runner_fixture(box: Box, files: dict) -> None:
-    box.g("checkout", "-q", "integ")
-    for name, text in files.items():
-        box.write(".github/workflows/" + name, text)
-    box.g("add", "-A")
-    box.g("commit", "-q", "-m", "workflows")
-    box.g("push", "-q", "origin", "integ")
-
-
-WF_VAR = ("name: ci\non: push\njobs:\n  build:\n    runs-on: ${{ fromJSON(vars.CI_RUNS_ON || '\"ubuntu-latest\"') }}\n"
-          "    steps:\n      - run: echo hi\n")
-
-
-def sc_runner_health(t: T, shared: Path) -> None:
-    """DL7: join warns, never blocks, when no online runner carries a self-hosted label set."""
-    selfhosted = {"CI_RUNS_ON": '["self-hosted","gpu"]'}
-    online = {"status": "online", "labels": [{"name": "self-hosted"}, {"name": "linux"}]}
-    gpu = {"status": "online", "labels": [{"name": "self-hosted"}, {"name": "gpu"}]}
-
-    def run_join(fixture: dict, wf: dict | None = None):
-        box = integ_box(shared)
-        box.gated("feat/a", {"apps/web/a.txt": "a\n"}, frm="integ", base_ref="origin/integ")
-        runner_fixture(box, wf or {"ci.yml": WF_VAR})
-        stub = GhStub(box, fixture)
-        r = join(box, "--into", "integ", "feat/a", "--no-gate", env=stub.env())
-        return r, box, stub
-
-    r, box, stub = run_join({"vars": selfhosted, "runners": [online]})
-    t.eq("no online runner with the label: join still succeeds (warnings only)", r.code, 0)
-    t.check("... and warns, naming the label", "WARNING" in r.out and "gpu" in r.out, r.out)
-    t.eq("... the report says warn", join_result(box)["runner_health"]["status"], "warn")
-
-    r, box, stub = run_join({"vars": selfhosted, "runners": [online, gpu]})
-    t.check("an online runner carries every label: no warning", "WARNING" not in r.out and "runner health: ok" in r.out, r.out)
-
-    r, box, stub = run_join({"vars": selfhosted, "runners": [{**gpu, "status": "offline"}]})
-    t.check("the only runner with the label is offline: warning", "WARNING" in r.out, r.out)
-
-    r, box, stub = run_join({"vars": {}, "runners": []})
-    t.check("the variable unset: the default is ubuntu-latest, hosted, no warning and no runner list",
-            "WARNING" not in r.out and not [c for c in stub.calls() if c[0] == "api"], r.out)
-
-    wf_hosted = {"ci.yml": "jobs:\n  a:\n    runs-on: windows-2022\n  b:\n    runs-on: [macos-14]\n"
-                           "  c:\n    runs-on:\n      - ubuntu-24.04\n"}
-    r, box, stub = run_join({"runners": []}, wf_hosted)
-    t.check("standard hosted labels count as available",
-            "WARNING" not in r.out and not [c for c in stub.calls() if c[0] == "api"], r.out)
-
-    wf_self = {"ci.yml": "jobs:\n  a:\n    runs-on: [self-hosted, linux, arm64]\n"}
-    wf_block = {"ci.yml": "jobs:\n  a:\n    runs-on:\n      - self-hosted\n      - arm64\n    steps: []\n"}
-    r, box, stub = run_join({"runners": [online]}, wf_block)
-    t.check("a block list of labels is read", "WARNING" in r.out and "arm64" in r.out, r.out)
-    r, box, stub = run_join({"runners": [online]}, wf_self)
-    t.check("a literal self-hosted label list is checked too", "WARNING" in r.out and "arm64" in r.out, r.out)
-    r, box, stub = run_join({"runners": [{**online, "labels": online["labels"] + [{"name": "arm64"}]}]}, wf_self)
-    t.check("... and passes when one runner has all three", "WARNING" not in r.out, r.out)
-
-    r, box, stub = run_join({"vars": selfhosted, "runners_error": True})
-    t.eq("runners cannot be listed: join succeeds", r.code, 0)
-    t.check("... and says the check was skipped and why", "check skipped" in r.out and "admin" in r.out, r.out)
-    t.eq("... the report says skipped", join_result(box)["runner_health"]["status"], "skipped")
 
 
 # --------------------------------------------------------------------------
@@ -3781,20 +3709,6 @@ MUTANTS = [
      '["run", "list", "--commit", sha,', '["run", "list", "--commit", "0" * 40,', "freeze"),
     ("pre-push ignores the freeze", ".githooks/pre-push",
      '--branch "${remote_ref#refs/heads/}" </dev/null || exit 1', '--branch "${remote_ref#refs/heads/}" </dev/null || true', "freeze"),
-    ("a hosted label needs a runner", "scripts/delivery/runner_health.py",
-     '    return "self-hosted" not in low and any(x.startswith(HOSTED_PREFIXES) for x in low)', "    return False", "runner_health"),
-    ("one matching label is enough", "scripts/delivery/runner_health.py",
-     "return all(n.lower() in have for n in needed)", "return any(n.lower() in have for n in needed)", "runner_health"),
-    ("an offline runner counts", "scripts/delivery/runner_health.py",
-     'if isinstance(r, dict) and r.get("status") == "online":', "if isinstance(r, dict):", "runner_health"),
-    ("the CI_RUNS_ON variable is not read", "scripts/delivery/runner_health.py",
-     "        value = var_lookup(name)\n", "        value = None\n", "runner_health"),
-    ("a block list of labels is not read", "scripts/delivery/runner_health.py",
-     'n = re.match(r"^\\s+-\\s*(.+)$", lines[i])', "n = None", "runner_health"),
-    ("unlistable runners are not reported", "scripts/delivery/runner_health.py",
-     'print("%s: check skipped: %s" % (prefix, res["reason"]))', "pass", "runner_health"),
-    ("a missing runner is not a warning", "scripts/delivery/runner_health.py",
-     '    if result["warnings"]:\n        result["status"] = "warn"', "    pass", "runner_health"),
 ]
 
 SCENARIOS = {
@@ -3841,7 +3755,6 @@ SCENARIOS = {
     "e2e_graph": sc_e2e_graph,
     "join_quick": sc_join_quick,
     "freeze": sc_freeze,
-    "runner_health": sc_runner_health,
 }
 
 

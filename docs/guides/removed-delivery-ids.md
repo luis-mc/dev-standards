@@ -4,7 +4,7 @@ type: how-to
 ---
 # Fix a citation of a removed delivery rule
 
-The delivery plugin no longer owns machine limits. Five of its rules are removed: DL-77, DL-78, DL-79, DL-90 and DL-91. They covered the load guard, the runner hooks and the CI slots. These IDs are not reused.
+The delivery plugin no longer owns machine limits. Seven of its rules are removed: DL-50, DL-51, DL-77, DL-78, DL-79, DL-90 and DL-91. They covered the load guard, the heavy-job and runner rules, the runner hooks and the CI slots. These IDs are not reused.
 
 ## What failed
 

@@ -740,24 +740,16 @@ class BranchSignalTests(unittest.TestCase):
         self.assertEqual(sum(1 for c in sh.calls if c[:2] == ["git", "ls-remote"]), 1)
 
 
-class RunnersInstallsHeartbeatTests(unittest.TestCase):
-    def test_runners_installs_and_heartbeat(self):
+class InstallsHeartbeatTests(unittest.TestCase):
+    def test_installs_and_heartbeat(self):
         import tempfile
         state = tempfile.mktemp(suffix=".json")
         with open(state, "w") as fh:
             json.dump({"version": "0.1.6212", "state": "done", "ended": "2026-10-14T11:00:00Z"}, fh)
-        root = make_root({"install_state_files": [{"product": "app", "path": state}], "local_runners": ["build-pc-linux"]})
-        seed(root, runners=[{"name": "build-pc-linux", "paused_by": "B14-build"}])
-        payload = {"runners": [{"name": "build-pc-linux", "status": "online", "busy": True,
-                                "labels": [{"name": "self-hosted"}, {"name": "Linux"}]}]}
-        sh = FakeShell({("gh", "api"): (0, json.dumps(payload))})
+        root = make_root({"install_state_files": [{"product": "app", "path": state}]})
+        sh = FakeShell({})
         watcher(root, sh).run_once("2026-10-14T11:00:00Z")
         led = L.load(root)
-        self.assertEqual(sh.calls[-1][:2], ["gh", "api"])
-        self.assertIn("actions/runners", sh.calls[-1][2])
-        r = led["runners"][0]
-        self.assertEqual((r["online"], r["busy"], r["local"], r["paused_by"]), (True, True, True, "B14-build"))
-        self.assertEqual(r["labels"], ["self-hosted", "Linux"])
         self.assertEqual((led["installs"][0]["product"], led["installs"][0]["version"], led["installs"][0]["state"]),
                          ("app", "0.1.6212", "done"))
         hb = led["watchers"][0]

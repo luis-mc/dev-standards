@@ -212,13 +212,6 @@
       },
       "description": "Check ids switched off."
     },
-    "local_runners": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Runner names that live on the owner's PC."
-    },
     "enforcement": {
       "type": "object",
       "description": "How the Stop hook enforces (0.2.0).",
@@ -376,7 +369,7 @@
     },
     "ci": {
       "type": "object",
-      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: Option 1 self-hosted (your own self-hosted runners on any machines you run; the `runners` and `local_runners` keys belong to it), Option 2 github-hosted (GitHub's runners), Option 3 cloud (Claude cloud sessions, no Actions and no webhooks). Option 4 (own runners first, a fallback after a wait) is the `fallback` block. All use the same shard table; the option only decides where a shard runs and how its result comes back.",
+      "description": "DL15: where CI runs, chosen PER OS. There is no default: setup asks, and `delivery_ci.py set` changes it later. Option values: Option 1 self-hosted (your own self-hosted runners on any machines you run; the `runners` key belongs to it), Option 2 github-hosted (GitHub's runners), Option 3 cloud (Claude cloud sessions, no Actions and no webhooks). Option 4 (own runners first, a fallback after a wait) is the `fallback` block. All use the same shard table; the option only decides where a shard runs and how its result comes back.",
       "properties": {
         "jobs": {
           "type": "object",

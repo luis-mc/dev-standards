@@ -19,7 +19,6 @@ SAMPLE_PROJECT = {
     "enforcement": {"mode": "block", "block_ceiling": 3, "log_every_block": True},
     "watcher": {"push_trains": True, "open_prs": True, "merge_on_green": True, "merge_flag": "--merge",
                 "never_auto_merge": True},
-    "local_runners": ["build-pc"],
     "runners": [{"name": "build-pc", "os": "Windows", "repair": ["powershell -Command x"]},
                 {"name": "build-pc-linux", "os": "Linux", "repair": [["docker", "restart", "c"]]},
                 {"name": "NUC8-linux", "os": "Linux", "repair": []}],
@@ -56,7 +55,7 @@ class ValidateTests(unittest.TestCase):
         self.assertEqual(C.validate_config(old), ([], []))
         self.assertEqual(C.validate_config({}), ([], []))
 
-    def test_task_spelling_merge_method_and_heavy_jobs_yield(self):
+    def test_task_spelling_merge_method_and_cancel_flag(self):
         cfg = {"watcher": {"merge_method": "merge"}, "runner_plan": {"cancel_replaced_runs": False}}
         self.assertEqual(C.validate_config(cfg), ([], []))
 

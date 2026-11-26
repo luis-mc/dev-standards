@@ -29,7 +29,6 @@ hook, language guard tests). tech-stack-setup and claude-setup carry no CI or de
 | `scripts/delivery/fallback_run.py` | same (what a fallback job runs: HEAD check, claim last, shard, one status; DL24) | ci |
 | `.github/workflows/ci-fallback.yml` | `templates/shared/.github/workflows/ci-fallback.yml` (hosted fallback, started only by `workflow_dispatch`) | ci |
 | `routines/ci-fallback-watch.json` | `templates/shared/routines/` (template of the hourly safety-net routine; never created by a script) | ci |
-| `scripts/delivery/runner_health.py` | same (runner labels against online runners; used by `join.py` and `ci_watch.py`) | gate |
 | `scripts/delivery/train_freeze.py` | same (called by the `pre-push` hook) | gate |
 | `scripts/delivery/ci_skip_check.py` | same | ci |
 | `scripts/delivery/reach_check.py` | same | ci |
@@ -410,16 +409,7 @@ when the joined tree equals the tree of a joined branch's head whose gate result
 `gate_verify.py` trusts for that head and for the same base the join would use
 (`origin/<default_branch>`, without `--allow-older-base`)**: those files were
 already gated against that base. Neither publishes a result for INTEGRATION.
-Last, before the join says it is done, **runner health** (`runner_health.py`, D5) prints a
-warning for every job whose `runs-on` labels no online runner carries, and never stops the
-join; it is recorded as `runner_health` in `join-result.json` (`status` `ok`, `warn` or
-`skipped`, with `warnings` and `reason`). It reads every `.github/workflows/*.yml|yaml`,
-resolves `${{ fromJSON(vars.NAME || '"default"') }}` through the repository variable (`gh
-variable get`; the default is used, with a note, when it cannot be read), counts
-`ubuntu-*`, `windows-*` and `macos-*` label sets as available, and for a `self-hosted` set
-needs one online runner (`gh api repos/{owner}/{repo}/actions/runners`) carrying every label.
-Listing runners needs admin rights; without them the check prints that it was skipped, and
-why. Hosted-only workflows make no runner call. Before the first fetch it runs `cleanup.py --local` (best effort:
+Before the first fetch it runs `cleanup.py --local` (best effort:
 its failure is printed and never stops the join), so worktrees of trains
 already merged are gone before new ones are made.
 
@@ -526,8 +516,7 @@ has completed. Green needs every executed run to succeed and at least one to hav
 open pull request `skipped` still counts as success.
 While it waits (`--queue-warn-seconds`, default 600) it reads the jobs of each unfinished run
 (`gh api repos/{owner}/{repo}/actions/runs/ID/jobs`) and warns **once per job** that has been
-queued longer, when no online runner carries the job's labels, or, when the runners cannot
-be listed, that the job has been queued 10+ min. GitHub-hosted label sets are not checked.
+queued longer, that the job has been queued 10+ min. GitHub-hosted label sets are not reported.
 A warning never changes the exit code (D5).
 Slowest job (TC8): once every run is complete, whether it passed or not, it prints one summary
 after the verdict: per run, the wall time (first job start to last job end), the slowest job with
@@ -737,7 +726,7 @@ workflow watch (0, 1, 4).
 ## Tests (in `tools/` of this repository)
 
 - `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (light check,
-  train freeze, runner health)
+  train freeze)
   against throwaway git repositories with a local bare remote and a `gate.json`
   whose steps are small Python commands. Every trust-rule branch and every exit
   code is exercised.
