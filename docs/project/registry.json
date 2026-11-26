@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:00+00:00",
+  "updated": "2026-11-26T09:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7696,8 +7696,7 @@
       "item": "Render fills carrier PR from ledger",
       "detail": "When an open release has no --pr, Full Progress reads the PR from the delivery ledger so the release tree shows in every project; docs plugin; owner request 26 Nov",
       "expected": "26 Nov",
-      "changed": "2026-11-26T08:58+00:00",
-      "rides": "DL418",
+      "changed": "2026-11-26T09:11+00:00",
       "started": "2026-11-26T08:31+00:00",
       "release": 187
     },
@@ -7787,13 +7786,13 @@
       "owner": "delivery-speed",
       "app": "",
       "status": "Running",
-      "item": "Release tree for every open release",
-      "detail": "Full Progress shows the release timeline tree and table whenever any release is open, with or without a carrier PR; owner: own page showed old figure",
+      "item": "Release table for every open release",
+      "detail": "Full Progress shows the release table below the timeline whenever any release is open, with or without a carrier PR; owner: own page showed no table",
       "expected": "26 Nov ~14:00",
-      "changed": "2026-11-26T09:00+00:00",
-      "expected_basis": "small edit, CI 5 min",
+      "changed": "2026-11-26T09:12+00:00",
+      "expected_basis": "CI 5 min after join",
       "release": 189,
-      "started": "2026-11-26T09:00+00:00"
+      "started": "2026-11-26T09:12+00:00"
     },
     {
       "id": "DP1",

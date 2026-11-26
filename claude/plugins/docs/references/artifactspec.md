@@ -1399,9 +1399,9 @@ double-click.
   `--release-waits-on` wins. The ledger and git are only read. With no ledger nothing changes.
   The tree (R5.58) then shows for any project with a linked PR. Verified by
   `test_dl420_ledger_links`.
-- **R5.60** — The tree (R5.58) and its table (R5.57) show whenever any release is open,
-  with or without a carrier PR. A release with no PR is a row of its own, CI "own run".
-  The older figure is gone. Verified by `test_artifacts_ds256`.
+- **R5.60** — The release table (R5.57) shows below the timeline figure whenever any release is open;
+  the figure is the tree (R5.58) only with a carrier PR or a dependency. A release with no PR is a row of its own, CI "own run".
+  Verified by `test_artifacts_ds256`.
 
 ---
 
