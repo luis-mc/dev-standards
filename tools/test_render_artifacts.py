@@ -2654,11 +2654,11 @@ def timeline_is_deterministic_and_uses_the_stamp_for_now(fx):
 @test
 @with_fixture
 def timeline_without_phases_is_a_diamond_at_expected(fx):
-    """R5.42: a release with no phases is a filled diamond at its Expected only; no bars."""
+    """R5.42, R5.42c (DS278): a release with no phases is an outline diamond at its Expected only; no bars."""
     registry = with_releases(fx, release('DS51', 'Plain release', '10 Oct ~16:00'))
     fig = timeline_of(fx.render('full-progress', registry=registry))
-    assert R.find(fig, 'rect', 'rt-bar') is None and R.find(fig, 'polygon', 'rt-expected') is not None
-    assert R.text_of(R.find(fig, 'text', 'rt-live-label')) == 'live ~16:00'
+    assert R.find(fig, 'rect', 'rt-bar') is None and R.find(fig, 'polygon', 'rt-nophase') is not None
+    assert R.text_of(R.find(fig, 'text', 'rt-live-label')) == 'live ~16:00 · no phases'
 
 
 @test
@@ -2737,7 +2737,7 @@ def check_finds_a_timed_release_in_a_day_slot(fx):
     registry = with_releases(fx, release('DS51', 'Soon release', '10 Oct ~16:00'))
     out = fx.render('full-progress', registry=registry)
     assert 'R5.42a' not in reqs(fx.check(out, 'full-progress', registry=registry))
-    bad = sub1(out, 'class="rt-expected"', 'class="rt-day"')
+    bad = sub1(out, 'class="rt-expected rt-nophase"', 'class="rt-day"')      # DS278: no phases, an outline diamond
     assert 'R5.42a' in reqs(fx.check(bad, 'full-progress', registry=registry))
 
 
