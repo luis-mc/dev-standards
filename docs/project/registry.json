@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T12:38+00:00",
+  "updated": "2026-11-26T12:39+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12217,11 +12217,11 @@
       "id": "DS259",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Running",
       "item": "CI findings S16: test the merge result",
       "detail": "From the leaner-CI review (S16): test the merge result before merging, so a main run can be skipped without lowering what main proves. Delivery plugin; note GitHub merge queue needs an organization repo.",
       "expected": "26 Nov ~13:30",
-      "changed": "2026-11-26T12:15+00:00",
+      "changed": "2026-11-26T12:39+00:00",
       "release": 196,
       "started": "2026-11-26T12:02+00:00"
     },
@@ -12229,11 +12229,11 @@
       "id": "DS260",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Running",
       "item": "CI findings S19: retry infrastructure errors once",
       "detail": "From the leaner-CI review (S19, F22): re-run a job once when it failed before any project step ran (runner lost, startup failure, apt mirror, image layer timeout); never a test failure (DL-99 G3); log every retry. Delivery plugin ci_watch.",
       "expected": "26 Nov ~13:30",
-      "changed": "2026-11-26T12:16+00:00",
+      "changed": "2026-11-26T12:39+00:00",
       "rides": "DS259",
       "started": "2026-11-26T12:02+00:00"
     },
@@ -12277,11 +12277,11 @@
       "id": "DS264",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Running",
       "item": "CI findings S9 and S11: quarantine and one full run",
       "detail": "From the leaner-CI review (S9, S11): quarantine policy for flaky tests (no retry in CI, DL-99 G3) and the local gate runs a smoke of touched suites only, CI is the one full run (DL-12). Delivery plugin.",
       "expected": "26 Nov ~13:30",
-      "changed": "2026-11-26T12:16+00:00",
+      "changed": "2026-11-26T12:39+00:00",
       "rides": "DS259",
       "started": "2026-11-26T12:02+00:00"
     },
