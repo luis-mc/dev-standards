@@ -147,6 +147,7 @@ Report each offer as **done**, **missing** or **broken**:
 - **project record** — `.claude/artifacts.json` present.
 - **specs** — spec files present (nothing to install).
 - **CI checks workflow** — `.github/workflows/dev-standards.yml` present. Run `python3 assets/ci_pin.py` and print its line: when the pin is older than the installed luismc-docs, generated docs fail G1 in CI. A missing file is "not installed".
+- **time zone data** — when `.delivery/config.json` has a `tz`, run `python -c "import zoneinfo; zoneinfo.ZoneInfo('<tz>')"`. Print `tzdata: done` when it loads, `tzdata: missing (delivery_doctor FAILs until installed)` when it fails, and "not applicable" when there is no `tz`. Install nothing in status mode.
 - **plugin updates** — run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/plugin_update_offer.py status` and print its text: the luismc plugins whose version differs from the one this project last applied (SO9). Nothing to apply prints "plugins in step".
 - **repo gates** — `scripts/delivery/` and `.githooks/` present.
 - **auth** — judged only after repo gates are done (auth-setup refuses a repo not set up by tech-stack-setup).
@@ -418,9 +419,11 @@ Each skips when the plugin is not installed yet; print the command instead.
 
 - **Time zone data (R13.73).** When `.delivery/config.json` has a `tz` and
   `python -c "import zoneinfo; zoneinfo.ZoneInfo('<tz>')"` fails (Windows Python
-  has no time zone data), plan `python -m pip install --user tzdata`. Run it
-  after the owner confirms, say what you did, and check again. Skip it when the
-  zone loads.
+  has no time zone data), plan `python -m pip install --user tzdata`. This is a
+  checked step: run it only after the owner confirms it in step 3, like the
+  plugin installs, then run the same `zoneinfo` check again and report the
+  result. When the check still fails, say so and print the command for the owner.
+  Skip it when the zone loads, or when the owner declines.
 - **luismc-docs.** In a repo without `docs/docs.json`, run the docs plugin's
   `docs_setup.py init --apply` (it is under `scripts/` in the installed docs
   plugin). In a repo that already has docs, run `docs_setup.py migrate` without
@@ -825,7 +828,7 @@ Under the heading **Left for you**, before the enforcement table, give one numbe
 the steps that need the owner, in order. Each has its exact command or link and
 one line on why. Typical entries:
 
-1. Commit and push the new files (plugins never commit or push).
+1. Commit and push the new files (plugins never commit or push). Suggest the branch name `<task>-integration` (for example `DL423-integration`): the session guard refuses a ready pull request from any other branch name.
 2. Approve design system v1 from its review gallery (how to open it, the approval command or words).
 3. Steps held for PC load, with the command to run them later.
 4. Anything a run could not do.
