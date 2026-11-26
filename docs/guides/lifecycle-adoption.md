@@ -37,3 +37,14 @@ Until the runner exists, record an opt-out in `.delivery/config.json` under `lif
 ```
 
 It needs a decision ID, a reason and a review date. Past the date the check fails again. `python scripts/delivery/lifecycle_optout.py check` lists what each opt-out costs. Remove the opt-outs when the runner is registered.
+
+## 4. Run only the targets a change affects (DL-125)
+
+An existing project moves to affected targets in four steps.
+
+1. Run `python3 scripts/delivery/affected_targets.py scaffold --lifecycle <lifecycle.json> --write`. It adds `inputs` to each target and a `no_target` list. Edit them to the real folders of each target.
+2. Run `affected_targets.py unmapped`. Each path it prints maps to no target and so runs every target. Add it to a target's `inputs` or to `no_target`.
+3. Copy the new `lifecycle-lanes.yml` from the plugin. Add a pass-record shard `lifecycle-<lane>` with `inputs` to `scripts/delivery/ci-shards.json` for each lane, so a lane the change does not affect can take its result from the default branch.
+4. Run `delivery_doctor.py`. The `affected-targets` row warns while a path is unmapped.
+
+A path in a shared place (lifecycle.json, the lane scripts, the files directly in `packaging/` or `installer/`) runs every target, and so does a path no list names.

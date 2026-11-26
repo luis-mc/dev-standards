@@ -250,6 +250,10 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.81** — A local agent is recorded without a delivery block, and a Running task with no worker is flagged (DS267, DL-123, DL-124). With no `delivery` fenced block, `hook_post_tool.py` takes the task from a branch `<ID>-slug` in the prompt, else from the first `Task <ID>` or `(<ID>)` in its first 600 characters, and only an ID in the project record counts when the record can be read; with no match it keeps the `agent.no_task` event. The row has `model` and starts `running` when the agent runs in the background. No hook sees a local agent end, so the Stop hook marks a `running` local row `done` when its worktree or output file is gone or when it is a day old (a forgotten row; an agent past its eta is still checked by DL-32). The Stop hook also says one line, never blocking, when a task is Running and no agent row or CI train is open for it. Tests: `claude/plugins/delivery/tests/test_ds267_record_local_agents.py`.
 
+**R5.82** — A pull request proves only the targets its changes affect (DS269, DL-125). `affected_targets.py` (`affected`, `lane --lane L`, `unmapped`, `scaffold`) maps a diff to the targets of `lifecycle.json` by their `inputs`; a path in `no_target` selects none; a shared path or a path that maps to nothing selects all; a target with no `inputs` is always affected. The lane template runs `lane` first: an unaffected lane takes its result from `pass_records.py to-result` and runs no steps, and a miss runs the lane. `lifecycle_release_check.py --base REF` reads the same map. The doctor check `affected-targets` warns for tracked paths that map to nothing. The session hook adds one line, and `scaffold` adds `inputs` and `no_target` to an existing `lifecycle.json`. Not built yet: a Full Progress badge fragment for the affected set. Tests: `claude/plugins/delivery/tests/test_ds269_affected_targets.py`.
+
+**R5.83** — One agent per area, cloud first (DS270, DL-126, DL-127). A launch whose prompt names a task, while another To do or Waiting task of the same `app` is in the project record, is denied once with the list; the second identical launch passes (`.delivery/state/dl40-denied.json`). `checks_off` `DL-40` turns it off. A `PC-bound:` line that names no PC-bound step is a warning, not a deny; `checks_off` `DL-127` turns it off. The report `docs/work/DS270-report.md` lists what is enforced and what is advice (D4, DL-38, DL-39, DL-40, DL-41). Tests: `claude/plugins/delivery/tests/test_ds270_bundling.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -320,6 +324,8 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.72 | `claude/plugins/delivery/tests/test_config.py` |
 | R5.73 | `claude/plugins/delivery/tests/test_dp10_onboard.py` |
 | R5.81 | `claude/plugins/delivery/tests/test_ds267_record_local_agents.py` |
+| R5.82 | `claude/plugins/delivery/tests/test_ds269_affected_targets.py` |
+| R5.83 | `claude/plugins/delivery/tests/test_ds270_bundling.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.36 | `tools/test_delivery_records.py` (TreeKeyTests) |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |

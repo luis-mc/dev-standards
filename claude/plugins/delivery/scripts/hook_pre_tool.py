@@ -28,6 +28,11 @@ GATE_NAMES = ('check:branch', 'branch_gate.py')
 BRIEF_GATE_RE = re.compile(r'check:branch|branch_gate\.py|--full\b|--keep-going\b|--time-limit\b', re.I)
 JOIN_LINE_RE = re.compile(r'^\s*join\b|\bjoin\.py\b|\bjoin\s+RELEASE-', re.M | re.I)
 PC_BOUND_RE = re.compile(r'^\s*PC-bound:\s*\S', re.M | re.I)
+PC_BOUND_LINE_RE = re.compile(r'^\s*PC-bound:[ \t]*(\S.*)$', re.M | re.I)
+# DL-127: words that name a step only this PC can do. A reason with none of them is a warning.
+PC_STEP_RE = re.compile(r'build|compil|test|install|runner|browser|hardware|device|gpu|usb|driver|display|screen|'
+                        r'windows|macos|\bmsi\b|\bvm\b|docker|e2e|playwright|\bsigning\b|bluetooth|camera|printer', re.I)
+DL40_STATE_REL = os.path.join('.delivery', 'state', 'dl40-denied.json')
 
 
 class Deny(Exception):
@@ -673,7 +678,62 @@ def check_eta_measured(ledger, text, where):
          % (total, est['n'], where, est['median'], est['p75']))
 
 
-def check_launch(cfg, ledger, data, where):
+def pc_bound_warning(text):
+    """DL-127: a note when a `PC-bound:` line names no PC-bound step; None when it does or there is no line."""
+    m = PC_BOUND_LINE_RE.search(text)
+    if not m or PC_STEP_RE.search(m.group(1)):
+        return None
+    return ('DL-127 the "PC-bound:" reason "%s" names no PC-bound step (a build, test, install, runner, browser or '
+            'hardware step). If nothing needs this PC, launch it in the cloud with RemoteTrigger.' % m.group(1).strip()[:80])
+
+
+def dl40_siblings(root, text, block):
+    """DL-126: (task, area, [other open To do/Waiting task ids of that area]); None when no task or no area is known."""
+    if not root:
+        return None
+    reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
+    if reg is None:
+        reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
+    tasks = reg.get('tasks') if isinstance(reg, dict) else None
+    if not isinstance(tasks, list):
+        return None
+    tid = str(block.get('task') or '').strip()
+    if not tid:
+        import hook_post_tool as PT
+        tid = PT.infer_task(text, root).get('task') or ''
+    mine = next((t for t in tasks if isinstance(t, dict) and str(t.get('id')) == tid), None)
+    area = (mine or {}).get('area') or (mine or {}).get('app')
+    if not mine or not area:
+        return None
+    key = 'area' if mine.get('area') else 'app'
+    others = [str(t['id']) for t in tasks if isinstance(t, dict) and t.get('id') and str(t['id']) != tid
+              and t.get('status') in ('To do', 'Waiting') and (t.get(key) or t.get('app')) == area]
+    return (tid, area, others) if others else None
+
+
+def check_bundling(root, cfg, text, block, where):
+    """DL-126 (DS270): deny a launch once when it names a task and another open task of the same area exists."""
+    sib = dl40_siblings(root, text, block)
+    if not sib:
+        return
+    tid, area, others = sib
+    fp = H.fingerprint([where, tid] + others)
+    path = os.path.join(root, DL40_STATE_REL)
+    seen = H.read_json(path)
+    seen = seen if isinstance(seen, list) else []
+    if fp in seen:
+        return
+    try:
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, 'w', encoding='utf-8') as f:
+            json.dump(seen[-199:] + [fp], f)
+    except OSError:
+        return              # cannot remember the denial, so never deny twice-unpassable
+    deny('DL-40 %s shares the area "%s" with open tasks: %s. One agent and one branch carry every open task of an area: '
+         'add them to this brief, or launch again if they are truly parallel.' % (tid, area, ', '.join(others[:8])))
+
+
+def check_launch(cfg, ledger, data, where, root=None, notes=None):
     ti = data.get('tool_input') or {}
     if where == 'cloud':
         action = str(ti.get('action') or '').lower()
@@ -694,6 +754,10 @@ def check_launch(cfg, ledger, data, where):
     caps = cfg['caps']
     cap_cloud, cap_local = int(caps.get('cloud', 50)), int(caps.get('local', 3))
     cap_total = int(caps.get('total', cap_cloud + cap_local))
+    if where == 'local' and notes is not None and H.check_on(cfg, 'DL-127') and PC_BOUND_RE.search(text):
+        note = pc_bound_warning(text)
+        if note:
+            notes.append(note)
     if where == 'local' and H.check_on(cfg, 'D4') and cloud_running < cap_cloud and not PC_BOUND_RE.search(text):
         deny('D4 run non-PC-bound work in the cloud (cloud running %d of %d). Launch it with RemoteTrigger, or add a '
              '"PC-bound: <reason>" line to this brief.' % (cloud_running, cap_cloud))
@@ -732,6 +796,8 @@ def check_launch(cfg, ledger, data, where):
             if free is not None and free <= float(cfg['min_free_gb']):
                 deny('DL-38 local agents need more than %s GB free memory (%.1f GB free). Use a cloud run or wait.'
                      % (cfg['min_free_gb'], free))
+    if root and H.check_on(cfg, 'DL-40'):
+        check_bundling(root, cfg, text, block, where)
     if H.check_on(cfg, 'DL-41') and block['owns']:
         for a in H.running_agents(ledger):
             for mine in block['owns']:
@@ -835,9 +901,12 @@ def main():
         elif tool in ('Edit', 'MultiEdit'):
             check_workflow_fetch(root, cfg, data)
         elif tool == 'Agent':
-            check_launch(cfg, ledger, data, 'local')
+            notes = []
+            check_launch(cfg, ledger, data, 'local', root, notes)
+            if notes:
+                print(json.dumps({'systemMessage': 'luismc-delivery (warning, call allowed): ' + ' '.join(notes)}))
         elif tool == 'RemoteTrigger':
-            check_launch(cfg, ledger, data, 'cloud')
+            check_launch(cfg, ledger, data, 'cloud', root)
             note = check_postpone(ledger, data, at)
             if note:
                 print(json.dumps({'systemMessage': 'luismc-delivery (warning, call allowed): ' + note}))
