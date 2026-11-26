@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:29+00:00",
+  "updated": "2026-11-26T09:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7797,12 +7797,27 @@
       "id": "DL429",
       "owner": "delivery-speed",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Status badges and real status text",
       "detail": "Full Progress section 0: badges (key TLDR plus CI runs and status) at full width replace the repeated collapsible lines; below them short bullets of real status of the active or last releases and PRs: what went wrong, what fixes it, what went well. Owner request 26 Nov",
       "expected": "26 Nov ~14:00",
-      "changed": "2026-11-26T09:23+00:00",
-      "expected_basis": "agent ~15 min, CI 5 min"
+      "changed": "2026-11-26T09:30+00:00",
+      "expected_basis": "agent ~15 min, CI 5 min",
+      "release": 191,
+      "started": "2026-11-26T09:30+00:00"
+    },
+    {
+      "id": "DL430",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "R1 skips tool checkouts and state",
+      "detail": "docs_check R1 (removed delivery IDs) skips .dev-standards-tools, .claude/worktrees and .delivery state so a pinned tool checkout or a ledger is not scanned; peer finding 26 Nov",
+      "expected": "26 Nov ~12:00",
+      "changed": "2026-11-26T09:29+00:00",
+      "expected_basis": "small edit, CI 5 min",
+      "release": 190,
+      "started": "2026-11-26T09:29+00:00"
     },
     {
       "id": "DP1",

@@ -303,9 +303,9 @@ REMOVED_DELIVERY_IDS = {
 }
 REMOVED_ID_RE = re.compile(r"\b(" + "|".join(REMOVED_DELIVERY_IDS) + r")(?!\d)")
 R1_SUFFIXES = {".md", ".py", ".ts", ".tsx", ".js", ".mjs", ".json", ".yml", ".yaml", ".sh", ".ps1", ".toml"}
-R1_SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "dist", "build"}
+R1_SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "dist", "build", ".dev-standards-tools", ".delivery"}
 # Records of the past or generated files: they may name a removed ID.
-R1_SKIP_PREFIXES = ("docs/archive/", "docs/work/", "docs/project/", "docs/reference/", "docs/architecture/changes/",
+R1_SKIP_PREFIXES = (".claude/worktrees/", "docs/archive/", "docs/work/", "docs/project/", "docs/reference/", "docs/architecture/changes/",
                     "docs/features/index.md", "docs/architecture/decisions.md", "docs/index.html", "docs/llms.txt",
                     "docs/docs-map.json", "docs/architecture/DELIVERYSPEC.md", "docs/guides/removed-delivery-ids.md",
                     "claude/plugins/docs/scripts/docs_check.py", "claude/plugins/docs/tests/test_ds246_removed_ids.py")

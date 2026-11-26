@@ -36,6 +36,13 @@ class RemovedIdTests(unittest.TestCase):
         d = make({".delivery/config.json": "{}", "docs/guides/g.md": "| 0.31.2 | 2026-11-11 | R | DL-91 freed | DL253 |\n"})
         self.assertEqual(r1(d), [])
 
+    def test_tool_checkouts_worktrees_and_state_are_not_scanned(self):
+        """DL430: a pinned tool checkout, an agent worktree and the delivery state are not the project's files."""
+        cite = "# DL-77\n"
+        d = make({".delivery/config.json": "{}", ".delivery/ledger.json": "DL-77", ".dev-standards-tools/x/a.py": cite,
+                  ".claude/worktrees/agent-1/a.py": cite})
+        self.assertEqual(r1(d), [])
+
 
 if __name__ == "__main__":
     unittest.main()
