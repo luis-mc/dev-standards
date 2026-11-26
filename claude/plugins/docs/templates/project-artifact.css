@@ -217,6 +217,41 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
 .glance-live { border-left-color: var(--live); }
 
+/* Status badges and What is happening (Full Progress section 0, R5.61, R5.62): full width, tokens only */
+.status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .5rem;
+  width: 100%;
+  margin: 1.2em 0 .8em;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45em;
+  max-width: 100%;
+  padding: .2em .65em;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--rule-strong);
+  background: var(--surface);
+  font-size: .85rem;
+  overflow-wrap: anywhere;
+}
+.badge-label { color: var(--ink-muted); }
+.badge-value { font-weight: 600; color: var(--ink); }
+.badge-running { border-left-color: var(--running-mark); background: var(--running-bg); }
+.badge-built, .badge-live-24h, .badge-last-live { border-left-color: var(--live); }
+.badge-waiting, .badge-to-do { border-left-style: dashed; }
+.badge-alert { border-color: var(--signal); border-left-color: var(--signal); background: var(--waiting-bg); }
+.badge-alert .badge-label, .badge-alert .badge-value { color: var(--signal); }
+.badge-fail { border-color: var(--failed); border-left-color: var(--failed); background: var(--waiting-bg); }
+.badge-fail .badge-label, .badge-fail .badge-value { color: var(--failed); }
+.what-happens { width: 100%; margin: .6em 0 1.2em; }
+.happen-title { margin: 0 0 .3em; font-weight: 600; color: var(--ink-muted); }
+.what-happens ul { list-style: none; margin: 0; padding: 0; }
+.what-happens li { padding: .25em .7em; margin-block: .2em; border-left: 4px solid var(--live); overflow-wrap: anywhere; }
+.what-happens li.happen-fail { border-left-color: var(--failed); background: var(--waiting-bg); }
+
 /* Status chips */
 .status-chip {
   display: inline-block;
