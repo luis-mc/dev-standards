@@ -663,6 +663,33 @@ def check_running_idle(root, ledger, cfg):
     return out
 
 
+USER_LINES = 3    # DS280: findings of one rule shown in full in a message to the person
+
+
+def user_text(found):
+    """The findings as one line for the person (a systemMessage), never for the model.
+
+    More than USER_LINES findings of one rule fold to the first one, a count and the
+    ids; the model's block reason keeps every finding in full.
+    """
+    groups, order = {}, []
+    for k, m in found:
+        rule, _, ident = k.partition(':')
+        if rule not in groups:
+            groups[rule] = []
+            order.append(rule)
+        groups[rule].append((ident, m))
+    parts = []
+    for rule in order:
+        items = groups[rule]
+        if len(items) <= USER_LINES:
+            parts.extend(m for _, m in items)
+            continue
+        ids = ', '.join(i for i, _ in items[1:] if i)
+        parts.append('%s (+%d more%s)' % (items[0][1], len(items) - 1, ': ' + ids if ids else ''))
+    return '; '.join(parts)
+
+
 # --- main ------------------------------------------------------------------------------------
 
 def findings(root, data, cfg):
@@ -715,7 +742,7 @@ def main():
             for _, m in found:
                 H.log_block(root, cfg, 'stop:warn', m, force=True, sid=data.get('session_id'))   # R5.70
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, nothing blocked): '
-                              + '; '.join(m for _, m in found)}))
+                              + user_text(found)}))
         return 0
     sid = str(data.get('session_id') or 'default')
     limit = H.repeat_limit(cfg, enf['block_ceiling'])
