@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T07:25+00:00",
+  "updated": "2026-11-26T07:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7675,6 +7675,19 @@
       "expected_basis": "agent ~15 min, CI ~5 min, release ~10 min",
       "release": 184,
       "started": "2026-11-26T07:19+00:00"
+    },
+    {
+      "id": "DL419",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Track .delivery/config.json, ignore the rest",
+      "detail": "DELIVERYSPEC states which .delivery files are tracked; installer and onboard add .delivery/* with !config.json; dev-standards gitignore fixed; owner request 26 Nov",
+      "expected": "26 Nov ~12:00",
+      "changed": "2026-11-26T07:30+00:00",
+      "expected_basis": "after RELEASE-184 merges, then CI 5 min",
+      "release": 186,
+      "started": "2026-11-26T07:30+00:00"
     },
     {
       "id": "DP1",

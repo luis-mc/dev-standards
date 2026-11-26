@@ -352,7 +352,7 @@ Do it in the first commit, so the first branch is already gated:
 | the guard-test starter, Go | `go/guards/` (`TestGuard*`) | `§13.5` item 4 |
 | the guard-test starter, Rust | `rust/crates/guards/` — a member crate (`guard_*` tests); add `crates/guards` to the workspace `members` in the root `Cargo.toml` | `§13.5` item 4 |
 | the guard-test starter, .NET | `dotnet/tests/Guards/` (`Category=Guard`); add `Guards.csproj` to the solution and match its `TargetFramework` to `global.json` | `§13.5` item 4 |
-| a `.gitignore` line `.delivery/` | no asset: append it to the generated `.gitignore` | `§13.5` |
+| the `.gitignore` lines `.delivery/*` and `!.delivery/config.json` | no asset: append it to the generated `.gitignore` | `§13.5` |
 
 Turn on the repository setting that deletes a merged pull request's head
 branch, so the platform does its part of the `§13.6` cleanup:
@@ -631,7 +631,7 @@ check, performed by reading.
      the project already used another), and any earlier pre-push hook it
      replaced is kept as `pre-push.local` beside it; `agent_setup.sh` installs
      the scanner at the version in `tools.json`, and CI installs that same
-     version; `.delivery/` is git-ignored; `.gitattributes` forces LF on `*.sh`,
+     version; `.delivery/` is git-ignored except `config.json`, which is committed; `.gitattributes` forces LF on `*.sh`,
      `.githooks/*` and `scripts/delivery/*.py`, so the hooks run on every OS
      (a CRLF shebang line fails on Linux and macOS). The guard starter is
      registered: the Rust `crates/guards` is in the workspace `members`, the
@@ -692,7 +692,7 @@ check, performed by reading.
      rules decay by default
    - lint, format, test and task-runner configs missing
    - `scripts/delivery/`, `gate.json`, `tools.json` or `.githooks/pre-push`
-     missing → `§13.5`; the `.delivery/` line missing from `.gitignore`;
+     missing → `§13.5`; the `.delivery/*` or `!.delivery/config.json` line missing from `.gitignore`;
      `.gitattributes` missing or not forcing LF on the hooks and scripts
    - `ci.yml` without the `decide` job or its job conditions → `§13.1`; E2E
      advisory or `e2e/quarantine.json` missing → `§11.2`

@@ -9,6 +9,7 @@ __pycache__/
 .claude/worktrees/
 .claude/artifacts-local.json
 
-.delivery/
+**/.delivery/*
+!**/.delivery/config.json
 .claude/artifacts-record.lock
 docs/_site/
