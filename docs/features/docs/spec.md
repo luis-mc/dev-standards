@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.16.0
+version: 1.16.1
 owner: agents
 type: reference
 code:
@@ -205,6 +205,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.16.1 | 2026-11-26 | RELEASE-200 | The rule hook marks delivery per repository, so worktrees do not repeat it. | DS271 |
 | 1.16.0 | 2026-11-26 | RELEASE-194 | Full Progress shows a CI waste badge from the CI runs file (R5.34 of the artifacts feature). | DS258 |
 | 1.15.2 | 2026-11-26 | RELEASE-193 | Full Progress agents badge splits running and total agents into local and cloud.<br>CI badge counts fixed failures apart. | DS265, DS266 |
 | 1.15.1 | 2026-11-26 | RELEASE-184 | R1 lists DL-50 and DL-51 as removed delivery rule IDs. | DL418 |
