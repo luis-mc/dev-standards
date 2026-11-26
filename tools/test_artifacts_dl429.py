@@ -132,6 +132,19 @@ def feature_artifact_keeps_its_glance_and_lede():
 
 
 @case
+def ci_badge_does_not_flag_a_failure_a_later_run_fixed():
+    fx = fixture()
+    try:
+        registry = with_rows(fx, rel('DS51', 1, pr=7))
+        ci = {'active': [], 'finished': [run(1, 7, 'failure'), run(2, 7, 'success', at='2026-10-10T10:05:00Z')]}
+        ci_badge = badges(render(fx, registry, ci))['ci']
+        assert R.text_of(R.find(ci_badge, 'span', 'badge-value')) == '2: 1 passed, 0 failed, 0 running, 1 fixed by a later run'
+        assert 'badge-fail' not in ci_badge.attrs.get('class', '')
+    finally:
+        fx.close()
+
+
+@case
 def ci_badge_counts_runs_of_the_active_release():
     fx = fixture()
     try:

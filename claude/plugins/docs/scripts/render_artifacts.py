@@ -2129,9 +2129,12 @@ def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) 
         if not watched or not (runs or running):
             runs = [e for e in ci_runs.get('finished', []) if isinstance(e, dict)]
             running = len([e for e in ci_runs.get('active', []) if isinstance(e, dict)])
-        bad = sum(1 for r in runs if r.get('conclusion') == 'failure')
+        runs.sort(key=lambda r: str(r.get('completed_at') or ''))
+        fixed = sum(1 for i, r in enumerate(runs) if r.get('conclusion') == 'failure' and any(
+            q.get('workflow') == r.get('workflow') and q.get('conclusion') == 'success' for q in runs[i + 1:]))
+        bad = sum(1 for r in runs if r.get('conclusion') == 'failure') - fixed
         ok = sum(1 for r in runs if r.get('conclusion') == 'success')
-        parts = ['%d passed' % ok, '%d failed' % bad, '%d running' % running]
+        parts = ['%d passed' % ok, '%d failed' % bad, '%d running' % running] + (['%d fixed by a later run' % fixed] if fixed else [])
         out.append(_badge('ci', 'CI runs', '%d: %s' % (len(runs) + running, ', '.join(parts)), 'badge-fail' if bad else ''))
     if agents:
         def split(rows):
