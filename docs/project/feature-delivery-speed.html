@@ -957,45 +957,34 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.24.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-26T10:09+00:00">26 Nov 10:09</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-26T10:23+00:00">26 Nov 10:23</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Nov 10:10</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
 <p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-running" data-glance="running" open><summary><span class="glance-label">Running now</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">14 tasks</span></summary>
 <ul>
-<li data-glance-task="DL424"><span class="task-id">DL424</span><span class="release-name">RELEASE-192</span>Allow cancelling old run during freeze <span class="glance-expected">26 Nov ~18:00</span><span class="glance-basis">queued behind RELEASE-184, ~1 h per task</span></li>
-<li data-glance-task="DL425"><span class="task-id">DL425</span>New worktree pre-push without node_modules <span class="glance-expected">26 Nov ~18:00</span><span class="glance-basis">queued behind RELEASE-184, ~1 h per task</span></li>
-<li data-glance-task="DL426"><span class="task-id">DL426</span>DL-88 reads gate result from worktree <span class="glance-expected">26 Nov ~18:00</span><span class="glance-basis">queued behind RELEASE-184, ~1 h per task</span></li>
-</ul>
-</details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">11 tasks</span></summary>
-<ul>
+<li data-glance-task="DL424"><span class="task-id">DL424</span><span class="release-name">RELEASE-192</span>Allow cancelling old run during freeze</li>
+<li data-glance-task="DL425"><span class="task-id">DL425</span>New worktree pre-push without node_modules</li>
+<li data-glance-task="DL426"><span class="task-id">DL426</span>DL-88 reads gate result from worktree</li>
 <li data-glance-task="DL418"><span class="task-id">DL418</span><span class="release-name">RELEASE-184</span>DL-runner-out: delivery holds no runner rules</li>
 <li data-glance-task="DL429"><span class="task-id">DL429</span><span class="release-name">RELEASE-191</span>Status badges and real status text</li>
 <li data-glance-task="DL431"><span class="task-id">DL431</span>Review the pool project&#x27;s leaner-CI analysis</li>
 <li data-glance-task="DL430"><span class="task-id">DL430</span><span class="release-name">RELEASE-190</span>R1 skips tool checkouts and state</li>
 <li data-glance-task="DL428"><span class="task-id">DL428</span><span class="release-name">RELEASE-189</span>Release table for every open release</li>
-<li data-glance-task="DL420"><span class="task-id">DL420</span><span class="release-name">RELEASE-187</span>Render fills carrier PR from ledger</li>
-<li data-glance-task="DL421"><span class="task-id">DL421</span>T2 stale-doc warning not fatal in strict</li>
-<li data-glance-task="DL422"><span class="task-id">DL422</span>Rule-add flow prints missing Proof line</li>
-<li class="glance-more">and 3 more</li>
+<li class="glance-more">and 6 more</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">412</div><div class="label">tasks live</div></div><div class="status-count-tile status-running"><div class="count">3</div><div class="label">tasks running</div></div><div class="status-count-tile status-dropped"><div class="count">16</div><div class="label">tasks dropped</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">415</div><div class="label">tasks live</div></div><div class="status-count-tile status-dropped"><div class="count">16</div><div class="label">tasks dropped</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">3 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">431 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="DL424"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL424</span><span class="release-name">RELEASE-192</span>Allow cancelling old run during freeze</td><td>Train freeze blocks a fix push during gh run rerun --failed; documented cancel of the old run or watcher cancels; peer finding 4</td><td>26 Nov ~18:00<span class="expected-basis">queued behind RELEASE-184, ~1 h per task</span></td></tr>
-<tr data-task="DL425"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL425</span>New worktree pre-push without node_modules<span class="release-line"><span class="release-name">RELEASE-192</span></span></td><td>Skip typecheck for docs and config-only pushes, or install in the worktree helper; peer finding 5</td><td>26 Nov ~18:00<span class="expected-basis">queued behind RELEASE-184, ~1 h per task</span></td></tr>
-<tr data-task="DL426"><td><span class="status-chip status-running">Running</span></td><td><span class="task-id">DL426</span>DL-88 reads gate result from worktree<span class="release-line"><span class="release-name">RELEASE-192</span></span></td><td>A gate run in a worktree needs no hand copy of gate-result.json; peer finding 6</td><td>26 Nov ~18:00<span class="expected-basis">queued behind RELEASE-184, ~1 h per task</span></td></tr>
-</tbody></table></div>
-</details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">428 tasks</span></summary>
-<div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="DL424"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL424</span><span class="release-name">RELEASE-192</span>Allow cancelling old run during freeze</td><td>Train freeze blocks a fix push during gh run rerun --failed; documented cancel of the old run or watcher cancels; peer finding 4</td><td>26 Nov</td></tr>
+<tr data-task="DL425"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL425</span>New worktree pre-push without node_modules<span class="release-line"><span class="release-name">RELEASE-192</span></span></td><td>Skip typecheck for docs and config-only pushes, or install in the worktree helper; peer finding 5</td><td>26 Nov</td></tr>
+<tr data-task="DL426"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL426</span>DL-88 reads gate result from worktree<span class="release-line"><span class="release-name">RELEASE-192</span></span></td><td>A gate run in a worktree needs no hand copy of gate-result.json; peer finding 6</td><td>26 Nov</td></tr>
 <tr data-task="DL418"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL418</span><span class="release-name">RELEASE-184</span>DL-runner-out: delivery holds no runner rules</td><td>Remove DL-50/DL-51, runner_health and runner/heavy-job fields from delivery; hand rules to the pool project.</td><td>26 Nov</td></tr>
 <tr data-task="DL429"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL429</span><span class="release-name">RELEASE-191</span>Status badges and real status text</td><td>Full Progress section 0: badges (key TLDR plus CI runs and status) at full width replace the repeated collapsible lines; below them short bullets of real status of the active or last releases and PRs: what went wrong, what fixes it, what went well. Owner request 26 Nov</td><td>26 Nov</td></tr>
 <tr data-task="DL431"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">DL431</span>Review the pool project&#x27;s leaner-CI analysis<span class="no-release-line">ships nothing: study of a peer page</span></td><td>Review F1-F17 and S1-S14 of the peer page ci-leaner-findings.html: research best practice, correct, add, mark edits, say dev-standards or project per solution; owner asked via the peer 26 Nov</td><td>26 Nov</td></tr>

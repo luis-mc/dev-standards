@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.16.0
+version: 0.16.1
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.16.1 | 2026-11-26 | RELEASE-192 | Train freeze lifts for a run cancelled with cancel_old_run.py; docs and config pushes skip typecheck and lint (see delivery R5.36c to R5.36e). | DL424 |
 | 0.16.0 | 2026-11-26 | RELEASE-184 | The delivery plugin holds no runner rules: the runner-health warning is gone, and ci_watch only reports a job queued over 10 minutes. | DL418 |
 | 0.15.2 | 2026-11-25 | RELEASE-181 | The gate skips every step when the same git tree already passed (delivery R13.36). | DP9 |
 | 0.15.1 | 2026-11-25 | RELEASE-175 | ci_watch no longer reads the pool container cap from Docker; the cap text is unknown. Changes claude/plugins/delivery/.claude-plugin/plugin.json.<br>R5.6, R5.9 and R5.10 no longer cite the removed runner test file. | DS245, DS246 |

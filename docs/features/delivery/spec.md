@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.51.0
+version: 0.52.0
 owner: agents
 type: reference
 code:
@@ -535,6 +535,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.52.0 | 2026-11-26 | RELEASE-192 | Cancel the old run to lift the train freeze (R5.36c), docs and config pushes skip typecheck and lint (R5.36d), gate result read from other worktrees (R5.36e). | DL424 |
 | 0.51.0 | 2026-11-26 | RELEASE-187 | New config key deploy.serial (default false): releases deploy one after another. | DL420 |
 | 0.50.0 | 2026-11-26 | RELEASE-186 | R6.4: .delivery/ is git-ignored except config.json, which is committed. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL419 |
 | 0.49.0 | 2026-11-25 | RELEASE-181 | Pass reuse by git tree (R13.36): a shard with tree true keys on the git tree hash; branch_gate.py skips the gate when the same tree already passed, and writes the record after a full pass. (section 13) | DP9 |
