@@ -1420,7 +1420,7 @@ double-click.
   `running`, `built`, `waiting`, `to-do` and `live-24h` (shown only above 0; the same counts as
   the glance groups of R5.34), one `release` badge for each active release (at most 4, then one
   badge `N more`) reading its R5.46 heading (`RELEASE-n · live ~HH:MM`), `pr` (the carrier PRs),
-  `ci` (R5.63; class `badge-fail` with a failed run), `agents` (the ledger's agents: running now and
+  `ci` (R5.63; class `badge-fail` with a failed run that no later run of the same workflow fixed), `agents` (the ledger's agents: running now and
   launched in all, each split into local and cloud) and `last-live` (the newest Live release and when). The colours are the existing
   tokens, light and dark. Verified by `test_artifacts_dl429`.
 - **R5.62** — `div.what-happens` holds a `What is happening` title and a list of 1 to 8 bullets, generated
