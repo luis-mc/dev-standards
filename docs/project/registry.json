@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T15:31+00:00",
+  "updated": "2026-11-26T15:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12378,9 +12378,9 @@
       "status": "Running",
       "item": "Full Progress: PR numbers link to the PR page, new window, any provider",
       "detail": "PR labels (release tree, What is happening) become links opening in a new tab; URL from a provider template (github now, gitlab-ready)",
-      "expected": "26 Nov ~15:48",
-      "changed": "2026-11-26T15:31+00:00",
-      "expected_basis": "join 3 min, CI ~8 min, fold 6 min",
+      "expected": "26 Nov ~15:52",
+      "changed": "2026-11-26T15:40+00:00",
+      "expected_basis": "second join after a CI fix; CI ~8 min, fold ~6 min",
       "release": 201,
       "started": "2026-11-26T14:48+00:00",
       "phases": [
@@ -12392,20 +12392,20 @@
         {
           "name": "join",
           "start": "2026-11-26T15:31+00:00",
-          "end": "2026-11-26T15:34+00:00"
+          "end": "2026-11-26T15:38+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-26T15:34+00:00",
-          "end": "2026-11-26T15:42+00:00"
+          "start": "2026-11-26T15:38+00:00",
+          "end": "2026-11-26T15:46+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-26T15:42+00:00",
-          "end": "2026-11-26T15:48+00:00"
+          "start": "2026-11-26T15:46+00:00",
+          "end": "2026-11-26T15:52+00:00"
         }
       ],
-      "pr": 299
+      "pr": 300
     },
     {
       "id": "DS273",
