@@ -27,3 +27,9 @@ The delivery plugin manages no runners. These rules left it in DL418. The runner
 - The watcher's `runner_plan.cancel_replaced_runs` and `runner_plan.hold_dependabot_during_train` flags. They act on CI runs, not runners.
 - The config `runners` list (CI Option 1) as a description of the project's CI; nothing in the plugin repairs those runners now.
 - ci_watch warns once when a job is queued over 10 minutes. It does not look at runners.
+
+## Also removed (found in review)
+
+- `delivery_eta.py --kind pool-refresh` (read `jobs[]` of the ledger). The kinds are now agent, ci and join.
+- The Stop hook no longer counts ledger `jobs[]` as work in flight.
+- Left in place: the `pool-refresh` and `.delivery/pool.apt` text in `commands/delivery-ci-setup.md` (setup help for the pool).
