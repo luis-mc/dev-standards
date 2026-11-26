@@ -281,6 +281,8 @@ def main(argv: list[str] | None = None) -> int:
     if ctx.widened:
         shown = ", ".join(ctx.widen_reasons[:5]) + (" ..." if len(ctx.widen_reasons) > 5 else "")
         print("widened : yes (%s)" % shown)
+    if dc.smoke_gate(ctx):
+        print(dc.SMOKE_LINE)
     minutes = args.timeout_minutes if args.timeout_minutes is not None else cfg["timeout_minutes"]
     print("limit   : %g min" % minutes)
 

@@ -305,6 +305,25 @@
           },
           "default": [],
           "description": "Names or files of pull_request workflows that are not CI gates; their runs on the PR head never block a train (DL298)."
+        },
+        "merge_result": {
+          "type": "string",
+          "enum": ["warn", "update"],
+          "default": "warn",
+          "description": "DS259: a PR head that is behind its base has an untested merge result. warn (default): print one line and merge as before. update: run `gh pr update-branch` and wait for the new CI run."
+        },
+        "infra_retry": {
+          "type": "boolean",
+          "default": false,
+          "description": "DS260: re-run the failed jobs of a red run once when it failed for an infrastructure reason. A test failure is never retried (DL-99 G3)."
+        },
+        "infra_retry_patterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 1,
+          "description": "DS260: log texts that mark a failed step as an infrastructure failure. Default: Hash Sum mismatch, Could not resolve host, TLS handshake timeout, 502 Bad Gateway, The operation was canceled."
         }
       }
     },

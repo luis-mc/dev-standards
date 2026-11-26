@@ -75,6 +75,24 @@ def _lifecycle_off_line(cfg, root):
     return ''
 
 
+def _quarantine_line(root):
+    """DS264: one line naming the quarantined tests (.delivery/quarantine.json); empty when none."""
+    try:
+        import importlib.util
+        here = os.path.dirname(os.path.abspath(__file__))
+        for base in (os.path.join(str(root), 'scripts', 'delivery'),
+                     os.path.join(here, '..', 'templates', 'shared', 'scripts', 'delivery')):
+            path = os.path.join(base, 'quarantine_check.py')
+            if os.path.exists(path):
+                spec = importlib.util.spec_from_file_location('quarantine_check', path)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                return mod.hook_line(mod.load(os.path.join(str(root), '.delivery', 'quarantine.json')))
+    except Exception:  # noqa: BLE001
+        pass
+    return ''
+
+
 def summary(root, cfg, ledger, at):
     lines = []
     by_state = {}
@@ -109,6 +127,9 @@ def summary(root, cfg, ledger, at):
     off = _lifecycle_off_line(cfg, root)
     if off:
         lines.append(off)
+    quarantined = _quarantine_line(root)
+    if quarantined:
+        lines.append(quarantined)
     return lines
 
 

@@ -333,6 +333,8 @@ def load_gate(root: Path) -> dict:
     minutes = cfg.setdefault("timeout_minutes", DEFAULT_TIMEOUT_MINUTES)
     if isinstance(minutes, bool) or not isinstance(minutes, int) or minutes < 1:
         raise DeliveryError("%s: 'timeout_minutes' must be an integer >= 1" % where)
+    if cfg.setdefault("local_gate", "full") not in ("full", "smoke"):
+        raise DeliveryError("%s: 'local_gate' must be \"full\" or \"smoke\"" % where)
     if "e2e_map" in cfg:
         cfg["e2e_map"] = _check_e2e_map(cfg["e2e_map"], where)
     if "e2e_spec_paths" in cfg:
@@ -1054,6 +1056,15 @@ def step_dirs(step: dict, ctx: Context, dirs: list[str]) -> list[str]:
     return [d for d in dirs if kinds.get(d) == kind]
 
 
+def smoke_gate(ctx: Context) -> bool:
+    """DS264 (DL-12): gate.json `"local_gate": "smoke"` makes the local gate run only the suites of the touched areas;
+    CI is the one full run. An explicit --full still runs everything. Default `"full"`: nothing changes."""
+    return ctx.cfg.get("local_gate") == "smoke" and not ctx.full
+
+
+SMOKE_LINE = "gate    : smoke (suites of the touched areas only); CI is the one full run (DL-12)"
+
+
 def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     """Decide one step: (run?, command with placeholders filled, reason)."""
     skip = scope_skip(step, ctx)
@@ -1093,6 +1104,9 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
             selection, specs = e2e_selection(ctx)  # no map: from the dependency graph
             if selection == "affected":
                 cmd, why, e2e_specs = step["run"], "affected specs (dependency graph)", " ".join(specs)
+        if not e2e_specs and smoke_gate(ctx):
+            # DS264, DL-12: no way to name the touched specs, so the local gate leaves the whole suite to CI
+            return False, None, "smoke gate: touched specs not derived, CI is the one full run"
     mine = lambda dirs: step_dirs(step, ctx, dirs)  # noqa: E731
     cmd = (
         cmd.replace("{e2e_specs}", e2e_specs)

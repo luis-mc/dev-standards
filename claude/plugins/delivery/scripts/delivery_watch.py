@@ -53,6 +53,10 @@ _NOT_READY_FINAL_RE = re.compile(r"^NOT READY(?::\s+\S.*)?$")
 _IN_PROGRESS_RE = re.compile(r"\b(in[ -]progress|wip|working)\b", re.I)
 ACTIVE_CI_STATES = ("pushed", "ci")
 CI_RUNS_MIN_INTERVAL_S = 60
+# DS260: a failed first step with one of these names means no project step ran
+INFRA_SETUP_STEPS = ("set up job", "set up runner", "initialize containers", "checkout", "run actions/checkout")
+# DS260: a pattern that is only an infrastructure sign next to one of these words in the log
+INFRA_PATTERN_CONTEXT = {"The operation was canceled": r"docker pull|pulling from|\bapt(-get)?\b|\bdpkg\b|layer"}
 RUN_FIELDS = "databaseId,status,conclusion,headSha,headBranch,event,workflowName,startedAt,updatedAt,createdAt"
 
 
@@ -778,6 +782,9 @@ class Watcher:
             if state == "success" and train.get("state") != "green":
                 self._set_train(train, "green", ci=ci)
             elif state == "failure" and train.get("state") != "red":
+                if self.retry_infra(train, head, runs):      # DS260: one re-run for an infrastructure failure
+                    self._set_train(train, None, ci={**ci, "state": "running", "retried": head})
+                    continue
                 self._set_train(train, "red", ci=ci)
             elif state in ("running", "queued") and train.get("state") == "green":
                 self._revoke_green(train, ci)     # a required run is not done: not green (DL-03)
@@ -870,6 +877,8 @@ class Watcher:
             self.mut(lambda led: L.add_event(led, "merge.head_moved", "%s %s -> %s" % (
                 train["id"], head[:7], (now_head or "?")[:7]), "delivery_watch"))
             return False
+        if not self.merge_result_ok(train, head):
+            return False
         rc, out, err = self.act(["gh", "pr", "merge", str(train["pr"]), "--merge", "--match-head-commit", head,
                                  *self.repo_args])
         if rc != 0:
@@ -879,6 +888,139 @@ class Watcher:
         self._set_train(train, "merged")
         if self.after_merge(train):      # DP6: cleanup and smoke first; a failure stops the next push
             self.push_next(exclude=train["id"])
+        return True
+
+    # -- DS260: retry an infrastructure failure once --
+    def job_infra_class(self, run: dict, job: dict, patterns: list, log: list):
+        """The infrastructure class of one failed job, or None (a test or build failure). Classes: startup_failure,
+        runner_lost (no step ran), before_project_step (the first failed step is runner or checkout set-up), or
+        log:<text> (a failed step's log holds a configured text). `log` caches the run's failed-step log."""
+        if job.get("conclusion") == "startup_failure":
+            return "startup_failure"
+        steps = [s for s in job.get("steps") or [] if isinstance(s, dict)]
+        if not steps:
+            return "runner_lost"
+        failed = [s for s in steps if s.get("conclusion") not in (None, "", "success", "skipped", "neutral")]
+        first = str(failed[0].get("name") or "").lower() if failed else ""
+        if first.startswith(INFRA_SETUP_STEPS):
+            return "before_project_step"
+        if not log:
+            rc, out, _ = self.read(["gh", "run", "view", str(run.get("databaseId")), "--log-failed", *self.repo_args])
+            log.append(out if rc == 0 else "")
+        text = log[0]
+        if re.search(r"runner has received a shutdown signal|lost communication with the server", text, re.I):
+            return "runner_lost"
+        for pat in patterns:
+            if pat not in text:
+                continue
+            need = INFRA_PATTERN_CONTEXT.get(pat)
+            if need is None or re.search(need, text, re.I):
+                return "log:" + pat
+        return None
+
+    def infra_class(self, runs: list):
+        """The class when EVERY failed job of EVERY failed run is infrastructure, else None. A test failure anywhere
+        means no retry (DL-99 G3)."""
+        failed_runs = [r for r in runs if r.get("status") == "completed" and r.get("conclusion") not in OK_CONCLUSIONS]
+        if not failed_runs or any(not isinstance(r.get("databaseId"), int) for r in failed_runs):
+            return None
+        patterns = C.infra_retry_patterns(self.cfg)
+        found = []
+        for run in failed_runs:
+            if run.get("conclusion") == "startup_failure":
+                found.append("startup_failure")
+                continue
+            data = self.gh_json(["run", "view", str(run["databaseId"]), "--json", "jobs", *self.repo_args])
+            jobs = data.get("jobs") if isinstance(data, dict) else None
+            bad = [j for j in jobs or [] if isinstance(j, dict) and j.get("status", "completed") == "completed"
+                   and j.get("conclusion") not in ("success", "skipped", "neutral")]
+            if not bad:
+                return None
+            log: list = []
+            for job in bad:
+                cls = self.job_infra_class(run, job, patterns, log)
+                if cls is None:
+                    return None
+                found.append(cls)
+        return found[0] if found else None
+
+    def retry_infra(self, train: dict, head: str, runs: list) -> bool:
+        """DS260: when `watcher.infra_retry` is on and the failed runs of `head` failed only for infrastructure, run
+        `gh run rerun --failed` once per head and record a `ci.retry` event naming the class. True when it re-ran."""
+        if not C.infra_retry(self.cfg):
+            return False
+        if self._train_ci(train).get("retried") == head:
+            return False
+        fresh = L.find_train(L.load(self.root), train["id"]) or train
+        if self._train_ci(fresh).get("retried") == head:
+            return False
+        cls = self.infra_class(runs)
+        if cls is None:
+            return False
+        ids = [r["databaseId"] for r in runs if r.get("status") == "completed" and r.get("conclusion") not in OK_CONCLUSIONS]
+        for rid in ids:
+            rc, out, err = self.act(["gh", "run", "rerun", str(rid), "--failed", *self.repo_args])
+            if rc != 0:
+                self.mut(lambda led: L.add_event(led, "ci.retry_failed", "%s %s %s" % (train["id"], rid, (err or out).strip()[:100]),
+                                                 "delivery_watch"))
+                return False
+        self.mut(lambda led: L.add_event(led, "ci.retry", "%s %s class=%s runs=%s" % (train["id"], head[:7], cls, ids),
+                                         "delivery_watch"))
+        self.out("train %s: CI failed for an infrastructure reason (%s); re-ran the failed jobs once" % (train["id"], cls))
+        return True
+
+    # -- DS259: test what will merge --
+    def commits_behind(self, base: str, head: str):
+        """How many commits `base` has that `head` lacks (GitHub compare API); None when it cannot be read."""
+        repo = self.repo or "{owner}/{repo}"
+        data = self.gh_json(["api", "repos/%s/compare/%s...%s" % (repo, base, head)])
+        n = data.get("behind_by") if isinstance(data, dict) else None
+        return n if isinstance(n, int) and not isinstance(n, bool) else None
+
+    def merge_tree(self, base: str, head: str):
+        """The tree of the merge result of `head` into origin/`base` (`git merge-tree --write-tree`); None on a
+        conflict, an old git, or any error."""
+        self._fetch_once()
+        rc, out, _ = self.read(["git", "merge-tree", "--write-tree", "origin/%s" % base, head])
+        first = out.split()[0] if rc == 0 and out.strip() else ""
+        return first if re.fullmatch(r"[0-9a-f]{40,64}", first) else None
+
+    def merge_result_ok(self, train: dict, head: str) -> bool:
+        """DS259: True when the watcher may merge. A head that is not behind its base was tested as it merges. A head
+        that is behind has an untested merge result unless its own tree equals the merge tree. `watcher.merge_result`
+        `warn` (default) prints one line and lets the merge go; `update` runs `gh pr update-branch` and waits for the
+        new head's CI. Anything unreadable merges as before."""
+        base = self.cfg.get("base", "main")
+        behind = self.commits_behind(base, head)
+        if not behind:
+            return True
+        tree = self.merge_tree(base, head)
+        if tree:
+            rc, own, _ = self.read(["git", "rev-parse", "%s^{tree}" % head])
+            if rc == 0 and own.strip() == tree:
+                return True
+        tid = train["id"]
+        key = (tid, head, "result")
+        seen = self.__dict__.setdefault("_merge_result_seen", set())
+        if C.merge_result(self.cfg) == "update":
+            if key in seen:
+                return False
+            seen.add(key)
+            rc, out, err = self.act(["gh", "pr", "update-branch", str(train["pr"]), "--expected-head-sha", head,
+                                     *self.repo_args])
+            kind = "merge.branch_updated" if rc == 0 else "merge.update_failed"
+            detail = "%s behind %s by %d%s" % (tid, base, behind, "" if rc == 0 else ": " + (err or out).strip()[:100])
+            self.mut(lambda led: L.add_event(led, kind, detail, "delivery_watch"))
+            self.out("train %s: PR head is %d commit(s) behind %s; %s" % (
+                tid, behind, base, "updated the branch, waiting for CI on the merge result" if rc == 0
+                else "could not update the branch, not merging"))
+            return False
+        if key not in seen:
+            seen.add(key)
+            self.mut(lambda led: L.add_event(led, "merge.untested_result", "%s behind %s by %d" % (tid, base, behind),
+                                             "delivery_watch"))
+            self.out("train %s: PR head is %d commit(s) behind %s, so CI did not test the merge result; merging "
+                     "anyway (set watcher.merge_result to \"update\" to test it first)" % (tid, behind, base))
         return True
 
     def after_merge(self, train: dict) -> bool:
