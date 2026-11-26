@@ -21,6 +21,7 @@ code:
   - claude/plugins/docs/scripts/hook_end_of_turn.py
   - tools/test_artifacts_dp7.py
   - tools/test_artifacts_dl429.py
+  - tools/test_artifacts_ds258.py
   - claude/plugins/docs/skills/feature-artifact-new/**
   - claude/plugins/docs/skills/full-progress-artifact-new/**
   - claude/plugins/docs/skills/project-artifact-check/**
@@ -201,6 +202,8 @@ flowchart LR
 **R5.32** — Under the badges, Full Progress shows a "What is happening" list of at most 8 short bullets, built on every render from the record, the ledger and the CI runs file. There is one bullet for each active release and each of the last 3 Live releases. A bullet names the release as `RELEASE-n` with its PR, then says what went wrong (failed CI jobs by name, fix rounds, a hold, what needs you, a merge not cleaned up, no smoke test), what is being done about it (a running agent, a CI run in progress, or that nothing is running yet) and what went well. With no active release the list says so. This text replaces the lede in Full Progress; a feature artifact keeps its lede. (DL429, ARTIFACTSPEC R5.62) Proof: `tools/test_artifacts_dl429.py`.
 
 **R5.33** — The badges and the bullets read `.delivery/ci-runs.json` and `.delivery/ledger.json` and write nothing. A run belongs to a release when its `why` names the release's PR (`#N`) or the train lists its run ID. With no CI runs file there is no CI badge; with no ledger there is no PR, agent or train detail, and the rest still shows. (DL429, ARTIFACTSPEC R5.63) Proof: `tools/test_artifacts_dl429.py`.
+
+**R5.34** — Next to the CI badge, Full Progress shows a CI waste badge, built from the finished runs in `.delivery/ci-runs.json`: `62% green · 31 min per merged PR · 14 min cancelled (7 d)`. Green is the finished runs that succeeded over all finished runs. Minutes per merged PR is the time of the finished runs that name a PR, over the PRs of releases Live in the last 7 days (`n/a` with none). Cancelled minutes count runs completed in the last 7 days. With no CI runs, or no finished run, there is no badge. It is a plain badge, never marked failed. (DS258, ARTIFACTSPEC R5.64) Proof: `tools/test_artifacts_ds258.py`.
 
 ## 6. Non-functional requirements
 
