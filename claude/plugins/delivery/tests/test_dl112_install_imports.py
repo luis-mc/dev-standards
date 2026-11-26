@@ -86,7 +86,7 @@ class WatcherError(unittest.TestCase):
         tmp = tempfile.mkdtemp()
         self.addCleanup(shutil.rmtree, tmp, True)
         src = TEMPLATES / "shared" / SCRIPTS
-        for name in ("ci_watch.py", "runner_health.py", "fallback_launch.py"):
+        for name in ("ci_watch.py", "fallback_launch.py"):
             shutil.copyfile(src / name, os.path.join(tmp, name))
         proc = subprocess.run([sys.executable, "-I", os.path.join(tmp, "ci_watch.py"), "--help"],
                               capture_output=True, text=True, cwd=tmp)

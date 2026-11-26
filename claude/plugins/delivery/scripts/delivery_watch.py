@@ -15,7 +15,6 @@ DELIVERYSPEC section 4(a) and owner decisions D5, D6. Each pass, against .delive
             are cancelled and recorded in held_runs; when no train's CI runs, they are re-run
             (`gh run rerun`).
   installs  configured update-state files (install_state_files: [{product, path}]).
-  runners   `gh api repos/{owner}/{repo}/actions/runners`.
   watchers  a heartbeat row.
 
 .delivery/config.json decides what is allowed (delivery_config.py): `watcher.push_trains`,
@@ -985,7 +984,7 @@ class Watcher:
                 n = len(led["held_runs"])
                 self.mut(lambda l2: (l2.__setitem__("held_runs", []), L.add_event(l2, "ci.rerun_held", str(n), "delivery_watch")))
 
-    # -- installs, runners, heartbeat --
+    # -- installs, heartbeat --
     def pass_installs(self) -> None:
         for spec in self.cfg.get("install_state_files", []) or []:
             try:
@@ -1006,22 +1005,6 @@ class Watcher:
                     if data.get(k) is not None:
                         row[k] = data[k]
             self.mut(fn)
-
-    def pass_runners(self) -> None:
-        data = self.gh_json(["api", "repos/%s/actions/runners" % (self.repo or "{owner}/{repo}")])
-        if not isinstance(data, dict):
-            return
-        local = set(self.cfg.get("local_runners", []) or [])
-        at = L.iso(self.now())
-
-        def fn(led):
-            old = {r.get("name"): r for r in led["runners"]}
-            led["runners"] = [{
-                "name": r.get("name"), "labels": [l.get("name") for l in r.get("labels", [])],
-                "online": r.get("status") == "online", "busy": bool(r.get("busy")),
-                "local": r.get("name") in local, "paused_by": (old.get(r.get("name")) or {}).get("paused_by"),
-                "checked_at": at} for r in data.get("runners", [])]
-        self.mut(fn)
 
     def pass_ci_runs(self) -> None:
         """D48: refresh .delivery/ci-runs.json for the Full Progress CI runs section, at most once a minute.
@@ -1051,7 +1034,7 @@ class Watcher:
 
     def run_once(self, started: str | None = None) -> list[list[str]]:
         self.actions = []
-        for step in (self.pass_agents, self.pass_checks, self.pass_trains, self.pass_other_runs, self.pass_installs, self.pass_runners,
+        for step in (self.pass_agents, self.pass_checks, self.pass_trains, self.pass_other_runs, self.pass_installs,
                      self.pass_ci_runs):
             try:
                 step()

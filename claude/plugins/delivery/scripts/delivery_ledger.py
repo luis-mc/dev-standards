@@ -174,8 +174,8 @@ def local_iso(text, root=None, cfg=None) -> str:
 
 def empty_ledger() -> dict:
     return {"schema": SCHEMA, "updated_at": iso(), "config_ref": ".delivery/config.json",
-            "trains": [], "agents": [], "jobs": [], "installs": [], "publishes": [],
-            "runners": [], "watchers": [], "owner_questions": [], "events": []}
+            "trains": [], "agents": [], "installs": [], "publishes": [],
+            "watchers": [], "owner_questions": [], "events": []}
 
 
 REPLACE_TRIES = 12
@@ -317,8 +317,8 @@ def _latest(row: dict, fields) -> datetime | None:
 def prune(led: dict, days: int, now: datetime | None = None) -> int:
     """DS156: drop finished rows older than `days` (0 = keep all). Returns how many rows went.
     Never drops an open row, a row with no readable timestamp, or a train with an active hold.
-    Stop checks (DL-02/03/14/18/30/32/33/76) read only open trains, agents, installs and jobs,
-    so finished rows are not needed by them. Publishes, jobs, runners, watchers and owner
+    Stop checks (DL-02/03/14/18/30/32/33/76) read only open trains, agents and installs,
+    so finished rows are not needed by them. Publishes, watchers and owner
     questions are left alone."""
     if not days or days < 0:
         return 0
@@ -647,8 +647,7 @@ def record(root, op: str, **kw) -> bool:
     """Best effort: apply a named write; never raises, returns whether it wrote.
 
     ops: train_state(train|pr|branch, state, **fields), cargo(train|branch, task, **fields),
-         ci(train|pr|branch, sha, state), runners(rows), event(kind, ref, by),
-         job(fields) and runner(fields): upsert one `jobs[]` row by id / one `runners[]` row by name.
+         ci(train|pr|branch, sha, state), event(kind, ref, by).
     """
     try:
         if root is None or not Path(root).is_dir():
@@ -658,19 +657,6 @@ def record(root, op: str, **kw) -> bool:
             by = kw.get("by", "script")
             if op == "event":
                 add_event(led, kw.get("kind", "event"), kw.get("ref", ""), by)
-                return
-            if op in ("job", "runner"):
-                key, rows = ("id", led.setdefault("jobs", [])) if op == "job" else ("name", led.setdefault("runners", []))
-                fields = dict(kw.get("fields") or {})
-                row = next((r for r in rows if r.get(key) == fields.get(key)), None)
-                if row is None:
-                    row = {}
-                    rows.append(row)
-                row.update(fields)
-                return
-            if op == "runners":
-                led["runners"] = list(kw.get("rows", []))
-                add_event(led, "runners.checked", "%d" % len(led["runners"]), by)
                 return
             if op == "agents_done":
                 # DL127: close the open agents of a shipped train's cargo (task) or of its branches

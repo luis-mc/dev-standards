@@ -134,7 +134,7 @@ flowchart LR
 
 **R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
 
-**R6.2** — The freeze, runner health and the log never block on a GitHub outage. They allow the work and warn.
+**R6.2** — The freeze and the log never block on a GitHub outage. They allow the work and warn.
 
 ## 7. Design
 

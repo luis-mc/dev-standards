@@ -23,8 +23,7 @@ guards (the pre_push steps of fast_guards.py). It is never a branch gate and nev
 tests: the ready pull request's CI is the one full suite, so no result is published and a
 fix made after a failed check is not re-gated. gate.json picks the steps ("join": true or
 false on a step) and may turn the guards off ("join_guards": false). Each step's time is
-printed and written to join-result.json ("quick_check"). Last, runner health (runner_health.py) warns when no online runner carries a label CI needs; it never
-blocks. --push then pushes INTEGRATION.
+printed and written to join-result.json ("quick_check"). --push then pushes INTEGRATION.
 
 --ci-gate (or "ci_gate": true in gate.json; DELIVERYSPEC DL-81, DL-83) is the light join of urgent work at code
 push: a branch whose agent's gate is its branch CI run (agent_ci.py) needs no gate result, so it is joined as
@@ -79,7 +78,6 @@ sys.dont_write_bytecode = True  # keep scripts/delivery/ free of __pycache__ (a 
 
 import delivery_common as dc
 import gate_verify
-import runner_health
 
 # The steps of gate.json the light check runs, by name; a step's own "join": true/false wins.
 QUICK_STEPS = ("typecheck", "lint")
@@ -759,14 +757,6 @@ def main(argv: list[str] | None = None) -> int:
             return code if code in (dc.EXIT_FAIL, dc.EXIT_USAGE, dc.EXIT_TIMEOUT) else dc.EXIT_FAIL
 
     extra["pre_pr_docs"] = pre_pr_docs(root)
-    # Runner health (DL7): warnings only, never a reason to stop.
-    try:
-        health = runner_health.check(root)
-        print("")
-        runner_health.report(health, "join: runner health")
-        extra["runner_health"] = {k: health[k] for k in ("status", "warnings", "reason")}
-    except Exception as exc:  # a broken check must never stop a join
-        print("join: runner health: check skipped: %s" % exc)
     write_join_result(root, joined, None, [], extra=extra)
 
     if args.push:

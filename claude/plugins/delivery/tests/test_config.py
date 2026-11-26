@@ -19,7 +19,6 @@ SAMPLE_PROJECT = {
     "enforcement": {"mode": "block", "block_ceiling": 3, "log_every_block": True},
     "watcher": {"push_trains": True, "open_prs": True, "merge_on_green": True, "merge_flag": "--merge",
                 "never_auto_merge": True},
-    "local_runners": ["build-pc"],
     "runners": [{"name": "build-pc", "os": "Windows", "repair": ["powershell -Command x"]},
                 {"name": "build-pc-linux", "os": "Linux", "repair": [["docker", "restart", "c"]]},
                 {"name": "NUC8-linux", "os": "Linux", "repair": []}],

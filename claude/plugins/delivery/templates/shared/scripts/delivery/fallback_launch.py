@@ -164,6 +164,15 @@ def job_shard(job_name: str, shards: list[dict]):
     return best[1] if best else None
 
 
+HOSTED_PREFIXES = ("ubuntu-", "windows-", "macos-")
+
+
+def is_hosted(labels: list[str]) -> bool:
+    """A label set GitHub provides itself: no self-hosted label, a hosted image name."""
+    low = [x.lower() for x in labels]
+    return "self-hosted" not in low and any(x.startswith(HOSTED_PREFIXES) for x in low)
+
+
 def waiting_shards(runs: list[dict], shards: list[dict], repo: str | None, now: float,
                    gh_json, is_hosted=None, wait_marker=None, claimed=None) -> list[dict]:
     """Shards that wait for a runner now: [{"shard", "wait_min"}].
@@ -276,11 +285,7 @@ class Deps:
         self.gate = over.get("gate") or self._gate  # caps: counts the shard before it starts
         self.out = over.get("out") or (lambda line: print(line, flush=True))
         self.state: dict = over.get("state") if over.get("state") is not None else {}
-        try:
-            import runner_health  # noqa: PLC0415
-            self.is_hosted = over.get("is_hosted") or runner_health.is_hosted
-        except ImportError:
-            self.is_hosted = over.get("is_hosted")
+        self.is_hosted = over.get("is_hosted") or is_hosted
 
     def _gh_json(self, args):
         proc = run_gh(args)
