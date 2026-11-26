@@ -29,6 +29,7 @@ Seven checks (an eighth, `rust`, appears only on the rust track: see below), eac
   scripts  (DL188) `ci.scripts-current`: scripts/delivery files that are older than, or missing from, the plugin's templates
            (the same plan `delivery_ci_install.py update` makes; a file in ci-install.json "keep" is ok). WARNS, never fails.
            With `ci.wait_min` set, the CI line shows that wait (10 when unset). Cached tools are found in the ci_tool cache.
+  ci-filters (DL-116) WARNS (never fails) when a workflow in watcher.ci_workflows has a pull-request `paths` or `paths-ignore` filter (ci_areas_check.py).
   plugins  (DL173) `plugins.compat`: the highest installed version of each luismc-* plugin, read from the Claude plugin cache
            (~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/; DELIVERY_PLUGIN_CACHE replaces the root in tests),
            against references/plugin-compat.json. WARNS (never fails) per pair that does not fit, with
@@ -783,6 +784,23 @@ def check_fail_fast(root, cfg):
         [_item("ci.fail_fast", "warn", "; ".join(found))]
 
 
+def check_ci_filters(root, cfg):
+    """DL-116 (DS261): WARN, never fail, when a workflow the watcher requires has a pull-request path filter."""
+    import importlib.util
+    src = os.path.join(PLUGIN, "templates", "shared", "scripts", "delivery", "ci_areas_check.py")
+    try:
+        spec = importlib.util.spec_from_file_location("ci_areas_check", src)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        names = [str(n) for n in C.ci_workflows(cfg)]
+        found = [f for f in mod.check(__import__("pathlib").Path(root), names) if "not found" not in f] if names else []
+    except Exception:
+        return None
+    if not found:
+        return None
+    return True, "WARN DL-116 a required workflow has a pull-request path filter, so a filtered change leaves the watcher "         "without a run: " + "; ".join(found) + ". Skip by job-level `if` plus an always-run aggregate job "         "(templates/ci-snippets/ci-areas-pattern.yml).", [_item("ci.path_filter", "warn", "; ".join(found))]
+
+
 def check_plugins(root, cfg):
     items = compat_items()
     if not items:
@@ -865,7 +883,7 @@ def check_stack(root, cfg):
 
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("ci", check_ci), ("rust", check_rust),
-          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("plugins", check_plugins),
+          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("ci-filters", check_ci_filters), ("plugins", check_plugins),
           ("gate-steps", check_gate_steps), ("stack", check_stack))
 
 
