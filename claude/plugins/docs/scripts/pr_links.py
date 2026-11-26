@@ -94,7 +94,7 @@ def parse_remote(remote: str):
 def derive_from_git(root: str):
     """`pr_links` from `git config --get remote.origin.url` in `root`, else None. Only the writing script calls this."""
     try:
-        got = subprocess.run(['git', '-C', root, 'config', '--get', 'remote.origin.url'], capture_output=True, text=True, timeout=10)
+        got = subprocess.run(['git', 'config', '--get', 'remote.origin.url'], cwd=root, capture_output=True, text=True, timeout=10)
     except (OSError, subprocess.SubprocessError):
         return None
     return parse_remote(got.stdout) if got.returncode == 0 else None
