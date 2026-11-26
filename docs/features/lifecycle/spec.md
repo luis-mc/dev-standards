@@ -4,7 +4,7 @@ title: Install, update and remove
 apps: [luismc-docs, luismc-delivery]
 topics: [delivery, docs, testing]
 status: live
-version: 0.3.3
+version: 0.4.0
 owner: agents
 type: explanation
 code:
@@ -118,6 +118,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.0 | 2026-11-26 | RELEASE-199 | R1.4: only the targets a pull request affects run their lane; the others are proven by a pass record from the default branch (DL-125). | DS269 |
 | 0.3.3 | 2026-11-26 | RELEASE-195 | The release check accepts a lane result written from a default-branch pass record with the same inputs key (DL-112, DL-118). | DS263 |
 | 0.3.2 | 2026-11-25 | RELEASE-182 | The design-system wizard guard kit gains the step-bar-more-for-one rule (specified in the docs feature, R5.25). | DS244 |
 | 0.3.1 | 2026-11-22 | RELEASE-165 | Workflow templates read the per-job variable CRSP_<JOB> first (DL399). | DL399 |

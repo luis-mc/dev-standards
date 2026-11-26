@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.18.0
+version: 0.19.0
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.19.0 | 2026-11-26 | RELEASE-199 | R5.29: the release check needs a lane for each affected target and a default-branch pass record for the others (DL-125). | DS269 |
 | 0.18.0 | 2026-11-26 | RELEASE-196 | ci_watch.py prints one line after a green run whose PR head is behind its base, since CI did not test the merge result (delivery R5.77).<br>gate.json local_gate smoke: the local gate runs only the touched suites and CI is the one full run (delivery R5.80). | DS259, DS264 |
 | 0.17.0 | 2026-11-26 | RELEASE-195 | Changed areas job and the pull-request path-filter check (DL-116).<br>Base image reuse by input key (DL-117).<br>Pass records as lane results and copy-to-main (DL-118, DL-112). | DS261, DS262, DS263 |
 | 0.16.1 | 2026-11-26 | RELEASE-192 | Train freeze lifts for a run cancelled with cancel_old_run.py; docs and config pushes skip typecheck and lint (see delivery R5.36c to R5.36e). | DL424 |
