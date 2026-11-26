@@ -811,6 +811,7 @@ class Context:
     lock_dirs: list[str] = field(default_factory=list)  # packages a lockfile change touches
     package_kinds: dict = field(default_factory=dict)  # package directory -> its kind (DL256)
     full: bool = False  # an explicit --full: the only thing that widens the e2e step (DL389)
+    docs_config_only: bool = False  # DL425: the push changes only docs/config; fast_guards skips the node steps
 
 
 def build_context(root: Path, cfg: dict, base_ref: str | None, full: bool = False) -> Context:
@@ -1058,6 +1059,8 @@ def plan_step(step: dict, ctx: Context) -> tuple[bool, str | None, str]:
     skip = scope_skip(step, ctx)
     if skip:
         return False, None, skip
+    if getattr(ctx, "docs_config_only", False) and step.get("name") in DOCS_ONLY_SKIPPED_STEPS:
+        return False, None, "no code changed (docs/config-only push)"
     wc = step.get("when_changed")
     if wc and not any(widen_match(f, e) for f in ctx.files for e in wc):
         return False, None, "no change under when_changed (%s)" % ", ".join(wc)
@@ -1395,6 +1398,89 @@ def overall_pass(entries: list[dict], timed_out: bool = False) -> bool:
 def is_lockfile(path: str, cfg: dict) -> bool:
     name = posixpath.basename(path)
     return name in DEFAULT_LOCKFILES or path in cfg.get("lockfiles", []) or name in cfg.get("lockfiles", [])
+
+
+CANCELLED_RUNS_PATH = ".delivery/cancelled-runs.json"  # DL424: runs cancelled on request; the train freeze lets these pass
+
+
+def main_checkout_root(cwd: Path | str | None = None) -> Path:
+    """The folder that holds .delivery/ for the whole repository: the main checkout, found from git's
+    common dir, so a git worktree shares it. Falls back to this work tree's top folder."""
+    try:
+        p = run_git(["rev-parse", "--path-format=absolute", "--git-common-dir"], cwd=cwd, check=False)
+        common = Path(p.stdout.strip()) if p.returncode == 0 and p.stdout.strip() else None
+        if common is not None and common.name == ".git" and (common.parent / ".delivery").is_dir():
+            return common.parent
+    except Exception:  # noqa: BLE001
+        pass
+    return repo_root()
+
+
+def cancelled_run_ids(root: Path | None = None) -> set[str]:
+    """Run ids cancel_old_run.py cancelled (DL424). Empty when the file is absent or unreadable."""
+    try:
+        data = read_json((root or main_checkout_root()) / CANCELLED_RUNS_PATH)
+        return {str(k) for k in data} if isinstance(data, dict) else set()
+    except (OSError, ValueError, DeliveryError):
+        return set()
+
+
+def gate_result_files(root: Path) -> list[Path]:
+    """Every .delivery/gate-result.json that may hold the result of a gate run for this repository
+    (DL426): the pushing checkout's first, then those of the other worktrees (`git worktree list`)."""
+    out = [root / GATE_RESULT_PATH]
+    p = run_git(["worktree", "list", "--porcelain"], cwd=root, check=False)
+    if p.returncode == 0:
+        for line in p.stdout.splitlines():
+            if line.startswith("worktree "):
+                wt = Path(line[len("worktree "):].strip())
+                f = wt / GATE_RESULT_PATH
+                if f != out[0] and f.is_file():
+                    out.append(f)
+    return out
+
+
+def find_gate_result(root: Path, head: str) -> dict | None:
+    """The gate result for `head` (DL426): the pushing checkout's file when it is for `head`; else the
+    newest file in another worktree of the repository whose head is `head`; else the pushing checkout's
+    file as it is (so the caller reports the mismatch), else None."""
+    own: dict | None = None
+    found: list[tuple[float, dict]] = []
+    for i, f in enumerate(gate_result_files(root)):
+        try:
+            data = read_json(f)
+            mtime = f.stat().st_mtime
+        except (OSError, ValueError):
+            continue
+        if not isinstance(data, dict):
+            continue
+        if i == 0:
+            own = data
+        if data.get("head") == head:
+            found.append((mtime if i else float("inf"), data))
+    if found:
+        return max(found, key=lambda t: t[0])[1]
+    return own
+
+
+NODE_CHECK_RE = re.compile(r"(^|/)(package\.json|pnpm-lock\.yaml|pnpm-workspace\.yaml|tsconfig[^/]*\.json|\.dependency-cruiser\.cjs)$")
+DOCS_ONLY_SKIPPED_STEPS = ("typecheck", "lint")  # DL425: node steps a docs/config-only push skips
+DOCS_CONFIG_EXT = (".md", ".mdx", ".txt", ".rst", ".json", ".yaml", ".yml", ".toml", ".ini", ".cfg")
+
+
+def docs_config_only(files: list[str], inert_paths: list[str]) -> bool:
+    """DL425: True when every pushed file is documentation or configuration that no node check covers:
+    an inert path (gate.json "inert_paths"), anything under .delivery/, or a markdown, text or config
+    file (not package.json, a lockfile, a workspace file or a tsconfig). No files is not docs-only."""
+    if not files:
+        return False
+    for f in files:
+        if f.startswith(".delivery/") or any(widen_match(f, e) for e in inert_paths):
+            continue
+        if f.lower().endswith(DOCS_CONFIG_EXT) and not NODE_CHECK_RE.search(f):
+            continue
+        return False
+    return True
 
 
 def ledger_record(root, op: str, **kw) -> bool:

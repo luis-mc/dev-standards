@@ -14,7 +14,7 @@ code:
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - claude/plugins/delivery/references/release-asset-names.md
   - tools/test_delivery_*.py
-last_verified: 2026-11-08
+last_verified: 2026-11-26
 artifact: feature-delivery-speed.html
 ---
 # Delivery speed
