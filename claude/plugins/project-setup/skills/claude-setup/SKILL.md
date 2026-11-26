@@ -1,5 +1,5 @@
 ---
-description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Sonnet-by-default model split (Opus by `/model` for planning only) with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 6 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), turns on luismc-transcript-folds in the project like the other five and binds its two chords in ~/.claude/keybindings.json, defaults every config file to the project's .claude/, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
+description: Apply Claude Code configuration — statusline, settings.json (auto-compact window, output style, Sonnet-by-default model split (Opus by `/model` for planning only) with a medium-or-high effort level per model), output styles, rules, and CLAUDE.md — to this project and/or the user-level ~/.claude/, turns on and configures all 6 plugins of the luismc marketplace in the project settings (installing missing ones after the owner confirms), turns on luismc-transcript-folds in the project like the other five and binds its three chords in ~/.claude/keybindings.json, defaults every config file to the project's .claude/, then offers to start enforcing the docs, design system, delivery, project record, CI checks and other dev-standards setups (`claude-setup status` only reports). Use when the user asks to set up Claude, configure the statusline, fix their Claude settings, add a CLAUDE.md, or apply their Claude config to a repo or a new machine, or invokes /luismc-project-setup:claude-setup. Not for repo or product tooling (hooks, gitleaks, CI, playwright) — that is /luismc-project-setup:tech-stack-setup.
 model: sonnet
 effort: medium
 ---
@@ -385,7 +385,7 @@ and say so in the report. Today that is `luismc-agents`, `luismc-audits`,
 `luismc-specs` once did (DS219). When the project's settings still enable either
 old name, remove that key and say so in the report. Scope is the project: everything
 is turned on in the target's `.claude/settings.json`, not at user level. That
-includes `luismc-transcript-folds`. Only its two chords stay at user level (next
+includes `luismc-transcript-folds`. Only its three chords stay at user level (next
 section).
 
 **Marketplace name.** Looked up in this order:
@@ -449,22 +449,23 @@ Each skips when the plugin is not installed yet; print the command instead.
 transcript into one line each, with a band above the prompt and two toggle
 chords. It is turned on in the project's `.claude/settings.json`
 `enabledPlugins` like the other five plugins (see "All plugins") and installed
-with `--scope project`. Its two chords stay in `~/.claude/keybindings.json`,
+with `--scope project`. Its three chords stay in `~/.claude/keybindings.json`,
 because keybindings have no project scope. On **every run, whatever target was
 picked**, the change plan includes the chords. They land outside the repo and
 appear in the step 3 confirmation. If the owner declines them there, skip them
 and report them as skipped.
 
 **`~/.claude/keybindings.json` — merge `assets/keybindings.json`.** The asset
-holds the `Global` context with two chords:
+holds the `Global` context with three chords:
 
 | Chord | Action | Does |
 |---|---|---|
 | `ctrl+x d` | `theme:toggleSyntaxHighlighting` | toggles folded diffs |
 | `ctrl+x f` | `theme:editCustom` | toggles folded commands |
+| `ctrl+x h` | `settings:sortByTokens` | toggles folded hook messages |
 
-Both actions are handled by the engine only inside the `/theme` dialog, so
-outside it the chords reach the plugin's buttons. Merge rules:
+The first two actions are handled by the engine only inside the `/theme` dialog,
+the third only inside the usage settings, so outside them the chords reach the plugin's buttons. Merge rules:
 
 - If the file is absent, create it from the asset.
 - Otherwise find the `Global` context block in `bindings` (add one when there is
@@ -782,7 +783,7 @@ Apply what was confirmed. Then check the result. Do not assume it worked:
   (or the owner's existing entry, unchanged).
 - `~/.claude/keybindings.json` parses as JSON, its `Global` context binds
   `ctrl+x d` to `theme:toggleSyntaxHighlighting` and `ctrl+x f` to
-  `theme:editCustom` (or the conflicting chord is listed as declined), and every
+  `theme:editCustom` and `ctrl+x h` to `settings:sortByTokens` (or the conflicting chord is listed as declined), and every
   binding that was there before is unchanged.
 - No `CLAUDE_CODE_EFFORT_LEVEL` remains in the target's `env` block, unless the
   user chose to keep it. In that case, say it overrides the saved efforts.
