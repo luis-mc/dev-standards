@@ -370,6 +370,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D22 | Where does the record worktree live? | Retired in 1.8.0: there is none; the record is `docs/artifacts/` of the working tree. | The old setting is ignored, and an old worktree's record is copied once when newer (R4.24). |
 | D23 | Does the plugin commit or push? | No: it writes files; the project commits and pushes. | A record change never triggers a deploy by itself (R4.13, R4.28). |
 | D24 | What happens to a finished feature artifact? | `retire` moves it to `retired_features`, keeps its decisions and tasks, deletes its file and content (owner, 30 Oct). | Finished features stop taking most of `docs/artifacts` without breaking INV-3 or R4.6 (R4.31 to R4.36). |
+| D25 | How does Full Progress know where a pull request lives? | A provider table (`github`, `gitlab`, `custom`) in `pr_links.py` and an optional manifest field `pr_links`, derived from `git remote get-url origin` when absent (DS272). | A new host needs one table row, not a code path in the renderer; the render never runs git (R5.65, R5.66). |
 
 ---
 
@@ -533,6 +534,7 @@ docs/artifacts/
 | `full_progress_artifact` | object | `{key:"full-progress", title, url, file, published_sha256, published_at}`; `published_at` is the ISO time (with offset) of the last `mark-published`, absent before the first publish (R4.30) |
 | `feature_artifacts` | array | `{key, title, file, prefix, apps:[...], updated}` each: no `url` and no `published_sha256`, because a feature artifact is never published; `updated` is the ISO time (with offset) of the stamp of the feature's page, written whenever the script writes that page with a new stamp, and absent in an older record (R4.30) |
 | `retired_features` | array | Optional. `[{key, title, prefix, retired, url, decisions}]`: features removed by `retire` (§4.10, R4.31); `retired` is the ISO time, `url` the last claude.ai page of the feature or empty, `decisions` the path of its archive or empty. Not to be confused with `retired`, which lists old claude.ai pages. |
+| `pr_links` | object | Optional. `{provider, repo, host, template}`: where pull requests live, so Full Progress links them (§5, R5.65, R5.66). `provider` is `github`, `gitlab` or `custom`. |
 | `retired` | array | Optional. `[{key, title, url, retired}]`: claude.ai pages of feature artifacts still to delete (R4.19). |
 | `deleted` | array | Optional. `[{key, url, deleted}]`, plus `"gone": true` for a page that no longer existed: pages recorded as deleted (R4.19). |
 | `project_prefixes` | array | Task prefixes owned by the project, e.g. `["DS"]`. |
@@ -1462,6 +1464,28 @@ double-click.
   whose `why` names a PR (`#N`) and whose `completed_at` is in the last 7 days, over the carrier PRs of the releases Live in the last 7 days
   (`n/a` with no such PR). K is the sum of `total_s` of runs with conclusion `cancelled` whose
   `completed_at` is in the last 7 days. Verified by `test_artifacts_ds258`.
+- **R5.65** — In Full Progress every place that names a pull request by number is a link to that
+  pull request's page when a URL can be built (R5.66): the PR row of the release table (`PR 298`,
+  `in PR 298`, `via PR 298`), the PR label of the release tree figure, the `(PR #N)` in a `What is
+  happening` bullet and the `Carrier PR` badge. The link text is what it was before. The anchor is
+  `<a href="URL" target="_blank" rel="noopener noreferrer">`. With no URL the label is plain text.
+  The URL comes from a provider table (`PR_URL_PATTERNS` in `pr_links.py`): `github`
+  `https://{host}/{repo}/pull/{n}`, `gitlab` `https://{host}/{repo}/-/merge_requests/{n}`, `custom`
+  the manifest's `template`. Every inserted value is escaped. Only `https` URLs are linked: a
+  `javascript:`, `data:` or `http:` URL, a missing `{n}` or a value with a space, quote, `<` or `>`
+  gives plain text. The render takes the setting as an input and never runs git, so the same record
+  gives the same bytes (R7.4). A page published on claude.ai is sandboxed. Whether `target="_blank"`
+  opens a new window there is unverified; if it does not, the link still works as a normal link.
+  Verified by `test_artifacts_ds272`.
+- **R5.66** — The manifest may hold `pr_links`: `{provider, repo, host, template}`. `provider` is
+  `github`, `gitlab` or `custom`. `repo` is `owner/repo` (github) or `group/project` (gitlab, any
+  depth); not for `custom`. `host` is optional (default `github.com` or `gitlab.com`) and a bare host
+  name. `template` is for `custom` only, an `https://` URL with `{n}`. `check` reports a bad value
+  (R4.2). When `pr_links` is absent, `render` and `pr-links` read `git remote get-url origin`; an
+  https or ssh URL of github.com or gitlab.com (or a host with `gitlab` in its name) is parsed and
+  written to the manifest by `project_artifacts.py`, the one script that writes it. When it cannot
+  be derived nothing is written and the labels are plain text. `pr-links --provider P --repo R
+  [--host H] [--template T]` sets it by hand. Verified by `test_artifacts_ds272`.
 
 ---
 
