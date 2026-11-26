@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.56.0
+version: 0.57.0
 owner: agents
 type: reference
 code:
@@ -570,6 +570,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.57.0 | 2026-11-26 | RELEASE-202 | R5.84 to R5.87: a fold takes only the notes of the named release; the Stop hook names every release a pull request carries; a merged entry is not idle work; link sets the pull request on its releases (DL-128 to DL-131). | DS274 |
 | 0.56.0 | 2026-11-26 | RELEASE-199 | R5.82: a pull request proves only the lifecycle targets its changes affect (DL-125). R5.83: DL-40 is enforced once per launch and a `PC-bound:` line with no PC-bound step warns (DL-126, DL-127, DS270). | DS269 |
 | 0.55.0 | 2026-11-26 | RELEASE-197 | R5.81: local agents without a delivery block are recorded from the prompt and closed by the Stop hook; a Running task with no worker is flagged (DL-123, DL-124). | DS267 |
 | 0.54.0 | 2026-11-26 | RELEASE-196 | R5.77: before the watcher merges a green PR it tests the merge result: watcher.merge_result warn (default) prints one line, update runs gh pr update-branch and waits for CI (DL-119).<br>R5.78: with watcher.infra_retry the watcher re-runs the failed jobs once after an infrastructure failure and records a ci.retry event; a test failure is never retried (DL-120).<br>R5.79, R5.80: flake quarantine file with quarantine_check.py and a session hook line; gate.json local_gate smoke runs only the touched suites (DL-121, DL-122). | DS259, DS260, DS264 |
