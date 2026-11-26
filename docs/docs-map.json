@@ -93,6 +93,9 @@
     "claude/plugins/docs/scripts/plan_rows_check.py": [
       "docs/features/artifacts/spec.md"
     ],
+    "claude/plugins/docs/scripts/pr_links.py": [
+      "docs/features/artifacts/spec.md"
+    ],
     "claude/plugins/docs/scripts/project_artifacts.py": [
       "docs/features/artifacts/spec.md"
     ],
@@ -184,6 +187,9 @@
       "docs/features/artifacts/spec.md"
     ],
     "tools/test_artifacts_ds258.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "tools/test_artifacts_ds272.py": [
       "docs/features/artifacts/spec.md"
     ],
     "tools/test_authspec_check.py": [
