@@ -317,29 +317,6 @@ def has_open_pr(sha: str, repo: str | None) -> bool:
                for p in data)
 
 
-def behind_base_note(sha: str, repo: str | None) -> str:
-    """DS259: one plain line when `sha` is the head of an open pull request that is behind its base, so the CI that
-    just passed did not test the merge result. '' when it is not behind or anything cannot be read. Never raises."""
-    try:
-        base = f"repos/{repo}" if repo else "repos/{owner}/{repo}"
-        pulls = gh_json(["api", f"{base}/commits/{sha}/pulls"])
-        for pr in pulls if isinstance(pulls, list) else []:
-            if not isinstance(pr, dict) or pr.get("state") != "open" \
-                    or not str((pr.get("head") or {}).get("sha", "")).startswith(sha[:7]):
-                continue
-            target = (pr.get("base") or {}).get("ref")
-            if not target:
-                continue
-            cmp = gh_json(["api", f"{base}/compare/{target}...{sha}"])
-            n = cmp.get("behind_by") if isinstance(cmp, dict) else None
-            if isinstance(n, int) and not isinstance(n, bool) and n > 0:
-                return (f"ci_watch: the pull request head is {n} commit(s) behind {target}, so this run did not test "
-                        f"the merge result; update the branch (gh pr update-branch) and let CI run again")
-    except Exception:  # noqa: BLE001 - a note must never change the verdict
-        return ""
-    return ""
-
-
 def queued_age(job: dict, now: float) -> float | None:
     """Seconds a job has been queued, from its created_at; None when unknown."""
     raw = job.get("created_at")
@@ -1068,9 +1045,6 @@ def poll_commit(sha: str, args: argparse.Namespace, st: dict) -> int | None:
                     print(f"ci_watch: {len(runs)} {args.workflow} run(s) for {sha[:10]} "
                           "succeeded")
                     print_slowest_job_summary(runs, args.repo)
-                    note = behind_base_note(sha, args.repo)
-                    if note:
-                        print(note)
                     ledger_ci(sha, "success", args.repo)
                     return finish(0, runs, sha, args)
                 print(f"ci_watch: {len(bad)} of {len(runs)} {args.workflow} run(s) for "

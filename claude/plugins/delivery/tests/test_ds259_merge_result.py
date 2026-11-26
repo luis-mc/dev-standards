@@ -109,35 +109,5 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(prop["default"], "warn")
 
 
-class CiWatchNoteTests(unittest.TestCase):
-    def setUp(self):
-        d = Path(__file__).resolve().parents[1] / "templates" / "shared" / "scripts" / "delivery"
-        sys.path.insert(0, str(d))
-        import ci_watch
-        self.cw = ci_watch
-
-    def fake(self, behind):
-        sha = "e" * 40
-
-        def gh(args):
-            if args[1].endswith("/pulls"):
-                return [{"state": "open", "head": {"sha": sha}, "base": {"ref": "main"}}]
-            return {"behind_by": behind}
-        return sha, gh
-
-    def test_note_when_behind(self):
-        sha, gh = self.fake(2)
-        with mock.patch.object(self.cw, "gh_json", gh):
-            note = self.cw.behind_base_note(sha, "o/r")
-        self.assertIn("2 commit(s) behind main", note)
-
-    def test_no_note_when_not_behind_or_unreadable(self):
-        sha, gh = self.fake(0)
-        with mock.patch.object(self.cw, "gh_json", gh):
-            self.assertEqual(self.cw.behind_base_note(sha, "o/r"), "")
-        with mock.patch.object(self.cw, "gh_json", side_effect=self.cw.GhError("x")):
-            self.assertEqual(self.cw.behind_base_note(sha, "o/r"), "")
-
-
 if __name__ == "__main__":
     unittest.main()
