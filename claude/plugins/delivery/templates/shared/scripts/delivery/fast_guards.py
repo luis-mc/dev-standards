@@ -221,7 +221,7 @@ def run_guards(root: Path, work: Path, args: argparse.Namespace) -> int:
     ctx = dc.build_context(work, cfg, args.base_ref)
     if dc.docs_config_only(ctx.files, cfg["inert_paths"]):
         ctx.docs_config_only = True  # DL425: no typecheck/lint (and no node_modules needed) for docs and config
-        print("fast_guards: this push changes only docs and config; typecheck and lint skipped.", flush=True)
+        print("fast_guards: this push changes only docs and config; typecheck and lint not run.", flush=True)
     tmp = Path(tempfile.mkdtemp(prefix="fast-guards-"))
     try:
         steps = with_pushed_gitleaks(steps, work, ctx.head, tmp)
