@@ -165,12 +165,12 @@ def no_ci_runs_file_means_no_ci_badge():
 def release_pr_and_agent_badges_come_from_the_ledger():
     fx = fixture()
     try:
-        write_delivery(fx, [train('DS51', 7)], [{'task': 'DS51', 'state': 'running'}, {'task': 'DS9', 'state': 'done'}])
+        write_delivery(fx, [train('DS51', 7)], [{'task': 'DS51', 'state': 'running', 'where': 'local'}, {'task': 'DS9', 'state': 'done', 'where': 'cloud'}])
         registry = with_rows(fx, rel('DS51', 1), rel('DS52', 2, status='Live', changed='2026-10-10T09:00+01:00'))
         out = render(fx, registry)
         got = badges(out)
         assert R.text_of(R.find(got['pr'], 'span', 'badge-value')) == '#7'
-        assert R.text_of(R.find(got['agents'], 'span', 'badge-value')) == '1'
+        assert R.text_of(R.find(got['agents'], 'span', 'badge-value')) == '1 running (1 local, 0 cloud) · 2 total (1 local, 1 cloud)'
         assert R.text_of(R.find(got['release'], 'span', 'badge-value')).startswith('RELEASE-1 · live ~18:00')
         assert R.text_of(R.find(got['last-live'], 'span', 'badge-value')).startswith('RELEASE-2')
     finally:

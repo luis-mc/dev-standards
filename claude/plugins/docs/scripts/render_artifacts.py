@@ -2133,9 +2133,12 @@ def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) 
         ok = sum(1 for r in runs if r.get('conclusion') == 'success')
         parts = ['%d passed' % ok, '%d failed' % bad, '%d running' % running]
         out.append(_badge('ci', 'CI runs', '%d: %s' % (len(runs) + running, ', '.join(parts)), 'badge-fail' if bad else ''))
-    busy = sum(1 for a in agents if a.get('state') == 'running')
     if agents:
-        out.append(_badge('agents', 'Agents running', busy))
+        def split(rows):
+            loc = sum(1 for a in rows if a.get('where') == 'local')
+            return '%d local, %d cloud' % (loc, sum(1 for a in rows if a.get('where') == 'cloud'))
+        busy = [a for a in agents if a.get('state') == 'running']
+        out.append(_badge('agents', 'Agents', '%d running (%s) · %d total (%s)' % (len(busy), split(busy), len(agents), split(agents))))
     if lives:
         when = _when(lives[0], trains.get(lives[0]['id']), ref)
         out.append(_badge('last-live', 'Last Live', '%s%s' % (release_name(lives[0]), (', ' + when) if when else '')))
