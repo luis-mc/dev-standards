@@ -209,7 +209,7 @@ flowchart LR
 
 **R5.35** — Every place in Full Progress that names a pull request by number is a link to that PR when a URL can be built: the release table, the tree figure label, the `(PR #N)` of a "What is happening" bullet and the Carrier PR badge. The link keeps its text, opens with `target="_blank" rel="noopener noreferrer"`, and is plain text when no URL can be built. A provider table in `pr_links.py` maps `github`, `gitlab` and `custom` to a URL pattern; only `https` is linked and every value is escaped. Whether `target="_blank"` opens a new window on a published claude.ai page is unverified (the page is sandboxed); the link still works as a normal link. (DS272, ARTIFACTSPEC R5.65) Proof: `tools/test_artifacts_ds272.py`.
 
-**R5.36** — The manifest holds an optional `pr_links` (`provider`, `repo`, `host`, `template`), checked by `check`. When it is absent, `render` reads `git remote get-url origin` (https or ssh, github or gitlab) and writes it to the manifest through `project_artifacts.py`; when it cannot be derived, labels stay plain text. `pr-links` sets it by hand. The render itself never runs git. (DS272, ARTIFACTSPEC R5.66) Proof: `tools/test_artifacts_ds272.py`.
+**R5.36** — The manifest holds an optional `pr_links` (`provider`, `repo`, `host`, `template`), checked by `check`. When it is absent, `render` reads `git config --get remote.origin.url` (https or ssh, github or gitlab) and writes it to the manifest through `project_artifacts.py`; when it cannot be derived, labels stay plain text. `pr-links` sets it by hand. The render itself never runs git. (DS272, ARTIFACTSPEC R5.66) Proof: `tools/test_artifacts_ds272.py`.
 
 ## 6. Non-functional requirements
 

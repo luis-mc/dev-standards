@@ -370,7 +370,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D22 | Where does the record worktree live? | Retired in 1.8.0: there is none; the record is `docs/artifacts/` of the working tree. | The old setting is ignored, and an old worktree's record is copied once when newer (R4.24). |
 | D23 | Does the plugin commit or push? | No: it writes files; the project commits and pushes. | A record change never triggers a deploy by itself (R4.13, R4.28). |
 | D24 | What happens to a finished feature artifact? | `retire` moves it to `retired_features`, keeps its decisions and tasks, deletes its file and content (owner, 30 Oct). | Finished features stop taking most of `docs/artifacts` without breaking INV-3 or R4.6 (R4.31 to R4.36). |
-| D25 | How does Full Progress know where a pull request lives? | A provider table (`github`, `gitlab`, `custom`) in `pr_links.py` and an optional manifest field `pr_links`, derived from `git remote get-url origin` when absent (DS272). | A new host needs one table row, not a code path in the renderer; the render never runs git (R5.65, R5.66). |
+| D25 | How does Full Progress know where a pull request lives? | A provider table (`github`, `gitlab`, `custom`) in `pr_links.py` and an optional manifest field `pr_links`, derived from `git config --get remote.origin.url` when absent (DS272). | A new host needs one table row, not a code path in the renderer; the render never runs git (R5.65, R5.66). |
 
 ---
 
@@ -1481,7 +1481,7 @@ double-click.
   `github`, `gitlab` or `custom`. `repo` is `owner/repo` (github) or `group/project` (gitlab, any
   depth); not for `custom`. `host` is optional (default `github.com` or `gitlab.com`) and a bare host
   name. `template` is for `custom` only, an `https://` URL with `{n}`. `check` reports a bad value
-  (R4.2). When `pr_links` is absent, `render` and `pr-links` read `git remote get-url origin`; an
+  (R4.2). When `pr_links` is absent, `render` and `pr-links` read `git config --get remote.origin.url`; an
   https or ssh URL of github.com or gitlab.com (or a host with `gitlab` in its name) is parsed and
   written to the manifest by `project_artifacts.py`, the one script that writes it. When it cannot
   be derived nothing is written and the labels are plain text. `pr-links --provider P --repo R
