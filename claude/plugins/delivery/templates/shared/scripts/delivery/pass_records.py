@@ -5,6 +5,8 @@
     pass_records.py check   --shard ID --read-from BRANCH [--read-from ...] [--table T] [--remote origin]
     pass_records.py write   --shard ID --state success|failure --write-as BRANCH [--table T] [--remote origin]
     pass_records.py cleanup [--keep 20] [--default main] [--dry-run] [--remote origin]
+    pass_records.py to-result   --shard ID --out FILE [--lane L --arch A --package P] [--default main] [--table T]
+    pass_records.py copy-to-main --from-branch B [--default main] [--remote origin]
 
 Inputs key. A shard lists what it depends on in the shard table: `inputs` (paths of files or folders, for
 example its workspaces and their dependencies) and, for the whole table, `root_files` (files that change every
@@ -24,6 +26,14 @@ A run on any other branch reads its own records and the base branch's. `--all` i
 
 Cleanup. `cleanup` removes the records of branches that no longer exist on the remote and keeps the newest
 `--keep` records of each shard. It never deletes the records branch and never touches a branch that still exists.
+
+Lane results (DL-118). `to-result` turns a pass record of the default branch into a lane result file for
+`lifecycle_release_check.py`: status `pass`, `source: "record"`, the key and the record's branch. It reads only
+the default branch's records and only a record whose own `branch` is the default branch, never the pull
+request's. A miss (no key, no record, another branch) exits 1 and writes nothing, so the lane runs. A lane with no
+`inputs` list never has a key and always runs. `copy-to-main` copies the success records of one branch to the
+default branch (a push to main skipped because its tree equals a passed pull-request tree has no run of its own,
+so main would hold no record); the copies say `copied_from`.
 
 Exit: check 0 = hit (skip), 1 = miss (run); key 0 = key printed, 3 = no key; others 0 ok, 2 error.
 Standard library only; plain git, no GitHub.
@@ -220,6 +230,48 @@ def commit_change(root, remote: str, branch: str, add: dict, remove: list[str], 
     return False, "push lost the race %d times: %s" % (PUSH_TRIES, last)
 
 
+def to_result(root, remote: str, branch: str, table: dict, shard_id: str, default: str, out: str,
+              lane=None, arch=None, package=None):
+    """(code, message). 0 and a lane result file written from a default-branch pass record; 1 on any miss."""
+    key, why = inputs_key(root, table, shard_id)
+    if key is None:
+        return 1, "no key (%s)" % why
+    rec = lookup(root, remote, branch, [default], shard_id, key)
+    if not rec or rec.get("branch") != default:
+        return 1, "miss: no pass record of %s with key %s" % (default, key[:12])
+    result = {"lane": lane or shard_id, "arch": arch, "package": package, "status": "pass", "failed": [],
+              "checks": 0, "source": "record", "shard": shard_id, "key": key, "record_branch": rec["branch"],
+              "record_sha": rec.get("sha", "")}
+    with open(out, "w", encoding="utf-8", newline="\n") as f:
+        f.write(json.dumps(result, indent=2) + "\n")
+    return 0, "record %s on %s" % (key[:12], default)
+
+
+def copy_to_main(root, remote: str, branch: str, from_branch: str, default: str):
+    """(count, error). Copy the success records of `from_branch` to `default`; one already there stays."""
+    if from_branch == default or not fetch(root, remote, branch):
+        return 0, None
+    prefix = slug(from_branch) + "/"
+    records = list_records(root, remote, branch)
+    have = {p for p, _ in records if p.startswith(slug(default) + "/")}
+    add = {}
+    for path, _ in records:
+        if not path.startswith(prefix):
+            continue
+        rec = read_file(root, remote, branch, path)
+        if not rec or rec.get("state") != "success" or not rec.get("key") or not rec.get("shard"):
+            continue
+        dest = record_path(default, rec["shard"], rec["key"])
+        if dest in have or dest in add:
+            continue
+        add[dest] = json.dumps(dict(rec, branch=default, copied_from=from_branch, at=now_iso()), indent=2) + "\n"
+    if not add:
+        return 0, None
+    ok, msg = commit_change(root, remote, branch, add, [],
+                            "copy %d pass records of %s to %s" % (len(add), from_branch, default))
+    return (len(add), None) if ok else (0, msg)
+
+
 def make_record(shard: str, key: str, state: str, sha: str, branch: str, seconds: float = 0.0) -> dict:
     return {"schema": SCHEMA, "shard": shard, "key": key, "state": state, "sha": sha, "branch": branch,
             "seconds": round(seconds, 1), "at": now_iso()}
@@ -346,7 +398,7 @@ def load_table(root, path):
 
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(prog="pass_records.py", description=__doc__.split("\n\n")[0])
-    ap.add_argument("action", choices=["key", "check", "write", "cleanup"])
+    ap.add_argument("action", choices=["key", "check", "write", "cleanup", "to-result", "copy-to-main"])
     ap.add_argument("--shard")
     ap.add_argument("--table", default="scripts/delivery/ci-shards.json")
     ap.add_argument("--remote", default="origin")
@@ -357,6 +409,11 @@ def main(argv=None) -> int:
     ap.add_argument("--keep", type=int, default=20, help="cleanup: records kept for each branch and shard")
     ap.add_argument("--default", default="main", help="cleanup: the base branch; its records are never dropped")
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--out", help="to-result: the lane result file to write")
+    ap.add_argument("--lane")
+    ap.add_argument("--arch")
+    ap.add_argument("--package")
+    ap.add_argument("--from-branch", help="copy-to-main: the branch whose success records are copied")
     ap.add_argument("--root", default=".")
     a = ap.parse_args(argv)
     root = os.path.abspath(a.root)
@@ -369,6 +426,16 @@ def main(argv=None) -> int:
             return 2
         print("pass_records: %d record(s) %s" % (len(removed), "would go" if a.dry_run else "removed"))
         return 0
+    if a.action == "copy-to-main":
+        if not a.from_branch:
+            print("pass_records: copy-to-main needs --from-branch", file=sys.stderr)
+            return 2
+        n, err = copy_to_main(root, a.remote, a.records_branch, a.from_branch, a.default)
+        if err:
+            print("pass_records: " + err, file=sys.stderr)
+            return 2
+        print("pass_records: %d record(s) copied to %s" % (n, a.default))
+        return 0
     if not a.shard:
         print("pass_records: --shard is required", file=sys.stderr)
         return 2
@@ -377,6 +444,14 @@ def main(argv=None) -> int:
     except (OSError, ValueError) as exc:
         print("pass_records: cannot read the shard table (%s)" % exc, file=sys.stderr)
         return 2
+    if a.action == "to-result":
+        if not a.out:
+            print("pass_records: to-result needs --out", file=sys.stderr)
+            return 2
+        code, msg = to_result(root, a.remote, a.records_branch, table, a.shard, a.default, a.out,
+                              a.lane, a.arch, a.package)
+        print("pass_records: " + msg)
+        return code
     key, why = inputs_key(root, table, a.shard)
     if a.action == "key":
         print(key if key else "none: " + why)

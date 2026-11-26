@@ -1,0 +1,97 @@
+# DL-117 (DS262): reuse the base image; build it only when its inputs change.
+#
+# Copy the jobs into the project's CI. The project owns .delivery/image-inputs.json (image name, input paths,
+# pinned tool versions). The image is a public ghcr.io package. Only the main-branch job has `packages: write`.
+#
+#   main push   key = image_reuse.py key. Tag <image>:<key> missing -> build, push it and the registry layer
+#               cache (<image>:cache). The image carries the label org.dev-standards.builder-ref=refs/heads/main.
+#   pull request  tag exists and main built it -> use <image>@<digest>. Otherwise build with the registry cache
+#               from main, push nothing.
+#   weekly      a clean rebuild: --no-cache --pull, same key, pushed again.
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    - cron: '17 3 * * 1'
+
+jobs:
+  image-key:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    outputs:
+      key: ${{ steps.k.outputs.key }}
+      hit: ${{ steps.k.outputs.hit }}
+      ref: ${{ steps.k.outputs.ref }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: k
+        run: |
+          image=$(python -c "import json;print(json.load(open('.delivery/image-inputs.json'))['image'])")
+          key=$(python scripts/delivery/image_reuse.py key) || { echo "key=" >> "$GITHUB_OUTPUT"; echo "hit=false" >> "$GITHUB_OUTPUT"; exit 0; }
+          echo "key=$key" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            echo "hit=false" >> "$GITHUB_OUTPUT"   # the weekly run always rebuilds
+          elif ref=$(python scripts/delivery/image_reuse.py digest --key "$key" --builder-ref refs/heads/main); then
+            echo "hit=true" >> "$GITHUB_OUTPUT"
+            echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          else
+            echo "hit=false" >> "$GITHUB_OUTPUT"
+          fi
+
+  image-build-main:
+    needs: image-key
+    if: needs.image-key.outputs.hit != 'true' && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write      # main only
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push <image>:<key> and the layer cache
+        run: |
+          image=$(python -c "import json;print(json.load(open('.delivery/image-inputs.json'))['image'])")
+          key="${{ needs.image-key.outputs.key }}"
+          fresh=""
+          [ "${{ github.event_name }}" = "schedule" ] && fresh="--no-cache --pull"
+          docker buildx build images/linux-base $fresh \
+            --label "org.dev-standards.builder-ref=refs/heads/main" \
+            --cache-from "type=registry,ref=$image:cache" \
+            --cache-to "type=registry,ref=$image:cache,mode=max" \
+            --tag "$image:$key" --push
+
+  image-build-pr:
+    needs: image-key
+    if: needs.image-key.outputs.hit != 'true' && github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read       # a pull request never writes the registry
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build with the cache from main, push nothing
+        run: |
+          image=$(python -c "import json;print(json.load(open('.delivery/image-inputs.json'))['image'])")
+          docker buildx build images/linux-base --cache-from "type=registry,ref=$image:cache" --load --tag base:pr
+
+  # A job that needs the image uses `needs.image-key.outputs.ref` (image@sha256:...) when hit is true.

@@ -104,6 +104,30 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+  # DL-118: the push is skipped because the pull request passed, so no run of main writes records. This job
+  # copies the pull request's success records to main, so a later release check finds them there. Best effort.
+  # It is a job of its own so that `decide` keeps read-only permissions.
+  copy-records:
+    name: 'copy pass records to main'
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.result == 'success' && github.event_name == 'push' && needs.decide.outputs.skip == 'true' }}
+    runs-on: ${{ fromJSON(vars.CRSP_DECIDE || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 5
+    permissions:
+      contents: write   # only this job pushes the pass-records branch
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - name: Copy the pass records of the pull request to main
+        continue-on-error: true
+        run: |
+          head=$(gh api "repos/${{ github.repository }}/commits/${{ github.sha }}/pulls" --jq '.[0].head.ref')
+          [ -n "$head" ] && python3 scripts/delivery/pass_records.py copy-to-main --from-branch "$head" --default "${{ github.event.repository.default_branch }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
+
   # ---------------------------------------------------------------------------
   # Runner plan (§13.1 SHOULD): which of the expensive jobs this change needs.
   # scripts/delivery/area_select.py reads the changed paths and the project's

@@ -1,0 +1,69 @@
+# DL-116 (DS261): skip work by area, never by a workflow-level path filter.
+#
+# Copy the jobs you need into the project's ci.yml. The project owns .delivery/ci-areas.json (the path table).
+#
+# Why not `on: pull_request: paths-ignore:`: GitHub then starts no run for a change that only touches the
+# ignored paths. The delivery watcher waits for a run of every required workflow (watcher.ci_workflows, DL-03)
+# and finds none. The filter also ignores `.delivery/**`, which the lifecycle release check reads (DL-112,
+# DL-113). ci_areas_check.py fails a required workflow that has such a filter.
+#
+# The pattern: one cheap `areas` job, job-level `if` on the work, and an `ci-ok` job that always runs. `ci-ok`
+# is the one required check. A skipped job is a pass, a failed or cancelled job is not.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+    # no `paths:` and no `paths-ignore:` here
+  push:
+    branches: [main]
+
+jobs:
+  areas:
+    runs-on: ubuntu-latest
+    outputs:
+      all: ${{ steps.areas.outputs.all }}
+      code: ${{ steps.areas.outputs.code }}
+      web: ${{ steps.areas.outputs.web }}
+      e2e: ${{ steps.areas.outputs.e2e }}
+      image: ${{ steps.areas.outputs.image }}
+      installer: ${{ steps.areas.outputs.installer }}
+      docs_only: ${{ steps.areas.outputs.docs_only }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: areas
+        # A push to the default branch runs everything. A release pull request runs everything unless
+        # .delivery/ci-areas.json sets "release_full": false. An unknown path runs everything.
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            base="origin/${{ github.base_ref }}"
+            rel=""
+            case "${{ github.head_ref }}" in release/*|*-integration) rel="--release";; esac
+            python scripts/delivery/changed_areas.py --base "$base" $rel --github-output
+          else
+            python scripts/delivery/changed_areas.py --all --github-output
+          fi
+
+  unit:
+    needs: areas
+    if: needs.areas.outputs.code == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "the project's unit tests"
+
+  installer:
+    needs: areas
+    if: needs.areas.outputs.installer == 'true'
+    runs-on: windows-latest
+    steps:
+      - run: echo "the project's installer lane"
+
+  # The required check. It runs even when the jobs above are skipped or failed.
+  ci-ok:
+    if: always()
+    needs: [areas, unit, installer]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every needed job passed or was skipped
+        run: |
+          echo '${{ toJSON(needs) }}' | python -c "import json,sys; n=json.load(sys.stdin); bad=[k for k,v in n.items() if v['result'] not in ('success','skipped')]; print('not green:', bad) if bad else print('ok'); sys.exit(1 if bad else 0)"
