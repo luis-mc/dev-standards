@@ -65,7 +65,7 @@ Until the owner decides, a remove writes no history entry and no check requires 
 | Updater test interface and conformance runner | luismc-delivery | A black-box run of the update flow against a fake signed update server |
 | Updater core templates (Rust, Go) | luismc-delivery | State machine, manifest check, retry timer, policies, audit events |
 | OS step scripts and lanes template | luismc-delivery | Install, upgrade, broken update, rollback, remove, purge and leftover scan per system |
-| Release check and opt-out report | luismc-delivery | A release fails unless every target's lane passed; opt-outs listed with their cost |
+| Release check and opt-out report | luismc-delivery | A release fails unless every affected target's lane passed and every other target has a pass record of the default branch; opt-outs listed with their cost |
 
 ### Flow
 
@@ -96,7 +96,7 @@ stateDiagram-v2
 
 **R1.3** — The updater passes the conformance runner (LC-3 to LC-7, LC-25, LC-26, LC-28).
 
-**R1.4** — Each target in `targets` passes its lane: install, upgrade, broken update and rollback, downgrade refused, remove, purge, leftover scan and package lints (LC-8 to LC-21, LC-29, LC-32, LC-33). LC-32 requires the artifact name `<Product>-<version>-<os>-<arch>.<ext>` per target. A system not in `targets` is not checked.
+**R1.4** — Each target in `targets` that the pull request affects passes its lane (DL-125); a target it does not affect is proven by a pass record from the default branch. A path that maps to no target runs every target. Each target lists `inputs` (path globs) and the file may list `no_target` paths. The lane covers: install, upgrade, broken update and rollback, downgrade refused, remove, purge, leftover scan and package lints (LC-8 to LC-21, LC-29, LC-32, LC-33). LC-32 requires the artifact name `<Product>-<version>-<os>-<arch>.<ext>` per target. A system not in `targets` is not checked.
 
 **R1.5** — The UI parts use the shared templates and tokens only and render without overlap or clipping (LC-22 to LC-24, LC-30).
 
@@ -108,7 +108,7 @@ stateDiagram-v2
 |---|---|
 | R1.1, R1.2 | `claude/plugins/docs/tests/test_ds235a_lifecycle_contract.py` |
 | R1.3 | `claude/plugins/delivery/tests/test_ds235c_conformance.py` |
-| R1.4 | `claude/plugins/delivery/tests/test_ds235d_os_steps.py`, `claude/plugins/delivery/tests/test_ds235d_release_optout.py` |
+| R1.4 | `claude/plugins/delivery/tests/test_ds235d_os_steps.py`, `claude/plugins/delivery/tests/test_ds235d_release_optout.py`, `claude/plugins/delivery/tests/test_ds269_affected_targets.py` |
 | R1.5 | `claude/plugins/docs/tests/test_ds235b_guards.py`, `claude/plugins/docs/tests/test_ds235b_parts.py` |
 | R1.6 | `claude/plugins/delivery/tests/test_ds235d_release_optout.py` |
 
