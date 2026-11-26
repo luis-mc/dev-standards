@@ -91,7 +91,9 @@ def offer(root: Path, config_dir: Path | None = None) -> str:
         "luismc plugins changed since this project was last set up:\n- " + "\n- ".join(lines) + "\n"
         "Ask the owner now, once, with AskUserQuestion: apply the new project config (CI workflow and its pin, "
         "settings, rules, docs)? Yes: run /luismc-project-setup:claude-setup (it adds what is missing and never "
-        f"overwrites), then `python3 {me} apply`. No: run `python3 {me} decline`; it is not asked again until a plugin changes."
+        f"overwrites), then `python3 {me} apply`. No: run `python3 {me} decline`; it is not asked again until a plugin changes. "
+        "When you tell the owner to commit the config change, suggest the branch name `<task>-integration`: the session guard "
+        "refuses a ready pull request from any other branch name."
     )
 
 
