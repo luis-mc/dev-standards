@@ -1257,6 +1257,21 @@ def context_of(out):
 
 
 @test
+def after_does_not_deliver_the_rule_again_in_a_new_worktree_of_the_same_repository():
+    """DS271: a second worktree of one repository, same session, has no per-root mark but the repository marker."""
+    work = make_repo()
+    assert RULE in context_of(after(work, 'git status')[1])
+    other = work + '-wt'
+    git_out = subprocess.run(['git', '-C', work, 'worktree', 'add', '-q', '--detach', other], capture_output=True, text=True)
+    assert git_out.returncode == 0, git_out.stderr
+    assert after(other, 'git status')[1] == '', 'rule printed again in a new worktree'
+    assert rule_state(other)['rule:s1']['rule']          # the new worktree is marked too
+    d2 = bash_input(other, 'ls')
+    d2['session_id'] = 's2'
+    assert RULE in context_of(run_hook(AFTER, d2, other)[1])   # another session still gets it
+
+
+@test
 def after_delivers_the_rule_once_per_session_and_again_when_it_changes():
     work = make_repo()
     rc, out, err, _ = after(work, 'git status')

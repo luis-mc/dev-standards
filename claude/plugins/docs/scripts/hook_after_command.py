@@ -388,6 +388,22 @@ def mark_delivered(root, sid, text, **more):
     write_state(path, state)
 
 
+def repo_marker(root, sid, text):
+    """DS271: a temp-dir marker for (session, rule text, repository). The key uses the git common directory, which
+    every worktree of one repository shares; '' when it cannot be found (then only the per-root state counts)."""
+    try:
+        out = subprocess.run(['git', '-C', root, 'rev-parse', '--path-format=absolute', '--git-common-dir'],
+                             capture_output=True, text=True, timeout=5)
+        common = out.stdout.strip() if out.returncode == 0 else ''
+        if not common:
+            return ''
+        import tempfile
+        key = hashlib.sha256(('%s|%s|%s' % (os.path.normcase(common), sid, rule_digest(text))).encode('utf-8')).hexdigest()[:24]
+        return os.path.join(tempfile.gettempdir(), 'luismc-docs-rule-' + key)
+    except Exception:  # noqa: BLE001 - never fails the tool call
+        return ''
+
+
 def deliver_rule(data):
     """R8.12: print the rule once per session and per rule text, for a session that did not get it at start."""
     root = hook_root(data)
@@ -403,8 +419,18 @@ def deliver_rule(data):
     entry = read_state(os.path.join(root, STATE_NAME)).get('rule:' + sid)
     if isinstance(entry, dict) and entry.get('rule') == rule_digest(text):
         return
+    marker = repo_marker(root, sid, text)       # DS271: a new worktree of the same repository is not a new session
+    if marker and not isinstance(entry, dict) and os.path.exists(marker):
+        mark_delivered(root, sid, text)
+        return
     context = context_text(root, manifest, updated=True)
     mark_delivered(root, sid, text)
+    if marker:
+        try:
+            with open(marker, 'w', encoding='utf-8') as f:
+                f.write('1')
+        except OSError:
+            pass
     event = data.get('hook_event_name')
     print(json.dumps({'hookSpecificOutput': {
         'hookEventName': event if event in ('PostToolUse', 'PostToolUseFailure') else 'PostToolUse',
