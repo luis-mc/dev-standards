@@ -119,6 +119,8 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.26** — `design_system.py visuals` prints, for each UX or CORE rule a feature spec cites with no existing test on its line or on a `Proof:` line, the line to add: `Proof: UX-n <test path>`. It is the same check as the citation guard, so the author fixes it before CI does. Proof: `claude/plugins/docs/tests/test_dl421_dl422.py`.
 
+**R5.27** — `docs_fold.py fold --release RELEASE-n` folds only the notes whose task belongs to release n in the project record (`docs/project/registry.json`: the task has `release` n or rides a task that has it). A note whose task the record does not know, or no readable record, folds as before; `--all` folds every note. `pending` is unchanged (DS274, DL-128). Tests: `claude/plugins/docs/tests/test_ds274_fold_release.py`.
+
 **R6.1** — The scripts use only the Python standard library and run on Python 3.9 or later (DOCSPEC R12.4).
 
 **R6.2** — The checks read Markdown, JSON, git and named paths only. They run a project command only for `generated_reference` (DOCSPEC R8.4).
@@ -158,6 +160,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.5, R5.6, R5.7 | `claude/plugins/docs/tests/test_index.py` |
 | R5.8, R5.9 | `claude/plugins/docs/tests/test_fold.py` |
 | R5.23 | `claude/plugins/docs/tests/test_ds252_fold_stale_notice.py` |
+| R5.27 | `claude/plugins/docs/tests/test_ds274_fold_release.py` |
 | R5.10, R5.11 | `claude/plugins/docs/tests/test_check.py` |
 | R5.12 | `claude/plugins/docs/tests/test_work.py` |
 | R5.13 | `claude/plugins/docs/tests/test_hooks.py` |
