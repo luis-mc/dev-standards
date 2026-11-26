@@ -1455,7 +1455,7 @@ double-click.
   where `ci` does, and not when the file has no finished run. Its value is
   `N% green · M min per merged PR · K min cancelled (7 d)`. N is the finished runs with
   conclusion `success` over all finished runs. M is the sum of `total_s` of the finished runs
-  whose `why` names a PR (`#N`), over the carrier PRs of the releases Live in the last 7 days
+  whose `why` names a PR (`#N`) and whose `completed_at` is in the last 7 days, over the carrier PRs of the releases Live in the last 7 days
   (`n/a` with no such PR). K is the sum of `total_s` of runs with conclusion `cancelled` whose
   `completed_at` is in the last 7 days. Verified by `test_artifacts_ds258`.
 

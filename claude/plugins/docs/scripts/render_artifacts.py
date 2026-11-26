@@ -2109,7 +2109,8 @@ def ci_waste_value(ci_runs, tasks: list, trains: dict, ref: datetime):
             p = _pr_number(t, trains.get(t['id']))
             if p:
                 prs.add(p)
-    named = sum(secs(r) for r in runs if re.search(r'#\d+', str(r.get('why') or '')))
+    named = sum(secs(r) for r in runs if re.search(r'#\d+', str(r.get('why') or ''))
+                and _parse_iso(r.get('completed_at'), since) > since)
     per_pr = '%d min per merged PR' % round(named / 60 / len(prs)) if prs else 'n/a per merged PR'
     cancelled = sum(secs(r) for r in runs if r.get('conclusion') == 'cancelled'
                     and _parse_iso(r.get('completed_at'), since) > since)
