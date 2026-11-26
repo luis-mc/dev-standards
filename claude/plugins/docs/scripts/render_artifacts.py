@@ -1590,6 +1590,20 @@ def _eta_text(r) -> str:
     return '%02d %s' % (r['exp_dt'].day, MONTHS[r['exp_dt'].month - 1])
 
 
+OUTLINE_STYLE = ' style="fill:none;stroke:var(--ink);stroke-width:1.5"'     # R5.42c: no phases, an outline diamond
+
+
+def _eta_cell(r) -> str:
+    """R5.42c: the Live ETA cell; a release with no phases says so."""
+    return _eta_text(r) + ('' if r['phases'] else ' · no phases')
+
+
+def no_phases_reason(task) -> str:
+    """R5.41a: the reason a release has no phases (`no_phases`), '' when it has none."""
+    reason = task.get('no_phases') if isinstance(task, dict) else None
+    return ' '.join(reason.split()) if isinstance(reason, str) else ''
+
+
 def _dep_text(r, by_row) -> str:
     names = []
     for d in r['task'].get('release_waits_on') or []:
@@ -1623,7 +1637,8 @@ def release_tree_table(groups: list, pr_links=None) -> str:
             cls = ('ch last' if i == len(rows) - 1 else 'ch') if g['pr'] else 'rel'
             ci = '<span class="ci-note">via %s</span>' % PRL.link('PR %s' % g['pr'], g['pr'], pr_links) if g['pr'] else '<span class="ci-note">own run</span>'
             out.append('<tr class="%s">%s</tr>' % (cls, cells(
-                '<b>%s</b>' % esc(release_name(t)), sub, _eta_text(r), ci, _dep_text(r, by_row), t.get('status', ''))))
+                '<b>%s</b>' % esc(release_name(t)), sub + (esc(' · no phases: %s' % no_phases_reason(t)) if no_phases_reason(t) and not r['phases'] else ''),
+                _eta_cell(r), ci, _dep_text(r, by_row), t.get('status', ''))))
     return ('<div class="timeline-scroll"><table class="release-tree"><thead><tr><th>Item</th><th>Live ETA</th><th>CI</th>'
             '<th>Waits on</th><th>Status</th></tr></thead><tbody>\n%s\n</tbody></table></div>' % '\n'.join(out))
 
@@ -1645,8 +1660,8 @@ def release_tree(tasks: list, ref: datetime, label: str, pr_links=None) -> str:
     x = lambda m: TREE_AX0 + (m - t0) * (TREE_AX1 - TREE_AX0) / (t1 - t0)
     midnight = datetime.combine(ref.date(), datetime.min.time())
     out, aria, pos, y = [], [], {}, TREE_TOP
-    diamond = lambda cx, cy: '<polygon class="rt-expected" points="%s,%d %s,%d %s,%d %s,%d"/>' % (
-        _n(cx), cy - 11, _n(cx + 9), cy, _n(cx), cy + 11, _n(cx - 9), cy)
+    diamond = lambda cx, cy, cls='': '<polygon class="%s"%s points="%s,%d %s,%d %s,%d %s,%d"/>' % (
+        cls or 'rt-expected', OUTLINE_STYLE if cls else '', _n(cx), cy - 11, _n(cx + 9), cy, _n(cx), cy + 11, _n(cx - 9), cy)
     for g in groups:
         top = y
         if g['pr']:
@@ -1685,8 +1700,8 @@ def release_tree(tasks: list, ref: datetime, label: str, pr_links=None) -> str:
                         out.append('<rect class="rt-bar merge" x="%s" y="%d" width="%s" height="20"><title>%s</title></rect>'
                                    % (_n(x(a)), mid - 10, _n(x(r['exp_min']) - x(a)), esc('release %s-%s' % (_hhmm(a), _hhmm(r['exp_min'])))))
                 ex = x(r['exp_min'])
-                out.append(diamond(ex, mid))
-                out.append('<text class="rt-live-label" style="text-anchor:start" x="%s" y="%d">live %s</text>' % (_n(ex + 14), mid + 4, _eta_text(r)))
+                out.append(diamond(ex, mid, '' if r['phases'] else 'rt-expected rt-nophase'))
+                out.append('<text class="rt-live-label" style="text-anchor:start" x="%s" y="%d">live %s</text>' % (_n(ex + 14), mid + 4, _eta_cell(r)))
                 said = 'expected live about %s' % _hhmm(r['exp_min'])
             else:
                 ex = TREE_AX0
@@ -1726,7 +1741,7 @@ def release_tree(tasks: list, ref: datetime, label: str, pr_links=None) -> str:
                % (_n(x(now_min)), _n(x(now_min)), height - 20, _n(x(now_min)), height - 6, _hhmm(now_min)))
     legend = ('<p class="timeline-legend">A PR is the carrier; a release is the unit that goes live. Rows are sorted by Live ETA, '
               'and a release is never live before the releases it waits on. Dashed arrows: a release waits on another release. '
-              'Filled diamond: the end of the last phase.</p>')
+              'Filled diamond: the end of the last phase. Outline diamond: a release with no phases.</p>')
     return ('<figure class="release-timeline release-tree-figure">\n<figcaption>Next releases (%s)</figcaption>\n'
             '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:640px;max-width:%dpx">'
             '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n%s\n</figure>\n'
@@ -1790,10 +1805,13 @@ def release_timeline(tasks: list, ref: datetime, label: str, pr_links=None) -> s
                            % (_n(rx), y - 1, _n(rx + 7), y + 11, _n(rx), y + 23, _n(rx - 7), y + 11))
                 out.append('<text class="rt-risk-label" x="%s" y="%d">%s</text>'
                            % (_n(rx + 11), y + 15, esc('%s → worst ~%s' % (r['risk']['label'], _hhmm(r['worst'])))))
-            out.append('<polygon class="rt-expected" points="%s,%d %s,%d %s,%d %s,%d"/>'
-                       % (_n(ex), y - 2, _n(ex + 8), y + 11, _n(ex), y + 24, _n(ex - 8), y + 11))
-            out.append('<text class="rt-live-label" x="%s" y="%d">live ~%s</text>' % (_n(ex), y + 40, _hhmm(r['exp_min'])))
+            out.append('<polygon class="%s"%s points="%s,%d %s,%d %s,%d %s,%d"/>'
+                       % ('rt-expected' if r['phases'] else 'rt-expected rt-nophase', '' if r['phases'] else OUTLINE_STYLE, _n(ex), y - 2, _n(ex + 8), y + 11, _n(ex), y + 24, _n(ex - 8), y + 11))
+            out.append('<text class="rt-live-label" x="%s" y="%d">live ~%s%s</text>'
+                       % (_n(ex), y + 40, _hhmm(r['exp_min']), '' if r['phases'] else ' · no phases'))
             said = 'expected live about %s' % _hhmm(r['exp_min'])
+            if not r['phases']:
+                said += ', no phases' + (' (%s)' % no_phases_reason(t) if no_phases_reason(t) else '')
             if r['worst'] is not None:
                 said += ', worst case %s' % _hhmm(r['worst'])
         else:
@@ -1867,7 +1885,7 @@ def release_timeline(tasks: list, ref: datetime, label: str, pr_links=None) -> s
     sw = lambda k: '<span class="rt-swatch %s"></span>%s' % (k, PHASE_LABELS[k])
     legend = ('<p class="timeline-legend">Bars: %s, %s, %s, %s and %s; Expected (filled diamond) is the sum of the phases. '
               'The thin grey extension is a named risk from the estimate\'s basis, ending at the outlined worst case. '
-              'An outline diamond alone: a day estimate with no time yet. The axis breaks between today and later days.</p>'
+              'An outline diamond alone: a day estimate with no time yet, or a release with no phases. The axis breaks between today and later days.</p>'
               % tuple(sw(k) for k in RELEASE_PHASES))
     if others:
         legend = legend[:-4] + (' Under %s, a bar runs from the start to its Expected, coloured by status; '

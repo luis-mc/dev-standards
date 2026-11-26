@@ -106,6 +106,9 @@ class Env:
             p.ok('feature-new', '--key', 'site', '--title', 'The site', '--prefix', 'SI', '--apps', 'web,api')
             p.ok('task-add', '--owner', 'project', '--prefix', 'DS', '--item', 'Standards',
                  '--detail', 'Keep them.', '--expected', '13 Oct', '--release')         # DS1, RELEASE-1
+            # DS278 (R5.41a): a rider runs only when its release has phases or a reason; the fixture release has a reason
+            p.ok('set-task-status', 'DS1', 'Running', '--no-phases', 'fixture release without phases', rides=False)
+            p.ok('set-task-status', 'DS1', 'To do', rides=False)
             p.ok('task-add', '--owner', 'artifacts', '--item', 'Spec', '--detail', 'Write it.',
                  '--expected', '10 Oct ~14:15', '--status', 'Running', '--rides', 'RELEASE-1')
             p.ok('task-add', '--owner', 'artifacts', '--item', 'Script', '--detail', 'Build it.',
@@ -554,7 +557,7 @@ def test_release_flags_store_the_fields(env):
     # the explicit date form, a replaced phase list and the clearing forms
     p.ok('set-task-status', rel, 'Running', '--phase', 'agents=10 Oct 17:30-10 Oct 18:00')
     assert p.task(rel)['phases'][0]['name'] == 'agents' and len(p.task(rel)['phases']) == 1
-    p.ok('set-task-status', rel, 'Running', '--phase', '', '--risk', '', '--rides', '')
+    p.ok('set-task-status', rel, 'Running', '--phase', '', '--risk', '', '--rides', '', '--no-phases', 'cleared for this test')   # DS278
     t = p.task(rel)
     assert 'phases' not in t and 'risk' not in t and t['release'] == 2, t
     p.ok('set-task-status', 'AR1', 'Waiting', '--rides', '')
@@ -622,7 +625,7 @@ def test_release_numbers_are_assigned_and_never_reused(env):
     r = p.ok('task-add', '--owner', 'project', '--item', 'Second', '--detail', 'd', '--expected', '14 Oct', '--release')
     second = r.out.strip()
     assert p.task(second)['release'] == 2
-    p.ok('set-task-status', second, 'Running', '--release')                 # an existing number is left alone
+    p.ok('set-task-status', second, 'Running', '--release', '--no-phases', 'a number test only')                 # an existing number is left alone
     assert p.task(second)['release'] == 2
     # a Live release keeps its number, and the next one is the highest plus one
     p.ok('set-task-status', second, 'Live')
@@ -662,7 +665,7 @@ def test_release_number_follows_the_delivery_ledger(env):
     r = p.ok(*add, '--item', 'Explicit', '--release', '20')
     assert p.task(r.out.strip())['release'] == 20
     # correcting a stored number
-    p.ok('set-task-status', ahead, 'Running', '--release', '9')
+    p.ok('set-task-status', ahead, 'Running', '--release', '9', '--no-phases', 'a number test only')
     assert p.task(ahead)['release'] == 9
     # a number another release uses is refused, nothing written
     before = p.head()

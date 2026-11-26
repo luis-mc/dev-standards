@@ -707,6 +707,10 @@ jobs:
       - name: Prove the DS272 pull request links still hold
         run: python3 -I tools/test_artifacts_ds272.py
 
+      # DS278: a Running or Waiting release has phases or a --no-phases reason; no phases is an outline diamond.
+      - name: Prove the DS278 release phases rule still holds
+        run: python3 -I tools/test_artifacts_ds278.py
+
       # DL173: a ledger or ci-runs file with a missing or newer schema warns.
       - name: Prove the DL173 schema check still holds
         run: python3 -I tools/test_artifacts_dl173.py

@@ -33,6 +33,7 @@
     {"name": "artifacts-dl429", "full": "python tools/test_artifacts_dl429.py", "cases": ""},
     {"name": "artifacts-ds258", "full": "python tools/test_artifacts_ds258.py", "cases": ""},
     {"name": "artifacts-ds272", "full": "python tools/test_artifacts_ds272.py", "cases": ""},
+    {"name": "artifacts-ds278", "full": "python tools/test_artifacts_ds278.py", "cases": "python tools/test_artifacts_ds278.py {cases}"},
     {"name": "render-artifacts", "full": "python tools/test_render_artifacts.py", "cases": ""},
     {"name": "artifact-prune", "full": "python tools/test_artifact_prune.py", "cases": ""},
     {"name": "ci-speedups", "full": "python tools/test_ci_speedups.py", "cases": ""},

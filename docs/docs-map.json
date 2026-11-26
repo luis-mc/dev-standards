@@ -192,6 +192,9 @@
     "tools/test_artifacts_ds272.py": [
       "docs/features/artifacts/spec.md"
     ],
+    "tools/test_artifacts_ds278.py": [
+      "docs/features/artifacts/spec.md"
+    ],
     "tools/test_authspec_check.py": [
       "docs/features/project-setup/spec.md"
     ],

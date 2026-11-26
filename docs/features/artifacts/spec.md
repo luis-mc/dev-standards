@@ -23,6 +23,7 @@ code:
   - tools/test_artifacts_dl429.py
   - tools/test_artifacts_ds258.py
   - tools/test_artifacts_ds272.py
+  - tools/test_artifacts_ds278.py
   - claude/plugins/docs/scripts/pr_links.py
   - claude/plugins/docs/skills/feature-artifact-new/**
   - claude/plugins/docs/skills/full-progress-artifact-new/**
@@ -211,6 +212,10 @@ flowchart LR
 
 **R5.36** — The manifest holds an optional `pr_links` (`provider`, `repo`, `host`, `template`), checked by `check`. When it is absent, `render` reads `git config --get remote.origin.url` (https or ssh, github or gitlab) and writes it to the manifest through `project_artifacts.py`; when it cannot be derived, labels stay plain text. `pr-links` sets it by hand. The render itself never runs git. (DS272, ARTIFACTSPEC R5.66) Proof: `tools/test_artifacts_ds272.py`.
 
+**R5.37** — A release that is Running or Waiting has phases. `set-task-status` exits 1 when it moves a task to Running or Waiting and the task's release (its own, or the one it rides) has none; the message says to give `--phase agents=HH:MM-HH:MM` and the other phases. To do, Built, Live, Dropped and `--no-release` tasks are exempt. `--no-phases REASON` (two words or more, Running or Waiting only) stores the reason on the release and is the only way round it. `check` reports an open release with neither, with a warning instead for a row changed before 26 Nov 2026. (DS278, ARTIFACTSPEC R5.41a) Proof: `tools/test_artifacts_ds278.py`.
+
+**R5.38** — A release with no phases is an outline diamond on the timeline, never a filled one. Its Live ETA cell in the release table reads `<time> · no phases`, and a `--no-phases` reason shows in the Item cell. (DS278, ARTIFACTSPEC R5.42c) Proof: `tools/test_artifacts_ds278.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -272,6 +277,8 @@ flowchart TB
 | R5.9a | `tools/test_artifacts_dl246.py`, `tools/test_artifacts_dl264.py` |
 | R5.5 | `test_determinism` in `tools/test_project_artifacts.py` |
 | R5.6 | `test_earlier_findings_do_not_block_a_change`, `test_a_new_finding_is_refused_beside_earlier_ones` in `tools/test_project_artifacts.py` |
+| R5.37 | `test_running_release_needs_phases`, `test_no_phases_escape_hatch`, `test_no_phases_refusals`, `test_check_finds_a_release_without_phases`, `test_older_row_without_phases_warns` in `tools/test_artifacts_ds278.py` |
+| R5.38 | `test_no_phases_diamond_is_an_outline`, `test_no_phases_live_eta_cell`, `test_no_phases_reason_in_the_table` in `tools/test_artifacts_ds278.py` |
 | R5.7 | `test_mark_published_refuses_a_feature_artifact`, `test_pending_never_lists_a_feature_artifact` in `tools/test_project_artifacts.py` |
 | R5.8 | `test_detail_only_change_needs_no_publish`, `test_status_change_needs_a_publish` in `tools/test_project_artifacts.py` |
 | R5.9 | `test_deferred_publish_does_not_block_until_the_reset` in `tools/test_project_artifacts.py`; `end_of_turn_reminds_once_while_deferred` in `tools/test_project_artifacts_hooks.py` |
@@ -313,6 +320,7 @@ The full list is the ARTIFACTSPEC decision record (D1 to D25). These are the las
 | ARTIFACTSPEC D15 | Which rows fold into Earlier? | Live rows older than 14 days; Built never | 2026-10-12 |
 | ARTIFACTSPEC D24 | What happens to a finished feature artifact? | `retire` | 2026-10-30 |
 | ARTIFACTSPEC D25 | How does Full Progress know where a pull request lives? | A provider table and an optional `pr_links` setting | 2026-11-26 |
+| ARTIFACTSPEC D26 | What if a running release has no phases? | `set-task-status` refuses it; `--no-phases REASON` is the one way round | 2026-11-26 |
 
 Where the record lives when nothing says (D182, DS219): `docs/project`. `.claude/artifacts.json` with a `record_dir` wins. A `record_dir` in `docs/docs.json` is used when there is no `.claude/artifacts.json`. A `.claude/artifacts.json` without `record_dir` keeps the old `docs/artifacts`. With no setting at all, a record that already sits in `docs/artifacts` (and none in `docs/project`) is still found there. The tests are in `tools/test_artifacts_ds219.py`.
 
