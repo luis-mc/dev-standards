@@ -29,8 +29,12 @@ class RemovedIdTests(unittest.TestCase):
         self.assertEqual(r1(d), [])
 
     def test_task_ids_and_other_rules_pass(self):
-        d = make({".delivery/config.json": "{}", "src/a.py": "# DL77 and DL-770 and DL-50\n"})
+        d = make({".delivery/config.json": "{}", "src/a.py": "# DL77 and DL-770 and DL-52\n"})
         self.assertEqual(r1(d), [])
+
+    def test_dl50_and_dl51_are_removed(self):
+        d = make({".delivery/config.json": "{}", "src/a.py": "# DL-50 and DL-51\n"})
+        self.assertEqual(len(r1(d)), 2)
 
     def test_version_rows_are_history(self):
         d = make({".delivery/config.json": "{}", "docs/guides/g.md": "| 0.31.2 | 2026-11-11 | R | DL-91 freed | DL253 |\n"})

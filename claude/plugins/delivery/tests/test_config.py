@@ -55,7 +55,7 @@ class ValidateTests(unittest.TestCase):
         self.assertEqual(C.validate_config(old), ([], []))
         self.assertEqual(C.validate_config({}), ([], []))
 
-    def test_task_spelling_merge_method_and_heavy_jobs_yield(self):
+    def test_task_spelling_merge_method_and_cancel_flag(self):
         cfg = {"watcher": {"merge_method": "merge"}, "runner_plan": {"cancel_replaced_runs": False}}
         self.assertEqual(C.validate_config(cfg), ([], []))
 

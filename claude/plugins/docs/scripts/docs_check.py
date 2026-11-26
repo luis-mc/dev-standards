@@ -16,8 +16,8 @@ Checks (each finding has a code):
   G2  generated reference (docs.json "generated_reference") equals the committed copy
   M1  code mapped to a doc changed on this branch but no doc, change note or `Docs: none` did
   W1  the branch adds files under docs/work/ (branch-only, D9)
-  R1  a project that uses delivery (`.delivery/`) cites a removed delivery rule ID (DL-77, DL-78, DL-79,
-      DL-90, DL-91): an error that names the ID and says to delete the citation; the fix is in
+  R1  a project that uses delivery (`.delivery/`) cites a removed delivery rule ID (DL-50, DL-51, DL-77, DL-78,
+      DL-79, DL-90, DL-91): an error that names the ID and says to delete the citation; the fix is in
       docs/guides/removed-delivery-ids.md
   U1  rule-like text in a feature's screens section without a design-system citation (D10);
       a WARNING for now, it becomes an error later (owner decision); put <!-- ux-ok --> on the line to allow it
@@ -295,6 +295,8 @@ def check_map(root: Path, cfg: dict, base: str | None) -> list[Finding]:
 
 # R1: delivery rule IDs that were removed. The text says what to do about each one.
 REMOVED_DELIVERY_IDS = {
+    "DL-50": "removed, delete the citation",
+    "DL-51": "removed, delete the citation",
     "DL-77": "removed, delete the citation",
     "DL-78": "removed, delete the citation",
     "DL-79": "removed, delete the citation",
