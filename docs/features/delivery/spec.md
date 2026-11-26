@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.57.0
+version: 0.57.1
 owner: agents
 type: reference
 code:
@@ -570,6 +570,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.57.1 | 2026-11-26 | RELEASE-204 | Stop hook warn-mode message folds 3+ findings of one rule to the first, a count and the ids; the model's block reason stays full. Changes claude/plugins/delivery/.claude-plugin/plugin.json. | DS280 |
 | 0.57.0 | 2026-11-26 | RELEASE-202 | R5.84 to R5.87: a fold takes only the notes of the named release; the Stop hook names every release a pull request carries; a merged entry is not idle work; link sets the pull request on its releases (DL-128 to DL-131). | DS274 |
 | 0.56.0 | 2026-11-26 | RELEASE-199 | R5.82: a pull request proves only the lifecycle targets its changes affect (DL-125). R5.83: DL-40 is enforced once per launch and a `PC-bound:` line with no PC-bound step warns (DL-126, DL-127, DS270). | DS269 |
 | 0.55.0 | 2026-11-26 | RELEASE-197 | R5.81: local agents without a delivery block are recorded from the prompt and closed by the Stop hook; a Running task with no worker is flagged (DL-123, DL-124). | DS267 |
