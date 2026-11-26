@@ -3,10 +3,13 @@
 
   lifecycle_release_check.py check --lifecycle lifecycle.json --results DIR [--release] [--artifacts DIR] [--config .delivery/config.json]
                                    [--table scripts/delivery/ci-shards.json] [--default main] [--root .]
+                                   [--base REF | --changed-file FILE]
   lifecycle_release_check.py write-result --lane L --arch A --package P --steps steps.txt --out result.json
 
 `check` reads the targets from lifecycle.json. On a release pull request (--release) it fails unless every
-target has a passing lane result. A target that is not listed is not required. With --artifacts it also checks
+target the pull request affects has a passing lane result (DL-125: with --base REF or --changed-file, the map is
+affected_targets.py; with neither, every target is affected) and every other target has a passing result that is a
+pass record of the default branch. A target that is not listed is not required. With --artifacts it also checks
 the artifact names `<Product>-<version>-<os>-<arch>.<ext>` and, from the config, that public packages and private
 user data live in separate stores (LC-32). Exit 0 pass, 1 fail, 2 bad input.
 
@@ -64,15 +67,19 @@ def record_problem(r, key_of, default):
     return None
 
 
-def check_lanes(targets, results, key_of=None, default="main"):
+def check_lanes(targets, results, key_of=None, default="main", unaffected=()):
     """A list of problems; empty when every target has a passing lane result.
-    key_of(result) is the inputs key now for a record result's shard (DL-118)."""
+    key_of(result) is the inputs key now for a record result's shard (DL-118).
+    unaffected is the set of target keys the change does not touch (DL-125): they need a pass record of the
+    default branch; a live pass is accepted too."""
     problems = []
     for t in targets:
         key = target_key(t)
         name = "%s %s %s" % key
         r = results.get(key)
-        if r is None:
+        if r is None and key in unaffected:
+            problems.append("%s: not affected, but no pass record of %s and no lane result" % (name, default))
+        elif r is None:
             problems.append("%s: no lane result" % name)
         elif r.get("status") != "pass":
             failed = ", ".join(r.get("failed") or []) or "lane not green"
@@ -97,6 +104,27 @@ def make_key_of(root, table_path):
         shard = r.get("shard")
         return P.inputs_key(str(root), table, shard)[0] if shard else None
     return key_of
+
+
+def unaffected_keys(lifecycle, targets, base, changed_file):
+    """Target keys the change does not affect (DL-125); empty without --base or --changed-file or on any error."""
+    if not base and not changed_file:
+        return set()
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import affected_targets as A
+        import area_select as AS
+        changed = []
+        if changed_file:
+            changed += [x for x in Path(changed_file).read_text(encoding="utf-8").splitlines() if x.strip()]
+        if base:
+            changed += AS.changed_from_git(base)
+        lc = load_json(lifecycle)
+        res = A.decide(changed, lc)
+    except (ImportError, OSError, ValueError):
+        return set()
+    names = set(res["targets"])
+    return {target_key(t) for t in targets if A.name_of(t) not in names}
 
 
 def os_word(target):
@@ -145,8 +173,11 @@ def cmd_check(a):
         return 2
     problems = []
     if a.release:
+        off = unaffected_keys(a.lifecycle, targets, a.base, a.changed_file)
+        if off:
+            print("not affected, proven by a pass record of %s: %s" % (a.default, ", ".join("%s %s %s" % k for k in sorted(off, key=str))))
         problems += check_lanes(targets, load_results(a.results) if a.results else {},
-                                make_key_of(a.root, a.table), a.default)
+                                make_key_of(a.root, a.table), a.default, off)
     else:
         print("not a release pull request: lane results are not required")
     if a.artifacts:
@@ -187,6 +218,8 @@ def main(argv=None):
     c.add_argument("--table", default="scripts/delivery/ci-shards.json")
     c.add_argument("--default", default="main")
     c.add_argument("--root", default=".")
+    c.add_argument("--base", help="DL-125: the base ref; targets the diff does not affect need a pass record of main")
+    c.add_argument("--changed-file", help="DL-125: a file listing the changed paths")
     w = sub.add_parser("write-result")
     for k in ("lane", "arch", "package", "steps", "out"):
         w.add_argument("--" + k, required=True)

@@ -2,6 +2,9 @@
 # A project copies this file to .github/workflows/ and sets, as repository variables, the JSON value
 # of `runs-on` for each lane it releases for. This file names no runner: where a lane runs is the
 # project's choice (GitHub-hosted, a shared pool, anything). A lane with no variable is skipped.
+# DL-125: a lane runs only when the change affects its targets (affected_targets.py reads `inputs` in lifecycle.json).
+# A lane the change does not affect takes its result from a pass record of the default branch (shard `lifecycle-<lane>` in
+# scripts/delivery/ci-shards.json, with `inputs`); with no such record it runs.
 # Lanes: windows, ubuntu-lts, fedora, debian, macos. Each lane writes lifecycle-result-<lane>.json,
 # which lifecycle_release_check.py reads on a release pull request.
 name: lifecycle
@@ -19,16 +22,27 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Is this lane affected by the change? (DL-125)
+        id: affected
+        run: python scripts/delivery/affected_targets.py lane --lane windows --lifecycle "$LIFECYCLE_JSON" --base origin/${{ github.base_ref || 'main' }} --github-output
+      - name: Take the result from a pass record of main when it is not affected
+        id: record
+        if: ${{ steps.affected.outputs.run == 'false' }}
+        continue-on-error: true
+        run: python scripts/delivery/pass_records.py to-result --shard lifecycle-windows --lane windows --arch x64 --package msi --out lifecycle-result-windows.json
       - name: Get the packages (a project step that sets LC_PKG, LC_PREV_PKG, LC_BROKEN_PKG and LC_OLDER_PKG)
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: ./scripts/lifecycle/fetch-packages.ps1 windows
       - name: Lifecycle steps
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: pwsh templates/lifecycle/os/windows.ps1 -Check all | Tee-Object lifecycle-steps.txt
       - name: Write the lane result
-        if: always()
+        if: ${{ always() && (steps.affected.outputs.run != 'false' || steps.record.outcome != 'success') }}
         run: python scripts/delivery/lifecycle_release_check.py write-result --lane windows --arch x64 --package msi --steps lifecycle-steps.txt --out lifecycle-result-windows.json
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: lifecycle-result-windows, path: lifecycle-result-windows.json }
+        with: { name: lifecycle-result-windows, path: lifecycle-result-windows.json, if-no-files-found: ignore }
 
   ubuntu-lts:
     if: ${{ vars.LIFECYCLE_RUNS_ON_UBUNTU_LTS != '' }}
@@ -36,16 +50,27 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Is this lane affected by the change? (DL-125)
+        id: affected
+        run: python3 scripts/delivery/affected_targets.py lane --lane ubuntu-lts --lifecycle "$LIFECYCLE_JSON" --base origin/${{ github.base_ref || 'main' }} --github-output
+      - name: Take the result from a pass record of main when it is not affected
+        id: record
+        if: ${{ steps.affected.outputs.run == 'false' }}
+        continue-on-error: true
+        run: python3 scripts/delivery/pass_records.py to-result --shard lifecycle-ubuntu-lts --lane ubuntu-lts --arch x64 --package deb --out lifecycle-result-ubuntu-lts.json
       - name: Get the packages
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: ./scripts/lifecycle/fetch-packages.sh ubuntu-lts
       - name: Lifecycle steps
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: sudo -E bash templates/lifecycle/os/linux-deb.sh all | tee lifecycle-steps.txt
       - name: Write the lane result
-        if: always()
+        if: ${{ always() && (steps.affected.outputs.run != 'false' || steps.record.outcome != 'success') }}
         run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane ubuntu-lts --arch x64 --package deb --steps lifecycle-steps.txt --out lifecycle-result-ubuntu-lts.json
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: lifecycle-result-ubuntu-lts, path: lifecycle-result-ubuntu-lts.json }
+        with: { name: lifecycle-result-ubuntu-lts, path: lifecycle-result-ubuntu-lts.json, if-no-files-found: ignore }
 
   debian:
     if: ${{ vars.LIFECYCLE_RUNS_ON_DEBIAN != '' }}
@@ -53,16 +78,27 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Is this lane affected by the change? (DL-125)
+        id: affected
+        run: python3 scripts/delivery/affected_targets.py lane --lane debian --lifecycle "$LIFECYCLE_JSON" --base origin/${{ github.base_ref || 'main' }} --github-output
+      - name: Take the result from a pass record of main when it is not affected
+        id: record
+        if: ${{ steps.affected.outputs.run == 'false' }}
+        continue-on-error: true
+        run: python3 scripts/delivery/pass_records.py to-result --shard lifecycle-debian --lane debian --arch x64 --package deb --out lifecycle-result-debian.json
       - name: Get the packages
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: ./scripts/lifecycle/fetch-packages.sh debian
       - name: Lifecycle steps
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: sudo -E bash templates/lifecycle/os/linux-deb.sh all | tee lifecycle-steps.txt
       - name: Write the lane result
-        if: always()
+        if: ${{ always() && (steps.affected.outputs.run != 'false' || steps.record.outcome != 'success') }}
         run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane debian --arch x64 --package deb --steps lifecycle-steps.txt --out lifecycle-result-debian.json
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: lifecycle-result-debian, path: lifecycle-result-debian.json }
+        with: { name: lifecycle-result-debian, path: lifecycle-result-debian.json, if-no-files-found: ignore }
 
   fedora:
     if: ${{ vars.LIFECYCLE_RUNS_ON_FEDORA != '' }}
@@ -70,16 +106,27 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Is this lane affected by the change? (DL-125)
+        id: affected
+        run: python3 scripts/delivery/affected_targets.py lane --lane fedora --lifecycle "$LIFECYCLE_JSON" --base origin/${{ github.base_ref || 'main' }} --github-output
+      - name: Take the result from a pass record of main when it is not affected
+        id: record
+        if: ${{ steps.affected.outputs.run == 'false' }}
+        continue-on-error: true
+        run: python3 scripts/delivery/pass_records.py to-result --shard lifecycle-fedora --lane fedora --arch x64 --package rpm --out lifecycle-result-fedora.json
       - name: Get the packages
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: ./scripts/lifecycle/fetch-packages.sh fedora
       - name: Lifecycle steps
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: sudo -E bash templates/lifecycle/os/linux-rpm.sh all | tee lifecycle-steps.txt
       - name: Write the lane result
-        if: always()
+        if: ${{ always() && (steps.affected.outputs.run != 'false' || steps.record.outcome != 'success') }}
         run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane fedora --arch x64 --package rpm --steps lifecycle-steps.txt --out lifecycle-result-fedora.json
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: lifecycle-result-fedora, path: lifecycle-result-fedora.json }
+        with: { name: lifecycle-result-fedora, path: lifecycle-result-fedora.json, if-no-files-found: ignore }
 
   macos:
     if: ${{ vars.LIFECYCLE_RUNS_ON_MACOS != '' }}
@@ -87,16 +134,27 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Is this lane affected by the change? (DL-125)
+        id: affected
+        run: python3 scripts/delivery/affected_targets.py lane --lane macos --lifecycle "$LIFECYCLE_JSON" --base origin/${{ github.base_ref || 'main' }} --github-output
+      - name: Take the result from a pass record of main when it is not affected
+        id: record
+        if: ${{ steps.affected.outputs.run == 'false' }}
+        continue-on-error: true
+        run: python3 scripts/delivery/pass_records.py to-result --shard lifecycle-macos --lane macos --arch arm64 --package pkg --out lifecycle-result-macos.json
       - name: Get the packages
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: ./scripts/lifecycle/fetch-packages.sh macos
       - name: Lifecycle steps
+        if: ${{ steps.affected.outputs.run != 'false' || steps.record.outcome != 'success' }}
         run: bash templates/lifecycle/os/macos.sh all | tee lifecycle-steps.txt
       - name: Write the lane result
-        if: always()
+        if: ${{ always() && (steps.affected.outputs.run != 'false' || steps.record.outcome != 'success') }}
         run: python3 scripts/delivery/lifecycle_release_check.py write-result --lane macos --arch arm64 --package pkg --steps lifecycle-steps.txt --out lifecycle-result-macos.json
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: lifecycle-result-macos, path: lifecycle-result-macos.json }
+        with: { name: lifecycle-result-macos, path: lifecycle-result-macos.json, if-no-files-found: ignore }
 
   # Fills the results folder and runs the release check. Needs every lane job to have run.
   release-check:
@@ -106,6 +164,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
       - uses: actions/download-artifact@v4
         with: { pattern: lifecycle-result-*, path: lifecycle-results, merge-multiple: true }
-      - run: python3 scripts/delivery/lifecycle_release_check.py check --lifecycle "$LIFECYCLE_JSON" --results lifecycle-results --release
+      - run: python3 scripts/delivery/lifecycle_release_check.py check --lifecycle "$LIFECYCLE_JSON" --results lifecycle-results --release --base origin/${{ github.base_ref || 'main' }}

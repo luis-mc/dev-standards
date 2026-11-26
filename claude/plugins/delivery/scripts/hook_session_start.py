@@ -75,6 +75,24 @@ def _lifecycle_off_line(cfg, root):
     return ''
 
 
+def _affected_line(root):
+    """DS269, DL-125: one line while the project has a lifecycle.json; empty otherwise."""
+    try:
+        import importlib.util
+        here = os.path.dirname(os.path.abspath(__file__))
+        for base in (os.path.join(str(root), 'scripts', 'delivery'),
+                     os.path.join(here, '..', 'templates', 'shared', 'scripts', 'delivery')):
+            path = os.path.join(base, 'affected_targets.py')
+            if os.path.exists(path):
+                spec = importlib.util.spec_from_file_location('affected_targets', path)
+                mod = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(mod)
+                return mod.hook_line(str(root))
+    except Exception:  # noqa: BLE001
+        pass
+    return ''
+
+
 def _quarantine_line(root):
     """DS264: one line naming the quarantined tests (.delivery/quarantine.json); empty when none."""
     try:
@@ -127,6 +145,9 @@ def summary(root, cfg, ledger, at):
     off = _lifecycle_off_line(cfg, root)
     if off:
         lines.append(off)
+    affected = _affected_line(root)
+    if affected:
+        lines.append(affected)
     quarantined = _quarantine_line(root)
     if quarantined:
         lines.append(quarantined)

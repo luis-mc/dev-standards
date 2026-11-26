@@ -30,6 +30,7 @@ Seven checks (an eighth, `rust`, appears only on the rust track: see below), eac
            (the same plan `delivery_ci_install.py update` makes; a file in ci-install.json "keep" is ok). WARNS, never fails.
            With `ci.wait_min` set, the CI line shows that wait (10 when unset). Cached tools are found in the ci_tool cache.
   ci-filters (DL-116) WARNS (never fails) when a workflow in watcher.ci_workflows has a pull-request `paths` or `paths-ignore` filter (ci_areas_check.py).
+  affected-targets (DL-125) WARNS (never fails) for each tracked path that maps to no lifecycle target and is not in `no_target` (affected_targets.py).
   plugins  (DL173) `plugins.compat`: the highest installed version of each luismc-* plugin, read from the Claude plugin cache
            (~/.claude/plugins/cache/<marketplace>/<plugin>/<version>/; DELIVERY_PLUGIN_CACHE replaces the root in tests),
            against references/plugin-compat.json. WARNS (never fails) per pair that does not fit, with
@@ -801,6 +802,26 @@ def check_ci_filters(root, cfg):
     return True, "WARN DL-116 a required workflow has a pull-request path filter, so a filtered change leaves the watcher "         "without a run: " + "; ".join(found) + ". Skip by job-level `if` plus an always-run aggregate job "         "(templates/ci-snippets/ci-areas-pattern.yml).", [_item("ci.path_filter", "warn", "; ".join(found))]
 
 
+def check_affected_targets(root, cfg):
+    """DL-125 (DS269): WARN, never fail, for tracked paths that map to no target and are not in `no_target`."""
+    import importlib.util
+    src = os.path.join(PLUGIN, "templates", "shared", "scripts", "delivery", "affected_targets.py")
+    try:
+        spec = importlib.util.spec_from_file_location("affected_targets", src)
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        st = mod.status(root)
+    except Exception:
+        return None
+    if not st or not st[2]:
+        return None
+    shown = ", ".join(st[2][:5]) + (" and %d more" % (len(st[2]) - 5) if len(st[2]) > 5 else "")
+    return True, ("WARN DL-125 %d tracked path%s map to no lifecycle target, so a change to %s runs every target: %s. Add them to a "
+                  "target's `inputs` or to `no_target` in lifecycle.json (affected_targets.py scaffold adds a start)."
+                  % (len(st[2]), "" if len(st[2]) == 1 else "s", "one" if len(st[2]) == 1 else "any", shown)), \
+        [_item("lifecycle.affected_targets", "warn", "%d unmapped paths" % len(st[2]))]
+
+
 def check_plugins(root, cfg):
     items = compat_items()
     if not items:
@@ -883,7 +904,7 @@ def check_stack(root, cfg):
 
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("ci", check_ci), ("rust", check_rust),
-          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("ci-filters", check_ci_filters), ("plugins", check_plugins),
+          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("ci-filters", check_ci_filters), ("affected-targets", check_affected_targets), ("plugins", check_plugins),
           ("gate-steps", check_gate_steps), ("stack", check_stack))
 
 
