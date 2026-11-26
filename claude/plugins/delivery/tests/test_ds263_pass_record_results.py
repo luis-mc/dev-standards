@@ -193,19 +193,12 @@ class Workflow(unittest.TestCase):
                 parts[name].append(ln)
         return {k: "\n".join(v) for k, v in parts.items()}
 
-    def test_decide_stays_read_only_and_copy_job_writes(self):
+    def test_template_has_no_copy_job_and_no_write_permission(self):
         jobs = self.jobs()
+        self.assertNotIn("copy-records", jobs)
         self.assertIn("contents: read", jobs["decide"])
-        self.assertNotIn("contents: write", jobs["decide"])
-        self.assertNotIn("copy-to-main", jobs["decide"])
-        c = jobs["copy-records"]
-        self.assertIn("needs: decide", c)
-        self.assertIn("github.event_name == 'push' && needs.decide.outputs.skip == 'true'", c)
-        self.assertIn("!cancelled() && needs.decide.result == 'success'", c)
-        self.assertIn("contents: write", c)
-        self.assertIn("continue-on-error: true", c)
-        self.assertIn("pass_records.py copy-to-main", c)
-        self.assertEqual(self.CI.read_text(encoding="utf-8").count("contents: write"), 1)
+        self.assertNotIn("copy-to-main", self.CI.read_text(encoding="utf-8"))
+        self.assertNotIn("contents: write", self.CI.read_text(encoding="utf-8"))
 
 
 if __name__ == "__main__":
