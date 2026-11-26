@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T14:34+00:00",
+  "updated": "2026-11-26T14:48+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12370,6 +12370,19 @@
       "changed": "2026-11-26T14:28+00:00",
       "release": 200,
       "started": "2026-11-26T14:20+00:00"
+    },
+    {
+      "id": "DS272",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Full Progress: PR numbers link to the PR page, new window, any provider",
+      "detail": "PR labels (release tree, What is happening) become links opening in a new tab; URL from a provider template (github now, gitlab-ready)",
+      "expected": "26 Nov ~15:15",
+      "changed": "2026-11-26T14:48+00:00",
+      "expected_basis": "cloud agent ~10 min + CI ~5 + fold",
+      "release": 201,
+      "started": "2026-11-26T14:48+00:00"
     },
     {
       "id": "DU1",
