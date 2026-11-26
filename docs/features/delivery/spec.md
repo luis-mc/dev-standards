@@ -254,6 +254,14 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.83** — One agent per area, cloud first (DS270, DL-126, DL-127). A launch whose prompt names a task, while another To do or Waiting task of the same `app` is in the project record, is denied once with the list; the second identical launch passes (`.delivery/state/dl40-denied.json`). `checks_off` `DL-40` turns it off. A `PC-bound:` line that names no PC-bound step is a warning, not a deny; `checks_off` `DL-127` turns it off. The report `docs/work/DS270-report.md` lists what is enforced and what is advice (D4, DL-38, DL-39, DL-40, DL-41). Tests: `claude/plugins/delivery/tests/test_ds270_bundling.py`.
 
+**R5.84** — A fold takes only the notes of the named release (DS274, DL-128). `change_notes.py fold --release RELEASE-n` reads the project record (`docs/project/registry.json`) and folds a note only when the task in its file name (`<task-id>-<slug>.md`) belongs to release n. A note whose task the record does not know, or no readable record, folds as before. `--all` folds every note. Tests: `claude/plugins/delivery/tests/test_ds274_release_fold.py`.
+
+**R5.85** — The Stop hook names every release a pull request carries (DS275, DL-129). A message about a pull request with cargo tasks of releases 1 and 2 says `RELEASE-1 and RELEASE-2`. It never says train or train label (DL-64). Tests: `claude/plugins/delivery/tests/test_ds275_release_names.py`.
+
+**R5.86** — A merged entry is not idle work (DS276, DL-130). A Running task whose pull request merged and whose cleanup or smoke is not recorded gets no "no agent is working on it" line; once cleaned and smoked it does again. Tests: `claude/plugins/delivery/tests/test_ds276_merged_not_idle.py`.
+
+**R5.87** — `delivery_ledger.py link` sets the pull request on the releases of its cargo (DS277, DL-131), so the Full Progress release tree shows without a manual step. It is best effort and never fails `link`. Tests: `claude/plugins/delivery/tests/test_ds277_link_sets_pr.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -326,6 +334,10 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.81 | `claude/plugins/delivery/tests/test_ds267_record_local_agents.py` |
 | R5.82 | `claude/plugins/delivery/tests/test_ds269_affected_targets.py` |
 | R5.83 | `claude/plugins/delivery/tests/test_ds270_bundling.py` |
+| R5.84 | `claude/plugins/delivery/tests/test_ds274_release_fold.py` |
+| R5.85 | `claude/plugins/delivery/tests/test_ds275_release_names.py` |
+| R5.86 | `claude/plugins/delivery/tests/test_ds276_merged_not_idle.py` |
+| R5.87 | `claude/plugins/delivery/tests/test_ds277_link_sets_pr.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.36 | `tools/test_delivery_records.py` (TreeKeyTests) |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |

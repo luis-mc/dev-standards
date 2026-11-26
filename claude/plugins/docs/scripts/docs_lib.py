@@ -401,3 +401,34 @@ def sections(body: str):
     if cur:
         out.append(cur)
     return [(a, b, "\n".join(c)) for a, b, c in out]
+
+
+def task_releases(root: Path) -> dict | None:
+    """DS274: task id -> release number from the project record (docs/project/registry.json). A task has a number
+    when it has `release` N or rides a task that has it. None when the record cannot be read."""
+    import json
+    data = None
+    for rel in ("docs/project/registry.json", "docs/artifacts/registry.json"):
+        try:
+            data = json.loads((Path(root) / rel).read_text(encoding="utf-8"))
+            break
+        except (OSError, ValueError):
+            continue
+    tasks = data.get("tasks") if isinstance(data, dict) else None
+    if not isinstance(tasks, list):
+        return None
+    by_id = {str(t["id"]): t for t in tasks if isinstance(t, dict) and t.get("id")}
+
+    def number(t):
+        n = t.get("release")
+        return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+
+    out = {}
+    for tid, t in by_id.items():
+        seen, cur = set(), t
+        while cur is not None and number(cur) is None and str(cur.get("id")) not in seen:
+            seen.add(str(cur.get("id")))
+            cur = by_id.get(str(cur.get("rides") or ""))
+        if cur is not None and number(cur) is not None:
+            out[tid] = number(cur)
+    return out

@@ -2,7 +2,7 @@
 """Change notes: how a spec's version and change log are kept by one hand (CONTRACT.md U7).
 
     change_notes.py check [--config PATH] [--base-ref REF] [--branch NAME]
-    change_notes.py fold  [--config PATH] [--dry-run] [--date YYYY-MM-DD]
+    change_notes.py fold  [--config PATH] [--dry-run] [--date YYYY-MM-DD] [--release RELEASE-n | --all]
     change_notes.py pending [--config PATH]
 
 A change note is docs/specs/changes/<task-id>-<slug>.md:
@@ -34,7 +34,10 @@ under the change-log heading (new version, date, one bullet per note) and
 deletes the folded notes. A note's "plugin:" is bumped the same way: the
 manifest's "version" value, by the highest kind of the notes naming it (no change
 log). No notes: nothing to do. --dry-run prints the same
-summary and writes nothing.
+summary and writes nothing. With --release RELEASE-n (DS274) a note is folded only when
+the project record (docs/project/registry.json) puts the task named by its file name
+(<task-id>-<slug>.md) in release n: the task has "release" n, or rides a task that has it. A note whose task the
+record does not know, or no readable record, is folded as before. --all folds every note.
 
 Settings come from scripts/delivery/gate.json, or from --config PATH (a JSON
 file relative to the repository root; no "schema" or steps needed). Keys, all
@@ -499,6 +502,50 @@ def plan_plugin(root: Path, plugin: str, notes: list[Note]) -> tuple[str, str, s
     return eol.join(lines), "%d.%d.%d" % old, new_s, kind
 
 
+def task_releases(root: Path) -> dict[str, int] | None:
+    """DS274: task id -> release number from the project record; None when no record can be read."""
+    data = None
+    for rel in ("docs/project/registry.json", "docs/artifacts/registry.json"):
+        try:
+            data = json.loads((root / rel).read_text(encoding="utf-8"))
+            break
+        except (OSError, ValueError):
+            continue
+    tasks = data.get("tasks") if isinstance(data, dict) else None
+    if not isinstance(tasks, list):
+        return None
+    by_id = {str(t["id"]): t for t in tasks if isinstance(t, dict) and t.get("id")}
+
+    def number(t):
+        n = t.get("release")
+        return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+
+    out: dict[str, int] = {}
+    for tid, t in by_id.items():
+        cur, seen = t, set()
+        while cur is not None and number(cur) is None and str(cur.get("id")) not in seen:
+            seen.add(str(cur.get("id")))
+            cur = by_id.get(str(cur.get("rides") or ""))
+        if cur is not None and number(cur) is not None:
+            out[tid] = number(cur)
+    return out
+
+
+def notes_of_release(root: Path, notes: list[Note], release: str) -> list[Note]:
+    """DS274: drop the notes the record puts in another release. Unknown task or no record: keep."""
+    m = re.search(r"(\d+)\s*$", release or "")
+    known = task_releases(root)
+    if not m or not known:
+        return notes
+    want = int(m.group(1))
+    kept = []
+    for n in notes:
+        t = re.match(r"[A-Za-z]+\d+", n.path.rsplit("/", 1)[-1])
+        if known.get(t.group(0) if t else "", want) == want:
+            kept.append(n)
+    return kept
+
+
 def cmd_fold(args: argparse.Namespace) -> int:
     root = dc.repo_root()
     cfg = load_config(root, args.config)
@@ -508,8 +555,10 @@ def cmd_fold(args: argparse.Namespace) -> int:
         for p in problems:
             print("  " + p)
         return dc.EXIT_FAIL
+    if args.release and not args.all:
+        notes = notes_of_release(root, notes, args.release)
     if not notes:
-        print("change-notes: no notes in %s/; nothing to fold" % cfg["notes_dir"])
+        print("change-notes: no notes in %s/ for this fold; nothing to fold" % cfg["notes_dir"])
         return dc.EXIT_OK
     date = args.date or datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%d")
     by_spec: dict[str, list[Note]] = {}
@@ -566,6 +615,8 @@ def main() -> int:
     f = sub.add_parser("fold", parents=[conf], help="fold the notes into versions and change logs")
     f.add_argument("--dry-run", action="store_true", help="print what would be done; write nothing")
     f.add_argument("--date", help="date of the entries (default: today, UTC)")
+    f.add_argument("--release", help="RELEASE-n: fold only the notes of that release's tasks (from the project record)")
+    f.add_argument("--all", action="store_true", help="fold every note (the default without --release)")
     f.set_defaults(fn=cmd_fold)
     w = sub.add_parser("pending", parents=[conf], help="fail while any note waits to be folded")
     w.set_defaults(fn=cmd_pending)

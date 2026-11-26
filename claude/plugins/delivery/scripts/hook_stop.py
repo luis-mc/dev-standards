@@ -376,7 +376,7 @@ def repeat_limit(found, ledger, root, sid, limit):
 
 def limit_notice(noticed, limit):
     rules = sorted({k.split(':')[0] for k, _ in noticed})
-    names = sorted({(re.match(r'DL-\d+ (RELEASE-\d+|the train)\b', m) or [None, k])[1] for k, m in noticed})
+    names = sorted({(re.match(r'DL-\d+ (RELEASE-\d+(?:(?:, | and )RELEASE-\d+)*|the train)\b', m) or [None, k])[1] for k, m in noticed})
     return ('luismc-delivery: letting the turn end after %d blocks with no change. %s for %s still open after %d tries; '
             'the turn is no longer blocked for it. Record it with the command named below, or ask the owner. %s'
             % (limit, '/'.join(rules), ', '.join(names), limit, ' '.join(m for _, m in noticed)))
@@ -633,7 +633,8 @@ WARN_ONLY = ('DL-123',)
 
 
 def check_running_idle(root, ledger, cfg):
-    """DL-123 (DS267, warn only): a task is Running, no agent row is open for it and no CI run is active for it."""
+    """DL-123 (DS267, warn only): a task is Running, no agent row is open for it and no CI run is active for it.
+    DS276 (DL-130): a merged entry not yet cleaned and smoked counts as active."""
     reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
     if reg is None:
         reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
@@ -645,7 +646,10 @@ def check_running_idle(root, ledger, cfg):
         if a.get('state') not in H.TERMINAL_AGENT:
             busy.update(str(x) for x in [a.get('task')] + list(a.get('tasks') or []) if x)
     for t in ledger['trains']:
-        if t.get('state') in ('pushed', 'ci'):
+        # DS276: a merged entry is work until it is cleaned and smoked
+        merged_open = (t.get('merged_at') and t.get('state') not in _DONE_TRAIN
+                       and not (t.get('cleaned_at') and (t.get('smoke') or {}).get('state')))
+        if t.get('state') in ('pushed', 'ci') or merged_open:
             busy.update(str(c.get('task')) for c in t.get('cargo') or [] if isinstance(c, dict) and c.get('task'))
             busy.update(str(x) for x in t.get('tasks') or [])
             m = re.match(r'[A-Z]{2,5}\d+', str(t.get('branch') or ''))
@@ -673,6 +677,7 @@ def findings(root, data, cfg):
     except Exception:  # noqa: BLE001
         pass
     ledger = H.load_ledger(root)
+    H.use_record(root)                # DS275: names every release of a pull request
     text = last_assistant_text(data)
     out = []
     out += check_trains(ledger, cfg, at, grouped=True)
