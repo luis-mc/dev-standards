@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.50.0
+version: 0.51.0
 owner: agents
 type: reference
 code:
@@ -529,6 +529,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.51.0 | 2026-11-26 | RELEASE-187 | New config key deploy.serial (default false): releases deploy one after another. | DL420 |
 | 0.50.0 | 2026-11-26 | RELEASE-186 | R6.4: .delivery/ is git-ignored except config.json, which is committed. Touches claude/plugins/delivery/.claude-plugin/plugin.json. | DL419 |
 | 0.49.0 | 2026-11-25 | RELEASE-181 | Pass reuse by git tree (R13.36): a shard with tree true keys on the git tree hash; branch_gate.py skips the gate when the same tree already passed, and writes the record after a full pass. (section 13) | DP9 |
 | 0.48.0 | 2026-11-25 | RELEASE-179 | R5.73: /delivery-onboard writes warn-mode config and ledger for a project with none; asks the merge mode, no default. | DP10 |

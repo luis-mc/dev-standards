@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.12.1
+version: 1.13.0
 owner: agents
 type: reference
 code:
@@ -205,6 +205,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.13.0 | 2026-11-26 | RELEASE-187 | note sets last_verified (R5.11b); visuals prints missing Proof lines (R5.26). | DL420 |
 | 1.12.1 | 2026-11-26 | RELEASE-183 | DS256: ARTIFACTSPEC adds R5.55 to R5.58 for the release tree (a PR carries its releases). | DS256 |
 | 1.12.0 | 2026-11-25 | RELEASE-182 | The wizard behaviour guard adds step-bar-more-for-one: a step bar never says "+ 1 more" for one hidden step (R5.25). | DS244 |
 | 1.11.0 | 2026-11-25 | RELEASE-180 | A real release fold prints the Full Progress publish steps when the page changed since its last publish. | DS252 |
