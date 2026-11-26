@@ -49,7 +49,7 @@ def three():
 def old_look_without_fields():
     a = rel('DS51', '10 Oct ~18:00', 1)
     assert not R.tree_mode([a])
-    assert 'release-tree' not in R.release_timeline([a], R._parse_iso(STAMP), 'Lisbon')
+    assert 'release-tree-figure' not in R.release_timeline([a], R._parse_iso(STAMP), 'Lisbon')
     html = R.release_timeline([a], R._parse_iso(STAMP), 'Lisbon')
     assert 'class="release-tree"' in html and 'own run' in html, 'DL428: the table shows for any open release'
 
