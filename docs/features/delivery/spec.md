@@ -248,6 +248,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.80** — One full run per change (DS264, DL-12). `gate.json` `local_gate` is `full` (the default, nothing changes) or `smoke`. With `smoke` the local gate runs only the suites of the touched areas: the e2e step (scope `ui-changed`) runs only when its specs can be named by the existing affected-area rules (`e2e_map`, or the dependency graph), and is otherwise skipped with the reason `smoke gate: touched specs not derived, CI is the one full run`. `branch_gate.py` prints one line saying that CI is the one full run. An explicit `--full` still runs everything. Other steps are unchanged. Proof: `claude/plugins/delivery/tests/test_ds264_quarantine_smoke.py`.
 
+**R5.81** — A local agent is recorded without a delivery block, and a Running task with no worker is flagged (DS267, DL-123, DL-124). With no ```delivery block, `hook_post_tool.py` takes the task from a branch `<ID>-slug` in the prompt, else from the first `Task <ID>` or `(<ID>)` in its first 600 characters, and only an ID in the project record counts when the record can be read; with no match it keeps the `agent.no_task` event. The row has `model` and starts `running` when the agent runs in the background. No hook sees a local agent end, so the Stop hook marks a `running` local row `done` when its worktree or output file is gone or when it is a day old (a forgotten row; an agent past its eta is still checked by DL-32). The Stop hook also says one line, never blocking, when a task is Running and no agent row or CI train is open for it. Tests: `claude/plugins/delivery/tests/test_ds267_record_local_agents.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).
@@ -317,6 +319,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.71 | `claude/plugins/delivery/tests/test_dp16_merge_mode.py` |
 | R5.72 | `claude/plugins/delivery/tests/test_config.py` |
 | R5.73 | `claude/plugins/delivery/tests/test_dp10_onboard.py` |
+| R5.81 | `claude/plugins/delivery/tests/test_ds267_record_local_agents.py` |
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.36 | `tools/test_delivery_records.py` (TreeKeyTests) |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `tools/test_delivery_cloud.py` |
