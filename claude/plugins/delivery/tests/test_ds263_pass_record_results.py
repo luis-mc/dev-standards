@@ -177,5 +177,36 @@ class Results(unittest.TestCase):
         self.assertEqual(quiet(P.main, ["copy-to-main", "--root", str(self.work)]), 2)
 
 
+class Workflow(unittest.TestCase):
+    CI = DELIVERY.parent.parent.parent / "ts" / ".github" / "workflows" / "ci.yml"
+
+    def jobs(self):
+        text = self.CI.read_text(encoding="utf-8")
+        body = text.split("\njobs:\n", 1)[1]
+        parts = {}
+        name = None
+        for ln in body.split("\n"):
+            if ln.startswith("  ") and not ln.startswith("   ") and ln.strip().endswith(":") and not ln.strip().startswith("#"):
+                name = ln.strip()[:-1]
+                parts[name] = []
+            elif name:
+                parts[name].append(ln)
+        return {k: "\n".join(v) for k, v in parts.items()}
+
+    def test_decide_stays_read_only_and_copy_job_writes(self):
+        jobs = self.jobs()
+        self.assertIn("contents: read", jobs["decide"])
+        self.assertNotIn("contents: write", jobs["decide"])
+        self.assertNotIn("copy-to-main", jobs["decide"])
+        c = jobs["copy-records"]
+        self.assertIn("needs: decide", c)
+        self.assertIn("github.event_name == 'push' && needs.decide.outputs.skip == 'true'", c)
+        self.assertIn("!cancelled()", c)
+        self.assertIn("contents: write", c)
+        self.assertIn("continue-on-error: true", c)
+        self.assertIn("pass_records.py copy-to-main", c)
+        self.assertEqual(self.CI.read_text(encoding="utf-8").count("contents: write"), 1)
+
+
 if __name__ == "__main__":
     unittest.main()
