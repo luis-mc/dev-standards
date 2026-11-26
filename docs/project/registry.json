@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:30+00:00",
+  "updated": "2026-11-26T09:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7810,12 +7810,11 @@
       "id": "DL430",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "R1 skips tool checkouts and state",
       "detail": "docs_check R1 (removed delivery IDs) skips .dev-standards-tools, .claude/worktrees and .delivery state so a pinned tool checkout or a ledger is not scanned; peer finding 26 Nov",
-      "expected": "26 Nov ~12:00",
-      "changed": "2026-11-26T09:29+00:00",
-      "expected_basis": "small edit, CI 5 min",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T09:35+00:00",
       "release": 190,
       "started": "2026-11-26T09:29+00:00"
     },
