@@ -46,7 +46,9 @@ class VersionLineTests(unittest.TestCase):
         d = make_repo({"docs/architecture/sec.md": both})
         note(d, "architecture/sec", "T1")
         self.assertEqual(fold(d), 2)
-        self.assertEqual(r(d, "docs/architecture/sec.md"), both)
+        # the note sets last_verified (DL421); the refused fold changes nothing else
+        kept = [x for x in r(d, "docs/architecture/sec.md").splitlines() if not x.startswith("last_verified:")]
+        self.assertEqual(kept, both.splitlines())
         self.assertTrue((d / "docs/architecture/changes/sec/T1.md").is_file())
 
 
