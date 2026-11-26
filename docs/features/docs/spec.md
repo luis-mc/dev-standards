@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.15.1
+version: 1.15.2
 owner: agents
 type: reference
 code:
@@ -205,6 +205,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.15.2 | 2026-11-26 | RELEASE-193 | Full Progress agents badge splits running and total agents into local and cloud.<br>CI badge counts fixed failures apart. | DS265, DS266 |
 | 1.15.1 | 2026-11-26 | RELEASE-184 | R1 lists DL-50 and DL-51 as removed delivery rule IDs. | DL418 |
 | 1.15.0 | 2026-11-26 | RELEASE-191 | The docs plugin renders Full Progress section 0 as status badges plus a generated What is happening list (artifactspec R5.61 to R5.63). | DL429 |
 | 1.14.1 | 2026-11-26 | RELEASE-190 | R1 skips pinned tool checkouts, agent worktrees and the .delivery state. Touches claude/plugins/docs/.claude-plugin/plugin.json. | DL430 |

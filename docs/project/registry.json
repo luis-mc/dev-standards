@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T11:15+00:00",
+  "updated": "2026-11-26T11:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12282,12 +12282,11 @@
       "id": "DS265",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Agents badge: running and total, local and cloud",
       "detail": "Owner: the Agents running badge shows total agents and how many are local and cloud (running now, and launched in all).",
-      "expected": "26 Nov ~12:15",
-      "changed": "2026-11-26T11:13+00:00",
-      "expected_basis": "one small render change, CI 5 min",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T11:21+00:00",
       "release": 193,
       "started": "2026-11-26T11:13+00:00"
     },
@@ -12295,12 +12294,11 @@
       "id": "DS266",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "CI badge: a failure a later run fixed is not a failure",
       "detail": "Owner screenshot: Full Progress CI badge showed 1 failed for RELEASE-192 although the rerun passed. Count open failures only; show fixed ones apart.",
-      "expected": "26 Nov ~12:15",
-      "changed": "2026-11-26T11:15+00:00",
-      "expected_basis": "small render change, CI 5 min",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T11:21+00:00",
       "rides": "DS265",
       "started": "2026-11-26T11:15+00:00"
     },

@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.30.0
+**Version:** 1.30.1
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,11 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.30.1 — 2026-11-26.**
+
+- R5.61: the agents badge shows the ledger's agents running now and launched in all, each split into local and cloud (DS265).
+- R5.61: a failed CI run that a later run of the same workflow fixed is counted apart and does not mark the CI badge as failed (DS266).
 
 **1.30.0 — 2026-11-26.**
 
