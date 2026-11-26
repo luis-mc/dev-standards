@@ -90,6 +90,31 @@ def ignore_workflows(cfg) -> list:
     return [x.strip() for x in v if isinstance(x, str) and x.strip()] if isinstance(v, list) else []
 
 
+MERGE_RESULT_MODES = ("warn", "update")
+INFRA_RETRY_PATTERNS = ("Hash Sum mismatch", "Could not resolve host", "TLS handshake timeout", "502 Bad Gateway",
+                        "The operation was canceled")
+
+
+def merge_result(cfg) -> str:
+    """DS259: `watcher.merge_result`. `warn` (default) prints one line when a PR head is behind its base and
+    merges as before; `update` updates the branch (`gh pr update-branch`) and waits for the new run. Any other value is warn."""
+    v = _section(cfg, "watcher").get("merge_result")
+    return v if v in MERGE_RESULT_MODES else "warn"
+
+
+def infra_retry(cfg) -> bool:
+    """DS260: `watcher.infra_retry` (default false): re-run the failed jobs once after an infrastructure failure."""
+    return _section(cfg, "watcher").get("infra_retry") is True
+
+
+def infra_retry_patterns(cfg) -> list:
+    """DS260: `watcher.infra_retry_patterns`: log texts that mark a failed step as infrastructure (default list above)."""
+    v = _section(cfg, "watcher").get("infra_retry_patterns")
+    if isinstance(v, list) and v and all(isinstance(x, str) and x.strip() for x in v):
+        return [x.strip() for x in v]
+    return list(INFRA_RETRY_PATTERNS)
+
+
 def pr_proven_jobs(cfg) -> list:
     """pr_proven_jobs: job names a release PR proves, which must not re-run on the default branch after the merge."""
     v = cfg.get("pr_proven_jobs") if isinstance(cfg, dict) else None

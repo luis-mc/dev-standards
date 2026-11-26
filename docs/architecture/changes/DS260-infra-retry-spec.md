@@ -1,0 +1,6 @@
+---
+spec: docs/architecture/DELIVERYSPEC.md
+change: minor
+---
+
+DL-120: with `watcher.infra_retry` the watcher re-runs the failed jobs once after an infrastructure failure and records a `ci.retry` event; a test failure is never retried (DS260).
