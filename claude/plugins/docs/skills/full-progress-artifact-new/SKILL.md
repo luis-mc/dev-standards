@@ -62,10 +62,10 @@ and pass it to the script. Never edit the record files by hand.
    nothing, keep the default design.
 5. **Write the content.** Run `export-content full-progress --to <scratch dir>`
    and edit the files there:
-   - `meta.json`: `title`, `hero` (one line: what the project is), `lede` (one
-     or two sentences of context the registry cannot show: an incident, a
-     constraint, a plan; never restate statuses, because the At a glance block
-     lists them; may be empty), `extra_css` (empty unless needed).
+   - `meta.json`: `title`, `hero` (one line: what the project is), `lede` (kept
+     in the file, but Full Progress does not show it: the status badges and the
+     generated "What is happening" list take its place; leave it empty),
+     `extra_css` (empty unless needed).
    - Optional sections for what the owner wants beside the checklist (how the
      project is released, where things live). Files start at `01-` and render as
      section 2 and up, because section 1 (the list of feature artifacts) is

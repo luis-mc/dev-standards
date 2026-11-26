@@ -112,3 +112,20 @@ def links(releases: list, record_dir: str) -> dict:
             if wait:
                 out[bid]['waits'].append(aid)
     return out
+
+
+def read(record_dir: str) -> dict:
+    """R5.63: {'trains': {release task id: train}, 'agents': [agent rows]} from `.delivery/ledger.json`, read-only.
+    A train belongs to the release whose task ID is its branch `<TASK-ID>-integration`. No ledger gives empty parts."""
+    root = delivery_root(record_dir) if record_dir else None
+    ledger = _json_file(os.path.join(root, '.delivery', 'ledger.json')) if root else None
+    out = {'trains': {}, 'agents': []}
+    if not isinstance(ledger, dict):
+        return out
+    for tr in ledger.get('trains') if isinstance(ledger.get('trains'), list) else []:
+        branch = tr.get('branch') if isinstance(tr, dict) else None
+        if isinstance(branch, str) and branch.endswith('-integration'):
+            out['trains'][branch[:-len('-integration')]] = tr
+    if isinstance(ledger.get('agents'), list):
+        out['agents'] = [a for a in ledger['agents'] if isinstance(a, dict)]
+    return out

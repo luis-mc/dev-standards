@@ -20,6 +20,7 @@ code:
   - claude/plugins/docs/scripts/hook_after_command.py
   - claude/plugins/docs/scripts/hook_end_of_turn.py
   - tools/test_artifacts_dp7.py
+  - tools/test_artifacts_dl429.py
   - claude/plugins/docs/skills/feature-artifact-new/**
   - claude/plugins/docs/skills/full-progress-artifact-new/**
   - claude/plugins/docs/skills/project-artifact-check/**
@@ -194,6 +195,12 @@ flowchart LR
 **R5.29** — Nothing needs hand input. An open release with no `pr` takes it from `.delivery/ledger.json`: the train whose branch is `<TASK-ID>-integration` belongs to that release. An open release with no `release_waits_on` waits on every earlier open release when its train holds commits of the other train not yet on the base branch (git ancestry, skipped when git cannot say), or when `deploy.serial` is true in `.delivery/config.json` and the other train merged first. `--pr` and `--release-waits-on` win. Both reads are read-only; with no ledger nothing changes. The tree (R5.28) then shows for any project with a linked PR. (DL420, ARTIFACTSPEC R5.59) Proof: `claude/plugins/docs/tests/test_dl420_ledger_links.py`.
 
 **R5.30** — The release table shows below the timeline whenever any release is open; the figure is the tree only with a carrier PR or a dependency. A release with no PR is a row of its own with CI "own run". (DL428, ARTIFACTSPEC R5.60) Proof: `tools/test_artifacts_ds256.py`.
+
+**R5.31** — Section 0 of Full Progress opens with one full-width row of badges, not collapsible lines. A badge is a small labelled chip. The row shows the count of tasks that need you, are running, built, waiting, to do and live in the last 24 hours (a count of 0 shows no badge, except Needs you); each active release with its Live ETA; the carrier PRs; the CI runs; the agents running; and the last Live release with its time. A Needs you badge with tasks, and a CI badge with a failed run, are marked in the status colours. The count badges replace the count tiles. No task listing is lost: every task stays in the release groups. A feature artifact keeps its At a glance block and its tiles. (DL429, ARTIFACTSPEC R5.61) Proof: `tools/test_artifacts_dl429.py`.
+
+**R5.32** — Under the badges, Full Progress shows a "What is happening" list of at most 8 short bullets, built on every render from the record, the ledger and the CI runs file. There is one bullet for each active release and each of the last 3 Live releases. A bullet names the release as `RELEASE-n` with its PR, then says what went wrong (failed CI jobs by name, fix rounds, a hold, what needs you, a merge not cleaned up, no smoke test), what is being done about it (a running agent, a CI run in progress, or that nothing is running yet) and what went well. With no active release the list says so. This text replaces the lede in Full Progress; a feature artifact keeps its lede. (DL429, ARTIFACTSPEC R5.62) Proof: `tools/test_artifacts_dl429.py`.
+
+**R5.33** — The badges and the bullets read `.delivery/ci-runs.json` and `.delivery/ledger.json` and write nothing. A run belongs to a release when its `why` names the release's PR (`#N`) or the train lists its run ID. With no CI runs file there is no CI badge; with no ledger there is no PR, agent or train detail, and the rest still shows. (DL429, ARTIFACTSPEC R5.63) Proof: `tools/test_artifacts_dl429.py`.
 
 ## 6. Non-functional requirements
 

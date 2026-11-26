@@ -146,6 +146,20 @@ def reqs(findings):
     return sorted({r for r, _ in findings})
 
 
+def own_registry(fx, registry=None):
+    """DL429: Full Progress no longer draws the At a glance block or the count tiles. A feature artifact that owns
+    every task of the registry still does; this returns that registry (a copy)."""
+    registry = copy.deepcopy(registry if registry is not None else fx.registry)
+    for t in registry['tasks']:
+        t['owner'] = 'artifacts'
+    return registry
+
+
+def feature_view(fx, registry=None):
+    """The HTML of the feature artifact that owns every task (see own_registry)."""
+    return fx.render('artifacts', registry=own_registry(fx, registry))
+
+
 def glance(html):
     """{group key: (task ids, decision ids, 'and N more' text, 'none' text)} of the At a glance block."""
     root = R.parse_dom(html)
@@ -517,9 +531,9 @@ def a_group_with_only_folded_rows_is_still_closed_correctly(fx):
 @with_fixture
 def needs_you_sentence(fx):
     out = fx.render('full-progress')
-    lede = R.text_of(R.find(R.parse_dom(out), 'p', 'lede'))
-    assert lede == 'All ongoing work in dev-standards. More words follow.', lede     # R5.7: the note only
-    assert glance(out)['you'][:2] == (['DS9', 'DS11'], []), glance(out)['you']
+    assert R.find(R.parse_dom(out), 'p', 'lede') is None, 'DL429: Full Progress shows the generated text, not the lede'
+    assert R.find(R.parse_dom(out), 'div', 'what-happens') is not None
+    assert glance(feature_view(fx))['you'][:2] == (['DS9', 'DS11'], []), glance(feature_view(fx))['you']
     # a feature artifact lists only its own tasks, and says so when there are none
     assert glance(fx.render('artifacts'))['you'] == ([], [], '', 'Nothing needs you.')
     fx.registry['tasks'][0]['status'] = 'Needs you'
@@ -540,7 +554,8 @@ def needs_you_sentence_unit():
 @test
 @with_fixture
 def tiles_count_each_status_in_order_and_skip_empty(fx):
-    dom = R.parse_dom(fx.render('full-progress'))
+    assert R.find(R.parse_dom(fx.render('full-progress')), 'div', 'status-count-tiles') is None     # DL429: count badges
+    dom = R.parse_dom(feature_view(fx))
     tiles = [(R.text_of(R.find(t, 'div', 'label')), R.text_of(R.find(t, 'div', 'count')), t.attrs['class'])
              for t in R.find_all(dom, 'div', 'status-count-tile')]
     assert tiles == [('tasks live', '4', 'status-count-tile status-live'), ('tasks built', '2', 'status-count-tile status-built'),
@@ -850,8 +865,10 @@ def check_finds_a_wrong_open_state(fx):
 @with_fixture
 def glance_groups_are_collapsible_details(fx):
     """R6.13: each At a glance group is a <details> with the label and a task count in its <summary>; done groups start closed."""
-    fx.registry = glance_registry()
-    for name in ('full-progress', 'artifacts'):
+    fx.registry = own_registry(fx, glance_registry())
+    fp = fx.render('full-progress')       # DL429: Full Progress has badges, not collapsible glance groups
+    assert not R.find_all(R.parse_dom(fp), 'details', 'glance-group') and R.find(R.parse_dom(fp), 'div', 'status-badges') is not None
+    for name in ('artifacts',):
         out = fx.render(name)
         dom = R.parse_dom(out)
         groups = R.find_all(dom, 'details', 'glance-group')
@@ -859,17 +876,17 @@ def glance_groups_are_collapsible_details(fx):
         for g in groups:
             kids = [n for n in g.children if n.tag != '#text']
             assert kids[0].tag == 'summary' and R.find(kids[0], 'span', 'glance-label') is not None
-            want = False if name == 'full-progress' else g.attrs['data-glance'] not in ('built', 'live')
+            want = g.attrs['data-glance'] not in ('built', 'live')
             assert ('open' in g.attrs) == want, (name, g.attrs)
         assert fx.check(out, name) == []
-    out = fx.render('full-progress')
+    out = fx.render('artifacts')
     counts = {g.attrs['data-glance']: R.text_of(R.find(g, 'span', 'fold-count'))
               for g in R.find_all(R.parse_dom(out), 'details', 'glance-group')}
     got = glance(out)
     for key, text in counts.items():
         n = len(got[key][0]) + len(got[key][1]) + (int(''.join(c for c in got[key][2] if c.isdigit())) if got[key][2] else 0)
         assert text == '%d task%s' % (n, '' if n == 1 else 's'), (key, text, n)
-    empty = fx.render('artifacts')
+    empty = fx.render('artifacts', registry=glance_registry())
     you = [g for g in R.find_all(R.parse_dom(empty), 'details', 'glance-group') if g.attrs['data-glance'] == 'you'][0]
     assert 'open' in you.attrs and R.text_of(R.find(you, 'p', 'glance-none')) == 'Nothing needs you.' or R.find(you, 'li')
 
@@ -877,14 +894,14 @@ def glance_groups_are_collapsible_details(fx):
 @test
 @with_fixture
 def check_finds_a_wrong_glance_state(fx):
-    fx.registry = glance_registry()
-    fp = fx.render('full-progress')
-    expect(fx, sub1(fp, 'data-glance="live">', 'data-glance="live" open>'), 'full-progress', ['R6.13'])
-    expect(fx, sub1(fp, 'data-glance="running">', 'data-glance="running" open>'), 'full-progress', ['R6.13'])
+    fx.registry = own_registry(fx, glance_registry())
+    fp = fx.render('artifacts')
+    expect(fx, sub1(fp, 'data-glance="live">', 'data-glance="live" open>'), 'artifacts', ['R6.13'])
+    expect(fx, sub1(fp, 'data-glance="running" open>', 'data-glance="running">'), 'artifacts', ['R6.13'])
     fa = fx.render('artifacts')
     expect(fx, sub1(fa, 'data-glance="you" open>', 'data-glance="you">'), 'artifacts', ['R6.13'])
     at = fp.index('data-glance="you"')
-    expect(fx, fp[:at] + fp[at:].replace('class="fold-count">', 'class="fold-count">9', 1), 'full-progress', ['R6.13'])
+    expect(fx, fp[:at] + fp[at:].replace('class="fold-count">', 'class="fold-count">9', 1), 'artifacts', ['R6.13'])
 
 
 @test
@@ -981,8 +998,10 @@ def check_r56_feature_list(fx):
 @test
 @with_fixture
 def check_r57_lede(fx):
-    fp = fx.render('full-progress')
-    expect(fx, drop_item(fp, 'task', 'DS11'), 'full-progress', ['R5.7'])                    # a Failed task missing
+    fx.registry = own_registry(fx)
+    fp = fx.render('artifacts')
+    expect(fx, drop_item(fp, 'task', 'DS11'), 'artifacts', ['R5.7'])                        # a Failed task missing
+    fx.registry = base_registry()
     out = fx.render('artifacts')
     wrong = sub1(out, '<p class="glance-none">Nothing needs you.</p>', '<ul><li data-glance-task="AR6"><span class="task-id">AR6</span>Templates</li></ul>')
     expect(fx, wrong, 'artifacts', ['R5.7'])                                                # a task that does not need you
@@ -2015,7 +2034,7 @@ QUIET = {'spec': R.SPEC, 'updated': STAMP_ISO, 'tasks': [
 @with_fixture
 def at_a_glance_groups_and_order(fx):
     """R5.33, R5.34: the groups, in order, each from its statuses; To do is not listed; Live is 24 h and capped at 8."""
-    out = fx.render('full-progress', registry=glance_registry())
+    out = fx.render('artifacts', registry=own_registry(fx, glance_registry()))
     got = glance(out)
     assert list(got) == ['you', 'running', 'built', 'waiting', 'live'], list(got)
     assert got['you'][0] == ['DS9', 'DS11'] and got['running'][0] == ['DS6', 'AR6', 'MP2'], got
@@ -2026,7 +2045,7 @@ def at_a_glance_groups_and_order(fx):
     row = out[out.index('data-glance-task="DS6"'):]
     row = row[:row.index('</li>')]
     assert '<span class="glance-expected">10 Oct ~13:45</span>' in row, row
-    fx.registry = glance_registry()
+    fx.registry = own_registry(fx, glance_registry())
     by_id = {t['id']: t for t in fx.registry['tasks']}
     by_id['AR6']['expected_basis'] = 'agent slot'
     by_id['LV10']['expected_basis'] = 'not shown'
@@ -2045,13 +2064,13 @@ def at_a_glance_groups_and_order(fx):
 def glance_splits_owner_waits_from_work_waits(fx):
     """R5.34, R5.34a: a Waiting task with waits_on owner is in Needs you, after Needs you and before Failed; the others
     stay in Waiting for other work; each of their rows reads the dependency first, then the item, then Expected."""
-    registry = glance_registry()
+    registry = own_registry(fx, glance_registry())
     by_id = {t['id']: t for t in registry['tasks']}
     by_id['DS7']['waits_on'] = 'owner'
     by_id['DS7']['expected_basis'] = 'your OK on the folder name'
     by_id['DS10']['detail'] = 'Needs the cloud runner. More text.'
     by_id['DS9']['expected_basis'] = 'your review'
-    out = fx.render('full-progress', registry=registry)
+    out = fx.render('artifacts', registry=registry)
     got = glance(out)
     assert got['you'][0] == ['DS9', 'DS7', 'DS11'], got['you']
     assert got['waiting'][0] == ['DS10'], got['waiting']
@@ -2062,7 +2081,7 @@ def glance_splits_owner_waits_from_work_waits(fx):
     assert '<span class="glance-dep">your OK on the folder name</span>' in row and 'glance-basis' not in row, row
     row = out[out.index('data-glance-task="DS10"'):]
     assert '<span class="glance-dep">Needs the cloud runner.</span>' in row[:row.index('</li>')], row
-    assert fx.check(out, 'full-progress', registry=registry) == []
+    assert fx.check(out, 'artifacts', registry=registry) == []
     # the work side with no basis and no detail sentence falls back to the release it rides
     by_id['DS10']['detail'] = ''
     by_id['DS10']['rides'] = 'DS6'
@@ -2075,7 +2094,7 @@ def glance_splits_owner_waits_from_work_waits(fx):
 def glance_default_waits_on_work_keeps_old_grouping(fx):
     """R5.34a: without waits_on a Waiting or On hold task is waiting for other work, as before the split; Needs you
     and its count do not change."""
-    out = fx.render('full-progress', registry=glance_registry())
+    out = fx.render('artifacts', registry=own_registry(fx, glance_registry()))
     got = glance(out)
     assert got['you'][0] == ['DS9', 'DS11'] and got['waiting'][0] == ['DS7', 'DS10'], got
     assert R.waits_on_owner({'status': 'Waiting', 'waits_on': 'work'}) is False
@@ -2087,11 +2106,11 @@ def glance_default_waits_on_work_keeps_old_grouping(fx):
 def glance_needs_you_count_matches_the_section(fx):
     """R5.34a, R6.13: the Needs you count is the section: Needs you, owner waits, Failed and open decisions; the
     summary line and the Needs you sentence agree."""
-    registry = glance_registry()
+    registry = own_registry(fx, glance_registry())
     by_id = {t['id']: t for t in registry['tasks']}
     by_id['DS7']['waits_on'] = 'owner'
     by_id['DS10']['waits_on'] = 'owner'
-    out = fx.render('full-progress', registry=registry)
+    out = fx.render('artifacts', registry=registry)
     dom = R.parse_dom(out)
     groups = {g.attrs['data-glance']: g for g in R.find_all(dom, 'details', 'glance-group')}
     assert R.text_of(R.find(groups['you'], 'span', 'fold-count')) == '4 tasks'
@@ -2100,22 +2119,22 @@ def glance_needs_you_count_matches_the_section(fx):
     assert R.needs_you_sentence(registry['tasks']).startswith('Needs you: DS9 ')
     assert 'DS7' in R.needs_you_sentence(registry['tasks'])
     assert R.feature_summary([by_id['DS7']]) == '1 needs you' and R.feature_summary([by_id['DS6']]).startswith('1 running')
-    assert fx.check(out, 'full-progress', registry=registry) == []
+    assert fx.check(out, 'artifacts', registry=registry) == []
 
 
 @test
 @with_fixture
 def check_finds_a_wrong_split_or_dependency(fx):
     """R5.34a, R5.35: a task in the wrong one of the two groups, or a row without its dependency, is a finding."""
-    registry = glance_registry()
+    registry = own_registry(fx, glance_registry())
     by_id = {t['id']: t for t in registry['tasks']}
     by_id['DS7']['waits_on'] = 'owner'
     by_id['DS7']['expected_basis'] = 'your OK'
-    out = fx.render('full-progress', registry=registry)
-    expect(fx, sub1(out, '<span class="glance-dep">your OK</span> ', ''), 'full-progress', ['R5.34a'], registry=registry)
-    expect(fx, drop_item(out, 'task', 'DS7'), 'full-progress', ['R5.7'], registry=registry)
+    out = fx.render('artifacts', registry=registry)
+    expect(fx, sub1(out, '<span class="glance-dep">your OK</span> ', ''), 'artifacts', ['R5.34a'], registry=registry)
+    expect(fx, drop_item(out, 'task', 'DS7'), 'artifacts', ['R5.7'], registry=registry)
     by_id['DS7']['waits_on'] = 'work'
-    expect(fx, out, 'full-progress', ['R5.7', 'R5.9', 'R5.35', 'R6.13'], registry=registry)           # rendered with the old split
+    expect(fx, out, 'artifacts', ['R5.7', 'R5.35', 'R6.13'], registry=registry)           # rendered with the old split
 
 
 @test
@@ -2152,20 +2171,20 @@ def check_r532_block_and_order(fx):
 @with_fixture
 def check_r534_each_group_lists_its_tasks(fx):
     """R5.34, R5.35: a missing or extra task in a group, or a wrong 'and N more', is a finding."""
-    fx.registry = glance_registry()
-    fp = fx.render('full-progress')
-    expect(fx, drop_item(fp, 'task', 'DS6'), 'full-progress', ['R5.35'])                     # Running task missing
-    expect(fx, drop_item(fp, 'task', 'AR5'), 'full-progress', ['R5.35'])                     # Built task missing
-    expect(fx, drop_item(fp, 'task', 'DS10'), 'full-progress', ['R5.35'])                    # On hold task missing
-    expect(fx, drop_item(fp, 'task', 'LV9'), 'full-progress', ['R5.35'])                     # Live task missing
-    expect(fx, sub1(fp, 'and 2 more', 'and 3 more'), 'full-progress', ['R5.35'])
+    fx.registry = own_registry(fx, glance_registry())
+    fp = fx.render('artifacts')
+    expect(fx, drop_item(fp, 'task', 'DS6'), 'artifacts', ['R5.35'])                     # Running task missing
+    expect(fx, drop_item(fp, 'task', 'AR5'), 'artifacts', ['R5.35'])                     # Built task missing
+    expect(fx, drop_item(fp, 'task', 'DS10'), 'artifacts', ['R5.35'])                    # On hold task missing
+    expect(fx, drop_item(fp, 'task', 'LV9'), 'artifacts', ['R5.35'])                     # Live task missing
+    expect(fx, sub1(fp, 'and 2 more', 'and 3 more'), 'artifacts', ['R5.35'])
     extra = sub1(fp, '<li data-glance-task="AR5">', '<li data-glance-task="AR7"><span class="task-id">AR7</span>x</li>\n<li data-glance-task="AR5">')
-    expect(fx, extra, 'full-progress', ['R5.35'])                                            # To do task listed
+    expect(fx, extra, 'artifacts', ['R5.35'])                                            # To do task listed
     old_live = sub1(fp, '<li data-glance-task="LV3">', '<li data-glance-task="LV11"><span class="task-id">LV11</span>x</li>\n<li data-glance-task="LV3">')
-    expect(fx, old_live, 'full-progress', ['R5.35'])                                         # Live task older than 24 h listed
+    expect(fx, old_live, 'artifacts', ['R5.35'])                                         # Live task older than 24 h listed
     # the window follows the stamp: exactly 24 h before it is in
     fx.registry['tasks'][-1]['changed'] = '2026-10-09T12:39+01:00'
-    assert 'LV11' not in glance(fx.render('full-progress'))['live'][0]                     # cut by the cap, still not shown past 8
+    assert 'LV11' not in glance(fx.render('artifacts'))['live'][0]                     # cut by the cap, still not shown past 8
     assert fx.check(fx.render('full-progress'), 'full-progress') == []
 
 
@@ -2803,7 +2822,7 @@ def other_work_strip_alone_and_overdue(fx):
 @with_fixture
 def tiles_say_tasks(fx):
     """R5.8a: a tile reads `tasks live` and, for one, `task running`."""
-    out = fx.render('full-progress')
+    out = feature_view(fx)         # DL429: Full Progress shows count badges instead of tiles
     assert '<div class="count">4</div><div class="label">tasks live</div>' in out
     assert '<div class="count">1</div><div class="label">task waiting</div>' in out
 
@@ -2841,7 +2860,7 @@ def release_group_heading_with_risk(fx):
     assert '<strong>RELEASE-1 · live ~18:00 · worst ~18:10</strong>' in out
     assert '<strong>RELEASE-2 · live 12 Oct</strong>' in out and 'RELEASE-2 · live 12 Oct · worst' not in out
     assert '<span class="task-id">DS51</span><span class="release-name">RELEASE-1</span>DL12 release' in out
-    assert '<li data-glance-task="DS51"><span class="task-id">DS51</span><span class="release-name">RELEASE-1</span>' in out
+    assert 'RELEASE-1: Expected: live ~18:00 · worst ~18:10.' in out      # DL429: the What is happening bullet
     # a timed release without a risk: live time only
     registry = with_releases(fx, release('DS51', 'Plain', '10 Oct ~19:00', status='Running'))
     assert '<strong>RELEASE-1 · live ~19:00</strong>' in fx.render('full-progress', registry=registry)
@@ -2905,7 +2924,7 @@ def check_finds_a_row_in_the_wrong_release_group(fx):
             t['rides'] = 'DS53'
     out = fx.render('full-progress', registry=registry)
     expect(fx, move_row(out, 'AR6', 'data-group="release-2"'), 'full-progress', ['R5.46'], registry=registry)
-    expect(fx, sub1(out, 'RELEASE-1 · live ~18:00 · worst ~18:10', 'RELEASE-1 · live ~18:00'), 'full-progress', ['R5.46'], registry=registry)
+    expect(fx, sub1(out, '<strong>RELEASE-1 · live ~18:00 · worst ~18:10</strong>', '<strong>RELEASE-1 · live ~18:00</strong>'), 'full-progress', ['R5.46'], registry=registry)
     expect(fx, sub1(out, '<span class="release-line"><span class="release-name">RELEASE-3</span></span>', ''), 'full-progress', ['R5.46'], registry=registry)
     expect(fx, sub1(out, '<span class="task-id">DS52</span><span class="release-name">RELEASE-2</span>', '<span class="task-id">DS52</span>'),
            'full-progress', ['R5.45'], registry=registry)
@@ -2981,7 +3000,7 @@ def dropped_release_is_closed_history(fx):
     row = row[:row.index('</tr>')]
     assert '<span class="dropped-line">dropped: folded into RELEASE-2</span>' in row and 'status-dropped' in row, row
     assert R.dropped_line(gone, {'DS52': kept}) == 'dropped: folded into RELEASE-2'
-    assert 'status-count-tile status-dropped' in out and 'status-chip status-dropped' in out
+    assert 'status-chip status-dropped' in out
     assert R.find([f for f in R.find_all(R.parse_dom(out), 'details', 'status-fold') if not R.has_class(f, 'feature-group')][-1], 'tr') is not None
     assert fx.check(out, 'full-progress', registry=registry) == []
     bad = out.replace('dropped: folded into RELEASE-2', 'dropped: something else')
