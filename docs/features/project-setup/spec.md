@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.17.0
+version: 0.18.0
 owner: agents
 type: reference
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.18.0 | 2026-11-26 | RELEASE-188 | The update offer and claude-setup suggest the branch name <task>-integration when they tell the owner to commit. claude-setup installs tzdata as a confirmed, checked step and status reports it. | DL423 |
 | 0.17.0 | 2026-11-26 | RELEASE-186 | tech-stack-setup and claude-setup write .delivery/* and !.delivery/config.json to .gitignore. Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | DL419 |
 | 0.16.0 | 2026-11-26 | RELEASE-185 | claude-setup template: auto-compact window 350000 (was 150000). Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP12 |
 | 0.15.0 | 2026-11-25 | RELEASE-182 | A SessionStart hook offers to apply the new project config when the luismc plugins changed since the project was last set up (R5.26). | SO9 |

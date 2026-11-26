@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T08:31+00:00",
+  "updated": "2026-11-26T08:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7732,12 +7732,11 @@
       "id": "DL423",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Setup suggests <task>-integration branch",
       "detail": "claude-setup and plugin_update_offer suggest the branch name when telling the owner to commit; session_guard refusal otherwise; peer finding 3",
-      "expected": "26 Nov ~18:00",
-      "changed": "2026-11-26T08:31+00:00",
-      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T08:40+00:00",
       "release": 188,
       "started": "2026-11-26T08:31+00:00"
     },
@@ -7778,12 +7777,11 @@
       "id": "DL427",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "claude-setup installs tzdata on Windows",
       "detail": "delivery_doctor FAILs on Europe/Lisbon until tzdata is installed; claude-setup installs it; peer finding 7",
-      "expected": "26 Nov ~18:00",
-      "changed": "2026-11-26T08:31+00:00",
-      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T08:40+00:00",
       "rides": "DL423",
       "started": "2026-11-26T08:31+00:00"
     },
