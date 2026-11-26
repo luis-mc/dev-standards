@@ -9,14 +9,26 @@
       "os": "windows",
       "distro": null,
       "arch": "x64",
-      "package": "msi"
+      "package": "msi",
+      "inputs": [
+        "installer/windows/**",
+        "packaging/windows/**"
+      ]
     },
     {
       "os": "linux",
       "distro": "ubuntu-lts",
       "arch": "x64",
-      "package": "deb"
+      "package": "deb",
+      "inputs": [
+        "installer/linux/**",
+        "packaging/linux/**"
+      ]
     }
+  ],
+  "no_target": [
+    "docs/**",
+    "**/*.md"
   ],
   "paths": {
     "windows": {

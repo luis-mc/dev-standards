@@ -79,6 +79,14 @@
               "pkg",
               "tar"
             ]
+          },
+          "inputs": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            },
+            "description": "DL-125: path globs whose change affects this target; none means always affected"
           }
         }
       }
@@ -534,6 +542,14 @@
           "type": "string"
         }
       }
+    },
+    "no_target": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "description": "DL-125: path globs that affect no target (docs and the like)"
     }
   }
 }

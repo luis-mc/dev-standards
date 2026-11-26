@@ -68,6 +68,7 @@ hook, language guard tests). tech-stack-setup and claude-setup carry no CI or de
 | `scripts/delivery/shard_table.py`, `scripts/delivery/shard_guard.py` | same (DL19: resolves the shard table to test files per shard; the guard that every test file is in exactly one shard and every shard fits its limits) | ci |
 | `scripts/delivery/cloud_status.py` | same (CI option c: lists the heads that need shards and posts the results as commit statuses; starter) | ci |
 | `scripts/delivery/pass_records.py` | same (inputs key and pass records: a shard whose inputs already passed is skipped; see "Pass records") | ci |
+| `scripts/delivery/affected_targets.py` | same (DL-125: which lifecycle targets a change affects, from `inputs` in lifecycle.json; `lane`, `unmapped`, `scaffold`) | ci |
 | `scripts/delivery/ci-shards.json` | per product (the shard table, see "CI options"; `ci-shards.example.json` is the format) | ci |
 | `scripts/delivery/speed_probe.py`, `scaled.mjs` | `templates/shared/scripts/delivery/` (speed probe and `scaled(ms)` for timing budgets, see "Speed probe") | ci |
 | `scripts/delivery/db_per_worker.py` | same (one Postgres database per test worker from a template; Postgres projects only) | ci |

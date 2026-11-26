@@ -126,7 +126,7 @@ flowchart LR
 
 **R5.28** — The lifecycle step scripts in `claude/plugins/delivery/templates/lifecycle/os/` (windows msi, linux deb and rpm, macos pkg) and the leftover scanners check install, reinstall, upgrade, rollback, downgrade, remove, purge, tray, boot and pairing against `lifecycle.json` (DELIVERYSPEC DL-109, DL-110; LC-8 to LC-21, LC-29, LC-33). The lanes job template names no runner.
 
-**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target in `lifecycle.json` has a passing lane result, and checks artifact names (`<Product>-<version>-<os>-<arch>.<ext>`) and separate stores for public packages and private data (DL-112; LC-32).
+**R5.29** — `lifecycle_release_check.py` fails a release pull request unless every target the change affects has a passing lane result and every other target has a pass record of the default branch (DL-125, DS269), and checks artifact names (`<Product>-<version>-<os>-<arch>.<ext>`) and separate stores for public packages and private data (DL-112; LC-32).
 
 **R5.30** — `lifecycle_optout.py` fails a lifecycle opt-out with no decision ID, no reason or a past review date, prints what each opt-out loses, and the session hook lists the opt-outs in one line (DL-113; LC-27).
 
