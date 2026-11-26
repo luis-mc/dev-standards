@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.16.1
+version: 0.17.0
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.17.0 | 2026-11-26 | RELEASE-195 | Changed areas job and the pull-request path-filter check (DL-116).<br>Base image reuse by input key (DL-117).<br>Pass records as lane results and copy-to-main (DL-118, DL-112). | DS261, DS262, DS263 |
 | 0.16.1 | 2026-11-26 | RELEASE-192 | Train freeze lifts for a run cancelled with cancel_old_run.py; docs and config pushes skip typecheck and lint (see delivery R5.36c to R5.36e). | DL424 |
 | 0.16.0 | 2026-11-26 | RELEASE-184 | The delivery plugin holds no runner rules: the runner-health warning is gone, and ci_watch only reports a job queued over 10 minutes. | DL418 |
 | 0.15.2 | 2026-11-25 | RELEASE-181 | The gate skips every step when the same git tree already passed (delivery R13.36). | DP9 |
