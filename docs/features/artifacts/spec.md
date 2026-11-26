@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.23.1
+version: 0.24.0
 owner: agents
 type: reference
 code:
@@ -353,6 +353,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.24.0 | 2026-11-26 | RELEASE-201 | Full Progress links every pull request number to its page, opening in a new window; new optional manifest setting pr_links (R5.35, R5.36). | DS272 |
 | 0.23.1 | 2026-11-26 | RELEASE-200 | The after-command hook prints the project rule once per session and repository: a new worktree of the same repository no longer prints it again (temp marker keyed by the git common directory). | DS271 |
 | 0.23.0 | 2026-11-26 | RELEASE-194 | Full Progress shows a CI waste badge from the CI runs file (R5.34). | DS258 |
 | 0.22.1 | 2026-11-26 | RELEASE-193 | The Agents badge shows running and total agents, each split into local and cloud (R5.31).<br>The CI badge flags only failures no later run fixed (R5.31). | DS265, DS266 |
