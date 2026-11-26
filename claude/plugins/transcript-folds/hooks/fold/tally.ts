@@ -3,6 +3,7 @@
 import type { Change } from './change.ts'
 import { MINUS, filesWord } from './summary.ts'
 import type { Piece } from './summary.ts'
+import { HOOKS_CHORD } from './hookfold.ts'
 
 export type Tally = {
   /** Paths touched, each once. */
@@ -62,14 +63,16 @@ export const COMMANDS_CHORD = 'ctrl+x f'
 export type BandParts = {
   diffsLabel: string
   commandsLabel: string
+  hooksLabel: string
   tally: string
 }
 
-/** The words of the band: two switch labels and the tally. */
-export function bandParts(diffsFolded: boolean, commandsFolded: boolean, tally: Tally): BandParts {
+/** The words of the band: three switch labels and the tally. */
+export function bandParts(diffsFolded: boolean, commandsFolded: boolean, hooksFolded: boolean, tally: Tally): BandParts {
   return {
     diffsLabel: `Diffs ${diffsFolded ? 'folded' : 'shown'} (${DIFFS_CHORD})`,
     commandsLabel: `Commands ${commandsFolded ? 'folded' : 'shown'} (${COMMANDS_CHORD})`,
+    hooksLabel: `Hooks ${hooksFolded ? 'folded' : 'shown'} (${HOOKS_CHORD})`,
     tally: tallyText(tally),
   }
 }
@@ -80,6 +83,8 @@ export function bandPieces(parts: BandParts): Piece[] {
     { text: parts.diffsLabel, tone: 'dim' },
     { text: ' · ', tone: 'dim' },
     { text: parts.commandsLabel, tone: 'dim' },
+    { text: ' · ', tone: 'dim' },
+    { text: parts.hooksLabel, tone: 'dim' },
   ]
   if (parts.tally !== '') {
     out.push({ text: ' · ', tone: 'dim' }, { text: parts.tally, tone: 'dim' })
@@ -88,7 +93,7 @@ export function bandPieces(parts: BandParts): Piece[] {
 }
 
 /** The one line a toggle answers (toast and slash command). */
-export function switchSentence(which: 'diffs' | 'commands', isFolded: boolean): string {
-  const name = which === 'diffs' ? 'Diffs' : 'Commands'
+export function switchSentence(which: 'diffs' | 'commands' | 'hooks', isFolded: boolean): string {
+  const name = which === 'diffs' ? 'Diffs' : which === 'commands' ? 'Commands' : 'Hook messages'
   return `${name} ${isFolded ? 'folded' : 'shown in full'}.`
 }

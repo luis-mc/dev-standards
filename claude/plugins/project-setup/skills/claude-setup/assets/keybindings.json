@@ -5,7 +5,8 @@
       "context": "Global",
       "bindings": {
         "ctrl+x d": "theme:toggleSyntaxHighlighting",
-        "ctrl+x f": "theme:editCustom"
+        "ctrl+x f": "theme:editCustom",
+        "ctrl+x h": "settings:sortByTokens"
       }
     }
   ]

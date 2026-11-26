@@ -45,17 +45,17 @@ test('a change of no lines still counts its file', () => {
 })
 
 test('the band: labels with chords, no tally before the first change', () => {
-  const parts = bandParts(true, true, EMPTY_TALLY)
-  assert.equal(piecesText(bandPieces(parts)), 'Diffs folded (ctrl+x d) · Commands folded (ctrl+x f)')
+  const parts = bandParts(true, true, true, EMPTY_TALLY)
+  assert.equal(piecesText(bandPieces(parts)), 'Diffs folded (ctrl+x d) · Commands folded (ctrl+x f) · Hooks folded (ctrl+x h)')
 })
 
 test('the band: states shown, and the tally once there is one', () => {
   let t = EMPTY_TALLY
   for (let i = 0; i < 7; i += 1) t = addToTally(t, one(`/p/f${i}`, i === 0 ? 120 : 0, i === 0 ? 34 : 0))
-  const parts = bandParts(false, true, t)
+  const parts = bandParts(false, true, true, t)
   assert.equal(
     piecesText(bandPieces(parts)),
-    'Diffs shown (ctrl+x d) · Commands folded (ctrl+x f) · 7 files +120 −34 this session',
+    'Diffs shown (ctrl+x d) · Commands folded (ctrl+x f) · Hooks folded (ctrl+x h) · 7 files +120 −34 this session',
   )
 })
 
@@ -64,6 +64,8 @@ test('switchSentence says the new state in one line', () => {
   assert.equal(switchSentence('diffs', false), 'Diffs shown in full.')
   assert.equal(switchSentence('commands', true), 'Commands folded.')
   assert.equal(switchSentence('commands', false), 'Commands shown in full.')
+  assert.equal(switchSentence('hooks', true), 'Hook messages folded.')
+  assert.equal(switchSentence('hooks', false), 'Hook messages shown in full.')
 })
 
 test('F56: one Windows file in two spellings counts once', () => {
