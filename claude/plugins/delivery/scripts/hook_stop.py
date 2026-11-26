@@ -629,6 +629,36 @@ def check_registry(root, cfg, at):
     return out
 
 
+WARN_ONLY = ('DL-123',)
+
+
+def check_running_idle(root, ledger, cfg):
+    """DL-123 (DS267, warn only): a task is Running, no agent row is open for it and no CI run is active for it."""
+    reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
+    if reg is None:
+        reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
+    tasks = reg.get('tasks') if isinstance(reg, dict) else None
+    if not isinstance(tasks, list):
+        return []
+    busy = set()
+    for a in ledger['agents']:
+        if a.get('state') not in H.TERMINAL_AGENT:
+            busy.update(str(x) for x in [a.get('task')] + list(a.get('tasks') or []) if x)
+    for t in ledger['trains']:
+        if t.get('state') in ('pushed', 'ci'):
+            busy.update(str(c.get('task')) for c in t.get('cargo') or [] if isinstance(c, dict) and c.get('task'))
+            busy.update(str(x) for x in t.get('tasks') or [])
+            m = re.match(r'[A-Z]{2,5}\d+', str(t.get('branch') or ''))
+            if m:
+                busy.add(m.group(0))
+    out = []
+    for t in tasks:
+        if isinstance(t, dict) and t.get('status') == 'Running' and t.get('id') and str(t['id']) not in busy:
+            out.append(('DL-123:' + str(t['id']), '%s is Running but no agent is working on it: set it Built, Waiting or '
+                        'Needs you.' % t['id']))
+    return out
+
+
 # --- main ------------------------------------------------------------------------------------
 
 def findings(root, data, cfg):
@@ -638,6 +668,10 @@ def findings(root, data, cfg):
         _L.autoclose(root)
     except Exception:  # noqa: BLE001
         pass
+    try:                              # DS267: a local agent whose end no hook sees is closed here
+        _L.close_local_agents(root)
+    except Exception:  # noqa: BLE001
+        pass
     ledger = H.load_ledger(root)
     text = last_assistant_text(data)
     out = []
@@ -645,6 +679,7 @@ def findings(root, data, cfg):
     out += check_agents(ledger, cfg, at)
     out += check_watcher(ledger, cfg, at)
     out += check_registry(root, cfg, at)
+    out += check_running_idle(root, ledger, cfg)
     out += check_one_ci_per_release(root, ledger, cfg)
     if text:
         out += check_eta_text(text)
@@ -662,6 +697,13 @@ def main():
         return 0
     cfg = H.load_config(root)
     found = findings(root, data, cfg)
+    warns = [m for k, m in found if k.split(':')[0] in WARN_ONLY]       # DS267: said, never blocking
+    found = [(k, m) for k, m in found if k.split(':')[0] not in WARN_ONLY]
+    if warns and not found:
+        print(json.dumps({'systemMessage': 'luismc-delivery: ' + '; '.join(warns)}))
+        return 0
+    if warns:
+        found[0] = (found[0][0], found[0][1] + ' (Warning only: ' + '; '.join(warns) + ')')
     enf = H.C.enforcement(cfg)
     if enf['mode'] == 'warn':
         if found:

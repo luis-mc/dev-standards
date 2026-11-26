@@ -1414,6 +1414,54 @@ def _stale_verdict(root, t: dict, run, now: datetime):
     return "live" if out.strip() else "branch-gone"
 
 
+LOCAL_AGENT_ETA_MIN = 60
+
+
+def _local_agent_over(a: dict, now) -> str | None:
+    """DS267, DL-123: why a `running` local agent row is finished, or None while it may still work. No hook sees
+    the end of a local agent, so: its worktree or its output file is gone, or the row is older than twice its
+    eta (total_min, default 60). Never leaves a row running for ever."""
+    for key, why in (("worktree", "worktree-gone"), ("log_path", "output-gone")):
+        path = a.get(key)
+        if isinstance(path, str) and path and not os.path.exists(path):
+            return why
+    started = parse_iso(a.get("started"))
+    eta = a.get("eta") if isinstance(a.get("eta"), dict) else {}
+    try:
+        total = float(eta.get("total_min") or LOCAL_AGENT_ETA_MIN)
+    except (TypeError, ValueError):
+        total = LOCAL_AGENT_ETA_MIN
+    if started and (now - started).total_seconds() > 2 * total * 60:
+        return "eta-exceeded"
+    return None
+
+
+def close_local_agents(root, now: datetime | None = None) -> list:
+    """DS267, DL-123: mark finished local agent rows `done`. Returns [(task, id, reason)]. Never raises."""
+    try:
+        now = now or utcnow()
+        todo = [(a.get("id"), a.get("task")) for a in load(root).get("agents", [])
+                if isinstance(a, dict) and a.get("where") == "local" and a.get("state") == "running"
+                and _local_agent_over(a, now)]
+        if not todo:
+            return []
+        done = []
+
+        def fn(led):
+            for a in led["agents"]:
+                if a.get("where") == "local" and a.get("state") == "running" and (a.get("id"), a.get("task")) in todo:
+                    why = _local_agent_over(a, now)
+                    if why:
+                        a["state"] = "done"
+                        a["last_activity"] = iso(now)
+                        add_event(led, "agent.done", str(a.get("task") or a.get("id") or ""), "close_local_agents", iso(now))
+                        done.append((a.get("task"), a.get("id"), why))
+        update(root, fn)
+        return done
+    except Exception:  # noqa: BLE001 - fail safe: no change
+        return []
+
+
 def autoclose(root, run=_run, now: datetime | None = None) -> list:
     """DL382: close open trains whose PR merged elsewhere or whose branch is gone with no open PR. Returns
     [(train id, reason)]. Never raises; a failing gh or git changes nothing."""
