@@ -143,6 +143,12 @@ timed out. A script never exits 0 when it could not decide.
   glob over the full path; anything else is a root-level file only (a nested
   `package.json` does not widen). Per-package lockfiles use globs (`*go.sum`,
   `*packages.lock.json`).
+- `local_gate` (optional, default `full`; DS264, DL-12): `smoke` makes the local gate run
+  only the suites of the touched areas. A `ui-changed` step (the e2e suite) runs only when
+  its specs can be named (`e2e_map` or the dependency graph); otherwise it is skipped with
+  the reason `smoke gate: touched specs not derived, CI is the one full run`, and
+  `branch_gate.py` prints one line saying CI is the one full run. `--full` still runs
+  everything. `full` changes nothing.
 - `lockfile_scope` (optional, default `widen`): how a lockfile change is scoped.
   `widen`: the lockfile is whatever `widen_on` says (an entry there widens the gate
   to every package; a gate.json written before this key keeps working, and a
@@ -1112,3 +1118,7 @@ is not configured and writes `"gate": "not configured"` to `join-result.json`.
 - `detect_tools(root) -> {tool: evidence_path}` reads files up to two folders deep (not `node_modules`, `target`, `.git`, `vendor`, build folders). `declared(cfg)` returns the block. `resolve(root, cfg)` gives each tool `known`, `declared` or `unchecked`; the declaration wins over detection.
 - `KNOWN` lists the tools the checks handle today, each with the code that handles it: playwright, vitest, jest, pytest (`test_guardrails.py`), go, dotnet, pnpm (`delivery_common.py` package kinds), cargo (`test_guardrails.py`, `delivery_common.py`). With no `stack` block, the track preset (`PRESETS`: ts, go, rust, dotnet) stands as the declaration, so a default project sees no change.
 - `delivery_doctor.py` check `stack.tools` fails at once, whatever `enforcement.mode` says, for a detected tool that is neither known nor declared. A declared tool that is not known is ok and prints `declared; delivery runs its commands but cannot judge them`.
+
+## Flake quarantine (DS264, DELIVERYSPEC DL-121)
+
+`.delivery/quarantine.json` lists the tests that are out of the blocking step: `{"tests": [{"test": "TestX", "task": "DS300", "review": "2026-12-05", "reason": "...", "suite": "go"}]}`. `test`, `task` (the task that fixes the flake) and `review` (YYYY-MM-DD) are required. A quarantined test is never retried until it passes (DL-99 G3). The project's blocking step leaves it out and a non-blocking step runs it and reports; `quarantine_check.py names` prints the test names for the step to use (for example `go test -skip`). `quarantine_check.py check` fails an entry with no task ID or a past review date and prints one plain line per entry saying what it loses; `quarantine_check.py line` prints the one line the session hook shows while any entry exists.

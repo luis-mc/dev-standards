@@ -47,6 +47,9 @@ New in 0.2.0:
 | `watcher.open_prs` | true | open its ready PR; the body carries `.delivery/docs-summaries.md` (written by `join.py`) when present |
 | `watcher.merge_mode` | `auto` | `auto`: merge on green. `manual`: the owner merges; the watcher never merges and the hooks refuse an agent's `gh pr merge` (DP16) |
 | `watcher.merge_on_green` | true | `gh pr merge N --merge --match-head-commit SHA`, never `--auto`, only when the head is unchanged since the green run |
+| `watcher.merge_result` | `warn` | a green PR whose head is behind its base has an untested merge result (DS259). `warn`: print one line and merge as before. `update`: run `gh pr update-branch` and merge only after CI is green on the new head. GitHub's merge queue does the same, but only for organization-owned repositories |
+| `watcher.infra_retry` | false | when a run failed for an infrastructure reason (runner lost, startup failure, a failure before any project step, or a log line in `infra_retry_patterns`), re-run the failed jobs once and record a `ci.retry` event. A test failure is never retried (DS260) |
+| `watcher.infra_retry_patterns` | `Hash Sum mismatch`, `Could not resolve host`, `TLS handshake timeout`, `502 Bad Gateway`, `The operation was canceled` | log texts that mark a failed step as infrastructure |
 | `deploy.serial` | false | releases deploy one after another; Full Progress then shows a release waiting on every earlier open release whose train merged first. A project with serial deploys sets it once |
 | `runner_plan.cancel_replaced_runs` | true | cancel CI runs of a head a newer push replaced |
 | `runner_plan.hold_dependabot_during_train` | true | cancel, then re-run, non-train CI runs while a train's CI runs |
