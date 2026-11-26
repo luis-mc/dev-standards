@@ -669,7 +669,7 @@ def findings(root, data, cfg):
     except Exception:  # noqa: BLE001
         pass
     try:                              # DS267: a local agent whose end no hook sees is closed here
-        _L.close_local_agents(root)
+        _L.close_local_agents(root, at)
     except Exception:  # noqa: BLE001
         pass
     ledger = H.load_ledger(root)

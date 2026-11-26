@@ -92,14 +92,9 @@ class Close(unittest.TestCase):
         got = L.close_local_agents(root, L.utcnow() + timedelta(minutes=minutes))
         return got, L.load(root)["agents"][0]["state"]
 
-    def test_old_row_closed_default_eta(self):
-        self.assertEqual(self.run_close(self.row(), 121)[1], "done")
-        self.assertEqual(self.run_close(self.row(), 100)[1], "running")
-
-    def test_uses_eta_total(self):
-        r = self.row(eta={"total_min": 10})
-        self.assertEqual(self.run_close(r, 21)[1], "done")
-        self.assertEqual(self.run_close(r, 15)[1], "running")
+    def test_day_old_row_closed_and_a_late_row_is_not(self):
+        self.assertEqual(self.run_close(self.row(), 24 * 60 + 1)[1], "done")
+        self.assertEqual(self.run_close(self.row(eta={"total_min": 10}), 121)[1], "running")  # past its eta: DL-32 asks
 
     def test_gone_worktree_or_output(self):
         self.assertEqual(self.run_close(self.row(worktree="/no/such/dir-ds267"))[1], "done")

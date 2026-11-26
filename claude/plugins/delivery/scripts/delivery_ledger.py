@@ -1419,20 +1419,15 @@ LOCAL_AGENT_ETA_MIN = 60
 
 def _local_agent_over(a: dict, now) -> str | None:
     """DS267, DL-123: why a `running` local agent row is finished, or None while it may still work. No hook sees
-    the end of a local agent, so: its worktree or its output file is gone, or the row is older than twice its
-    eta (total_min, default 60). Never leaves a row running for ever."""
+    the end of a local agent, so: its worktree or its output file is gone, or the row is a day old
+    (a forgotten row; an agent past its eta is still checked by DL-32). Never leaves a row running for ever."""
     for key, why in (("worktree", "worktree-gone"), ("log_path", "output-gone")):
         path = a.get(key)
         if isinstance(path, str) and path and not os.path.exists(path):
             return why
     started = parse_iso(a.get("started"))
-    eta = a.get("eta") if isinstance(a.get("eta"), dict) else {}
-    try:
-        total = float(eta.get("total_min") or LOCAL_AGENT_ETA_MIN)
-    except (TypeError, ValueError):
-        total = LOCAL_AGENT_ETA_MIN
-    if started and (now - started).total_seconds() > 2 * total * 60:
-        return "eta-exceeded"
+    if started and (now - started).total_seconds() > 24 * 3600:
+        return "day-old"
     return None
 
 
