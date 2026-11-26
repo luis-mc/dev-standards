@@ -201,7 +201,7 @@ class Workflow(unittest.TestCase):
         c = jobs["copy-records"]
         self.assertIn("needs: decide", c)
         self.assertIn("github.event_name == 'push' && needs.decide.outputs.skip == 'true'", c)
-        self.assertIn("!cancelled()", c)
+        self.assertIn("!cancelled() && needs.decide.result == 'success'", c)
         self.assertIn("contents: write", c)
         self.assertIn("continue-on-error: true", c)
         self.assertIn("pass_records.py copy-to-main", c)
