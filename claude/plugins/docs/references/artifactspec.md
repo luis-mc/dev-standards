@@ -1,7 +1,7 @@
 # ARTIFACTSPEC — Project Artifacts Specification
 
 **Status:** Normative
-**Version:** 1.26.0
+**Version:** 1.27.0
 **Applies to:** every project that keeps feature artifacts and a full-progress artifact with the `luismc-docs` plugin
 **Audience:** Claude Code sessions in those projects, and the implementers of `luismc-docs`
 **Owner:** Luis Carvalho
@@ -104,6 +104,10 @@ sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
 ### 0.4 What changed in 1.1.0
+
+**1.27.0 — 2026-11-26.**
+
+- DS256: the Full Progress release timeline is a tree. A PR carries its releases, dashed arrows show a release waiting on a release, and a table lists them. Releases take `--pr`, `--release-start` and `--release-waits-on`; a dependent release is never live before what it waits on (R5.55 to R5.58).
 
 **1.26.0 — 2026-11-22.**
 

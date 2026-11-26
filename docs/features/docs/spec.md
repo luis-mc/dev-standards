@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.12.0
+version: 1.12.1
 owner: agents
 type: reference
 code:
@@ -201,6 +201,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.12.1 | 2026-11-26 | RELEASE-183 | DS256: ARTIFACTSPEC adds R5.55 to R5.58 for the release tree (a PR carries its releases). | DS256 |
 | 1.12.0 | 2026-11-25 | RELEASE-182 | The wizard behaviour guard adds step-bar-more-for-one: a step bar never says "+ 1 more" for one hidden step (R5.25). | DS244 |
 | 1.11.0 | 2026-11-25 | RELEASE-180 | A real release fold prints the Full Progress publish steps when the page changed since its last publish. | DS252 |
 | 1.10.0 | 2026-11-25 | RELEASE-175 | set-task-status and task-add refuse a --no-release reason that names shipping or a release (R5.47a); work that ships must ride a release. Plugin: claude/plugins/docs/.claude-plugin/plugin.json<br>Docs plugin scripts gain the default Expected and overdue-sweep (see features/artifacts R5.24, R5.25); claude/plugins/docs/.claude-plugin/plugin.json.<br>Full Progress adds a Warn mode section with one line when a project runs the delivery rules in warn mode (reads .delivery/warn-report.json).<br>docs_check reports R1 when a delivery project cites a removed delivery rule ID. The fix guide is docs/guides/removed-delivery-ids.md. Plugin file claude/plugins/docs/.claude-plugin/plugin.json. | DP13, DP7, DP8, DS246 |
