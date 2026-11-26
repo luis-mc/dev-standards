@@ -1163,7 +1163,7 @@ def validate_structure(rec):
                 f('R5.34a', 'registry.json', '%s: waits_on must be one of %s' % (label, ', '.join(WAITS_ON)))
             elif isinstance(st, str) and st in statuses and st not in ('Waiting', 'On hold'):
                 f('R5.34a', 'registry.json', '%s: waits_on belongs on a Waiting or On hold row, not on a %s row' % (label, st))
-        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + started_problems(t) + release_label_problems(t, ledger_numbers):
+        for req, msg in release_problems(t, {x.get('id'): x for x in tasks if isinstance(x, dict)}) + phases_problems(t, old_warns=True) + started_problems(t) + release_label_problems(t, ledger_numbers):
             f(req, 'registry.json', '%s: %s' % (label, msg))
         ex = t.get('expected')
         if isinstance(ex, str) and isinstance(st, str) and st in statuses:
@@ -1692,6 +1692,8 @@ def phase_known(name):
 
 
 RISK_LABEL_MAX = 40
+NO_PHASES_MAX = 80           # R5.41a: longest `no_phases` reason
+NO_PHASES_FROM = '2026-11-26'   # R5.41a: a row last changed before this date warns instead of failing
 NO_RELEASE_MAX = 80          # R5.47a: longest `no_release` reason
 _POINT_RE = re.compile(r'^\s*(?:(\d{1,2}) (' + '|'.join(MONTHS) + r') )?([01]?\d|2[0-3]):([0-5]\d)\s*$')
 
@@ -1927,6 +1929,81 @@ def release_problems(task, by_id):
             out.append(('R5.41', 'Expected is "%s" but the last phase ends at %s: a release\'s Expected is the end of its last '
                                  'phase (name a risk with --risk instead of padding)' % (have, want)))
     return out
+
+
+PHASES_FIX = ('give --phase agents=HH:MM-HH:MM and the other phases (join, ci, merge), '
+              'or --no-phases REASON when the release really has none')
+
+
+def phase_target(task, by_id):
+    """R5.41a: the release a task counts on: itself when it is a release, else the one it rides, else None."""
+    if is_release(task):
+        return task
+    rides = task.get('rides')
+    return by_id.get(rides) if isinstance(rides, str) else None
+
+
+def phases_problems(task, old_warns=False):
+    """R5.41a: [(requirement, message)] for the phases of one release row. `old_warns` leaves out an open release
+    changed before NO_PHASES_FROM (it is a warning, see phases_warnings)."""
+    out = []
+    if 'no_phases' in task:
+        np = task['no_phases']
+        if not is_release(task):
+            out.append(('R5.41a', 'no_phases belongs to a release task'))
+        elif not isinstance(np, str) or len(np.split()) < 2:
+            out.append(('R5.41a', 'no_phases must be a reason of at least two words, at most %d characters' % NO_PHASES_MAX))
+        elif len(np) > NO_PHASES_MAX:
+            out.append(('R5.41a', 'no_phases is %d characters; at most %d' % (len(np), NO_PHASES_MAX)))
+    if (is_release(task) and task.get('status') in ('Running', 'Waiting') and not task.get('phases')
+            and not (isinstance(task.get('no_phases'), str) and task['no_phases'].strip())
+            and not (old_warns and phases_old(task))):
+        out.append(('R5.41a', 'an open release has phases; %s' % PHASES_FIX))
+    return out
+
+
+def phases_old(task):
+    """R5.41a: True when the row was last changed before NO_PHASES_FROM."""
+    return str(task.get('changed') or '')[:10] < NO_PHASES_FROM
+
+
+def phases_warnings(rec):
+    """R5.41a: [(file, message)] for an older open release with no phases and no reason."""
+    out = []
+    for t in rec.tasks():
+        if (isinstance(t, dict) and is_release(t) and t.get('status') in ('Running', 'Waiting') and not t.get('phases')
+                and not t.get('no_phases') and phases_old(t)):
+            out.append(('registry.json', '%s: an open release has phases (R5.41a); %s' % (t.get('id'), PHASES_FIX)))
+    return out
+
+
+def apply_phase_rule(task, by_id, args, status):
+    """R5.41a: refuse a move to Running or Waiting whose release has no phases; --no-phases REASON is the way round."""
+    np = getattr(args, 'no_phases', None)
+    reason = ' '.join(np.split()) if np is not None else None
+    target = phase_target(task, by_id)
+    if reason is not None:
+        if status not in ('Running', 'Waiting'):
+            raise Fail(1, '--no-phases goes with Running or Waiting; a %s task has no phases to excuse' % status)
+        if len(reason.split()) < 2:
+            raise Fail(1, '--no-phases needs a reason of at least two words (say why there are no phases), got "%s"' % reason)
+        if len(reason) > NO_PHASES_MAX:
+            raise Fail(1, '--no-phases is %d characters; at most %d' % (len(reason), NO_PHASES_MAX))
+        if task.get('no_release'):
+            raise Fail(1, '%s ships nothing (--no-release); it has no release phases to excuse' % task.get('id'))
+        if target is None:
+            raise Fail(1, '%s rides no release; give --rides RELEASE-n or --release with --no-phases' % task.get('id'))
+        if target.get('phases'):
+            raise Fail(1, '%s already has phases; --no-phases is for a release with none' % target.get('id'))
+        target['no_phases'] = reason
+    if task.get('phases'):
+        task.pop('no_phases', None)               # phases now say it; the old reason goes
+    if status not in ('Running', 'Waiting') or task.get('no_release') or target is None:
+        return                                    # exempt; a missing release is R5.47's to report
+    if not target.get('phases') and not target.get('no_phases'):
+        who = '%s' % target.get('id') if target is task else '%s (the release %s rides)' % (target.get('id'), task.get('id'))
+        raise Fail(1, '%s: %s has no phases, so moving %s to %s is refused (R5.41a); %s'
+                   % (task.get('id'), who, task.get('id'), status, PHASES_FIX))
 
 
 TREE_FIELDS = ('pr', 'release_start', 'release_waits_on')
@@ -2405,7 +2482,9 @@ def cmd_set_task_status(args):
                 task['waits_on'] = waits_on
             else:
                 task.pop('waits_on', None)
-        apply_release_fields(task, {t.get('id'): t for t in rec.tasks()}, args, now.dt, ctx.root, expected_given=args.expected is not None)
+        by_id = {t.get('id'): t for t in rec.tasks()}
+        apply_release_fields(task, by_id, args, now.dt, ctx.root, expected_given=args.expected is not None)
+        apply_phase_rule(task, by_id, args, status)
         apply_started(task, args, now.dt, prev)
         owner = task['owner']
         if owner != 'project':
@@ -2832,7 +2911,7 @@ def cmd_render(args):
     return 0
 
 
-FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release',
+FINGERPRINT_TASK_FIELDS = ('id', 'owner', 'status', 'item', 'expected', 'release', 'rides', 'phases', 'risk', 'no_release', 'no_phases',
                            'waits_on', 'started', 'dropped_into', 'dropped_reason', 'pr', 'release_start', 'release_waits_on')
 
 
@@ -3238,7 +3317,7 @@ def cmd_check(args):
         findings += fresh_render_findings(rec, key)
     findings = sorted(set(findings))
     notes = setting_ignored_notes(session_root() or '.') + rule_copy_notes() + done_notes(rec) + release_notes(rec) + feature_url_notes(rec) + retired_notes(rec)
-    warnings = decision_warnings(rec) + lede_warnings(rec) + stale_lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec)
+    warnings = decision_warnings(rec) + lede_warnings(rec) + stale_lede_warnings(rec) + overdue_warnings(rec) + design_warnings(rec) + phases_warnings(rec)
     warnings += [('.delivery', m) for m in schema_warnings(session_root(str(rec.dir)))]
     if getattr(args, 'json_out', False):
         result = {'findings': [{'req': r, 'file': f, 'message': m} for r, f, m in findings],
@@ -3929,6 +4008,7 @@ def build_parser():
     s.add_argument('--release-start', metavar='"DD Mon ~HH:MM"|HH:MM', help='when this release starts, in the project time zone (a release only); "" clears it (R5.55)')
     s.add_argument('--release-waits-on', metavar='ID[,ID]', help='the releases this one waits on, task IDs or RELEASE-n, comma separated; each must exist and there must be no cycle (a release only); "" clears it (R5.55)')
     s.add_argument('--no-release', metavar='REASON', help='this task ships nothing (a publish, a study, a cleanup), at most 80 characters; it rides no release and is never Built (R5.47a); "" clears it')
+    s.add_argument('--no-phases', metavar='REASON', help='the release has no phases, at least two words, at most 80 characters; only with Running or Waiting (R5.41a)')
     s.add_argument('--waits-on', metavar='owner|work', help='who a Waiting or On hold task waits on: owner (it shows under Needs you) or work (other work, the default); "" clears it (R5.34a)')
     s.add_argument('--started', metavar='"DD Mon ~HH:MM"|HH:MM', help='when work on the task began, in the project time zone; it is where an open task\'s bar starts on the timeline and must be before Expected; "" clears it (R5.48)')
     s.add_argument('--into', metavar='ID', help='with Dropped: the task that took the work, its task ID or RELEASE-n; required for a release (R5.49)')
