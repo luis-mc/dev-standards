@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:42+00:00",
+  "updated": "2026-11-26T09:59+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7797,12 +7797,11 @@
       "id": "DL429",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Status badges and real status text",
       "detail": "Full Progress section 0: badges (key TLDR plus CI runs and status) at full width replace the repeated collapsible lines; below them short bullets of real status of the active or last releases and PRs: what went wrong, what fixes it, what went well. Owner request 26 Nov",
-      "expected": "26 Nov ~14:00",
-      "changed": "2026-11-26T09:30+00:00",
-      "expected_basis": "agent ~15 min, CI 5 min",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T09:59+00:00",
       "release": 191,
       "started": "2026-11-26T09:30+00:00"
     },
@@ -7822,12 +7821,11 @@
       "id": "DL431",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Review the pool project's leaner-CI analysis",
       "detail": "Review F1-F17 and S1-S14 of the peer page ci-leaner-findings.html: research best practice, correct, add, mark edits, say dev-standards or project per solution; owner asked via the peer 26 Nov",
-      "expected": "26 Nov ~11:30",
-      "changed": "2026-11-26T09:42+00:00",
-      "expected_basis": "agent research ~30 min",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T09:59+00:00",
       "no_release": "study of a peer page",
       "started": "2026-11-26T09:42+00:00"
     },

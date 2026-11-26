@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.14.1
+version: 1.15.0
 owner: agents
 type: reference
 code:
@@ -205,6 +205,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.15.0 | 2026-11-26 | RELEASE-191 | The docs plugin renders Full Progress section 0 as status badges plus a generated What is happening list (artifactspec R5.61 to R5.63). | DL429 |
 | 1.14.1 | 2026-11-26 | RELEASE-190 | R1 skips pinned tool checkouts, agent worktrees and the .delivery state. Touches claude/plugins/docs/.claude-plugin/plugin.json. | DL430 |
 | 1.14.0 | 2026-11-26 | RELEASE-189 | Full Progress shows the release tree and table whenever any release is open. Touches claude/plugins/docs/.claude-plugin/plugin.json. | DL428 |
 | 1.13.0 | 2026-11-26 | RELEASE-187 | note sets last_verified (R5.11b); visuals prints missing Proof lines (R5.26). | DL420 |

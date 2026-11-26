@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.21.0
+version: 0.22.0
 owner: agents
 type: reference
 code:
@@ -343,6 +343,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.22.0 | 2026-11-26 | RELEASE-191 | Full Progress section 0 shows full-width status badges and a generated What is happening list instead of the At a glance lines, tiles and lede (R5.31 to R5.33). | DL429 |
 | 0.21.0 | 2026-11-26 | RELEASE-189 | The release tree and table show whenever any release is open (R5.30). Touches claude/plugins/docs/.claude-plugin/plugin.json. | DL428 |
 | 0.20.0 | 2026-11-26 | RELEASE-187 | A release takes its PR and waits-on from the delivery ledger and git when unset (R5.29). | DL420 |
 | 0.19.0 | 2026-11-26 | RELEASE-183 | The Full Progress timeline draws a release tree: a PR carries its releases, dashed arrows show a release waiting on a release, and a table lists them. New release fields --pr, --release-start, --release-waits-on (R5.26 to R5.28). | DS256 |

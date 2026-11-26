@@ -310,6 +310,41 @@ details.glance-group > summary:hover { background: var(--surface-2); }
 .glance-waiting { border-left-color: var(--rule-strong); border-left-style: dashed; }
 .glance-live { border-left-color: var(--live); }
 
+/* Status badges and What is happening (Full Progress section 0, R5.61, R5.62): full width, tokens only */
+.status-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem .5rem;
+  width: 100%;
+  margin: 1.2em 0 .8em;
+}
+.status-badge {
+  display: inline-flex;
+  align-items: baseline;
+  gap: .45em;
+  max-width: 100%;
+  padding: .2em .65em;
+  border: 1px solid var(--rule);
+  border-left: 4px solid var(--rule-strong);
+  background: var(--surface);
+  font-size: .85rem;
+  overflow-wrap: anywhere;
+}
+.badge-label { color: var(--ink-muted); }
+.badge-value { font-weight: 600; color: var(--ink); }
+.badge-running { border-left-color: var(--running-mark); background: var(--running-bg); }
+.badge-built, .badge-live-24h, .badge-last-live { border-left-color: var(--live); }
+.badge-waiting, .badge-to-do { border-left-style: dashed; }
+.badge-alert { border-color: var(--signal); border-left-color: var(--signal); background: var(--waiting-bg); }
+.badge-alert .badge-label, .badge-alert .badge-value { color: var(--signal); }
+.badge-fail { border-color: var(--failed); border-left-color: var(--failed); background: var(--waiting-bg); }
+.badge-fail .badge-label, .badge-fail .badge-value { color: var(--failed); }
+.what-happens { width: 100%; margin: .6em 0 1.2em; }
+.happen-title { margin: 0 0 .3em; font-weight: 600; color: var(--ink-muted); }
+.what-happens ul { list-style: none; margin: 0; padding: 0; }
+.what-happens li { padding: .25em .7em; margin-block: .2em; border-left: 4px solid var(--live); overflow-wrap: anywhere; }
+.what-happens li.happen-fail { border-left-color: var(--failed); background: var(--waiting-bg); }
+
 /* Status chips */
 .status-chip {
   display: inline-block;
@@ -920,9 +955,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Decisions</a><a href="#s3"><b>3</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.23.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Transcript folds</h1><p>Long diffs and finished shell commands fold to one line in the transcript, toggled with ctrl+x d and ctrl+x f; claude-setup installs it on every machine.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.24.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Transcript folds</h1><p>Long diffs and finished shell commands fold to one line in the transcript, toggled with ctrl+x d and ctrl+x f; claude-setup installs it on every machine.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-26T09:35+00:00">26 Nov 09:35</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-26T09:59+00:00">26 Nov 09:59</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">26 Nov 09:43</a> (Lisbon)</p>
 <p class="lede">Live since 13 Oct (PR #60): luismc-transcript-folds 1.0.0, installed by claude-setup 14.3.0.</p>
 <div class="at-a-glance">
