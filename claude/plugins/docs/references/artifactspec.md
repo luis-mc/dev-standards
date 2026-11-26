@@ -1822,7 +1822,10 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   delivered text per session in `.claude/artifacts-stop-state.json` (key
   `rule:<session_id>`; the session-start hook records it too), so it prints
   once per session and again after the rule text changes. It stays inside
-  R8.2's rule of never failing and writes that file only (INV-4). Verified by
+  R8.2's rule of never failing and writes that file only (INV-4), plus one
+  marker file in the system temp directory per session, rule text and
+  repository (keyed by the git common directory), so a new worktree of the same
+  repository does not print the rule again (DS271). Verified by
   `after_delivers_the_rule_once_per_session_and_again_when_it_changes` and
   `start_records_the_delivery_so_after_stays_quiet`.
 - **R8.13** — When retired pages exist (the manifest's `retired` list, plus
