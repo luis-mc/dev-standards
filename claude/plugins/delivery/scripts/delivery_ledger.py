@@ -1309,6 +1309,58 @@ def _cmd_cleaned(root, args, run=_run) -> int:
     return 0
 
 
+def _record_script(root):
+    """DS277: the project record script, or None: the project's own copy first, then the docs plugin next to this one."""
+    here = Path(__file__).resolve()
+    for p in (Path(root) / "claude" / "plugins" / "docs" / "scripts" / "project_artifacts.py",
+              Path(root) / "scripts" / "project_artifacts.py",
+              here.parents[2] / "docs" / "scripts" / "project_artifacts.py"):
+        if p.is_file():
+            return p
+    return None
+
+
+def set_release_prs(root, cargo_tasks, pr, runner=None) -> list:
+    """DS277 (DL-131): set `pr` on the release of each Running or Built cargo task whose release has none, with the
+    record script's set-task-status. Best effort: a missing script or record, or any failure, changes nothing.
+    Returns the release task IDs it set."""
+    done = []
+    try:
+        script = _record_script(root)
+        reg = None
+        for rel in ("docs/project/registry.json", "docs/artifacts/registry.json"):
+            try:
+                reg = json.loads((Path(root) / rel).read_text(encoding="utf-8"))
+                break
+            except (OSError, ValueError):
+                continue
+        tasks = reg.get("tasks") if isinstance(reg, dict) else None
+        if script is None or not isinstance(tasks, list):
+            return done
+        by_id = {str(t["id"]): t for t in tasks if isinstance(t, dict) and t.get("id")}
+
+        def number(t):
+            n = t.get("release")
+            return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+        for tid in cargo_tasks:
+            t = by_id.get(str(tid))
+            if not t or t.get("status") not in ("Running", "Built"):
+                continue
+            cur, seen = t, set()
+            while cur is not None and number(cur) is None and str(cur.get("id")) not in seen:
+                seen.add(str(cur.get("id")))
+                cur = by_id.get(str(cur.get("rides") or ""))
+            if cur is None or number(cur) is None or cur.get("pr") or str(cur["id"]) in done:
+                continue
+            cmd = [sys.executable, str(script), "set-task-status", str(cur["id"]), str(cur.get("status")), "--pr", str(pr)]
+            res = (runner or subprocess.run)(cmd, cwd=str(root), capture_output=True, text=True, timeout=60)
+            if getattr(res, "returncode", 1) == 0:
+                done.append(str(cur["id"]))
+    except Exception:  # noqa: BLE001
+        pass
+    return done
+
+
 def _cmd_link(root, args, run=_run) -> int:
     """DL90: set an open train's pr and ci.head_sha by hand, for a PR the hook did not record."""
     info = _gh_json(["pr", "view", str(args.pr), "--json", "headRefName,headRefOid"], root, run)
@@ -1337,9 +1389,13 @@ def _cmd_link(root, args, run=_run) -> int:
         t["pr"] = args.pr
         t.setdefault("ci", {})["head_sha"] = sha
         add_event(led, "train.link", "%s #%d %s" % (t["id"], args.pr, str(sha)[:7]), "delivery_ledger")
-        picked.update(id=t["id"])
+        cargo = [str(c.get("task")) for c in t.get("cargo") or [] if isinstance(c, dict) and c.get("task")]
+        m = re.match(r"[A-Z]{2,5}\d+", str(t.get("branch") or ""))
+        picked.update(id=t["id"], cargo=cargo or ([m.group(0)] if m else []))
     update(root, fn)
     print("linked train %s pr=%d sha=%s" % (picked["id"], args.pr, sha))
+    for rid in set_release_prs(root, picked.get("cargo") or [], args.pr):   # DS277
+        print("set pr %d on %s in the project record" % (args.pr, rid))
     return 0
 
 

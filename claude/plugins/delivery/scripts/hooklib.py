@@ -244,9 +244,49 @@ def on_hold(train, at):
     return True
 
 
+_RELEASE_MAP = {}
+
+
+def use_record(root):
+    """DS275: read the project record's task -> release numbers for release_name (an unreadable record: none)."""
+    _RELEASE_MAP.clear()
+    for rel in (os.path.join(record_dir(root), 'registry.json'), os.path.join('docs', 'artifacts', 'registry.json')):
+        reg = read_json(os.path.join(root, rel))
+        tasks = reg.get('tasks') if isinstance(reg, dict) else None
+        if not isinstance(tasks, list):
+            continue
+        by_id = {str(t['id']): t for t in tasks if isinstance(t, dict) and t.get('id')}
+
+        def number(t):
+            n = t.get('release')
+            return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else None
+        for tid, t in by_id.items():
+            cur, seen = t, set()
+            while cur is not None and number(cur) is None and str(cur.get('id')) not in seen:
+                seen.add(str(cur.get('id')))
+                cur = by_id.get(str(cur.get('rides') or ''))
+            if cur is not None and number(cur) is not None:
+                _RELEASE_MAP[tid] = number(cur)
+        return
+
+
+def release_numbers(train):
+    """DS275: every release number a pull request carries: the entry's own and one per cargo task in the record."""
+    nums = set()
+    if train.get('release_no') is not None:
+        nums.add(train['release_no'])
+    tasks = [c.get('task') for c in train.get('cargo') or [] if isinstance(c, dict)] + list(train.get('tasks') or [])
+    for task in tasks:
+        if task and str(task) in _RELEASE_MAP:
+            nums.add(_RELEASE_MAP[str(task)])
+    return sorted(nums, key=lambda n: (str(type(n)), n if isinstance(n, int) else str(n)))
+
+
 def release_name(train):
-    n = train.get('release_no')
-    return 'RELEASE-%s' % n if n is not None else 'the train'
+    names = ['RELEASE-%s' % n for n in release_numbers(train)]
+    if not names:
+        return 'the train'
+    return names[0] if len(names) == 1 else '%s and %s' % (', '.join(names[:-1]), names[-1])
 
 
 def stale_hint(train):

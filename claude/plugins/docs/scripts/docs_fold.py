@@ -6,11 +6,15 @@ note; the release fold writes ONE version row per doc per release.
 
   docs_fold.py note --doc features/import --task IW21 --change minor --text "Step 3 shows ..." [--section 3] [--breaking]
   docs_fold.py pending                    list notes waiting to be folded (exit 1 if any)
-  docs_fold.py fold --release RELEASE-131 [--date YYYY-MM-DD] [--dry-run]
+  docs_fold.py fold --release RELEASE-131 [--date YYYY-MM-DD] [--dry-run] [--all]
 
 Where notes live:
   features:  docs/features/<feature>/changes/<task>.md
   others:    docs/<area>/changes/<doc>/<task>.md   (for docs/<area>/<doc>.md)
+
+Release scope (DS274): fold takes the notes whose task belongs to the named release in the project record
+(docs/project/registry.json: the task has `release` N or rides a task that has it). A note whose task the record
+does not know, or no readable record, is folded as before. --all folds every note.
 
 Version rule: per release the highest note wins. major when a note is breaking (or says
 change: major), minor when a note adds or changes behaviour, patch for wording and fixes to
@@ -153,9 +157,31 @@ def add_row_if_table(text: str, row: str) -> str:
     return text
 
 
-def plan_fold(root: Path, release: str, date: str) -> list[dict]:
+def release_number(release: str):
+    m = re.search(r"(\d+)\s*$", str(release or ""))
+    return int(m.group(1)) if m else None
+
+
+def notes_for_release(root: Path, release: str, found: dict[str, list[Path]]) -> dict[str, list[Path]]:
+    """DS274: keep a note unless the record puts its task in another release."""
+    want = release_number(release)
+    known = D.task_releases(root)
+    if want is None or not known:
+        return found
+    out: dict[str, list[Path]] = {}
+    for doc, files in found.items():
+        keep = [p for p in files if known.get(read_note(p)["task"], want) == want]
+        if keep:
+            out[doc] = keep
+    return out
+
+
+def plan_fold(root: Path, release: str, date: str, all_notes: bool = False) -> list[dict]:
     plan = []
-    for doc, files in sorted(find_notes(root).items()):
+    found = find_notes(root)
+    if not all_notes:
+        found = notes_for_release(root, release, found)
+    for doc, files in sorted(found.items()):
         f = root / doc
         if not f.is_file():
             plan.append({"doc": doc, "error": "note(s) name a doc that does not exist", "files": files})
@@ -176,8 +202,8 @@ def plan_fold(root: Path, release: str, date: str) -> list[dict]:
     return plan
 
 
-def fold(root: Path, release: str, date: str, dry: bool) -> list[dict]:
-    plan = plan_fold(root, release, date)
+def fold(root: Path, release: str, date: str, dry: bool, all_notes: bool = False) -> list[dict]:
+    plan = plan_fold(root, release, date, all_notes)
     if dry:
         return plan
     for p in plan:
@@ -261,6 +287,7 @@ def main(argv=None) -> int:
     f.add_argument("--release", required=True)
     f.add_argument("--date", default=None)
     f.add_argument("--dry-run", action="store_true")
+    f.add_argument("--all", action="store_true", help="fold every note, whatever release its task belongs to")
     f.add_argument("--root", default=None)
     argv = list(sys.argv[1:] if argv is None else argv)
     if "--" in argv:  # a package-manager script passes a lone -- through: drop it
@@ -300,7 +327,7 @@ def main(argv=None) -> int:
         return 1 if found else 0
 
     date = a.date or D.today()
-    plan = fold(root, a.release, date, a.dry_run)
+    plan = fold(root, a.release, date, a.dry_run, a.all)
     if not plan:
         print("no change notes: nothing to fold")
         return 0
