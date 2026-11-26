@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T07:38+00:00",
+  "updated": "2026-11-26T08:31+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7687,6 +7687,105 @@
       "changed": "2026-11-26T07:38+00:00",
       "release": 186,
       "started": "2026-11-26T07:30+00:00"
+    },
+    {
+      "id": "DL420",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Render fills carrier PR from ledger",
+      "detail": "When an open release has no --pr, Full Progress reads the PR from the delivery ledger so the release tree shows in every project; docs plugin; owner request 26 Nov",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:31+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "rides": "DL418",
+      "started": "2026-11-26T08:31+00:00",
+      "release": 187
+    },
+    {
+      "id": "DL421",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "T2 stale-doc warning not fatal in strict",
+      "detail": "docs_check --strict exits 1 on T2 when only shared UI changed; docs_fold note bumps last_verified or T2 is non-fatal; peer finding 1",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:31+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "rides": "DL420",
+      "started": "2026-11-26T08:31+00:00"
+    },
+    {
+      "id": "DL422",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Rule-add flow prints missing Proof line",
+      "detail": "citation-test fails when a spec cites a new UX rule with no Proof: UX-n line; design_system flow prints or adds it; peer finding 2",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:31+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "rides": "DL420",
+      "started": "2026-11-26T08:31+00:00"
+    },
+    {
+      "id": "DL423",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Setup suggests <task>-integration branch",
+      "detail": "claude-setup and plugin_update_offer suggest the branch name when telling the owner to commit; session_guard refusal otherwise; peer finding 3",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:31+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "release": 188,
+      "started": "2026-11-26T08:31+00:00"
+    },
+    {
+      "id": "DL424",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Allow cancelling old run during freeze",
+      "detail": "Train freeze blocks a fix push during gh run rerun --failed; documented cancel of the old run or watcher cancels; peer finding 4",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:30+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task"
+    },
+    {
+      "id": "DL425",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "New worktree pre-push without node_modules",
+      "detail": "Skip typecheck for docs and config-only pushes, or install in the worktree helper; peer finding 5",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:30+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task"
+    },
+    {
+      "id": "DL426",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "DL-88 reads gate result from worktree",
+      "detail": "A gate run in a worktree needs no hand copy of gate-result.json; peer finding 6",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:30+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task"
+    },
+    {
+      "id": "DL427",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "claude-setup installs tzdata on Windows",
+      "detail": "delivery_doctor FAILs on Europe/Lisbon until tzdata is installed; claude-setup installs it; peer finding 7",
+      "expected": "26 Nov ~18:00",
+      "changed": "2026-11-26T08:31+00:00",
+      "expected_basis": "queued behind RELEASE-184, ~1 h per task",
+      "rides": "DL423",
+      "started": "2026-11-26T08:31+00:00"
     },
     {
       "id": "DP1",
