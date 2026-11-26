@@ -183,6 +183,9 @@
     "tools/test_artifacts_dp7.py": [
       "docs/features/artifacts/spec.md"
     ],
+    "tools/test_artifacts_ds258.py": [
+      "docs/features/artifacts/spec.md"
+    ],
     "tools/test_authspec_check.py": [
       "docs/features/project-setup/spec.md"
     ],

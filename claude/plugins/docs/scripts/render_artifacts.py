@@ -2089,6 +2089,33 @@ def _badge(key: str, label: str, value, cls: str = '') -> str:
             '<span class="badge-value">%s</span></span>' % ('badge-' + key, (' ' + cls) if cls else '', esc(key), esc(label), esc(value)))
 
 
+def ci_waste_value(ci_runs, tasks: list, trains: dict, ref: datetime):
+    """R5.64: the text of the ci-waste badge, from the finished runs only; None with no finished run."""
+    if not ci_runs_valid(ci_runs):
+        return None
+    runs = [e for e in ci_runs.get('finished', []) if isinstance(e, dict)]
+    if not runs:
+        return None
+
+    def secs(run):
+        v = run.get('total_s')
+        return v if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 0 else 0
+
+    since = ref - timedelta(days=7)
+    green = round(100 * sum(1 for r in runs if r.get('conclusion') == 'success') / len(runs))
+    prs = set()
+    for t in tasks:
+        if is_release(t) and t.get('status') == 'Live' and _parse_iso(t.get('changed'), since) > since:
+            p = _pr_number(t, trains.get(t['id']))
+            if p:
+                prs.add(p)
+    named = sum(secs(r) for r in runs if re.search(r'#\d+', str(r.get('why') or '')))
+    per_pr = '%d min per merged PR' % round(named / 60 / len(prs)) if prs else 'n/a per merged PR'
+    cancelled = sum(secs(r) for r in runs if r.get('conclusion') == 'cancelled'
+                    and _parse_iso(r.get('completed_at'), since) > since)
+    return '%d%% green · %s · %d min cancelled (7 d)' % (green, per_pr, round(cancelled / 60))
+
+
 def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) -> str:
     """R5.61: the badge row of Full Progress: counts by status, the active releases with their Live ETA, the carrier
     PRs, the CI runs, the agents running and the last Live release. A needs-you or failing badge is marked."""
@@ -2136,6 +2163,9 @@ def status_badges(tasks: list, decisions, ledger: dict, ci_runs, ref: datetime) 
         ok = sum(1 for r in runs if r.get('conclusion') == 'success')
         parts = ['%d passed' % ok, '%d failed' % bad, '%d running' % running] + (['%d fixed by a later run' % fixed] if fixed else [])
         out.append(_badge('ci', 'CI runs', '%d: %s' % (len(runs) + running, ', '.join(parts)), 'badge-fail' if bad else ''))
+    waste = ci_waste_value(ci_runs, tasks, trains, ref)
+    if waste:
+        out.append(_badge('ci-waste', 'CI waste', waste))
     if agents:
         def split(rows):
             loc = sum(1 for a in rows if a.get('where') == 'local')

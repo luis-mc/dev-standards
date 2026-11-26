@@ -699,6 +699,10 @@ jobs:
       - name: Prove the DL429 status badges still hold
         run: python3 -I tools/test_artifacts_dl429.py
 
+      # DS258: Full Progress shows a ci-waste badge from the CI runs file.
+      - name: Prove the DS258 ci-waste badge still holds
+        run: python3 -I tools/test_artifacts_ds258.py
+
       # DL173: a ledger or ci-runs file with a missing or newer schema warns.
       - name: Prove the DL173 schema check still holds
         run: python3 -I tools/test_artifacts_dl173.py
