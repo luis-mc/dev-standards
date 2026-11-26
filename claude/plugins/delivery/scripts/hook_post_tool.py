@@ -39,6 +39,9 @@ FENCE_RE = re.compile(r"```delivery[ \t]*\r?\n(.*?)```", re.S)
 PR_URL_RE = re.compile(r"/pull/(\d+)")
 ARTIFACT_URL_RE = re.compile(r"https://claude\.ai/(?:code/)?artifact/[\w-]+")
 TOOL_ERR_RE = re.compile(r"Exit code (\d+)")
+TASK_ID = r"[A-Z]{2,5}\d+"
+BRANCH_ID_RE = re.compile(r"[Bb]ranch\s+[`'\"]*(" + TASK_ID + r")-")      # DS267: `Branch `DS258-slug``, `branch DS258-slug`
+TASK_MENTION_RE = re.compile(r"\bTask\s+(" + TASK_ID + r")\b|\((" + TASK_ID + r")\)")
 BACKGROUND_RE = re.compile(r"moved to the background|running in the background|started in the background", re.I)
 
 
@@ -97,6 +100,28 @@ def parse_delivery_block(text: str) -> dict:
         except ValueError:
             out["total_min"] = sum(br.values())
     return out
+
+
+def infer_task(prompt: str, root=None) -> dict:
+    """DS267: {task, branch?} guessed from a prompt with no ```delivery block. First a branch written as
+    `<ID>-slug`, else the first `Task <ID>` or `(<ID>)` in the first 600 characters. With a readable project
+    record only an ID that exists there counts. {} when nothing fits."""
+    known = None
+    if root is not None:
+        try:
+            known = L.project_statuses(root) or None
+        except Exception:  # noqa: BLE001
+            known = None
+    text = prompt or ""
+    for m in BRANCH_ID_RE.finditer(text):
+        if known is None or m.group(1) in known:
+            tail = re.match(r"[\w./-]+", text[m.start(1):])
+            return {"task": m.group(1), "branch": tail.group(0).rstrip(".-/") if tail else None}
+    for m in TASK_MENTION_RE.finditer(text[:600]):
+        tid = m.group(1) or m.group(2)
+        if known is None or tid in known:
+            return {"task": tid}
+    return {}
 
 
 def find_strings(obj, limit: int = 200):
@@ -455,7 +480,15 @@ def _rec_ci_watch(led, argv, exit_code, now, text=""):
         L.add_event(led, "ci_watch.exit%d" % exit_code, t["id"], "hook_post_tool", now)
 
 
-def rec_agent(led, data, cfg, now, where="local") -> None:
+def _resp_path(resp, *keys):
+    if isinstance(resp, dict):
+        for k in keys:
+            if isinstance(resp.get(k), str) and resp[k]:
+                return resp[k]
+    return None
+
+
+def rec_agent(led, data, cfg, now, where="local", root=None) -> None:
     inp = data.get("tool_input") or {}
     if where == "cloud":
         action = str(inp.get("action") or "").lower()
@@ -465,6 +498,12 @@ def rec_agent(led, data, cfg, now, where="local") -> None:
     else:
         prompt = inp.get("prompt") or ""
     blk = parse_delivery_block(prompt)
+    if not blk.get("task") and where == "local":      # DS267: no delivery block: read the task from the prompt
+        guess = infer_task(prompt, root)
+        if guess.get("task"):
+            blk["task"] = guess["task"]
+            if guess.get("branch") and not blk.get("branch"):
+                blk["branch"] = guess["branch"]
     text = response_text(data)
     ident = None
     resp = data.get("tool_response")
@@ -510,9 +549,14 @@ def rec_agent(led, data, cfg, now, where="local") -> None:
         "launched_by": data.get("session_id") or None,
         "branch": blk.get("branch"), "base_sha": None, "head_sha": None, "owns": blk.get("owns", []),
         "model": blk.get("model") or inp.get("model"), "effort": blk.get("effort"), "started": now, "eta": eta,
-        "log_path": None, "last_checked": None, "last_activity": now,
+        "log_path": _resp_path(resp, "outputFile", "output_file", "outputPath") if where == "local" else None,
+        "last_checked": None, "last_activity": now,
         "state": "running" if inp.get("run_in_background") or where == "cloud" else "done",
     }
+    if where == "local" and isinstance(resp, dict):
+        wt = _resp_path(resp, "worktreePath", "worktree_path", "worktree")
+        if wt:
+            row["worktree"] = wt
     if where == "local" and not inp.get("run_in_background"):
         row["state"] = "done"  # a foreground Agent finished inside the call
     if not row["task"]:   # DL156: the ledger refuses a row without a task; note it instead of losing the whole write
@@ -615,7 +659,7 @@ def handle(data: dict, root=None) -> bool:
         elif failed:
             L.add_event(led, "tool.failed", tool, "hook_post_tool", now)
         elif tool in ("Agent", "Task"):
-            rec_agent(led, data, cfg, now, "local")
+            rec_agent(led, data, cfg, now, "local", root)
         elif tool == "RemoteTrigger":
             rec_agent(led, data, cfg, now, "cloud")
         elif tool == "Artifact":
