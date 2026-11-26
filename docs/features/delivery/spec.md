@@ -236,7 +236,7 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R6.3** — Scripts use only the Python standard library and run on Linux, macOS and Windows.
 
-**R6.4** — `.delivery/` is git-ignored. The ledger keeps events only as long as the project keeps the folder.
+**R6.4** — `.delivery/` is git-ignored except `.delivery/config.json`, which is committed: CI, other clones and agents read the same limits, and a change to it shows in a pull request. The ledger keeps events only as long as the project keeps the folder.
 
 ## 7. Design
 

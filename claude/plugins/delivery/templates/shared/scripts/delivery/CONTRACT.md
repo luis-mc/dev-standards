@@ -73,7 +73,7 @@ hook, language guard tests). tech-stack-setup and claude-setup carry no CI or de
 | `scripts/delivery/speed_probe.py`, `scaled.mjs` | `templates/shared/scripts/delivery/` (speed probe and `scaled(ms)` for timing budgets, see "Speed probe") | ci |
 | `scripts/delivery/db_per_worker.py` | same (one Postgres database per test worker from a template; Postgres projects only) | ci |
 
-`.delivery/` (local results and step logs) is added to the generated `.gitignore`.
+`.delivery/*` (local results and step logs) is added to the generated `.gitignore`, with `!.delivery/config.json`: the config is shared policy and is committed.
 
 Repository setting, applied by tech-stack-setup with
 `gh api -X PATCH repos/{owner}/{repo} -F delete_branch_on_merge=true`: the
