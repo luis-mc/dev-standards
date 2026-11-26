@@ -87,7 +87,7 @@ test('normalizeOptions: defaults, bad values, a marker that is empty', () => {
   assert.deepEqual(normalizeOptions(undefined), DEFAULT_OPTIONS)
   assert.deepEqual(normalizeOptions({}), DEFAULT_OPTIONS)
   assert.deepEqual(normalizeOptions({ foldAbove: 0, marker: '', compactCounts: true }), {
-    foldAbove: 0, marker: '', compactCounts: true,
+    foldAbove: 0, marker: '', compactCounts: true, foldHooksAbove: 40,
   })
   assert.equal(normalizeOptions({ foldAbove: 7.9 }).foldAbove, 7)
   assert.equal(normalizeOptions({ foldAbove: -2 }).foldAbove, 0)
