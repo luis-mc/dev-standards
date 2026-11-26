@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:11+00:00",
+  "updated": "2026-11-26T09:12+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7780,6 +7780,19 @@
       "changed": "2026-11-26T08:40+00:00",
       "rides": "DL423",
       "started": "2026-11-26T08:31+00:00"
+    },
+    {
+      "id": "DL428",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Release table for every open release",
+      "detail": "Full Progress shows the release table below the timeline whenever any release is open, with or without a carrier PR; owner: own page showed no table",
+      "expected": "26 Nov ~14:00",
+      "changed": "2026-11-26T09:12+00:00",
+      "expected_basis": "CI 5 min after join",
+      "release": 189,
+      "started": "2026-11-26T09:12+00:00"
     },
     {
       "id": "DP1",
