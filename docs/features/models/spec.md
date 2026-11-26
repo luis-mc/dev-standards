@@ -21,7 +21,7 @@ artifact: feature-model-and-effort-profiles.html
 
 ## 1. In one paragraph
 
-Every project set up by `claude-setup` runs its main session on Sonnet (Opus by `/model` for planning or a risky review only) and its code agents on Sonnet, both at medium effort. The auto-compact window is 150000 tokens. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
+Every project set up by `claude-setup` runs its main session on Sonnet (Opus by `/model` for planning or a risky review only) and its code agents on Sonnet, both at medium effort. The auto-compact window is 350000 tokens. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
 
 ## 2. Why
 
