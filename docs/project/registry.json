@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T10:23+00:00",
+  "updated": "2026-11-26T10:43+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12188,6 +12188,18 @@
       "changed": "2026-11-26T00:07+00:00",
       "release": 183,
       "started": "2026-11-25T23:40+00:00"
+    },
+    {
+      "id": "DS257",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Check ci-leaner-findings layout; add cache and image findings",
+      "detail": "Peer asks: view the page at 360 and 1300 px in light and dark, fix layout, add setup-go/setup-node cache finding and two image-build failures under F19/S19.",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T10:43+00:00",
+      "no_release": "edits a peer page only",
+      "started": "2026-11-26T10:42+00:00"
     },
     {
       "id": "DU1",
