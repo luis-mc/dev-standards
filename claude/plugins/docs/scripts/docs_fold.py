@@ -231,6 +231,19 @@ STALE_NOTICE = ("Full Progress is stale: this release changed the record. Wait 6
                 "`mark-published full-progress --url <URL>`, and commit the record.")
 
 
+def verify_doc(path: Path) -> None:
+    """DL421: a change note says the author checked the doc, so `last_verified` becomes today. That clears the
+    code-newer-than-doc warning (T2). The line is rewritten in place; a doc with no front matter is left alone."""
+    raw = path.read_bytes().decode("utf-8")
+    fm, _body, ok = D.parse_front_matter(raw.replace("\r\n", "\n"))
+    if not ok:
+        return
+    crlf = "\r\n" in raw
+    text = D.set_front_matter(raw.replace("\r\n", "\n"), {"last_verified": D.today()})
+    path.write_bytes((text.replace("\n", "\r\n") if crlf else text).encode("utf-8"))
+    print(f"last_verified set to {D.today()}")
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = ap.add_subparsers(dest="cmd", required=True)
@@ -277,6 +290,7 @@ def main(argv=None) -> int:
         fm += [f"task: {a.task}", "---", a.text, ""]
         dest.write_text("\n".join(fm), encoding="utf-8")
         print("wrote", D.posix(dest.relative_to(root)))
+        verify_doc(root / doc)
         return 0
 
     if a.cmd == "pending":

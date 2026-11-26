@@ -448,6 +448,34 @@ def refresh_draft_gallery(root: Path) -> str:
         return ""
 
 
+def missing_proofs(root: Path) -> list:
+    """DL422: the `Proof:` lines a feature spec still needs. A spec that cites UX-n or CORE-n must name an
+    existing test file on the same line or on a `Proof: UX-n `path`` line (guard E, citation-test.mjs).
+    Returns [(spec path, rule ID)], read-only."""
+    cite = re.compile(r"\b(?:UX|CORE)-\d+[a-z]?\b")
+    path = re.compile(r"`([^`\s]+\.(?:py|ts|tsx|mjs|js|rs|go|sh))`")
+    out = []
+    for spec in sorted((Path(root) / "docs" / "features").glob("*/spec.md")):
+        named, cited = set(), []
+        for line in spec.read_text(encoding="utf-8").splitlines():
+            ids = cite.findall(line)
+            ok = any(re.search(r"test|spec", Path(m).name, re.I) and ((Path(root) / m).exists() or (spec.parent / m).exists())
+                     for m in path.findall(line))
+            for i in ids:
+                if i not in cited:
+                    cited.append(i)
+                if ok:
+                    named.add(i)
+        out += [(spec.relative_to(root).as_posix(), i) for i in cited if i not in named]
+    return out
+
+
+def proof_hint(root: Path) -> str:
+    """The text `visuals` prints for each rule a spec cites with no proof: the line to add."""
+    return os.linesep.join(f"{spec}: cites {rid} with no test. Add this line: Proof: {rid} `<path of the test that proves it>`"
+                     for spec, rid in missing_proofs(root))
+
+
 def visuals_fresh(folder: Path) -> bool:
     return gallery_state(folder) == "fresh"
 
@@ -1184,6 +1212,9 @@ def main(argv=None) -> int:
             print("refused: a numbered version is read-only; rebuild next-version", file=sys.stderr)
             return 2
         print(build_visuals(ds_dir(root) / v).relative_to(root).as_posix())
+        hint = proof_hint(root)  # DL422
+        if hint:
+            print(hint)
         return 0
     if a.command == "promote":
         return cmd_promote(root, a)

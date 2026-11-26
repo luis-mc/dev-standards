@@ -1385,6 +1385,16 @@ double-click.
 - **R5.58** — In the same case the timeline is a tree: a left bar, a trunk at x=22, 18px
   elbows into each release, labels at x=46, dashed arrows for release-waits-on-release,
   no dashed box. The figure is at most 880 wide, about 52 per release row.
+- **R5.59** — Nothing needs hand input. For an open release with no `pr`, the PR is read
+  from `.delivery/ledger.json`: the train whose `branch` is `<TASK-ID>-integration` belongs to
+  the release with that task ID, and its `pr` is the release's PR. For an open release with no
+  `release_waits_on`, it waits on every earlier open release (not Live) when its train holds
+  commits of that release's integration branch that are not yet on the base branch (git
+  ancestry; skipped when git cannot say), or when `deploy.serial` is true in
+  `.delivery/config.json` and the other train merged first. A value set with `--pr` or
+  `--release-waits-on` wins. The ledger and git are only read. With no ledger nothing changes.
+  The tree (R5.58) then shows for any project with a linked PR. Verified by
+  `test_dl420_ledger_links`.
 
 ---
 
