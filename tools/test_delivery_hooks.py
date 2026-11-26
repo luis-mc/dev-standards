@@ -462,6 +462,19 @@ def block_ceiling_comes_from_config():
 
 
 @test
+def stop_user_message_folds_a_long_run_of_one_rule():
+    # DS280: the person's message folds 3+ findings of one rule; the model's reason does not.
+    sys.path.insert(0, SCRIPTS)
+    import hook_stop
+    few = [('DL-63:A%d' % i, 'row A%d late' % i) for i in range(3)]
+    assert hook_stop.user_text(few) == 'row A0 late; row A1 late; row A2 late'
+    many = [('DL-63:A%d' % i, 'row A%d late' % i) for i in range(15)] + [('DL-03', 'train waits')]
+    out = hook_stop.user_text(many)
+    assert out.startswith('row A0 late (+14 more: A1, A2,') and out.endswith('; train waits'), out
+    assert 'row A5 late' not in out and len(out) < 200, out
+
+
+@test
 def warn_mode_never_blocks_and_logs_only_warn_lines():
     cfg = {'enforcement': {'mode': 'warn', 'log_every_block': True}}
     p = Project(ledger(trains=[train(state='green', green_at=iso(30))]), config=cfg)

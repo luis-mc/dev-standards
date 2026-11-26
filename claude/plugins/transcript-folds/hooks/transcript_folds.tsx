@@ -1,5 +1,4 @@
-// luismc-transcript-folds: folds long diffs, finished shell commands and long
-// hook messages to one
+// luismc-transcript-folds: folds long diffs and finished shell commands to one
 // line in the transcript. This file is glue: every decision (what counts as a
 // change, what folds, the words of each line) is a call into ./fold/*.ts,
 // which has no engine import and is tested with node:test.
@@ -8,8 +7,6 @@ import { atom, read, update } from 'claude-code'
 import type { EngineInterface, Register } from 'claude-code'
 
 import { EDIT_TOOLS, SHELL_TOOLS, changeOf, foldedFileChange, isOverThreshold } from './fold/change.ts'
-import { EMPTY_DIAG, HOOK_COMPONENTS, diagSentence, hookLine, noteSeen, parseHookMessage, planHookFold, wordCount } from './fold/hookfold.ts'
-import type { Diag } from './fold/hookfold.ts'
 import { normalizeOptions } from './fold/options.ts'
 import { commandRow, outputView, planCommand, runningCommand, shellOutcome } from './fold/shell.ts'
 import { compactCounts, compactRow, cutPieces, diffLine, filesLine, toolLabel } from './fold/summary.ts'
@@ -21,14 +18,12 @@ import type { Tally } from './fold/tally.ts'
 // folded in every session.
 const diffsFolded = atom({ plugin: 'luismc-transcript-folds', key: 'diffsFolded' } as const, true)
 const commandsFolded = atom({ plugin: 'luismc-transcript-folds', key: 'commandsFolded' } as const, true)
-const hooksFolded = atom({ plugin: 'luismc-transcript-folds', key: 'hooksFolded' } as const, true)
 const tally = atom({ plugin: 'luismc-transcript-folds', key: 'tally' } as const, EMPTY_TALLY as Tally)
 const root = atom({ plugin: 'luismc-transcript-folds', key: 'root' } as const, '')
 const COUNTS = { plugin: 'luismc-transcript-folds', key: 'counts' } as const
-const HOOK_DIAG = { plugin: 'luismc-transcript-folds', key: 'hookDiag' } as const
 const OUTCOMES = { plugin: 'luismc-transcript-folds', key: 'outcomes' } as const
 
-type Which = 'diffs' | 'commands' | 'hooks'
+type Which = 'diffs' | 'commands'
 
 // Flips a switch for this session and answers its new state.
 async function flip($: Pick<EngineInterface, 'state'>, which: Which): Promise<boolean> {
@@ -36,9 +31,7 @@ async function flip($: Pick<EngineInterface, 'state'>, which: Which): Promise<bo
   const isFolded =
     which === 'diffs'
       ? await update($, diffsFolded, value => !value)
-      : which === 'commands'
-        ? await update($, commandsFolded, value => !value)
-        : await update($, hooksFolded, value => !value)
+      : await update($, commandsFolded, value => !value)
   return isFolded
 }
 
@@ -80,7 +73,6 @@ export const register: Register = (on, options) => {
     // toggle holds for this session only, so a stray ctrl+x f never carries over.
     await $.command.register({ name: 'fold-diffs', description: 'Fold or show long diffs in the transcript' })
     await $.command.register({ name: 'fold-commands', description: 'Fold or show finished shell commands in the transcript' })
-    await $.command.register({ name: 'fold-hooks', description: 'Fold or show long hook messages in the transcript (diag: what the matcher saw)' })
     return next(e)
   })
 
@@ -93,41 +85,6 @@ export const register: Register = (on, options) => {
     const isFolded = await flip($, 'commands')
     return { text: switchSentence('commands', isFolded) }
   })
-
-  on('command.run', { command: 'fold-hooks' }, async ($, e) => {
-    if (e.args.trim() === 'diag') {
-      const held = await $.state.get(HOOK_DIAG)
-      return { text: diagSentence((held.value as Diag | undefined) ?? EMPTY_DIAG) }
-    }
-    const isFolded = await flip($, 'hooks')
-    return { text: switchSentence('hooks', isFolded) }
-  })
-
-  // A hook message has no component of its own and no marker in the render
-  // input, so it is found by the shape of its text in the non-assistant rows
-  // (a user-side row, an info notice). Only a first line such as `Stop says:`
-  // folds. The diagnostic records what the matcher saw, for /fold-hooks diag.
-  for (const component of HOOK_COMPONENTS) {
-    on('ui.render', { component }, async ($, e, next) => {
-      const text = (e.props as { text?: unknown }).text
-      if (typeof text !== 'string') return next(e)
-      // The person's own prompt is never a hook message.
-      const origin = (e.props as { origin?: { kind?: string } }).origin
-      if (origin?.kind === 'composer' || (e.props as { isExpanded?: boolean }).isExpanded === true) return next(e)
-      try {
-        const held = await $.state.get(HOOK_DIAG)
-        const diag = (held.value as Diag | undefined) ?? EMPTY_DIAG
-        const seen = noteSeen(diag, component, text, parseHookMessage(text) !== null)
-        if (seen !== diag) await $.state.set(HOOK_DIAG, seen)
-      } catch {
-        // The diagnostic never costs the row.
-      }
-      const message = planHookFold(text, await read($, hooksFolded), opts.foldHooksAbove)
-      if (message === null) return next(e)
-      const { Box, Text } = $.ui.resolve(e)
-      return <Box>{row(Text, hookLine(message, wordCount(text), e.viewport?.columns ?? 0))}</Box>
-    })
-  }
 
   // The tally and the per-call records. The result is the engine's own and is
   // handed back untouched.
@@ -245,11 +202,11 @@ export const register: Register = (on, options) => {
     return next({ ...e, props: { ...e.props, isExpanded: true } })
   })
 
-  // The band above the prompt: three buttons, each pressed by the chord the
+  // The band above the prompt: two buttons, each pressed by the chord the
   // person gave its engine action, and the session's tally.
   on('ui.render', { component: 'AbovePrompt' }, async ($, e, next) => {
     if (e.props.hasSurvey) return next(e)
-    const parts = bandParts(await read($, diffsFolded), await read($, commandsFolded), await read($, hooksFolded), await read($, tally))
+    const parts = bandParts(await read($, diffsFolded), await read($, commandsFolded), await read($, tally))
     const { Box, Button, Text } = $.ui.resolve(e)
     // The tally is absent before the first change.
     const tail = parts.tally === '' ? [] : [<Text dimColor>{` · ${parts.tally}`}</Text>]
@@ -274,17 +231,6 @@ export const register: Register = (on, options) => {
           action="theme:editCustom"
           onPress={async () => {
             $.ui.toast(switchSentence('commands', await flip($, 'commands')))
-          }}
-        />
-        <Text dimColor>{' · '}</Text>
-        <Button
-          key="hooks"
-          label={parts.hooksLabel}
-          plain
-          dimColor
-          action="settings:sortByTokens"
-          onPress={async () => {
-            $.ui.toast(switchSentence('hooks', await flip($, 'hooks')))
           }}
         />
         {tail}

@@ -43,13 +43,13 @@
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.4.0 | 2026-11-08 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.18.0 | 2026-11-08 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.3.2 | 2026-11-26 |
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.3.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.3.0 | 2026-11-26 |
 
 ### luismc-transcript-folds
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.3.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.3.0 | 2026-11-26 |
 
 ## By topic
 
@@ -103,7 +103,6 @@
 |---|---|---|---|---|---|
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.57.0 | 2026-11-26 |
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.17.1 | 2026-11-26 |
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.3.0 | 2026-11-26 |
 
 ### models
 
@@ -138,7 +137,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.3.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.3.0 | 2026-11-26 |
 
 ## By status
 
@@ -157,7 +156,7 @@
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.18.0 | 2026-11-08 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.1 | 2026-11-01 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.3.2 | 2026-11-26 |
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts, hooks | live | 0.3.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.3.0 | 2026-11-26 |
 
 ## Gaps
 

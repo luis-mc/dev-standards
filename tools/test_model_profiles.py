@@ -78,8 +78,7 @@ ARCHITECT = "claude/plugins/agents/agents/architect.md"
 KEYBINDINGS = ASSETS + "/keybindings.json"
 FOLDS_HOOKS = "claude/plugins/transcript-folds/hooks"
 CHORDS = {"ctrl+x d": "theme:toggleSyntaxHighlighting",
-          "ctrl+x f": "theme:editCustom",
-          "ctrl+x h": "settings:sortByTokens"}
+          "ctrl+x f": "theme:editCustom"}
 FOLDS_PLUGIN = "luismc-transcript-folds"
 EXPECTED_PENDING = ("P2 feature-artifact-new",)
 
