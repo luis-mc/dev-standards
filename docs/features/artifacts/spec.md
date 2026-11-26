@@ -22,6 +22,8 @@ code:
   - tools/test_artifacts_dp7.py
   - tools/test_artifacts_dl429.py
   - tools/test_artifacts_ds258.py
+  - tools/test_artifacts_ds272.py
+  - claude/plugins/docs/scripts/pr_links.py
   - claude/plugins/docs/skills/feature-artifact-new/**
   - claude/plugins/docs/skills/full-progress-artifact-new/**
   - claude/plugins/docs/skills/project-artifact-check/**
@@ -205,6 +207,10 @@ flowchart LR
 
 **R5.34** — Next to the CI badge, Full Progress shows a CI waste badge, built from the finished runs in `.delivery/ci-runs.json`: `62% green · 31 min per merged PR · 14 min cancelled (7 d)`. Green is the finished runs that succeeded over all finished runs. Minutes per merged PR is the time of the finished runs that name a PR, over the PRs of releases Live in the last 7 days (`n/a` with none). Cancelled minutes count runs completed in the last 7 days. With no CI runs, or no finished run, there is no badge. It is a plain badge, never marked failed. (DS258, ARTIFACTSPEC R5.64) Proof: `tools/test_artifacts_ds258.py`.
 
+**R5.35** — Every place in Full Progress that names a pull request by number is a link to that PR when a URL can be built: the release table, the tree figure label, the `(PR #N)` of a "What is happening" bullet and the Carrier PR badge. The link keeps its text, opens with `target="_blank" rel="noopener noreferrer"`, and is plain text when no URL can be built. A provider table in `pr_links.py` maps `github`, `gitlab` and `custom` to a URL pattern; only `https` is linked and every value is escaped. Whether `target="_blank"` opens a new window on a published claude.ai page is unverified (the page is sandboxed); the link still works as a normal link. (DS272, ARTIFACTSPEC R5.65) Proof: `tools/test_artifacts_ds272.py`.
+
+**R5.36** — The manifest holds an optional `pr_links` (`provider`, `repo`, `host`, `template`), checked by `check`. When it is absent, `render` reads `git config --get remote.origin.url` (https or ssh, github or gitlab) and writes it to the manifest through `project_artifacts.py`; when it cannot be derived, labels stay plain text. `pr-links` sets it by hand. The render itself never runs git. (DS272, ARTIFACTSPEC R5.66) Proof: `tools/test_artifacts_ds272.py`.
+
 ## 6. Non-functional requirements
 
 **R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
@@ -294,7 +300,7 @@ R6.2 and R6.5 have no automated test. R6.5 is a manual check (ARTIFACTSPEC secti
 
 ## 10. Decisions
 
-The full list is the ARTIFACTSPEC decision record (D1 to D24). These are the lasting ones.
+The full list is the ARTIFACTSPEC decision record (D1 to D25). These are the lasting ones.
 
 | ID | Question | Chosen | Date |
 |---|---|---|---|
@@ -306,6 +312,7 @@ The full list is the ARTIFACTSPEC decision record (D1 to D24). These are the las
 | ARTIFACTSPEC D4 | What look do pages get? | The project's own design, else a default | 2026-10-10 |
 | ARTIFACTSPEC D15 | Which rows fold into Earlier? | Live rows older than 14 days; Built never | 2026-10-12 |
 | ARTIFACTSPEC D24 | What happens to a finished feature artifact? | `retire` | 2026-10-30 |
+| ARTIFACTSPEC D25 | How does Full Progress know where a pull request lives? | A provider table and an optional `pr_links` setting | 2026-11-26 |
 
 Where the record lives when nothing says (D182, DS219): `docs/project`. `.claude/artifacts.json` with a `record_dir` wins. A `record_dir` in `docs/docs.json` is used when there is no `.claude/artifacts.json`. A `.claude/artifacts.json` without `record_dir` keeps the old `docs/artifacts`. With no setting at all, a record that already sits in `docs/artifacts` (and none in `docs/project`) is still found there. The tests are in `tools/test_artifacts_ds219.py`.
 

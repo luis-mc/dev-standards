@@ -35,6 +35,7 @@ if str(HERE) not in sys.path:
     sys.path.insert(0, str(HERE))
 
 import gen_badge as GB  # noqa: E402
+import pr_links as PRL  # noqa: E402
 
 try:
     import artifact_queue
@@ -968,6 +969,10 @@ def validate_structure(rec):
             f('R5.11', 'design.css', 'cannot be checked: %s' % ex)
     if isinstance(m.get('updated'), str) and m['updated'] and parse_iso(m['updated']) is None:
         f('R4.2', 'manifest.json', 'updated is not an ISO time with offset')
+
+    if 'pr_links' in m:
+        for why in PRL.problems(m['pr_links']):
+            f('R5.66', 'manifest.json', why)
 
     pp = m.get('project_prefixes')
     if not isinstance(pp, list) or not all(isinstance(x, str) and PREFIX_RE.match(x) for x in pp):
@@ -2762,8 +2767,59 @@ def render_line(res):
     return 'record already rendered; ' + (tail or 'there is no Full Progress publish copy to refresh')
 
 
+def set_pr_links(ctx, setting):
+    """R5.66: write `pr_links` to the manifest and redraw Full Progress. The one writer of the setting."""
+    def apply(rec):
+        if rec.manifest.get('pr_links') == setting:
+            rec.noop = True
+            return {'command': 'pr-links'}
+        rec.manifest['pr_links'] = setting
+        rec.invalidate()
+        rec.render_keys[FP_NAME] = 'new'
+        rec.message = ctx.rel + ': pr-links'
+        return {'command': 'pr-links'}
+    return run_change(ctx, apply)
+
+
+def derive_pr_links(ctx):
+    """R5.66: with no `pr_links` in the manifest, read the git remote and write what it says. Never fails a render."""
+    try:
+        if not (ctx.record_dir / 'manifest.json').is_file():
+            return None
+        rec = Record.load(ctx.record_dir)
+        if not isinstance(rec.manifest, dict) or 'pr_links' in rec.manifest:
+            return None
+        setting = PRL.derive_from_git(str(ctx.root))
+        if setting:
+            set_pr_links(ctx, setting)
+        return setting
+    except Exception:
+        return None
+
+
+def cmd_pr_links(args):
+    """R5.66: set `pr_links` by hand, or read it from the git remote with no options."""
+    ctx = make_ctx(args)
+    if args.provider:
+        setting = {'provider': args.provider}
+        for k in ('repo', 'host', 'template'):
+            if getattr(args, k):
+                setting[k] = getattr(args, k)
+    else:
+        setting = PRL.derive_from_git(str(ctx.root))
+        if not setting:
+            raise Fail(1, 'cannot read a github or gitlab remote; give --provider and --repo')
+    bad = PRL.problems(setting)
+    if bad:
+        raise Fail(1, '; '.join(bad))
+    res = set_pr_links(ctx, setting)
+    emit(args, res, ['pr-links: %s' % json.dumps(setting, sort_keys=True)])
+    return 0
+
+
 def cmd_render(args):
     ctx = make_ctx(args)
+    derive_pr_links(ctx)
     res = render_changed(ctx, args.all)
     emit(args, res, [render_line(res)])
     if not getattr(args, 'json_out', False):
@@ -3927,6 +3983,13 @@ def build_parser():
     s.add_argument('--local', metavar='DIR', help='the work directory for the local copy of Full Progress (default: work_root of .delivery/config.json, else the publish-copy folder)')
     s.add_argument('--no-open', action='store_true', help='write the local copy but do not open it')
     s.set_defaults(func=cmd_mark_deferred)
+
+    s = sub.add_parser('pr-links', parents=[w], help='set where pull requests live so Full Progress links them; no options reads git remote origin (R5.66)')
+    s.add_argument('--provider', choices=PRL.PROVIDERS)
+    s.add_argument('--repo', help='owner/repo (github) or group/project (gitlab)')
+    s.add_argument('--host')
+    s.add_argument('--template', help='custom only: an https URL with {n}')
+    s.set_defaults(func=cmd_pr_links)
 
     s = sub.add_parser('retire', parents=[w], help='remove a finished feature artifact and its content, keeping its tasks and decisions (R4.31 to R4.36)')
     s.add_argument('key', help='the feature key')
