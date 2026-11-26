@@ -2,12 +2,19 @@
 """DS235d: release check for the lifecycle lanes (DELIVERYSPEC LC-32, and the lane results of LC-8 to LC-21).
 
   lifecycle_release_check.py check --lifecycle lifecycle.json --results DIR [--release] [--artifacts DIR] [--config .delivery/config.json]
+                                   [--table scripts/delivery/ci-shards.json] [--default main] [--root .]
   lifecycle_release_check.py write-result --lane L --arch A --package P --steps steps.txt --out result.json
 
 `check` reads the targets from lifecycle.json. On a release pull request (--release) it fails unless every
 target has a passing lane result. A target that is not listed is not required. With --artifacts it also checks
 the artifact names `<Product>-<version>-<os>-<arch>.<ext>` and, from the config, that public packages and private
 user data live in separate stores (LC-32). Exit 0 pass, 1 fail, 2 bad input.
+
+A lane result may come from a pass record (DL-118: `pass_records.py to-result` writes `status: pass`,
+`source: "record"`, `shard`, `key`, `record_branch`). It counts only when `record_branch` is the default branch and
+its `key` equals the inputs key computed now for its shard from the table (`--table`, `--root`). A record of
+another branch, another key, a shard with no key, or an unreadable table is refused, and the lane must run.
+A lane with no `inputs` list has no key and always runs.
 """
 import argparse
 import json
@@ -45,8 +52,21 @@ def load_results(folder):
     return out
 
 
-def check_lanes(targets, results):
-    """A list of problems; empty when every target has a passing lane result."""
+def record_problem(r, key_of, default):
+    """Why a result written from a pass record is refused, or None."""
+    if r.get("record_branch") != default:
+        return "record is from branch %r, not %s" % (r.get("record_branch"), default)
+    want = key_of(r) if key_of else None
+    if not want:
+        return "this pull request has no inputs key for the lane"
+    if r.get("key") != want:
+        return "record key differs from this pull request's key"
+    return None
+
+
+def check_lanes(targets, results, key_of=None, default="main"):
+    """A list of problems; empty when every target has a passing lane result.
+    key_of(result) is the inputs key now for a record result's shard (DL-118)."""
     problems = []
     for t in targets:
         key = target_key(t)
@@ -57,7 +77,26 @@ def check_lanes(targets, results):
         elif r.get("status") != "pass":
             failed = ", ".join(r.get("failed") or []) or "lane not green"
             problems.append("%s: lane failed (%s)" % (name, failed))
+        elif r.get("source") == "record":
+            why = record_problem(r, key_of, default)
+            if why:
+                problems.append("%s: pass record refused (%s)" % (name, why))
     return problems
+
+
+def make_key_of(root, table_path):
+    """A function: result -> the inputs key of its shard now, or None (no shard, no table, no key)."""
+    try:
+        sys.path.insert(0, str(Path(__file__).resolve().parent))
+        import pass_records as P
+        table = P.load_table(str(root), table_path)
+    except (ImportError, OSError, ValueError):
+        return lambda r: None
+
+    def key_of(r):
+        shard = r.get("shard")
+        return P.inputs_key(str(root), table, shard)[0] if shard else None
+    return key_of
 
 
 def os_word(target):
@@ -106,7 +145,8 @@ def cmd_check(a):
         return 2
     problems = []
     if a.release:
-        problems += check_lanes(targets, load_results(a.results) if a.results else {})
+        problems += check_lanes(targets, load_results(a.results) if a.results else {},
+                                make_key_of(a.root, a.table), a.default)
     else:
         print("not a release pull request: lane results are not required")
     if a.artifacts:
@@ -144,6 +184,9 @@ def main(argv=None):
     c.add_argument("--release", action="store_true")
     c.add_argument("--artifacts")
     c.add_argument("--config", default=".delivery/config.json")
+    c.add_argument("--table", default="scripts/delivery/ci-shards.json")
+    c.add_argument("--default", default="main")
+    c.add_argument("--root", default=".")
     w = sub.add_parser("write-result")
     for k in ("lane", "arch", "package", "steps", "out"):
         w.add_argument("--" + k, required=True)
