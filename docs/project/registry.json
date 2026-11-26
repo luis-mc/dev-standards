@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:36+00:00",
+  "updated": "2026-11-26T09:42+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7817,6 +7817,19 @@
       "changed": "2026-11-26T09:35+00:00",
       "release": 190,
       "started": "2026-11-26T09:29+00:00"
+    },
+    {
+      "id": "DL431",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "Running",
+      "item": "Review the pool project's leaner-CI analysis",
+      "detail": "Review F1-F17 and S1-S14 of the peer page ci-leaner-findings.html: research best practice, correct, add, mark edits, say dev-standards or project per solution; owner asked via the peer 26 Nov",
+      "expected": "26 Nov ~11:30",
+      "changed": "2026-11-26T09:42+00:00",
+      "expected_basis": "agent research ~30 min",
+      "no_release": "study of a peer page",
+      "started": "2026-11-26T09:42+00:00"
     },
     {
       "id": "DP1",
