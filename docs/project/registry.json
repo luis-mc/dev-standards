@@ -12330,10 +12330,11 @@
       "item": "Transcript folds: third fold for hook messages",
       "detail": "Owner: fold long 'Stop says:' hook feedback lines (and similar hook messages) as the plugin folds diffs and commands: one dim line, a chord and a slash command, a switch in the band. First find which render component draws these messages (RenderComponent has InfoNotice, ToolResult, CommandOutput; none is named for hooks).",
       "expected": "27 Nov",
-      "changed": "2026-11-26T12:50+00:00",
+      "changed": "2026-11-26T12:58+00:00",
       "expected_basis": "one agent, about 20 min, after a check of the component",
       "release": 198,
-      "started": "2026-11-26T12:50+00:00"
+      "started": "2026-11-26T12:50+00:00",
+      "rides": "DS267"
     },
     {
       "id": "DU1",
