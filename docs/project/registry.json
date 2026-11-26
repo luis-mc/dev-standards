@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T14:51+00:00",
+  "updated": "2026-11-26T14:55+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12379,10 +12379,32 @@
       "item": "Full Progress: PR numbers link to the PR page, new window, any provider",
       "detail": "PR labels (release tree, What is happening) become links opening in a new tab; URL from a provider template (github now, gitlab-ready)",
       "expected": "26 Nov ~15:15",
-      "changed": "2026-11-26T14:48+00:00",
-      "expected_basis": "cloud agent ~10 min + CI ~5 + fold",
+      "changed": "2026-11-26T14:53+00:00",
+      "expected_basis": "cloud agent ~8 min, CI ~6 min (earlier runs)",
       "release": 201,
-      "started": "2026-11-26T14:48+00:00"
+      "started": "2026-11-26T14:48+00:00",
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-26T14:52+00:00",
+          "end": "2026-11-26T15:00+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-26T15:00+00:00",
+          "end": "2026-11-26T15:03+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-26T15:03+00:00",
+          "end": "2026-11-26T15:09+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-26T15:09+00:00",
+          "end": "2026-11-26T15:15+00:00"
+        }
+      ]
     },
     {
       "id": "DS273",
@@ -12395,6 +12417,54 @@
       "changed": "2026-11-26T14:51+00:00",
       "no_release": "a test of the display and the ledger",
       "started": "2026-11-26T14:50+00:00"
+    },
+    {
+      "id": "DS274",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Fold takes only the notes of the named release's tasks",
+      "detail": "docs_fold.py and change_notes.py fold: filter pending notes by the record's task-to-release map; no record keeps today's behaviour; test with two releases",
+      "expected": "27 Nov",
+      "changed": "2026-11-26T14:55+00:00",
+      "expected_basis": "one agent round ~10 min + CI",
+      "release": 202
+    },
+    {
+      "id": "DS275",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Stop hook names every release a PR carries",
+      "detail": "hook_stop messages list all RELEASE-n of a PR's cargo, not only the ledger entry's number",
+      "expected": "27 Nov",
+      "changed": "2026-11-26T14:55+00:00",
+      "expected_basis": "same agent round",
+      "rides": "DS274"
+    },
+    {
+      "id": "DS276",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Merged-not-cleaned release counts as active work for DL-124",
+      "detail": "no false Running-with-no-agent warning between merge and cleanup/smoke",
+      "expected": "27 Nov",
+      "changed": "2026-11-26T14:55+00:00",
+      "expected_basis": "same agent round",
+      "rides": "DS274"
+    },
+    {
+      "id": "DS277",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Join sets the release's PR automatically",
+      "detail": "when the join or link records a PR, every release of the cargo gets --pr N so the release tree shows without a manual step",
+      "expected": "27 Nov",
+      "changed": "2026-11-26T14:55+00:00",
+      "expected_basis": "same agent round",
+      "rides": "DS274"
     },
     {
       "id": "DU1",
