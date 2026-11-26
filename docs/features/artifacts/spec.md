@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.20.0
+version: 0.21.0
 owner: agents
 type: reference
 code:
@@ -336,6 +336,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.21.0 | 2026-11-26 | RELEASE-189 | The release tree and table show whenever any release is open (R5.30). Touches claude/plugins/docs/.claude-plugin/plugin.json. | DL428 |
 | 0.20.0 | 2026-11-26 | RELEASE-187 | A release takes its PR and waits-on from the delivery ledger and git when unset (R5.29). | DL420 |
 | 0.19.0 | 2026-11-26 | RELEASE-183 | The Full Progress timeline draws a release tree: a PR carries its releases, dashed arrows show a release waiting on a release, and a table lists them. New release fields --pr, --release-start, --release-waits-on (R5.26 to R5.28). | DS256 |
 | 0.18.0 | 2026-11-25 | RELEASE-175 | A --no-release reason that names shipping or a release is refused (R5.47a); work that ships rides a release. Plugin: claude/plugins/docs/.claude-plugin/plugin.json<br>Default Expected by task type (R5.24); an open row past its Expected warns once, then overdue-sweep moves it to Needs you after 60 minutes (R5.25). Plugin files changed: claude/plugins/docs/.claude-plugin/plugin.json.<br>Full Progress adds a Warn mode section with one line when a project runs the delivery rules in warn mode (reads .delivery/warn-report.json). | DP13, DP7, DP8 |

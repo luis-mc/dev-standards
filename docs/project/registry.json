@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T09:12+00:00",
+  "updated": "2026-11-26T09:29+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -7785,14 +7785,24 @@
       "id": "DL428",
       "owner": "delivery-speed",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release table for every open release",
       "detail": "Full Progress shows the release table below the timeline whenever any release is open, with or without a carrier PR; owner: own page showed no table",
-      "expected": "26 Nov ~14:00",
-      "changed": "2026-11-26T09:12+00:00",
-      "expected_basis": "CI 5 min after join",
+      "expected": "26 Nov",
+      "changed": "2026-11-26T09:29+00:00",
       "release": 189,
       "started": "2026-11-26T09:12+00:00"
+    },
+    {
+      "id": "DL429",
+      "owner": "delivery-speed",
+      "app": "",
+      "status": "To do",
+      "item": "Status badges and real status text",
+      "detail": "Full Progress section 0: badges (key TLDR plus CI runs and status) at full width replace the repeated collapsible lines; below them short bullets of real status of the active or last releases and PRs: what went wrong, what fixes it, what went well. Owner request 26 Nov",
+      "expected": "26 Nov ~14:00",
+      "changed": "2026-11-26T09:23+00:00",
+      "expected_basis": "agent ~15 min, CI 5 min"
     },
     {
       "id": "DP1",
