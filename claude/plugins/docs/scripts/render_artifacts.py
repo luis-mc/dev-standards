@@ -1551,8 +1551,8 @@ TREE_AX0, TREE_AX1 = 190, 800
 
 
 def tree_mode(tasks: list) -> bool:
-    """R5.55, R5.59: true when an open release names a carrier PR (its own or the ledger's) or waits on another release; else the older figure."""
-    return any(t.get('pr') or t.get('release_waits_on') for t in open_releases(tasks))
+    """R5.55, R5.59: true when any release is open (DL428); a release with no carrier PR is a row of its own with \"own run\", and the older figure is gone."""
+    return bool(open_releases(tasks))
 
 
 def _depth(task, by_id, seen=()):

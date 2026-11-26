@@ -46,10 +46,11 @@ def three():
 
 
 @case
-def old_look_without_fields():
+def tree_without_fields():
     a = rel('DS51', '10 Oct ~18:00', 1)
-    assert not R.tree_mode([a])
-    assert 'release-tree' not in R.release_timeline([a], R._parse_iso(STAMP), 'Lisbon')
+    assert R.tree_mode([a])
+    assert 'release-tree' in R.release_timeline([a], R._parse_iso(STAMP), 'Lisbon')
+    assert not R.tree_mode([])
 
 
 @case
