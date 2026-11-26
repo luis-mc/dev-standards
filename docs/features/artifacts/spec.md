@@ -33,7 +33,7 @@ code:
   - tools/test_render_artifacts.py
   - tools/test_artifact_prune.py
   - tools/test_artifacts_ar*.py
-last_verified: 2026-11-01
+last_verified: 2026-11-26
 artifact: feature-project-artifacts-standard.html
 ---
 # Project artifacts
@@ -190,6 +190,8 @@ flowchart LR
 **R5.27** — A release that waits on others is never live before them: its Live ETA is the latest of its own and theirs. The timeline and the table are sorted by that ETA; a dependency comes first on a tie. (DS256, ARTIFACTSPEC R5.56)
 
 **R5.28** — The timeline is a tree: a PR row with a 4px left bar and a trunk at x=22, an 18px elbow into each of its releases, dashed arrows from a release to the release it waits on, and no dashed box. It is at most 880 wide, about 52 per row, uses the page font and the CSS colour variables. Under it a table lists Item, Live ETA, CI, Waits on and Status: a `tr.pr` row, then `tr.ch` rows (the last `tr.ch.last`) with the sub-line `<task id> · in PR N`. (DS256, ARTIFACTSPEC R5.57, R5.58)
+
+**R5.29** — Nothing needs hand input. An open release with no `pr` takes it from `.delivery/ledger.json`: the train whose branch is `<TASK-ID>-integration` belongs to that release. An open release with no `release_waits_on` waits on every earlier open release when its train holds commits of the other train not yet on the base branch (git ancestry, skipped when git cannot say), or when `deploy.serial` is true in `.delivery/config.json` and the other train merged first. `--pr` and `--release-waits-on` win. Both reads are read-only; with no ledger nothing changes. The tree (R5.28) then shows for any project with a linked PR. (DL420, ARTIFACTSPEC R5.59) Proof: `claude/plugins/docs/tests/test_dl420_ledger_links.py`.
 
 ## 6. Non-functional requirements
 
