@@ -47,6 +47,7 @@ class LedgerLinks(unittest.TestCase):
         d = make_repo({"docs/project/x": "x"})
         got = tasks_of([rel("DL1", 1)], str(d / "docs" / "project"))
         self.assertNotIn("pr", got["DL1"])
+        self.assertFalse(R.tree_mode(list(got.values())))
 
     def test_serial_waits_on_earlier_merged_train(self):
         trains = [train("DL1", pr=11, state="merged"), train("DL2", pr=12)]

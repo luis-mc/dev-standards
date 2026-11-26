@@ -193,7 +193,7 @@ flowchart LR
 
 **R5.29** — Nothing needs hand input. An open release with no `pr` takes it from `.delivery/ledger.json`: the train whose branch is `<TASK-ID>-integration` belongs to that release. An open release with no `release_waits_on` waits on every earlier open release when its train holds commits of the other train not yet on the base branch (git ancestry, skipped when git cannot say), or when `deploy.serial` is true in `.delivery/config.json` and the other train merged first. `--pr` and `--release-waits-on` win. Both reads are read-only; with no ledger nothing changes. The tree (R5.28) then shows for any project with a linked PR. (DL420, ARTIFACTSPEC R5.59) Proof: `claude/plugins/docs/tests/test_dl420_ledger_links.py`.
 
-**R5.30** — The tree and its table show whenever any release is open, with or without a carrier PR; a release with no PR is a row of its own with CI "own run". The older figure is gone. (DL428, ARTIFACTSPEC R5.60) Proof: `tools/test_artifacts_ds256.py`.
+**R5.30** — The release table shows below the timeline whenever any release is open; the figure is the tree only with a carrier PR or a dependency. A release with no PR is a row of its own with CI "own run". (DL428, ARTIFACTSPEC R5.60) Proof: `tools/test_artifacts_ds256.py`.
 
 ## 6. Non-functional requirements
 

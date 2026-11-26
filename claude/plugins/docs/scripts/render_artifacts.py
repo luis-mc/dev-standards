@@ -1551,8 +1551,8 @@ TREE_AX0, TREE_AX1 = 190, 800
 
 
 def tree_mode(tasks: list) -> bool:
-    """R5.55, R5.59: true when any release is open (DL428); a release with no carrier PR is a row of its own with \"own run\", and the older figure is gone."""
-    return bool(open_releases(tasks))
+    """R5.55, R5.59: true when an open release names a carrier PR (its own or the ledger's) or waits on another release; else the older figure."""
+    return any(t.get('pr') or t.get('release_waits_on') for t in open_releases(tasks))
 
 
 def _depth(task, by_id, seen=()):
@@ -1872,9 +1872,10 @@ def release_timeline(tasks: list, ref: datetime, label: str) -> str:
                                 'a red outline means it is past its Expected.</p>' % OTHER_TITLE)
     return ('<figure class="release-timeline">\n<figcaption>Next releases (%s)</figcaption>\n'
             '<div class="timeline-scroll"><svg viewBox="0 0 %d %d" role="img" aria-label="%s" style="min-width:%dpx;max-width:%dpx">'
-            '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n</figure>\n'
+            '<g class="rt-axis">%s</g>\n%s\n%s\n</svg></div>\n%s\n%s\n</figure>\n'
             % (esc(label), width, height, esc(('Next releases: ' + '; '.join(aria) + '.' if aria else '') + ((' ' if aria else '') + OTHER_TITLE + ': ' + '; '.join(aria_other) + '.' if aria_other else '')), max(360, round(width * 640 / 900)), width,
-               ''.join(grid), '\n'.join(out), now, legend))
+               ''.join(grid), '\n'.join(out), now, legend,
+               release_tree_table(tree_rows(tasks, ref)) if rows else ''))
 
 
 # ------------------------------------------------------------------ State column (R5.44)
