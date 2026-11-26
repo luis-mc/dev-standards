@@ -1383,7 +1383,7 @@ double-click.
   `set-task-status`, and only on a release. They are in the publish fingerprint.
 - **R5.56** — A release that waits on others is never live before them: its Live ETA is
   the latest of its own and theirs. Rows are sorted by that ETA.
-- **R5.57** — When an open release has `pr` or `release_waits_on`, a table follows the
+- **R5.57** — When any release is open (R5.60), a table follows the
   timeline: Item, Live ETA, CI, Waits on, Status. A `tr.pr` row per PR, its releases as
   `tr.ch` rows (the last `tr.ch.last`), each with the sub-line `<task id> · in PR N`.
 - **R5.58** — In the same case the timeline is a tree: a left bar, a trunk at x=22, 18px
@@ -1399,6 +1399,9 @@ double-click.
   `--release-waits-on` wins. The ledger and git are only read. With no ledger nothing changes.
   The tree (R5.58) then shows for any project with a linked PR. Verified by
   `test_dl420_ledger_links`.
+- **R5.60** — The tree (R5.58) and its table (R5.57) show whenever any release is open,
+  with or without a carrier PR. A release with no PR is a row of its own, CI "own run".
+  The older figure is gone. Verified by `test_artifacts_ds256`.
 
 ---
 
