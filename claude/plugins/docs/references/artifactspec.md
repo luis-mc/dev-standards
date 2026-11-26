@@ -375,6 +375,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D23 | Does the plugin commit or push? | No: it writes files; the project commits and pushes. | A record change never triggers a deploy by itself (R4.13, R4.28). |
 | D24 | What happens to a finished feature artifact? | `retire` moves it to `retired_features`, keeps its decisions and tasks, deletes its file and content (owner, 30 Oct). | Finished features stop taking most of `docs/artifacts` without breaking INV-3 or R4.6 (R4.31 to R4.36). |
 | D25 | How does Full Progress know where a pull request lives? | A provider table (`github`, `gitlab`, `custom`) in `pr_links.py` and an optional manifest field `pr_links`, derived from `git config --get remote.origin.url` when absent (DS272). | A new host needs one table row, not a code path in the renderer; the render never runs git (R5.65, R5.66). |
+| D26 | What if a running release has no phases? | `set-task-status` refuses a Running or Waiting release without phases; `--no-phases REASON` (two words or more) is the one way round it, and `check` fails an open release with neither (DS278). | A release with only an Expected shows one diamond and no bars, so the timeline says nothing about its phases (R5.41a, R5.42c). |
 
 ---
 
@@ -1150,6 +1151,22 @@ double-click.
   is no silent padding. A margin for what may go wrong is named as the
   release's `risk` and is not added to Expected. Verified by `test_release_expected_is_the_end_of_the_last_phase`,
   `rule_file_carries_the_release_rule` and the R5.41 fixture of `test_check_fixtures`.
+- **R5.41a** — A release that is open in Running or Waiting has phases. The
+  release is the task's own, or the one it rides (`rides`, R5.40). `set-task-status`
+  exits 1 when it moves a task to Running or Waiting and that release has no phases
+  once the command is applied; the message says to give
+  `--phase agents=HH:MM-HH:MM` and the other phases. A move to To do, Built, Live
+  or Dropped, and a task with `--no-release` (R5.47a), are exempt. The escape hatch
+  is `--no-phases REASON`: it stores `no_phases` (the reason, at most 80 characters)
+  on the release, is accepted only with Running or Waiting, and refuses an empty
+  reason or a one-word reason. `check` reports a Running or Waiting release with
+  no `phases` and no `no_phases` reason (R5.41a), so an old record or a hand edit
+  is caught and CI fails on it; a row last changed before 26 Nov 2026 is a warning
+  instead. `no_phases` belongs on a release row only. The page shows the reason in
+  the release table (R5.42c). Verified by `test_running_release_needs_phases`,
+  `test_no_phases_escape_hatch`, `test_no_phases_refusals`,
+  `test_check_finds_a_release_without_phases` and `test_older_row_without_phases_warns`
+  in `tools/test_artifacts_ds278.py`.
 - **R5.42** — Section 0 of the full-progress artifact holds, after the status key
   and before the checklist, the **release timeline** whenever at least one
   release is open (Running, Waiting, To do, Needs you or On hold) and nothing
@@ -1166,8 +1183,8 @@ double-click.
   small gap, clears the label before it and the last label, so time labels never
   print on top of each other (`axis_labels_keep_a_gap`). A release whose Expected is
   more than 24 hours after the stamp, or has no time, sits after an axis break in one slot per day, as
-  an outline diamond with the day. A release without phases is a filled diamond at
-  its Expected only. The figure is deterministic (R7.4): the "now" mark is the
+  an outline diamond with the day. A release without phases is an outline diamond at
+  its Expected only (R5.42c). The figure is deterministic (R7.4): the "now" mark is the
   render stamp, never the wall clock. `check` finds a missing, extra or misplaced
   timeline and a wrong caption (R5.42). Verified by `timeline_rows_axis_and_break`,
   `timeline_axis_is_to_scale_from_the_earliest_phase`, `timeline_is_absent_without_open_releases`,
@@ -1196,6 +1213,15 @@ double-click.
   `Next releases (<timezone_label>)`. Verified by
   `other_work_strip_renders_beside_the_release_rows` and
   `other_work_strip_alone_and_overdue`.
+- **R5.42c** — A release with no phases is drawn as an outline diamond at its
+  Expected (never a filled one: a filled diamond is the end of the last phase),
+  and its Live ETA cell in the release table reads `<time> · no phases`. When it
+  carries a `no_phases` reason (R5.41a), the table's Item cell shows the line
+  `no phases: <reason>`. The legend says an outline diamond alone is an
+  estimate with no phases. The figure stays deterministic (R7.4). `check` finds
+  a release row that does not match. Verified by `test_no_phases_diamond_is_an_outline`,
+  `test_no_phases_live_eta_cell` and `test_no_phases_reason_in_the_table`
+  in `tools/test_artifacts_ds278.py`.
 - **R5.43** — The look of the timeline uses the design tokens only, through
   classes of the structure stylesheet: phases are bars in `--running-mark`
   (agents), `--signal` (join), `--live` (PR CI) and `--ink` (merge and cleanup);
@@ -2176,6 +2202,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 | The CI runs section of Full Progress: absent without the file, folded, summary, figures, In progress table, 20 finished rows with waterfalls, legend, tokens only | R5.51 |
 | Where it stands is derived from the record: Live release, open work with IDs, basis and Expected; short; lede only when no tasks | R5.53, R5.54 |
 | Release fields: `release`, `phases`, `risk`, `rides`; Expected is the end of the last phase | R5.40, R5.41 |
+| A Running or Waiting release has phases or a `no_phases` reason; no phases is an outline diamond and `no phases` in the table | R5.41a, R5.42c |
 | Release numbers: positive, unique, none left `true`; `RELEASE-<n>` on every release row | R5.45 |
 | Full Progress grouped by release; release line on rows that rode one | R5.46 |
 | Every Running or Built task rides a release | R5.47 |
