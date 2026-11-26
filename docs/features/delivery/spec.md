@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.53.0
+version: 0.54.0
 owner: agents
 type: reference
 code:
@@ -549,6 +549,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.54.0 | 2026-11-26 | RELEASE-196 | R5.77: before the watcher merges a green PR it tests the merge result: watcher.merge_result warn (default) prints one line, update runs gh pr update-branch and waits for CI (DL-119).<br>R5.78: with watcher.infra_retry the watcher re-runs the failed jobs once after an infrastructure failure and records a ci.retry event; a test failure is never retried (DL-120).<br>R5.79, R5.80: flake quarantine file with quarantine_check.py and a session hook line; gate.json local_gate smoke runs only the touched suites (DL-121, DL-122). | DS259, DS260, DS264 |
 | 0.53.0 | 2026-11-26 | RELEASE-195 | R5.74: CI skips work by area with changed_areas.py, a job-level if and an always-run aggregate job; ci_areas_check.py fails a required workflow with a pull-request path filter.<br>R5.75: a base image is keyed on its inputs and reused by digest only when main built it (image_reuse.py, image-reuse.yml).<br>R5.76: a lane result can come from a default-branch pass record with the same inputs key (to-result); copy-to-main puts a pull request's records on main. | DS261, DS262, DS263 |
 | 0.52.0 | 2026-11-26 | RELEASE-192 | Cancel the old run to lift the train freeze (R5.36c), docs and config pushes skip typecheck and lint (R5.36d), gate result read from other worktrees (R5.36e). | DL424 |
 | 0.51.0 | 2026-11-26 | RELEASE-187 | New config key deploy.serial (default false): releases deploy one after another. | DL420 |
