@@ -628,9 +628,10 @@ the documented example is `work_root` `C:\\Work`, `tz` `Europe/Lisbon`, `caps`
 `commit-msg` hook that the delivery installer writes refuse `Co-Authored-By` and AI
 attribution trailers (DL-74). Without the answer, write the neutral defaults.
 
-Add `.delivery/` to the project's `.gitignore` in the same change (the ledger,
-suite times and watcher state live there and are per machine). Append the line
-only when no line already ignores it; create the file when absent. The
+Add `.delivery/*` and `!.delivery/config.json` to the project's `.gitignore` in the
+same change (the ledger, suite times and watcher state are per machine; the
+config is shared policy and is committed). Append each line only when it is
+not there; create the file when absent. The
 `config.json` itself is local too: it is ignored with the folder, so the
 template is the shared record.
 
@@ -764,7 +765,7 @@ Apply what was confirmed. Then check the result. Do not assume it worked:
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any
   hooks that were already there.
 - When the user target was applied, `~/.claude/hooks/questions_stop.py` is identical to the asset and `~/.claude/settings.json` `hooks.Stop` runs it once, next to every Stop hook that was there before. A project `settings.json` has no `questions_stop.py` entry.
-- A project target's `enabledPlugins` holds `luismc-delivery@<marketplace>`, `.delivery/config.json` parses as JSON with none of the `_` keys, `.gitignore` ignores `.delivery/`, every applied target has `rules/delivery-timing.md` identical to the template, and no `hooks.Stop` entry naming `no-tomorrow.mjs` remains unless the removal was declined.
+- A project target's `enabledPlugins` holds `luismc-delivery@<marketplace>`, `.delivery/config.json` parses as JSON with none of the `_` keys, `.gitignore` ignores `.delivery/*` but not `.delivery/config.json`, every applied target has `rules/delivery-timing.md` identical to the template, and no `hooks.Stop` entry naming `no-tomorrow.mjs` remains unless the removal was declined.
 - A project target's `enabledPlugins` holds an entry for every plugin in the
   marketplace file (`true`, or the owner's existing value), next to every entry
   that was there before, with no `{{MARKETPLACE}}` left in the file, and the
