@@ -12,7 +12,7 @@ ledger read-only; never writes it. A project without .delivery/ is untouched.
 The loop limit (config `stop_repeat_limit`, default 3, 0 = never): a finding that blocked `limit` turn ends in a row
 with its key and the ledger fields it depends on unchanged stops blocking and is announced once per session.
 
-Checks: DL-02 DL-03 DL-14 DL-18 DL-30 DL-31 DL-32 DL-33 DL-63 DL-64 DL-76 and Q-2.
+Checks: DL-02 DL-03 DL-14 DL-18 DL-30 DL-31 DL-32 DL-33 DL-64 DL-76 DL-124 and Q-2.
 Disable one in .delivery/config.json "checks_off", all with CLAUDE_DELIVERY_HOOKS=off.
 """
 import fnmatch
@@ -248,6 +248,11 @@ def _prs(rows):
     return ', '.join(str(t.get('pr')) for t in rows)
 
 
+MANUAL_PREFIX = 'DL-03:manual:'     # a warning said once per session (DS303), never a block
+WATCHER_MERGES = ('the watcher merges it (a session never merges): check that delivery_watch.py runs, '
+                  'or record a hold with its reason: delivery_ledger.py hold')
+
+
 def check_trains(ledger, cfg, at, grouped=False):
     """The train findings. `grouped` (DL382): one line per rule, with a count and the PR numbers."""
     out = []
@@ -258,6 +263,11 @@ def check_trains(ledger, cfg, at, grouped=False):
     nopr, merge, clean, smoke = [], [], [], []
     for t in H.trains_green_unmerged(ledger, at):
         (merge if t.get('pr') else nopr).append(t)
+    if merge and H.C.merge_mode(cfg) == 'manual':
+        # DS303 (DL-03): in manual merge mode the owner merges. A green PR is said once, as a warning, never a block.
+        out.append((MANUAL_PREFIX + ','.join(str(t.get('pr')) for t in merge),
+                    'DL-03 green, waiting for the owner to merge (merge mode manual): PRs %s.' % _prs(merge)))
+        merge = []
     for t in ledger['trains']:
         if not t.get('merged_at') or t.get('state') in _DONE_TRAIN:
             continue
@@ -280,8 +290,7 @@ def check_trains(ledger, cfg, at, grouped=False):
     if grouped:
         if merge:
             out.append(('DL-03:' + ','.join(str(t.get('id')) for t in merge),
-                        'DL-03 green and not merged (%d): PRs %s (gh pr merge N, after ci_watch.py passed for its head, '
-                        'or record a hold with its reason: delivery_ledger.py hold).' % (len(merge), _prs(merge))))
+                        'DL-03 green and not merged (%d): PRs %s (%s).' % (len(merge), _prs(merge), WATCHER_MERGES)))
         if clean:
             out.append(('DL-14:' + ','.join(str(t.get('id')) for t in clean),
                         'DL-14 merged and not cleaned (%d): PRs %s (%s)' % (
@@ -294,9 +303,8 @@ def check_trains(ledger, cfg, at, grouped=False):
                                                                  'Run the smoke step after its deploy'))))
         return out
     for t in merge:
-        out.append(('DL-03:' + str(t.get('id')), 'DL-03 %s is green and not merged. Merge it now (gh pr merge %s, after '
-                    'ci_watch.py passed for its head), or record a hold with its reason: delivery_ledger.py hold.'
-                    % (H.release_name(t), t.get('pr', 'N'))))
+        out.append(('DL-03:' + str(t.get('id')), 'DL-03 %s (PR %s) is green and not merged. %s.'
+                    % (H.release_name(t), t.get('pr', 'N'), WATCHER_MERGES[0].upper() + WATCHER_MERGES[1:])))
     for t in clean:
         pr = t.get('pr', 'N')
         out.append(('DL-14:' + str(t.get('id')), 'DL-14 %s is merged and not cleaned. %s'
@@ -566,75 +574,16 @@ def check_watcher(ledger, cfg, at):
              % (', '.join(items[:4]), cfg['watcher_min']))]
 
 
-def parse_expected(text, at, tz=None):
-    """A registry 'expected' as an aware datetime (end of day for a bare date); None when not a date.
-    A date or time without a zone is read in `tz` (the owner zone, R6.6; UTC when None). `~HH:MM` is a time."""
-    if not isinstance(text, str):
-        return None
-    t = H.parse_ts(text.strip())
-    if t is not None:
-        return t if 'T' in text else t + timedelta(days=1)
-    m = re.search(r'\b(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?(?:\s+(\d{4}))?(?:[ ,]+~?(\d{1,2}):(\d{2}))?', text)
-    if not m or m.group(2).lower() not in MONTHS:
-        return None
-    tz = tz or at.tzinfo
-    local = at.astimezone(tz)
-    month, day = MONTHS[m.group(2).lower()], int(m.group(1))
+# DL-63 is retired (merged into ARTIFACTSPEC R8.19, DS303): the docs plugin's end-of-turn hook owns the
+# past-due Expected check, so this hook no longer reads the record's Expected times.
 
-    def build(year):
-        d = datetime(year, month, day, tzinfo=tz)
-        if m.group(4):
-            return d.replace(hour=int(m.group(4)), minute=int(m.group(5)))
-        return d + timedelta(days=1)
-
-    if m.group(3):
-        try:
-            return build(int(m.group(3)))
-        except (ValueError, OverflowError):
-            return None
-    # no year: the year that puts the date nearest to now (30 Dec + `2 Jan` is next year)
-    options = []
-    for y in (local.year - 1, local.year, local.year + 1):
-        try:
-            options.append(build(y))
-        except (ValueError, OverflowError):    # 29 Feb in a common year
-            pass
-    return min(options, key=lambda d: abs(d - at)) if options else None
-
-
-def _owner_tz(cfg):
-    try:
-        from zoneinfo import ZoneInfo
-        return ZoneInfo(cfg.get('tz') or 'UTC')
-    except Exception:  # noqa: BLE001 - no tzdata or a bad name: read in UTC
-        return None
-
-
-def check_registry(root, cfg, at):
-    reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
-    if reg is None:      # older projects keep the record in docs/artifacts
-        reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
-    tasks = reg.get('tasks') if isinstance(reg, dict) else None
-    if not isinstance(tasks, list):
-        return []
-    out = []
-    for t in tasks:
-        if not isinstance(t, dict) or t.get('status') not in cfg['registry_open']:
-            continue
-        exp = parse_expected(t.get('expected'), at, _owner_tz(cfg))
-        if exp is not None and exp <= at:
-            out.append(('DL-63:' + str(t.get('id')), 'DL-63 row %s (%s) is %s with Expected "%s" in the past. Close it if '
-                        'it shipped, or set a new real Expected time (task-status-update / task-add), then publish Full Progress.'
-                        % (t.get('id'), t.get('item', ''), t.get('status'), t.get('expected'))))
-    return out
-
-
-WARN_ONLY = ('DL-123',)
+WARN_ONLY = ('DL-124',)
 
 
 def check_running_idle(root, ledger, cfg):
-    """DL-123 (DS267, warn only): a task is Running, no agent row is open for it and no CI run is active for it.
-    DS276 (DL-130): a merged entry not yet cleaned and smoked counts as active."""
+    """DL-124 (DS267, warn only): a task is Running, no agent row is open for it and no CI run is active for it.
+    DS276 (DL-130): a merged entry not yet cleaned and smoked counts as active. DS303: the key is DL-124 (it was
+    DL-123, so `checks_off: ["DL-124"]` did nothing)."""
     reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
     if reg is None:
         reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
@@ -658,9 +607,21 @@ def check_running_idle(root, ledger, cfg):
     out = []
     for t in tasks:
         if isinstance(t, dict) and t.get('status') == 'Running' and t.get('id') and str(t['id']) not in busy:
-            out.append(('DL-123:' + str(t['id']), '%s is Running but no agent is working on it: set it Built, Waiting or '
+            out.append(('DL-124:' + str(t['id']), 'DL-124 %s is Running but no agent is working on it: set it Built, Waiting or '
                         'Needs you.' % t['id']))
     return out
+
+
+def first_warning(root, sid, key):
+    """True the first time this session sees `key` (DS303: the manual-mode DL-03 line is said once)."""
+    state = H.read_state(root)
+    slot = 'warned:' + sid
+    seen = state.get(slot) if isinstance(state.get(slot), list) else []
+    if key in seen:
+        return False
+    state[slot] = (seen + [key])[-20:]
+    H.write_state(root, state)
+    return True
 
 
 USER_LINES = 3    # DS280: findings of one rule shown in full in a message to the person
@@ -704,13 +665,12 @@ def findings(root, data, cfg):
     except Exception:  # noqa: BLE001
         pass
     ledger = H.load_ledger(root)
-    H.use_record(root)                # DS275: names every release of a pull request
+    H.use_record(root)                # DS275 (DL-129): names every release of a pull request
     text = last_assistant_text(data)
     out = []
     out += check_trains(ledger, cfg, at, grouped=True)
     out += check_agents(ledger, cfg, at)
     out += check_watcher(ledger, cfg, at)
-    out += check_registry(root, cfg, at)
     out += check_running_idle(root, ledger, cfg)
     out += check_one_ci_per_release(root, ledger, cfg)
     if text:
@@ -729,8 +689,10 @@ def main():
         return 0
     cfg = H.load_config(root)
     found = findings(root, data, cfg)
+    sid = str(data.get('session_id') or 'default')
     warns = [m for k, m in found if k.split(':')[0] in WARN_ONLY]       # DS267: said, never blocking
-    found = [(k, m) for k, m in found if k.split(':')[0] not in WARN_ONLY]
+    warns += [m for k, m in found if k.startswith(MANUAL_PREFIX) and first_warning(root, sid, k)]
+    found = [(k, m) for k, m in found if k.split(':')[0] not in WARN_ONLY and not k.startswith(MANUAL_PREFIX)]
     if warns and not found:
         print(json.dumps({'systemMessage': 'luismc-delivery: ' + '; '.join(warns)}))
         return 0
@@ -744,7 +706,6 @@ def main():
             print(json.dumps({'systemMessage': 'luismc-delivery (warn mode, nothing blocked): '
                               + user_text(found)}))
         return 0
-    sid = str(data.get('session_id') or 'default')
     limit = H.repeat_limit(cfg, enf['block_ceiling'])
     found, noticed = repeat_limit(found, H.load_ledger(root), root, sid, limit)
     notice = {'systemMessage': limit_notice(noticed, limit)} if noticed else {}
