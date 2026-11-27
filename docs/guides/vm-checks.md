@@ -1,3 +1,7 @@
+---
+title: VM checks on a kvm runner
+type: how-to
+---
 # VM checks on a kvm runner
 
 Use this to test a package in a clean distro VM, for example a Fedora VM with SELinux Enforcing. It needs a self-hosted runner with the `kvm` label.

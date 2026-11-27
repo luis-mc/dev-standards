@@ -10,12 +10,25 @@ Start with the [overview](overview/README.md).
 |---|---|
 | `overview/` | What is this, who is it for, how do the parts fit? |
 | `features/` | What does feature X do, and how is it built? One folder per feature. |
-| `design-system/` | What are the UX rules, tokens, components? The only home of UX rules. |
+| `design-system/` | What are the UX rules, tokens, components? The only home of UX rules. Not present here: this repository has no UI. |
 | `architecture/` | How is the system built, and why? Binding cross-cutting specs, decision records and change notes. |
 | `guides/` | How do I do task Y (set up, release, restore)? |
 | `reference/` | What exactly is the value (API, CLI, config keys)? Generated. |
 | `project/` | The artifacts record: progress and decisions in flight. |
-| `archive/` | Superseded docs and old reports. Never binding. |
+
+## Guides
+
+- [Testing in dev-standards](guides/testing.md)
+- [Set up CI for a project](guides/set-up-ci.md)
+- [Set up the CI fallback and try it on a test repository](guides/ci-fallback-test-run.md)
+- [Shared CI on your machine](guides/shared-self-hosted-runners.md)
+- [Run work in cloud routines](guides/cloud-routines.md)
+- [What the setup skills do and what you can do after](guides/setup-skills.md)
+- [Adopt the lifecycle kit in a project](guides/lifecycle-adoption.md)
+- [Rust beside a JS stack](guides/rust-beside-js.md)
+- [VM checks on a kvm runner](guides/vm-checks.md)
+- [Windows packaging on the Linux pool](guides/windows-packaging.md)
+- [Fix a citation of a removed delivery rule](guides/removed-delivery-ids.md)
 
 ## Settings
 
@@ -23,13 +36,13 @@ Start with the [overview](overview/README.md).
 
 ## Change notes
 
-A branch never edits a spec's `**Version:**` line or a plugin's `version`. It adds a change note in `architecture/changes/` instead; see the folder's `README.md`. The release fold on `main` turns the notes into versions and change-log entries, then deletes them. Do not fold by hand.
+A branch never edits a spec's `**Version:**` line or a plugin's `version`. It adds a change note instead. A feature spec's note goes in `features/<feature>/changes/` (`docs_fold.py note`). A shipped spec's or a plugin's note goes in `architecture/changes/`; see that folder's `README.md`. The release fold runs on `main` after the merge. It turns the notes into versions and change-log entries, then deletes them. Do not fold by hand.
 
 A change that needs no doc puts `Docs: none, <reason>` in a commit message.
 
-## Archive
+## Replaced docs
 
-A doc that is replaced moves to `archive/`, keeps a link to what replaced it, and is never cited as a rule. The old reports stay unchanged in `archive/reports/`.
+A replaced doc is deleted, not archived. This repository has no `archive/` folder. Git history keeps the old text.
 
 ## Generated files
 

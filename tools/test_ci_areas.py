@@ -14,7 +14,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ci_areas as ca  # noqa: E402
 
-TS = "claude/plugins/project-setup/skills/tech-stack-setup"
+PSP = "claude/plugins/project-setup"
+TS = PSP + "/skills/tech-stack-setup"
 FAILS: list[str] = []
 
 
@@ -38,8 +39,8 @@ def mflags_early(path_list):
 
 # one path per area
 for path, want in [
-    (f"{TS}/references/invariants.md", {"specs"}),
-    ("claude/plugins/project-setup/skills/auth-setup/references/authentication.md", {"specs"}),
+    (f"{PSP}/references/stackspec.md", {"specs"}),
+    (f"{PSP}/references/authspec.md", {"specs"}),
     ("claude/plugins/docs/references/artifactspec.md", {"specs"}),
     ("claude/plugins/docs/skills/spec-new/assets/spec-template.md", {"specs"}),
     ("claude/plugins/docs/skills/spec-check/assets/spec_check.py", {"specs"}),
@@ -49,7 +50,8 @@ for path, want in [
     ("tools/route-ratelimit-map.json", {"specs"}),
     (".claude/settings.json", {"specs"}),
     (".claude/suites.json", {"specs"}),
-    (f"{TS}/assets/preflight.py", {"delivery"}),
+    (f"{PSP}/scripts/preflight.py", {"delivery"}),
+    ("tools/test_kit_suite_sim.py", {"delivery"}),
     ("claude/plugins/delivery/templates/shared/scripts/delivery/join.py", {"delivery"}),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", {"delivery"}),
     ("tools/test_delivery_gate.py", {"delivery"}),
@@ -64,7 +66,9 @@ for path, want in [
     ("claude/plugins/docs/rules/project-artifacts.md", {"specs", "artifacts"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md", {"specs", "profiles"}),
     ("claude/plugins/docs/scripts/render_artifacts.py", {"artifacts"}),
-    ("claude/plugins/docs/scripts/artifacts/hook_session_start.py", {"artifacts"}),
+    ("claude/plugins/docs/scripts/hook_session_start_artifacts.py", {"artifacts"}),
+    ("tools/test_artifacts_dl251.py", {"artifacts"}),
+    ("tools/test_artifacts_dl269.py", {"artifacts"}),
     ("claude/plugins/docs/design/DESIGN.md", {"artifacts"}),
     ("tools/test_project_artifacts_hooks.py", {"artifacts"}),
     ("tools/test_render_artifacts.py", {"artifacts"}),
@@ -72,6 +76,12 @@ for path, want in [
     ("claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json", {"profiles"}),
     ("claude/plugins/agents/agents/architect.md", {"profiles"}),
     ("tools/test_model_profiles.py", {"profiles"}),
+    (f"{PSP}/scripts/ci_pin.py", {"profiles"}),
+    ("tools/test_dl263_ci_pin.py", {"profiles"}),
+    ("tools/test_project_setup_fixes.py", {"profiles"}),
+    ("tools/test_setup_pattern.py", {"profiles"}),
+    (f"{PSP}/tests/test_so9_update_offer.py", {"profiles"}),
+    ("claude/plugins/docs/tests/fixtures/vitest_shim/run.mjs", {"docs"}),
     ("claude/plugins/transcript-folds/hooks/transcript_folds.tsx", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/hooks/fold/width.ts", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/hooks/hooks.json", {"transcript-folds"}),
@@ -102,7 +112,7 @@ for path in ["docs/artifacts/feature-x.html", "docs/plans/test-cost-train.md",
              ".github/workflows/nightly.yml", ".github/workflows/template-build.yml",
              "claude/plugins/transcript-folds/.claude-plugin/plugin.json",
              "claude/plugins/docs/.claude-plugin/plugin.json",
-             f"{TS}/assets/catalog/tech/data.yaml", f"{TS}/assets/check_stack.py",
+             f"{TS}/assets/catalog/tech/data.yaml", f"{PSP}/scripts/check_stack.py",
              "tools/template_build_check.py"]:
     check(f"none {path}", hit([path]), set())
 check("docs-only mix", hit(["docs/a.md", "docs/artifacts/b.html", "README.md"]), set())
@@ -153,7 +163,7 @@ for path, want in [
     ("tools/test_delivery_cleanup.py", (T, F, T, F)),
     ("tools/test_change_notes.py", (T, F, F, T)),
     ("tools/test_delivery_ci.py", (F, F, F, F)),
-    (f"{TS}/assets/preflight.py", (F, F, F, F)),
+    (f"{PSP}/scripts/preflight.py", (F, F, F, F)),
     (f"{TS}/assets/tooling/ts/vitest.config.ts", (F, F, F, F)),
     ("tools/test_render_artifacts.py", (F, F, F, F)),
     ("docs/a.md", (F, F, F, F)),
@@ -181,9 +191,9 @@ check("skip beats run_all",
 check("advice light", ca.advice(["claude/plugins/project-setup/skills/x/SKILL.md", "docs/a.md"]),
       "light: test locally only")
 check("advice docs only", ca.advice(["docs/a.md"]), "light: test locally only")
-check("advice specs light", ca.advice([f"{TS}/references/invariants.md"]),
+check("advice specs light", ca.advice([f"{PSP}/references/stackspec.md"]),
       "light: test locally only")
-check("advice heavy delivery", ca.advice([f"{TS}/assets/preflight.py"], "DS9-a"),
+check("advice heavy delivery", ca.advice([f"{PSP}/scripts/preflight.py"], "DS9-a"),
       "heavy: delivery -> run `gh workflow run spec-lint.yml --ref DS9-a -f areas=delivery`")
 check("advice heavy lists touched areas",
       ca.advice(["claude/plugins/docs/scripts/render_artifacts.py", "tools/test_model_profiles.py"], "b"),

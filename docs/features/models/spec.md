@@ -159,7 +159,7 @@ R5.5, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by
 | ID | Question | Chosen | Date |
 |---|---|---|---|
 | [0013](../../architecture/decisions/0013-medium-effort-for-both-models.md) | What is the default model and effort? | Opus and Sonnet, both medium | 2026-10-11 |
-| [0014](../../architecture/decisions/0014-leave-explore-and-plan-on-opus.md) | Override Explore and Plan? | No, leave both on Opus | 2026-10-10 |
+| [0014](../../architecture/decisions/0014-leave-explore-and-plan-on-opus.md) | Override Explore and Plan? | No, leave both on Opus. Reversed for Explore by page D6 (27 Nov): Explore runs on Haiku. Plan stays built in. | 2026-10-10 |
 | [0015](../../architecture/decisions/0015-warn-when-saved-effort-stops-applying.md) | What if an alias moves to a model with no saved effort? | Warn at session start | 2026-10-10 |
 | page D2 | Where do the role rules live? | A rule file the plugin owns | 2026-10-10 |
 | page D4 | How are skills profiled? | By kind of work | 2026-10-10 |
