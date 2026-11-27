@@ -712,7 +712,8 @@ docs/artifacts/
   `test_worktree_prints_the_record_folder_and_ignores_the_old_setting`.
 - **R4.25** — Retired in 1.8.0: a worktree setting is no longer read, so none is refused.
 - **R4.26** — The old setting file `.claude/artifacts-local.json` stays in
-  `.gitignore`; the record never holds a machine path.
+  `.gitignore`; the record never holds a machine path. The file holds the
+  local Full Progress page fields of R9.7.
 - **R4.27** — Retired in 1.8.0: the plugin does not move or remove a worktree.
 
 ### 4.9 Not pushing the record
@@ -1984,17 +1985,20 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   local page has `<meta http-equiv="refresh" content="60">` in its head; the
   repo copy and the publish copy do not. The page opens once in the default
   browser per deferral (not with `--no-open`, with `CI` set, or with no
-  display); `local_opened` on the entry records it, and a second
+  display); `local_opened` records it, and a second
   `mark-deferred` in the same deferral does not open it again. `<dir>` is
   `--local DIR`, else `work_root` of `.delivery/config.json`, else `work_root`
   of `machine.json` in the delivery machine folder, else the publish-copy
   folder (with a warning that names `machine.json`). The path is recorded as
-  `local_path` on the entry. While the deferral is active, every writing
+  `local_path`. Both fields live under `deferred_local.<key>` in the git-ignored
+  `.claude/artifacts-local.json`, never in the committed manifest (R4.26); the
+  next writing command moves them out of an older manifest. While the deferral is active, every writing
   command refreshes the copies; after the until time they are left as they
   are, never deleted. `pending` shows the path (`local_path` in `--json`) and
   the hook line reads `Full Progress is deferred until HH:MM; local copy:
   <path>`. Any later `mark-published` clears the deferral. Verified by
-  `test_deferred_publish_does_not_block_until_the_reset` and
+  `test_deferred_publish_does_not_block_until_the_reset`,
+  `test_deferred_local_page_lives_in_the_local_file_not_the_manifest` and
   `end_of_turn_reminds_once_while_deferred`.
 - **R9.8** — Full Progress is published at least every 60 minutes while
   work is open: while a task is Running, Waiting or Needs you (the hourly
