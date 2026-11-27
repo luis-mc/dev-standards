@@ -31,8 +31,8 @@ references are skipped, not checked:
 
 ```bash
 python3 "${CLAUDE_PLUGIN_ROOT}/skills/spec-check/assets/spec_check.py" specs/mine.md \
-  --external STACKSPEC=<plugin>/skills/tech-stack-setup/references/invariants.md \
-  --external AUTHSPEC=<plugin>/skills/auth-setup/references/authentication.md
+  --external STACKSPEC=<plugin>/references/stackspec.md \
+  --external AUTHSPEC=<plugin>/references/authspec.md
 ```
 
 Point at the spec where it is *maintained*, inside the `luismc-project-setup`

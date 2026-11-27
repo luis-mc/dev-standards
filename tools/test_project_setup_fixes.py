@@ -16,6 +16,7 @@ PS = ROOT / "claude/plugins/project-setup/skills"
 CS = PS / "claude-setup"
 TS = PS / "tech-stack-setup"
 AS = PS / "auth-setup"
+PSCRIPTS = ROOT / "claude/plugins/project-setup/scripts"
 HOOKS = TS / "assets/tooling/shared/.githooks"
 DELIV = ROOT / "claude/plugins/delivery/templates/shared"
 STOP = CS / "assets/.claude/hooks/questions_stop.py"
@@ -127,7 +128,7 @@ def f20():
     (d / "docs/architecture/stack-profile.md").write_text("x")
     (d / "go.work").write_text("go 1.22\n")
     (d / "apps").mkdir()
-    p = sh([sys.executable, str(TS / "assets/preflight.py"), "--require", "stack", "--for-skill", "auth-setup"], cwd=d)
+    p = sh([sys.executable, str(PSCRIPTS / "preflight.py"), "--require", "stack", "--for-skill", "auth-setup"], cwd=d)
     return [] if p.returncode == 0 else [f"F20 Go repo blocked: {p.stdout.strip()[:80]}"]
 
 
@@ -140,7 +141,7 @@ def f21():
 def selection(text):
     f = Path(tempfile.mkdtemp()) / "sel.yaml"
     f.write_text(text)
-    return sh([sys.executable, str(TS / "assets/check_stack.py"), "--selection", str(f)])
+    return sh([sys.executable, str(PSCRIPTS / "check_stack.py"), "--selection", str(f)])
 
 
 def f22():
@@ -162,7 +163,7 @@ def f23():
         e.append("F23 blazor_server on cloudflare passes")
     if "blazor-server" in (TS / "assets/catalog/tech/hosting.yaml").read_text():
         e.append("F23 hosting.yaml still names blazor-server")
-    sys.path.insert(0, str(TS / "assets"))
+    sys.path.insert(0, str(PSCRIPTS))
     import check_stack
     import yaml
     hosting = check_stack.load("tech/hosting.yaml")
