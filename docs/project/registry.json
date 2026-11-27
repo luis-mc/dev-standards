@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T20:30+00:00",
+  "updated": "2026-11-27T20:34+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12892,12 +12892,11 @@
       "id": "DS302",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: review fixes (DS298-DS300 decisions)",
       "detail": "Apply the no-decision batches and owner decisions D327-D344",
-      "expected": "27 Nov ~20:33",
-      "changed": "2026-11-27T20:30+00:00",
-      "expected_basis": "4 cloud agents ~40 min, join, CI ~15 min, watcher merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T20:32+00:00",
       "release": 210,
       "phases": [
         {
@@ -12972,11 +12971,11 @@
       "id": "DS303",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Delivery plugin: merge roles, question rules, cited-ID test",
       "detail": "C1 C2 C3 C12 C13 C15 C16 C17 D2 D14 E1 E2 E3 M1; DELIVERYSPEC and delivery hooks",
       "expected": "27 Nov",
-      "changed": "2026-11-27T18:58+00:00",
+      "changed": "2026-11-27T20:32+00:00",
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00",
       "ci_runs": {
@@ -13009,11 +13008,11 @@
       "id": "DS304",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Docs plugin: record and DOCSPEC/ARTIFACTSPEC fixes",
       "detail": "C4 C9 C10 C11 C14 C23 D9 D10 U4 U5 U11 S3 S4 E19 E20; docs plugin and its specs",
       "expected": "27 Nov",
-      "changed": "2026-11-27T18:58+00:00",
+      "changed": "2026-11-27T20:32+00:00",
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00",
       "ci_runs": {
@@ -13036,11 +13035,11 @@
       "id": "DS305",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Project-setup: spec moves, STACKSPEC/AUTHSPEC fixes",
       "detail": "S2 S5 S6 U7 S9 C24 C25 M5 E18 E21 E22; project-setup plugin",
       "expected": "27 Nov",
-      "changed": "2026-11-27T18:58+00:00",
+      "changed": "2026-11-27T20:32+00:00",
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00"
     },
@@ -13048,11 +13047,11 @@
       "id": "DS306",
       "owner": "project",
       "app": "",
-      "status": "Built",
+      "status": "Live",
       "item": "Repo: AGENTS.md, feature specs, CI wiring, deletions",
       "detail": "M7 C5 C6 C7 C8 C19-C22 C26 S1 U1-U3 U6 U9 U10 U12 U20; repo files",
       "expected": "27 Nov",
-      "changed": "2026-11-27T18:58+00:00",
+      "changed": "2026-11-27T20:32+00:00",
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00",
       "ci_runs": {
@@ -13084,6 +13083,41 @@
       "release_waits_on": [
         "DS302"
       ]
+    },
+    {
+      "id": "DS308",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: check_stack --help without PyYAML (smoke fix)",
+      "detail": "Plugin smoke failed after RELEASE-210: check_stack.py moved to scripts/ and exited 2 on --help without PyYAML. Lazy import.",
+      "expected": "27 Nov ~20:50",
+      "changed": "2026-11-27T20:34+00:00",
+      "expected_basis": "one-file fix; CI ~5 min",
+      "release": 212,
+      "phases": [
+        {
+          "name": "fix",
+          "start": "2026-11-27T20:34+00:00",
+          "end": "2026-11-27T20:40+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T20:40+00:00",
+          "end": "2026-11-27T20:47+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T20:47+00:00",
+          "end": "2026-11-27T20:50+00:00"
+        }
+      ],
+      "risk": {
+        "label": "fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-27T20:34+00:00",
+      "pr": 311
     },
     {
       "id": "DU1",

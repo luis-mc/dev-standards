@@ -14,9 +14,7 @@
     "file": "full-progress-dev-standards.html",
     "published_sha256": "fa9c35a178f8ee16838005862a6c15823a72f4ed64786c69fb00ff26064841e0",
     "published_at": "2026-11-27T20:15+00:00",
-    "published_fingerprint": "22e73dec6785db6bc521faadedb225184b2b5d0b5e34dcdc93bf0382c443262b",
-    "local_path": "C:\\GitHub\\dev-standards\\.claude\\artifacts-publish\\full-progress\\dev-standards\\full-progress-dev-standards.html",
-    "local_opened": true
+    "published_fingerprint": "22e73dec6785db6bc521faadedb225184b2b5d0b5e34dcdc93bf0382c443262b"
   },
   "feature_artifacts": [
     {
@@ -27,7 +25,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-11-27T20:21+00:00"
+      "updated": "2026-11-27T20:32+00:00"
     },
     {
       "key": "delivery-speed",
@@ -39,7 +37,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-27T20:21+00:00"
+      "updated": "2026-11-27T20:32+00:00"
     },
     {
       "key": "transcript-folds",
@@ -50,13 +48,13 @@
         "luismc-transcript-folds",
         "luismc-project-setup"
       ],
-      "updated": "2026-11-27T20:21+00:00"
+      "updated": "2026-11-27T20:32+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-27T20:30+00:00",
+  "updated": "2026-11-27T20:34+00:00",
   "retired": [],
   "deleted": [
     {
