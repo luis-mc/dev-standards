@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T11:12+00:00",
+  "updated": "2026-11-27T11:21+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12619,6 +12619,45 @@
         }
       ],
       "started": "2026-11-27T11:08+00:00"
+    },
+    {
+      "id": "DS285",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Dogfood: Explore agent on Haiku in dev-standards",
+      "detail": "Copy the claude-setup Explore.md into this repo's .claude/agents/ and test that the copy matches",
+      "expected": "",
+      "changed": "2026-11-27T11:19+00:00"
+    },
+    {
+      "id": "DS286",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: three small fixes (TF7, DS283, DS285)",
+      "detail": "Folds TF7, DS283 and DS285 into docs and the specs",
+      "expected": "27 Nov ~11:40",
+      "changed": "2026-11-27T11:21+00:00",
+      "release": 206,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-27T11:22+00:00",
+          "end": "2026-11-27T11:25+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T11:25+00:00",
+          "end": "2026-11-27T11:32+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T11:32+00:00",
+          "end": "2026-11-27T11:40+00:00"
+        }
+      ],
+      "started": "2026-11-27T11:21+00:00"
     },
     {
       "id": "DU1",
