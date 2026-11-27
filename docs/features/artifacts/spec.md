@@ -216,9 +216,15 @@ flowchart LR
 
 **R5.38** — A release with no phases is an outline diamond on the timeline, never a filled one. Its Live ETA cell in the release table reads `<time> · no phases`, and a `--no-phases` reason shows in the Item cell. (DS278, ARTIFACTSPEC R5.42c) Proof: `tools/test_artifacts_ds278.py`.
 
+**R5.39** — At `pending --refresh` and `render`, the plugin asks `gh` for the workflow runs of each open task and release: `gh pr view N --json headRefOid,mergeCommit`, then `gh run list --commit <sha> --json name,status,conclusion,url,createdAt,updatedAt,headBranch,event` for the PR head and, once merged, the merge commit; runs whose branch is the release's `tag`; and, for a task with no PR, runs of a pushed branch named `<task-id>-*`. Live and Dropped tasks are not fetched. The runs are stored on the task as `ci_runs` (`fetched_at`, `runs` with `name`, `state`, `url`, `created`, `updated`, `kind`). The fetch is read-only and takes an injectable runner. `CLAUDE_ARTIFACTS_NO_GH=1` skips it. With no `gh`, no network or any error, the runs stored last stay with their fetched time, and the render never fails. `ci_runs` is not part of the publish fingerprint. (DS295) Proof: `claude/plugins/docs/tests/test_ds295_live_ci.py`.
+
+**R5.40** — A release row in the next-releases table shows the PR link and each workflow run of the PR head commit: workflow name, state (queued, running, passed, failed, cancelled), a link to the run, the start time as UTC HH:MM, and the duration (finished) or the elapsed time at fetch (running). A carrier PR row shows the PR runs; a release under it shows its tag runs and the merge commit runs. A release with no carrier shows the PR link and every run. Until the release is Live; a run list always says when it was fetched. Each run is a `.ci-chip` with the status colours of the checklist chips (`--done-bg` passed, `--failed` failed, `--running-bg` queued, teal running). Only https run links are made. (DS295) Proof: `claude/plugins/docs/tests/test_ds295_live_ci.py`.
+
+**R5.41** — A task row that has a PR, or a pushed branch `<task-id>-*` with runs, shows the PR link and the same run list as a compact cell under the Item. No column is added; the Full Progress fonts and widths are unchanged. (DS295) Proof: `claude/plugins/docs/tests/test_ds295_live_ci.py`.
+
 ## 6. Non-functional requirements
 
-**R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls.
+**R6.1** — The plugin never runs a git write and never runs a `gh` command that writes. It may run read-only git calls and read-only `gh pr view` and `gh run list` (R5.39).
 
 **R6.2** — The scripts use the Python standard library only.
 
@@ -298,6 +304,9 @@ flowchart TB
 | R5.26 | `validation_rules`, `cli_options_store_and_refuse`, `old_look_without_fields` in `tools/test_artifacts_ds256.py` |
 | R5.27 | `eta_rule_lifts_dependent` in `tools/test_artifacts_ds256.py` |
 | R5.28 | `tree_draws_pr_rows_and_arrows`, `whole_artifact_checks_clean` in `tools/test_artifacts_ds256.py` |
+| R5.39 | `test_fetch_parses_gh_json_and_stores_ci_runs`, `test_states`, `test_failed_fetch_keeps_the_old_runs`, `test_raising_runner_keeps_the_old_runs`, `test_no_gh_skips_the_fetch`, `test_live_and_dropped_tasks_are_not_fetched` in `claude/plugins/docs/tests/test_ds295_live_ci.py` |
+| R5.40 | `test_release_row_shows_name_status_link_and_time` in `claude/plugins/docs/tests/test_ds295_live_ci.py` |
+| R5.41 | `test_task_row_shows_pr_link_and_runs`, `test_branch_task_without_pr_takes_runs_of_its_branch` in `claude/plugins/docs/tests/test_ds295_live_ci.py` |
 | R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
 | R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `tools/test_project_artifacts_hooks.py` |
 | R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `tools/test_project_artifacts_hooks.py` |
@@ -336,6 +345,8 @@ The plugin is part of `luismc-docs` since DS219. The five skills are `luismc-doc
 Source: claude/plugins/docs/references/artifactspec.md
 Source: claude/plugins/docs/scripts/project_artifacts.py
 Source: claude/plugins/docs/scripts/render_artifacts.py
+Source: claude/plugins/docs/scripts/ci_live.py
+Source: claude/plugins/docs/templates/project-artifact.css
 Source: claude/plugins/docs/scripts/hook_after_command.py
 Source: claude/plugins/docs/scripts/hook_end_of_turn.py
 Source: claude/plugins/docs/scripts/artifacts/hook_session_start.py
@@ -353,7 +364,7 @@ Source: claude/plugins/docs/scripts/artifacts/hook_session_start.py
 | `skills/` | The five skills |
 | `references/artifactspec.md` | ARTIFACTSPEC |
 
-Tests: `tools/test_project_artifacts.py`, `tools/test_project_artifacts_hooks.py`, `tools/test_render_artifacts.py`, `tools/test_artifact_prune.py`.
+Tests: `tools/test_project_artifacts.py`, `tools/test_project_artifacts_hooks.py`, `tools/test_render_artifacts.py`, `tools/test_artifact_prune.py`, `claude/plugins/docs/tests/test_ds295_live_ci.py`.
 
 ## Versions
 

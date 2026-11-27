@@ -58,6 +58,11 @@ except ImportError as _e:  # pragma: no cover - broken install
     H = None
     _HOURLY_ERROR = str(_e)
 try:
+    import ci_live as CL
+except ImportError:
+    CL = None
+
+try:
     import render_artifacts as R
 except ImportError as _e:
     R = None
@@ -2814,6 +2819,29 @@ def cmd_design(args):
     return 0
 
 
+def refresh_ci_runs(ctx, runner=None):
+    """DS295 (R5.39): store the live CI runs of open tasks and releases in the record (`ci_runs`). Any failure keeps
+    the stored runs and never stops the caller. CLAUDE_ARTIFACTS_NO_GH=1 skips it."""
+    if CL is None or CL.skipped():
+        return 0
+    try:
+        def apply(rec):
+            n = CL.refresh(rec.tasks(), runner, rec.now().iso)
+            if not n:
+                rec.noop = True
+                return {'command': 'ci-refresh'}
+            rec.invalidate()
+            rec.touch()
+            rec.message = ctx.rel + ': ci runs'
+            for key, _kind, _e in rec.artifacts():
+                rec.render_keys[key] = 'new'
+            return {'command': 'ci-refresh'}
+        return run_change(ctx, apply)
+    except Exception as ex:                 # never fail a render because gh did
+        warn('live CI runs not refreshed (%s)' % ex)
+        return 0
+
+
 def render_changed(ctx, render_all=False):
     """Renders every artifact that is missing or differs from a fresh render (all of them with render_all).
     Returns the run_change result."""
@@ -2899,6 +2927,7 @@ def cmd_pr_links(args):
 def cmd_render(args):
     ctx = make_ctx(args)
     derive_pr_links(ctx)
+    refresh_ci_runs(ctx)
     res = render_changed(ctx, args.all)
     emit(args, res, [render_line(res)])
     if not getattr(args, 'json_out', False):
@@ -3646,6 +3675,7 @@ def cmd_pending(args):
     refresh = bool(getattr(args, 'refresh', False))
     if refresh and rec is not None:
         # AR67: render first, so the publish copy and the committed file match a fresh render and mark-published accepts them
+        refresh_ci_runs(ctx)
         try:
             render_changed(ctx)
         except Fail as fl:

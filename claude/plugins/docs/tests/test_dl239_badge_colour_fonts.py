@@ -16,7 +16,7 @@ import docs_index as I  # noqa: E402
 import design_system as DS  # noqa: E402
 import render_artifacts as R  # noqa: E402
 
-ENV = dict(os.environ, GIT_TERMINAL_PROMPT="0", CLAUDE_ARTIFACTS_NOW="2026-10-12T10:00:00+01:00")
+ENV = dict(os.environ, CLAUDE_ARTIFACTS_NO_GH="1", GIT_TERMINAL_PROMPT="0", CLAUDE_ARTIFACTS_NOW="2026-10-12T10:00:00+01:00")
 for k in ("GIT_DIR", "GIT_WORK_TREE"):
     ENV.pop(k, None)
 ENV.pop(B.ENV_DIR, None)
