@@ -5,7 +5,7 @@
 */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+html { font-size: 90%; scroll-behavior: smooth; scroll-padding-top: 4rem; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -13,7 +13,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14.4px;
+  font-size: 12.96px;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -91,7 +91,7 @@ h1 {
   font-family: var(--font-display);
   font-stretch: var(--font-display-stretch);
   font-weight: 800;
-  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-size: clamp(2rem, 4.05vw, 3rem);
   line-height: 1.05;
   text-wrap: balance;
   margin: .2em 0 .4em;
@@ -797,11 +797,11 @@ details.status-fold > summary strong { min-width: 0; }
 }
 .timeline-scroll { overflow-x: auto; }
 .release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
-.release-timeline .rt-axis { font-size: 9.9px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-axis { font-size: 8.91px; fill: var(--ink-muted); text-anchor: middle; }
 .release-timeline .rt-grid { stroke: var(--rule); }
 .release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
-.release-timeline .rt-name { font-size: 11.7px; font-weight: 600; fill: var(--ink); }
-.release-timeline .rt-sub { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-name { font-size: 10.53px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
@@ -811,13 +811,13 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
 .release-timeline .rt-expected { fill: var(--ink); }
 .release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.release-timeline .rt-day-label { font-size: 10.8px; fill: var(--ink); }
-.release-timeline .rt-live-label { font-size: 10.8px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
-.release-timeline .rt-risk-label { font-size: 9.45px; fill: var(--ink-muted); }
+.release-timeline .rt-day-label { font-size: 9.72px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 9.72px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 8.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
-.release-timeline .rt-now-label { font-size: 9.9px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
-.release-timeline .rt-strip-title { font-size: 10.8px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
-.release-timeline .rt-other-label { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-now-label { font-size: 8.91px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 9.72px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-other.status-running { fill: var(--running-mark); }
 .release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
 .release-timeline .rt-other.status-needs-you { fill: var(--signal); }
@@ -845,7 +845,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
 .release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
 .release-timeline .rt-arrow-head { fill: var(--ink-muted); }
-.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 8.91px; fill: var(--ink-muted); }
 .release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
 .release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
 .release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
