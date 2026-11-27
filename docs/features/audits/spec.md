@@ -4,7 +4,7 @@ title: Audit skills (luismc-audits)
 apps: [luismc-audits]
 topics: [audits, models]
 status: live
-version: 0.1.1
+version: 0.1.2
 owner: agents
 type: reference
 code:
@@ -102,4 +102,5 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.1.2 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.1.1 | 2026-11-01 | RELEASE-22 | Wording pass; requirements and IDs unchanged. | DS142 |

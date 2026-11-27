@@ -4,7 +4,7 @@ title: Delivery speed
 apps: [luismc-project-setup]
 topics: [delivery, ci]
 status: live
-version: 0.20.0
+version: 0.20.1
 owner: agents
 type: explanation
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.1 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.20.0 | 2026-11-27 | RELEASE-210 | Speed point DL3 is superseded by DELIVERYSPEC DL-12. The plan table names its rows speed points, so DL1 to DL7 are not read as DELIVERYSPEC rows or tasks. R5.7 says the delivery log is off by default. R6.1 adds exit 5 for ci_watch.py and join.py. | DS306 |
 | 0.19.1 | 2026-11-26 | RELEASE-202 | change_notes.py fold takes --release and --all (R5.84); no change to the speed rules. | DS274 |
 | 0.19.0 | 2026-11-26 | RELEASE-199 | R5.29: the release check needs a lane for each affected target and a default-branch pass record for the others (DL-125). | DS269 |

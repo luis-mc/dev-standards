@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.27.0
+version: 0.27.1
 owner: agents
 type: reference
 code:
@@ -372,6 +372,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.27.1 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.27.0 | 2026-11-27 | RELEASE-210 | mark-deferred keeps the local page path and opened flag in the git-ignored .claude/artifacts-local.json, not the manifest; the R5.9a proof names the folded cases in test_project_artifacts.py (U5, U11). Past-due Expected follows ARTIFACTSPEC R8.19 (R5.25, owner C12). The spec cites ARTIFACTSPEC for statuses, section 0, hooks, the record folder and the charset and token rules instead of restating them (D19). The session hook is scripts/hook_session_start_artifacts.py (S4); the before-command script and the CI-runs mockup are gone (U4, U10). | DS304 |
 | 0.26.0 | 2026-11-27 | RELEASE-207 | Full Progress shows live CI runs: each release row lists the PR link and the workflow runs (name, state, link, UTC start, duration or elapsed); a task row with a PR or a pushed branch shows the same compact list. pending --refresh and render store the runs as ci_runs (R5.39 to R5.41). | DS295 |
 | 0.25.3 | 2026-11-27 | RELEASE-209 | The description under a page's title fills the header width instead of wrapping at 46em. | DS291 |

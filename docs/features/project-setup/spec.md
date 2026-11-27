@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.20.0
+version: 0.20.1
 owner: agents
 type: reference
 code:
@@ -217,6 +217,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.20.1 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.20.0 | 2026-11-27 | RELEASE-210 | STACKSPEC and AUTHSPEC paths move to the plugin's references/ and three scripts to its scripts/; R5.15: claude-setup writes clarifying-questions.md only for a user-level setup and removes an unchanged project copy. | DS305 |
 | 0.19.0 | 2026-11-27 | RELEASE-205 | claude-setup copies an Explore agent on Haiku at medium to the project's .claude/agents/ (plugin-owned, overwritten each run), and its report names /model opusplan as an option it never sets. Detail in features/models R5.6, R5.8, R5.9. | MP17 |
 | 0.18.1 | 2026-11-26 | RELEASE-204 | claude-setup binds two chords, not three: ctrl+x h is dropped with the hooks fold. Changes claude/plugins/project-setup/.claude-plugin/plugin.json. | DS281 |

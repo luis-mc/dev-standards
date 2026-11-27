@@ -4,7 +4,7 @@ title: Transcript folds
 apps: [luismc-transcript-folds, luismc-project-setup]
 topics: [transcripts]
 status: live
-version: 0.4.0
+version: 0.4.1
 owner: agents
 type: reference
 code:
@@ -173,6 +173,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.1 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.4.0 | 2026-11-26 | RELEASE-204 | Remove the hooks fold (switch, band button, /fold-hooks, foldHooksAbove): the engine gives no component for hook rows. R5.8 to R5.10 retired. Changes claude/plugins/transcript-folds/.claude-plugin/plugin.json. | DS281 |
 | 0.3.0 | 2026-11-26 | RELEASE-197 | Third fold: long hook messages draw as one dim line (event, first sentence, word count). Adds R5.8 to R5.10, the Hooks band button (ctrl+x h), /fold-hooks with a diag mode, and the foldHooksAbove setting. | DS268 |
 | 0.2.1 | 2026-11-04 | RELEASE-42 | Errored shell calls fold to their first error line (failure table); the documented test command runs on Node 22. | TF6 |

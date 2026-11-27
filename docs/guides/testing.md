@@ -1,7 +1,7 @@
 ---
 title: Testing in dev-standards
 type: how-to
-version: 0.1.1
+version: 0.1.2
 last_verified: 2026-11-27
 ---
 # Testing in dev-standards
@@ -25,5 +25,6 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.1.2 | 2026-11-27 | RELEASE-211 | Says where tests live: plugin tests in claude/plugins/<plugin>/tests/, this repository's CI tools and their tests in tools/ (DS307). | DS307 |
 | 0.1.1 | 2026-11-27 | RELEASE-210 | The ready PR states this repository's deviation from DELIVERYSPEC DL-80 and cites test-cost R5.2. A heavy change runs a short local smoke, then branch CI for its own area by one named command. Front matter gets a title and type. | DS306 |
 | 0.1.0 | 2026-11-25 | RELEASE-175 | spec-lint's docs-check job now waits for the areas job and runs only when a change touches docs/, AGENTS.md, tools/, claude/ or the workflows; tools/ci_areas.py emits a docs_check output. | DP5 |

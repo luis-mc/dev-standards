@@ -4,7 +4,7 @@ title: Test and validation cost
 apps: [luismc-project-setup, luismc-docs]
 topics: [ci, testing]
 status: live
-version: 0.4.0
+version: 0.4.1
 owner: agents
 type: explanation
 code:
@@ -231,6 +231,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.4.1 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.4.0 | 2026-11-27 | RELEASE-210 | R5.2 and R5.3 state this repository's deviations from DELIVERYSPEC DL-80 and DL-99 G6, with the reason. R5.5 cites the delivery feature's R5.95. R5.8 is superseded by ARTIFACTSPEC R4.13. Links to deleted MADRs 0036 and 0037 are gone. spec-lint now runs eight of the tools tests that only suites.json ran, and the project-setup plugin tests. ci_areas.py and change-notes.json follow the moved STACKSPEC, AUTHSPEC, project-setup scripts and artifacts session hook. | DS306 |
 | 0.3.2 | 2026-11-26 | RELEASE-194 | Declares tools/test_artifacts_ds258.py in the spec-lint workflow. | DS258 |
 | 0.3.1 | 2026-11-26 | RELEASE-184 | ci_areas no longer lists runner_health.py among the delivery gate files. | DL418 |

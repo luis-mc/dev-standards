@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.59.0
+version: 0.59.1
 owner: agents
 type: reference
 code:
@@ -598,6 +598,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.59.1 | 2026-11-27 | RELEASE-211 | Test paths only: the tests that lived in tools/ now sit in their plugin's tests/ folder (DS307). No requirement changes. | DS307 |
 | 0.59.0 | 2026-11-27 | RELEASE-210 | The watcher is the only merger: the hook refuses a session's gh pr merge in both merge modes, and in manual mode Q-4 and the Stop hook never ask a session to merge; the Stop hook says one warning line once (R5.71, R5.99).<br>Rule keys match DELIVERYSPEC (DL-124, DL-39, DL-35); the delivery Stop hook drops the past-due Expected check, which the docs plugin keeps; tools/test_rule_ids.py checks cited IDs, the Today column and the counts line (R5.100).<br>Fixes: R5.13 cancel default, R5.12 doctor checks, R5.80 cites DL-122, duplicate IDs renamed (R5.36f, R5.46a, R13.96a), decision D5 says machine limits are removed. | DS303 |
 | 0.58.0 | 2026-11-27 | RELEASE-207 | CI carry-forward: a pull request's later heads run only the jobs with no proof head or whose areas the new commits touch; the rest are carried with a link to the proving run (R5.88). A release pull request runs everything on its first run only (R5.89). Narrower valves (R5.90), carried counts as pass in the required check and one carry-plan action for every workflow (R5.91), failed tests first then affected packages on every trigger (R5.92), replay proof (R5.93).<br>DELIVERYSPEC ships in the delivery plugin at references/deliveryspec.md, so projects can read the DL IDs their rules cite; cancel_joined_runs.py is removed (R5.22); the shared-runners guide moved to docs/guides.<br>Cloud sessions get the docs scripts and gitleaks: `cloud_setup.sh` fetches the pinned dev-standards checkout and installs gitleaks from `tools.json`, a SessionStart hook runs it, and `ds_scripts.py` gives one scripts path (R5.96 to R5.98). The brief tells cloud agents to use `gh pr create` and never hand-write change notes. | DS287, DS293, DS296 |
 | 0.57.1 | 2026-11-26 | RELEASE-204 | Stop hook warn-mode message folds 3+ findings of one rule to the first, a count and the ids; the model's block reason stays full. Changes claude/plugins/delivery/.claude-plugin/plugin.json. | DS280 |
