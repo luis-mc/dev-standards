@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T11:31+00:00",
+  "updated": "2026-11-27T12:24+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12662,6 +12662,16 @@
         }
       ],
       "started": "2026-11-27T11:21+00:00"
+    },
+    {
+      "id": "DS287",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "CI carry-forward: PR reruns run only what changed since the last proven head",
+      "detail": "crsp ask 27 Nov: carry-forward planner (diff from last finished head, patch-id on rebase), verify treats carried as pass, failed-test-first rerun inside a job on every trigger, narrower run-all valves, one reusable plan step. Owner decisions as relayed: carried may merge (main full run and nightly are the net), on at once, proof = planner unit tests + replay of 20 PRs",
+      "expected": "",
+      "changed": "2026-11-27T12:24+00:00"
     },
     {
       "id": "DU1",
