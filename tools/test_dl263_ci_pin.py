@@ -110,6 +110,12 @@ class CiPin(unittest.TestCase):
         self.assertIn("ci_pin.py --bump", TEMPLATE)
         self.assertNotIn("by hand", TEMPLATE)
 
+    def test_template_names_new_path(self):
+        # S6 (DS305): ci_pin.py lives in the plugin's scripts/ folder.
+        self.assertIn("<project-setup>/scripts/ci_pin.py", TEMPLATE)
+        skill = (CS / "SKILL.md").read_text("utf-8")
+        self.assertNotIn("assets/ci_pin.py", skill)
+
 
 if __name__ == "__main__":
     unittest.main()
