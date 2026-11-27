@@ -130,12 +130,17 @@ jobs:
     permissions:
       contents: read
       statuses: write # DL183: the pending `rerun-first/held` status, set only when jobs are held
+      actions: read # DS287: the carry plan reads earlier runs of this pull request
     outputs:
       # DL181: a job held back for the second run reads as a planned skip ('false'), so the job conditions and
       # the `e2e` aggregator need no new clause.
       integration: ${{ contains(format(',{0},', steps.rerun.outputs.held), ',integration,') && 'false' || steps.areas.outputs.integration }}
       e2e: ${{ contains(format(',{0},', steps.rerun.outputs.held), ',e2e-shard,') && 'false' || steps.areas.outputs.e2e }}
       scope: ${{ steps.scope.outputs.scope }}
+      # DS287 (R5.88): `carry_plan` is JSON {run_<job>: 'true'|'false'}; a job whose entry is 'false' is carried
+      # from an earlier head. `carried` names the proof run of each carried job.
+      carry_plan: ${{ steps.carry.outputs.plan }}
+      carried: ${{ steps.carry.outputs.carried }}
       # DL181: `held` lists the jobs held back for a second run ('' unless scripts/delivery/ci-areas.json
       # has "rerun_first": true and the previous head had jobs that did not pass). `rerun` is 'true' when the
       # `e2e` job must dispatch that second run.
@@ -146,6 +151,12 @@ jobs:
         with:
           # The base commit must be present to diff against it.
           fetch-depth: 0
+
+      - id: carry
+        continue-on-error: true
+        uses: ./.github/actions/carry-plan
+        with:
+          workflow: ci.yml
 
       - name: Select the jobs from the changed paths
         id: areas
@@ -219,9 +230,9 @@ jobs:
   # ---------------------------------------------------------------------------
   verify:
     name: lint, types, boundaries, unit + contract tests
-    needs: decide
+    needs: [decide, plan]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.plan.result != 'failure' && fromJSON(needs.plan.outputs.carry_plan || '{}').run_verify != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_VERIFY || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 15
     env:
@@ -360,7 +371,7 @@ jobs:
     name: integration tests (ephemeral Postgres)
     needs: [decide, plan]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-') }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && !contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-') && fromJSON(needs.plan.outputs.carry_plan || '{}').run_integration != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_INTEGRATION || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 30
     services:
@@ -422,7 +433,7 @@ jobs:
     name: integration tests (ephemeral Postgres)
     needs: [decide, plan]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-') }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.integration != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-') && fromJSON(needs.plan.outputs.carry_plan || '{}').run_integration-pool != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_INTEGRATION_POOL || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 30
     env:
@@ -506,7 +517,7 @@ jobs:
     name: web E2E shard ${{ matrix.shard }}
     needs: [decide, plan]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && needs.plan.result != 'failure' && needs.plan.outputs.e2e != 'false' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && fromJSON(needs.plan.outputs.carry_plan || '{}').run_e2e-shard != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_E2E_SHARD || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 30
     env:
@@ -603,6 +614,7 @@ jobs:
       statuses: write # DL183: closes the `rerun-first/held` status (only a rerun-first run ever sets one)
     steps:
       - name: Every shard passed
+        if: ${{ github.event_name != 'pull_request' }}
         env:
           SHARDS: ${{ needs.e2e-shard.result }}
           PLANNED: ${{ needs.plan.outputs.e2e }}
@@ -615,6 +627,25 @@ jobs:
             exit 0
           fi
           [ "$SHARDS" = "success" ]
+
+      # DS287 (R5.91): on a pull request a job carried from an earlier head counts as passed. A job the runner plan
+      # skipped (area, or held for the second run) and the runner kind that is not in use are left out.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: ${{ github.event_name == 'pull_request' }}
+      - name: Every needed job passed, or was skipped and carried
+        if: ${{ github.event_name == 'pull_request' }}
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          CARRIED: ${{ needs.plan.outputs.carried || '{}' }}
+          PLAN_INTEGRATION: ${{ needs.plan.outputs.integration }}
+          PLAN_E2E: ${{ needs.plan.outputs.e2e }}
+          POOL: ${{ contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-') }}
+        run: |
+          ign="decide,plan"
+          if [ "$POOL" = true ]; then ign="$ign,integration"; else ign="$ign,integration-pool"; fi
+          [ "$PLAN_INTEGRATION" = false ] && ign="$ign,integration,integration-pool"
+          [ "$PLAN_E2E" = false ] && ign="$ign,e2e-shard"
+          python3 scripts/delivery/carry_verify.py --needs "$NEEDS" --carried "$CARRIED" --ignore "$ign"
 
       # DL181: the first set passed (the step above failed otherwise); now start the second run with the jobs
       # that passed on the previous head. If the dispatch fails this step fails, so a held job is never forgotten.
@@ -637,9 +668,9 @@ jobs:
       # always() so it runs after a failed step or a cancel. (A run cancelled before this job starts leaves the
       # status pending, which keeps the merge blocked.)
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ always() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
+        if: ${{ !cancelled() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
       - name: Close the rerun-first/held status
-        if: ${{ always() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
+        if: ${{ !cancelled() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
@@ -676,17 +707,17 @@ jobs:
       # How long the run took, as a job summary and the artifact `ci-run-times` (a stable name; artifact-prune.yml
       # keeps the newest). Report only: no step here ever fails the run.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+        if: ${{ !cancelled() && vars.CI_RUN_TIMES == 'true' }}
         continue-on-error: true
       - name: Write the run times
-        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+        if: ${{ !cancelled() && vars.CI_RUN_TIMES == 'true' }}
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
           CI_SCOPE: ${{ needs.plan.outputs.scope }}
         run: python3 scripts/delivery/ci_run_times.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
+        if: ${{ !cancelled() && vars.CI_RUN_TIMES == 'true' }}
         continue-on-error: true
         with:
           name: ci-run-times
