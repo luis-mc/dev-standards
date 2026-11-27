@@ -85,6 +85,7 @@ HOOKS = TEMPLATES + "/shared/.githooks/"
 DS = DELIVERY_SCRIPTS
 # DS307: the plugin tests that left tools/ for their plugin's tests/ folder.
 DOCS_TESTS = "claude/plugins/docs/tests"
+PS_TESTS = PSP + "/tests"
 # TC7: suite -> the files whose change turns its mutation pass on. Derived from
 # what each suite copies, imports or mutates. A path ending in "/" is a folder.
 SUITE_MUTANTS: dict[str, frozenset[str]] = {
@@ -148,15 +149,13 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/.*/SKILL\.md", frozenset({"profiles"})),
     (re.escape(PS) + r"/claude-setup/assets/.*", frozenset({"profiles"})),
     (r"claude/plugins/agents/agents/.*", frozenset({"profiles"})),
-    (r"tools/test_model_profiles\.py", frozenset({"profiles"})),
-    (r"tools/(test_claude_setup_plugins|test_check_stack_rust)\.py", frozenset({"profiles"})),
-    (r"tools/test_setup_pattern\.py", frozenset({"profiles"})),
-    (r"tools/(test_questions_stop|test_project_setup_fixes)\.py", frozenset({"profiles"})),
     # ci_pin.py and its test (DS305 moved the script out of the claude-setup assets)
     (re.escape(PSP) + r"/scripts/ci_pin\.py", frozenset({"profiles"})),
-    (r"tools/test_dl263_ci_pin\.py", frozenset({"profiles"})),
-    # the project-setup plugin's own tests run in the profiles job (DS306)
-    (re.escape(PSP) + r"/tests/.*", frozenset({"profiles"})),
+    # the preflight test runs in the delivery job (DS307 moved it from tools/)
+    (re.escape(PS_TESTS) + r"/test_preflight\.py", frozenset({"delivery"})),
+    # the project-setup plugin's own tests run in the profiles job (DS306), with the
+    # model-profiles, setup-pattern, ci_pin and other tests DS307 moved from tools/
+    (re.escape(PS_TESTS) + r"/.*", frozenset({"profiles"})),
     (r"\.claude-plugin/marketplace\.json", frozenset({"profiles"})),
     # transcript-folds (its .claude-plugin/ manifest is matched above: nothing heavy)
     (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
@@ -180,7 +179,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
     (re.escape(PSP) + r"/scripts/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z_]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged|test_ci_speedups|test_shard_guard|test_kit_suite_sim)\.py",
+    (r"tools/(test_delivery_[a-z_]+|test_artifact_prune|test_change_notes|test_smoke_packaged|test_ci_speedups|test_shard_guard|test_kit_suite_sim)\.py",
      frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]

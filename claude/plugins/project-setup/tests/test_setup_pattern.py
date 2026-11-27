@@ -6,7 +6,7 @@ headings Done, Left for you, What you can do now. No network."""
 import pathlib
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 SKILLS = [
     "claude/plugins/project-setup/skills/claude-setup/SKILL.md",
     "claude/plugins/docs/skills/docs-setup/SKILL.md",

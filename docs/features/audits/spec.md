@@ -9,8 +9,8 @@ owner: agents
 type: reference
 code:
   - claude/plugins/audits/**
-  - tools/test_model_profiles.py
-last_verified: 2026-11-09
+  - claude/plugins/project-setup/tests/test_model_profiles.py
+last_verified: 2026-11-27
 ---
 # Audit skills (luismc-audits)
 
@@ -81,12 +81,12 @@ Each skill is one `SKILL.md` and nothing else: no scripts, no hooks. The front m
 
 | Requirement | Test |
 |---|---|
-| R5.4 | `tools/test_model_profiles.py` (checks P1 and P2) |
+| R5.4 | `claude/plugins/project-setup/tests/test_model_profiles.py` (checks P1 and P2) |
 | R5.1, R5.2, R5.3, R5.5, R5.6 | not covered by a test yet; see section 11 |
 
 ## 11. Not built yet
 
-NOT YET IMPLEMENTED: a test that reads each `SKILL.md` for R5.2, R5.3, R5.5 and R5.6. The seam is `tools/test_model_profiles.py`, which already walks every skill file.
+NOT YET IMPLEMENTED: a test that reads each `SKILL.md` for R5.2, R5.3, R5.5 and R5.6. The seam is `claude/plugins/project-setup/tests/test_model_profiles.py`, which already walks every skill file.
 
 ## 12. Code map
 
@@ -94,7 +94,7 @@ Source: claude/plugins/audits/skills/security-audit/SKILL.md
 Source: claude/plugins/audits/skills/performance-audit/SKILL.md
 Source: claude/plugins/audits/skills/compliance-audit/SKILL.md
 Source: claude/plugins/audits/.claude-plugin/plugin.json
-Source: tools/test_model_profiles.py
+Source: claude/plugins/project-setup/tests/test_model_profiles.py
 
 ## Versions
 

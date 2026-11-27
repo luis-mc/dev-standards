@@ -5,7 +5,7 @@ import json
 import pathlib
 import sys
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 SKILL = ROOT / "claude/plugins/project-setup/skills/claude-setup"
 
 

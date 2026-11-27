@@ -42,7 +42,7 @@ feature-artifact-new belongs to the luismc-docs plugin, which is edited
 on its own branch; until it is joined, the real tree reports its old effort as
 a P2 failure. That is expected; every other check passes.
 
-Run:  python3 tools/test_model_profiles.py
+Run:  python3 claude/plugins/project-setup/tests/test_model_profiles.py
 """
 import importlib.util
 import json
@@ -53,7 +53,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = pathlib.Path(__file__).resolve().parent.parent
+ROOT = pathlib.Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 SETUP = "claude/plugins/project-setup/skills/claude-setup"
 ASSETS = SETUP + "/assets"
 PROFILES = ASSETS + "/model-profiles.json"

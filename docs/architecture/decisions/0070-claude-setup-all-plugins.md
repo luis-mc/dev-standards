@@ -39,7 +39,7 @@ Configuration (all three chosen):
 
 ## Decision
 
-The options marked chosen. The skill reads the plugin list from the marketplace file, with the eight names as a fallback. `tools/test_claude_setup_plugins.py` fails when the settings template or the SKILL.md table misses a marketplace plugin.
+The options marked chosen. The skill reads the plugin list from the marketplace file, with the eight names as a fallback. `claude/plugins/project-setup/tests/test_claude_setup_plugins.py` fails when the settings template or the SKILL.md table misses a marketplace plugin.
 
 Points the brief left open: the template lists luismc-transcript-folds too, so the project also enables it (the user-level entry and chords stay as they were). "The CI workflows" is `watcher.ci_workflows: ["ci.yml"]` in the template. Caps are only ever raised, never lowered.
 

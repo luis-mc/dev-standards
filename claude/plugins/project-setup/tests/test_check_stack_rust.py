@@ -5,7 +5,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-CHECK = (Path(__file__).resolve().parent.parent
+CHECK = (Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
          / "claude/plugins/project-setup/scripts/check_stack.py")
 
 
@@ -68,6 +68,13 @@ class RustComponent(unittest.TestCase):
         self.assertEqual(p.returncode, 1)
         p = run("api: typescript\ncomponents: [go]\n")
         self.assertEqual(p.returncode, 1)
+
+
+# DS307: CI runs this file on its own (python3 -I <path>). unittest discover over
+# this folder imports it too, so it adds no cases there and nothing runs twice.
+if __name__ != "__main__":
+    def load_tests(loader, tests, pattern):
+        return unittest.TestSuite()
 
 
 if __name__ == "__main__":

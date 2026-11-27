@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DS185: regression tests for the project-setup review findings F14-F30.
 One check per finding; each fails on the old code. No network.
-Run: python3 tools/test_project_setup_fixes.py"""
+Run: python3 claude/plugins/project-setup/tests/test_project_setup_fixes.py"""
 import json
 import os
 import re
@@ -11,7 +11,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 PS = ROOT / "claude/plugins/project-setup/skills"
 CS = PS / "claude-setup"
 TS = PS / "tech-stack-setup"

@@ -956,6 +956,6 @@ spec-check, project-artifact-check, task-add, task-status-update, docs-index,
 docs-note, docs-check) and `setup` (Sonnet, medium: this skill). Every profile is medium, the
 owner's default for both models. Every skill's `model:` and `effort:`
 frontmatter must match its group. This skill's own frontmatter does.
-`tools/test_model_profiles.py` enforces that, so change the JSON first and the
+`claude/plugins/project-setup/tests/test_model_profiles.py` enforces that, so change the JSON first and the
 skill files after. The file is not copied to a target, and nothing here applies
 it to a user's settings.

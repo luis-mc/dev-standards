@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """DL263: tests for claude-setup's ci_pin.py. No network, git and marketplace stubbed.
-Run: python3 tools/test_dl263_ci_pin.py"""
+Run: python3 claude/plugins/project-setup/tests/test_dl263_ci_pin.py"""
 import importlib.util
 import tempfile
 import unittest
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 CS = ROOT / "claude/plugins/project-setup/skills/claude-setup"
 spec = importlib.util.spec_from_file_location(
     "ci_pin", ROOT / "claude/plugins/project-setup/scripts/ci_pin.py")
@@ -115,6 +115,13 @@ class CiPin(unittest.TestCase):
         self.assertIn("<project-setup>/scripts/ci_pin.py", TEMPLATE)
         skill = (CS / "SKILL.md").read_text("utf-8")
         self.assertNotIn("assets/ci_pin.py", skill)
+
+
+# DS307: CI runs this file on its own (python3 -I <path>). unittest discover over
+# this folder imports it too, so it adds no cases there and nothing runs twice.
+if __name__ != "__main__":
+    def load_tests(loader, tests, pattern):
+        return unittest.TestSuite()
 
 
 if __name__ == "__main__":

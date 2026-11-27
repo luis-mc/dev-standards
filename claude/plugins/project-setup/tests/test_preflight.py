@@ -11,7 +11,7 @@ Each case builds a real temporary git repository, because the script shells out
 to `git rev-parse` and stats real paths. A mocked filesystem would not exercise
 the part that breaks.
 
-Run:  python3 tools/test_preflight.py
+Run:  python3 claude/plugins/project-setup/tests/test_preflight.py
 """
 from __future__ import annotations
 
@@ -21,7 +21,7 @@ import subprocess
 import sys
 import tempfile
 
-ROOT = pathlib.Path(__file__).resolve().parents[1]
+ROOT = pathlib.Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 PREFLIGHT = ROOT / "claude/plugins/project-setup/scripts/preflight.py"
 
 

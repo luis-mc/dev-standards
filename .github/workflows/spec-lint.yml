@@ -254,7 +254,7 @@ jobs:
       # SKILL.md because a prose precondition is advisory. A guard nobody has
       # watched fail is indistinguishable from one that always exits 0.
       - name: Prove the setup preflight still blocks
-        run: python3 tools/test_preflight.py
+        run: python3 claude/plugins/project-setup/tests/test_preflight.py
 
   # tech-stack-setup copies the delivery scripts into every repository it
   # generates, and an agent trusts the gate's result as the only check a
@@ -623,7 +623,7 @@ jobs:
       # expensive reasoning skills fall to a cheaper default, or a mechanical one
       # burns the larger model. The test reads every SKILL.md and compares.
       - name: Prove every skill's model and effort match the profile table
-        run: python3 tools/test_model_profiles.py
+        run: python3 claude/plugins/project-setup/tests/test_model_profiles.py
 
       # DS122: claude-setup turns on every marketplace plugin; a plugin added
       # to the marketplace but missing from its settings template or table fails.
@@ -632,23 +632,23 @@ jobs:
         run: python3 -m pip install --quiet pyyaml==6.0.2
 
       - name: Prove claude-setup names every marketplace plugin
-        run: python3 tools/test_claude_setup_plugins.py
+        run: python3 claude/plugins/project-setup/tests/test_claude_setup_plugins.py
 
       - name: Prove the Rust checks in check_stack.py still hold
-        run: python3 tools/test_check_stack_rust.py
+        run: python3 claude/plugins/project-setup/tests/test_check_stack_rust.py
 
       - name: Prove the questions stop hook still holds
-        run: python3 tools/test_questions_stop.py
+        run: python3 claude/plugins/project-setup/tests/test_questions_stop.py
 
       # DL263: ci_pin.py pins a project's dev-standards workflow to a release.
       - name: Prove ci_pin.py still holds (DL263)
-        run: python3 -I tools/test_dl263_ci_pin.py
+        run: python3 -I claude/plugins/project-setup/tests/test_dl263_ci_pin.py
 
       - name: Prove the project-setup fixes still hold
-        run: python3 -I tools/test_project_setup_fixes.py
+        run: python3 -I claude/plugins/project-setup/tests/test_project_setup_fixes.py
 
       - name: Prove every setup skill follows the setup pattern
-        run: python3 -I tools/test_setup_pattern.py
+        run: python3 -I claude/plugins/project-setup/tests/test_setup_pattern.py
 
       # DS306: the project-setup plugin's own tests, by unittest discovery.
       - name: Prove the project-setup plugin tests still hold

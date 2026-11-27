@@ -16,6 +16,7 @@ import ci_areas as ca  # noqa: E402
 
 PSP = "claude/plugins/project-setup"
 DT = "claude/plugins/docs/tests"
+PT = PSP + "/tests"
 TS = PSP + "/skills/tech-stack-setup"
 FAILS: list[str] = []
 
@@ -62,7 +63,7 @@ for path, want in [
     ("claude/plugins/delivery/scripts/delivery_ledger.py", {"delivery"}),
     ("tools/test_delivery_hooks.py", {"delivery"}),
     ("tools/test_change_notes.py", {"delivery"}),
-    ("tools/test_preflight.py", {"delivery"}),
+    (f"{PT}/test_preflight.py", {"delivery"}),
     ("tools/test_rule_tags.py", {"specs"}),
     ("claude/plugins/docs/rules/project-artifacts.md", {"specs", "artifacts"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md", {"specs", "profiles"}),
@@ -76,12 +77,15 @@ for path, want in [
     ("claude/plugins/audits/skills/security-audit/SKILL.md", {"profiles"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json", {"profiles"}),
     ("claude/plugins/agents/agents/architect.md", {"profiles"}),
-    ("tools/test_model_profiles.py", {"profiles"}),
+    (f"{PT}/test_model_profiles.py", {"profiles"}),
     (f"{PSP}/scripts/ci_pin.py", {"profiles"}),
-    ("tools/test_dl263_ci_pin.py", {"profiles"}),
-    ("tools/test_project_setup_fixes.py", {"profiles"}),
-    ("tools/test_setup_pattern.py", {"profiles"}),
+    (f"{PT}/test_dl263_ci_pin.py", {"profiles"}),
+    (f"{PT}/test_project_setup_fixes.py", {"profiles"}),
+    (f"{PT}/test_setup_pattern.py", {"profiles"}),
     (f"{PSP}/tests/test_so9_update_offer.py", {"profiles"}),
+    (f"{PT}/test_check_stack_rust.py", {"profiles"}),
+    (f"{PT}/test_claude_setup_plugins.py", {"profiles"}),
+    (f"{PT}/test_questions_stop.py", {"profiles"}),
     ("claude/plugins/docs/tests/fixtures/vitest_shim/run.mjs", {"docs"}),
     ("claude/plugins/transcript-folds/hooks/transcript_folds.tsx", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/hooks/fold/width.ts", {"transcript-folds"}),
@@ -125,12 +129,12 @@ check("docs-only mix", hit(["docs/a.md", "docs/artifacts/b.html", "README.md"]),
 
 # a union, and Windows separators
 check("union", hit(["docs/a.md", f"{DT}/test_render_artifacts.py",
-                    "tools/test_model_profiles.py"]), {"artifacts", "profiles"})
+                    f"{PT}/test_model_profiles.py"]), {"artifacts", "profiles"})
 check("backslashes", hit(["claude\\plugins\\docs\\tests\\test_render_artifacts.py"]), {"artifacts"})
 check("transcript-folds with a manifest bump and docs",
       hit(["claude/plugins/transcript-folds/.claude-plugin/plugin.json", "docs/a.md"]), set())
 check("transcript-folds union",
-      hit(["claude/plugins/transcript-folds/hooks/fold/lines.ts", "tools/test_model_profiles.py"]),
+      hit(["claude/plugins/transcript-folds/hooks/fold/lines.ts", f"{PT}/test_model_profiles.py"]),
       {"transcript-folds", "profiles"})
 check("transcript-folds is light advice",
       ca.advice(["claude/plugins/transcript-folds/hooks/fold/lines.ts"]), "light: test locally only")
@@ -179,7 +183,7 @@ check("mutants: delivery_log + cleanup test only cleanup",
       mflags([D + "delivery_log.py", "tools/test_delivery_cleanup.py"]), (T, F, T, F))
 check("mutants with other changes", mflags(["docs/a.md", D + "join.py"]), (T, T, T, F))
 check("forced mutants need delivery work",
-      mflags(["tools/test_model_profiles.py"], force_mutants=True), (F, F, F, F))
+      mflags([f"{PT}/test_model_profiles.py"], force_mutants=True), (F, F, F, F))
 check("mutants forced with delivery", mflags([D + "x.py"], force_mutants=True), (T, T, T, T))
 check("mutants forced run_all", ca.classify([], run_all=True, force_mutants=True),
       {**{a: True for a in ca.AREAS}, "mutants": True, "mutants_gate": True,
@@ -202,7 +206,7 @@ check("advice specs light", ca.advice([f"{PSP}/references/stackspec.md"]),
 check("advice heavy delivery", ca.advice([f"{PSP}/scripts/preflight.py"], "DS9-a"),
       "heavy: delivery -> run `gh workflow run spec-lint.yml --ref DS9-a -f areas=delivery`")
 check("advice heavy lists touched areas",
-      ca.advice(["claude/plugins/docs/scripts/render_artifacts.py", "tools/test_model_profiles.py"], "b"),
+      ca.advice(["claude/plugins/docs/scripts/render_artifacts.py", f"{PT}/test_model_profiles.py"], "b"),
       "heavy: artifacts -> run `gh workflow run spec-lint.yml --ref b -f areas=artifacts,profiles`")
 check("advice shared path is every area, heavy",
       ca.advice(["tools/ci_areas.py"], "b"),
@@ -256,7 +260,7 @@ with tempfile.TemporaryDirectory() as tmp:
     git(tmp, "init", "-q")
     base = commit(tmp, "README.md")
     docs = commit(tmp, "docs/artifacts/x.html")
-    prof = commit(tmp, "tools/test_model_profiles.py")
+    prof = commit(tmp, f"{PT}/test_model_profiles.py")
     dgate = commit(tmp, "tools/test_delivery_gate.py")
     none = {"specs": "false", "delivery": "false", "artifacts": "false", "profiles": "false",
             "transcript-folds": "false", "docs": "false", "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",

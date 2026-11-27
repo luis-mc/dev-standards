@@ -741,7 +741,7 @@ workflow watch (0, 1, 4).
 - `tools/test_delivery_ci.py` — ci_watch and ci_skip_check with a stub `gh` on
   `PATH`, reach_check against a local HTTP server, and a structural check of the
   four `ci.yml` files (decide job, job conditions, e2e not advisory).
-- `tools/test_model_profiles.py` — every SKILL.md's `model` and `effort` match
+- `claude/plugins/project-setup/tests/test_model_profiles.py` — every SKILL.md's `model` and `effort` match
   the profile table.
 - `tools/test_delivery_cleanup.py` — cleanup.py against throwaway repositories
   with a local bare remote, linked worktrees and a stub `gh`: finished, kept,

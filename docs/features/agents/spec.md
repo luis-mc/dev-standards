@@ -9,8 +9,8 @@ owner: agents
 type: reference
 code:
   - claude/plugins/agents/**
-  - tools/test_model_profiles.py
-last_verified: 2026-11-01
+  - claude/plugins/project-setup/tests/test_model_profiles.py
+last_verified: 2026-11-27
 ---
 # Architect agent (luismc-agents)
 
@@ -76,18 +76,18 @@ The agent is one Markdown file. It has front matter (`name`, `description`, `mod
 
 | Requirement | Test |
 |---|---|
-| R5.2 | `tools/test_model_profiles.py` (check D1: architect is opus at medium) |
+| R5.2 | `claude/plugins/project-setup/tests/test_model_profiles.py` (check D1: architect is opus at medium) |
 | R5.1, R5.3, R5.4, R5.5, R5.6 | not covered by a test yet; see section 11 |
 
 ## 11. Not built yet
 
-NOT YET IMPLEMENTED: a test that reads `architect.md` and checks R5.1 and R5.3 to R5.6. The seam is `tools/test_model_profiles.py`, which already parses the file.
+NOT YET IMPLEMENTED: a test that reads `architect.md` and checks R5.1 and R5.3 to R5.6. The seam is `claude/plugins/project-setup/tests/test_model_profiles.py`, which already parses the file.
 
 ## 12. Code map
 
 Source: claude/plugins/agents/agents/architect.md
 Source: claude/plugins/agents/.claude-plugin/plugin.json
-Source: tools/test_model_profiles.py
+Source: claude/plugins/project-setup/tests/test_model_profiles.py
 
 ## Versions
 

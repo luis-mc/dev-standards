@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """SO6: the questions Stop hook (Q-1, Q-5; Q-2 lives in the delivery hook since DL171) against recorded inputs, plus the claude-setup wiring.
-No network. Run: python3 tools/test_questions_stop.py"""
+No network. Run: python3 claude/plugins/project-setup/tests/test_questions_stop.py"""
 import json
 import os
 import subprocess
@@ -8,7 +8,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]  # claude/plugins/project-setup/tests
 SKILL = ROOT / "claude/plugins/project-setup/skills/claude-setup"
 HOOK = SKILL / "assets/.claude/hooks/questions_stop.py"
 
