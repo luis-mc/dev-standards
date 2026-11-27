@@ -297,3 +297,120 @@ Sizes today: r/ai 723 words, r/pa 446, r/cq 242 (twice, once per plugin), r/dt 1
 | E22 | r/ai:19 drops "(no Actions)" and cites the new branch-name row (D14), not DL-08. | ~5 |
 | E23 | A line tagged `check:` whose check exists can be shorter: the hook's deny message carries the detail. Lines tagged `advice` need the full text. | — |
 | E24 | AG:3 says "`CLAUDE.md` imports this file", but the repo has no `CLAUDE.md` (never tracked). Either add a one-line `CLAUDE.md` (`@AGENTS.md`) or drop the sentence. | — |
+
+## 5. Minimal rule set per spec
+
+Rules for every table below (AG:9): IDs, section numbers and `**Version:**` lines never move or renumber. A surviving rule keeps its ID. A retired ID stays in place as one line, `DL-70 — Merged into Q-1.` Rows marked **meaning change** alter what a cited ID requires; projects, hooks or tests that cite it must be checked.
+
+### M1. DELIVERYSPEC
+
+| Current IDs | Merged rule text (keeps the ID on the left) | Objective kept | Flag |
+|---|---|---|---|
+| DL-03, D5 (merge part), DL-73 (merge clause), §6 `merge_on_green` | **DL-03**: In `merge_mode: auto` (default) the watcher merges a green PR at once with `gh pr merge --merge --match-head-commit`. In `manual` the owner merges, and no hook asks the session to merge. | No green PR sits unmerged; the owner can keep the merge. | **meaning change** (adds the manual case) |
+| DL-05 | **DL-05**: Never `gh pr merge --auto`. | Merge only on a proven head. | none, if the manual deny moves to DL-03; today the code reuses DL-05 for it (**meaning change** if kept there) |
+| DL-08, DL-73 (PR clause), r/ai:19 | **DL-08**: A task agent opens draft PRs only. The orchestrator or the watcher opens the one ready PR, from the integration branch. | One full run per release; drafts cost no CI. | **meaning change** (names roles) |
+| new row (D14) | **DL-1nn** (next free): A task branch is `<task-id>-<slug>`; the task ID follows ARTIFACTSPEC R4.5. | Hooks match events to tasks. | new |
+| DL-11, DL-12, DL-80, DL-116, DL-122, DL-81 | **DL-80** keeps the CI scope rule (first run full, later heads carry, valves). **DL-12** keeps the agent test rule (light: local touched suites; heavy: short local smoke, then branch CI for its area by one named command). DL-11, DL-116, DL-122, DL-81 keep only their mechanism and cite DL-80 or DL-12. | One full run per change; agents spend little. | DL-12 **meaning change** after C6 |
+| DL-04, DL-70, DL-71, DL-72, D8 Q-1..Q-5 | **Q-1..Q-5** move into the §1 table with Kind and Today. DL-04 — Merged into Q-4. DL-70 — Merged into Q-1. DL-71 — Merged into Q-3. DL-72 — Merged into Q-2. | All questions at once, in the wizard, after the free actions. | DL-71/72 "plain chat" exception is dropped (**meaning change**) |
+| DL-30, D9, §3 DL-30 row | **DL-30**: An agent brief carries an ETA breakdown (setup, work, checks). The hook refuses a total over 1.5 x the measured p75 for its kind (5 samples or more) without an `eta-reason:` line. | Honest, unpadded ETAs. | **meaning change** (matches code) |
+| DL-31 | **DL-31**: Every ETA in chat is a clock time in the owner's zone, with its start and dependency. Record rows follow ARTIFACTSPEC R6.6. | Times that can be checked. | scope note only |
+| DL-61, DL-62 | DL-61 — Merged into ARTIFACTSPEC R9.8. DL-62 — Merged into ARTIFACTSPEC R9.11. | Hourly fail-safe; fresh copy. | none (docs plugin enforces) |
+| DL-63 | DL-63 — Merged into ARTIFACTSPEC R8.19 (after C12). | No stale Expected. | depends on C12 |
+| DL-74 | **DL-74**: When `no_attribution` is true, no attribution in commits or PR bodies. | Owner's choice holds. | **meaning change** (now conditional, as the code is) |
+| DL-75 | DL-75 — Merged into DOCSPEC R2.1. | Docs in one tree. | none |
+| DL-10, DL-24, DL-128 | **DL-24**: The fold runs once per release, at the point the owner picks in C9; DOCSPEC §7 owns the note format. DL-10 and DL-128 cite DL-24. | Parallel branches never conflict on versions. | **meaning change** if the fold point moves |
+| DL-34 | DL-34 — Merged into DL-32a. | A routine counts done only when its branch moved. | none |
+| DL-35 | DL-35 — Retired: the launch tool sets the start. | — | retired |
+| DL-21 | DL-21 — Moved to project config (`ci.runner`). | Runner choice is per project. | retired from G |
+| DL-65 | Move to §5 Design as a design property; row says "Design: see §5". | One truth for status. | none |
+| DL-99 G3, DL-120, DL-121 | **DL-121** owns "never retry a test; quarantine flakes"; G3 and DL-120 cite it. | No hidden flakes. | none |
+| D3, §6 `block_ceiling`, `stop_repeat_limit` | One key, `stop_repeat_limit`, default 3. | Hooks never loop. | none |
+| Counts line (ds:190), Today column | Generated (E1). | Honest status. | none |
+
+### M2. DOCSPEC
+
+| Current IDs | Merged rule text | Objective kept | Flag |
+|---|---|---|---|
+| R2.1 (+ DL-75, r/pa:8) | **R2.1** adds: "Every lasting doc lives under `docs/`." | One docs tree. | additive |
+| R2.4 | **R2.4**: The record folder follows ARTIFACTSPEC R4.37; `docs.json` `record_dir` names the same folder. | One record. | cites code order (C11) |
+| R4.3, R7.1, R7.5, R5.2 | **R7.1** keeps the note rule; R4.3 and R5.2 cite R7.1 and R7.5. | Versions only by the fold. | none |
+| R7.1-R7.4 (+ `change_notes.py` notes) | **R7.1** covers both note kinds: doc notes (`docs_fold.py`) and spec or plugin notes (`change_notes.py`), each with its folder. MUST level. | One versioning rule. | **meaning change** (widens scope) |
+| R2.5, R4.5, R6.3 | **R2.5** owns the generated-file list; the others cite it. | No hand edits of generated files. | none |
+| R5.4, D10, R11.2 | **R11.2** owns "UX rules only in `docs/design-system/`". | One UX home. | none |
+| R15.10, R15.11 (date pickers) | **R15.10** owns it; R15.11 cites it. | One input rule. | none |
+| R15.7 DS2, R15.25 DS7 | One rule: a numbered design-system version with no approval warns on a task branch and fails on a release branch (the R15.25 pattern). | Approval before use. | **meaning change** for R15.7 |
+| R10.2 / W1 | **R10.2** unchanged; the code follows it (E8). | Briefs never reach `main`. | none |
+| R8.1 code table | Add R1 (removed ID cited). | Every check named. | additive |
+
+### M3. ARTIFACTSPEC
+
+| Current IDs | Merged rule text | Objective kept | Flag |
+|---|---|---|---|
+| R3.1, R9.1, D13, §1.4, §15 text | **R9.1** owns "publish once per turn, at its end"; **R9.8** owns the hourly fail-safe; the Why (200 a day) stays once in §15. Others cite. | Few publishes, fresh page. | none |
+| R9.10, R9.11, R9.12, R8.18, r/pa:6 | **R9.10** owns the three steps; others cite. | One publish order. | none |
+| R4.13, R4.14, R4.28, R7.6, R8.17, D23 | **R4.13** owns "never write git state"; others cite. R8.5 drops "fetches the default branch" or says why it is allowed. | No surprise commits. | R8.5 **meaning change** |
+| R4.37, R4.13 path text | **R4.37** states the code's lookup order (C11). R4.13 says "the record folder (R4.37)". | One record folder. | **meaning change** for the default |
+| R6.3, R6.12, R5.46, D15, §12 Earlier row | Remove the Earlier fold text that R6.3 retired, or restore R6.3. | One group layout. | owner picks only if the fold is wanted back |
+| R5.3, R5.33, R5.37, §14, R5.61 | **R5.61** wins; edit the others. | One section-0 layout. | none |
+| R4.5, R5.49 | **R4.5** says dropped work is `Dropped` (R5.49). | One close status. | none |
+| R6.14, R8.19 (+ DL-63, f/art R5.25) | **R8.19** owns past-due behaviour (C12). | No stale Expected. | depends on C12 |
+| R6.10 (+ DL-30 breakdown) | **R6.10** owns `expected_basis`; DL-30 cites it for record rows. | Each estimate shows its basis. | none |
+| §1.4 `owner (of a task)` | Rename to "feature (of a task)" in the text; the JSON field stays. | One meaning of owner. | wording |
+| R10.3 rule-file list | List all 18 lines of r/pa, or make R10.3 point to the file and a test. | Rule file and spec agree. | none |
+
+### M4. STACKSPEC
+
+STACKSPEC has no rule IDs; it cites by section. Proposal: no new IDs, but each rule another spec cites gets an anchor-stable sentence.
+
+| Current section | Merged rule text | Objective kept | Flag |
+|---|---|---|---|
+| §13.5-§13.8 (inv:1500-1671) | Keep the outcomes as MUSTs: one ready PR, its first run full, later heads carry, freeze while CI runs, drafts run no CI, branches never edit versions. Cite DELIVERYSPEC for scripts and config. | A product delivers the same way on any stack. | none (text shrinks, MUSTs stay) |
+| inv:1604 "SHOULD NOT edit a spec's version" | MUST NOT, citing DOCSPEC R7.1 (matches AG:8 and the pre-commit check). | Parallel branches never conflict. | **level change** SHOULD to MUST (major per §20) |
+| inv:1569 "named after its task ID" | Cite the new DELIVERYSPEC branch row. | One branch format. | none |
+| §2.1 tree (inv:333-335) | Replace `docs/specs/`, `docs/notes/` with a pointer to DOCSPEC §2. | One docs layout. | none |
+| §4.6 rate-limit headers (inv:564) | Add: "Auth endpoints send only `Retry-After` (AUTHSPEC R17.7)." | Limits are visible, accounts are not probed. | **owner** (C24) |
+| §5.7 `secret` class (inv:715-717) | Add: "A one-way hash (AUTHSPEC §5.3) meets this rule." | Dumps leak nothing. | **owner** (C24) |
+| §12 secret scan + 4 copies | §12 owns it; inv:1370, 1500, 1557 and the checklist cite §12. | Scan at commit, push and CI. | none |
+| §20 "a new MUST is a major" | Keep and enforce (E17), or relax (C25). | Products can trust minor bumps. | **owner** |
+| §0.1 heading | "What changed" (no version range), so new entries fit. | Readable log. | heading text only; section number stays |
+
+### M5. AUTHSPEC
+
+| Current IDs | Merged rule text | Objective kept | Flag |
+|---|---|---|---|
+| §0.1 conformance (auth:72-78) | Cite STACKSPEC §0.2; deviations recorded in the Stack Profile. | One deviation record. | **meaning change** (where a deviation lives) |
+| R24.3, R27.4 | Cite STACKSPEC §12 for scanning; keep "never committed". | One scan rule. | none |
+| §22.1 latency, R22.38 payload, R21.1 accessibility, rate-limit fail mode | Keep the stricter numbers; add "narrows STACKSPEC §x" to each. | Auth flows are faster, smaller, more accessible. | none |
+| About 49 internal repeats (auth index D) | Keep each rule once, in the section that owns the topic; repeats become "see Rn.n". | Same rules, less text. | none |
+| auth:463 "low entropy" vs R8.7 "≥128 bits" recovery codes; R22.18 30 s job timeout vs §24.2 10 s ceiling | Fix the stale side of each. | One number each. | **owner** for the timeout |
+| §27.1 `/audits:*` | `/luismc-audits:*`. | Commands work. | none |
+
+### M6. Feature specs
+
+| Spec | Change | Flag |
+|---|---|---|
+| f/del | Duplicate IDs R5.36c, R5.46, R13.96: the first keeps the ID; the second takes the next free letter (R5.36d, R5.46a, R13.96a). Check which one tests and the "How it is proven" table cite first. Fix R5.13 cancel default (C20), R5.22 vs DL-97 (C21), R5.80 citation, R5.12 runner hook, :378 machine limits. | **meaning change** for any citation of the second copy |
+| f/dsp | Its table IDs `DL1`..`DL7` look like DELIVERYSPEC `DL-n` and task IDs `DLnnn`. Cite them as "speed point 1..7" in prose (IDs stay). Fix R5.7 (C22). DL3 marked superseded by DL-12 (C6). | none |
+| f/tc | R5.2 states this repo's deviation from DL-80 (C5). R5.3 states its deviation from DL-99 G6 (C7). R5.8 — Superseded by ARTIFACTSPEC R4.13 (C4). | R5.8 retired |
+| f/art | Drop restated ARTIFACTSPEC rules (statuses, hooks, record folder, section 0); cite ARTIFACTSPEC. Keep build-only requirements. Fix R5.17a, R5.11d against R5.29, R5.11. | none |
+| f/docs | Second R5.23 (:108) takes R5.23a. Move the six R5 rules under §6 to §5 or renumber them as R6.x with "Moved from R5.x" lines. | **meaning change** for citations of the second R5.23 |
+| f/specs | :70 says spec-check is `sonnet`; code says `haiku`. | none |
+| f/models | Decision row 0014 (:162) is reversed by :39; mark it. | none |
+| f/ps | R5.24 restates DL-73; cite DL-08 and DL-73 instead. | none |
+
+### M7. Rule files and AGENTS.md
+
+AGENTS.md, minimal text (keeps every current objective):
+
+```
+- Work on a task branch `<task-id>-<slug>`. Push only that branch. Never push to `main`, merge, or open a ready PR (DL-08).
+- Never edit a `**Version:**` line, a change log or a plugin's `"version"`. Add a change note (DOCSPEC R7.1); a plugin change needs a note naming its `plugin.json`.
+- Requirement IDs, section numbers and `**Version:**` lines never move or renumber.
+- Merges follow `watcher.merge_mode` (DL-03). Agents never run `gh pr merge`.
+- Hooks and the docs plugin never commit, push or merge; the delivery watcher does, per DL-03.
+- Name no other project. Plain, short English.
+- Test only what you touch: `python tools/ci_areas.py --branch-advice` (DL-12, docs/guides/testing.md).
+- Docs: read docs/README.md. A behaviour change updates its feature spec and adds a note, or says `Docs: none, <reason>`. UX rules live only in docs/design-system/. Briefs and reports live in docs/work/ on your branch only. Never edit generated files. Run docs_check.py before you finish.
+```
+
+The rule files keep one line per rule, tagged. Changes are in E18-E24. r/ai shrinks by about a fifth; r/pa by about a tenth.
