@@ -1,6 +1,6 @@
 name: Carry-forward plan
 description: >-
-  DS287 (R5.88, R5.91). On a pull_request, run scripts/delivery/carry_plan.py for one workflow: it says which jobs
+  DS287 (R5.88, R5.91). On a pull_request, or a push to the default branch (R5.95), run scripts/delivery/carry_plan.py for one workflow: it says which jobs
   an earlier head of the pull request already proved (carried) and which must run. Any other event, a missing
   script or a failed script: every job runs. The caller checks out the repository first, with fetch-depth 0.
 inputs:
@@ -10,9 +10,12 @@ inputs:
   map:
     description: The area map
     default: scripts/delivery/ci-areas.json
-  github-token:
-    description: Token for the run lookups
-    default: ${{ github.token }}
+  always:
+    description: On a push, comma list of jobs that always run (release, publish, smoke); R5.95
+    default: ''
+  default-branch:
+    description: The branch whose pushes are planned from the merged pull request (R5.95)
+    default: main
 outputs:
   run:
     description: The jobs that run
@@ -32,18 +35,28 @@ runs:
     - id: plan
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.github-token }}
+        GH_TOKEN: ${{ github.token }}  # the job's permissions: actions, pull-requests read
         WORKFLOW: ${{ inputs.workflow }}
         MAP: ${{ inputs.map }}
         EVENT: ${{ github.event_name }}
         PR_NUMBER: ${{ github.event.pull_request.number }}
         HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PUSH_SHA: ${{ github.sha }}
+        REF_NAME: ${{ github.ref_name }}
+        ALWAYS: ${{ inputs.always }}
+        DEFAULT_BRANCH: ${{ inputs.default-branch }}
       run: |
         real_out="$GITHUB_OUTPUT"
         tmp="$(mktemp)"
         reason=""
-        if [ "$EVENT" != pull_request ]; then
-          reason="not a pull request: every job runs"
+        if [ "$EVENT" = push ] && [ "$REF_NAME" = "$DEFAULT_BRANCH" ] && [ -f scripts/delivery/carry_plan.py ]; then
+          if ! GITHUB_OUTPUT="$tmp" python3 scripts/delivery/carry_plan.py --repo "$GITHUB_REPOSITORY"                 --workflow "$WORKFLOW" --push --sha "$PUSH_SHA" --always "$ALWAYS" --map "$MAP" --github-output; then
+            echo "::warning::carry plan failed; every job runs"
+            : > "$tmp"
+            reason="carry plan failed: every job runs"
+          fi
+        elif [ "$EVENT" != pull_request ]; then
+          reason="not a pull request or a default-branch push: every job runs"
         elif [ ! -f scripts/delivery/carry_plan.py ]; then
           echo "::warning::scripts/delivery/carry_plan.py is missing; every job runs"
           reason="carry plan missing: every job runs"
