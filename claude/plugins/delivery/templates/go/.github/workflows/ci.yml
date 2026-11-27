@@ -84,6 +84,12 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
+      # DS287 (R5.94): every tracked file belongs to an area, a `docs` glob or a `run_everything` entry. A new file
+      # must be mapped before it merges; the list below names each file that is not.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' && hashFiles('scripts/delivery/ci-areas.json') != '' }}
+        run: python3 scripts/delivery/area_select.py --unmapped --check
+
       - id: carry
         continue-on-error: true
         uses: ./.github/actions/carry-plan
@@ -358,6 +364,8 @@ jobs:
       - name: Every needed job passed, or was skipped and carried
         run: |
           if [ "${{ github.event_name }}" = pull_request ]; then
+            # R5.94: the plan job also checks that every file is mapped; its failure fails this check.
+            if [ "${{ needs.carry.result }}" = failure ]; then echo "::error::the plan job failed (an unmapped file, R5.94)"; exit 1; fi
             python3 scripts/delivery/carry_verify.py --needs "$NEEDS" --carried "$CARRIED" --ignore "$IGNORE"
           else
             echo "$NEEDS" | python3 -c "import json,sys; n=json.load(sys.stdin); bad=[k for k,v in n.items() if v['result'] not in ('success','skipped')]; print('not green:', bad) if bad else print('ok'); sys.exit(1 if bad else 0)"

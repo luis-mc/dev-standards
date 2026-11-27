@@ -41,6 +41,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # DS287 (R5.94): a file that no area, `docs` glob or `all` entry names fails the pull request and is listed.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: python scripts/delivery/changed_areas.py unmapped --check
+
       - id: carry
         continue-on-error: true
         uses: ./.github/actions/carry-plan

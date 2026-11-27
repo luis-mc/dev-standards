@@ -802,6 +802,39 @@ def check_ci_filters(root, cfg):
     return True, "WARN DL-116 a required workflow has a pull-request path filter, so a filtered change leaves the watcher "         "without a run: " + "; ".join(found) + ". Skip by job-level `if` plus an always-run aggregate job "         "(templates/ci-snippets/ci-areas-pattern.yml).", [_item("ci.path_filter", "warn", "; ".join(found))]
 
 
+def check_unmapped(root, cfg):
+    """DS287 (R5.94): WARN, never fail, when tracked files match no area, no docs glob and no run-everything entry."""
+    import importlib.util
+    import subprocess
+    d = os.path.join(PLUGIN, "templates", "shared", "scripts", "delivery")
+    for rel, mod_name in ((".delivery/ci-areas.json", "changed_areas"), ("scripts/delivery/ci-areas.json", "area_select")):
+        path = os.path.join(root, *rel.split("/"))
+        if os.path.isfile(path):
+            break
+    else:
+        return None
+    try:
+        sys.path.insert(0, d)
+        try:
+            spec = importlib.util.spec_from_file_location(mod_name, os.path.join(d, mod_name + ".py"))
+            mod = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(mod)
+        finally:
+            sys.path.remove(d)
+        r = subprocess.run(["git", "ls-files", "-z"], cwd=root, capture_output=True, check=True)
+        files = [x for x in r.stdout.decode("utf-8", "replace").split("\0") if x]
+        cmap = mod.load_map(path) if mod_name == "changed_areas" else mod.load_map(__import__("pathlib").Path(path))
+        bad = mod.unmapped(files, cmap)
+    except Exception:
+        return None
+    if not bad:
+        return True, "DS287 every tracked file is mapped (%s): 0 unmapped" % rel, [_item("ci.unmapped", "ok", "0")]
+    shown = ", ".join(bad[:10]) + (" ..." if len(bad) > 10 else "")
+    return True, "WARN DS287 %d tracked file(s) match no area, no docs glob and no run-everything entry in %s (R5.94): %s. " \
+        "Map them; the pull-request check fails on them." % (len(bad), rel, shown), \
+        [_item("ci.unmapped", "warn", "%d: %s" % (len(bad), shown))]
+
+
 def check_affected_targets(root, cfg):
     """DL-125 (DS269): WARN, never fail, for tracked paths that map to no target and are not in `no_target`."""
     import importlib.util
@@ -904,7 +937,7 @@ def check_stack(root, cfg):
 
 CHECKS = (("config", check_config), ("gh", check_gh), ("tz", check_tz), ("hooks", check_hooks), ("ledger", check_ledger),
           ("ci", check_ci), ("rust", check_rust),
-          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("ci-filters", check_ci_filters), ("affected-targets", check_affected_targets), ("plugins", check_plugins),
+          ("scripts", check_scripts), ("fail-fast", check_fail_fast), ("ci-filters", check_ci_filters), ("unmapped", check_unmapped), ("affected-targets", check_affected_targets), ("plugins", check_plugins),
           ("gate-steps", check_gate_steps), ("stack", check_stack))
 
 

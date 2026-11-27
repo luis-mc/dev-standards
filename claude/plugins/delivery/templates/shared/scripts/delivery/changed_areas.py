@@ -3,7 +3,8 @@
 
     changed_areas.py [--map .delivery/ci-areas.json] [--base REF | --changed-file FILE|- | PATH...]
                      [--release] [--all] [--github-output] [--json]
-    changed_areas.py [--map FILE] unmapped [PATH...]     paths that fall to "all" (default: git ls-files)
+    changed_areas.py [--map FILE] unmapped [--check] [PATH...]   paths that fall to "all" (default: git ls-files)
+                     --check (DS287, R5.94): print each such path and exit 1; exit 0 when every file is mapped
 
 The project owns `.delivery/ci-areas.json`:
 
@@ -120,6 +121,7 @@ def main(argv=None) -> int:
     p.add_argument("--all", action="store_true")
     p.add_argument("--github-output", action="store_true")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--check", action="store_true", help="with `unmapped`: exit 1 when a file is unmapped (R5.94)")
     p.add_argument("paths", nargs="*")
     a = p.parse_args(argv)
     list_unmapped = bool(a.paths) and a.paths[0] == "unmapped"
@@ -129,9 +131,13 @@ def main(argv=None) -> int:
         cmap = load_map(a.map)
         changed = list(a.paths)
         if list_unmapped:
-            for q in unmapped(changed or git_files(), cmap):
+            bad = unmapped(changed or git_files(), cmap)
+            for q in bad:
                 print(q)
-            return 0
+            if a.check and bad:
+                print("changed_areas: %d file(s) match no area, no docs glob and no `all` entry; map them in %s"
+                      % (len(bad), a.map), file=sys.stderr)
+            return 1 if (a.check and bad) else 0
         if a.changed_file:
             text = sys.stdin.read() if a.changed_file == "-" else Path(a.changed_file).read_text(encoding="utf-8")
             changed += text.splitlines()

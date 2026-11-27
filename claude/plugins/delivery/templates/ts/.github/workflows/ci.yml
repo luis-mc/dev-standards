@@ -152,6 +152,12 @@ jobs:
           # The base commit must be present to diff against it.
           fetch-depth: 0
 
+      # DS287 (R5.94): every tracked file belongs to an area, a `docs` glob or a `run_everything` entry. A new file
+      # must be mapped before it merges; the list below names each file that is not.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' && hashFiles('scripts/delivery/ci-areas.json') != '' }}
+        run: python3 scripts/delivery/area_select.py --unmapped --check
+
       - id: carry
         continue-on-error: true
         uses: ./.github/actions/carry-plan

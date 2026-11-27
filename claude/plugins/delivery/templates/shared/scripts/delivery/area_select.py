@@ -3,6 +3,8 @@
 
     area_select.py [--map FILE] [--base REF | --changed-file FILE|- | PATH...] [--all]
                    [--github-output] [--json]
+    area_select.py [--map FILE] --unmapped [--check] [PATH...]   files no area, `docs` or `run_everything` names (R5.94);
+                   --check exits 1 and names them (default paths: git ls-files)
 
 The changed paths come from `git diff --name-only --no-renames REF...HEAD` (`--base`), a list (`--changed-file`,
 `-` is stdin) or the arguments. The project's committed map (default `scripts/delivery/ci-areas.json`):
@@ -228,6 +230,13 @@ def lines(res: dict) -> list[str]:
     return out
 
 
+def unmapped(paths: list[str], cmap: dict) -> list[str]:
+    """Paths no list names: not in `run_everything`, `docs` or any area's `paths` (R5.94)."""
+    return [p for p in paths
+            if not (any_match(p, cmap.get("run_everything") or []) or any_match(p, cmap.get("docs") or [])
+                    or any(any_match(p, a.get("paths") or []) for a in cmap["areas"].values()))]
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="which test areas and CI jobs does this change need")
     p.add_argument("--map", default=DEFAULT_MAP)
@@ -238,6 +247,9 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--all", action="store_true", help="run everything (push to the default branch, manual run)")
     p.add_argument("--github-output", action="store_true")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--unmapped", action="store_true",
+                   help="list tracked files (git ls-files, or PATHS) that match no area, `docs` or `run_everything` (R5.94)")
+    p.add_argument("--check", action="store_true", help="with --unmapped: exit 1 when a file is unmapped")
     p.add_argument("paths", nargs="*")
     args = p.parse_args(argv)
     try:
@@ -251,6 +263,19 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as e:
         print(f"area_select: {e}", file=sys.stderr)
         return EXIT_USAGE
+    if args.unmapped:
+        try:
+            files = changed or [x for x in subprocess.run(["git", "ls-files", "-z"], capture_output=True, check=True)
+                                .stdout.decode("utf-8", "replace").split("\0") if x]
+        except (OSError, subprocess.SubprocessError) as e:
+            print(f"area_select: {e}", file=sys.stderr)
+            return EXIT_USAGE
+        bad = unmapped(files, cmap)
+        print("\n".join(bad))
+        if args.check and bad:
+            print(f"area_select: {len(bad)} file(s) match no area, `docs` or `run_everything`; map them in {args.map}",
+                  file=sys.stderr)
+        return 1 if (args.check and bad) else 0
     wtext = None
     if args.workflow:
         try:
