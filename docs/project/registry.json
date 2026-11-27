@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T14:10+00:00",
+  "updated": "2026-11-27T14:20+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12667,12 +12667,11 @@
       "id": "DS287",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "CI carry-forward: PR reruns run only what changed since the last proven head",
       "detail": "crsp ask 27 Nov: carry-forward planner (diff from last finished head, patch-id on rebase), verify treats carried as pass, failed-test-first rerun inside a job on every trigger, narrower run-all valves, one reusable plan step. Owner decisions as relayed: carried may merge (main full run and nightly are the net), on at once, proof = planner unit tests + replay of 20 PRs",
-      "expected": "27 Nov ~14:33",
-      "changed": "2026-11-27T14:10+00:00",
-      "expected_basis": "rides RELEASE-207: CI 14:15-14:30, merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T14:20+00:00",
       "rides": "DS288",
       "started": "2026-11-27T12:32+00:00"
     },
@@ -12680,11 +12679,11 @@
       "id": "DS288",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: CI carry-forward in luismc-delivery",
       "detail": "Folds DS287 into the delivery plugin and spec",
-      "expected": "27 Nov ~14:33",
-      "changed": "2026-11-27T14:10+00:00",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T14:20+00:00",
       "release": 207,
       "phases": [
         {
@@ -12707,8 +12706,7 @@
         "label": "FIX-ROUND",
         "minutes": 15
       },
-      "started": "2026-11-27T12:32+00:00",
-      "expected_basis": "3rd fix waits for the running CI run; CI ~15 min; merge"
+      "started": "2026-11-27T12:32+00:00"
     },
     {
       "id": "DS289",
@@ -12786,12 +12784,11 @@
       "id": "DS293",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Move DELIVERYSPEC into the delivery plugin",
       "detail": "docs/architecture/DELIVERYSPEC.md -> claude/plugins/delivery/references/deliveryspec.md, IDs and version kept; change-notes config, tests, links and docs map follow; pointer at the old path. Starts after DS287 merges (DS287 edits DL-11, DL-80, DL-116)",
-      "expected": "27 Nov ~14:33",
-      "changed": "2026-11-27T14:10+00:00",
-      "expected_basis": "rides RELEASE-207: CI 14:15-14:30, merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T14:20+00:00",
       "rides": "DS288",
       "started": "2026-11-27T13:13+00:00"
     },
@@ -12811,12 +12808,11 @@
       "id": "DS295",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Full Progress shows live CI runs per release and per task",
       "detail": "crsp ask 27 Nov 13:15: release rows show the PR plus each workflow run of its head (name, status, link, start, duration/ETA), the tag run and post-merge main runs until Live; task rows with a PR or pushed branch show the same. Data: gh run list --commit <sha>, refreshed by pending --refresh",
-      "expected": "27 Nov ~14:33",
-      "changed": "2026-11-27T14:10+00:00",
-      "expected_basis": "rides RELEASE-207: CI 14:15-14:30, merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T14:20+00:00",
       "rides": "DS288",
       "started": "2026-11-27T13:13+00:00"
     },
@@ -12824,12 +12820,11 @@
       "id": "DS296",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Cloud sessions get the pinned dev-standards scripts and gitleaks",
       "detail": "crsp ask 27 Nov 13:25: a delivery-installed cloud bootstrap (SessionStart hook or scripts/delivery/cloud_setup.sh) fetches the pinned dev-standards checkout into .dev-standards-tools and gives the scripts one path locally and in the cloud; installs pinned gitleaks (version + SHA-256 as ci.yml pins) and the Python test deps",
-      "expected": "27 Nov ~14:33",
-      "changed": "2026-11-27T14:10+00:00",
-      "expected_basis": "rides RELEASE-207: CI 14:15-14:30, merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T14:20+00:00",
       "rides": "DS288",
       "started": "2026-11-27T13:13+00:00"
     },
@@ -12837,12 +12832,11 @@
       "id": "DS297",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "claude-setup allows the GitHub MCP PR tools",
       "detail": "crsp ask 27 Nov 13:25: auto mode refused mcp__github__create_pull_request in a cloud routine. claude-setup would add allow rules for the MCP create/update/ready PR tools (the gh pr create/ready/edit rules exist), and routine briefs would state the owner's PR authorisation; merge stays the owner's. Changes shipped permissions: owner OK first",
-      "expected": "27 Nov ~14:33",
-      "changed": "2026-11-27T14:10+00:00",
-      "expected_basis": "rides RELEASE-207: CI 14:15-14:30, merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T14:20+00:00",
       "rides": "DS288",
       "started": "2026-11-27T13:13+00:00"
     },
