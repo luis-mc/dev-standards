@@ -178,7 +178,7 @@ def select(changed: list[str], cmap: dict, force_all: bool = False, workflow_tex
     lock_jobs = cmap.get("lock_jobs") if isinstance(cmap.get("lock_jobs"), dict) else {}
     for p in paths:
         if workflow_path:
-            if p == workflow_path.lstrip("./"):
+            if p == re.sub(r"^\./", "", workflow_path):
                 return result("all", [], f"{p} is this workflow: run all its jobs")
             if p.startswith(wf_dir) and any_match(p, ["**/*.yml", "**/*.yaml"]):
                 continue  # another workflow file: no change for this one
