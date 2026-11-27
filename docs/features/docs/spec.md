@@ -4,14 +4,14 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.17.1
+version: 1.18.0
 owner: agents
 type: reference
 code:
   - claude/plugins/docs/**
   - tools/fixtures/vitest_shim/*.mjs
   - tools/test_ds_enforcement.py
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 ---
 # Documentation standard plugin (luismc-docs)
 
@@ -99,7 +99,7 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.17** — Every generated page uses the default page, surface, ink and line colours of `design/default-design.css`, in light and dark. A project's `design.css` may change accents only: its `--paper`, `--surface`, `--surface-2`, `--ink`, `--ink-muted`, `--rule`, `--rule-strong` and size tokens are dropped when the page is drawn, and the token check warns that they are ignored. The site and the gallery use the same page colours.
 
-**R5.18** — Font sizes in the plugin's pages are 0.9 times the earlier ones: the base is 14.4px, and px and `clamp()` sizes are scaled (`rem` sizes follow the base). Pages drawn in a project's design-system gallery keep that project's own size tokens.
+**R5.18** — Font sizes in the plugin's pages are 0.81 times the original ones (DL239 took 0.9, DS289 another 0.9, so the pages read as they did at 90% browser zoom): the body base is 12.96px, the root `html` is `font-size: 90%` so every `rem` size scales too (DL239 scaled only the body, which `rem` sizes ignore), and px and `clamp()` sizes are scaled. Pages drawn in a project's design-system gallery keep that project's own size tokens.
 
 **R5.19** — The React and TypeScript picker templates (`DatePicker`, `TimePicker`, `NumberKeypad`, their logic files, tests and `test-dom.ts`) compile with `tsc --noEmit` under `strict`, `exactOptionalPropertyTypes`, `noUncheckedIndexedAccess`, `noImplicitOverride` and `noPropertyAccessFromIndexSignature`, and pass typescript-eslint `recommendedTypeChecked` and react-hooks `recommended` with `reportUnusedDisableDirectives` on. They carry no `eslint-disable` for `react-hooks/exhaustive-deps`. Behaviour and rendered output are unchanged (DL331).
 
@@ -208,6 +208,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.18.0 | 2026-11-27 | RELEASE-208 | Fonts in every page the docs plugin renders are 90% of the DL239 sizes; the root now carries the scale, so rem sizes shrink too (R5.18). | DS289 |
 | 1.17.1 | 2026-11-26 | RELEASE-203 | The artifacts spec gains R5.41a and R5.42c: a Running or Waiting release has phases or a --no-phases reason. | DS278 |
 | 1.17.0 | 2026-11-26 | RELEASE-202 | R5.27: fold --release folds only the notes of that release's tasks; --all folds every note (DL-128). | DS274 |
 | 1.16.2 | 2026-11-26 | RELEASE-199 | The lifecycle schema and template allow `inputs` on each target and a `no_target` list (DL-125). | DS269 |

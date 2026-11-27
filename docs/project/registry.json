@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T11:31+00:00",
+  "updated": "2026-11-27T13:13+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12662,6 +12662,193 @@
         }
       ],
       "started": "2026-11-27T11:21+00:00"
+    },
+    {
+      "id": "DS287",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "CI carry-forward: PR reruns run only what changed since the last proven head",
+      "detail": "crsp ask 27 Nov: carry-forward planner (diff from last finished head, patch-id on rebase), verify treats carried as pass, failed-test-first rerun inside a job on every trigger, narrower run-all valves, one reusable plan step. Owner decisions as relayed: carried may merge (main full run and nightly are the net), on at once, proof = planner unit tests + replay of 20 PRs",
+      "expected": "27 Nov ~15:30",
+      "changed": "2026-11-27T13:13+00:00",
+      "expected_basis": "rides RELEASE-207 with DS293/295/296/297 (owner 13:12)",
+      "rides": "DS288",
+      "started": "2026-11-27T12:32+00:00"
+    },
+    {
+      "id": "DS288",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: CI carry-forward in luismc-delivery",
+      "detail": "Folds DS287 into the delivery plugin and spec",
+      "expected": "27 Nov ~13:40",
+      "changed": "2026-11-27T12:32+00:00",
+      "release": 207,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-27T12:41+00:00",
+          "end": "2026-11-27T13:00+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-27T13:00+00:00",
+          "end": "2026-11-27T13:15+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T13:15+00:00",
+          "end": "2026-11-27T13:25+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T13:25+00:00",
+          "end": "2026-11-27T13:40+00:00"
+        }
+      ],
+      "risk": {
+        "label": "+1 fix round",
+        "minutes": 20
+      },
+      "started": "2026-11-27T12:32+00:00"
+    },
+    {
+      "id": "DS289",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Docs plugin pages at 90% font size",
+      "detail": "Owner zooms Chrome to 90% for Full Progress; every page the docs plugin renders uses 90% of today's Full Progress font sizes",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T12:50+00:00",
+      "rides": "DS290",
+      "started": "2026-11-27T12:36+00:00"
+    },
+    {
+      "id": "DS290",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Release: docs pages at 90% font size",
+      "detail": "Folds DS289 into docs",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T12:50+00:00",
+      "release": 208,
+      "phases": [
+        {
+          "name": "ci",
+          "start": "2026-11-27T12:50+00:00",
+          "end": "2026-11-27T13:00+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T13:00+00:00",
+          "end": "2026-11-27T13:05+00:00"
+        }
+      ],
+      "started": "2026-11-27T12:36+00:00"
+    },
+    {
+      "id": "DS291",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Full Progress header text uses the full width",
+      "detail": "The description under the page title wraps at 46em; it should fill the header width",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T13:03+00:00",
+      "rides": "DS292",
+      "started": "2026-11-27T12:53+00:00"
+    },
+    {
+      "id": "DS292",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Release: header text full width",
+      "detail": "Folds DS291 into docs",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T13:03+00:00",
+      "release": 209,
+      "phases": [
+        {
+          "name": "ci",
+          "start": "2026-11-27T12:55+00:00",
+          "end": "2026-11-27T13:05+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T13:05+00:00",
+          "end": "2026-11-27T13:10+00:00"
+        }
+      ],
+      "started": "2026-11-27T12:53+00:00"
+    },
+    {
+      "id": "DS293",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Move DELIVERYSPEC into the delivery plugin",
+      "detail": "docs/architecture/DELIVERYSPEC.md -> claude/plugins/delivery/references/deliveryspec.md, IDs and version kept; change-notes config, tests, links and docs map follow; pointer at the old path. Starts after DS287 merges (DS287 edits DL-11, DL-80, DL-116)",
+      "expected": "27 Nov ~15:30",
+      "changed": "2026-11-27T13:13+00:00",
+      "expected_basis": "agents 13:16 ~40 min, join 14:10, PR CI ~10 min, fix round, merge",
+      "rides": "DS288",
+      "started": "2026-11-27T13:13+00:00"
+    },
+    {
+      "id": "DS294",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Scan for files today's plugins no longer need",
+      "detail": "Every tracked file: keep only what the current plugins, their tests, CI and the live docs use; list the rest for owner confirmation before any delete",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T13:11+00:00",
+      "no_release": "a read-only scan that writes a list",
+      "started": "2026-11-27T13:04+00:00"
+    },
+    {
+      "id": "DS295",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Full Progress shows live CI runs per release and per task",
+      "detail": "crsp ask 27 Nov 13:15: release rows show the PR plus each workflow run of its head (name, status, link, start, duration/ETA), the tag run and post-merge main runs until Live; task rows with a PR or pushed branch show the same. Data: gh run list --commit <sha>, refreshed by pending --refresh",
+      "expected": "27 Nov ~15:30",
+      "changed": "2026-11-27T13:13+00:00",
+      "expected_basis": "agents 13:16 ~40 min, join 14:10, PR CI ~10 min, fix round, merge",
+      "rides": "DS288",
+      "started": "2026-11-27T13:13+00:00"
+    },
+    {
+      "id": "DS296",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Cloud sessions get the pinned dev-standards scripts and gitleaks",
+      "detail": "crsp ask 27 Nov 13:25: a delivery-installed cloud bootstrap (SessionStart hook or scripts/delivery/cloud_setup.sh) fetches the pinned dev-standards checkout into .dev-standards-tools and gives the scripts one path locally and in the cloud; installs pinned gitleaks (version + SHA-256 as ci.yml pins) and the Python test deps",
+      "expected": "27 Nov ~15:30",
+      "changed": "2026-11-27T13:13+00:00",
+      "expected_basis": "agents 13:16 ~40 min, join 14:10, PR CI ~10 min, fix round, merge",
+      "rides": "DS288",
+      "started": "2026-11-27T13:13+00:00"
+    },
+    {
+      "id": "DS297",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "claude-setup allows the GitHub MCP PR tools",
+      "detail": "crsp ask 27 Nov 13:25: auto mode refused mcp__github__create_pull_request in a cloud routine. claude-setup would add allow rules for the MCP create/update/ready PR tools (the gh pr create/ready/edit rules exist), and routine briefs would state the owner's PR authorisation; merge stays the owner's. Changes shipped permissions: owner OK first",
+      "expected": "27 Nov ~15:30",
+      "changed": "2026-11-27T13:13+00:00",
+      "expected_basis": "agents 13:16 ~40 min, join 14:10, PR CI ~10 min, fix round, merge",
+      "rides": "DS288",
+      "started": "2026-11-27T13:13+00:00"
     },
     {
       "id": "DU1",

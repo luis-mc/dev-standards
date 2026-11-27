@@ -98,7 +98,7 @@
 */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+html { font-size: 90%; scroll-behavior: smooth; scroll-padding-top: 4rem; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -106,7 +106,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14.4px;
+  font-size: 12.96px;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -184,7 +184,7 @@ h1 {
   font-family: var(--font-display);
   font-stretch: var(--font-display-stretch);
   font-weight: 800;
-  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-size: clamp(2rem, 4.05vw, 3rem);
   line-height: 1.05;
   text-wrap: balance;
   margin: .2em 0 .4em;
@@ -195,7 +195,7 @@ header.artifact-header { position: relative; }
 .gen-latest { color: var(--live); }
 .gen-update { color: var(--running-mark); }
 .gen-unknown { color: var(--ink-muted); }
-header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+header.artifact-header p { max-width: none; font-size: 1.08rem; }  /* DS291: the description fills the header width */
 .artifact-meta {
   font-family: var(--font-mono);
   font-size: .8rem;
@@ -890,11 +890,11 @@ details.status-fold > summary strong { min-width: 0; }
 }
 .timeline-scroll { overflow-x: auto; }
 .release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
-.release-timeline .rt-axis { font-size: 9.9px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-axis { font-size: 8.91px; fill: var(--ink-muted); text-anchor: middle; }
 .release-timeline .rt-grid { stroke: var(--rule); }
 .release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
-.release-timeline .rt-name { font-size: 11.7px; font-weight: 600; fill: var(--ink); }
-.release-timeline .rt-sub { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-name { font-size: 10.53px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
@@ -904,13 +904,13 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
 .release-timeline .rt-expected { fill: var(--ink); }
 .release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.release-timeline .rt-day-label { font-size: 10.8px; fill: var(--ink); }
-.release-timeline .rt-live-label { font-size: 10.8px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
-.release-timeline .rt-risk-label { font-size: 9.45px; fill: var(--ink-muted); }
+.release-timeline .rt-day-label { font-size: 9.72px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 9.72px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 8.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
-.release-timeline .rt-now-label { font-size: 9.9px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
-.release-timeline .rt-strip-title { font-size: 10.8px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
-.release-timeline .rt-other-label { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-now-label { font-size: 8.91px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 9.72px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-other.status-running { fill: var(--running-mark); }
 .release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
 .release-timeline .rt-other.status-needs-you { fill: var(--signal); }
@@ -938,7 +938,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
 .release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
 .release-timeline .rt-arrow-head { fill: var(--ink-muted); }
-.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 8.91px; fill: var(--ink-muted); }
 .release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
 .release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
 .release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
@@ -974,10 +974,10 @@ figure.diagram figcaption b{color:var(--ink)}
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Routing research: which model for which task</a><a href="#s8"><b>8</b>Decisions</a><a href="#s9"><b>9</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.29.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.30.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T11:12+00:00">27 Nov 11:12</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 11:32</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T13:16+00:00">27 Nov 13:16</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 13:28</a> (Lisbon)</p>
 <p class="lede">Since DL412 (RELEASE-169, 24 Nov) the main session and every subagent run on Sonnet, with Opus by <code>/model</code> for planning and the architect agent; both models default to medium effort (MP7, 11 October).</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
@@ -1403,16 +1403,7 @@ figure.diagram figcaption b{color:var(--ink)}
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
-<tr><td>27 Nov 10:52</td><td>Owner chose 27 Nov: D6 Haiku Explore, D7 Opus after one failed try, D8 Sonnet medium then Opus on failure, D9 routing table, D10 offer opusplan off by default</td></tr>
-<tr><td>27 Nov 10:33</td><td>Section 7 of the page written: research, hypotheses, both tests, routing, D6 to D10</td></tr>
-<tr><td>27 Nov 10:33</td><td>Done: Sonnet high 3 of 5 fixes, Opus medium 4 of 5; Opus 1.8x per run, Sonnet cheaper per pass</td></tr>
-<tr><td>27 Nov 10:30</td><td>Routing research added (section 7, MP13 to MP15): the suggested policy checked against docs and benchmarks; Test 1 Haiku and Sonnet Explore both 10 of 10, Haiku about a seventeenth of the cost; Test 2 Sonnet high 3 of 5 fixes, Opus medium 4 of 5. Open decisions D6 to D10.</td></tr>
-<tr><td>24 Nov 10:30</td><td>Shipped in RELEASE-169 (luismc-project-setup 1.14.0), merged 24 Nov 10:30 UTC</td></tr>
-<tr><td>11 Oct 01:10</td><td>MP7 released in luismc-project-setup 13.0.0 with STACKSPEC 7.0.0 (00:31): Opus at medium and Sonnet at medium everywhere, replacing the earlier high defaults. The owner first asked for Sonnet at high, then confirmed medium; his own ~/.claude and the installed plugins were updated.</td></tr>
-<tr><td>10 Oct 23:30</td><td>Decisions rebuilt in the 1.1.0 form: every option you were offered, the recommendation, and your choice in your words (AR23). The page is now a file in docs/artifacts, no longer a claude.ai artifact (AR26).</td></tr>
-<tr><td>10 Oct 13:40</td><td>MP3 to MP6 live: released in luismc-project-setup 12.0.0 (#10, 12:56); the alias-drift hook also installed in the owner’s ~/.claude.</td></tr>
-<tr><td>10 Oct 12:23</td><td>Expected times are now a date and a Lisbon time, not “today”; MP3 to MP6 ship with the DS6 release at about 13:45. No other project is named.</td></tr>
-<tr><td>10 Oct 11:07</td><td>Created. The owner made model and effort profiles a feature of their own. DS2 and DS5 moved here from the project tasks; MP1 to MP6 added; three figures (who runs on what, where settings come from, alias drift); the decisions of 10 October.</td></tr>
+
 </tbody></table></div>
 </section>
 </main></div>

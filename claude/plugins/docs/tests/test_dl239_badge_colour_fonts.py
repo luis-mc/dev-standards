@@ -120,7 +120,7 @@ class Generated(unittest.TestCase):
             low = css.lower()
             self.assertIn("--bg:" + light_paper, low)
             self.assertIn("--bg:" + dark_paper, low)
-            self.assertIn("14.4px", css)
+            self.assertIn("12.96px", css)  # DS289: 90% of DL239
             self.assertNotIn("16px/", css)
 
     def test_gallery_has_badge(self):
@@ -170,9 +170,10 @@ class RecordPages(unittest.TestCase):
     def test_base_font_is_scaled(self):
         for p in self.pages():
             text = p.read_text(encoding="utf-8")
-            self.assertIn("font-size: 14.4px;", text)
+            self.assertIn("font-size: 12.96px;", text)  # DS289
+            self.assertIn("html { font-size: 90%;", text)  # DS289: rem sizes follow the root
             self.assertNotIn("font-size: 16px", text)
-        self.assertIn("font-size: 9.9px", self.pages()[0].read_text(encoding="utf-8"))  # was 11px
+        self.assertIn("font-size: 8.91px", self.pages()[0].read_text(encoding="utf-8"))  # was 11px, then 9.9px (DS289)
 
     def test_project_design_changes_accent_not_page_colour(self):
         css = (PLUGIN / "design" / "default-design.css").read_text(encoding="utf-8")

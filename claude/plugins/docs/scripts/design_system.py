@@ -237,7 +237,7 @@ GALLERY_SCRIPT_VERSION = 3  # bump whenever the drawing changes (R15.2); an olde
 GALLERY_CSS = (
     ":root{--bg:#F5F6F8;--fg:#141A23;--mute:#556070;--line:#D5DAE1;--code:#ECEEF2}"
     "@media(prefers-color-scheme:dark){:root{--bg:#0F141B;--fg:#E7EBF0;--mute:#9AA5B4;--line:#2A3442;--code:#1E2733}}"
-    "body{margin:0;font:14.4px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}"
+    "body{margin:0;font:12.96px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg)}"
     "nav{position:sticky;top:0;background:var(--bg);border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:16px;flex-wrap:wrap;z-index:10}"
     "nav a{color:var(--fg)}main{max-width:960px;margin:0 auto;padding:0 16px 48px}"
     "table{border-collapse:collapse;width:100%;margin:12px 0;display:block;overflow-x:auto}"

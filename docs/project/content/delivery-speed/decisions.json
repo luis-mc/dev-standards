@@ -7268,6 +7268,142 @@
       "chosen": "Block, as now",
       "decided": "2026-11-24",
       "owner_words": "Block, as now (Recommended)"
+    },
+    {
+      "id": "D321",
+      "question": "After a release PR goes green and merges, should main's push re-run the jobs the PR already proved?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS287",
+      "options": [
+        {
+          "label": "Add to DS287 now",
+          "summary": "R5.95: a main push carries what the merged PR proved (same tree: carry all; else only reached jobs); release, publish and smoke always run; the nightly full run stays."
+        },
+        {
+          "label": "Separate task after DS287",
+          "summary": "DS287 ships first; main-push carry follows as its own task."
+        },
+        {
+          "label": "Keep main full run",
+          "summary": "Keep main's post-merge full run, as crsp's owner had decided."
+        }
+      ],
+      "chosen": "Add to DS287 now",
+      "decided": "2026-11-27",
+      "owner_words": "Add to DS287 now (Recommended)"
+    },
+    {
+      "id": "D322",
+      "question": "Should claude-setup allow the GitHub MCP PR tools (create, update, mark ready) for cloud agents?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS297",
+      "options": [
+        {
+          "label": "Allow MCP PR tools",
+          "summary": "Allow create, update and mark-ready; merge stays denied."
+        },
+        {
+          "label": "Keep gh only",
+          "summary": "Cloud briefs tell agents to use gh pr create from Bash; no permission change."
+        },
+        {
+          "label": "Not now",
+          "summary": "DS297 stays parked."
+        }
+      ],
+      "chosen": "Keep gh only",
+      "decided": "2026-11-27",
+      "owner_words": "Keep gh only"
+    },
+    {
+      "id": "D323",
+      "question": "Delete the 46 files of docs/archive/?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS293",
+      "options": [
+        {
+          "label": "Delete all 46",
+          "summary": "git rm docs/archive, drop it from skip lists, rebuild index"
+        },
+        {
+          "label": "Keep archive",
+          "summary": "leave it"
+        }
+      ],
+      "chosen": "Delete all 46",
+      "decided": "2026-11-27",
+      "owner_words": "Delete all 46 (Recommended)"
+    },
+    {
+      "id": "D324",
+      "question": "Which unused files should DS293 delete?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS293",
+      "options": [
+        {
+          "label": "cancel_joined_runs.py + test",
+          "summary": "no workflow calls it"
+        },
+        {
+          "label": "change-note.md template",
+          "summary": "nothing names it"
+        },
+        {
+          "label": "Two upgrade guides",
+          "summary": "one-time migrations every project is past"
+        },
+        {
+          "label": "All three",
+          "summary": "Delete the script and test, the template and the two guides (multi-select: all ticked)."
+        }
+      ],
+      "chosen": "All three",
+      "decided": "2026-11-27",
+      "owner_words": "cancel_joined_runs.py + test, change-note.md template, Two upgrade guides"
+    },
+    {
+      "id": "D325",
+      "question": "Retire the finished record features and unread history.json files?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS293",
+      "options": [
+        {
+          "label": "Retire all three + history",
+          "summary": "retire delivery-plugin-review, design-starter, design-field-updates; drop 9 history.json"
+        },
+        {
+          "label": "Keep the record",
+          "summary": "leave it"
+        }
+      ],
+      "chosen": "Retire all three + history",
+      "decided": "2026-11-27",
+      "owner_words": "Retire all three + history (Recommended)"
+    },
+    {
+      "id": "D326",
+      "question": "Move docs/features/delivery/shared-self-hosted-runners.md to docs/guides?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS293",
+      "options": [
+        {
+          "label": "Move to docs/guides",
+          "summary": "git mv and fix 10 links"
+        },
+        {
+          "label": "Leave it",
+          "summary": "keep it"
+        }
+      ],
+      "chosen": "Move to docs/guides",
+      "decided": "2026-11-27",
+      "owner_words": "Move to docs/guides (Recommended)"
     }
   ]
 }
