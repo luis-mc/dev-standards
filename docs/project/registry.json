@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T12:53+00:00",
+  "updated": "2026-11-27T12:55+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12786,6 +12786,16 @@
         }
       ],
       "started": "2026-11-27T12:53+00:00"
+    },
+    {
+      "id": "DS293",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Move DELIVERYSPEC into the delivery plugin",
+      "detail": "docs/architecture/DELIVERYSPEC.md -> claude/plugins/delivery/references/deliveryspec.md, IDs and version kept; change-notes config, tests, links and docs map follow; pointer at the old path. Starts after DS287 merges (DS287 edits DL-11, DL-80, DL-116)",
+      "expected": "",
+      "changed": "2026-11-27T12:55+00:00"
     },
     {
       "id": "DU1",
