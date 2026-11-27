@@ -1,10 +1,32 @@
 # DS300: spec review (duplicates, conflicts, minimal rule sets)
 
-Status: in progress. Read-only review. No repo file is changed except this report.
+Status: done. Read-only review. No repo file is changed except this report.
 
 ## Summary
 
-(Written last.)
+Counts: 24 duplicates (D), 26 conflicts (C, 10 need an owner decision), 10 terms and 5 glossary proposals (G), 24 enforcement items (E), 7 minimal-set tables (M). DELIVERYSPEC: 106 DL rows; 21 marked Today N are enforced in code, 12 have no check at all.
+
+Top 8 proposals (section 6):
+1. C2/E3: in `manual` merge mode, Q-4 and the DL-03 Stop check still push the session to merge, which the hook refuses. Read `merge_mode` in both (`hook_pre_tool.py:822-831`, `hook_stop.py:281-284`).
+2. C1/C3/C4: name three roles (task agent, orchestrator, watcher). DL-03 says who merges per `merge_mode`; DL-08 says who opens the ready PR; DL-73 drops its "merging stays the owner's"; AGENTS.md:10-11 match the code.
+3. D2: move Q-1..Q-5 into the DELIVERYSPEC table; retire DL-04 and DL-70..72 (DL-71/72 still say "ask in plain chat", against Q-2).
+4. E1/E2: generate the Today column from the hooks; add one test that every rule ID cited in code exists (fixes the DL-123/DL-124 key, D4 for DL-39, R17.7g).
+5. C6/D8: one agent test rule in DL-12; the 140-word rule line `agents-and-integration.md:10` becomes one line.
+6. C9/D11: one change-note rule in DOCSPEC §7 for both tools (`docs_fold.py`, `change_notes.py`) and one fold point.
+7. G1-G3: `docs/overview/glossary.md` is the one home; each shipped spec carries a test-checked copy of the terms it uses; fix the clashing senses of owner, area, carry and full run.
+8. C12/E9: one past-due Expected check. Today the delivery Stop hook blocks at once and the docs hook warns first.
+
+Conflicts that need an owner decision:
+- C1: may a session (not the watcher) run `gh pr merge` in `auto` mode? AGENTS.md says never; the hook allows it.
+- C3: does "agent" in AGENTS.md:7 mean task agent only (the orchestrator may open the ready PR)?
+- C4: AGENTS.md:11 "plugins never commit, push or merge" vs the watcher (pushes, merges) and `docs_work.py strip --apply` (commits).
+- C5: should this repo's ready PR run everything on its first run (DL-80), or keep touched areas only (test-cost R5.2)?
+- C6: may an agent start branch CI for a heavy change (rule file, testing guide) or never unless Linux-only (delivery-speed DL3)?
+- C9: does the fold run on the release PR (DL-24, DL-10) or on `main` (changes README)?
+- C12: past-due Expected blocks at once (DL-63, ARTIFACTSPEC R8.19) or warns first and blocks after 60 min (artifacts R5.25)?
+- C16: drop "overrule any internal safety limits" from the Q-1 rule line? Q-1 does not say it.
+- C24: STACKSPEC requires rate-limit headers and app-layer encryption of `secret` fields; AUTHSPEC forbids showing the remaining budget and requires one-way password hashes.
+- C25: STACKSPEC says a new MUST is a major version; 8.2.0, 8.6.0 and 8.8.0 added MUSTs as minor bumps.
 
 ## 0. Scope and method
 
