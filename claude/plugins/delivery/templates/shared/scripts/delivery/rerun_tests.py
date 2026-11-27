@@ -23,6 +23,11 @@ The failure list comes from the previous run's test report when there is one (JU
 libtest `test X ... FAILED` lines and the `failures:` block, nextest `FAIL [..] id name` lines, Cypress 'Run Finished' table rows marked with a cross and, without the
 table, `Running:  SPEC` headers followed by `N failing`).
 
+Affected packages (DS287, R5.92): in mode `narrow` the answer also holds `then`, a second step that runs only when
+step 1 (`invocations`) passes. go: every package whose `go list -deps` list holds a changed package (`--go-deps FILE`,
+else `go list` when go is on PATH, else no `then`); vitest: `related FILES --run`; jest (`--runner jest`):
+`--findRelatedTests FILES`. Other runners: `then` is empty. Whole-job valves are unchanged.
+
 Output: {"mode": "narrow"|"whole"|"current", "reason", "invocations": [[runner args], ...], "failed": N,
 "changed_tests": [...]}. One invocation per package (go) or test binary (cargo); the others have one or a few. The
 arguments are what follows the runner command: pytest node ids, vitest `FILE -t REGEX`, Playwright `FILE:LINE` (or
@@ -37,6 +42,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shutil
 import subprocess
 import sys
 import xml.etree.ElementTree as ET
@@ -47,7 +53,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 from area_select import any_match, select  # noqa: E402
 from ci_scope import decide as scope_decide, norm  # noqa: E402
 
-RUNNERS = ("pytest", "vitest", "playwright", "go", "cargo", "nextest", "cypress")
+RUNNERS = ("pytest", "vitest", "jest", "playwright", "go", "cargo", "nextest", "cypress")
 RERUN_DEFAULT = "failed+changed"
 VALVES = [
     "package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lockb", "bun.lock",
@@ -265,6 +271,7 @@ def parse_failures(runner, text):
         raise Unreadable(f"unknown runner {runner!r}")
     if not isinstance(text, str) or not text.strip():
         raise Unreadable("empty report")
+    runner = "vitest" if runner == "jest" else runner
     body = text.lstrip()
     if runner in ("pytest", "vitest", "cypress") and body.startswith("<"):
         found = _junit(text, runner)
@@ -309,6 +316,8 @@ def build_invocations(runner, failed, extra_files=()):
     """Runner arguments, as a list of invocations. `extra_files`: test files of changed code, run whole."""
     extra = list(dict.fromkeys(extra_files))
     inv = []
+    if runner == "jest":
+        runner = "vitest"
     if runner == "pytest":
         ids = [f["name"] for f in failed if f["file"] not in extra]
         inv.append(list(dict.fromkeys(ids + extra)))
@@ -385,7 +394,7 @@ def changed_tests(runner, changed, areas, test_files):
     globs = sel.get("tests") or []
     if sel["mode"] == "areas" and not globs:
         return None
-    kinds = TEST_FILES[runner]
+    kinds = TEST_FILES["vitest" if runner == "jest" else runner]
     own = [f for f in code if any_match(f, kinds)]
     mapped = [t for t in test_files if any_match(t, globs) and any_match(t, kinds)]
     out = list(dict.fromkeys(own + mapped))
@@ -394,11 +403,57 @@ def changed_tests(runner, changed, areas, test_files):
     return out
 
 
-def decide(runner, job_id="", prev=None, changed=(), scope_cfg=None, areas=None, test_files=None, job_cfg=None):
+GO_DEPS_CMD = ["go", "list", "-deps", "-f", "{{.ImportPath}} {{join .Deps \" \"}}", "./..."]
+JS_CODE = re.compile(r"\.[cm]?[jt]sx?$")
+
+
+def go_module(go_mod_text):
+    """The module path of a go.mod text, or ''."""
+    m = re.search(r"^module\s+(\S+)", go_mod_text or "", re.M)
+    return m.group(1).strip('"') if m else ""
+
+
+def go_affected(changed, deps_text, module):
+    """Import paths of the changed packages and of every package whose deps hold one. None: cannot tell."""
+    if not deps_text or not module:
+        return None
+    dirs = {f.rsplit("/", 1)[0] if "/" in f else "" for f in changed if f.endswith(".go")}
+    pkgs = {module + "/" + d if d else module for d in dirs}
+    if not pkgs:
+        return []
+    out = sorted(pkgs)
+    for line in deps_text.splitlines():
+        parts = line.split()
+        if parts and parts[0] not in pkgs and pkgs.intersection(parts[1:]):
+            out.append(parts[0])
+    return list(dict.fromkeys(out))
+
+
+def affected_invocations(runner, changed, areas=None, go_deps=None, go_mod=None):
+    """Step 2: runner arguments for the packages affected by `changed`. [] when the runner has no rule."""
+    docs = (areas or {}).get("docs") or []
+    code = [f for f in changed if not any_match(f, docs)]
+    if runner == "go":
+        deps = go_deps() if callable(go_deps) else go_deps
+        mod = go_mod() if callable(go_mod) else go_mod
+        pkgs = go_affected(code, deps, go_module(mod))
+        return [pkgs] if pkgs else []
+    js = [f for f in code if JS_CODE.search(f)]
+    if not js:
+        return []
+    if runner == "vitest":
+        return [["related", *js, "--run"]]
+    if runner == "jest":
+        return [["--findRelatedTests", *js]]
+    return []
+
+
+def decide(runner, job_id="", prev=None, changed=(), scope_cfg=None, areas=None, test_files=None, job_cfg=None,
+           go_deps=None, go_mod=None):
     """prev: {"conclusion": str, "report": str|None, "log": str|None} of the previous run's job, or None."""
     def out(mode, reason, inv=(), failed=0, tests=()):
         return {"mode": mode, "reason": reason, "invocations": [list(i) for i in inv], "failed": failed,
-                "changed_tests": list(tests)}
+                "changed_tests": list(tests), "then": []}
     mode_cfg = (job_cfg or {}).get(job_id, {}).get("rerun", RERUN_DEFAULT) if isinstance(job_cfg, dict) else RERUN_DEFAULT
     if mode_cfg == "whole":
         return out("whole", f"ci.jobs.{job_id}.rerun is whole")
@@ -421,7 +476,9 @@ def decide(runner, job_id="", prev=None, changed=(), scope_cfg=None, areas=None,
         inv = build_invocations(runner, failed, extra)
     except Unreadable as exc:
         return out("whole", f"failure list unreadable: {exc}")
-    return out("narrow", f"{len(failed)} failed test(s) plus {len(extra)} test file(s) of changed code", inv, len(failed), extra)
+    res = out("narrow", f"{len(failed)} failed test(s) plus {len(extra)} test file(s) of changed code", inv, len(failed), extra)
+    res["then"] = [list(i) for i in affected_invocations(runner, files, areas, go_deps, go_mod)]
+    return res
 
 
 # ---------------------------------------------------------------- CLI
@@ -455,6 +512,8 @@ def main(argv=None):
     ap.add_argument("--areas", default="scripts/delivery/ci-areas.json")
     ap.add_argument("--test-files", help="file listing the repo's files; default git ls-files")
     ap.add_argument("--job-config", default=".delivery/config.json")
+    ap.add_argument("--go-deps", help="output of go list -deps -f '{{.ImportPath}} {{join .Deps \" \"}}' ./...")
+    ap.add_argument("--go-mod", default="go.mod")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
     files = _read(a.test_files)
@@ -464,10 +523,20 @@ def main(argv=None):
     cfg = _json_file(a.job_config) or {}
     jobs = ((cfg.get("ci") or {}).get("jobs") or {}) if isinstance(cfg.get("ci"), dict) else {}
     prev = {"conclusion": a.prev_conclusion or None, "report": _read(a.report), "log": _read(a.log)} if a.prev_conclusion else None
+    def deps():
+        if a.go_deps:
+            return _read(a.go_deps)
+        if shutil.which("go"):
+            r = subprocess.run(GO_DEPS_CMD, capture_output=True, text=True)
+            return r.stdout if r.returncode == 0 else None
+        return None
+
     res = decide(a.runner, a.job, prev, (_read(a.changed_file) or "").splitlines(), _json_file(a.scope_config),
-                 _json_file(a.areas), files.splitlines() if files is not None else None, jobs)
+                 _json_file(a.areas), files.splitlines() if files is not None else None, jobs,
+                 deps, lambda: _read(a.go_mod))
     print(json.dumps(res) if a.json else f"mode={res['mode']}\nreason={res['reason']}\n"
-          + "\n".join("args=" + json.dumps(i) for i in res["invocations"]))
+          + "\n".join("args=" + json.dumps(i) for i in res["invocations"])
+          + "".join("\nthen=" + json.dumps(i) for i in res["then"]))
     return 0
 
 
