@@ -64,7 +64,8 @@ def base_env(extra=None):
     env = dict(os.environ)
     env.update({'GIT_CONFIG_NOSYSTEM': '1', 'GIT_CONFIG_GLOBAL': str(TMP / 'nullconfig'),
                 'GIT_TERMINAL_PROMPT': '0', 'CLAUDE_ARTIFACTS_NOW': NOW,
-                'CLAUDE_ARTIFACTS_SETTLE_SEC': '0'})     # AR72: these cases write and publish at one fixed instant
+                'CLAUDE_ARTIFACTS_SETTLE_SEC': '0',
+                'CLAUDE_ARTIFACTS_NO_OPEN': '1'})   # DS283: never open a browser tab from a test     # AR72: these cases write and publish at one fixed instant
     for k in ('GIT_AUTHOR_NAME', 'GIT_AUTHOR_EMAIL', 'GIT_COMMITTER_NAME', 'GIT_COMMITTER_EMAIL',
               'CLAUDE_ARTIFACTS_NO_ZONEINFO', 'CLAUDE_ARTIFACTS_NO_POWERSHELL', 'GIT_DIR', 'GIT_WORK_TREE',
               'LUISMC_ARTIFACTS_WORKTREE'):

@@ -147,7 +147,7 @@ There is no screen. `claude-setup` shows its change plan once. It asks for confi
 | R5.2 | `tools/test_model_profiles.py` check D1 and `m_opus_profile_high`, `m_sonnet_profile_high`, `m_architect_high`, `m_top_level_high` |
 | R5.3 | `tools/test_model_profiles.py` check R1 and `m_role_line`, `m_placeholder` |
 | R5.4 | `tools/test_model_profiles.py` check S1 |
-| R5.6 | `tools/test_model_profiles.py` check X1 and `m_explore_model`, `m_explore_edit_tool` |
+| R5.6 | `tools/test_model_profiles.py` check X1 and `m_explore_model`, `m_explore_edit_tool`; check X2 and `m_own_explore_drift` keep dev-standards' own copy equal to the asset |
 | R5.7 | `tools/test_model_profiles.py` check M1 and `m_rule_missing` |
 | R5.8 | `tools/test_model_profiles.py` check R1 and `m_escalation_line` |
 | R5.9 | `tools/test_model_profiles.py` check O1 and `m_opusplan_set` |

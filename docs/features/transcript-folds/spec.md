@@ -130,7 +130,7 @@ flowchart TB
 | R5.5 | `claude/plugins/transcript-folds/tests/width.test.ts` |
 | R5.6 | `claude/plugins/transcript-folds/tests/tally.test.ts` |
 | R6.2 | `claude/plugins/transcript-folds/tests/purity.test.ts` |
-| R6.3 | `tools/test_model_profiles.py`, check K1 (the keybindings asset holds the three chords and their actions, and the plugin source names the same actions) |
+| R6.3 | `tools/test_model_profiles.py`, check K1 (the keybindings asset holds the two chords and their actions, and the plugin source names the same actions) |
 
 Run the Node suites with `node --test --experimental-strip-types claude/plugins/transcript-folds/tests/*.test.ts`. R5.7 and R6.1 have no automated test; R5.7 was checked in a smoke run of the plugin in Claude Code.
 

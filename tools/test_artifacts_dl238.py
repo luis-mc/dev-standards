@@ -88,7 +88,14 @@ def open_is_skipped_and_stubbed():
     with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.dict(os.environ, {'CI': '1'}):
         assert PA.open_local(__file__) is False
         popen.assert_not_called()
-    env = {k: v for k, v in os.environ.items() if k not in ('CI', 'DISPLAY', 'WAYLAND_DISPLAY')}
+    env = {k: v for k, v in os.environ.items() if k != 'CI'}
+    env['CLAUDE_ARTIFACTS_NO_OPEN'] = '1'                  # DS283: test runs never open a tab
+    with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.object(PA.os, 'startfile', create=True) as sf, \
+            mock.patch.dict(os.environ, env, clear=True):
+        assert PA.open_local(__file__) is False
+        popen.assert_not_called()
+        sf.assert_not_called()
+    env = {k: v for k, v in os.environ.items() if k not in ('CI', 'DISPLAY', 'WAYLAND_DISPLAY', 'CLAUDE_ARTIFACTS_NO_OPEN')}
     with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.dict(os.environ, env, clear=True):
         if sys.platform.startswith('linux'):
             assert PA.open_local(__file__) is False       # no display
