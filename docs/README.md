@@ -16,6 +16,20 @@ Start with the [overview](overview/README.md).
 | `reference/` | What exactly is the value (API, CLI, config keys)? Generated. |
 | `project/` | The artifacts record: progress and decisions in flight. |
 
+## Guides
+
+- [Testing in dev-standards](guides/testing.md)
+- [Set up CI for a project](guides/set-up-ci.md)
+- [Set up the CI fallback and try it on a test repository](guides/ci-fallback-test-run.md)
+- [Shared CI on your machine](guides/shared-self-hosted-runners.md)
+- [Run work in cloud routines](guides/cloud-routines.md)
+- [What the setup skills do and what you can do after](guides/setup-skills.md)
+- [Adopt the lifecycle kit in a project](guides/lifecycle-adoption.md)
+- [Rust beside a JS stack](guides/rust-beside-js.md)
+- [VM checks on a kvm runner](guides/vm-checks.md)
+- [Windows packaging on the Linux pool](guides/windows-packaging.md)
+- [Fix a citation of a removed delivery rule](guides/removed-delivery-ids.md)
+
 ## Settings
 
 `docs.json` holds the app names (`apps`), the topics, the record folder, the default branch (`main`), the days before a doc counts as stale and the code folders the checks map (`code_roots`). The app names in [the apps page](overview/apps.md) are exactly its `apps` values.
