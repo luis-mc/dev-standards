@@ -125,18 +125,18 @@
 <p><b>H2 does not hold as stated.</b> Sonnet high fixed fewer bugs (3 against 4) for less money per pass. Escalation closes the gap: Sonnet first, then Opus on the two failures, costs about $0.94 + $0.68 = $1.62 for the same 4 passes, close to Opus alone ($1.69) but slower. Limits: five fixes is a small sample, and time includes waiting for each agent&rsquo;s own test runs.</p>
 <p>Side finding: the artifact test suite opens a demo Full Progress page in the browser on every local run, because the opener only stays quiet when <code>CI</code> is set (DS283).</p>
 
-<h3>7. Proposed routing</h3>
-<div class="table-scroll"><table><thead><tr><th>Work</th><th>Model</th><th>Effort</th><th>How it is set</th><th>Hangs on</th></tr></thead><tbody>
-<tr><td>Exploration, file lookups, reading logs</td><td>Haiku</td><td>medium</td><td>an <code>Explore.md</code> agent with <code>model: haiku</code></td><td>H1, D6</td></tr>
+<h3>7. Routing, decided 27 Nov</h3>
+<p>The owner chose D6 to D10 on 27 Nov. One change from the proposal: bug fixes stay on Sonnet at medium (D8, the owner&rsquo;s own answer), and any failure goes to Opus. So the proposal&rsquo;s two bug-fix rows (Sonnet high for tight specs, Opus medium for loose specs) become one row. Building it into <code>claude-setup</code> is MP17.</p>
+<div class="table-scroll"><table><thead><tr><th>Work</th><th>Model</th><th>Effort</th><th>How it is set</th><th>Decision</th></tr></thead><tbody>
+<tr><td>Exploration, file lookups, reading logs</td><td>Haiku</td><td>medium</td><td>an <code>Explore.md</code> agent with <code>model: haiku</code></td><td>D6</td></tr>
 <tr><td>Clear-spec code, CRUD, following a skill</td><td>Sonnet</td><td>medium</td><td>today&rsquo;s subagent default</td><td>&mdash;</td></tr>
-<tr><td>Bug fix with a tight spec and a known repro, migrations, tests</td><td>Sonnet</td><td>high</td><td><code>effort</code> on the Agent call</td><td>H2, D8</td></tr>
-<tr><td>Bug fix with a loose spec, or git and merge logic</td><td>Opus</td><td>medium</td><td><code>model</code> on the Agent call</td><td>H2, D8</td></tr>
-<tr><td>Sonnet high fails after a fair try</td><td>Opus</td><td>medium, then high</td><td>escalation rule</td><td>H2, D7</td></tr>
+<tr><td>Bug fixes, migrations, tests</td><td>Sonnet</td><td>medium</td><td>today&rsquo;s subagent default</td><td>D8</td></tr>
+<tr><td>Any Sonnet agent that fails its test or reports NOT READY once</td><td>Opus</td><td>medium, then high</td><td>escalation rule; never Sonnet xhigh</td><td>D7</td></tr>
 <tr><td>Architecture, ambiguous specs, PR and security review</td><td>Opus</td><td>medium</td><td>the architect agent, review agents</td><td>&mdash;</td></tr>
 <tr><td>Hard root-cause bugs, cross-file refactors</td><td>Opus</td><td>high or xhigh</td><td>main session by <code>/model</code></td><td>&mdash;</td></tr>
-<tr><td>Planning a multi-file feature</td><td><code>opusplan</code></td><td>medium</td><td>optional main-session setting</td><td>H3, D10</td></tr>
+<tr><td>Planning a multi-file feature</td><td><code>opusplan</code></td><td>medium</td><td>offered by claude-setup, off by default; warns of the cache re-read on each switch</td><td>D10</td></tr>
 </tbody></table></div>
-<p>Each row that changes <code>claude-setup</code> is an open decision in Decisions (D6 to D10).</p>
+<p>The table goes into <code>.claude/rules/agents-and-integration.md</code> as written here (D9), so every Agent call sets model and effort by kind of work.</p>
 
 <h3>Sources</h3>
 <ul>
