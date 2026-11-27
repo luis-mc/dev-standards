@@ -1059,7 +1059,7 @@ def check_r510_structure_stylesheet_byte_identical(fx):
     out = fx.render('artifacts')
     css = R.structure_css(PLUGIN)
     expect(fx, sub1(out, '<style id="structure-css">' + css, '<style id="structure-css">' + css + 'a{color:red}'), 'artifacts', ['R5.10'])
-    expect(fx, sub1(out, 'font-size: 14.4px;', 'font-size: 17px;'), 'artifacts', ['R5.10'])
+    expect(fx, sub1(out, 'font-size: 12.96px;', 'font-size: 17px;'), 'artifacts', ['R5.10'])
     expect(fx, sub1(out, '<style id="structure-css">', '<style id="structure">'), 'artifacts', ['R4.10', 'R5.10'])
     # the token block must be the one the manifest names
     other = sub1(out, '--paper: #F5F6F8;', '--paper: #FAFAFA;')

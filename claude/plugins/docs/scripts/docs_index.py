@@ -45,14 +45,14 @@ CSS = """
 :root{--bg:#F5F6F8;--fg:#141A23;--muted:#556070;--line:#D5DAE1;--accent:#2D46C8;--code:#ECEEF2;--warn:#9a5b00}
 @media (prefers-color-scheme:dark){:root:not([data-theme=light]){--bg:#0F141B;--fg:#E7EBF0;--muted:#9AA5B4;--line:#2A3442;--accent:#8EA2FF;--code:#1E2733;--warn:#f0b35a}}
 :root[data-theme=dark]{--bg:#0F141B;--fg:#E7EBF0;--muted:#9AA5B4;--line:#2A3442;--accent:#8EA2FF;--code:#1E2733;--warn:#f0b35a}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:14.4px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:12.96px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
 main{max-width:920px;margin:0 auto;padding:16px}header.top{border-bottom:1px solid var(--line);padding:8px 16px;display:flex;gap:16px;align-items:center;flex-wrap:wrap}
 header.top .gen-badge{margin-left:auto}
-a{color:var(--accent)}h1,h2,h3{line-height:1.25}code,pre{background:var(--code);border-radius:4px;font:12.6px ui-monospace,Consolas,monospace}code{padding:1px 4px}pre{padding:12px;overflow:auto}
+a{color:var(--accent)}h1,h2,h3{line-height:1.25}code,pre{background:var(--code);border-radius:4px;font:11.34px ui-monospace,Consolas,monospace}code{padding:1px 4px}pre{padding:12px;overflow:auto}
 table{border-collapse:collapse;display:block;overflow:auto;max-width:100%}th,td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
 blockquote{border-left:3px solid var(--line);margin:0;padding:0 12px;color:var(--muted)}img{max-width:100%}.muted{color:var(--muted)}.stale,.gap{color:var(--warn)}
 input[type=search]{width:100%;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--fg);font:inherit}
-.meta{color:var(--muted);font-size:12.6px}ul.hits{list-style:none;padding:0}ul.hits li{margin:6px 0}.mermaid{text-align:center}
+.meta{color:var(--muted);font-size:11.34px}ul.hits{list-style:none;padding:0}ul.hits li{margin:6px 0}.mermaid{text-align:center}
 """ + B.BADGE_CSS
 
 
