@@ -13,9 +13,9 @@
 - test_dl239_badge_colour_fonts.py: 17 passed.
 - tools/test_artifacts_ds256.py (release tree render): 6 passed.
 - tools/test_artifacts_dl238.py: 5 passed, 1 failed (`writes_to_local_dir`). It fails the same way on the unchanged base branch, so it is not from this task.
-- tools/test_project_artifacts.py: see the final line of this report.
+- tools/test_project_artifacts.py: 140 passed, 0 failed, 1 skipped.
+- tools/test_render_artifacts.py: 163 passed, 0 failed (run in the same background batch, before the last INV-1 edit may have landed).
 - docs_check: 0 errors, 0 warnings.
-- tools/test_render_artifacts.py was not run in full: the session guard refuses it as a heavy suite.
 
 ## Contract points not met or open
 - `docs/design-system/` is empty on this branch, so no design-system rule IDs could be cited. The chips follow the existing `.ci-chip` and checklist status colours; the spec cites R5.40.
