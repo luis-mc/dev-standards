@@ -4,7 +4,7 @@ type: how-to
 ---
 # What the setup skills do and what you can do after
 
-Use this guide to see, before you run a setup, what it will do, and what you have after it. The pattern is in [shared runners, section 13](../features/delivery/shared-self-hosted-runners.md). The feature pages are [project setup](../features/project-setup/spec.md) and [docs](../features/docs/spec.md).
+Use this guide to see, before you run a setup, what it will do, and what you have after it. The pattern is in [shared runners, section 13](shared-self-hosted-runners.md). The feature pages are [project setup](../features/project-setup/spec.md) and [docs](../features/docs/spec.md).
 
 ## How every setup behaves
 

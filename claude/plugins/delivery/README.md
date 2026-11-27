@@ -1,6 +1,6 @@
 # luismc-delivery
 
-Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `docs/architecture/DELIVERYSPEC.md`. Without `.delivery/` the delivery hooks do nothing.
+Delivery guard rails for a project that opts in with a `.delivery/` folder. Rules: `claude/plugins/delivery/references/deliveryspec.md`. Without `.delivery/` the delivery hooks do nothing.
 
 | Script | What it does |
 |---|---|
@@ -139,7 +139,7 @@ python3 scripts/ci_runs.py collect --root . [--repo owner/name] [--slot-log PATH
 - **Slot wait** comes from the machine layer's `slot-log.jsonl` (the folder of `DELIVERY_MACHINE_DIR`, else the machine default). A missing log means a wait of 0.
 - **Fallback in** uses `ci.fallback.after_min` in `.delivery/config.json`. Without it the file says the time is unknown.
 - `delivery_watch.py` runs the collector each tick, at most once a minute. A failure leaves the old file and never fails the tick.
-- Schema: `docs/features/delivery/shared-self-hosted-runners.md` section 12.5. One optional field is added to a finished run: `slot_start_s`, and `fallback: true` for a run that lost its claim.
+- Schema: `docs/guides/shared-self-hosted-runners.md` section 12.5. One optional field is added to a finished run: `slot_start_s`, and `fallback: true` for a run that lost its claim.
 
 Test: `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests -p "test_ci_runs.py"` (fixtures in `tests/fixtures/ci_runs/`).
 

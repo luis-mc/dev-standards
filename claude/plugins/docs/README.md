@@ -20,7 +20,6 @@ Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index
 
 Install: `claude plugin install luismc-docs@dev-standards --scope project`. First use in a repo: `python3 <plugin>/scripts/docs_setup.py migrate` (plan), then `--apply`, set `apps` and `topics` in `docs/docs.json`, `docs_index.py build`, `docs_check.py`.
 
-Coming from `luismc-artifacts` or `luismc-specs`: see [Move to luismc-docs 2](../../../docs/guides/migrate-to-luismc-docs-2.md).
 
 Settings live in `docs/docs.json`: `apps`, `topics`, `record_dir` (default `docs/project`), `default_branch`, `stale_days` (90), `binding`, `code_roots`, `generated_reference`.
 

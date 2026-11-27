@@ -8,7 +8,7 @@ The delivery plugin no longer owns the machine layer. The CI slots, the host loa
 
 This page keeps the parts that still apply to the plugin: how CI runs show in Full Progress, the CI runs file, and the setup pattern. Section numbers stay fixed, so notes that cite them still resolve. The removed sections are gone, not renumbered.
 
-To set up CI for a project, follow the [setup guide](../../guides/set-up-ci.md).
+To set up CI for a project, follow the [setup guide](set-up-ci.md).
 
 
 ### 11. CI runs in Full Progress (D48)

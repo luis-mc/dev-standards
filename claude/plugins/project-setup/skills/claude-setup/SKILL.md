@@ -702,7 +702,7 @@ file it points at exists.
 ## Step 3 — Present one batch summary and confirm once
 
 This is the **plan first** part of the setup pattern (section 13 of
-`docs/features/delivery/shared-self-hosted-runners.md`). Show one plan before
+`docs/guides/shared-self-hosted-runners.md`). Show one plan before
 any change: what it will install, configure and write (with paths), what it
 changes outside the repository, what needs the owner (a yes, an administrator
 shell, a sign-in, a web setting, a secret) and about how long it takes. Do not

@@ -45,7 +45,7 @@ skill must not default them.
 
 ## Setup pattern — how this skill talks to you
 
-This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
+This setup follows section 13 of `docs/guides/shared-self-hosted-runners.md`.
 
 1. **Plan first.** After the interview (Mode 1, step 2) and before anything is written, show one plan: the migrations, packages and endpoints it will write (with paths), the installs it will run, what it changes outside the repository (nothing), what needs the owner (a yes, the interview answers, a secret or key) and about how long it takes. Ask for one yes.
 2. **Do the heavy lifting.** After the yes, build in the order of step 3 and run the installs, the migrations and the `§27.2` test gate yourself. Leave to the owner only what you cannot do (a key or secret for production, a provider setting in a web page). Give each an exact step and check it afterwards.

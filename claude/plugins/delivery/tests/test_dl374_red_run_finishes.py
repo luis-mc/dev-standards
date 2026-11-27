@@ -14,7 +14,6 @@ SHARED = HERE.parent / "templates" / "shared" / "scripts" / "delivery"
 sys.path.insert(0, str(HERE.parent / "scripts"))
 sys.path.insert(0, str(SHARED))
 
-import cancel_joined_runs as CJ  # noqa: E402
 import delivery_doctor as D  # noqa: E402
 import hook_pre_tool as P  # noqa: E402
 import hooklib as H  # noqa: E402
@@ -72,38 +71,6 @@ class Hook(unittest.TestCase):
     def test_read_run_state_fails_open(self):
         with mock.patch.object(P.subprocess, "run", side_effect=OSError("no gh")):
             self.assertIsNone(P.read_run_state("5", "."))
-
-
-class Joined(unittest.TestCase):
-    def test_skips_red_running_run(self):
-        views = {"1": RED_RUNNING, "2": GREEN_RUNNING}
-
-        def gh(*args, repo=None):
-            return 0, json.dumps({"status": "in_progress", "jobs": views[args[2]]}), ""
-
-        with mock.patch.object(CJ, "gh", side_effect=gh):
-            self.assertTrue(CJ.is_red_and_running(1, None))
-            self.assertFalse(CJ.is_red_and_running(2, None))
-        with mock.patch.object(CJ, "gh", return_value=(1, "", "boom")):
-            self.assertFalse(CJ.is_red_and_running(1, None))
-
-    def test_main_skips_unless_blocks_all(self):
-        runs = [{"databaseId": 1, "headBranch": "a", "headSha": "s", "status": "in_progress"}]
-        calls = []
-
-        def gh(*args, repo=None):
-            calls.append(args)
-            if args[:2] == ("run", "view"):
-                return 0, json.dumps({"jobs": RED_RUNNING}), ""
-            return 0, "", ""
-
-        for extra, cancelled in (([], 0), (["--blocks-all"], 1)):
-            calls.clear()
-            out = io.StringIO()
-            with mock.patch.object(CJ, "git", return_value=(0, "", "")), mock.patch.object(CJ, "gh", side_effect=gh), \
-                    mock.patch.object(CJ, "plan", return_value=runs), contextlib.redirect_stdout(out):
-                CJ.main(["--into", "x", "--yes"] + extra)
-            self.assertEqual(sum(1 for c in calls if c[:2] == ("run", "cancel")), cancelled, out.getvalue())
 
 
 WF = """name: ci
