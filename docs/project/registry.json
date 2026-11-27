@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T10:52+00:00",
+  "updated": "2026-11-27T11:09+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12592,6 +12592,35 @@
       "changed": "2026-11-27T10:08+00:00"
     },
     {
+      "id": "DS284",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: model routing in claude-setup",
+      "detail": "Folds MP17 into project-setup and the models spec",
+      "expected": "27 Nov ~11:45",
+      "changed": "2026-11-27T11:08+00:00",
+      "release": 205,
+      "phases": [
+        {
+          "name": "join",
+          "start": "2026-11-27T11:10+00:00",
+          "end": "2026-11-27T11:15+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T11:15+00:00",
+          "end": "2026-11-27T11:35+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T11:35+00:00",
+          "end": "2026-11-27T11:45+00:00"
+        }
+      ],
+      "started": "2026-11-27T11:08+00:00"
+    },
+    {
       "id": "DU1",
       "owner": "design-field-updates",
       "app": "luismc-docs",
@@ -13023,11 +13052,14 @@
       "id": "MP17",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "To do",
+      "status": "Running",
       "item": "Build the chosen routing into claude-setup (D6 to D10)",
       "detail": "Explore.md on Haiku medium (R5 changed), escalation rule, Sonnet medium fixes with Opus on failure, routing table in agents-and-integration.md, opusplan offer; spec and tests",
-      "expected": "",
-      "changed": "2026-11-27T10:52+00:00"
+      "expected": "27 Nov ~11:45",
+      "changed": "2026-11-27T11:09+00:00",
+      "expected_basis": "join, ready PR CI ~20 min, watcher merge",
+      "rides": "DS284",
+      "started": "2026-11-27T11:09+00:00"
     },
     {
       "id": "SO1",
