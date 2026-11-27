@@ -98,7 +98,7 @@
 */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+html { font-size: 90%; scroll-behavior: smooth; scroll-padding-top: 4rem; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -106,7 +106,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14.4px;
+  font-size: 12.96px;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -184,7 +184,7 @@ h1 {
   font-family: var(--font-display);
   font-stretch: var(--font-display-stretch);
   font-weight: 800;
-  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-size: clamp(2rem, 4.05vw, 3rem);
   line-height: 1.05;
   text-wrap: balance;
   margin: .2em 0 .4em;
@@ -195,7 +195,7 @@ header.artifact-header { position: relative; }
 .gen-latest { color: var(--live); }
 .gen-update { color: var(--running-mark); }
 .gen-unknown { color: var(--ink-muted); }
-header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+header.artifact-header p { max-width: none; font-size: 1.08rem; }  /* DS291: the description fills the header width */
 .artifact-meta {
   font-family: var(--font-mono);
   font-size: .8rem;
@@ -890,11 +890,11 @@ details.status-fold > summary strong { min-width: 0; }
 }
 .timeline-scroll { overflow-x: auto; }
 .release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
-.release-timeline .rt-axis { font-size: 9.9px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-axis { font-size: 8.91px; fill: var(--ink-muted); text-anchor: middle; }
 .release-timeline .rt-grid { stroke: var(--rule); }
 .release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
-.release-timeline .rt-name { font-size: 11.7px; font-weight: 600; fill: var(--ink); }
-.release-timeline .rt-sub { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-name { font-size: 10.53px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
@@ -904,13 +904,13 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
 .release-timeline .rt-expected { fill: var(--ink); }
 .release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.release-timeline .rt-day-label { font-size: 10.8px; fill: var(--ink); }
-.release-timeline .rt-live-label { font-size: 10.8px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
-.release-timeline .rt-risk-label { font-size: 9.45px; fill: var(--ink-muted); }
+.release-timeline .rt-day-label { font-size: 9.72px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 9.72px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 8.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
-.release-timeline .rt-now-label { font-size: 9.9px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
-.release-timeline .rt-strip-title { font-size: 10.8px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
-.release-timeline .rt-other-label { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-now-label { font-size: 8.91px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 9.72px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-other.status-running { fill: var(--running-mark); }
 .release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
 .release-timeline .rt-other.status-needs-you { fill: var(--signal); }
@@ -938,7 +938,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
 .release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
 .release-timeline .rt-arrow-head { fill: var(--ink-muted); }
-.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 8.91px; fill: var(--ink-muted); }
 .release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
 .release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
 .release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
@@ -950,15 +950,29 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-tree tr.ch td:first-child::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; border-left: 2px solid var(--ink-muted); }
 .release-tree tr.ch.last td:first-child::before { bottom: 50%; }
 .release-tree tr.ch td:first-child::after { content: ""; position: absolute; left: 20px; top: 50%; width: 16px; border-top: 2px solid var(--ink-muted); }
+
+/* DS295: live CI runs in the release table and task rows (R5.39 to R5.41). Existing .ci-chip look and status colours. */
+.ci-live, .ci-live-cell { --ci-teal: color-mix(in srgb, var(--live) 70%, var(--signal)); }
+.ci-live { list-style: none; margin: .2em 0 0; padding: 0; display: flex; flex-direction: column; gap: .2em; }
+.ci-live li { margin: 0; }
+.ci-live a.ci-chip { color: inherit; text-decoration: none; }
+.ci-live a.ci-chip:hover, .ci-live a.ci-chip:focus-visible { text-decoration: underline; }
+.ci-live-passed { background: var(--done-bg); }
+.ci-live-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
+.ci-live-running { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
+.ci-live-queued { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
+.ci-live-cancelled { background: var(--surface-2); color: var(--ink); }
+.ci-live-fetched { display: block; font-size: .75rem; color: var(--muted, var(--ink)); }
+.ci-live-cell { display: block; margin-top: .25em; }
 </style>
 <style id="extra-css"></style>
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The design</a><a href="#s3"><b>3</b>The rules</a><a href="#s4"><b>4</b>In dev-standards</a><a href="#s5"><b>5</b>Requirements and tests</a><a href="#s6"><b>6</b>What the review changed</a><a href="#s7"><b>7</b>Decisions</a><a href="#s8"><b>8</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.29.0 <span class="gen-flag gen-update">update: 2.29.1</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.31.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Project artifacts standard</h1><p>How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T14:20+00:00">27 Nov 14:20</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 14:11</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T14:21+00:00">27 Nov 14:21</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 14:22</a> (Lisbon)</p>
 <p class="lede">luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.</p>
 <div class="at-a-glance">
 <details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
