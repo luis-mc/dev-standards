@@ -47,7 +47,7 @@ Every rule in section 1 has these columns.
 - **Source**: where the rule came from. rules = the user's rules files. CLAUDE.md = the user's or the project's CLAUDE.md. owner rule = a rule the owner set on that date. owner lesson = a lesson the owner gave; the rule now records it.
 - **Scope**: G = generic (belongs in a plugin), P = project-specific (per-project config or the project's own scripts).
 - **Kind**: STOP = Stop-hook block; PRE = PreToolUse deny; POST = PostToolUse ledger write; SS = SessionStart; WATCH = watcher script; CI = CI guard test; GIT = git hook; TEXT = rules text only.
-- **Today**: Y = enforced, W = warns only, ~ = partly, N = not enforced (rules text only). A hook named here must check the row's ID, and a row a hook checks names that hook; `tools/test_rule_ids.py` fails when they differ.
+- **Today**: Y = enforced, W = warns only, ~ = partly, N = not enforced (rules text only). A hook named here must check the row's ID, and a row a hook checks names that hook; `claude/plugins/delivery/tests/test_rule_ids.py` fails when they differ.
 
 A retired row keeps its ID as one line that says where the rule went (`Merged into Q-4.`). Its ID is never reused.
 
@@ -195,7 +195,7 @@ Goal: each delivery and orchestration rule is a mechanical check in the plugins 
 | Q-4 | Before any question dialog, do every action that does not need the answer: push a joined train, launch queued work, publish. A green PR counts only in merge mode `auto`, where the watcher merges it (DL-03); in `manual` the owner merges and Q-4 skips it. | owner lesson (D8) | G | PRE `AskUserQuestion` | ledger actionable-now set: a green train unmerged that has a PR or a release number (`auto` only), a joined train unpushed, a launch queued | Y `hook_pre_tool.py` |
 | Q-5 | Do not guess missing parameters and do not trickle questions. PreToolUse denies AskUserQuestion when this session has running agents (`agents[].launched_by`, state queued/running) and has already asked a question batch (`owner_questions[].asked_at`) within `question_window_min` (default 60) since the owner's last prompt (`owner_prompt.at`, written by the UserPromptSubmit recorder). The message says to park the question until the agents of this wave report, then ask everything at once. Allowed: every running agent has `blocked_on: "owner"`; the owner's latest prompt asked for questions (`owner_prompt.asked_for_questions`); dialogs issued within `question_batch_sec` (90) of the previous one (Q-1). Switch off with `checks_off: ["Q-5"]`. | owner lesson (D8) | G | PRE `AskUserQuestion` | `agents[]`, `owner_questions[]`, `owner_prompt` | Y `hook_pre_tool.py` |
 
-Counts: 115 rows in section 1: 98 live rules (93 DL, 5 Q) and 17 retired or removed rows. Today: 76 Y, 3 W, 8 ~, 9 N. `tools/test_rule_ids.py` checks this line and the Today column.
+Counts: 115 rows in section 1: 98 live rules (93 DL, 5 Q) and 17 retired or removed rows. Today: 76 Y, 3 W, 8 ~, 9 N. `claude/plugins/delivery/tests/test_rule_ids.py` checks this line and the Today column.
 
 ### Removed rules
 

@@ -173,7 +173,7 @@ jobs:
       # reporting a clean spec forever. Two checks in authspec_check.py did exactly
       # that for their whole existence before this test existed.
       - name: Prove every check still fires
-        run: python3 tools/test_spec_check.py
+        run: python3 claude/plugins/docs/tests/test_spec_check.py
 
       # ARTIFACTSPEC is what the luismc-docs artifacts are built from, so it obeys the
       # same numbering and reference rules as the other binding specs.
@@ -223,12 +223,12 @@ jobs:
       # check that enforces it, or with `advice`. A tag naming a path that does
       # not exist, or an untagged line, fails here.
       - name: Every shipped rule line names its check
-        run: python3 tools/test_rule_tags.py
+        run: python3 claude/plugins/delivery/tests/test_rule_tags.py
 
       # STACKSPEC 13.8: the session guard (test runs, ready pull requests) and
       # run_suite.py, and this repository's suites.json covering every suite.
       - name: Prove the session guard still holds
-        run: python3 tools/test_session_guard.py
+        run: python3 claude/plugins/delivery/tests/test_session_guard.py
 
   # TC7: the delivery area is one job per suite, so the suites run side by side
   # and the area takes as long as its slowest one. Each suite's mutation pass is
@@ -254,7 +254,7 @@ jobs:
       # SKILL.md because a prose precondition is advisory. A guard nobody has
       # watched fail is indistinguishable from one that always exits 0.
       - name: Prove the setup preflight still blocks
-        run: python3 tools/test_preflight.py
+        run: python3 claude/plugins/project-setup/tests/test_preflight.py
 
   # tech-stack-setup copies the delivery scripts into every repository it
   # generates, and an agent trusts the gate's result as the only check a
@@ -281,10 +281,10 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the branch gate and its trust rule still hold
-        run: python3 tools/test_delivery_gate.py --no-mutants
+        run: python3 claude/plugins/delivery/tests/test_delivery_gate.py --no-mutants
 
   # Mutants on: the mutation pass as a 4-way matrix, every shard running every
-  # 4th mutant (tools/test_delivery_gate.py --shard I/N). A shard with no
+  # 4th mutant (claude/plugins/delivery/tests/test_delivery_gate.py --shard I/N). A shard with no
   # mutants passes.
   delivery-gate-shards:
     name: delivery - branch gate and trust rule (shard ${{ matrix.shard }}/4)
@@ -304,7 +304,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove every gate rule is guarded by a check (mutation pass)
-        run: python3 tools/test_delivery_gate.py --no-scenarios --shard ${{ matrix.shard }}/4
+        run: python3 claude/plugins/delivery/tests/test_delivery_gate.py --no-scenarios --shard ${{ matrix.shard }}/4
 
   # The CI half of the same scripts: the watcher that waits for a commit's
   # workflow runs, the default-branch skip check, and the reachability check,
@@ -327,25 +327,25 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the CI scripts and workflow templates still hold
-        run: python3 tools/test_delivery_ci.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_ci.py
 
       - name: Prove the shard balancer, area select and nightly template
-        run: python3 tools/test_ci_speedups.py
+        run: python3 claude/plugins/delivery/tests/test_ci_speedups.py
 
       - name: Prove the shard table guard and sizing
-        run: python3 tools/test_shard_guard.py
+        run: python3 claude/plugins/delivery/tests/test_shard_guard.py
 
       - name: Prove the pass records
-        run: python3 tools/test_delivery_records.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_records.py
 
       - name: Prove the speed probe, limits and database per worker
-        run: python3 tools/test_delivery_speed.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_speed.py
 
       - name: Prove Option 4 (the fallback core and the launchers)
-        run: python3 tools/test_delivery_fallback.py && python3 tools/test_delivery_fallback_launch.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_fallback.py && python3 claude/plugins/delivery/tests/test_delivery_fallback_launch.py
 
       - name: Prove the cloud delivery scripts
-        run: python3 tools/test_delivery_cloud.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_cloud.py
 
   # STACKSPEC 7.0.0 section 13.6: once a train merges, cleanup.py removes its
   # branches, gate-result refs and worktrees. A cleanup that deletes a
@@ -366,7 +366,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove train cleanup removes only what is finished
-        run: python3 tools/test_delivery_cleanup.py ${{ (needs.areas.outputs.mutants_cleanup != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
+        run: python3 claude/plugins/delivery/tests/test_delivery_cleanup.py ${{ (needs.areas.outputs.mutants_cleanup != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
 
   # STACKSPEC 7.0.0 section 13.1: only the newest build artifact of each name is
   # kept, because artifact storage is billed. A pruner that keeps the oldest,
@@ -386,7 +386,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove artifact pruning keeps exactly the newest of each name
-        run: python3 tools/test_artifact_prune.py
+        run: python3 claude/plugins/delivery/tests/test_artifact_prune.py
 
   # DELIVERYSPEC: shared delivery script fixes (scope, guard, change notes).
   delivery-runner:
@@ -403,7 +403,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the shared delivery script fixes (scope, guard, change notes)
-        run: python3 tools/test_delivery_shared_fixes.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_shared_fixes.py
 
   # DELIVERYSPEC: the luismc-delivery plugin: ledger, post-tool recorder, watcher and the hooks.
   delivery-plugin:
@@ -425,13 +425,13 @@ jobs:
         run: python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests
 
       - name: Prove the delivery hooks still block and allow what DELIVERYSPEC says
-        run: python3 -I tools/test_delivery_hooks.py
+        run: python3 -I claude/plugins/delivery/tests/test_delivery_hooks.py
 
       - name: Prove the watcher post-merge steps still hold (DP6)
-        run: python3 -I tools/test_delivery_watch_post_merge.py
+        run: python3 -I claude/plugins/delivery/tests/test_delivery_watch_post_merge.py
 
       - name: Prove the warn-mode report still holds (DP8)
-        run: python3 -I tools/test_delivery_report.py
+        run: python3 -I claude/plugins/delivery/tests/test_delivery_report.py
 
   delivery-smoke:
     name: delivery - packaged-program smoke test
@@ -447,10 +447,10 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the packaged-program smoke test starts and stops what it declares
-        run: python3 tools/test_smoke_packaged.py
+        run: python3 claude/plugins/delivery/tests/test_smoke_packaged.py
 
       - name: Prove the Windows learnings (test table, hold artifacts, token retry, MSI recipe)
-        run: python3 tools/test_delivery_windows.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_windows.py
 
   # STACKSPEC 7.1.0 section 13.6: branches add change notes and the release folds
   # them, so parallel branches never conflict on a spec's version line. A
@@ -470,7 +470,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove change notes are enforced and folded correctly
-        run: python3 tools/test_change_notes.py ${{ (needs.areas.outputs.mutants_notes != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
+        run: python3 claude/plugins/delivery/tests/test_change_notes.py ${{ (needs.areas.outputs.mutants_notes != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
 
   # The area mapping is what decides which of these jobs run at all, so a
   # wrong rule silently skips a suite. Shared paths (this file, ci_areas.py
@@ -623,7 +623,7 @@ jobs:
       # expensive reasoning skills fall to a cheaper default, or a mechanical one
       # burns the larger model. The test reads every SKILL.md and compares.
       - name: Prove every skill's model and effort match the profile table
-        run: python3 tools/test_model_profiles.py
+        run: python3 claude/plugins/project-setup/tests/test_model_profiles.py
 
       # DS122: claude-setup turns on every marketplace plugin; a plugin added
       # to the marketplace but missing from its settings template or table fails.
@@ -632,23 +632,23 @@ jobs:
         run: python3 -m pip install --quiet pyyaml==6.0.2
 
       - name: Prove claude-setup names every marketplace plugin
-        run: python3 tools/test_claude_setup_plugins.py
+        run: python3 claude/plugins/project-setup/tests/test_claude_setup_plugins.py
 
       - name: Prove the Rust checks in check_stack.py still hold
-        run: python3 tools/test_check_stack_rust.py
+        run: python3 claude/plugins/project-setup/tests/test_check_stack_rust.py
 
       - name: Prove the questions stop hook still holds
-        run: python3 tools/test_questions_stop.py
+        run: python3 claude/plugins/project-setup/tests/test_questions_stop.py
 
       # DL263: ci_pin.py pins a project's dev-standards workflow to a release.
       - name: Prove ci_pin.py still holds (DL263)
-        run: python3 -I tools/test_dl263_ci_pin.py
+        run: python3 -I claude/plugins/project-setup/tests/test_dl263_ci_pin.py
 
       - name: Prove the project-setup fixes still hold
-        run: python3 -I tools/test_project_setup_fixes.py
+        run: python3 -I claude/plugins/project-setup/tests/test_project_setup_fixes.py
 
       - name: Prove every setup skill follows the setup pattern
-        run: python3 -I tools/test_setup_pattern.py
+        run: python3 -I claude/plugins/project-setup/tests/test_setup_pattern.py
 
       # DS306: the project-setup plugin's own tests, by unittest discovery.
       - name: Prove the project-setup plugin tests still hold
@@ -672,90 +672,90 @@ jobs:
       # section 5 must hold in what it produces. A renderer that drifts makes
       # every project's artifacts disagree with their own record.
       - name: Prove the artifact renderer still holds
-        run: python3 -I tools/test_render_artifacts.py
+        run: python3 -I claude/plugins/docs/tests/test_render_artifacts.py
 
       # The only writer of the record. The test builds throwaway repositories
       # with a bare remote and runs each command, each conformance check and the
       # push-race and protected-branch exits, so a check that went quiet fails
       # here instead of reporting a clean record forever.
       - name: Prove the artifact commands and checks still hold
-        run: python3 -I tools/test_project_artifacts.py
+        run: python3 -I claude/plugins/docs/tests/test_project_artifacts.py
 
       # Each review finding fixed in AR59 keeps a test that failed before the fix.
       - name: Prove the AR59 artifact fixes still hold
-        run: python3 -I tools/test_artifacts_ar59.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar59.py
 
       # AR60 (state temp files) and AR61 (hourly publish only while work is open).
       - name: Prove the AR60 and AR61 artifact fixes still hold
-        run: python3 -I tools/test_artifacts_ar60.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar60.py
 
       # AR63 (mark-published steps), AR64 (Expected without ~), AR65 (Expected optional on To do).
       - name: Prove the AR63 to AR65 artifact fixes still hold
-        run: python3 -I tools/test_artifacts_ar63.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar63.py
 
       # AR66: a release with no Expected is headed "not scheduled" and passes R5.46.
       - name: Prove the AR66 artifact fix still holds
-        run: python3 -I tools/test_artifacts_ar66.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar66.py
 
       - name: Prove the AR67 artifact fix still holds
-        run: python3 -I tools/test_artifacts_ar67.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar67.py
 
       # DP7 (D2): default Expected by task type; the overdue sweep.
       - name: Prove the DP7 default Expected and overdue sweep still hold
-        run: python3 -I tools/test_artifacts_dp7.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dp7.py
 
       # DS219 (D182): the record defaults to docs/project when nothing says.
       - name: Prove the record default still holds
-        run: python3 -I tools/test_artifacts_ds219.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds219.py
       - name: Prove the release tree still holds
-        run: python3 -I tools/test_artifacts_ds256.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds256.py
 
       # DL429: Full Progress section 0 shows status badges and a generated What is happening text.
       - name: Prove the DL429 status badges still hold
-        run: python3 -I tools/test_artifacts_dl429.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl429.py
 
       # DS258: Full Progress shows a ci-waste badge from the CI runs file.
       - name: Prove the DS258 ci-waste badge still holds
-        run: python3 -I tools/test_artifacts_ds258.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds258.py
 
       # DS272: Full Progress links every pull request number to its page.
       - name: Prove the DS272 pull request links still hold
-        run: python3 -I tools/test_artifacts_ds272.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds272.py
 
       # DS278: a Running or Waiting release has phases or a --no-phases reason; no phases is an outline diamond.
       - name: Prove the DS278 release phases rule still holds
-        run: python3 -I tools/test_artifacts_ds278.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds278.py
 
       # DL173: a ledger or ci-runs file with a missing or newer schema warns.
       - name: Prove the DL173 schema check still holds
-        run: python3 -I tools/test_artifacts_dl173.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl173.py
 
       # DL251: a stale Full Progress lede is a warning.
       - name: Prove the DL251 stale lede warning still holds
-        run: python3 -I tools/test_artifacts_dl251.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl251.py
 
       # DL259: a project design file is checked against the accents contract.
       - name: Prove the DL259 design accents check still holds
-        run: python3 -I tools/test_artifacts_dl259.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl259.py
 
       # DL260: every generated HTML page declares UTF-8 early.
       - name: Prove the DL260 UTF-8 declaration still holds
-        run: python3 -I tools/test_artifacts_dl260.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl260.py
 
       # DL264: mark-deferred --local accepts each of its folders.
       - name: Prove the DL264 mark-deferred folders still hold
-        run: python3 -I tools/test_artifacts_dl264.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl264.py
 
       # DL269: the record refuses U+FFFD.
       - name: Prove the DL269 U+FFFD refusal still holds
-        run: python3 -I tools/test_artifacts_dl269.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl269.py
 
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
       # let a turn end after three blocks, or a session that cannot publish
       # would loop forever.
       - name: Prove the artifact hooks still hold
-        run: python3 -I tools/test_project_artifacts_hooks.py
+        run: python3 -I claude/plugins/docs/tests/test_project_artifacts_hooks.py
 
   transcript-folds:
     name: transcript folds plugin
@@ -806,9 +806,9 @@ jobs:
       # The TypeScript guard templates run for real: fixture projects are built with
       # design_system.py, vitest (exact version, temp dir only) runs the four files.
       - name: Run the design-system guard templates
-        run: python3 -I tools/test_ds_guard_templates.py
+        run: python3 -I claude/plugins/docs/tests/test_ds_guard_templates.py
 
       # The enforcement kit: its Python checks, the design edit hook, the plan-rows
       # check, and the kit's TypeScript self-tests under the Node shim (Node 24 above).
       - name: Prove the design-system enforcement kit still holds
-        run: python3 -I tools/test_ds_enforcement.py
+        run: python3 -I claude/plugins/docs/tests/test_ds_enforcement.py

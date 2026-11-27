@@ -797,7 +797,7 @@ entry (R4.1). `retire` removes a finished feature cleanly and keeps what history
   exists, else `docs/project`. Every path this specification gives as `docs/artifacts/` means this folder. Verified by
   `test_record_dir_setting_absent_is_the_old_path`, `test_record_dir_setting_is_used_by_every_command`,
   `test_record_dir_setting_outside_docs_is_refused`, `test_hooks_read_the_record_dir_setting` and the cases of
-  `tools/test_artifacts_ds219.py`.
+  `claude/plugins/docs/tests/test_artifacts_ds219.py`.
 - **R4.38** — `move-record NEW_DIR [--yes]` moves the record folder to NEW_DIR (same rules as R4.37) and writes the
   setting; moving back to `docs/artifacts` removes the key. It is a plain file move: it does not run git, so the
   project commits the moved folder and `.claude/artifacts.json` when it chooses (R4.28). Without `--yes` it is a
@@ -1181,7 +1181,7 @@ double-click.
   the release table (R5.42c). Verified by `test_running_release_needs_phases`,
   `test_no_phases_escape_hatch`, `test_no_phases_refusals`,
   `test_check_finds_a_release_without_phases` and `test_older_row_without_phases_warns`
-  in `tools/test_artifacts_ds278.py`.
+  in `claude/plugins/docs/tests/test_artifacts_ds278.py`.
 - **R5.42** — Section 0 of the full-progress artifact holds, after the status key
   and before the checklist, the **release timeline** whenever at least one
   release is open (Running, Waiting, To do, Needs you or On hold) and nothing
@@ -1236,7 +1236,7 @@ double-click.
   estimate with no phases. The figure stays deterministic (R7.4). `check` finds
   a release row that does not match. Verified by `test_no_phases_diamond_is_an_outline`,
   `test_no_phases_live_eta_cell` and `test_no_phases_reason_in_the_table`
-  in `tools/test_artifacts_ds278.py`.
+  in `claude/plugins/docs/tests/test_artifacts_ds278.py`.
 - **R5.43** — The look of the timeline uses the design tokens only, through
   classes of the structure stylesheet: phases are bars in `--running-mark`
   (agents), `--signal` (join), `--live` (PR CI) and `--ink` (merge and cleanup);
@@ -1412,7 +1412,7 @@ double-click.
   steps, so every step stays reachable; step labels stay on one line with the
   full name in `title`; and a legend of the bar colours. Times
   are tabular figures and in the stamp's time zone. Colours come from the design
-  tokens only. Verified by the `ci_runs_*` cases in `tools/test_render_artifacts.py`.
+  tokens only. Verified by the `ci_runs_*` cases in `claude/plugins/docs/tests/test_render_artifacts.py`.
 - **R5.52** — `--phase NAME=HH:MM-HH:MM` (and `task-add`) reads a phase list with no
   date from the first HH:MM phase: that time takes the occurrence nearest now, yesterday, today
   or tomorrow, whichever is within 12 hours, the same idea as the nearest year of a
@@ -1926,7 +1926,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 - **R8.16** — (Retired in AR50.) There is no before-command hook: `hooks/hooks.json`
   registers no `PreToolUse` hook, nothing pushes the record before `gh pr create`,
   `gh pr ready` or `gh pr merge`, and `hook_before_command.py` is removed (DS304). Verified by
-  `hooks_json_registers_no_before_command_hook` in `tools/test_project_artifacts_hooks.py`.
+  `hooks_json_registers_no_before_command_hook` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py`.
 - **R8.17** — The end-of-turn hook does not push (R4.13). The publish gate and the
   background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
   `hooks_never_write_record` in the same file.
@@ -2130,7 +2130,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   - the release lines of R5.47 and R5.47a, and `mark-deferred` when the daily limit refuses a publish (R9.7).
 
   The file is the list; `rule_file_carries_the_activity_rules` and the other `rule_file_carries_*` cases of
-  `tools/test_project_artifacts_hooks.py` check it.
+  `claude/plugins/docs/tests/test_project_artifacts_hooks.py` check it.
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
   (R8.9) prints it in every project that has a record, every session, so a rule
   change reaches every project with the plugin and no copy can go stale.
@@ -2181,11 +2181,11 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 
 ## 13. Test gate
 
-- **R13.1** — `tools/test_project_artifacts.py` builds throwaway git repos with
+- **R13.1** — `claude/plugins/docs/tests/test_project_artifacts.py` builds throwaway git repos with
   a local bare remote (to prove it is never touched) and proves each command, each check of §14 (one fixture per
   check that fails without it), INV-1 to INV-3, R4.13 to R4.29, R6.10, R6.11, R5.31, R5.32,
   R5.33 to R5.39, R5.45 to R5.47, R5.8a, R4.30, R4.31 to R4.38, R7.4 to R7.6, R9.5 and R10.6.
-- **R13.2** — `tools/test_project_artifacts_hooks.py` feeds sample hook input
+- **R13.2** — `claude/plugins/docs/tests/test_project_artifacts_hooks.py` feeds sample hook input
   to each hook and asserts the queue, the exit code and the output, including
   R8.4, R8.8 to R8.17 and INV-4, and that every hook does nothing without a
   manifest.

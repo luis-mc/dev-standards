@@ -15,6 +15,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ci_areas as ca  # noqa: E402
 
 PSP = "claude/plugins/project-setup"
+DT = "claude/plugins/docs/tests"
+PT = PSP + "/tests"
+LT = "claude/plugins/delivery/tests"
 TS = PSP + "/skills/tech-stack-setup"
 FAILS: list[str] = []
 
@@ -46,41 +49,47 @@ for path, want in [
     ("claude/plugins/docs/skills/spec-check/assets/spec_check.py", {"specs"}),
     (f"{TS}/assets/stack-profile.md", {"specs"}),
     ("tools/authspec_check.py", {"specs"}),
-    ("tools/test_spec_check.py", {"specs"}),
+    (f"{DT}/test_spec_check.py", {"specs"}),
     ("tools/route-ratelimit-map.json", {"specs"}),
     (".claude/settings.json", {"specs"}),
     (".claude/suites.json", {"specs"}),
     (f"{PSP}/scripts/preflight.py", {"delivery"}),
-    ("tools/test_kit_suite_sim.py", {"delivery"}),
+    (f"{LT}/test_kit_suite_sim.py", {"delivery"}),
     ("claude/plugins/delivery/templates/shared/scripts/delivery/join.py", {"delivery"}),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", {"delivery"}),
-    ("tools/test_delivery_gate.py", {"delivery"}),
-    ("tools/test_artifact_prune.py", {"delivery"}),
-    ("tools/test_delivery_shared_fixes.py", {"delivery"}),
-    ("tools/test_ci_speedups.py", {"delivery"}),
+    (f"{LT}/test_delivery_gate.py", {"delivery"}),
+    (f"{LT}/test_artifact_prune.py", {"delivery"}),
+    (f"{LT}/test_delivery_shared_fixes.py", {"delivery"}),
+    (f"{LT}/test_ci_speedups.py", {"delivery"}),
     ("claude/plugins/delivery/scripts/delivery_ledger.py", {"delivery"}),
-    ("tools/test_delivery_hooks.py", {"delivery"}),
-    ("tools/test_change_notes.py", {"delivery"}),
-    ("tools/test_preflight.py", {"delivery"}),
-    ("tools/test_rule_tags.py", {"specs"}),
+    (f"{LT}/test_delivery_hooks.py", {"delivery"}),
+    (f"{LT}/test_change_notes.py", {"delivery"}),
+    (f"{PT}/test_preflight.py", {"delivery"}),
+    (f"{LT}/test_rule_tags.py", {"specs"}),
     ("claude/plugins/docs/rules/project-artifacts.md", {"specs", "artifacts"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md", {"specs", "profiles"}),
     ("claude/plugins/docs/scripts/render_artifacts.py", {"artifacts"}),
     ("claude/plugins/docs/scripts/hook_session_start_artifacts.py", {"artifacts"}),
-    ("tools/test_artifacts_dl251.py", {"artifacts"}),
-    ("tools/test_artifacts_dl269.py", {"artifacts"}),
+    (f"{DT}/test_artifacts_dl251.py", {"artifacts"}),
+    (f"{DT}/test_artifacts_dl269.py", {"artifacts"}),
     ("claude/plugins/docs/design/DESIGN.md", {"artifacts"}),
-    ("tools/test_project_artifacts_hooks.py", {"artifacts"}),
-    ("tools/test_render_artifacts.py", {"artifacts"}),
+    (f"{DT}/test_project_artifacts_hooks.py", {"artifacts"}),
+    (f"{DT}/test_render_artifacts.py", {"artifacts"}),
     ("claude/plugins/audits/skills/security-audit/SKILL.md", {"profiles"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json", {"profiles"}),
     ("claude/plugins/agents/agents/architect.md", {"profiles"}),
-    ("tools/test_model_profiles.py", {"profiles"}),
+    (f"{PT}/test_model_profiles.py", {"profiles"}),
     (f"{PSP}/scripts/ci_pin.py", {"profiles"}),
-    ("tools/test_dl263_ci_pin.py", {"profiles"}),
-    ("tools/test_project_setup_fixes.py", {"profiles"}),
-    ("tools/test_setup_pattern.py", {"profiles"}),
+    (f"{PT}/test_dl263_ci_pin.py", {"profiles"}),
+    (f"{PT}/test_project_setup_fixes.py", {"profiles"}),
+    (f"{PT}/test_setup_pattern.py", {"profiles"}),
     (f"{PSP}/tests/test_so9_update_offer.py", {"profiles"}),
+    (f"{PT}/test_check_stack_rust.py", {"profiles"}),
+    (f"{PT}/test_claude_setup_plugins.py", {"profiles"}),
+    (f"{PT}/test_questions_stop.py", {"profiles"}),
+    (f"{LT}/test_session_guard.py", {"specs"}),
+    (f"{LT}/test_rule_ids.py", {"delivery"}),
+    (f"{LT}/test_shard_guard.py", {"delivery"}),
     ("claude/plugins/docs/tests/fixtures/vitest_shim/run.mjs", {"docs"}),
     ("claude/plugins/transcript-folds/hooks/transcript_folds.tsx", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/hooks/fold/width.ts", {"transcript-folds"}),
@@ -89,6 +98,11 @@ for path, want in [
     ("claude/plugins/transcript-folds/types/state.d.ts", {"transcript-folds"}),
     ("claude/plugins/docs/scripts/docs_check.py", {"docs"}),
     ("claude/plugins/docs/tests/test_check.py", {"docs"}),
+    # DS307: the docs plugin tests that came from tools/ keep their areas
+    (f"{DT}/test_artifacts_dp7.py", {"artifacts"}),
+    (f"{DT}/test_project_artifacts.py", {"artifacts"}),
+    (f"{DT}/test_ds_enforcement.py", {"docs"}),
+    (f"{DT}/test_ds_guard_templates.py", {"docs"}),
     ("claude/plugins/docs/hooks/hooks.json", {"docs", "artifacts"}),
     ("claude/plugins/docs/templates/feature-spec.md", {"docs"}),
     ("claude/plugins/docs/references/docspec.md", {"specs", "docs"}),
@@ -118,13 +132,13 @@ for path in ["docs/artifacts/feature-x.html", "docs/plans/test-cost-train.md",
 check("docs-only mix", hit(["docs/a.md", "docs/artifacts/b.html", "README.md"]), set())
 
 # a union, and Windows separators
-check("union", hit(["docs/a.md", "tools/test_render_artifacts.py",
-                    "tools/test_model_profiles.py"]), {"artifacts", "profiles"})
-check("backslashes", hit(["tools\\test_render_artifacts.py"]), {"artifacts"})
+check("union", hit(["docs/a.md", f"{DT}/test_render_artifacts.py",
+                    f"{PT}/test_model_profiles.py"]), {"artifacts", "profiles"})
+check("backslashes", hit(["claude\\plugins\\docs\\tests\\test_render_artifacts.py"]), {"artifacts"})
 check("transcript-folds with a manifest bump and docs",
       hit(["claude/plugins/transcript-folds/.claude-plugin/plugin.json", "docs/a.md"]), set())
 check("transcript-folds union",
-      hit(["claude/plugins/transcript-folds/hooks/fold/lines.ts", "tools/test_model_profiles.py"]),
+      hit(["claude/plugins/transcript-folds/hooks/fold/lines.ts", f"{PT}/test_model_profiles.py"]),
       {"transcript-folds", "profiles"})
 check("transcript-folds is light advice",
       ca.advice(["claude/plugins/transcript-folds/hooks/fold/lines.ts"]), "light: test locally only")
@@ -159,21 +173,21 @@ for path, want in [
     ("claude/plugins/delivery/templates/shared/.githooks/pre-push", (T, T, F, F)),
     ("claude/plugins/delivery/templates/shared/.github/workflows/train-cleanup.yml", (T, F, T, F)),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", (T, F, T, F)),
-    ("tools/test_delivery_gate.py", (T, T, T, F)),
-    ("tools/test_delivery_cleanup.py", (T, F, T, F)),
-    ("tools/test_change_notes.py", (T, F, F, T)),
-    ("tools/test_delivery_ci.py", (F, F, F, F)),
+    (f"{LT}/test_delivery_gate.py", (T, T, T, F)),
+    (f"{LT}/test_delivery_cleanup.py", (T, F, T, F)),
+    (f"{LT}/test_change_notes.py", (T, F, F, T)),
+    (f"{LT}/test_delivery_ci.py", (F, F, F, F)),
     (f"{PSP}/scripts/preflight.py", (F, F, F, F)),
     (f"{TS}/assets/tooling/ts/vitest.config.ts", (F, F, F, F)),
-    ("tools/test_render_artifacts.py", (F, F, F, F)),
+    (f"{DT}/test_render_artifacts.py", (F, F, F, F)),
     ("docs/a.md", (F, F, F, F)),
 ]:
     check(f"mutants {path}", mflags([path]), want)
 check("mutants: delivery_log + cleanup test only cleanup",
-      mflags([D + "delivery_log.py", "tools/test_delivery_cleanup.py"]), (T, F, T, F))
+      mflags([D + "delivery_log.py", f"{LT}/test_delivery_cleanup.py"]), (T, F, T, F))
 check("mutants with other changes", mflags(["docs/a.md", D + "join.py"]), (T, T, T, F))
 check("forced mutants need delivery work",
-      mflags(["tools/test_model_profiles.py"], force_mutants=True), (F, F, F, F))
+      mflags([f"{PT}/test_model_profiles.py"], force_mutants=True), (F, F, F, F))
 check("mutants forced with delivery", mflags([D + "x.py"], force_mutants=True), (T, T, T, T))
 check("mutants forced run_all", ca.classify([], run_all=True, force_mutants=True),
       {**{a: True for a in ca.AREAS}, "mutants": True, "mutants_gate": True,
@@ -196,7 +210,7 @@ check("advice specs light", ca.advice([f"{PSP}/references/stackspec.md"]),
 check("advice heavy delivery", ca.advice([f"{PSP}/scripts/preflight.py"], "DS9-a"),
       "heavy: delivery -> run `gh workflow run spec-lint.yml --ref DS9-a -f areas=delivery`")
 check("advice heavy lists touched areas",
-      ca.advice(["claude/plugins/docs/scripts/render_artifacts.py", "tools/test_model_profiles.py"], "b"),
+      ca.advice(["claude/plugins/docs/scripts/render_artifacts.py", f"{PT}/test_model_profiles.py"], "b"),
       "heavy: artifacts -> run `gh workflow run spec-lint.yml --ref b -f areas=artifacts,profiles`")
 check("advice shared path is every area, heavy",
       ca.advice(["tools/ci_areas.py"], "b"),
@@ -250,8 +264,8 @@ with tempfile.TemporaryDirectory() as tmp:
     git(tmp, "init", "-q")
     base = commit(tmp, "README.md")
     docs = commit(tmp, "docs/artifacts/x.html")
-    prof = commit(tmp, "tools/test_model_profiles.py")
-    dgate = commit(tmp, "tools/test_delivery_gate.py")
+    prof = commit(tmp, f"{PT}/test_model_profiles.py")
+    dgate = commit(tmp, f"{LT}/test_delivery_gate.py")
     none = {"specs": "false", "delivery": "false", "artifacts": "false", "profiles": "false",
             "transcript-folds": "false", "docs": "false", "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
             "mutants_notes": "false"}

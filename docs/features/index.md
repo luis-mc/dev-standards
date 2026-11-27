@@ -8,14 +8,14 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-01 |
+| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-27 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.5.2 | 2026-11-27 |
 
 ### luismc-audits
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-09 |
+| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-27 |
 
 ### luismc-delivery
 
@@ -43,13 +43,13 @@
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.5.2 | 2026-11-27 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.20.0 | 2026-11-27 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.4.0 | 2026-11-27 |
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-27 |
 
 ### luismc-transcript-folds
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-27 |
 
 ## By topic
 
@@ -63,8 +63,8 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-01 |
-| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-09 |
+| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-27 |
+| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-27 |
 
 ### auth
 
@@ -108,8 +108,8 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-01 |
-| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-09 |
+| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-27 |
+| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-27 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.5.2 | 2026-11-27 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.20.0 | 2026-11-27 |
 
@@ -137,7 +137,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-27 |
 
 ## By status
 
@@ -145,8 +145,8 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-01 |
-| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-09 |
+| [Architect agent (luismc-agents)](agents/spec.md) | luismc-agents | audits, models | live | 0.1.1 | 2026-11-27 |
+| [Audit skills (luismc-audits)](audits/spec.md) | luismc-audits | audits, models | live | 0.1.1 | 2026-11-27 |
 | [Delivery guard rails](delivery/spec.md) | luismc-delivery, luismc-project-setup | delivery, hooks, ci | live | 0.59.0 | 2026-11-27 |
 | [Delivery speed](delivery-speed/spec.md) | luismc-project-setup | delivery, ci | live | 0.20.0 | 2026-11-27 |
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.19.0 | 2026-11-27 |
@@ -156,7 +156,7 @@
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.20.0 | 2026-11-27 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.2 | 2026-11-27 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.4.0 | 2026-11-27 |
-| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-26 |
+| [Transcript folds](transcript-folds/spec.md) | luismc-transcript-folds, luismc-project-setup | transcripts | live | 0.4.0 | 2026-11-27 |
 
 ## Gaps
 

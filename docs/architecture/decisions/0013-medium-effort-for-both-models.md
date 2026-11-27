@@ -24,4 +24,4 @@ The default is medium for both models, in every skill profile, in `claude-setup`
 
 ## Consequences
 
-Cost drops, and one table (`model-profiles.json`) holds the default. A test fails if any profile drifts from medium (`tools/test_model_profiles.py`, check D1). A project that wants high sets it itself. See the [models spec](../../features/models/spec.md).
+Cost drops, and one table (`model-profiles.json`) holds the default. A test fails if any profile drifts from medium (`claude/plugins/project-setup/tests/test_model_profiles.py`, check D1). A project that wants high sets it itself. See the [models spec](../../features/models/spec.md).

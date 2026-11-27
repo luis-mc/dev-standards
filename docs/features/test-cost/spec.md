@@ -12,7 +12,7 @@ code:
   - .github/workflows/spec-lint.yml
   - .github/workflows/nightly.yml
   - tools/test_ci_areas.py
-  - tools/test_delivery_gate.py
+  - claude/plugins/delivery/tests/test_delivery_gate.py
 last_verified: 2026-11-27
 artifact: feature-test-and-validation-cost.html
 ---
@@ -186,9 +186,9 @@ Areas: `specs`, `delivery`, `artifacts`, `profiles`, `transcript-folds`, `docs`.
 | Requirement | Test |
 |---|---|
 | R5.1, R5.2, R5.3, R5.5, R5.9 | `tools/test_ci_areas.py` |
-| R5.4, R5.7 | `tools/test_delivery_gate.py`, `tools/test_delivery_cleanup.py` |
-| R5.6 | `tools/test_ci_speedups.py` |
-| R6.2 | `tools/test_rule_tags.py` |
+| R5.4, R5.7 | `claude/plugins/delivery/tests/test_delivery_gate.py`, `claude/plugins/delivery/tests/test_delivery_cleanup.py` |
+| R5.6 | `claude/plugins/delivery/tests/test_ci_speedups.py` |
+| R6.2 | `claude/plugins/delivery/tests/test_rule_tags.py` |
 
 ## 10. Decisions
 

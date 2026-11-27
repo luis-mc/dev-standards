@@ -630,7 +630,7 @@ real start + typical duration with the dependency named; the next train is joine
 during CI and pushed at green; waits are gaps; trains leave when green at any
 hour; agent ETAs are setup + work + checks). Every rule line in the three rule
 files ends with `<!-- check: <DL id or Q id> -->` naming the DELIVERYSPEC id that
-enforces it, or `<!-- advice -->`. `tools/test_rule_tags.py` fails on an id the
+enforces it, or `<!-- advice -->`. `claude/plugins/delivery/tests/test_rule_tags.py` fails on an id the
 spec does not define.
 
 ### `.delivery/config.json` — project target, add if missing, NEVER overwrite
@@ -956,6 +956,6 @@ spec-check, project-artifact-check, task-add, task-status-update, docs-index,
 docs-note, docs-check) and `setup` (Sonnet, medium: this skill). Every profile is medium, the
 owner's default for both models. Every skill's `model:` and `effort:`
 frontmatter must match its group. This skill's own frontmatter does.
-`tools/test_model_profiles.py` enforces that, so change the JSON first and the
+`claude/plugins/project-setup/tests/test_model_profiles.py` enforces that, so change the JSON first and the
 skill files after. The file is not copied to a target, and nothing here applies
 it to a user's settings.

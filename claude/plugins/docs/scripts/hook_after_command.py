@@ -258,7 +258,7 @@ RULE_TAG_RE = re.compile(r'[ \t]*<!-- (?:check:[^>]*|advice) -->')
 
 def strip_rule_tags(text):
     """The rule text without its trailing `<!-- check: ... -->` / `<!-- advice -->` tags: they are for
-    maintainers and tools/test_rule_tags.py, not for the session."""
+    maintainers and claude/plugins/delivery/tests/test_rule_tags.py, not for the session."""
     return RULE_TAG_RE.sub('', text)
 
 

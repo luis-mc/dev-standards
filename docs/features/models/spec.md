@@ -14,7 +14,7 @@ code:
   - claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md
   - claude/plugins/project-setup/skills/claude-setup/assets/.claude/agents/Explore.md
   - claude/plugins/agents/agents/*.md
-  - tools/test_model_profiles.py
+  - claude/plugins/project-setup/tests/test_model_profiles.py
 last_verified: 2026-11-27
 artifact: feature-model-and-effort-profiles.html
 ---
@@ -143,14 +143,14 @@ There is no screen. `claude-setup` shows its change plan once. It asks for confi
 
 | Requirement | Test |
 |---|---|
-| R5.1 | `tools/test_model_profiles.py` checks P1 and P2 and proves them with `m_wrong_model`, `m_wrong_effort`, `m_no_model_line`, `m_unknown_skill` |
-| R5.2 | `tools/test_model_profiles.py` check D1 and `m_opus_profile_high`, `m_sonnet_profile_high`, `m_architect_high`, `m_top_level_high` |
-| R5.3 | `tools/test_model_profiles.py` check R1 and `m_role_line`, `m_placeholder` |
-| R5.4 | `tools/test_model_profiles.py` check S1 |
-| R5.6 | `tools/test_model_profiles.py` check X1 and `m_explore_model`, `m_explore_edit_tool`; check X2 and `m_own_explore_drift` keep dev-standards' own copy equal to the asset |
-| R5.7 | `tools/test_model_profiles.py` check M1 and `m_rule_missing` |
-| R5.8 | `tools/test_model_profiles.py` check R1 and `m_escalation_line` |
-| R5.9 | `tools/test_model_profiles.py` check O1 and `m_opusplan_set` |
+| R5.1 | `claude/plugins/project-setup/tests/test_model_profiles.py` checks P1 and P2 and proves them with `m_wrong_model`, `m_wrong_effort`, `m_no_model_line`, `m_unknown_skill` |
+| R5.2 | `claude/plugins/project-setup/tests/test_model_profiles.py` check D1 and `m_opus_profile_high`, `m_sonnet_profile_high`, `m_architect_high`, `m_top_level_high` |
+| R5.3 | `claude/plugins/project-setup/tests/test_model_profiles.py` check R1 and `m_role_line`, `m_placeholder` |
+| R5.4 | `claude/plugins/project-setup/tests/test_model_profiles.py` check S1 |
+| R5.6 | `claude/plugins/project-setup/tests/test_model_profiles.py` check X1 and `m_explore_model`, `m_explore_edit_tool`; check X2 and `m_own_explore_drift` keep dev-standards' own copy equal to the asset |
+| R5.7 | `claude/plugins/project-setup/tests/test_model_profiles.py` check M1 and `m_rule_missing` |
+| R5.8 | `claude/plugins/project-setup/tests/test_model_profiles.py` check R1 and `m_escalation_line` |
+| R5.9 | `claude/plugins/project-setup/tests/test_model_profiles.py` check O1 and `m_opusplan_set` |
 
 R5.5, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Whether a skill's effort reverts after its turn was never settled (see section 11).
 
@@ -182,7 +182,7 @@ Source: `claude/plugins/project-setup/skills/claude-setup/`
 | `assets/.claude/agents/Explore.md` | The Explore agent on Haiku |
 | `SKILL.md` | The setup steps |
 
-Also `claude/plugins/agents/agents/*.md` (the architect's model and effort) and `tools/test_model_profiles.py`.
+Also `claude/plugins/agents/agents/*.md` (the architect's model and effort) and `claude/plugins/project-setup/tests/test_model_profiles.py`.
 
 ## Versions
 

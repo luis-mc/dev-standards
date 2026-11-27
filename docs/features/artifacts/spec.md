@@ -19,11 +19,11 @@ code:
   - claude/plugins/docs/scripts/plan_rows_check.py
   - claude/plugins/docs/scripts/hook_after_command.py
   - claude/plugins/docs/scripts/hook_end_of_turn.py
-  - tools/test_artifacts_dp7.py
-  - tools/test_artifacts_dl429.py
-  - tools/test_artifacts_ds258.py
-  - tools/test_artifacts_ds272.py
-  - tools/test_artifacts_ds278.py
+  - claude/plugins/docs/tests/test_artifacts_dp7.py
+  - claude/plugins/docs/tests/test_artifacts_dl429.py
+  - claude/plugins/docs/tests/test_artifacts_ds258.py
+  - claude/plugins/docs/tests/test_artifacts_ds272.py
+  - claude/plugins/docs/tests/test_artifacts_ds278.py
   - claude/plugins/docs/scripts/pr_links.py
   - claude/plugins/docs/skills/feature-artifact-new/**
   - claude/plugins/docs/skills/full-progress-artifact-new/**
@@ -33,11 +33,11 @@ code:
   - claude/plugins/docs/templates/feature-artifact.html
   - claude/plugins/docs/templates/full-progress-artifact.html
   - claude/plugins/docs/templates/project-artifact.css
-  - tools/test_project_artifacts.py
-  - tools/test_project_artifacts_hooks.py
-  - tools/test_render_artifacts.py
-  - tools/test_artifact_prune.py
-  - tools/test_artifacts_ar*.py
+  - claude/plugins/docs/tests/test_project_artifacts.py
+  - claude/plugins/docs/tests/test_project_artifacts_hooks.py
+  - claude/plugins/docs/tests/test_render_artifacts.py
+  - claude/plugins/delivery/tests/test_artifact_prune.py
+  - claude/plugins/docs/tests/test_artifacts_ar*.py
 last_verified: 2026-11-27
 artifact: feature-project-artifacts-standard.html
 ---
@@ -198,23 +198,23 @@ flowchart LR
 
 **R5.29** — Nothing needs hand input. An open release with no `pr` takes it from `.delivery/ledger.json`: the train whose branch is `<TASK-ID>-integration` belongs to that release. An open release with no `release_waits_on` waits on every earlier open release when its train holds commits of the other train not yet on the base branch (git ancestry, skipped when git cannot say), or when `deploy.serial` is true in `.delivery/config.json` and the other train merged first. `--pr` and `--release-waits-on` win. Both reads are read-only; with no ledger nothing changes. The tree (R5.28) then shows for any project with a linked PR. (DL420, ARTIFACTSPEC R5.59) Proof: `claude/plugins/docs/tests/test_dl420_ledger_links.py`.
 
-**R5.30** — The release table shows below the timeline whenever any release is open; the figure is the tree only with a carrier PR or a dependency. A release with no PR is a row of its own with CI "own run". (DL428, ARTIFACTSPEC R5.60) Proof: `tools/test_artifacts_ds256.py`.
+**R5.30** — The release table shows below the timeline whenever any release is open; the figure is the tree only with a carrier PR or a dependency. A release with no PR is a row of its own with CI "own run". (DL428, ARTIFACTSPEC R5.60) Proof: `claude/plugins/docs/tests/test_artifacts_ds256.py`.
 
-**R5.31** — Section 0 of Full Progress opens with one full-width row of badges, not collapsible lines. A badge is a small labelled chip. The row shows the count of tasks that need you, are running, built, waiting, to do and live in the last 24 hours (a count of 0 shows no badge, except Needs you); each active release with its Live ETA; the carrier PRs; the CI runs; the agents, running now and launched in all, each split into local and cloud; and the last Live release with its time. A Needs you badge with tasks, and a CI badge with a failed run that no later run fixed, are marked in the status colours. The count badges replace the count tiles. No task listing is lost: every task stays in the release groups. A feature artifact keeps its At a glance block and its tiles. (DL429, ARTIFACTSPEC R5.61) Proof: `tools/test_artifacts_dl429.py`.
+**R5.31** — Section 0 of Full Progress opens with one full-width row of badges, not collapsible lines. A badge is a small labelled chip. The row shows the count of tasks that need you, are running, built, waiting, to do and live in the last 24 hours (a count of 0 shows no badge, except Needs you); each active release with its Live ETA; the carrier PRs; the CI runs; the agents, running now and launched in all, each split into local and cloud; and the last Live release with its time. A Needs you badge with tasks, and a CI badge with a failed run that no later run fixed, are marked in the status colours. The count badges replace the count tiles. No task listing is lost: every task stays in the release groups. A feature artifact keeps its At a glance block and its tiles. (DL429, ARTIFACTSPEC R5.61) Proof: `claude/plugins/docs/tests/test_artifacts_dl429.py`.
 
-**R5.32** — Under the badges, Full Progress shows a "What is happening" list of at most 8 short bullets, built on every render from the record, the ledger and the CI runs file. There is one bullet for each active release and each of the last 3 Live releases. A bullet names the release as `RELEASE-n` with its PR, then says what went wrong (failed CI jobs by name, fix rounds, a hold, what needs you, a merge not cleaned up, no smoke test), what is being done about it (a running agent, a CI run in progress, or that nothing is running yet) and what went well. With no active release the list says so. This text replaces the lede in Full Progress; a feature artifact keeps its lede. (DL429, ARTIFACTSPEC R5.62) Proof: `tools/test_artifacts_dl429.py`.
+**R5.32** — Under the badges, Full Progress shows a "What is happening" list of at most 8 short bullets, built on every render from the record, the ledger and the CI runs file. There is one bullet for each active release and each of the last 3 Live releases. A bullet names the release as `RELEASE-n` with its PR, then says what went wrong (failed CI jobs by name, fix rounds, a hold, what needs you, a merge not cleaned up, no smoke test), what is being done about it (a running agent, a CI run in progress, or that nothing is running yet) and what went well. With no active release the list says so. This text replaces the lede in Full Progress; a feature artifact keeps its lede. (DL429, ARTIFACTSPEC R5.62) Proof: `claude/plugins/docs/tests/test_artifacts_dl429.py`.
 
-**R5.33** — The badges and the bullets read `.delivery/ci-runs.json` and `.delivery/ledger.json` and write nothing. A run belongs to a release when its `why` names the release's PR (`#N`) or the train lists its run ID. With no CI runs file there is no CI badge; with no ledger there is no PR, agent or train detail, and the rest still shows. (DL429, ARTIFACTSPEC R5.63) Proof: `tools/test_artifacts_dl429.py`.
+**R5.33** — The badges and the bullets read `.delivery/ci-runs.json` and `.delivery/ledger.json` and write nothing. A run belongs to a release when its `why` names the release's PR (`#N`) or the train lists its run ID. With no CI runs file there is no CI badge; with no ledger there is no PR, agent or train detail, and the rest still shows. (DL429, ARTIFACTSPEC R5.63) Proof: `claude/plugins/docs/tests/test_artifacts_dl429.py`.
 
-**R5.34** — Next to the CI badge, Full Progress shows a CI waste badge, built from the finished runs in `.delivery/ci-runs.json`: `62% green · 31 min per merged PR · 14 min cancelled (7 d)`. Green is the finished runs that succeeded over all finished runs. Minutes per merged PR is the time of the finished runs that name a PR, over the PRs of releases Live in the last 7 days (`n/a` with none). Cancelled minutes count runs completed in the last 7 days. With no CI runs, or no finished run, there is no badge. It is a plain badge, never marked failed. (DS258, ARTIFACTSPEC R5.64) Proof: `tools/test_artifacts_ds258.py`.
+**R5.34** — Next to the CI badge, Full Progress shows a CI waste badge, built from the finished runs in `.delivery/ci-runs.json`: `62% green · 31 min per merged PR · 14 min cancelled (7 d)`. Green is the finished runs that succeeded over all finished runs. Minutes per merged PR is the time of the finished runs that name a PR, over the PRs of releases Live in the last 7 days (`n/a` with none). Cancelled minutes count runs completed in the last 7 days. With no CI runs, or no finished run, there is no badge. It is a plain badge, never marked failed. (DS258, ARTIFACTSPEC R5.64) Proof: `claude/plugins/docs/tests/test_artifacts_ds258.py`.
 
-**R5.35** — Every place in Full Progress that names a pull request by number is a link to that PR when a URL can be built: the release table, the tree figure label, the `(PR #N)` of a "What is happening" bullet and the Carrier PR badge. The link keeps its text, opens with `target="_blank" rel="noopener noreferrer"`, and is plain text when no URL can be built. A provider table in `pr_links.py` maps `github`, `gitlab` and `custom` to a URL pattern; only `https` is linked and every value is escaped. Whether `target="_blank"` opens a new window on a published claude.ai page is unverified (the page is sandboxed); the link still works as a normal link. (DS272, ARTIFACTSPEC R5.65) Proof: `tools/test_artifacts_ds272.py`.
+**R5.35** — Every place in Full Progress that names a pull request by number is a link to that PR when a URL can be built: the release table, the tree figure label, the `(PR #N)` of a "What is happening" bullet and the Carrier PR badge. The link keeps its text, opens with `target="_blank" rel="noopener noreferrer"`, and is plain text when no URL can be built. A provider table in `pr_links.py` maps `github`, `gitlab` and `custom` to a URL pattern; only `https` is linked and every value is escaped. Whether `target="_blank"` opens a new window on a published claude.ai page is unverified (the page is sandboxed); the link still works as a normal link. (DS272, ARTIFACTSPEC R5.65) Proof: `claude/plugins/docs/tests/test_artifacts_ds272.py`.
 
-**R5.36** — The manifest holds an optional `pr_links` (`provider`, `repo`, `host`, `template`), checked by `check`. When it is absent, `render` reads `git config --get remote.origin.url` (https or ssh, github or gitlab) and writes it to the manifest through `project_artifacts.py`; when it cannot be derived, labels stay plain text. `pr-links` sets it by hand. The render itself never runs git. (DS272, ARTIFACTSPEC R5.66) Proof: `tools/test_artifacts_ds272.py`.
+**R5.36** — The manifest holds an optional `pr_links` (`provider`, `repo`, `host`, `template`), checked by `check`. When it is absent, `render` reads `git config --get remote.origin.url` (https or ssh, github or gitlab) and writes it to the manifest through `project_artifacts.py`; when it cannot be derived, labels stay plain text. `pr-links` sets it by hand. The render itself never runs git. (DS272, ARTIFACTSPEC R5.66) Proof: `claude/plugins/docs/tests/test_artifacts_ds272.py`.
 
-**R5.37** — A release that is Running or Waiting has phases. `set-task-status` exits 1 when it moves a task to Running or Waiting and the task's release (its own, or the one it rides) has none; the message says to give `--phase agents=HH:MM-HH:MM` and the other phases. To do, Built, Live, Dropped and `--no-release` tasks are exempt. `--no-phases REASON` (two words or more, Running or Waiting only) stores the reason on the release and is the only way round it. `check` reports an open release with neither, with a warning instead for a row changed before 26 Nov 2026. (DS278, ARTIFACTSPEC R5.41a) Proof: `tools/test_artifacts_ds278.py`.
+**R5.37** — A release that is Running or Waiting has phases. `set-task-status` exits 1 when it moves a task to Running or Waiting and the task's release (its own, or the one it rides) has none; the message says to give `--phase agents=HH:MM-HH:MM` and the other phases. To do, Built, Live, Dropped and `--no-release` tasks are exempt. `--no-phases REASON` (two words or more, Running or Waiting only) stores the reason on the release and is the only way round it. `check` reports an open release with neither, with a warning instead for a row changed before 26 Nov 2026. (DS278, ARTIFACTSPEC R5.41a) Proof: `claude/plugins/docs/tests/test_artifacts_ds278.py`.
 
-**R5.38** — A release with no phases is an outline diamond on the timeline, never a filled one. Its Live ETA cell in the release table reads `<time> · no phases`, and a `--no-phases` reason shows in the Item cell. (DS278, ARTIFACTSPEC R5.42c) Proof: `tools/test_artifacts_ds278.py`.
+**R5.38** — A release with no phases is an outline diamond on the timeline, never a filled one. Its Live ETA cell in the release table reads `<time> · no phases`, and a `--no-phases` reason shows in the Item cell. (DS278, ARTIFACTSPEC R5.42c) Proof: `claude/plugins/docs/tests/test_artifacts_ds278.py`.
 
 **R5.39** — At `pending --refresh` and `render`, the plugin asks `gh` for the workflow runs of each open task and release: `gh pr view N --json headRefOid,mergeCommit`, then `gh run list --commit <sha> --json name,status,conclusion,url,createdAt,updatedAt,headBranch,event` for the PR head and, once merged, the merge commit; runs whose branch is the release's `tag`; and, for a task with no PR, runs of a pushed branch named `<task-id>-*`. Live and Dropped tasks are not fetched. The runs are stored on the task as `ci_runs` (`fetched_at`, `runs` with `name`, `state`, `url`, `created`, `updated`, `kind`). The fetch is read-only and takes an injectable runner. `CLAUDE_ARTIFACTS_NO_GH=1` skips it. With no `gh`, no network or any error, the runs stored last stay with their fetched time, and the render never fails. `ci_runs` is not part of the publish fingerprint. (DS295) Proof: `claude/plugins/docs/tests/test_ds295_live_ci.py`.
 
@@ -275,44 +275,44 @@ flowchart TB
 
 | Requirement | Test |
 |---|---|
-| R5.1 | `test_one_full_progress`, `test_feature_new_runs_init_first` in `tools/test_project_artifacts.py` |
-| R5.2 | `test_mark_published_leaves_registry_byte_identical`, `test_non_task_commands_leave_registry_alone` in `tools/test_project_artifacts.py` |
-| R5.3 | `test_set_task_status`, `test_set_task_status_only_touches_its_artifacts` in `tools/test_project_artifacts.py` |
+| R5.1 | `test_one_full_progress`, `test_feature_new_runs_init_first` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.2 | `test_mark_published_leaves_registry_byte_identical`, `test_non_task_commands_leave_registry_alone` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.3 | `test_set_task_status`, `test_set_task_status_only_touches_its_artifacts` in `claude/plugins/docs/tests/test_project_artifacts.py` |
 | R5.17 | `test_badge_in_both_pages`, `test_project_design_changes_accent_not_page_colour`, `test_latest_flag_does_not_make_pages_stale` in `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
-| R5.4 | `test_status_nearest` in `tools/test_project_artifacts.py` |
-| R5.9a | `test_deferred_copy_is_the_repo_copy_with_its_feature_pages`, `test_deferred_local_page_lives_in_the_local_file_not_the_manifest`, `test_deferred_local_page_is_opened_once_per_deferral` in `tools/test_project_artifacts.py`; `tools/test_artifacts_dl264.py` |
-| R5.5 | `test_determinism` in `tools/test_project_artifacts.py` |
-| R5.6 | `test_earlier_findings_do_not_block_a_change`, `test_a_new_finding_is_refused_beside_earlier_ones` in `tools/test_project_artifacts.py` |
-| R5.37 | `test_running_release_needs_phases`, `test_no_phases_escape_hatch`, `test_no_phases_refusals`, `test_check_finds_a_release_without_phases`, `test_older_row_without_phases_warns` in `tools/test_artifacts_ds278.py` |
-| R5.38 | `test_no_phases_diamond_is_an_outline`, `test_no_phases_live_eta_cell`, `test_no_phases_reason_in_the_table` in `tools/test_artifacts_ds278.py` |
-| R5.7 | `test_mark_published_refuses_a_feature_artifact`, `test_pending_never_lists_a_feature_artifact` in `tools/test_project_artifacts.py` |
-| R5.8 | `test_detail_only_change_needs_no_publish`, `test_status_change_needs_a_publish` in `tools/test_project_artifacts.py` |
-| R5.9 | `test_deferred_publish_does_not_block_until_the_reset` in `tools/test_project_artifacts.py`; `end_of_turn_reminds_once_while_deferred` in `tools/test_project_artifacts_hooks.py` |
-| R5.10 | `test_pending_refresh_lists_an_unchanged_full_progress` in `tools/test_project_artifacts.py`; `stop_blocks_when_full_progress_is_over_an_hour_old` in `tools/test_project_artifacts_hooks.py` |
-| R5.11 | `test_release_expected_is_the_end_of_the_last_phase`, `test_release_refusals` in `tools/test_project_artifacts.py` |
+| R5.4 | `test_status_nearest` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.9a | `test_deferred_copy_is_the_repo_copy_with_its_feature_pages`, `test_deferred_local_page_lives_in_the_local_file_not_the_manifest`, `test_deferred_local_page_is_opened_once_per_deferral` in `claude/plugins/docs/tests/test_project_artifacts.py`; `claude/plugins/docs/tests/test_artifacts_dl264.py` |
+| R5.5 | `test_determinism` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.6 | `test_earlier_findings_do_not_block_a_change`, `test_a_new_finding_is_refused_beside_earlier_ones` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.37 | `test_running_release_needs_phases`, `test_no_phases_escape_hatch`, `test_no_phases_refusals`, `test_check_finds_a_release_without_phases`, `test_older_row_without_phases_warns` in `claude/plugins/docs/tests/test_artifacts_ds278.py` |
+| R5.38 | `test_no_phases_diamond_is_an_outline`, `test_no_phases_live_eta_cell`, `test_no_phases_reason_in_the_table` in `claude/plugins/docs/tests/test_artifacts_ds278.py` |
+| R5.7 | `test_mark_published_refuses_a_feature_artifact`, `test_pending_never_lists_a_feature_artifact` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.8 | `test_detail_only_change_needs_no_publish`, `test_status_change_needs_a_publish` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.9 | `test_deferred_publish_does_not_block_until_the_reset` in `claude/plugins/docs/tests/test_project_artifacts.py`; `end_of_turn_reminds_once_while_deferred` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py` |
+| R5.10 | `test_pending_refresh_lists_an_unchanged_full_progress` in `claude/plugins/docs/tests/test_project_artifacts.py`; `stop_blocks_when_full_progress_is_over_an_hour_old` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py` |
+| R5.11 | `test_release_expected_is_the_end_of_the_last_phase`, `test_release_refusals` in `claude/plugins/docs/tests/test_project_artifacts.py` |
 | R5.11a | `claude/plugins/docs/tests/test_dl359_phase_gap_midnight.py` (a phase after a gap past midnight, same-day phases, a contiguous wrap) |
-| R5.12 | `test_retire_moves_the_feature_and_check_stays_clean`, `test_retire_refuses_a_feature_with_an_open_task` in `tools/test_project_artifacts.py` |
-| R5.13 | `test_promote_to_spec_writes_the_feature_spec`, `test_promote_mapping_by_heading` in `tools/test_project_artifacts.py` |
+| R5.12 | `test_retire_moves_the_feature_and_check_stays_clean`, `test_retire_refuses_a_feature_with_an_open_task` in `claude/plugins/docs/tests/test_project_artifacts.py` |
+| R5.13 | `test_promote_to_spec_writes_the_feature_spec`, `test_promote_mapping_by_heading` in `claude/plugins/docs/tests/test_project_artifacts.py` |
 | R5.18 | `test_copy_follows_set_task_status_and_task_add`, `test_detail_only_change_reaches_copy_but_is_not_listed`, `test_render_wording`, `test_render_says_refreshed_when_the_copy_was_old`, `test_order_in_hook_and_rule`, `test_mark_published_still_refuses_an_older_copy` in `claude/plugins/docs/tests/test_ar70_publish_copy.py` |
 | R5.19 | `test_task_add_warns_without_a_release_to_ride`, `test_task_add_no_warning_with_an_open_release` in `claude/plugins/docs/tests/test_ar70_publish_copy.py` |
 | R5.20 | `test_burst_is_asked_for_once_after_the_window`, `test_a_turn_end_asks_once_after_its_own_changes`, `test_second_publish_inside_the_window_is_warned_and_one_after_is_not`, `test_changes_unpublished_after_the_window_are_still_asked_for`, `test_settle_key_defaults_to_60_and_is_read_from_config` in `claude/plugins/docs/tests/test_ar72_publish_settle.py` |
-| R5.21 | `test_unchanged_copy_is_not_asked_for_outside_the_hourly_failsafe`, `test_hourly_failsafe_fires_at_60_minutes` in `claude/plugins/docs/tests/test_ar72_publish_settle.py`; `test_pending_refresh_lists_an_unchanged_full_progress` in `tools/test_project_artifacts.py` |
+| R5.21 | `test_unchanged_copy_is_not_asked_for_outside_the_hourly_failsafe`, `test_hourly_failsafe_fires_at_60_minutes` in `claude/plugins/docs/tests/test_ar72_publish_settle.py`; `test_pending_refresh_lists_an_unchanged_full_progress` in `claude/plugins/docs/tests/test_project_artifacts.py` |
 | R5.22 | `test_next_morning_keeps_the_evening_before`, `test_evening_chains_to_next_day`, `test_same_day_stays_today`, `test_dated_phases_keep_their_date`, `test_far_phase_warns_and_succeeds`, `test_clear_with_others_hint`, `test_waiting_expected_with_old_phases_hint` in `claude/plugins/docs/tests/test_ar74_phase_dates.py` |
-| R5.23 | `claude/plugins/docs/tests/test_ar77_where_it_stands.py` (Live part, ranges, Running release, fallback, length, fingerprint, stale-lede warning); `section_one_never_blank` in `tools/test_render_artifacts.py` |
-| R5.24 | `dp7_default_eta_table_and_format`, `dp7_task_add_without_expected_takes_the_default_for_its_type`, `dp7_set_task_status_running_without_expected_takes_the_default` in `tools/test_artifacts_dp7.py` |
-| R5.25 | `dp7_overdue_sweep_moves_only_rows_over_an_hour_past_due` in `tools/test_artifacts_dp7.py`; `stop_warns_once_on_open_rows_past_their_expected_time`, `stop_blocks_once_to_move_a_row_over_an_hour_past_due_and_leaves_needs_you_alone`, `stop_still_blocks_on_the_other_noisy_checks_with_an_overdue_row_present` in `tools/test_project_artifacts_hooks.py` |
-| R5.26 | `validation_rules`, `cli_options_store_and_refuse`, `old_look_without_fields` in `tools/test_artifacts_ds256.py` |
-| R5.27 | `eta_rule_lifts_dependent` in `tools/test_artifacts_ds256.py` |
-| R5.28 | `tree_draws_pr_rows_and_arrows`, `whole_artifact_checks_clean` in `tools/test_artifacts_ds256.py` |
+| R5.23 | `claude/plugins/docs/tests/test_ar77_where_it_stands.py` (Live part, ranges, Running release, fallback, length, fingerprint, stale-lede warning); `section_one_never_blank` in `claude/plugins/docs/tests/test_render_artifacts.py` |
+| R5.24 | `dp7_default_eta_table_and_format`, `dp7_task_add_without_expected_takes_the_default_for_its_type`, `dp7_set_task_status_running_without_expected_takes_the_default` in `claude/plugins/docs/tests/test_artifacts_dp7.py` |
+| R5.25 | `dp7_overdue_sweep_moves_only_rows_over_an_hour_past_due` in `claude/plugins/docs/tests/test_artifacts_dp7.py`; `stop_warns_once_on_open_rows_past_their_expected_time`, `stop_blocks_once_to_move_a_row_over_an_hour_past_due_and_leaves_needs_you_alone`, `stop_still_blocks_on_the_other_noisy_checks_with_an_overdue_row_present` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py` |
+| R5.26 | `validation_rules`, `cli_options_store_and_refuse`, `old_look_without_fields` in `claude/plugins/docs/tests/test_artifacts_ds256.py` |
+| R5.27 | `eta_rule_lifts_dependent` in `claude/plugins/docs/tests/test_artifacts_ds256.py` |
+| R5.28 | `tree_draws_pr_rows_and_arrows`, `whole_artifact_checks_clean` in `claude/plugins/docs/tests/test_artifacts_ds256.py` |
 | R5.39 | `test_fetch_parses_gh_json_and_stores_ci_runs`, `test_states`, `test_failed_fetch_keeps_the_old_runs`, `test_raising_runner_keeps_the_old_runs`, `test_no_gh_skips_the_fetch`, `test_live_and_dropped_tasks_are_not_fetched` in `claude/plugins/docs/tests/test_ds295_live_ci.py` |
 | R5.40 | `test_release_row_shows_name_status_link_and_time` in `claude/plugins/docs/tests/test_ds295_live_ci.py` |
 | R5.41 | `test_task_row_shows_pr_link_and_runs`, `test_branch_task_without_pr_takes_runs_of_its_branch` in `claude/plugins/docs/tests/test_ds295_live_ci.py` |
-| R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `tools/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `tools/test_project_artifacts_hooks.py` |
-| R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `tools/test_project_artifacts_hooks.py` |
-| R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `tools/test_project_artifacts_hooks.py` |
-| R6.6 | `test_time_summer_and_winter`, `test_time_local_fallback_warns` in `tools/test_project_artifacts.py` |
+| R6.1 | `test_writing_commands_change_files_and_leave_git_alone`, `test_only_read_only_git_is_run` in `claude/plugins/docs/tests/test_project_artifacts.py`; `hooks_never_write_record`, `start_runs_no_git_write` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py` |
+| R6.3 | `after_finishes_in_under_two_seconds`, `stop_does_nothing_without_a_manifest` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py` |
+| R6.4 | `stop_fails_open_when_pending_cannot_be_read`, `stop_lets_go_after_three_unchanged_blocks_with_a_system_message` in `claude/plugins/docs/tests/test_project_artifacts_hooks.py` |
+| R6.6 | `test_time_summer_and_winter`, `test_time_local_fallback_warns` in `claude/plugins/docs/tests/test_project_artifacts.py` |
 
-R6.2 and R6.5 have no automated test. R6.5 is a manual check (ARTIFACTSPEC section 13). Page rendering is covered by `tools/test_render_artifacts.py`.
+R6.2 and R6.5 have no automated test. R6.5 is a manual check (ARTIFACTSPEC section 13). Page rendering is covered by `claude/plugins/docs/tests/test_render_artifacts.py`.
 
 ## 10. Decisions
 
@@ -331,7 +331,7 @@ The full list is the ARTIFACTSPEC decision record (D1 to D25). These are the las
 | ARTIFACTSPEC D25 | How does Full Progress know where a pull request lives? | A provider table and an optional `pr_links` setting | 2026-11-26 |
 | ARTIFACTSPEC D26 | What if a running release has no phases? | `set-task-status` refuses it; `--no-phases REASON` is the one way round | 2026-11-26 |
 
-Where the record lives: ARTIFACTSPEC R4.37 gives the lookup order (D182, DS219). With no setting at all it is `docs/project`. The tests are in `tools/test_artifacts_ds219.py`.
+Where the record lives: ARTIFACTSPEC R4.37 gives the lookup order (D182, DS219). With no setting at all it is `docs/project`. The tests are in `claude/plugins/docs/tests/test_artifacts_ds219.py`.
 
 The plugin is part of `luismc-docs` since DS219. The five skills are `luismc-docs:feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add` and `task-status-update`. The artifacts hooks run beside the docs hooks in one `hooks/hooks.json`. The artifacts session hook is `scripts/hook_session_start_artifacts.py`, because the docs plugin has a `scripts/hook_session_start.py` of its own (moved from `scripts/artifacts/` in DS304).
 
@@ -364,7 +364,7 @@ Source: claude/plugins/docs/scripts/hook_session_start_artifacts.py
 | `skills/` | The five skills |
 | `references/artifactspec.md` | ARTIFACTSPEC |
 
-Tests: `tools/test_project_artifacts.py`, `tools/test_project_artifacts_hooks.py`, `tools/test_render_artifacts.py`, `tools/test_artifact_prune.py`, `claude/plugins/docs/tests/test_ds295_live_ci.py`.
+Tests: `claude/plugins/docs/tests/test_project_artifacts.py`, `claude/plugins/docs/tests/test_project_artifacts_hooks.py`, `claude/plugins/docs/tests/test_render_artifacts.py`, `claude/plugins/delivery/tests/test_artifact_prune.py`, `claude/plugins/docs/tests/test_ds295_live_ci.py`.
 
 ## Versions
 

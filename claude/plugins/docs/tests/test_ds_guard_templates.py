@@ -1,0 +1,258 @@
+#!/usr/bin/env python3
+"""Run the TypeScript design-system guard templates for real (DS188).
+
+Builds throwaway projects in a temp dir with design_system.py (init, visuals,
+promote), copies the four templates to scripts/design/, installs a pinned
+vitest there and runs it. Needs git, node 20.12+ and npm with registry access.
+
+Cases:
+  clean     v1 approved, next-version drafted: every guard passes.
+  archived  v1 moved to docs/archive/design-system-v1/, v2 live: layout and
+            freeze guards pass (the freeze case diffs against the commit
+            that still held v1).
+  gap       v1 missing and not archived: the layout guard fails, and only it.
+  components  the opt-in picker templates (design_system.py components --apply): their
+            vitest tests (jsdom) pass and tsc --noEmit is clean (R15.10).
+  raw-inputs  the kit's raw-inputs guard (UX-56) in a project: clean passes; each of
+            type="date", "time", "datetime-local" and "number" in app code fails;
+            a listed entry in raw-inputs.known.json passes.
+
+Run:  python3 claude/plugins/docs/tests/test_ds_guard_templates.py
+"""
+from __future__ import annotations
+
+import json
+import shutil
+import subprocess
+import sys
+import tempfile
+from pathlib import Path
+
+VITEST = "3.2.4"
+# The component templates' test stack, exact versions.
+COMPONENT_DEPS = {"vitest": VITEST, "jsdom": "26.1.0", "react": "19.1.0", "react-dom": "19.1.0",
+                  "typescript": "5.8.3", "@types/react": "19.1.8", "@types/react-dom": "19.1.6"}
+ROOT = Path(__file__).resolve().parents[4]  # claude/plugins/docs/tests
+PLUGIN = ROOT / "claude" / "plugins" / "docs"
+SCRIPT = PLUGIN / "scripts" / "design_system.py"
+TEMPLATES = PLUGIN / "templates" / "design-system" / "guards" / "typescript-vitest"
+KIT = PLUGIN / "templates" / "design-system" / "guards" / "typescript-vitest-kit"
+RAW_INPUT_FILES = ("raw-inputs-scan.ts", "raw-inputs.test.ts", "raw-inputs.known.json")
+RAW_INPUT_TYPES = ("date", "time", "datetime-local", "number")
+ENV_GIT = ["-c", "user.name=t", "-c", "user.email=t@example.invalid", "-c", "commit.gpgsign=false"]
+
+
+def run(cmd, cwd, env=None, check=True):
+    import os
+    e = dict(os.environ)
+    e.update(env or {})
+    p = subprocess.run(cmd, cwd=cwd, env=e, text=True, capture_output=True)
+    if check and p.returncode != 0:
+        raise SystemExit(f"FAIL: {' '.join(map(str, cmd))}\n{p.stdout}\n{p.stderr}")
+    return p
+
+
+def ds(proj, *args):
+    run([sys.executable, str(SCRIPT), "--root", str(proj), *args], proj)
+
+
+def promote(proj, n):
+    ds(proj, "promote", "--approved-by", "owner", "--approved-on", f"2026-01-0{n}",
+       "--evidence", "fixture", "--apply")
+
+
+def commit(proj, msg):
+    run(["git", *ENV_GIT, "add", "-A"], proj)
+    run(["git", *ENV_GIT, "commit", "-q", "-m", msg], proj)
+    return run(["git", "rev-parse", "HEAD"], proj).stdout.strip()
+
+
+def base_project(tmp: Path, name: str, versions: int) -> Path:
+    proj = tmp / name
+    proj.mkdir()
+    run(["git", "init", "-q"], proj)
+    ds(proj, "init", "--apply")
+    ds(proj, "visuals", "--apply")
+    for n in range(1, versions + 1):
+        if n > 1:  # a later promotion needs a change entry in the draft
+            changes = proj / "docs" / "design-system" / "next-version" / "CHANGES.md"
+            changes.write_text(changes.read_text() + f"- C{n}: fixture change\n")
+        promote(proj, n)
+    if versions:  # R15.25: the enforced version needs an implementation approval
+        ds(proj, "approve-implementation", f"v{versions}", "--approved-on", "2026-02-01", "--evidence", "fixture", "--apply")
+    (proj / "src").mkdir()
+    (proj / "src" / "app.ts").write_text("export const title = 'Home';\n")
+    guards = proj / "scripts" / "design"
+    guards.mkdir(parents=True)
+    for f in TEMPLATES.glob("*.ts"):
+        shutil.copy(f, guards / f.name)
+    (proj / "package.json").write_text(json.dumps({
+        "name": "app1", "private": True, "type": "module",
+        "devDependencies": {"vitest": VITEST}}, indent=2))
+    return proj
+
+
+def install(proj: Path, cache: Path | None):
+    if cache is not None:
+        shutil.copytree(cache / "node_modules", proj / "node_modules", symlinks=True)
+        return
+    run(["npm", "install", "--no-audit", "--no-fund", "--save-exact", "--no-package-lock"], proj)
+
+
+def vitest(proj: Path, base: str | None = None) -> dict:
+    env = {"DESIGN_BASE": base} if base else {}
+    p = run(["npx", "vitest", "run", "--reporter=json", "--root", str(proj)], proj, env, check=False)
+    start = p.stdout.find("{")
+    if start < 0:
+        raise SystemExit(f"FAIL: no vitest JSON\n{p.stdout}\n{p.stderr}")
+    return json.loads(p.stdout[start:])
+
+
+def failed_files(result: dict) -> dict[str, list[str]]:
+    out: dict[str, list[str]] = {}
+    for f in result["testResults"]:
+        bad = [a["title"] for a in f["assertionResults"] if a["status"] != "passed"]
+        if f["status"] != "passed" and not bad:
+            bad = [f.get("message", "file failed")]
+        if bad:
+            out[Path(f["name"]).name] = bad
+    return out
+
+
+def expect(label, result, want_fail: dict[str, str] | None):
+    """want_fail None: all pass. Else {file: title substring} and nothing else fails."""
+    bad = failed_files(result)
+    ran = sum(len(f["assertionResults"]) for f in result["testResults"])
+    if want_fail is None:
+        ok = not bad and ran > 0
+    else:
+        ok = set(bad) == set(want_fail) and all(
+            any(want_fail[k] in t for t in bad[k]) for k in want_fail)
+    print(f"{'PASS' if ok else 'FAIL'}: {label} ({ran} tests, failing: {bad or 'none'})")
+    return ok
+
+
+def components_case(tmp: Path) -> bool:
+    proj = tmp / "components"
+    proj.mkdir()
+    run(["git", "init", "-q"], proj)
+    ds(proj, "init", "--apply")
+    ds(proj, "components", "--apply")
+    (proj / "package.json").write_text(json.dumps({
+        "name": "app2", "private": True, "type": "module", "devDependencies": COMPONENT_DEPS}, indent=2))
+    (proj / "tsconfig.json").write_text(json.dumps({"compilerOptions": {
+        "target": "ES2022", "module": "ESNext", "moduleResolution": "bundler", "jsx": "react-jsx",
+        "strict": True, "noEmit": True, "skipLibCheck": True, "types": [],
+        "lib": ["ES2022", "DOM", "DOM.Iterable"]}, "include": ["src"]}, indent=2))
+    install(proj, None)
+    ok = expect("component templates: keyboard, value and limits", vitest(proj), None)
+    tsc = run(["npx", "tsc", "-p", "."], proj, check=False)
+    print(f"{'PASS' if tsc.returncode == 0 else 'FAIL'}: component templates typecheck"
+          + ("" if tsc.returncode == 0 else f"\n{tsc.stdout}{tsc.stderr}"))
+    return ok and tsc.returncode == 0
+
+
+def raw_inputs_case(tmp: Path, cache: Path) -> bool:
+    """The kit's raw-inputs guard (UX-56), run by real vitest on a planted tree."""
+    def project(name: str, app: str, known: list) -> Path:
+        proj = tmp / name
+        (proj / "scripts" / "design").mkdir(parents=True)
+        for f in RAW_INPUT_FILES:
+            shutil.copy(KIT / f, proj / "scripts" / "design" / f)
+        (proj / "scripts" / "design" / "raw-inputs.known.json").write_text(json.dumps({"entries": known}))
+        (proj / "apps" / "web").mkdir(parents=True)
+        (proj / "apps" / "web" / "page.tsx").write_text(app)
+        (proj / "package.json").write_text(json.dumps({
+            "name": name, "private": True, "type": "module", "devDependencies": {"vitest": VITEST}}, indent=2))
+        install(proj, cache)
+        return proj
+    title = "no new native input"
+    ok = expect("raw-inputs: a picker and a text box pass",
+                vitest(project("raw-clean", '<DatePicker /><input type="text" inputMode="numeric" />', [])), None)
+    for t in RAW_INPUT_TYPES:
+        ok &= expect(f'raw-inputs: type="{t}" fails', vitest(project(f"raw-{t}", f'<input type="{t}" />', [])),
+                     {"raw-inputs.test.ts": title})
+    entry = [{"file": "apps/web/page.tsx", "type": "date", "count": 1}]
+    ok &= expect("raw-inputs: a listed entry passes",
+                 vitest(project("raw-listed", '<input type="date" />', entry)), None)
+    return ok
+
+
+def main() -> int:
+    if not shutil.which("node") or not shutil.which("npm"):
+        print("FAIL: node and npm are required")
+        return 1
+    tmp = Path(tempfile.mkdtemp(prefix="ds-guards-"))
+    ok = True
+    try:
+        # clean
+        clean = base_project(tmp, "clean", 1)
+        commit(clean, "clean")
+        install(clean, None)
+        ok &= expect("clean fixture passes", vitest(clean, "HEAD"), None)
+
+        # archived: v1 and v2 approved, then v1 moved to docs/archive/
+        arch = base_project(tmp, "archived", 2)
+        before = commit(arch, "v1 and v2")
+        (arch / "docs" / "archive").mkdir()
+        shutil.move(str(arch / "docs" / "design-system" / "v1"),
+                    str(arch / "docs" / "archive" / "design-system-v1"))
+        commit(arch, "archive v1")
+        install(arch, clean)
+        ok &= expect("archived v1, live v2 passes layout and freeze", vitest(arch, before), None)
+
+        # gap: v1 deleted, not archived. The freeze diff would also flag the delete, so give it
+        # no base to compare with (it then skips); this case is about the layout guard alone.
+        gap = base_project(tmp, "gap", 2)
+        commit(gap, "v1 and v2")
+        shutil.rmtree(gap / "docs" / "design-system" / "v1")
+        install(gap, clean)
+        ok &= expect("v1 missing and not archived fails the layout guard", vitest(gap, "no-such-ref"),
+                     {"design-system-layout.test.ts": "holds only version folders"})
+
+        # R15.25: no implementation approval fails; --as-live passes
+        noimpl = base_project(tmp, "noimpl", 1)
+        ap = noimpl / "docs" / "design-system" / "approvals.json"
+        data = json.loads(ap.read_text())
+        data["versions"]["v1"]["implementation"] = None
+        ap.write_text(json.dumps(data, indent=2))
+        commit(noimpl, "no implementation approval")
+        install(noimpl, clean)
+        ok &= expect("enforced version without implementation approval fails",
+                     vitest(noimpl, "HEAD"), {"design-system-freeze.test.ts": "implementation approval"})
+        ds(noimpl, "approve-implementation", "v1", "--as-live", "--evidence", "live as-is, owner said so", "--apply")
+        ok &= expect("--as-live implementation approval passes", vitest(noimpl, "HEAD"), None)
+
+        # R15.25: an approval entry that lacks evidence fails
+        noev = base_project(tmp, "noev", 1)
+        ap = noev / "docs" / "design-system" / "approvals.json"
+        data = json.loads(ap.read_text())
+        del data["versions"]["v1"]["approved"]["evidence"]
+        ap.write_text(json.dumps(data, indent=2))
+        commit(noev, "approval without evidence")
+        install(noev, clean)
+        ok &= expect("a numbered version with an incomplete approval record fails",
+                     vitest(noev, "HEAD"), {"design-system-freeze.test.ts": "owner approval"})
+
+        # R15.25: a stale gallery warns on a task branch and fails on a release branch
+        stale = base_project(tmp, "stale", 1)
+        tk = stale / "docs" / "design-system" / "next-version" / "tokens.md"
+        tk.write_text(tk.read_text() + "\n| `--ds-x` | `#123456` | x |\n")
+        commit(stale, "stale gallery")
+        run(["git", "checkout", "-q", "-b", "DS1-task"], stale)
+        install(stale, clean)
+        ok &= expect("stale gallery on a task branch only warns", vitest(stale, "HEAD"), None)
+        run(["git", "checkout", "-q", "-b", "release/1.0"], stale)
+        ok &= expect("stale gallery on a release branch fails", vitest(stale, "HEAD"),
+                     {"design-system-gallery.test.ts": "matches the stamp"})
+
+        ok &= raw_inputs_case(tmp, clean)
+        ok &= components_case(tmp)
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+    print("OK" if ok else "NOT OK")
+    return 0 if ok else 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())
