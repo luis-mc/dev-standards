@@ -73,7 +73,7 @@ This specification defines one reusable **authentication and authorization frame
 ### 0.1 Conformance language
 
 - **MUST** / **MUST NOT** — absolute requirement. A violation is a defect.
-- **SHOULD** / **SHOULD NOT** — strong recommendation. A deviation needs a written, reviewed justification in the project's configuration reference (§24).
+- **SHOULD** / **SHOULD NOT** — strong recommendation. A deviation needs a recorded justification and a named approver in the project's Stack Profile (STACKSPEC §0.2).
 - **MAY** — optional.
 
 ### 0.2 Reading order for a generator
@@ -460,7 +460,7 @@ This entity holds:
 |---|---|---|
 | `id` | `id` | PK |
 | `principal_type` / `principal_id` | | |
-| `code_hash` | `bytes` **[HASH]** | Hashed with the password KDF, not a bare digest. These codes have low entropy compared with a random token |
+| `code_hash` | `bytes` **[HASH]** | Hashed with the password KDF, not a bare digest. Each code has ≥128 bits (R8.7), less than a ≥256-bit random token |
 | `consumed_at` | `timestamp?` | |
 | `generation` | `int` | Regeneration invalidates every prior generation atomically |
 | `created_at` | `timestamp` | |
@@ -1433,7 +1433,7 @@ Every one of these **MUST** emit an audit event, on both success and failure. `o
 
 - **R17.2** — Counters **MUST** live in shared state (the cache tier, or `rate_limit_counter` if no cache exists). **Per-process in-memory counters are ineffective** as soon as more than one instance runs. They are a defect in any horizontally scaled or serverless deployment.
 - **R17.3** — Counters **MUST** be keyed on a hashed identifier, never a raw address or email (§5.6).
-- **R17.4** — When the counter store is unavailable, auth endpoints **MUST fail closed** (reject), not open. An unlimited authentication endpoint is worse than a briefly unavailable one.
+- **R17.4** — When the counter store is unavailable, auth endpoints **MUST fail closed** (reject), not open. An unlimited authentication endpoint is worse than a briefly unavailable one. This narrows STACKSPEC §4.6.
 
 ### 17.3 Limits
 
@@ -1810,7 +1810,7 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ### 21.1 Baseline
 
-- **R21.1** — WCAG 2.2 Level **AA** is the floor for every authentication, recovery, consent and account-deletion flow. Level **AAA** contrast (7:1 for normal text, 4.5:1 for large text) **MUST** be met on error messages, validation feedback, status indicators and primary actions.
+- **R21.1** — WCAG 2.2 Level **AA** is the floor for every authentication, recovery, consent and account-deletion flow. Level **AAA** contrast (7:1 for normal text, 4.5:1 for large text) **MUST** be met on error messages, validation feedback, status indicators and primary actions. This narrows STACKSPEC §9.9.
 - **R21.2** — Every flow **MUST** be completable with the keyboard alone.
 - **R21.3** — No focus traps. A modal returns focus to the element that opened it when it closes (WCAG 2.1.2).
 - **R21.4** — Focus indicators **MUST** be visible and **MUST NOT** be suppressed by a reset stylesheet (WCAG 2.4.7, 2.4.11).
@@ -1874,6 +1874,8 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ### 22.1 Latency budgets (P95, server-side)
 
+These budgets narrow STACKSPEC §14.
+
 | Operation | Budget | Notes |
 |---|---|---|
 | Session validation (cache hit) | ≤5 ms | Hot path on every request |
@@ -1935,7 +1937,7 @@ Normative for **every** visual interface built against this API. The compliance 
 - **R22.15** — **Serverless/edge deployments MUST route through an external connection pooler.** Opening a direct persistence connection per invocation exhausts the engine's connection limit under load. That is a P0 cascading-failure vector.
 - **R22.16** — Long-lived processes **MUST** bound pool size below `max_connections ÷ instance_count`, and leave headroom for maintenance.
 - **R22.17** — Every pool **MUST** define an acquisition timeout (default 2 s). Without it, a saturated pool queues requests until memory runs out.
-- **R22.18** — **Every query path MUST enforce a statement/query timeout** (default 3 s for request paths, 30 s for background jobs). One slow query without a timeout pins a connection, drains the pool and stalls every unrelated request queued behind it.
+- **R22.18** — **Every query path MUST enforce a statement/query timeout** (default 3 s for request paths, 10 s for background jobs, the §24.2 ceiling). One slow query without a timeout pins a connection, drains the pool and stalls every unrelated request queued behind it.
 - **R22.19** — Transactions **MUST NOT** stay open across network I/O. Do no KMS call, email send or breach-list lookup inside a transaction. Encrypt before opening it. Send after committing.
 - **R22.20** — Transactions **MUST** be short and **MUST NOT** hold locks across multiple statements on high-write tables.
 
@@ -1970,7 +1972,7 @@ Normative for **every** visual interface built against this API. The compliance 
 
 ### 22.10 Payloads
 
-- **R22.38** — Auth responses **SHOULD** stay under 4 KB and **MUST** stay under 50 KB.
+- **R22.38** — Auth responses **SHOULD** stay under 4 KB and **MUST** stay under 50 KB. This narrows STACKSPEC §4.5.
 - **R22.39** — Permission lists in responses **MUST** be compact names, not nested objects with descriptions.
 - **R22.40** — Compression per R19.23.
 
@@ -2032,7 +2034,7 @@ Normative for **every** visual interface built against this API. The compliance 
 
 - **R24.1** — Every security-relevant value is explicit configuration with a documented secure default. No security value is hardcoded at a call site.
 - **R24.2** — Configuration may **tighten** but never **loosen** past the ceilings in §6.3, §8.5 and §17.3. Code enforces the ceilings, not convention.
-- **R24.3** — The environment or a secrets manager supplies secrets. They are never committed. The repository **MUST** carry secret-scanning in pre-commit and CI.
+- **R24.3** — The environment or a secrets manager supplies secrets. They are never committed. The repository **MUST** carry secret-scanning in pre-commit and CI (STACKSPEC §12).
 
 ### 24.2 Reference
 
@@ -2157,7 +2159,7 @@ Per §27.2.
 
 | Document | Contents |
 |---|---|
-| Configuration reference | Every key from §24.2 with its default, ceiling and effect, and every recorded deviation from a **SHOULD** |
+| Configuration reference | Every key from §24.2 with its default, ceiling and effect. Deviations from a **SHOULD** live in the Stack Profile (§0.1) |
 | Data inventory | §25.1 |
 | Third-party register | §25.6 |
 | Key management runbook | Rotation of signing, pseudonym and data keys; overlap windows; emergency rotation; KMS unavailability |
@@ -2178,9 +2180,9 @@ Per §27.2.
 Run all three audits against the generated code:
 
 ```
-/audits:security-audit
-/audits:compliance-audit
-/audits:performance-audit
+/luismc-audits:security-audit
+/luismc-audits:compliance-audit
+/luismc-audits:performance-audit
 ```
 
 - **R27.1** — All three **MUST** report zero findings: `[OK]`, `[COMPLIANCE OK]` and `[PERF OK]` respectively. Any finding at any severity blocks completion.
@@ -2278,7 +2280,7 @@ All of these **MUST** exist and pass.
 
 ### 27.3 Static gate
 
-- **R27.4** — Secret scanning passes on the working tree **and** on git history.
+- **R27.4** — Secret scanning passes on the working tree **and** on git history (STACKSPEC §12).
 - **R27.5** — Dependency vulnerability scanning reports no known-exploitable vulnerability in the auth module's dependency tree.
 - **R27.6** — The machine-readable description matches the registered routes (R19.25).
 - **R27.7** — No route lacks a permission declaration.
