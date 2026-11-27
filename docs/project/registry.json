@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T12:50+00:00",
+  "updated": "2026-11-27T12:53+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12749,6 +12749,43 @@
         }
       ],
       "started": "2026-11-27T12:36+00:00"
+    },
+    {
+      "id": "DS291",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Full Progress header text uses the full width",
+      "detail": "The description under the page title wraps at 46em; it should fill the header width",
+      "expected": "27 Nov ~13:10",
+      "changed": "2026-11-27T12:53+00:00",
+      "expected_basis": "PR CI ~8 min, watcher merge",
+      "rides": "DS292",
+      "started": "2026-11-27T12:53+00:00"
+    },
+    {
+      "id": "DS292",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Release: header text full width",
+      "detail": "Folds DS291 into docs",
+      "expected": "27 Nov ~13:10",
+      "changed": "2026-11-27T12:53+00:00",
+      "release": 209,
+      "phases": [
+        {
+          "name": "ci",
+          "start": "2026-11-27T12:55+00:00",
+          "end": "2026-11-27T13:05+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T13:05+00:00",
+          "end": "2026-11-27T13:10+00:00"
+        }
+      ],
+      "started": "2026-11-27T12:53+00:00"
     },
     {
       "id": "DU1",
