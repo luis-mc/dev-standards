@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T20:35+00:00",
+  "updated": "2026-11-27T20:36+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -13088,12 +13088,11 @@
       "id": "DS308",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: check_stack --help without PyYAML (smoke fix)",
       "detail": "Plugin smoke failed after RELEASE-210: check_stack.py moved to scripts/ and exited 2 on --help without PyYAML. Lazy import.",
-      "expected": "27 Nov ~20:50",
-      "changed": "2026-11-27T20:34+00:00",
-      "expected_basis": "one-file fix; CI ~5 min",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T20:36+00:00",
       "release": 212,
       "phases": [
         {
