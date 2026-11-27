@@ -15,6 +15,8 @@ What is checked against a repo root:
   X1  assets/.claude/agents/Explore.md names the agent Explore, pins model
       haiku and effort medium, denies Edit, Write and NotebookEdit, and keeps
       its description under 400 characters (every session loads it)
+  X2  this repo's own .claude/agents/Explore.md, when present, equals the
+      asset (dev-standards dogfoods it, DS285)
   O1  SKILL.md names opusplan in its report and the settings template never
       sets it as the model
   E1  the settings template enables luismc-docs@{{MARKETPLACE}} and
@@ -260,6 +262,10 @@ def check(root):
         if len(fm.get("description", "")) >= 400:
             found.append("X1 Explore.md description is 400 characters or more")
 
+    own = root / ".claude/agents/Explore.md"
+    if own.is_file() and explore.is_file() and own.read_bytes() != explore.read_bytes():
+        found.append("X2 .claude/agents/Explore.md differs from the claude-setup asset")
+
     try:
         skill_body = (root / SKILL).read_text(encoding="utf-8")
     except OSError:
@@ -479,6 +485,12 @@ def m_opusplan_set(r):
     edit(r / SETTINGS, '"model": "sonnet"', '"model": "opusplan"')
 
 
+def m_own_explore_drift(r):
+    d = r / ".claude/agents"
+    d.mkdir(parents=True, exist_ok=True)
+    (d / "Explore.md").write_text("---\nname: Explore\n---\nold\n", encoding="utf-8")
+
+
 def m_bad_json(r):
     (r / PROFILES).write_text("{", encoding="utf-8")
 
@@ -505,6 +517,7 @@ MUTATIONS = [
     ("X1 Explore not on Haiku", m_explore_model, "Explore.md model is sonnet, want haiku"),
     ("X1 Explore may edit", m_explore_edit_tool, "Explore.md does not deny Edit"),
     ("R1 escalation line gone", m_escalation_line, "rule file lacks: never Sonnet at xhigh"),
+    ("X2 own Explore drifts", m_own_explore_drift, "differs from the claude-setup asset"),
     ("O1 opusplan set", m_opusplan_set, "sets opusplan as the model"),
     ("E1 plugin not enabled", m_no_enabled_plugins, "does not enable luismc-docs"),
     ("E1 marketplace hard-coded", m_hardcoded_marketplace, "does not enable luismc-docs"),
