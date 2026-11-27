@@ -35,7 +35,6 @@ def rule_file_text():
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 AFTER = os.path.join(SCRIPTS, 'hook_after_command.py')
 STOP = os.path.join(SCRIPTS, 'hook_end_of_turn.py')
-BEFORE = os.path.join(SCRIPTS, 'hook_before_command.py')
 START = os.path.join(SCRIPTS, 'artifacts', 'hook_session_start.py')
 
 TESTS = []
@@ -755,30 +754,13 @@ def stop_fails_open_when_pending_cannot_be_read():
     assert res.get('decision') == 'block' and 'set-task-status AR5' in res['reason'], res
 
 
-def before(work, command, env=None, tool='Bash'):
-    d = {'session_id': 's1', 'cwd': work, 'hook_event_name': 'PreToolUse', 'tool_name': tool,
-         'tool_input': {'command': command}}
-    return run_hook(BEFORE, d, work, env)
-
-
-@test
-def before_command_is_silent_for_pr_commands_and_runs_nothing():
-    """AR50: gh pr create, ready and merge are not preceded by a push; the hook prints nothing."""
-    for cmd, tool in (('gh pr create --title t', 'Bash'), ('gh pr ready', 'Bash'), ('gh pr merge 3 --squash', 'Bash'),
-                      ('cd x && rtk gh pr create --fill', 'Bash'), ('gh pr ready; gh pr view', 'PowerShell')):
-        work = make_repo()
-        env = set_pending(work, mode='broken')
-        rc, out, err, _ = before(work, cmd, env, tool)
-        assert rc == 0 and out.strip() == '' and err.strip() == '', (cmd, rc, out, err)
-        assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log')), cmd
-
-
 @test
 def hooks_json_registers_no_before_command_hook():
     """AR50: the PreToolUse hook only pushed, so it is no longer registered."""
     cfg = read_json(os.path.join(PLUGIN, 'hooks', 'hooks.json'))
     assert 'PreToolUse' not in cfg['hooks'], list(cfg['hooks'])
     assert 'push the record' not in cfg['description'], cfg['description']
+    assert not os.path.exists(os.path.join(SCRIPTS, 'hook_before_command.py')), 'U4: the retired script is gone'
 
 
 @test
@@ -832,20 +814,6 @@ def stop_reads_the_registry_from_the_working_tree():
         'spec': 'ARTIFACTSPEC 1.0.0', 'tasks': [{'id': 'AR30', 'owner': 'project', 'status': 'Running', 'item': 'y'}]}))
     rc, out, _e, _ = stop(work, env)
     assert rc == 0 and out.strip() == '' and 's1' not in stop_state(work), (out, stop_state(work))
-
-
-@test
-def before_command_does_nothing_without_a_manifest_or_when_off():
-    work = make_repo(manifest=False)
-    env = set_pending(work)
-    assert before(work, 'gh pr create', env)[1].strip() == ''
-    assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log'))
-    work = make_repo()
-    env = dict(set_pending(work), CLAUDE_ARTIFACTS_HOOKS='off')
-    assert before(work, 'gh pr create', env)[1].strip() == ''
-    assert not os.path.exists(os.path.join(os.path.dirname(work), 'stubs', 'calls.log'))
-    for raw in ('garbage', '', '[]', '{"tool_input": {"command": 5}}'):
-        assert run_hook(BEFORE, raw, work, set_pending(work))[0] == 0, raw
 
 
 @test
