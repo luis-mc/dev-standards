@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T20:34+00:00",
+  "updated": "2026-11-27T20:35+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -13117,7 +13117,32 @@
         "minutes": 15
       },
       "started": "2026-11-27T20:34+00:00",
-      "pr": 311
+      "pr": 311,
+      "ci_runs": {
+        "fetched_at": "2026-11-27T20:35+00:00",
+        "runs": [
+          {
+            "name": "secret-scan",
+            "state": "passed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46064573577",
+            "created": "2026-11-27T20:34:38Z",
+            "updated": "2026-11-27T20:34:54Z",
+            "branch": "DS308-check-stack-help",
+            "event": "pull_request",
+            "kind": "pr"
+          },
+          {
+            "name": "spec-lint",
+            "state": "passed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46064573332",
+            "created": "2026-11-27T20:34:38Z",
+            "updated": "2026-11-27T20:35:06Z",
+            "branch": "DS308-check-stack-help",
+            "event": "pull_request",
+            "kind": "pr"
+          }
+        ]
+      }
     },
     {
       "id": "DU1",
