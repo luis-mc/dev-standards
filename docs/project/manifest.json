@@ -12,9 +12,9 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "53cc6bf4d506d4c093f14c670f8b3fbe122ab96c1770b7e5a7ab91ee319bbfe3",
-    "published_at": "2026-11-27T21:40+00:00",
-    "published_fingerprint": "cd391558871b410f27ae199e22a8302e1c27f55495d0394e7429bd35df2968a5"
+    "published_sha256": "3463fb0fddeb90831343e34990c088b7a413f9166bd9e31d4c8fca4b3bcadf2a",
+    "published_at": "2026-11-27T21:47+00:00",
+    "published_fingerprint": "924cf48e6abaf103a7e556e1bc8c18a9e96a06ee7b102e8ea9b48580e2278c83"
   },
   "feature_artifacts": [
     {
@@ -25,7 +25,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-11-27T21:40+00:00"
+      "updated": "2026-11-27T21:47+00:00"
     },
     {
       "key": "delivery-speed",
@@ -37,7 +37,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-27T21:40+00:00"
+      "updated": "2026-11-27T21:47+00:00"
     },
     {
       "key": "transcript-folds",
@@ -48,13 +48,13 @@
         "luismc-transcript-folds",
         "luismc-project-setup"
       ],
-      "updated": "2026-11-27T21:40+00:00"
+      "updated": "2026-11-27T21:47+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-27T21:40+00:00",
+  "updated": "2026-11-27T21:47+00:00",
   "retired": [],
   "deleted": [
     {

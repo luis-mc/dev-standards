@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T21:40+00:00",
+  "updated": "2026-11-27T21:47+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -13074,16 +13074,15 @@
       "id": "DS307",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "RELEASE: plugin tests out of tools/ (S7)",
       "detail": "Move plugin tests from tools/ into each plugin's tests/, one area at a time",
-      "expected": "27 Nov ~21:58",
-      "changed": "2026-11-27T21:40+00:00",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T21:47+00:00",
       "release": 211,
       "release_waits_on": [
         "DS302"
       ],
-      "expected_basis": "default ETA, other: 30 min",
       "phases": [
         {
           "name": "agents",
