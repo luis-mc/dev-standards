@@ -11,7 +11,7 @@ code:
   - claude/plugins/docs/skills/spec-new/**
   - claude/plugins/docs/skills/spec-check/**
   - tools/test_spec_check.py
-last_verified: 2026-11-01
+last_verified: 2026-11-27
 ---
 # Spec authoring and checking (luismc-docs)
 
@@ -67,7 +67,7 @@ flowchart LR
 
 ## 7. Design
 
-`claude/plugins/docs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. The repository's tests and CI run that same file. The skills pin `opus` (spec-new) and `sonnet` (spec-check), both at medium effort.
+`claude/plugins/docs/skills/spec-check/assets/spec_check.py` is the checker. It parses headings and definitions, then resolves references. The repository's tests and CI run that same file. The skills pin `opus` (spec-new) and `haiku` (spec-check), both at medium effort.
 
 ## 8. Failure modes
 
