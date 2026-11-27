@@ -70,8 +70,10 @@ Sets up:
 - The Caveman output style
 - `.claude/rules/agents-and-integration.md` — how agents are run and work is
   integrated (replaces `model-delegation.md`)
-- `.claude/rules/clarifying-questions.md` — gather every clarifying question
-  and ask them all at once; written on every install and re-run
+- `~/.claude/rules/clarifying-questions.md` — gather every clarifying question
+  and ask them all at once; written only for a user-level setup outside a
+  project. In a project, `luismc-delivery` injects the rule each session, so
+  claude-setup writes no copy and removes an unchanged old one
 - `.claude/rules/delivery-timing.md` — ETA and train-timing rules; every rule
   line in the three rule files ends with `<!-- check: DL-nn -->` / `Q-n`
   naming the DELIVERYSPEC id that enforces it, or `<!-- advice -->`
@@ -354,8 +356,10 @@ binding, versioned specifications:
 - **`STACKSPEC`** — the technology-neutral shape every generated repo must
   have: contract-first APIs, safe queueing, proper retention and erasure,
   consent-gated analytics, and more. It names no vendor and no framework. It
-  names only properties, so it applies equally to TypeScript and Rust.
+  names only properties, so it applies equally to TypeScript and Rust. File:
+  [`claude/plugins/project-setup/references/stackspec.md`](claude/plugins/project-setup/references/stackspec.md).
 - **`AUTHSPEC`** — the same idea, applied to authentication and authorization.
+  File: [`claude/plugins/project-setup/references/authspec.md`](claude/plugins/project-setup/references/authspec.md).
 
 Because they specify properties instead of products, your project does not
 vendor a copy of either spec. Instead, `tech-stack-setup` writes a **Stack

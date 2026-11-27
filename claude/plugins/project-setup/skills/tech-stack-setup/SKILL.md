@@ -12,7 +12,7 @@ This skill does two things:
    menu. Every option offered is compatible with everything already chosen, and
    every consequence is stated at the moment of the choice.
 2. **Generates a repository** conforming to **`STACKSPEC` 8.1.0**, the binding
-   invariants specification at `references/invariants.md`.
+   invariants specification at the plugin's `references/stackspec.md`.
 
 ## The two halves, and why they are separate
 
@@ -263,7 +263,7 @@ solve.
 Show the complete stack on one screen. Then run the validator:
 
 ```
-python3 assets/check_stack.py --selection <selections.yaml>
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/check_stack.py" --selection <selections.yaml>
 ```
 
 It reports **errors** (combinations that cannot be built) and **warnings**

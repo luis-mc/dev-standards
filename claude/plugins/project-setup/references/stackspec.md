@@ -59,7 +59,7 @@ database engine, host, cache, storage, mail and error tracking. The product
 records the choice in its Stack Profile (§18). This document does not name or
 rank vendors.
 
-### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+### 0.1 What changed
 
 **8.8.0 — 2026-11-27.**
 
@@ -330,9 +330,7 @@ separate:
 <product>/
 ├── apps/            deployables: api, worker, web, admin, ios, android
 ├── packages/        shared modules — see §3
-├── docs/
-│   ├── specs/       binding specifications for this product
-│   └── notes/       superseded specs, research, transcripts
+├── docs/            laid out as DOCSPEC §2 sets
 ├── tools/           codegen, conformance checker, scripts
 └── .github/workflows/
 ```
@@ -562,6 +560,7 @@ endpoint.
   buckets **fail closed**, everything else **fails open**.
 - Limits are configuration, tunable per environment without a code change.
 - Responses MUST carry rate-limit headers, and `Retry-After` on rejection.
+  Auth endpoints send only `Retry-After` (AUTHSPEC R17.7).
 
 ### 4.7 Error hygiene
 
@@ -714,7 +713,8 @@ Derived requirements:
 
 - **Encryption at rest** MUST be enabled for the datastore, object storage and
   backups. Fields classified `secret` MUST *additionally* be encrypted at the
-  application layer, so a datastore dump alone does not expose them.
+  application layer, so a datastore dump alone does not expose them. A one-way
+  hash (AUTHSPEC §5.3) meets this rule.
 - **Minimization.** Every field MUST map to a stated purpose in the
   data-collection inventory (§9.7). A field with no purpose MUST NOT be added,
   and an existing one whose purpose has lapsed MUST be dropped. CI MUST
@@ -1306,8 +1306,9 @@ untested release path is a decision, and it should be a visible one.
 
 ## 12. Security and compliance
 
-- **Secret scanning** runs as a pre-commit hook *and* as a CI gate. The CI scan
-  MUST examine full history, not only the tip commit.
+- **Secret scanning** runs as a pre-commit hook, a pre-push hook (§13.5) *and* as
+  a CI gate. The CI scan MUST examine full history, not only the tip commit.
+  This section owns the rule; other sections cite it.
 - **Dependency scanning** runs in CI on every PR. It fails on known-exploitable
   advisories in production dependencies.
 - **Security headers** go on all browser-facing responses: HSTS with preload, a
@@ -1367,7 +1368,7 @@ MUST fail the build on:
 8. Contract tests
 9. Route-coverage tests — authorization and rate-limit declarations
 10. Dependency scan
-11. Secret scan, over full history
+11. Secret scan, over full history (§12)
 12. Layer-boundary check (§3.2)
 
 Workflows MUST be path-filtered so a change to one surface does not rebuild
@@ -1497,7 +1498,7 @@ the branch it will join. It runs these steps:
    specs as a whole (retired vocabulary, design rules, duplication ratchets,
    spec-note rules). If a guard is scoped by package, a change elsewhere can
    break it unseen.
-2. The secret scan over the branch's new commits.
+2. The secret scan (§12) over the branch's new commits.
 3. Type check of the changed packages and every package that depends on them.
 4. Lint of the same set. It continues past a failing package, so one run
    reports every error.
@@ -1554,7 +1555,7 @@ was merged. The ready pull request's CI still tests the real merge, which is why
 this is safe. The check reports why it accepted the result, and a strict mode
 keeps the exact-base rule.
 
-The guard tests and the secret scan MUST also run as a pre-push hook. They take
+The guard tests and the secret scan (§12) MUST also run as a pre-push hook. They take
 seconds and catch the failures that otherwise reach pull-request CI. The hook
 SHOULD also run type check and lint of the touched packages and their dependents.
 The task runner's cache makes a repeat cheap, and a push that changes no package
@@ -1566,8 +1567,9 @@ scanner CI runs.
 
 ### 13.6 Integration flow
 
-- Each change is a branch named after its task ID, with a draft pull request into
-  an integration branch. Drafts skip CI (§13.1); the branch gate is their check.
+- Each change is a branch named `<task-id>-<slug>` (the DELIVERYSPEC task-branch
+  row), with a draft pull request into an integration branch. Drafts skip CI
+  (§13.1); the branch gate is their check.
 - Shared contracts (types, schemas, interfaces that several branches build on)
   are committed to the integration branch before parallel work starts.
 - Branches join the integration branch through a merge script. It merges each
@@ -1601,8 +1603,8 @@ scanner CI runs.
   needs administrator rights, and without them the check says it was skipped.
 - CI is watched through the workflow runs for the head commit, never through a
   pull request's check list, which can be read before the new run is listed.
-- Branches SHOULD NOT edit a spec's version or change log. Each adds a change
-  note naming the spec and the kind of change. The release folds the notes into
+- Branches MUST NOT edit a spec's version or change log (DOCSPEC R7.1). Each adds
+  a change note naming the spec and the kind of change. The release folds the notes into
   the versions and change logs, so parallel branches do not conflict.
 - When ready pull requests' CI runs on one shared Linux runner, the jobs that need
   no Linux (lint, types, boundary checks, and contract or unit tests that run on
@@ -1952,7 +1954,7 @@ Every item is checkable regardless of stack.
 - [ ] Route-coverage tests for authorization and rate-limit declarations
 - [ ] A suite finding zero tests fails rather than passes
 - [ ] All twelve §13.1 gates present and failing the build
-- [ ] Secret scan covers full history
+- [ ] Secret scan covers full history (§12)
 - [ ] Workflows path-filtered; expensive runners not used on unrelated changes
 - [ ] CI cost kept down (SHOULD): no sub-minute job that could be a step, superseded PR runs cancelled but never default-branch runs, drafts skip CI, installs and task-runner results cached; a dominant job or step split into its own job or parallel shards
 - [ ] Default-branch push runs skip a tree a pull-request run already passed
@@ -1989,7 +1991,8 @@ Every item is checkable regardless of stack.
 
 ## 20. Governance
 
-- Semantic versioning. **A new `MUST` is a major version.**
+- Semantic versioning. **A new `MUST` is a major version only when it breaks a
+  conforming product.**
 - Promoting a `CHOICE` to a `SHOULD` or `MUST` is a major version. Naming a
   vendor anywhere in this document is a defect, not an edit.
 - Products record the `STACKSPEC` version they satisfy in their Stack Profile.

@@ -34,8 +34,7 @@ for _stream in (sys.stdout, sys.stderr):
         _stream.reconfigure(encoding="utf-8")
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-SPEC = (ROOT / "claude/plugins/project-setup/skills/auth-setup"
-        / "references/authentication.md")
+SPEC = ROOT / "claude/plugins/project-setup/references/authspec.md"
 BASE = SPEC.read_text(encoding="utf-8")
 ROUTE_MAP = ROOT / "tools" / "route-ratelimit-map.json"
 

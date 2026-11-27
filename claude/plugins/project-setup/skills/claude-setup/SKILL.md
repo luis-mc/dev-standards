@@ -31,8 +31,8 @@ the repo.
 
 ## Rules live at one level
 
-The three rule files (`agents-and-integration.md`, `clarifying-questions.md`,
-`delivery-timing.md`) go to the **project's `.claude/rules/` only**. Never
+The rule files `agents-and-integration.md` and `delivery-timing.md` go to the
+**project's `.claude/rules/` only**. Never
 install the same rules file at both `~/.claude/rules` and the project's
 `.claude/rules`: Claude loads both, so every request pays for the text twice.
 Write to `~/.claude/rules/` only when the target is not a project (no repository
@@ -40,6 +40,11 @@ to hold `.claude/`). When the owner picks **user** or **both** inside a project,
 the rule files still go to the project only. If `~/.claude/rules/` already holds
 a copy of one of these files and the project gets it, queue the user copy as a
 **removal** the owner confirms in step 3; never delete it silently.
+
+`clarifying-questions.md` is the exception. Its source is the delivery plugin's
+`rules/clarifying-questions.md`, which that plugin's SessionStart hook injects
+in every opted-in project. So this skill writes its copy only to a user-level
+target (`~/.claude/rules/`). See "`rules/clarifying-questions.md`" below.
 
 ## Token cost
 
@@ -147,7 +152,7 @@ Report each offer as **done**, **missing** or **broken**:
 - **delivery** — `.delivery/config.json` present and `delivery_doctor.py` reports no FAIL.
 - **project record** — `.claude/artifacts.json` present.
 - **specs** — spec files present (nothing to install).
-- **CI checks workflow** — `.github/workflows/dev-standards.yml` present. Run `python3 assets/ci_pin.py` and print its line: when the pin is older than the installed luismc-docs, generated docs fail G1 in CI. A missing file is "not installed".
+- **CI checks workflow** — `.github/workflows/dev-standards.yml` present. Run `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/ci_pin.py"` and print its line: when the pin is older than the installed luismc-docs, generated docs fail G1 in CI. A missing file is "not installed".
 - **time zone data** — when `.delivery/config.json` has a `tz`, run `python -c "import zoneinfo; zoneinfo.ZoneInfo('<tz>')"`. Print `tzdata: done` when it loads, `tzdata: missing (delivery_doctor FAILs until installed)` when it fails, and "not applicable" when there is no `tz`. Install nothing in status mode.
 - **plugin updates** — run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/plugin_update_offer.py status` and print its text: the luismc plugins whose version differs from the one this project last applied (SO9). Nothing to apply prints "plugins in step".
 - **repo gates** — `scripts/delivery/` and `.githooks/` present.
@@ -178,7 +183,7 @@ the owner. Steps only the owner can do go to the "Left for you" list.
 - **design system** — run `/luismc-docs:design-system-setup`: `init`, `guards`, style reading, review gallery. Then tell the owner how to open the gallery, what to look at and how to approve (the approval command or the words to say). Promotion to v1 only with the owner's approval date and evidence.
 - **delivery** — `.delivery/config.json` (add if missing, with the chosen `enforcement.mode`), then `delivery_doctor.py`.
 - **project record** — `.claude/artifacts.json` with `record_dir` `docs/project`.
-- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}` is `claude/plugins/docs/skills/spec-check/assets/spec_check.py`, the luismc-docs spec-check skill's script). Fill `{{DEFAULT_BRANCH}}` from `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` (ask the owner when `gh` cannot tell); the workflow's push trigger and design-guard base use it. Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file. Keep the pin in step with the installed plugins: `python3 assets/ci_pin.py --bump` rewrites only the `ref:` value in the working tree (it never commits); `--check` exits 1 when the pin is stale. Tell the owner to commit the change.
+- **CI** — copy `assets/ci/dev-standards.yml` to `.github/workflows/dev-standards.yml` and fill the placeholders. The workflow finds `docs_check.py` and `spec_check.py` through a pinned checkout of the dev-standards repo into `.dev-standards-tools/` (`{{DEV_STANDARDS_REPO}}`, `{{DEV_STANDARDS_REF}}`, `{{DOCS_SCRIPTS}}`, `{{SPEC_CHECK}}` is `claude/plugins/docs/skills/spec-check/assets/spec_check.py`, the luismc-docs spec-check skill's script). Fill `{{DEFAULT_BRANCH}}` from `gh repo view --json defaultBranchRef --jq .defaultBranchRef.name` (ask the owner when `gh` cannot tell); the workflow's push trigger and design-guard base use it. Ask the owner for the repo and a tag or commit if they cannot be read from the marketplace. Never overwrite an existing workflow file. Keep the pin in step with the installed plugins: `python3 "${CLAUDE_PLUGIN_ROOT}/scripts/ci_pin.py" --bump` rewrites only the `ref:` value in the working tree (it never commits); `--check` exits 1 when the pin is stale. Tell the owner to commit the change.
 
 **Plugin update offer (SO9).** A SessionStart hook of this plugin (`hooks/hooks.json`, `scripts/plugin_update_offer.py`) reads the installed plugin versions and the project's stamp `.claude/plugin-versions.json`. When a version differs, it hands the agent an offer: ask the owner once, with AskUserQuestion, whether to apply the new project config. On a yes run this skill (it adds what is missing and never overwrites), including `ci_pin.py --bump` for the CI pin. After a run that finished, or on that yes, run `python3 ${CLAUDE_PLUGIN_ROOT}/scripts/plugin_update_offer.py apply`; on a no run `... decline`, which stops the offer until a plugin changes again. Add `.claude/plugin-versions.json` to the files the owner commits.
 - **branch protection** — after a yes, check whether the workflow has run on the default branch: `gh run list --workflow dev-standards.yml --branch <default>`.
@@ -597,16 +602,25 @@ without them, the cited lines are guidance for tooling that has not been
 generated yet. Say so in the step 5 report when the
 project target has no `scripts/delivery/` directory.
 
-### `rules/clarifying-questions.md` — overwrite unconditionally
+### `rules/clarifying-questions.md` — user level only
 
-`.claude/rules/clarifying-questions.md` (project; user level only when the target is not a project). Part of the standard setup.
-Write it to every target this skill applies, new or existing, on every install
-and every re-run, with no question asked. It tells Claude to gather every
-clarifying question it needs and ask them all at once, in the questions
-interface, instead of guessing or asking a few per turn. Plugin-owned like
-`agents-and-integration.md`. It is a rule file, not `CLAUDE.md` text, for the
-same reason: it reaches projects whose `CLAUDE.md` already exists. A local edit
-is drift, and the fix belongs in the template. No placeholders.
+`~/.claude/rules/clarifying-questions.md`, only when the target is not a project.
+The delivery plugin's `rules/clarifying-questions.md` is the source; this asset
+is a byte copy of it. A user-level target has no delivery hook, so it needs the
+file. On that target, write it on every install and every re-run, with no
+question asked.
+
+For a project target, write no copy: the delivery plugin injects the rule every
+session. If the project already has `.claude/rules/clarifying-questions.md` and
+its text, with line endings normalised and surrounding whitespace stripped,
+equals this asset, delete it from the working tree and leave the deletion
+uncommitted (the same way docs R10.6 removes an old `project-artifacts.md`). An
+edited copy stays; the step 5 report names it as drift for the owner.
+
+The rule tells Claude to gather every clarifying question it needs and ask
+them all at once, in the questions interface, instead of guessing or asking a
+few per turn. A local edit is drift, and the fix belongs in the delivery
+plugin's source. No placeholders.
 
 ### `rules/delivery-timing.md` — overwrite unconditionally
 
@@ -770,8 +784,10 @@ Apply what was confirmed. Then check the result. Do not assume it worked:
 - The written `rules/agents-and-integration.md` contains no
   `{{SUBAGENT_EFFORT}}` placeholder and names the chosen Sonnet effort.
 - No `rules/model-delegation.md` remains in a target that was applied.
-- Every applied target has `rules/clarifying-questions.md`, identical to the
-  template.
+- An applied user-level target that is not a project has
+  `rules/clarifying-questions.md`, identical to the template. An applied project
+  target has no `.claude/rules/clarifying-questions.md`, unless an edited copy
+  was kept and reported.
 - Every target that got the split has `hooks/effort_drift.py`, and its
   `hooks.SessionStart` holds the command for that target (project form
   with `$CLAUDE_PROJECT_DIR`, user form with `$HOME`), once, next to any

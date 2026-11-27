@@ -5,7 +5,8 @@
 # marketplace repo into .dev-standards-tools/. One pin, no vendored copies.
 # Fill the placeholders. The pin must match the installed plugins: a newer
 # luismc-docs builds docs that an older pin judges stale (G1). Keep it current
-# with `python3 <claude-setup>/assets/ci_pin.py --bump` (`--check` exits 1 when stale).
+# with `python3 <project-setup>/scripts/ci_pin.py --bump` (`--check` exits 1 when stale).
+# ci_pin.py moved there from claude-setup/assets/ in DS305.
 #   {{DEV_STANDARDS_REPO}}  the marketplace repository, as owner/name
 #   {{DEV_STANDARDS_REF}}   a tag or full commit SHA (not a branch)
 #   {{DOCS_SCRIPTS}}        path of the docs plugin scripts inside that checkout

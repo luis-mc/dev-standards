@@ -8,7 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CS = ROOT / "claude/plugins/project-setup/skills/claude-setup"
-spec = importlib.util.spec_from_file_location("ci_pin", CS / "assets/ci_pin.py")
+spec = importlib.util.spec_from_file_location(
+    "ci_pin", ROOT / "claude/plugins/project-setup/scripts/ci_pin.py")
 ci_pin = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ci_pin)
 
@@ -108,6 +109,12 @@ class CiPin(unittest.TestCase):
     def test_template_comment_names_command(self):
         self.assertIn("ci_pin.py --bump", TEMPLATE)
         self.assertNotIn("by hand", TEMPLATE)
+
+    def test_template_names_new_path(self):
+        # S6 (DS305): ci_pin.py lives in the plugin's scripts/ folder.
+        self.assertIn("<project-setup>/scripts/ci_pin.py", TEMPLATE)
+        skill = (CS / "SKILL.md").read_text("utf-8")
+        self.assertNotIn("assets/ci_pin.py", skill)
 
 
 if __name__ == "__main__":
