@@ -40,9 +40,9 @@ Each row names the canonical home first. "Copies" are the places that restate it
 | D2 | Ask every question at once, in the wizard, after doing what needs no answer | Q-1 to Q-5 (ds:347-351) | DL-04 (ds:63), DL-70 (ds:182), DL-71 (ds:183), DL-72 (ds:184), §3 rows (ds:284-286), r/cq (whole file) | D8 already says Q-n "replaces DL-70..72" (ds:346), but the rows are live. Retire DL-04 and DL-70..72 as "Merged into Q-4 / Q-1 / Q-3 / Q-2". Move Q-1..Q-5 into the §1 table so they get Kind and Today columns. |
 | D3 | Never `gh pr merge --auto` | DL-05 (ds:64) | D5 (ds:342), §6 `never_auto_merge` (ds:360), r/ai:20, inv:1588 | Keep DL-05. D5 and §6 cite it. |
 | D4 | Merge a green train at once | DL-03 (ds:62) | D5 (ds:342), r/dt:6, Q-4 text (r/cq:6), f/del R5.71 (:231) | Keep DL-03 and add the merge mode to it (see C2). |
-| D5 | Watch CI by the head commit's runs | DL-07 (ds:66) | r/ai:22, inv:1600 | Keep DL-07. |
+| D5 | Watch CI by the head commit's runs | DL-07 (ds:66) | r/ai:21, inv:1600 | Keep DL-07. |
 | D6 | Train freeze while the ready PR's CI runs | DL-01 (ds:60) | f/dsp DL6 (:52), inv:1590 | Keep DL-01. |
-| D7 | Shared contracts committed before agents start | DL-45 (ds:110) | r/ai:21, inv:1571 | Keep DL-45. |
+| D7 | Shared contracts committed before agents start | DL-45 (ds:110) | r/ai:13, inv:1571 | Keep DL-45. |
 | D8 | Agent test cost (what to run locally, when to use branch CI, no mutation or Docker locally) | DL-12 (ds:71) | r/ai:10, `docs/guides/testing.md:7-11`, f/dsp DL3 (:48), f/tc S4 (:125), DL-81 (ds:160), DL-122 (ds:137) | Keep DL-12 as the single agent rule. Settle C6 first. The guide keeps only the repo's area names and commands. |
 | D9 | Publish Full Progress once per turn, three steps, 200 a day | ARTIFACTSPEC R9.1 (art:1943) for when, R9.10 (art:2010) for the steps | R3.1, D13 (art:365), §1.4 (art:416), art:298, art:977, art:1962, art:2254, R8.18, R9.11, R9.12, DL-61 (ds:171), DL-62 (ds:172), r/pa:6 | About ten copies of "once per turn" and of "200 a day" (art index D). Keep R9.1 and R9.10. The Why text stays once, in §15. DL-61 and DL-62 cite R9.8 and R9.11. |
 | D10 | The docs plugin never commits or pushes the record | ARTIFACTSPEC R4.13 (art:618) | R4.14, R4.28, R7.6, R8.17, D23, §11, §15, the 1.8.0 log, r/pa:9, AG:11 | Keep R4.13. Others cite it. Fix AG:11 scope (see C4). |
@@ -92,9 +92,9 @@ Each row quotes both sides. "Code" says which side the hooks or scripts follow. 
 **C4. "Plugins never commit, push or merge."** Owner? **Yes.**
 - AG:11 "Plugins write files in the working tree. They never commit, push or merge."
 - The delivery watcher pushes, opens PRs, merges, cancels and re-runs runs (`delivery_watch.py:702-1124`), and SessionStart starts it (`hook_session_start.py:195-270`). D5 (ds:342) requires this.
-- f/tc R5.8 (:163) "The artifacts record commits on every change and pushes once per turn". ARTIFACTSPEC R4.13 (art:618) "The plugin MUST NOT write git state". f/docs 0.10.1 log says `docs_work.py strip --apply` commits.
-- Code: the docs plugin follows R4.13; the delivery watcher follows D5.
-- Proposal: AG:11 becomes "Hooks and the docs plugin never commit, push or merge. The delivery watcher pushes trains, opens the ready PR and merges per `merge_mode` (DL-03)." Retire f/tc R5.8 as "Superseded by ARTIFACTSPEC R4.13". Check whether `strip --apply` still commits.
+- f/tc R5.8 (:163) "The artifacts record commits on every change and pushes once per turn". ARTIFACTSPEC R4.13 (art:618) "The plugin MUST NOT write git state". `docs_work.py strip --apply` commits the `docs/work/` removal (`docs_work.py:108-119`, f/docs 0.10.1 log).
+- Code: the record commands follow R4.13; `docs_work.py` and the delivery watcher do not follow AG:11.
+- Proposal: AG:11 becomes "Hooks and the docs plugin never commit, push or merge. The delivery watcher pushes trains, opens the ready PR and merges per `merge_mode` (DL-03)." Retire f/tc R5.8 as "Superseded by ARTIFACTSPEC R4.13". Either `strip --apply` stops committing (it prints the command) or AG:11 names it as the one docs-plugin commit.
 
 ### 2.2 CI scope and test cost
 
@@ -196,7 +196,7 @@ Each row quotes both sides. "Code" says which side the hooks or scripts follow. 
 
 **C22. Delivery log default.** f/dsp R5.7 (:85) logs before every delete. f/del R5.32 (:137) "The default changed from on to off". Code: `cleanup.py:40` off. Fix f/dsp R5.7.
 
-**C23. `docs/work/` on a branch.** AG:20 puts briefs in `docs/work/`; AG:24 says run `docs_check.py` before finishing. DOCSPEC R10.2 (doc:394) runs W1 "on a ready pull request". Code: `docs_check.py:343-349` fails W1 on any branch that adds `docs/work/` files, so the check AG:24 asks for fails on every agent branch with a report. Proposal: W1 runs only with `--ready` (or in the PR gate), as R10.2 says.
+**C23. `docs/work/` on a branch.** AG:22 puts briefs in `docs/work/`; AG:24 says run `docs_check.py` before finishing. DOCSPEC R10.2 (doc:394) runs W1 "on a ready pull request". Code: `docs_check.py:343-349` fails W1 on any branch that adds `docs/work/` files, so the check AG:24 asks for fails on every agent branch with a report. Proposal: W1 runs only with `--ready` (or in the PR gate), as R10.2 says.
 
 **C24. AUTHSPEC against STACKSPEC.** Owner? **Yes** for the first two.
 - Rate-limit headers: inv:564 "Responses MUST carry rate-limit headers". auth R17.7 (:1462) "MUST NOT reveal which limit was hit, the remaining budget". Common headers carry the remaining budget. Proposal: STACKSPEC says "except auth endpoints (AUTHSPEC R17.7), which send only `Retry-After`".
