@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T14:03+00:00",
+  "updated": "2026-11-27T14:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12683,27 +12683,32 @@
       "status": "Running",
       "item": "Release: CI carry-forward in luismc-delivery",
       "detail": "Folds DS287 into the delivery plugin and spec",
-      "expected": "27 Nov ~14:15",
-      "changed": "2026-11-27T13:59+00:00",
+      "expected": "27 Nov ~14:24",
+      "changed": "2026-11-27T14:05+00:00",
       "release": 207,
       "phases": [
         {
+          "name": "fix",
+          "start": "2026-11-27T14:00+00:00",
+          "end": "2026-11-27T14:06+00:00"
+        },
+        {
           "name": "ci",
-          "start": "2026-11-27T13:58+00:00",
-          "end": "2026-11-27T14:13+00:00"
+          "start": "2026-11-27T14:06+00:00",
+          "end": "2026-11-27T14:21+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-27T14:13+00:00",
-          "end": "2026-11-27T14:15+00:00"
+          "start": "2026-11-27T14:21+00:00",
+          "end": "2026-11-27T14:24+00:00"
         }
       ],
       "risk": {
-        "label": "+1 fix round",
-        "minutes": 20
+        "label": "FIX-ROUND",
+        "minutes": 15
       },
       "started": "2026-11-27T12:32+00:00",
-      "expected_basis": "PR 309 CI from 13:58 ~15 min, watcher merge"
+      "expected_basis": "2 test fixes pushed after the red run; CI ~15 min; merge"
     },
     {
       "id": "DS289",
