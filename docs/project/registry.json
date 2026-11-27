@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T10:33+00:00",
+  "updated": "2026-11-27T10:52+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -13012,12 +13012,22 @@
       "id": "MP16",
       "owner": "models",
       "app": "luismc-project-setup",
-      "status": "Needs you",
+      "status": "Live",
       "item": "Choose model routing for claude-setup (D6 to D10)",
       "detail": "Owner picks: Haiku Explore, escalation rule, bug-fix model, routing table, opusplan offer",
-      "expected": "27 Nov ~11:05",
-      "changed": "2026-11-27T10:33+00:00",
-      "expected_basis": "default ETA, other: 30 min"
+      "expected": "27 Nov",
+      "changed": "2026-11-27T10:52+00:00",
+      "no_release": "decisions only"
+    },
+    {
+      "id": "MP17",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "To do",
+      "item": "Build the chosen routing into claude-setup (D6 to D10)",
+      "detail": "Explore.md on Haiku medium (R5 changed), escalation rule, Sonnet medium fixes with Opus on failure, routing table in agents-and-integration.md, opusplan offer; spec and tests",
+      "expected": "",
+      "changed": "2026-11-27T10:52+00:00"
     },
     {
       "id": "SO1",

@@ -106,7 +106,7 @@
    "id": "D6",
    "question": "Run Explore lookups on Haiku?",
    "asked": "2026-11-27",
-   "status": "open",
+   "status": "decided",
    "options": [
     {
      "label": "Ship Explore.md on Haiku",
@@ -123,13 +123,15 @@
      "summary": "claude-setup asks Haiku or Sonnet for Explore, Haiku preselected.",
      "recommended": false
     }
-   ]
+   ],
+   "chosen": "Ship Explore.md on Haiku",
+   "decided": "2026-11-27"
   },
   {
    "id": "D7",
    "question": "Escalation rule when Sonnet fails?",
    "asked": "2026-11-27",
-   "status": "open",
+   "status": "decided",
    "options": [
     {
      "label": "Opus after one failed try",
@@ -146,13 +148,15 @@
      "summary": "The orchestrator decides each time.",
      "recommended": false
     }
-   ]
+   ],
+   "chosen": "Opus after one failed try",
+   "decided": "2026-11-27"
   },
   {
    "id": "D8",
    "question": "Model and effort for bug-fix agents?",
    "asked": "2026-11-27",
-   "status": "open",
+   "status": "decided",
    "options": [
     {
      "label": "Sonnet high, Opus on failure",
@@ -168,14 +172,21 @@
      "label": "Sonnet medium, as today",
      "summary": "No change: every code agent at medium. Not tested here.",
      "recommended": false
+    },
+    {
+     "label": "Sonnet medium, Opus on failure",
+     "summary": "The owner's own answer: bug-fix agents run on Sonnet at medium, as today, and a fix that fails goes to Opus (the D7 rule). Keeps Sonnet high out of the default.",
+     "recommended": false
     }
-   ]
+   ],
+   "chosen": "Sonnet medium, Opus on failure",
+   "decided": "2026-11-27"
   },
   {
    "id": "D9",
    "question": "Write a per-task routing table?",
    "asked": "2026-11-27",
-   "status": "open",
+   "status": "decided",
    "options": [
     {
      "label": "Table in agents-and-integration.md",
@@ -192,13 +203,15 @@
      "summary": "The rule file keeps one line per role.",
      "recommended": false
     }
-   ]
+   ],
+   "chosen": "Table in agents-and-integration.md",
+   "decided": "2026-11-27"
   },
   {
    "id": "D10",
    "question": "Offer opusplan for the main session?",
    "asked": "2026-11-27",
-   "status": "open",
+   "status": "decided",
    "options": [
     {
      "label": "Offer, off by default",
@@ -215,7 +228,9 @@
      "summary": "Keep Sonnet with Opus by /model.",
      "recommended": false
     }
-   ]
+   ],
+   "chosen": "Offer, off by default",
+   "decided": "2026-11-27"
   }
  ]
 }

@@ -419,10 +419,15 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | design-starter | D8 | Should the gallery draw real visuals? | Swatches, samples and rendered components | decided | 2026-11-02 |
 | design-starter | D9 | Which components does the gallery draw? | Every starter component | decided | 2026-11-02 |
 | models | D1 | Effort for each model of the split? | Keep asking, high preselected | decided | 2026-10-10 |
+| models | D10 | Offer opusplan for the main session? | Offer, off by default | decided | 2026-11-27 |
 | models | D2 | Where do the role rules live? | Plugin-owned rule file | decided | 2026-10-10 |
 | models | D3 | Override Explore and Plan? | Leave both on Opus | decided | 2026-10-10 |
 | models | D4 | Per-skill profiles? | By kind of work | decided | 2026-10-10 |
 | models | D5 | Saved effort when an alias moves? | Warn at session start | decided | 2026-10-10 |
+| models | D6 | Run Explore lookups on Haiku? | Ship Explore.md on Haiku | decided | 2026-11-27 |
+| models | D7 | Escalation rule when Sonnet fails? | Opus after one failed try | decided | 2026-11-27 |
+| models | D8 | Model and effort for bug-fix agents? | Sonnet medium, Opus on failure | decided | 2026-11-27 |
+| models | D9 | Write a per-task routing table? | Table in agents-and-integration.md | decided | 2026-11-27 |
 | setup-offers | D1 | How should claude-setup ask about enforcing each plugin? | Grouped pages | decided | 2026-11-01 |
 | setup-offers | D10 | How should claude-setup offer the three audits? | Three separate options | decided | 2026-11-02 |
 | setup-offers | D11 | What should claude-setup do about branch protection for the dev-standards check? | Ask, then run when possible | decided | 2026-11-02 |

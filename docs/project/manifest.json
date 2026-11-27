@@ -12,8 +12,8 @@
     "title": "Full Progress: dev-standards",
     "url": "https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv",
     "file": "full-progress-dev-standards.html",
-    "published_sha256": "94b93d349eb3c8f5bb3ef3fe29503379a71525f2b7280e61634ec98648f205ac",
-    "published_at": "2026-11-27T10:34+00:00",
+    "published_sha256": "c93b1e21f762499892a74fc18c242cb2e59318a4d8cbd8b79fb035a597c29adf",
+    "published_at": "2026-11-27T10:36+00:00",
     "published_fingerprint": "2afbff2123db27f1bf24c7d41c882772b4eb51b0a2239d3dca5ac8b1620c700b",
     "local_path": "C:\\GitHub\\dev-standards\\.claude\\artifacts-publish\\full-progress\\dev-standards\\full-progress-dev-standards.html",
     "local_opened": true
@@ -37,7 +37,7 @@
       "apps": [
         "luismc-project-setup"
       ],
-      "updated": "2026-11-27T10:35+00:00"
+      "updated": "2026-11-27T10:52+00:00"
     },
     {
       "key": "test-cost",
@@ -121,7 +121,7 @@
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-27T10:35+00:00",
+  "updated": "2026-11-27T10:52+00:00",
   "retired": [],
   "deleted": [
     {

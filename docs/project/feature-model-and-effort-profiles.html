@@ -976,37 +976,32 @@ figure.diagram figcaption b{color:var(--ink)}
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>Today</a><a href="#s3"><b>3</b>Where model and effort come from</a><a href="#s4"><b>4</b>Consequences</a><a href="#s5"><b>5</b>The profiles</a><a href="#s6"><b>6</b>Requirements and tests</a><a href="#s7"><b>7</b>Routing research: which model for which task</a><a href="#s8"><b>8</b>Decisions</a><a href="#s9"><b>9</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.29.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Model and effort profiles</h1><p>Which model and which effort every kind of agent and every skill uses, where each setting lives, and what follows from it. Built into <code>claude-setup</code> in luismc-project-setup.</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T10:35+00:00">27 Nov 10:35</time> (Lisbon)</p>
-<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 10:34</a> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T10:52+00:00">27 Nov 10:52</time> (Lisbon)</p>
+<p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 10:36</a> (Lisbon)</p>
 <p class="lede">Since DL412 (RELEASE-169, 24 Nov) the main session and every subagent run on Sonnet, with Opus by <code>/model</code> for planning and the architect agent; both models default to medium effort (MP7, 11 October).</p>
 <div class="at-a-glance">
-<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">6 tasks</span></summary>
-<ul>
-<li data-glance-task="MP16"><span class="task-id">MP16</span><span class="glance-dep">default ETA, other: 30 min</span> Choose model routing for claude-setup (D6 to D10) <span class="glance-expected">27 Nov ~11:05</span></li>
-<li data-glance-decision="D6"><span class="task-id">D6</span>Run Explore lookups on Haiku?</li>
-<li data-glance-decision="D7"><span class="task-id">D7</span>Escalation rule when Sonnet fails?</li>
-<li data-glance-decision="D8"><span class="task-id">D8</span>Model and effort for bug-fix agents?</li>
-<li data-glance-decision="D9"><span class="task-id">D9</span>Write a per-task routing table?</li>
-<li data-glance-decision="D10"><span class="task-id">D10</span>Offer opusplan for the main session?</li>
-</ul>
+<details class="glance-group glance-you" data-glance="you" open><summary><span class="glance-label">Needs you</span><span class="fold-count">0 tasks</span></summary>
+<p class="glance-none">Nothing needs you.</p>
 </details>
-<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">3 tasks</span></summary>
+<details class="glance-group glance-live" data-glance="live"><summary><span class="glance-label">Live in the last 24 hours</span><span class="fold-count">4 tasks</span></summary>
 <ul>
+<li data-glance-task="MP16"><span class="task-id">MP16</span>Choose model routing for claude-setup (D6 to D10)</li>
 <li data-glance-task="MP13"><span class="task-id">MP13</span>Page: model routing research, hypotheses and proposals</li>
 <li data-glance-task="MP15"><span class="task-id">MP15</span>Test: Sonnet high against Opus medium on real fixes</li>
 <li data-glance-task="MP14"><span class="task-id">MP14</span>Test: Haiku Explore against Sonnet Explore</li>
 </ul>
 </details>
 </div>
-<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">17</div><div class="label">tasks live</div></div><div class="status-count-tile status-needs-you"><div class="count">1</div><div class="label">task needs you</div></div></div>
+<div class="status-count-tiles"><div class="status-count-tile status-live"><div class="count">18</div><div class="label">tasks live</div></div><div class="status-count-tile status-to-do"><div class="count">1</div><div class="label">task to do</div></div></div>
 <p class="note">Key: <span class="status-chip status-live">Live</span> · <span class="status-chip status-built">Built</span> · <span class="status-chip status-running">Running</span> · <span class="status-chip status-needs-you">Needs you</span> · <span class="status-chip status-waiting">Waiting</span> · <span class="status-chip status-to-do">To do</span> · <span class="status-chip status-on-hold">On hold</span> · <span class="status-chip status-failed">Failed</span> · <span class="status-chip status-dropped">Dropped</span>. Times are Lisbon time; each estimate names what sets it.</p>
-<details class="status-fold" data-group="you" open><summary><strong>Needs you, failed or on hold</strong><span class="fold-count">1 task</span></summary>
+<details class="status-fold" data-group="now" open><summary><strong>Running now and next</strong><span class="fold-count">1 task</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
-<tr data-task="MP16"><td><span class="status-chip status-needs-you">Needs you</span></td><td><span class="task-id">MP16</span>Choose model routing for claude-setup (D6 to D10)</td><td>Owner picks: Haiku Explore, escalation rule, bug-fix model, routing table, opusplan offer</td><td>27 Nov ~11:05<span class="expected-basis">default ETA, other: 30 min</span></td></tr>
+<tr data-task="MP17"><td><span class="status-chip status-to-do">To do</span></td><td><span class="task-id">MP17</span>Build the chosen routing into claude-setup (D6 to D10)</td><td>Explore.md on Haiku medium (R5 changed), escalation rule, Sonnet medium fixes with Opus on failure, routing table in agents-and-integration.md, opusplan offer; spec and tests</td><td>Not scheduled</td></tr>
 </tbody></table></div>
 </details>
-<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">17 tasks</span></summary>
+<details class="status-fold" data-group="built"><summary><strong>Live or built</strong><span class="fold-count">18 tasks</span></summary>
 <div class="table-scroll"><table class="status-checklist"><colgroup><col class="col-status"><col class="col-item"><col class="col-detail"><col class="col-expected"></colgroup><thead><tr><th>Status</th><th>Item</th><th>Detail</th><th>Expected (Lisbon)</th></tr></thead><tbody>
+<tr data-task="MP16"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP16</span>Choose model routing for claude-setup (D6 to D10)<span class="no-release-line">ships nothing: decisions only</span></td><td>Owner picks: Haiku Explore, escalation rule, bug-fix model, routing table, opusplan offer</td><td>27 Nov</td></tr>
 <tr data-task="MP13"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP13</span>Page: model routing research, hypotheses and proposals<span class="no-release-line">ships nothing: record page only</span></td><td>Section 07 of the Model and effort profiles page, with charts and open decisions</td><td>27 Nov</td></tr>
 <tr data-task="MP15"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP15</span>Test: Sonnet high against Opus medium on real fixes<span class="no-release-line">ships nothing: study only</span></td><td>5 past fixes replayed in worktrees at the commit before the fix; pass the fix&#x27;s test or not; tokens</td><td>27 Nov</td></tr>
 <tr data-task="MP14"><td><span class="status-chip status-live">Live</span></td><td><span class="task-id">MP14</span>Test: Haiku Explore against Sonnet Explore<span class="no-release-line">ships nothing: study only</span></td><td>10 real repo lookups each, graded against known answers; tokens and time</td><td>27 Nov</td></tr>
@@ -1235,92 +1230,96 @@ figure.diagram figcaption b{color:var(--ink)}
 </section>
 <section id="s8"><h2><span class="section-number">&sect; 8</span>Decisions</h2>
 <div class="decision-list">
-<article class="decision decision-open" data-decision="D10">
-<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">Offer opusplan for the main session?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 27 Nov</p>
+<article class="decision decision-decided" data-decision="D10">
+<h3 class="decision-head"><span class="decision-id">D10</span> <span class="decision-question">Offer opusplan for the main session?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Offer, off by default</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Offer, off by default</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
 <p class="decision-summary">claude-setup mentions opusplan as an option for multi-file planning and warns that each switch re-reads the context.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Make it the default</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Make it the default</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">The main session runs opusplan: Opus to plan, Sonnet to build.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Do not offer</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Do not offer</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Keep Sonnet with Opus by /model.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D9">
-<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">Write a per-task routing table?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 27 Nov</p>
+<article class="decision decision-decided" data-decision="D9">
+<h3 class="decision-head"><span class="decision-id">D9</span> <span class="decision-question">Write a per-task routing table?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Table in agents-and-integration.md</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Table in agents-and-integration.md</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
 <p class="decision-summary">claude-setup writes the routing table of section 7 into the rule file, so every Agent call sets model and effort by kind of work.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Split the effort question only</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Split the effort question only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Keep the rule file; claude-setup asks review effort and implementation effort apart.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">No change</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No change</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">The rule file keeps one line per role.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D8">
-<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">Model and effort for bug-fix agents?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 27 Nov</p>
+<article class="decision decision-decided" data-decision="D8">
+<h3 class="decision-head"><span class="decision-id">D8</span> <span class="decision-question">Model and effort for bug-fix agents?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Sonnet high, Opus on failure</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Sonnet high, Opus on failure</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Test 2: Sonnet high passed 3 of 5 at $0.31 per pass; escalating its 2 failures to Opus gives 4 of 5 for about the cost of Opus alone. A loose spec or git logic goes straight to Opus medium.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Opus medium for every fix</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Opus medium for every fix</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Test 2: 4 of 5 passed, $0.42 per pass, about 1.8 times Sonnet per run. Fewer reruns and fewer gaps to fill in the brief.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Sonnet medium, as today</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Sonnet medium, as today</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">No change: every code agent at medium. Not tested here.</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Sonnet medium, Opus on failure</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">The owner&#x27;s own answer: bug-fix agents run on Sonnet at medium, as today, and a fix that fails goes to Opus (the D7 rule). Keeps Sonnet high out of the default.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D7">
-<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Escalation rule when Sonnet fails?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 27 Nov</p>
+<article class="decision decision-decided" data-decision="D7">
+<h3 class="decision-head"><span class="decision-id">D7</span> <span class="decision-question">Escalation rule when Sonnet fails?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Opus after one failed try</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Opus after one failed try</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
 <p class="decision-summary">A Sonnet agent that fails its test or reports NOT READY once is relaunched on Opus (medium; high if it fails again), not on Sonnet xhigh. Test 2: Opus passed a fix Sonnet high missed.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Sonnet xhigh first, then Opus</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Sonnet xhigh first, then Opus</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">Raise Sonnet to xhigh once, then go to Opus. Cheaper per token, but Sonnet xhigh costs more per task than Opus high on the general index.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">No written rule</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">No written rule</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">The orchestrator decides each time.</p>
 </div>
 </div>
 </article>
-<article class="decision decision-open" data-decision="D6">
-<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">Run Explore lookups on Haiku?</span> <span class="status-chip status-needs-you">Needs you</span></h3>
-<p class="decision-meta">Asked 27 Nov</p>
+<article class="decision decision-decided" data-decision="D6">
+<h3 class="decision-head"><span class="decision-id">D6</span> <span class="decision-question">Run Explore lookups on Haiku?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov</p>
 <div class="decision-options">
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Ship Explore.md on Haiku</span> <span class="decision-tag">Recommended</span></div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Ship Explore.md on Haiku</span> <span class="decision-tag">Recommended</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
 <p class="decision-summary">claude-setup writes a user or project agent named Explore with model: haiku and effort medium. Test 1: same answers on 10 of 10 lookups for about a seventeenth of the cost. Needs R5 changed.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Keep Explore on Sonnet</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep Explore on Sonnet</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">No change. Explore keeps following CLAUDE_CODE_SUBAGENT_MODEL (Sonnet). Simplest, costs about 17 times more per lookup.</p>
 </div>
-<div class="decision-option">
-<div class="decision-option-head"><span class="decision-label">Ask in claude-setup</span></div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Ask in claude-setup</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
 <p class="decision-summary">claude-setup asks Haiku or Sonnet for Explore, Haiku preselected.</p>
 </div>
 </div>
@@ -1407,6 +1406,7 @@ figure.diagram figcaption b{color:var(--ink)}
 </section>
 <section id="s9"><h2><span class="section-number">&sect; 9</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
+<tr><td>27 Nov 10:52</td><td>Owner chose 27 Nov: D6 Haiku Explore, D7 Opus after one failed try, D8 Sonnet medium then Opus on failure, D9 routing table, D10 offer opusplan off by default</td></tr>
 <tr><td>27 Nov 10:33</td><td>Section 7 of the page written: research, hypotheses, both tests, routing, D6 to D10</td></tr>
 <tr><td>27 Nov 10:33</td><td>Done: Sonnet high 3 of 5 fixes, Opus medium 4 of 5; Opus 1.8x per run, Sonnet cheaper per pass</td></tr>
 <tr><td>27 Nov 10:30</td><td>Routing research added (section 7, MP13 to MP15): the suggested policy checked against docs and benchmarks; Test 1 Haiku and Sonnet Explore both 10 of 10, Haiku about a seventeenth of the cost; Test 2 Sonnet high 3 of 5 fixes, Opus medium 4 of 5. Open decisions D6 to D10.</td></tr>
