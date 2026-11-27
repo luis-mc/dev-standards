@@ -88,7 +88,7 @@ flowchart LR
 
 **R5.9** — When all watched runs finish, `ci_watch.py` prints each run's wall time and slowest job. It never changes the exit code.
 
-**R5.10** — The CI workflow templates fail fast and use few jobs (CIR10 L1, L2, L6). In `verify`, the secret scan runs first, then format, lint, typecheck, the boundary check, the codegen drift check, and last the unit and contract tests. Each track's `gate.json` lists its steps in `fail_fast_order`, and the steps run in that order. A Linux workflow has one job per suite family (`verify`, `integration`, `e2e`), never one per tool. A job that only reports is the last step of the last job, with `continue-on-error`, and is never a job of its own. Guard tests in `tools/test_delivery_ci.py` fail a template that breaks any of this.
+**R5.10** — The CI workflow templates fail fast and use few jobs (CIR10 L1, L2, L6). In `verify`, the secret scan runs first, then format, lint, typecheck, the boundary check, the codegen drift check, and last the unit and contract tests. Each track's `gate.json` lists its steps in `fail_fast_order`, and the steps run in that order. A Linux workflow has one job per suite family (`verify`, `integration`, `e2e`), never one per tool. A job that only reports is the last step of the last job, with `continue-on-error`, and is never a job of its own. Guard tests in `claude/plugins/delivery/tests/test_delivery_ci.py` fail a template that breaks any of this.
 
 **R5.11** — `speed_probe.py` times a fixed workload (median of 5 runs) and gives a scale: median over the reference time, never below 1. `scaled(ms)` (Python, and `scaled.mjs`) multiplies a timing budget by it; at scale 1 the budget is unchanged. A scale above 3 is a refusal: the probe exits 2, writes state `error` (never `success`), and the budgets are not judged. A bad `DELIVERY_SPEED_SCALE` also refuses. Budgets run in CI only, alone, one probe per job.
 
@@ -155,9 +155,9 @@ The scripts live in `luismc-delivery` (`templates/shared/scripts/delivery/`). It
 |---|---|
 | R5.1, R5.2, R5.3, R5.5 | `tools/test_delivery_gate.py` |
 | R5.4, R5.8 | `tools/test_smoke_packaged.py`, `tools/template_build_check.py` |
-| R5.6, R5.9, R5.10 | `tools/test_delivery_ci.py` |
+| R5.6, R5.9, R5.10 | `claude/plugins/delivery/tests/test_delivery_ci.py` |
 | R5.7 | `tools/test_delivery_cleanup.py` |
-| R5.11, R5.12, R5.13 | `tools/test_delivery_speed.py` |
+| R5.11, R5.12, R5.13 | `claude/plugins/delivery/tests/test_delivery_speed.py` |
 | R5.17 | `claude/plugins/delivery/tests/test_dl371_versioned_asset_names.py` |
 | R5.18, R5.19 | `claude/plugins/delivery/tests/test_dl374_red_run_finishes.py` |
 | R5.20 | `claude/plugins/delivery/tests/test_dl375_rerun_narrowing.py` |

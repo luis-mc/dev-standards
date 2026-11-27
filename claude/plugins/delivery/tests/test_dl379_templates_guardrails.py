@@ -63,7 +63,8 @@ class Guardrails(unittest.TestCase):
             cond = cond.group(1) if cond else ""
             if re.search(r"--no-scenarios|--shard", body):  # the mutation pass
                 self.assertIn("!= 'pull_request'", cond, name)
-            for m in re.finditer(r"run: python3 tools/test_\w+\.py ([^\n]*)", body):
+            # DS307: a suite run line names tools/ or a plugin's tests/ folder
+            for m in re.finditer(r"run: python3 (?:tools|claude/plugins/[\w-]+/tests)/test_\w+\.py ([^\n]*)", body):
                 if "mutants_" in m.group(1):
                     self.assertIn("github.event_name == 'pull_request') && '--no-mutants'", m.group(1), name)
 

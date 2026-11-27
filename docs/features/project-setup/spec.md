@@ -15,7 +15,7 @@ code:
   - tools/test_authspec_check.py
   - claude/plugins/docs/tests/test_spec_check.py
   - claude/plugins/project-setup/tests/test_model_profiles.py
-  - tools/test_rule_tags.py
+  - claude/plugins/delivery/tests/test_rule_tags.py
   - claude/plugins/project-setup/tests/test_questions_stop.py
   - claude/plugins/project-setup/tests/test_project_setup_fixes.py
   - claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py
@@ -177,8 +177,8 @@ flowchart TD
 |---|---|
 | R5.6, R5.7 | `claude/plugins/project-setup/tests/test_preflight.py` |
 | R5.10, R6.2 | `claude/plugins/project-setup/tests/test_model_profiles.py` |
-| R5.11 | `tools/test_rule_tags.py` |
-| R5.24 | `claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py`, `tools/test_delivery_hooks.py` (the deny list still blocks outbound sends and never blocks PR create, ready or edit) |
+| R5.11 | `claude/plugins/delivery/tests/test_rule_tags.py` |
+| R5.24 | `claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py`, `claude/plugins/delivery/tests/test_delivery_hooks.py` (the deny list still blocks outbound sends and never blocks PR create, ready or edit) |
 | R5.25 | `f31` in `claude/plugins/project-setup/tests/test_project_setup_fixes.py` (typed names and a Rust path committed; quoted and assigned values blocked) |
 | R5.13, R5.15 | `claude/plugins/project-setup/tests/test_questions_stop.py` (the hook on recorded inputs, its wiring, and the user-level-only copy) |
 | R5.12 | `claude/plugins/docs/tests/test_spec_check.py`, `tools/test_authspec_check.py` |

@@ -223,12 +223,12 @@ jobs:
       # check that enforces it, or with `advice`. A tag naming a path that does
       # not exist, or an untagged line, fails here.
       - name: Every shipped rule line names its check
-        run: python3 tools/test_rule_tags.py
+        run: python3 claude/plugins/delivery/tests/test_rule_tags.py
 
       # STACKSPEC 13.8: the session guard (test runs, ready pull requests) and
       # run_suite.py, and this repository's suites.json covering every suite.
       - name: Prove the session guard still holds
-        run: python3 tools/test_session_guard.py
+        run: python3 claude/plugins/delivery/tests/test_session_guard.py
 
   # TC7: the delivery area is one job per suite, so the suites run side by side
   # and the area takes as long as its slowest one. Each suite's mutation pass is
@@ -327,25 +327,25 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the CI scripts and workflow templates still hold
-        run: python3 tools/test_delivery_ci.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_ci.py
 
       - name: Prove the shard balancer, area select and nightly template
-        run: python3 tools/test_ci_speedups.py
+        run: python3 claude/plugins/delivery/tests/test_ci_speedups.py
 
       - name: Prove the shard table guard and sizing
-        run: python3 tools/test_shard_guard.py
+        run: python3 claude/plugins/delivery/tests/test_shard_guard.py
 
       - name: Prove the pass records
-        run: python3 tools/test_delivery_records.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_records.py
 
       - name: Prove the speed probe, limits and database per worker
-        run: python3 tools/test_delivery_speed.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_speed.py
 
       - name: Prove Option 4 (the fallback core and the launchers)
-        run: python3 tools/test_delivery_fallback.py && python3 tools/test_delivery_fallback_launch.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_fallback.py && python3 claude/plugins/delivery/tests/test_delivery_fallback_launch.py
 
       - name: Prove the cloud delivery scripts
-        run: python3 tools/test_delivery_cloud.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_cloud.py
 
   # STACKSPEC 7.0.0 section 13.6: once a train merges, cleanup.py removes its
   # branches, gate-result refs and worktrees. A cleanup that deletes a
@@ -386,7 +386,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove artifact pruning keeps exactly the newest of each name
-        run: python3 tools/test_artifact_prune.py
+        run: python3 claude/plugins/delivery/tests/test_artifact_prune.py
 
   # DELIVERYSPEC: shared delivery script fixes (scope, guard, change notes).
   delivery-runner:
@@ -403,7 +403,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the shared delivery script fixes (scope, guard, change notes)
-        run: python3 tools/test_delivery_shared_fixes.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_shared_fixes.py
 
   # DELIVERYSPEC: the luismc-delivery plugin: ledger, post-tool recorder, watcher and the hooks.
   delivery-plugin:
@@ -425,13 +425,13 @@ jobs:
         run: python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests
 
       - name: Prove the delivery hooks still block and allow what DELIVERYSPEC says
-        run: python3 -I tools/test_delivery_hooks.py
+        run: python3 -I claude/plugins/delivery/tests/test_delivery_hooks.py
 
       - name: Prove the watcher post-merge steps still hold (DP6)
-        run: python3 -I tools/test_delivery_watch_post_merge.py
+        run: python3 -I claude/plugins/delivery/tests/test_delivery_watch_post_merge.py
 
       - name: Prove the warn-mode report still holds (DP8)
-        run: python3 -I tools/test_delivery_report.py
+        run: python3 -I claude/plugins/delivery/tests/test_delivery_report.py
 
   delivery-smoke:
     name: delivery - packaged-program smoke test
@@ -450,7 +450,7 @@ jobs:
         run: python3 tools/test_smoke_packaged.py
 
       - name: Prove the Windows learnings (test table, hold artifacts, token retry, MSI recipe)
-        run: python3 tools/test_delivery_windows.py
+        run: python3 claude/plugins/delivery/tests/test_delivery_windows.py
 
   # STACKSPEC 7.1.0 section 13.6: branches add change notes and the release folds
   # them, so parallel branches never conflict on a spec's version line. A

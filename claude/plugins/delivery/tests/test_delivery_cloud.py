@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from unittest import mock
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 SCRIPTS = REPO / "claude/plugins/delivery/templates/shared/scripts/delivery"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -225,6 +225,13 @@ class StatusTests(unittest.TestCase):
             self.assertNotIn("workflow_dispatch", text)
             self.assertNotIn("gh run", text)
             self.assertNotIn("/hooks", text)
+
+
+# DS307: CI runs this file on its own (python3 -I <path>). unittest discover over
+# this folder imports it too, so it adds no cases there and nothing runs twice.
+if __name__ != "__main__":
+    def load_tests(loader, tests, pattern):
+        return unittest.TestSuite()
 
 
 if __name__ == "__main__":

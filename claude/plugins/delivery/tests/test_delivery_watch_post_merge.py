@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DP6: after a PR merge the watcher runs the project's cleanup and smoke commands; a failure stops the next push.
 
-Run:  python3 tools/test_delivery_watch_post_merge.py
+Run:  python3 claude/plugins/delivery/tests/test_delivery_watch_post_merge.py
 """
 from __future__ import annotations
 
@@ -10,7 +10,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-SCRIPTS = Path(__file__).resolve().parent.parent / "claude/plugins/delivery/scripts"
+SCRIPTS = Path(__file__).resolve().parents[4] / "claude/plugins/delivery/scripts"
 sys.path.insert(0, str(SCRIPTS))
 import delivery_watch as W  # noqa: E402
 

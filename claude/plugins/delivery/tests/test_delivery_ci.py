@@ -20,7 +20,7 @@ of going quiet:
     old tools.json form still works with a warning, and that the checks can fail
     (a tampered archive, a script with the comparison removed).
 
-Run:  python3 tools/test_delivery_ci.py
+Run:  python3 claude/plugins/delivery/tests/test_delivery_ci.py
 """
 from __future__ import annotations
 
@@ -42,7 +42,7 @@ import traceback
 import zipfile
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]
 TOOLING = (ROOT / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling")
 TEMPLATES = ROOT / "claude/plugins/delivery/templates"
 DELIVERY = TEMPLATES / "shared/scripts/delivery"

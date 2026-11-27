@@ -11,7 +11,7 @@
    (never denies or blocks) says W.
 4. The counts line under the tables matches the rows. `--fix` rewrites it.
 
-Run:  python3 tools/test_rule_ids.py [--fix]
+Run:  python3 claude/plugins/delivery/tests/test_rule_ids.py [--fix]
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations
@@ -22,7 +22,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 PLUGIN = REPO / "claude" / "plugins" / "delivery"
 SPEC = PLUGIN / "references" / "deliveryspec.md"
 HOOKS = ("hook_pre_tool.py", "hook_stop.py")
@@ -84,7 +84,7 @@ def counts_line(rows: dict[str, dict]) -> str:
     q = sum(1 for i, r in rows.items() if not r["retired"] and i.startswith("Q-"))
     tally = {k: sum(1 for r in live if r["today"][:1] == k) for k in "YW~N"}
     return ("Counts: %d rows in section 1: %d live rules (%d DL, %d Q) and %d retired or removed rows. "
-            "Today: %d Y, %d W, %d ~, %d N. `tools/test_rule_ids.py` checks this line and the Today column."
+            "Today: %d Y, %d W, %d ~, %d N. `claude/plugins/delivery/tests/test_rule_ids.py` checks this line and the Today column."
             % (len(rows), len(live), dl, q, len(rows) - len(live), tally["Y"], tally["W"], tally["~"], tally["N"]))
 
 
@@ -121,7 +121,7 @@ def problems(text: str, sources: dict[str, str], hooks: dict[str, str]) -> list[
     if not m:
         found.append("DELIVERYSPEC has no counts line")
     elif m.group(0) != want:
-        found.append("counts line is stale; run python3 tools/test_rule_ids.py --fix\n    is:   %s\n    want: %s"
+        found.append("counts line is stale; run python3 claude/plugins/delivery/tests/test_rule_ids.py --fix\n    is:   %s\n    want: %s"
                      % (m.group(0), want))
     return found
 

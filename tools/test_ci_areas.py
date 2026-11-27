@@ -17,6 +17,7 @@ import ci_areas as ca  # noqa: E402
 PSP = "claude/plugins/project-setup"
 DT = "claude/plugins/docs/tests"
 PT = PSP + "/tests"
+LT = "claude/plugins/delivery/tests"
 TS = PSP + "/skills/tech-stack-setup"
 FAILS: list[str] = []
 
@@ -53,18 +54,18 @@ for path, want in [
     (".claude/settings.json", {"specs"}),
     (".claude/suites.json", {"specs"}),
     (f"{PSP}/scripts/preflight.py", {"delivery"}),
-    ("tools/test_kit_suite_sim.py", {"delivery"}),
+    (f"{LT}/test_kit_suite_sim.py", {"delivery"}),
     ("claude/plugins/delivery/templates/shared/scripts/delivery/join.py", {"delivery"}),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", {"delivery"}),
     ("tools/test_delivery_gate.py", {"delivery"}),
-    ("tools/test_artifact_prune.py", {"delivery"}),
-    ("tools/test_delivery_shared_fixes.py", {"delivery"}),
-    ("tools/test_ci_speedups.py", {"delivery"}),
+    (f"{LT}/test_artifact_prune.py", {"delivery"}),
+    (f"{LT}/test_delivery_shared_fixes.py", {"delivery"}),
+    (f"{LT}/test_ci_speedups.py", {"delivery"}),
     ("claude/plugins/delivery/scripts/delivery_ledger.py", {"delivery"}),
-    ("tools/test_delivery_hooks.py", {"delivery"}),
+    (f"{LT}/test_delivery_hooks.py", {"delivery"}),
     ("tools/test_change_notes.py", {"delivery"}),
     (f"{PT}/test_preflight.py", {"delivery"}),
-    ("tools/test_rule_tags.py", {"specs"}),
+    (f"{LT}/test_rule_tags.py", {"specs"}),
     ("claude/plugins/docs/rules/project-artifacts.md", {"specs", "artifacts"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md", {"specs", "profiles"}),
     ("claude/plugins/docs/scripts/render_artifacts.py", {"artifacts"}),
@@ -86,6 +87,9 @@ for path, want in [
     (f"{PT}/test_check_stack_rust.py", {"profiles"}),
     (f"{PT}/test_claude_setup_plugins.py", {"profiles"}),
     (f"{PT}/test_questions_stop.py", {"profiles"}),
+    (f"{LT}/test_session_guard.py", {"specs"}),
+    (f"{LT}/test_rule_ids.py", {"delivery"}),
+    (f"{LT}/test_shard_guard.py", {"delivery"}),
     ("claude/plugins/docs/tests/fixtures/vitest_shim/run.mjs", {"docs"}),
     ("claude/plugins/transcript-folds/hooks/transcript_folds.tsx", {"transcript-folds"}),
     ("claude/plugins/transcript-folds/hooks/fold/width.ts", {"transcript-folds"}),
@@ -172,7 +176,7 @@ for path, want in [
     ("tools/test_delivery_gate.py", (T, T, T, F)),
     ("tools/test_delivery_cleanup.py", (T, F, T, F)),
     ("tools/test_change_notes.py", (T, F, F, T)),
-    ("tools/test_delivery_ci.py", (F, F, F, F)),
+    (f"{LT}/test_delivery_ci.py", (F, F, F, F)),
     (f"{PSP}/scripts/preflight.py", (F, F, F, F)),
     (f"{TS}/assets/tooling/ts/vitest.config.ts", (F, F, F, F)),
     (f"{DT}/test_render_artifacts.py", (F, F, F, F)),

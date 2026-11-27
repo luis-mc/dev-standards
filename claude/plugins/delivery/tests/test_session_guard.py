@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for session_guard.py and run_suite.py (STACKSPEC 13.8).
 
-    python tools/test_session_guard.py [CASE ...]     cases whose name contains an argument
+    python claude/plugins/delivery/tests/test_session_guard.py [CASE ...]     cases whose name contains an argument
 
 Each case builds a tiny git repository in a temporary directory; none runs a real suite.
 """
@@ -17,7 +17,7 @@ import traceback
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]
 DELIVERY = ROOT / "claude/plugins/delivery/templates/shared/scripts/delivery"
 SETTINGS = ROOT / "claude/plugins/project-setup/skills/claude-setup/assets/.claude/settings.json"
 sys.path.insert(0, str(DELIVERY))

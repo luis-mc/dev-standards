@@ -15,7 +15,7 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 from pathlib import Path
 from unittest import mock
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 sys.path.insert(0, str(REPO / "claude/plugins/delivery/templates/shared/scripts/delivery"))
 import ci_fallback as F  # noqa: E402
 import pass_records as PR  # noqa: E402
@@ -381,6 +381,13 @@ class SourceTests(unittest.TestCase):
         src = (REPO / "claude/plugins/delivery/templates/shared/scripts/delivery/ci_fallback.py").read_text()
         for bad in ("requests", "webhook", "workflow_dispatch", "pip install"):
             self.assertNotIn(bad, src)
+
+
+# DS307: CI runs this file on its own (python3 -I <path>). unittest discover over
+# this folder imports it too, so it adds no cases there and nothing runs twice.
+if __name__ != "__main__":
+    def load_tests(loader, tests, pattern):
+        return unittest.TestSuite()
 
 
 if __name__ == "__main__":

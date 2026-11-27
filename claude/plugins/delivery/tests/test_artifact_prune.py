@@ -15,7 +15,7 @@ one problem. A check that cannot fail is a check that proves nothing.
 artifact-prune.yml and the four ci.yml files are checked structurally (text and
 regex, no YAML library), also against broken copies.
 
-Run:  python3 tools/test_artifact_prune.py
+Run:  python3 claude/plugins/delivery/tests/test_artifact_prune.py
 """
 from __future__ import annotations
 
@@ -29,7 +29,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]
 TOOLING = (ROOT / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling")
 TEMPLATES = ROOT / "claude/plugins/delivery/templates"
 SCRIPT = TEMPLATES / "shared/scripts/delivery/artifact_prune.py"

@@ -15,7 +15,7 @@
   * ci_run_times.py: the summary, the markdown, and that a missing token never fails the run (DS26).
   * mutants: copies of the scripts with one rule broken must each fail at least one scenario.
 
-Run:  python3 tools/test_ci_speedups.py
+Run:  python3 claude/plugins/delivery/tests/test_ci_speedups.py
 """
 from __future__ import annotations
 
@@ -31,7 +31,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 TOOLING = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling"
 TEMPLATES = REPO / "claude/plugins/delivery/templates"
 DELIVERY = TEMPLATES / "shared/scripts/delivery"

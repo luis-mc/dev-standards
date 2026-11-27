@@ -15,7 +15,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 SCRIPTS = REPO / "claude/plugins/delivery/templates/shared/scripts/delivery"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -289,6 +289,13 @@ class CloudShardTests(unittest.TestCase):
         ok = self._run("unit-1")
         self.assertEqual(ok["state"], "success", ok)
         self.assertLess(ok["peak_memory_gib"], 8)
+
+
+# DS307: CI runs this file on its own (python3 -I <path>). unittest discover over
+# this folder imports it too, so it adds no cases there and nothing runs twice.
+if __name__ != "__main__":
+    def load_tests(loader, tests, pattern):
+        return unittest.TestSuite()
 
 
 if __name__ == "__main__":

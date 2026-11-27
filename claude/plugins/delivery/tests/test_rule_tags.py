@@ -14,7 +14,7 @@ This test fails on an untagged bullet, on a `check:` path that does not exist in
 The one exception: the TC9 guard scripts/delivery/session_guard.py may be absent on a branch that
 has not joined TC9 yet; its tags are then skipped with a message, never silently passed.
 
-Run:  python3 tools/test_rule_tags.py
+Run:  python3 claude/plugins/delivery/tests/test_rule_tags.py
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations
@@ -26,7 +26,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 TAG_RE = re.compile(r"<!-- (advice|check: (.+?)) -->$")
 ID_RE = re.compile(r"^(DL-\d{2,3}[a-z]?|Q-\d+)$")   # DS303: three-digit ids (DL-124) are rule ids too
 SPEC = "claude/plugins/delivery/references/deliveryspec.md"
@@ -112,9 +112,9 @@ def selftest() -> list[str]:
         bad.append("an advice tag was refused")
     if not problems("x.md", "- a rule <!-- check: nope/missing.py -->\n"):
         bad.append("a check path that does not exist was not reported")
-    if not problems("x.md", "- a rule <!-- check: tools/test_rule_tags.py#" + "no_such" + "_name -->\n"):
+    if not problems("x.md", "- a rule <!-- check: claude/plugins/delivery/tests/test_rule_tags.py#" + "no_such" + "_name -->\n"):
         bad.append("a #name the file does not mention was not reported")
-    if problems("x.md", "- a rule <!-- check: tools/test_rule_tags.py#problems -->\n"):
+    if problems("x.md", "- a rule <!-- check: claude/plugins/delivery/tests/test_rule_tags.py#problems -->\n"):
         bad.append("a valid check tag was refused")
     fake = {"DL-01", "Q-1"}
     if problems("x.md", "- a rule <!-- check: DL-01, Q-1 -->\n", ids=fake):

@@ -9,7 +9,7 @@
   * db_per_worker.py: names, the SQL, the worker id from the environment, a name cannot carry SQL.
   * mutants: copies with one rule broken must each fail a scenario.
 
-Run:  python3 tools/test_delivery_speed.py
+Run:  python3 claude/plugins/delivery/tests/test_delivery_speed.py
 """
 from __future__ import annotations
 
@@ -22,7 +22,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 DELIVERY = REPO / "claude/plugins/delivery"
 DS = DELIVERY / "templates/shared/scripts/delivery"
 sys.path.insert(0, str(DELIVERY / "scripts"))

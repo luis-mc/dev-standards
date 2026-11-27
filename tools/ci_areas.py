@@ -86,6 +86,7 @@ DS = DELIVERY_SCRIPTS
 # DS307: the plugin tests that left tools/ for their plugin's tests/ folder.
 DOCS_TESTS = "claude/plugins/docs/tests"
 PS_TESTS = PSP + "/tests"
+DELIVERY_TESTS = "claude/plugins/delivery/tests"
 # TC7: suite -> the files whose change turns its mutation pass on. Derived from
 # what each suite copies, imports or mutates. A path ending in "/" is a folder.
 SUITE_MUTANTS: dict[str, frozenset[str]] = {
@@ -139,8 +140,9 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/route-ratelimit-map\.json", frozenset({"specs"})),
     # this repository's .claude/ settings and suites: test_session_guard.py (specs) reads them (DS91)
     (r"\.claude/(settings|suites)\.json", frozenset({"specs"})),
-    # rule files shipped to projects: tools/test_rule_tags.py (specs) checks their tags
-    (r"tools/test_rule_tags\.py", frozenset({"specs"})),
+    # rule files shipped to projects: test_rule_tags.py (specs) checks their tags, and
+    # test_session_guard.py runs in the specs job too (DS307 moved both from tools/)
+    (re.escape(DELIVERY_TESTS) + r"/(test_rule_tags|test_session_guard)\.py", frozenset({"specs"})),
     # the plugin smoke (DL-18 for this repository) and its test run in the profiles job
     (r"tools/(plugin_smoke|test_plugin_smoke)\.py", frozenset({"profiles"})),
     (r"claude/plugins/docs/rules/.*", frozenset({"specs", "artifacts"})),
@@ -179,7 +181,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
     (re.escape(PSP) + r"/scripts/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z_]+|test_artifact_prune|test_change_notes|test_smoke_packaged|test_ci_speedups|test_shard_guard|test_kit_suite_sim)\.py",
+    (r"tools/(test_delivery_[a-z_]+|test_change_notes|test_smoke_packaged)\.py",
      frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]

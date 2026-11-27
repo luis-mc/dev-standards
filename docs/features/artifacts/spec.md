@@ -36,7 +36,7 @@ code:
   - claude/plugins/docs/tests/test_project_artifacts.py
   - claude/plugins/docs/tests/test_project_artifacts_hooks.py
   - claude/plugins/docs/tests/test_render_artifacts.py
-  - tools/test_artifact_prune.py
+  - claude/plugins/delivery/tests/test_artifact_prune.py
   - tools/test_artifacts_ar*.py
 last_verified: 2026-11-27
 artifact: feature-project-artifacts-standard.html
@@ -364,7 +364,7 @@ Source: claude/plugins/docs/scripts/hook_session_start_artifacts.py
 | `skills/` | The five skills |
 | `references/artifactspec.md` | ARTIFACTSPEC |
 
-Tests: `claude/plugins/docs/tests/test_project_artifacts.py`, `claude/plugins/docs/tests/test_project_artifacts_hooks.py`, `claude/plugins/docs/tests/test_render_artifacts.py`, `tools/test_artifact_prune.py`, `claude/plugins/docs/tests/test_ds295_live_ci.py`.
+Tests: `claude/plugins/docs/tests/test_project_artifacts.py`, `claude/plugins/docs/tests/test_project_artifacts_hooks.py`, `claude/plugins/docs/tests/test_render_artifacts.py`, `claude/plugins/delivery/tests/test_artifact_prune.py`, `claude/plugins/docs/tests/test_ds295_live_ci.py`.
 
 ## Versions
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regression tests for the DL56 fixes in the shared delivery scripts (F12-F19).
 
-    python3 tools/test_delivery_shared_fixes.py [-k SUBSTRING]
+    python3 claude/plugins/delivery/tests/test_delivery_shared_fixes.py [-k SUBSTRING]
 
 Each case builds a tiny git repository in a temporary directory.
 """
@@ -16,7 +16,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]
 DS = ROOT / "claude/plugins/delivery/templates/shared/scripts/delivery"
 sys.path.insert(0, str(DS))
 sys.dont_write_bytecode = True

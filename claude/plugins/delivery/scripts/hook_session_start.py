@@ -24,7 +24,7 @@ RULE_TAG_RE = re.compile(r'[ \t]*<!-- (?:check:[^>]*|advice) -->')
 
 
 def rules_text():
-    """The plugin's rule files (tags stripped: they are for maintainers and tools/test_rule_tags.py)."""
+    """The plugin's rule files (tags stripped: they are for maintainers and claude/plugins/delivery/tests/test_rule_tags.py)."""
     out = []
     for name in RULE_FILES:
         try:

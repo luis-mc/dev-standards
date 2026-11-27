@@ -11,7 +11,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-SHARED = Path(__file__).resolve().parent.parent / "claude/plugins/delivery/templates/shared"
+SHARED = Path(__file__).resolve().parents[4] / "claude/plugins/delivery/templates/shared"
 
 
 def run(cmd, cwd):

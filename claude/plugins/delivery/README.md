@@ -147,7 +147,7 @@ Test: `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claud
 
 ```
 python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests
-python3 -I tools/test_delivery_hooks.py
+python3 -I claude/plugins/delivery/tests/test_delivery_hooks.py
 ```
 
 

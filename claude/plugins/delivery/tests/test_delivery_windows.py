@@ -10,7 +10,7 @@
   - windows-msi-linux.sh: the recipe, with stub `wine` and `xvfb-run` (the sandbox has no Wine) (W1, W2).
   - package-windows.yml: structure of the hold-until-publish rules.
 
-Run:  python3 tools/test_delivery_windows.py
+Run:  python3 claude/plugins/delivery/tests/test_delivery_windows.py
 """
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ import tempfile
 import urllib.error
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]
 SHARED = ROOT / "claude/plugins/delivery/templates/shared"
 D = SHARED / "scripts/delivery"
 sys.path.insert(0, str(D))

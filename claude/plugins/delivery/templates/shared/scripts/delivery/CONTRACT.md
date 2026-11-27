@@ -738,7 +738,7 @@ workflow watch (0, 1, 4).
   against throwaway git repositories with a local bare remote and a `gate.json`
   whose steps are small Python commands. Every trust-rule branch and every exit
   code is exercised.
-- `tools/test_delivery_ci.py` — ci_watch and ci_skip_check with a stub `gh` on
+- `claude/plugins/delivery/tests/test_delivery_ci.py` — ci_watch and ci_skip_check with a stub `gh` on
   `PATH`, reach_check against a local HTTP server, and a structural check of the
   four `ci.yml` files (decide job, job conditions, e2e not advisory).
 - `claude/plugins/project-setup/tests/test_model_profiles.py` — every SKILL.md's `model` and `effort` match
@@ -752,15 +752,15 @@ workflow watch (0, 1, 4).
   that starts workers: all up, one missing, the program exiting, health probes,
   the declaration's errors, the process tree stopped on every path, and the
   structure of the tracks' `package.yml` and `smoke.json`.
-- `tools/test_artifact_prune.py` — artifact_prune.py with a stub `gh` serving
+- `claude/plugins/delivery/tests/test_artifact_prune.py` — artifact_prune.py with a stub `gh` serving
   artifact pages: grouping, ties, expired, `--keep`, `--dry-run`, a failed
   deletion, pagination, and the structure of `artifact-prune.yml`.
 
-- `tools/test_shard_guard.py` — shard_guard.py and shard_table.py on a sample project (it passes and fits its limits;
+- `claude/plugins/delivery/tests/test_shard_guard.py` — shard_guard.py and shard_table.py on a sample project (it passes and fits its limits;
   a file in no shard, a file in two shards, a missing or repeated part, a stale `members` glob, sizes and timeouts
   over limits fail), the cut of every suite by timings, `shard_balance.py --table`, `cloud_shard.py` sizing,
   `{files}` and the memory limit, and guard mutants that must each fail a scenario.
-- `tools/test_ci_speedups.py` — shard_balance.py (greedy split, median for unknown files, glob and
+- `claude/plugins/delivery/tests/test_ci_speedups.py` — shard_balance.py (greedy split, median for unknown files, glob and
   stdin input, `update` from vitest and Playwright reports), area_select.py (areas, shared, unknown,
   docs-only, `--base` on a throwaway git repository, `$GITHUB_OUTPUT`), the starter files, the structure
   of `nightly-full.yml` and its compare step run with bash against a stub `gh`; scripts with one rule

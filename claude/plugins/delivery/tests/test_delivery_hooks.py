@@ -5,7 +5,7 @@ Feeds hook input to each script in a throwaway project with a .delivery/ folder 
 fixture ledger (schema 1, DELIVERYSPEC section 2). No network: gh is a stub through
 DELIVERY_GH, the clock is DELIVERY_NOW.
 
-Run: python -I tools/test_delivery_hooks.py
+Run: python -I claude/plugins/delivery/tests/test_delivery_hooks.py
 Standard library only. Prints "N passed, 0 failed" and exits 0 when all pass.
 """
 import json
@@ -17,7 +17,7 @@ import tempfile
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'delivery')
+PLUGIN = os.path.dirname(HERE)
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 NOW = '2026-10-14T20:00:00+00:00'
 

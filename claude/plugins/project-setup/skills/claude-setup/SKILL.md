@@ -630,7 +630,7 @@ real start + typical duration with the dependency named; the next train is joine
 during CI and pushed at green; waits are gaps; trains leave when green at any
 hour; agent ETAs are setup + work + checks). Every rule line in the three rule
 files ends with `<!-- check: <DL id or Q id> -->` naming the DELIVERYSPEC id that
-enforces it, or `<!-- advice -->`. `tools/test_rule_tags.py` fails on an id the
+enforces it, or `<!-- advice -->`. `claude/plugins/delivery/tests/test_rule_tags.py` fails on an id the
 spec does not define.
 
 ### `.delivery/config.json` — project target, add if missing, NEVER overwrite

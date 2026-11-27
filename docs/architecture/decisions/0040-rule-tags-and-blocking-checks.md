@@ -20,7 +20,7 @@ Shipped rule files mixed checked rules with advice, and nothing said which was w
 
 ## Decision
 
-Tag every line of the shipped rule files with its check or `advice`, with a test that fails on an untagged line (`tools/test_rule_tags.py`). A check that catches a break blocks. A suite is heavy when it takes over 3 minutes locally.
+Tag every line of the shipped rule files with its check or `advice`, with a test that fails on an untagged line (`claude/plugins/delivery/tests/test_rule_tags.py`). A check that catches a break blocks. A suite is heavy when it takes over 3 minutes locally.
 
 ## Consequences
 

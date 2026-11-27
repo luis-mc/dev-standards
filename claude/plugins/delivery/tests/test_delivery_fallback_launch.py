@@ -13,7 +13,7 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from unittest import mock
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 SCRIPTS = REPO / "claude/plugins/delivery/templates/shared/scripts/delivery"
 sys.path.insert(0, str(SCRIPTS))
 
@@ -432,6 +432,13 @@ class WatchHook(unittest.TestCase):
             if calls:
                 self.assertEqual(hook.call_args.args[0], SHA)
                 self.assertEqual(hook.call_args.args[1], pending)
+
+
+# DS307: CI runs this file on its own (python3 -I <path>). unittest discover over
+# this folder imports it too, so it adds no cases there and nothing runs twice.
+if __name__ != "__main__":
+    def load_tests(loader, tests, pattern):
+        return unittest.TestSuite()
 
 
 if __name__ == "__main__":
