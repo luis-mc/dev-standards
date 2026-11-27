@@ -20,7 +20,7 @@ code:
   - tools/test_delivery_*.py
   - claude/plugins/delivery/tests/*.py
   - tools/test_delivery_cloud.py
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 ---
 # Delivery guard rails
 
@@ -261,6 +261,18 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 **R5.86** — A merged entry is not idle work (DS276, DL-130). A Running task whose pull request merged and whose cleanup or smoke is not recorded gets no "no agent is working on it" line; once cleaned and smoked it does again. Tests: `claude/plugins/delivery/tests/test_ds276_merged_not_idle.py`.
 
 **R5.87** — `delivery_ledger.py link` sets the pull request on the releases of its cargo (DS277, DL-131), so the Full Progress release tree shows without a manual step. It is best effort and never fails `link`. Tests: `claude/plugins/delivery/tests/test_ds277_link_sets_pr.py`.
+
+**R5.88** — Carry-forward plan (DS287, owner decisions relayed by crsp 27 Nov: carried jobs may merge; on at once; main's post-merge full run and the nightly full run are the safety net). `carry_plan.py` runs in a workflow's plan job on a `pull_request` event. For each job of that workflow it finds the job's proof head: the newest earlier head of this pull request where the job's newest completed run ended `success` (a job skipped by a carry is not a proof; the search goes further back). The job runs when it has no proof head, or when a commit after the proof head touches one of its areas (the `areas`, `always_jobs` and valves of `scripts/delivery/ci-areas.json`, read by `area_select.py`). Every other job is carried: it is skipped, and the plan names the run that proved it. A force-push or rebase keeps a proof head: a commit whose `git patch-id --stable` matches a commit of the proof head's range (merge base to proof head) counts as proven, and only the paths of the other commits count. A merge commit counts with the paths it brings (diff to its first parent). When the proof head cannot be fetched, or any step fails, the job runs. Outputs to `$GITHUB_OUTPUT`: `run=<jobs>`, `run_<job>=true|false` for each job, `carried=<json {job: {"sha", "run_url"}}>`, `reason=<one line>`; `--json` prints the same.
+
+**R5.89** — A release pull request runs everything on its first run only (DS287; this narrows DL-97 and DL-98). The first run is a head with no earlier completed run of this workflow on this pull request. Later heads follow R5.88, so a one-line fix after a red run reruns the failed jobs and the jobs whose areas it touches. `ci_scope.py` and `changed_areas.py` keep their `full` and `release_full` answers for the first run; the plan job passes `--carry` to them on later heads.
+
+**R5.90** — Narrower run-everything valves (DS287). In `ci-areas.json`: a change to a workflow file runs every job of that workflow only (other workflows treat it as no change; a change under `.github/actions/**` runs every workflow); `script_jobs: true` makes a change to a script under `scripts/ci/**` or `scripts/delivery/**` run the jobs whose steps name that script plus the `ci_tests` area; `lock_jobs: {"<lockfile glob>": ["<job>", ...]}` makes a lockfile or toolchain change (`pnpm-lock.yaml`, `go.mod`, `go.sum`, `Cargo.lock`, ...) run only the listed jobs. A path that matches no rule still runs everything.
+
+**R5.91** — The required check treats a carried job as passed (DS287). `carry_verify.py --needs '<toJSON(needs)>' --carried '<plan carried json>'` passes when every needed job is `success`, or is `skipped` and named in `carried`. It fails on any other result, and on a skipped job that is not carried. It writes a table to `$GITHUB_STEP_SUMMARY`: each job, run or carried, and for a carried job the link to the run that proved it. One composite action, `.github/actions/carry-plan/action.yml` (shipped in the shared templates), runs `carry_plan.py` for any workflow, so every workflow of a repository (CI, package, installer, smoke) skips and carries the same way.
+
+**R5.92** — Inside a failed test job, failed tests first, then affected packages, on every trigger (DS287, extends R5.68 and DL375). The templates pass the previous head's job conclusion to `rerun_tests.py` on `pull_request` pushes as well as on `workflow_dispatch`. After a red run the job runs the failed tests first; when they pass it runs the tests of the packages affected by the change: Go by `go list -deps` (every package whose dependencies include a changed package), vitest by `vitest related <changed files>`. A runner with no affected-package rule runs the tests of the changed files, as today.
+
+**R5.93** — Proof of the carry-forward plan (DS287). `carry_replay.py --repo OWNER/REPO --prs N,N,...` replays each pull request's heads through `carry_plan.py` from the recorded runs and prints, per head, the jobs that ran, the jobs the plan would run, and the job-minutes saved; it reads only the GitHub API and the repository's git history, and changes nothing. Tests: `claude/plugins/delivery/tests/test_ds287_carry_forward.py` (planner on git fixture repositories, patch-id on rebase, valves, verify, replay on recorded fixtures).
 
 ## 6. Non-functional requirements
 
