@@ -20,34 +20,12 @@
   },
   "feature_artifacts": [
     {
-      "key": "artifacts",
-      "title": "Feature: Project artifacts standard",
-      "file": "feature-project-artifacts-standard.html",
-      "prefix": "AR",
-      "apps": [
-        "luismc-artifacts"
-      ],
-      "updated": "2026-11-27T14:21+00:00"
-    },
-    {
       "key": "models",
       "title": "Feature: Model and effort profiles",
       "file": "feature-model-and-effort-profiles.html",
       "prefix": "MP",
       "apps": [
         "luismc-project-setup"
-      ],
-      "updated": "2026-11-27T14:21+00:00"
-    },
-    {
-      "key": "test-cost",
-      "title": "Feature: Test and validation cost",
-      "file": "feature-test-and-validation-cost.html",
-      "prefix": "TC",
-      "apps": [
-        "spec-lint",
-        "delivery scripts",
-        "luismc-artifacts"
       ],
       "updated": "2026-11-27T14:21+00:00"
     },
@@ -61,7 +39,7 @@
         "STACKSPEC",
         "tech-stack-setup"
       ],
-      "updated": "2026-11-27T14:21+00:00"
+      "updated": "2026-11-27T16:45+00:00"
     },
     {
       "key": "transcript-folds",
@@ -73,25 +51,12 @@
         "luismc-project-setup"
       ],
       "updated": "2026-11-27T14:21+00:00"
-    },
-    {
-      "key": "setup-offers",
-      "title": "Feature: claude-setup offers and enforcement",
-      "file": "feature-claude-setup-offers-and-enforcement.html",
-      "prefix": "SO",
-      "apps": [
-        "luismc-project-setup",
-        "luismc-docs",
-        "luismc-delivery",
-        "luismc-artifacts"
-      ],
-      "updated": "2026-11-27T14:21+00:00"
     }
   ],
   "project_prefixes": [
     "DS"
   ],
-  "updated": "2026-11-27T16:07+00:00",
+  "updated": "2026-11-27T16:45+00:00",
   "retired": [],
   "deleted": [
     {
@@ -135,6 +100,30 @@
       "retired": "2026-11-27T13:16+00:00",
       "url": "",
       "decisions": "retired/design-field-updates.decisions.json"
+    },
+    {
+      "key": "artifacts",
+      "title": "Feature: Project artifacts standard",
+      "prefix": "AR",
+      "retired": "2026-11-27T16:45+00:00",
+      "url": "https://claude.ai/artifact/UUcPLxwLp89kMAQxVYb5hq",
+      "decisions": "retired/artifacts.decisions.json"
+    },
+    {
+      "key": "test-cost",
+      "title": "Feature: Test and validation cost",
+      "prefix": "TC",
+      "retired": "2026-11-27T16:45+00:00",
+      "url": "",
+      "decisions": "retired/test-cost.decisions.json"
+    },
+    {
+      "key": "setup-offers",
+      "title": "Feature: claude-setup offers and enforcement",
+      "prefix": "SO",
+      "retired": "2026-11-27T16:45+00:00",
+      "url": "",
+      "decisions": "retired/setup-offers.decisions.json"
     }
   ]
 }

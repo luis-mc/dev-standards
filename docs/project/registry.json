@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T16:06+00:00",
+  "updated": "2026-11-27T16:27+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12875,6 +12875,19 @@
       "changed": "2026-11-27T16:06+00:00",
       "no_release": "study: proposal only",
       "started": "2026-11-27T14:55+00:00"
+    },
+    {
+      "id": "DS301",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Review decisions page",
+      "detail": "Gather DS298-DS300 proposals into one page; ask the owner's open decisions",
+      "expected": "27 Nov ~16:55",
+      "changed": "2026-11-27T16:27+00:00",
+      "expected_basis": "read reports, write and publish page ~30 min from 16:25",
+      "no_release": "study: decision page only",
+      "started": "2026-11-27T16:27+00:00"
     },
     {
       "id": "DU1",

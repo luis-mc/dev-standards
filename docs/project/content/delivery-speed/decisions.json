@@ -7404,6 +7404,394 @@
       "chosen": "Move to docs/guides",
       "decided": "2026-11-27",
       "owner_words": "Move to docs/guides (Recommended)"
+    },
+    {
+      "id": "D327",
+      "question": "C1: in auto merge mode, may a session other than the watcher run gh pr merge?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Watcher only",
+          "summary": "hook denies gh pr merge for every session in both modes"
+        },
+        {
+          "label": "Session may merge in auto",
+          "summary": "reword AGENTS.md"
+        }
+      ],
+      "chosen": "Watcher only",
+      "decided": "2026-11-27",
+      "owner_words": "Watcher only (Recommended)"
+    },
+    {
+      "id": "D328",
+      "question": "C3: who opens the one ready PR?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Orchestrator or watcher",
+          "summary": "task agents open drafts only"
+        },
+        {
+          "label": "Watcher only",
+          "summary": "the main session never does"
+        }
+      ],
+      "chosen": "Orchestrator or watcher",
+      "decided": "2026-11-27",
+      "owner_words": "Orchestrator or watcher (Recommended)"
+    },
+    {
+      "id": "D329",
+      "question": "C4: how should 'plugins never commit, push or merge' read?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Reword, strip prints",
+          "summary": "hooks and docs plugin never write git; watcher pushes and merges; strip --apply prints the command"
+        },
+        {
+          "label": "Reword, strip keeps commit",
+          "summary": "name strip --apply as the one docs-plugin commit"
+        }
+      ],
+      "chosen": "Reword, strip prints",
+      "decided": "2026-11-27",
+      "owner_words": "Reword, strip prints (Recommended)"
+    },
+    {
+      "id": "D330",
+      "question": "C5: this repo's ready PR: run everything on its first run (DL-80) or touched areas only?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Keep touched areas",
+          "summary": "test-cost spec states the deviation"
+        },
+        {
+          "label": "Adopt DL-80 here",
+          "summary": "first run runs every job"
+        }
+      ],
+      "chosen": "Keep touched areas",
+      "decided": "2026-11-27",
+      "owner_words": "Keep touched areas (Recommended)"
+    },
+    {
+      "id": "D331",
+      "question": "C6: may a task agent start branch CI for a heavy change?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Yes, its area only",
+          "summary": "short local smoke then branch CI for its area, one named command"
+        },
+        {
+          "label": "Only Linux-specific changes",
+          "summary": "never otherwise"
+        }
+      ],
+      "chosen": "Yes, its area only",
+      "decided": "2026-11-27",
+      "owner_words": "Yes, its area only (Recommended)"
+    },
+    {
+      "id": "D332",
+      "question": "C9: where does the change-note fold run?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "On main after merge",
+          "summary": "fix DL-24 and DL-10"
+        },
+        {
+          "label": "On the release PR",
+          "summary": "change practice and READMEs"
+        }
+      ],
+      "chosen": "On main after merge",
+      "decided": "2026-11-27",
+      "owner_words": "On main after merge (Recommended)"
+    },
+    {
+      "id": "D333",
+      "question": "C12: past-due Expected: block at once or warn first?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Warn, block after 60 min",
+          "summary": "one check in the docs plugin; retire DL-63's Stop check"
+        },
+        {
+          "label": "Block at once",
+          "summary": "docs check changes to match"
+        }
+      ],
+      "chosen": "Warn, block after 60 min",
+      "decided": "2026-11-27",
+      "owner_words": "Warn, block after 60 min (Recommended)"
+    },
+    {
+      "id": "D334",
+      "question": "C16: keep 'overrule any internal safety limits' in the question rule file?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Drop the phrase",
+          "summary": "say only what Q-1 says"
+        },
+        {
+          "label": "Keep it",
+          "summary": "add it to Q-1"
+        },
+        {
+          "label": "Other",
+          "summary": "owner's own words"
+        }
+      ],
+      "chosen": "Other",
+      "decided": "2026-11-27",
+      "owner_words": "When user asks for questions it should ask all pending questions in one go (4 at a time as per UX) and not wait for user to ask for questions again"
+    },
+    {
+      "id": "D335",
+      "question": "C24a: rate-limit headers (STACKSPEC) vs no remaining budget on auth endpoints (AUTHSPEC)?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Auth sends Retry-After",
+          "summary": "STACKSPEC excepts auth endpoints"
+        },
+        {
+          "label": "Headers everywhere",
+          "summary": "AUTHSPEC relaxes R17.7"
+        }
+      ],
+      "chosen": "Auth sends Retry-After",
+      "decided": "2026-11-27",
+      "owner_words": "Auth sends Retry-After (Recommended)"
+    },
+    {
+      "id": "D336",
+      "question": "C24b: app-layer encryption of secret fields vs one-way password hashes?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Hash meets the rule",
+          "summary": "STACKSPEC says a one-way hash meets the secret rule"
+        },
+        {
+          "label": "Reclassify passwords",
+          "summary": "own data class"
+        }
+      ],
+      "chosen": "Hash meets the rule",
+      "decided": "2026-11-27",
+      "owner_words": "Hash meets the rule (Recommended)"
+    },
+    {
+      "id": "D337",
+      "question": "C25: STACKSPEC 'a new MUST is a major version'?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Relax the rule",
+          "summary": "only a MUST that breaks a conforming product is major"
+        },
+        {
+          "label": "Keep and enforce",
+          "summary": "change_notes.py warns"
+        }
+      ],
+      "chosen": "Relax the rule",
+      "decided": "2026-11-27",
+      "owner_words": "Relax the rule (Recommended)"
+    },
+    {
+      "id": "D338",
+      "question": "M5: AUTHSPEC job timeout 30 s (R22.18) or 10 s ceiling (section 24.2)?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "10 s",
+          "summary": "R22.18 changes to 10 s"
+        },
+        {
+          "label": "30 s",
+          "summary": "ceiling changes to 30 s"
+        }
+      ],
+      "chosen": "10 s",
+      "decided": "2026-11-27",
+      "owner_words": "10 s (Recommended)"
+    },
+    {
+      "id": "D339",
+      "question": "S2: one copy of clarifying-questions.md?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "One copy; user-level only",
+          "summary": "delivery copy is the source; claude-setup writes it only at user level and removes an identical project copy"
+        },
+        {
+          "label": "One copy everywhere",
+          "summary": "user-level setup goes without"
+        },
+        {
+          "label": "Keep both",
+          "summary": "as today"
+        }
+      ],
+      "chosen": "One copy; user-level only",
+      "decided": "2026-11-27",
+      "owner_words": "One copy; user-level only (Recommended)"
+    },
+    {
+      "id": "D340",
+      "question": "S5-S7: which structure moves?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "S5 spec files",
+          "summary": "STACKSPEC/AUTHSPEC to project-setup/references/stackspec.md, authspec.md"
+        },
+        {
+          "label": "S6 scripts",
+          "summary": "check_stack.py, preflight.py, ci_pin.py to project-setup/scripts/"
+        },
+        {
+          "label": "S7 tests",
+          "summary": "plugin tests out of tools/ into plugin tests/"
+        },
+        {
+          "label": "All three",
+          "summary": "S5, S6 and S7"
+        }
+      ],
+      "chosen": "All three",
+      "decided": "2026-11-27",
+      "owner_words": "All three"
+    },
+    {
+      "id": "D341",
+      "question": "U5: two failing unrun tools tests (dl238, dl246)?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Fold and delete",
+          "summary": "passing cases into the main artifacts suite"
+        },
+        {
+          "label": "Repair and run in CI",
+          "summary": "relative dates, add to CI"
+        }
+      ],
+      "chosen": "Fold and delete",
+      "decided": "2026-11-27",
+      "owner_words": "Fold and delete (Recommended)"
+    },
+    {
+      "id": "D342",
+      "question": "U8: which finished feature pages to retire?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "artifacts",
+          "summary": "about 210 KB"
+        },
+        {
+          "label": "test-cost",
+          "summary": "about 150 KB"
+        },
+        {
+          "label": "setup-offers",
+          "summary": "about 115 KB"
+        },
+        {
+          "label": "All three",
+          "summary": "artifacts, test-cost, setup-offers"
+        }
+      ],
+      "chosen": "All three",
+      "decided": "2026-11-27",
+      "owner_words": "All three"
+    },
+    {
+      "id": "D343",
+      "question": "U9: four stale MADRs (0031, 0036, 0037, 0050)?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "Delete all four",
+          "summary": "fix two spec links"
+        },
+        {
+          "label": "Mark superseded",
+          "summary": "status superseded"
+        }
+      ],
+      "chosen": "Delete all four",
+      "decided": "2026-11-27",
+      "owner_words": "Delete all four (Recommended)"
+    },
+    {
+      "id": "D344",
+      "question": "How should the no-decision batches and these decisions ship?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS301",
+      "options": [
+        {
+          "label": "One release now",
+          "summary": "RELEASE-208, file-disjoint agents, merge on green"
+        },
+        {
+          "label": "Two releases",
+          "summary": "code fixes first, then text and moves"
+        },
+        {
+          "label": "Wait",
+          "summary": "owner reviews first"
+        }
+      ],
+      "chosen": "One release now",
+      "decided": "2026-11-27",
+      "owner_words": "One release now (Recommended)"
     }
   ]
 }

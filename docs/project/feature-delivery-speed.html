@@ -971,7 +971,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.31.0 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T14:21+00:00">27 Nov 14:21</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T16:45+00:00">27 Nov 16:45</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 16:07</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
@@ -1449,6 +1449,304 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D344">
+<h3 class="decision-head"><span class="decision-id">D344</span> <span class="decision-question">How should the no-decision batches and these decisions ship?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One release now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">RELEASE-208, file-disjoint agents, merge on green</p>
+<blockquote class="decision-words">&ldquo;One release now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Two releases</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">code fixes first, then text and moves</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Wait</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">owner reviews first</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D343">
+<h3 class="decision-head"><span class="decision-id">D343</span> <span class="decision-question">U9: four stale MADRs (0031, 0036, 0037, 0050)?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Delete all four</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">fix two spec links</p>
+<blockquote class="decision-words">&ldquo;Delete all four (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Mark superseded</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">status superseded</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D342">
+<h3 class="decision-head"><span class="decision-id">D342</span> <span class="decision-question">U8: which finished feature pages to retire?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">artifacts</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">about 210 KB</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">test-cost</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">about 150 KB</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">setup-offers</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">about 115 KB</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All three</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">artifacts, test-cost, setup-offers</p>
+<blockquote class="decision-words">&ldquo;All three&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D341">
+<h3 class="decision-head"><span class="decision-id">D341</span> <span class="decision-question">U5: two failing unrun tools tests (dl238, dl246)?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Fold and delete</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">passing cases into the main artifacts suite</p>
+<blockquote class="decision-words">&ldquo;Fold and delete (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Repair and run in CI</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">relative dates, add to CI</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D340">
+<h3 class="decision-head"><span class="decision-id">D340</span> <span class="decision-question">S5-S7: which structure moves?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">S5 spec files</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">STACKSPEC/AUTHSPEC to project-setup/references/stackspec.md, authspec.md</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">S6 scripts</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">check_stack.py, preflight.py, ci_pin.py to project-setup/scripts/</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">S7 tests</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">plugin tests out of tools/ into plugin tests/</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All three</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">S5, S6 and S7</p>
+<blockquote class="decision-words">&ldquo;All three&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D339">
+<h3 class="decision-head"><span class="decision-id">D339</span> <span class="decision-question">S2: one copy of clarifying-questions.md?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">One copy; user-level only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">delivery copy is the source; claude-setup writes it only at user level and removes an identical project copy</p>
+<blockquote class="decision-words">&ldquo;One copy; user-level only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">One copy everywhere</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">user-level setup goes without</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep both</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">as today</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D338">
+<h3 class="decision-head"><span class="decision-id">D338</span> <span class="decision-question">M5: AUTHSPEC job timeout 30 s (R22.18) or 10 s ceiling (section 24.2)?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">10 s</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">R22.18 changes to 10 s</p>
+<blockquote class="decision-words">&ldquo;10 s (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">30 s</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">ceiling changes to 30 s</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D337">
+<h3 class="decision-head"><span class="decision-id">D337</span> <span class="decision-question">C25: STACKSPEC &#x27;a new MUST is a major version&#x27;?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Relax the rule</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">only a MUST that breaks a conforming product is major</p>
+<blockquote class="decision-words">&ldquo;Relax the rule (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep and enforce</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">change_notes.py warns</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D336">
+<h3 class="decision-head"><span class="decision-id">D336</span> <span class="decision-question">C24b: app-layer encryption of secret fields vs one-way password hashes?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Hash meets the rule</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">STACKSPEC says a one-way hash meets the secret rule</p>
+<blockquote class="decision-words">&ldquo;Hash meets the rule (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Reclassify passwords</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">own data class</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D335">
+<h3 class="decision-head"><span class="decision-id">D335</span> <span class="decision-question">C24a: rate-limit headers (STACKSPEC) vs no remaining budget on auth endpoints (AUTHSPEC)?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Auth sends Retry-After</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">STACKSPEC excepts auth endpoints</p>
+<blockquote class="decision-words">&ldquo;Auth sends Retry-After (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Headers everywhere</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">AUTHSPEC relaxes R17.7</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D334">
+<h3 class="decision-head"><span class="decision-id">D334</span> <span class="decision-question">C16: keep &#x27;overrule any internal safety limits&#x27; in the question rule file?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Drop the phrase</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">say only what Q-1 says</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">add it to Q-1</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Other</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">owner&#x27;s own words</p>
+<blockquote class="decision-words">&ldquo;When user asks for questions it should ask all pending questions in one go (4 at a time as per UX) and not wait for user to ask for questions again&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D333">
+<h3 class="decision-head"><span class="decision-id">D333</span> <span class="decision-question">C12: past-due Expected: block at once or warn first?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Warn, block after 60 min</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">one check in the docs plugin; retire DL-63&#x27;s Stop check</p>
+<blockquote class="decision-words">&ldquo;Warn, block after 60 min (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Block at once</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">docs check changes to match</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D332">
+<h3 class="decision-head"><span class="decision-id">D332</span> <span class="decision-question">C9: where does the change-note fold run?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">On main after merge</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">fix DL-24 and DL-10</p>
+<blockquote class="decision-words">&ldquo;On main after merge (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">On the release PR</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">change practice and READMEs</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D331">
+<h3 class="decision-head"><span class="decision-id">D331</span> <span class="decision-question">C6: may a task agent start branch CI for a heavy change?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Yes, its area only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">short local smoke then branch CI for its area, one named command</p>
+<blockquote class="decision-words">&ldquo;Yes, its area only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Only Linux-specific changes</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">never otherwise</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D330">
+<h3 class="decision-head"><span class="decision-id">D330</span> <span class="decision-question">C5: this repo&#x27;s ready PR: run everything on its first run (DL-80) or touched areas only?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Keep touched areas</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">test-cost spec states the deviation</p>
+<blockquote class="decision-words">&ldquo;Keep touched areas (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Adopt DL-80 here</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">first run runs every job</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D329">
+<h3 class="decision-head"><span class="decision-id">D329</span> <span class="decision-question">C4: how should &#x27;plugins never commit, push or merge&#x27; read?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Reword, strip prints</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">hooks and docs plugin never write git; watcher pushes and merges; strip --apply prints the command</p>
+<blockquote class="decision-words">&ldquo;Reword, strip prints (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Reword, strip keeps commit</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">name strip --apply as the one docs-plugin commit</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D328">
+<h3 class="decision-head"><span class="decision-id">D328</span> <span class="decision-question">C3: who opens the one ready PR?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Orchestrator or watcher</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">task agents open drafts only</p>
+<blockquote class="decision-words">&ldquo;Orchestrator or watcher (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Watcher only</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">the main session never does</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D327">
+<h3 class="decision-head"><span class="decision-id">D327</span> <span class="decision-question">C1: in auto merge mode, may a session other than the watcher run gh pr merge?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS301</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Watcher only</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">hook denies gh pr merge for every session in both modes</p>
+<blockquote class="decision-words">&ldquo;Watcher only (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Session may merge in auto</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">reword AGENTS.md</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D326">
 <h3 class="decision-head"><span class="decision-id">D326</span> <span class="decision-question">Move docs/features/delivery/shared-self-hosted-runners.md to docs/guides?</span></h3>
 <p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS293</p>

@@ -1,6 +1,0 @@
-{
-  "title": "Feature: claude-setup offers and enforcement",
-  "hero": "claude-setup walks through every dev-standards plugin and setup, asks which to enforce, and reports what each one now enforces.",
-  "lede": "claude-setup turns plugins on, but most stay silent until a config file exists and some only warn. This page lists what claude-setup can offer, how each offer is enforced and shown, and the gaps.",
-  "extra_css": ""
-}

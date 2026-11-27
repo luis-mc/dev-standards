@@ -1,6 +1,0 @@
-{
-  "title": "Feature: Project artifacts standard",
-  "hero": "How every project gets the same status artifacts: a feature artifact per feature and one full-progress artifact for all the work, kept current automatically. Built in dev-standards as the plugin <code>luismc-artifacts</code>.",
-  "lede": "luismc-artifacts 1.4.0 is live: section 0 opens with an At a glance block, Full Progress lists features newest first with sortable headers, and the record is pushed once per turn.",
-  "extra_css": ""
-}
