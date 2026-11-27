@@ -12,16 +12,17 @@ code:
   - claude/plugins/project-setup/skills/claude-setup/assets/.claude/settings.json
   - claude/plugins/project-setup/skills/claude-setup/assets/.claude/hooks/effort_drift.py
   - claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md
+  - claude/plugins/project-setup/skills/claude-setup/assets/.claude/agents/Explore.md
   - claude/plugins/agents/agents/*.md
   - tools/test_model_profiles.py
-last_verified: 2026-11-08
+last_verified: 2026-11-27
 artifact: feature-model-and-effort-profiles.html
 ---
 # Model and effort profiles
 
 ## 1. In one paragraph
 
-Every project set up by `claude-setup` runs its main session on Sonnet (Opus by `/model` for planning or a risky review only) and its code agents on Sonnet, both at medium effort. The auto-compact window is 350000 tokens. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
+Every project set up by `claude-setup` runs its main session on Sonnet (Opus by `/model` for planning or a risky review only) and its code agents on Sonnet, both at medium effort. Lookups run on an Explore agent on Haiku, and a Sonnet agent that fails once goes to Opus. The auto-compact window is 350000 tokens. Each skill declares the model and effort for its kind of work. `model-profiles.json` sets the default in one place. A test keeps every skill in step with it.
 
 ## 2. Why
 
@@ -35,7 +36,7 @@ Evidence from a real project's sessions (9 and 10 October 2026):
 
 Goals: a cheap default that is the same on every machine, a profile for each skill, and a warning when a saved effort stops applying.
 
-Non-goals: choosing the model for a user's own prompt, and overriding the built-in Explore and Plan agents (decided: leave both on Opus).
+Non-goals: choosing the model for a user's own prompt, and overriding the built-in Plan agent. The built-in Explore is replaced (D6, 27 Nov), which reverses decision 0014.
 
 ## 3. How it works
 
@@ -44,7 +45,9 @@ flowchart TB
   main[Main session: Sonnet, medium] --> code[Code agents: Sonnet, medium]
   main --> arch[luismc-agents architect: Opus, medium]
   main --> tri[Log triage: Haiku]
-  main --> ex[Explore, Plan, fork: main session's model]
+  main --> ex[Explore: Haiku, medium]
+  main --> pl[Plan, fork: main session's model]
+  code -->|fails once| esc[Opus: medium, then high]
   setup[claude-setup] -->|writes| cfg[settings: model, modelSettings, effortLevel, SUBAGENT_MODEL]
   setup -->|writes| rule[agent rules: effort on every Agent call]
   cfg --> main
@@ -76,7 +79,9 @@ The docs do not say that `modelSettings` reaches subagents. So the effort is als
 | Merges and checks | Join branches, run gates | none: scripts | none |
 | Log triage | Read CI logs, name the failure | Haiku | default |
 | `luismc-agents:architect` | Hard design calls, audit review | Opus | medium |
-| Explore, Plan, fork | Search, plan, continue | main session's | main session's |
+| Explore (shipped by claude-setup) | Lookups, read-only search | Haiku | medium |
+| A Sonnet agent that failed once | The same work again | Opus | medium, then high |
+| Plan, fork | Plan, continue | main session's | main session's |
 | Cloud agents, routines | Unattended work | settings model | top-level `effortLevel` |
 
 | Kind of skill | Skills | Model | Effort |
@@ -102,9 +107,13 @@ There is no screen. `claude-setup` shows its change plan once. It asks for confi
 
 **R5.5** — The session-start hook warns when the active Opus or Sonnet model ID has no saved effort entry, and stays silent when it has one or when it cannot tell the model.
 
-**R5.6** — No plugin ships an agent named Explore or Plan.
+**R5.6** — `claude-setup` ships one agent named Explore, to the project's `.claude/agents/`: `model: haiku`, `effort: medium`, no editing tools. No plugin ships an agent named Explore or Plan.
 
 **R5.7** — No `model-delegation.md` remains in the claude-setup assets (the role rules live in the rules file).
+
+**R5.8** — The agent rules route work in as few lines as the rules file can hold, because it loads on every prompt: code, bug fixes, migrations and tests go to Sonnet; one failed Sonnet try goes to Opus (medium, then high), never Sonnet at xhigh; lookups go to the Explore agent.
+
+**R5.9** — `claude-setup`'s report names `opusplan` as an option for planning a multi-file feature and never sets it.
 
 ## 6. Non-functional requirements
 
@@ -138,9 +147,12 @@ There is no screen. `claude-setup` shows its change plan once. It asks for confi
 | R5.2 | `tools/test_model_profiles.py` check D1 and `m_opus_profile_high`, `m_sonnet_profile_high`, `m_architect_high`, `m_top_level_high` |
 | R5.3 | `tools/test_model_profiles.py` check R1 and `m_role_line`, `m_placeholder` |
 | R5.4 | `tools/test_model_profiles.py` check S1 |
+| R5.6 | `tools/test_model_profiles.py` check X1 and `m_explore_model`, `m_explore_edit_tool` |
 | R5.7 | `tools/test_model_profiles.py` check M1 and `m_rule_missing` |
+| R5.8 | `tools/test_model_profiles.py` check R1 and `m_escalation_line` |
+| R5.9 | `tools/test_model_profiles.py` check O1 and `m_opusplan_set` |
 
-R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Whether a skill's effort reverts after its turn was never settled (see section 11).
+R5.5, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verified by hand when the hook shipped. Whether a skill's effort reverts after its turn was never settled (see section 11).
 
 ## 10. Decisions
 
@@ -151,6 +163,7 @@ R5.5, R5.6, R6.1, R6.2 and R6.3 have no automated test. R5.5 and R6.1 were verif
 | [0015](../../architecture/decisions/0015-warn-when-saved-effort-stops-applying.md) | What if an alias moves to a model with no saved effort? | Warn at session start | 2026-10-10 |
 | page D2 | Where do the role rules live? | A rule file the plugin owns | 2026-10-10 |
 | page D4 | How are skills profiled? | By kind of work | 2026-10-10 |
+| page D6 to D10 | Model routing after the MP14 and MP15 tests | Explore on Haiku; Opus after one failed Sonnet try; bug fixes on Sonnet medium; routing in the rules file; `opusplan` offered, off | 2026-11-27 |
 
 ## 11. Not built yet
 
@@ -166,6 +179,7 @@ Source: `claude/plugins/project-setup/skills/claude-setup/`
 | `assets/.claude/settings.json` | Model, effort, subagent model, drift hook |
 | `assets/.claude/hooks/effort_drift.py` | The session-start warning |
 | `assets/.claude/rules/agents-and-integration.md` | The role rules |
+| `assets/.claude/agents/Explore.md` | The Explore agent on Haiku |
 | `SKILL.md` | The setup steps |
 
 Also `claude/plugins/agents/agents/*.md` (the architect's model and effort) and `tools/test_model_profiles.py`.
