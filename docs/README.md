@@ -22,7 +22,7 @@ Start with the [overview](overview/README.md).
 
 ## Change notes
 
-A branch never edits a spec's `**Version:**` line or a plugin's `version`. It adds a change note in `architecture/changes/` instead; see the folder's `README.md`. The release fold on `main` turns the notes into versions and change-log entries, then deletes them. Do not fold by hand.
+A branch never edits a spec's `**Version:**` line or a plugin's `version`. It adds a change note instead. A feature spec's note goes in `features/<feature>/changes/` (`docs_fold.py note`). A shipped spec's or a plugin's note goes in `architecture/changes/`; see that folder's `README.md`. The release fold runs on `main` after the merge. It turns the notes into versions and change-log entries, then deletes them. Do not fold by hand.
 
 A change that needs no doc puts `Docs: none, <reason>` in a commit message.
 
