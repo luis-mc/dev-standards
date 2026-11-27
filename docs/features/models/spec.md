@@ -4,7 +4,7 @@ title: Model and effort profiles
 apps: [luismc-project-setup, luismc-agents]
 topics: [models]
 status: live
-version: 0.5.0
+version: 0.5.1
 owner: agents
 type: reference
 code:
@@ -190,6 +190,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.5.1 | 2026-11-27 | RELEASE-206 | dev-standards runs the Explore agent on Haiku itself; check X2 keeps its .claude/agents/Explore.md equal to the claude-setup asset. | DS285 |
 | 0.5.0 | 2026-11-27 | RELEASE-205 | Model routing from the MP14 and MP15 tests (D6 to D10): claude-setup ships an Explore agent on Haiku at medium (R5.6); the agent rules send code, bug fixes, migrations and tests to Sonnet, one failed Sonnet try to Opus (medium, then high, never Sonnet xhigh) and lookups to Explore, in as few lines as possible because the rules load on every prompt (R5.8); the report names opusplan and never sets it (R5.9). Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP17 |
 | 0.4.0 | 2026-11-26 | RELEASE-185 | claude-setup default auto-compact window 350000 (was 150000). Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | MP12 |
 | 0.3.0 | 2026-11-24 | RELEASE-171 | Seven checking and bookkeeping skills move to the haiku profile. The shipped agents rule is shorter, tells the orchestrator to group tasks into one agent, and moves delivery detail to docs/guides/agent-delivery-details.md. claude-setup asks overwrite, merge or keep when the rules file differs. The DL-41 and DL-303 messages offer merging tasks into the running agent's brief. Plugins: claude/plugins/docs/.claude-plugin/plugin.json, claude/plugins/project-setup/.claude-plugin/plugin.json, claude/plugins/delivery/.claude-plugin/plugin.json. | MP10 |

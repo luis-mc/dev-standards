@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.25.0
+version: 0.25.1
 owner: agents
 type: reference
 code:
@@ -361,6 +361,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.25.1 | 2026-11-27 | RELEASE-206 | open_local also skips when CLAUDE_ARTIFACTS_NO_OPEN is set; the artifact tests set it, so local test runs no longer open browser tabs (R5.9a). | DS283 |
 | 0.25.0 | 2026-11-26 | RELEASE-203 | A Running or Waiting release must have phases or a --no-phases reason; a release with no phases is an outline diamond marked no phases (R5.37, R5.38). | DS278 |
 | 0.24.0 | 2026-11-26 | RELEASE-201 | Full Progress links every pull request number to its page, opening in a new window; new optional manifest setting pr_links (R5.35, R5.36). | DS272 |
 | 0.23.1 | 2026-11-26 | RELEASE-200 | The after-command hook prints the project rule once per session and repository: a new worktree of the same repository no longer prints it again (temp marker keyed by the git common directory). | DS271 |
