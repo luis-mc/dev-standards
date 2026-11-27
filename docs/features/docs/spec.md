@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.17.1
+version: 1.18.0
 owner: agents
 type: reference
 code:
@@ -208,6 +208,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.18.0 | 2026-11-27 | RELEASE-208 | Fonts in every page the docs plugin renders are 90% of the DL239 sizes; the root now carries the scale, so rem sizes shrink too (R5.18). | DS289 |
 | 1.17.1 | 2026-11-26 | RELEASE-203 | The artifacts spec gains R5.41a and R5.42c: a Running or Waiting release has phases or a --no-phases reason. | DS278 |
 | 1.17.0 | 2026-11-26 | RELEASE-202 | R5.27: fold --release folds only the notes of that release's tasks; --all folds every note (DL-128). | DS274 |
 | 1.16.2 | 2026-11-26 | RELEASE-199 | The lifecycle schema and template allow `inputs` on each target and a `no_target` list (DL-125). | DS269 |

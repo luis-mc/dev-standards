@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T12:36+00:00",
+  "updated": "2026-11-27T12:50+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12718,12 +12718,11 @@
       "id": "DS289",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Docs plugin pages at 90% font size",
       "detail": "Owner zooms Chrome to 90% for Full Progress; every page the docs plugin renders uses 90% of today's Full Progress font sizes",
-      "expected": "27 Nov ~13:05",
-      "changed": "2026-11-27T12:36+00:00",
-      "expected_basis": "PR CI ~8 min, watcher merge",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T12:50+00:00",
       "rides": "DS290",
       "started": "2026-11-27T12:36+00:00"
     },
@@ -12731,11 +12730,11 @@
       "id": "DS290",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Release: docs pages at 90% font size",
       "detail": "Folds DS289 into docs",
-      "expected": "27 Nov ~13:05",
-      "changed": "2026-11-27T12:36+00:00",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T12:50+00:00",
       "release": 208,
       "phases": [
         {
