@@ -23,6 +23,7 @@ hook, language guard tests). tech-stack-setup and claude-setup carry no CI or de
 | `scripts/delivery/fast_guards.py` | same | gate |
 | `scripts/delivery/join.py` | same | gate |
 | `scripts/delivery/agent_setup.sh` | same | gate |
+| `scripts/delivery/cloud_setup.sh` | same (cloud sessions: fetches the pinned dev-standards checkout, installs gitleaks from `tools.json`, prints `DEV_STANDARDS_SCRIPTS`; DS296) | gate |
 | `scripts/delivery/delivery_common.py` | same (shared helpers: git, JSON, gate.json loading) | gate |
 | `scripts/delivery/ci_watch.py` | same | ci |
 | `scripts/delivery/fallback_launch.py` | same (Option 4: measures shard waits, starts the cloud or hosted fallback once per shard over X; `sweep` is the hourly routine; `launch` starts one by hand; DL24) | ci |
