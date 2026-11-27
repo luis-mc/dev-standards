@@ -150,6 +150,8 @@ python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugi
 python3 -I claude/plugins/delivery/tests/test_delivery_hooks.py
 ```
 
+The suites with their own CI step (gate, cleanup, change notes, CI, hooks and the other `test_delivery_*.py`) run on their own, for example `python3 -I claude/plugins/delivery/tests/test_delivery_gate.py --no-mutants`. They add no cases to discover.
+
 
 ## Trust
 

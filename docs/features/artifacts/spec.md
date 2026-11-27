@@ -37,7 +37,7 @@ code:
   - claude/plugins/docs/tests/test_project_artifacts_hooks.py
   - claude/plugins/docs/tests/test_render_artifacts.py
   - claude/plugins/delivery/tests/test_artifact_prune.py
-  - tools/test_artifacts_ar*.py
+  - claude/plugins/docs/tests/test_artifacts_ar*.py
 last_verified: 2026-11-27
 artifact: feature-project-artifacts-standard.html
 ---

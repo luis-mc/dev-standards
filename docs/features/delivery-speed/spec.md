@@ -13,7 +13,7 @@ code:
   - claude/plugins/delivery/templates/lifecycle/**
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - claude/plugins/delivery/references/release-asset-names.md
-  - tools/test_delivery_*.py
+  - claude/plugins/delivery/tests/test_delivery_*.py
 last_verified: 2026-11-27
 artifact: feature-delivery-speed.html
 ---

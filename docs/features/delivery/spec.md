@@ -17,7 +17,7 @@ code:
   - claude/plugins/delivery/templates/shared/scripts/delivery/*.py
   - claude/plugins/delivery/templates/**
   - claude/plugins/delivery/templates/shared/scripts/delivery/CONTRACT.md
-  - tools/test_delivery_*.py
+  - claude/plugins/delivery/tests/test_delivery_*.py
   - claude/plugins/delivery/tests/*.py
   - claude/plugins/delivery/tests/test_delivery_cloud.py
 last_verified: 2026-11-27
