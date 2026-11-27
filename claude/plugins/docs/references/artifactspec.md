@@ -440,7 +440,7 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | `scripts/artifact_queue.py` | Reads and writes the queue (§8.1). Imported by the hooks and the script. |
 | `scripts/artifact_hourly.py`, `scripts/publish_hourly.py` | The hourly, release-change and overdue checks (R6.14, R8.18, R8.19, R9.8 to R9.10): pure helpers imported by the end-of-turn hook and the script, and the command a session's hourly cron runs. |
 | `scripts/artifact_retire.py` | Retired and deleted pages, the history recovery, the migration check and the shipped rule hashes (R4.19 to R4.23, R10.6). Pure and read-only except where the script applies it. Imported by the hooks and the script. |
-| `scripts/hook_after_command.py`, `hook_end_of_turn.py`, `hook_session_start.py` | The three hooks (§8). |
+| `scripts/hook_after_command.py`, `hook_end_of_turn.py`, `hook_session_start_artifacts.py` | The three hooks (§8). The docs plugin's own `hook_session_start.py` is not one of them. |
 | `templates/feature-artifact.html`, `templates/full-progress-artifact.html` | Skeletons with placeholders: the first is a complete HTML document, the second a fragment (§5.1). |
 | `templates/project-artifact.css` | The fixed structure stylesheet. |
 | `design/default-design.css`, `design/DESIGN.md` | Default tokens and the token contract (§5.3). |

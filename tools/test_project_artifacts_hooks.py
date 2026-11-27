@@ -35,7 +35,7 @@ def rule_file_text():
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 AFTER = os.path.join(SCRIPTS, 'hook_after_command.py')
 STOP = os.path.join(SCRIPTS, 'hook_end_of_turn.py')
-START = os.path.join(SCRIPTS, 'artifacts', 'hook_session_start.py')
+START = os.path.join(SCRIPTS, 'hook_session_start_artifacts.py')
 
 TESTS = []
 INV4 = {'runs': 0, 'violations': []}
@@ -1491,7 +1491,7 @@ def hooks_json_registers_the_three_hooks():
     assert cfg and isinstance(cfg.get('hooks'), dict), cfg
     # luismc-docs holds the artifacts hooks and its own docs hooks (Stop, SessionStart): the artifacts one is among them
     want = {'PostToolUse': 'hook_after_command.py', 'PostToolUseFailure': 'hook_after_command.py',
-            'Stop': 'hook_end_of_turn.py', 'SessionStart': 'artifacts/hook_session_start.py'}
+            'Stop': 'hook_end_of_turn.py', 'SessionStart': 'hook_session_start_artifacts.py'}
     for event, script in want.items():
         groups = cfg['hooks'].get(event)
         assert groups, event

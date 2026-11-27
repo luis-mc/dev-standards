@@ -212,7 +212,7 @@ class ComponentGalleryTests(unittest.TestCase):
 class RawInputsGuardTests(unittest.TestCase):
     """The raw-inputs guard template (UX-56) runs under the Node vitest shim when Node 22.6+ is there."""
     KIT = S.TEMPLATES / "guards" / "typescript-vitest-kit"
-    SHIM = Path(__file__).resolve().parents[4] / "tools" / "fixtures" / "vitest_shim" / "run.mjs"
+    SHIM = Path(__file__).resolve().parent / "fixtures" / "vitest_shim" / "run.mjs"
 
     def node_ok(self):
         import shutil

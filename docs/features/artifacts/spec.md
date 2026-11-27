@@ -11,7 +11,7 @@ code:
   - claude/plugins/docs/references/artifactspec.md
   - claude/plugins/docs/rules/**
   - claude/plugins/docs/design/**
-  - claude/plugins/docs/scripts/artifacts/**
+  - claude/plugins/docs/scripts/hook_session_start_artifacts.py
   - claude/plugins/docs/scripts/artifact_*.py
   - claude/plugins/docs/scripts/project_artifacts.py
   - claude/plugins/docs/scripts/render_artifacts.py
@@ -333,7 +333,7 @@ The full list is the ARTIFACTSPEC decision record (D1 to D25). These are the las
 
 Where the record lives when nothing says (D182, DS219): `docs/project`. `.claude/artifacts.json` with a `record_dir` wins. A `record_dir` in `docs/docs.json` is used when there is no `.claude/artifacts.json`. A `.claude/artifacts.json` without `record_dir` keeps the old `docs/artifacts`. With no setting at all, a record that already sits in `docs/artifacts` (and none in `docs/project`) is still found there. The tests are in `tools/test_artifacts_ds219.py`.
 
-The plugin is part of `luismc-docs` since DS219. The five skills are `luismc-docs:feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add` and `task-status-update`. The artifacts hooks run beside the docs hooks in one `hooks/hooks.json`. The artifacts session hook is `scripts/artifacts/hook_session_start.py`, because the docs plugin has a `scripts/hook_session_start.py` of its own.
+The plugin is part of `luismc-docs` since DS219. The five skills are `luismc-docs:feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add` and `task-status-update`. The artifacts hooks run beside the docs hooks in one `hooks/hooks.json`. The artifacts session hook is `scripts/hook_session_start_artifacts.py`, because the docs plugin has a `scripts/hook_session_start.py` of its own (moved from `scripts/artifacts/` in DS304).
 
 ## 11. Not built yet
 
@@ -349,7 +349,7 @@ Source: claude/plugins/docs/scripts/ci_live.py
 Source: claude/plugins/docs/templates/project-artifact.css
 Source: claude/plugins/docs/scripts/hook_after_command.py
 Source: claude/plugins/docs/scripts/hook_end_of_turn.py
-Source: claude/plugins/docs/scripts/artifacts/hook_session_start.py
+Source: claude/plugins/docs/scripts/hook_session_start_artifacts.py
 
 | Path | Holds |
 |---|---|

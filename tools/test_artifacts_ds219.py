@@ -6,7 +6,7 @@
   3. .claude/artifacts.json without record_dir: docs/artifacts (the old default)
   4. .claude/artifacts.json record_dir wins over docs.json
   5. a broken artifacts.json falls back to docs/artifacts for the hooks, raises for the script
-  6. the session hook (scripts/artifacts/) finds a record in docs/project
+  6. the session hook (scripts/hook_session_start_artifacts.py) finds a record in docs/project
 
 Run:  python -I tools/test_artifacts_ds219.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
@@ -92,7 +92,7 @@ def broken_settings():
 
 @case
 def session_hook_reads_a_record_in_docs_project():
-    hook = os.path.join(SCRIPTS, 'artifacts', 'hook_session_start.py')
+    hook = os.path.join(SCRIPTS, 'hook_session_start_artifacts.py')
     with tempfile.TemporaryDirectory() as d:
         subprocess.run(['git', 'init', '-q', d], check=True)
         write(d, 'docs/project/manifest.json', json.dumps({'schema': 1, 'artifacts': {}}))

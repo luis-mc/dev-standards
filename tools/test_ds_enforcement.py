@@ -24,7 +24,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 PLUGINS = os.path.join(REPO, 'claude', 'plugins')
 KIT = os.path.join(PLUGINS, 'docs', 'templates', 'design-system', 'guards', 'typescript-vitest-kit')
-SHIM = os.path.join(HERE, 'fixtures', 'vitest_shim', 'run.mjs')
+SHIM = os.path.join(PLUGINS, 'docs', 'tests', 'fixtures', 'vitest_shim', 'run.mjs')
 
 
 def load(path, name):

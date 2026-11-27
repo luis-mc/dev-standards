@@ -1,4 +1,4 @@
-// Usage: node tools/fixtures/vitest_shim/run.mjs <test file> [<test file> ...]
+// Usage: node claude/plugins/docs/tests/fixtures/vitest_shim/run.mjs <test file> [<test file> ...]
 // Runs vitest-style test files (TypeScript with erasable types) with the shim in vitest.mjs.
 import { register } from 'node:module';
 import { resolve } from 'node:path';
