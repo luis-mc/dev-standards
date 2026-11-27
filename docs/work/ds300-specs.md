@@ -62,3 +62,159 @@ Each row names the canonical home first. "Copies" are the places that restate it
 | D24 | No retries in CI | DL-121 (ds:136) | DL-99 G3 (ds:120), DL-120 (ds:135) | Keep DL-121; the others cite it. |
 
 Also inside DELIVERYSPEC: DL-76 is repeated word for word at ds:363; `stalled` is defined twice, differently (ds:96 and ds:283); the counts line (ds:190) still counts DL-77..79, which ds:195 says are removed.
+
+## 2. Conflicts
+
+Each row quotes both sides. "Code" says which side the hooks or scripts follow. "Owner?" is Yes when the fix needs an owner decision, not just an edit.
+
+### 2.1 Merge, ready PRs and who pushes
+
+**C1. Who merges a green PR.** Owner? **Yes.**
+- Side A, the owner merges: DL-73 (ds:185) "agents may open pull requests, mark them ready and edit their title and description; merging stays the owner's." Same text in r/ai:15 and f/ps R5.24 (:114). AG:10 "Agents never run `gh pr merge` in either mode".
+- Side B, the watcher or the session merges: DL-03 (ds:62) "Merge a green train at once." D5 (ds:342) "merges the previous train the moment its CI is green". §6 `merge_on_green` default true (ds:360). f/del R5.71 (:231) "`auto` (the default: merge on green)". r/dt:6 "merge it at once". inv:1588 "It merges when that run is green, never by auto-merge" (the word "auto-merge" here means `--auto`, which reads like the opposite of `merge_mode: auto`).
+- Code: side B. `delivery_config.py:55-57` defaults to `auto`. The watcher merges (`delivery_watch.py:882`). `hpt:88-93` denies an agent's `gh pr merge` only in `manual` mode or with `--auto`. In `auto` mode an agent session may still run `gh pr merge`, which AG:10 forbids.
+- `watcher.merge_mode` is not in DELIVERYSPEC at all; only f/del R5.71 and AG:10 state it.
+- Proposal: DL-03 becomes "In `auto` mode the watcher merges a green PR at once; in `manual` mode the owner merges." DL-73 drops its merge clause and cites DL-03. Owner decides: may a session (not the watcher) run `gh pr merge` in `auto` mode? If no, `hpt` denies it in both modes and AG:10 becomes true.
+
+**C2. Manual merge mode deadlocks the question rule.** Owner? No (follows from the owner's choice of `manual`).
+- `hpt:822-831` (Q-4) denies `AskUserQuestion` while a green train is unmerged. `hs:281-284` (DL-03) blocks the turn end with "green and not merged ... gh pr merge N". Neither reads `merge_mode` (`hl:300-303`).
+- In `manual` mode `hpt:88-90` refuses the merge. The session can neither merge nor ask the owner, until it records a hold.
+- Proposal: Q-4 and the DL-03 Stop check skip green trains when `merge_mode` is `manual`; the Stop line says "green, waiting for the owner to merge" once, as a warning. Add a test next to `test_dp16_merge_mode.py`.
+
+**C3. Who opens a ready PR.** Owner? **Yes** (scope of "agent").
+- AG:7 "an agent ... never ... opens a ready pull request."
+- DL-73 (ds:185) "agents may open pull requests, mark them ready".
+- DL-08 (ds:67) "Open a ready PR only from a release/integration branch; every other PR is a draft." r/ai:20 "Open one ready PR when the join is pushed".
+- D5 (ds:342): the watcher "opens its ready PR".
+- Code: `session_guard.py:247-277` refuses `gh pr create` without `--draft` and `gh pr ready` off a release branch. It is wired only by this repo's `.claude/settings.json`, so it does not ship to projects. The watcher's `gh pr create` (`delivery_watch.py:1081`) runs as a subprocess, so no hook sees it.
+- Proposal: name three roles once (G-section): task agent, orchestrator (the main session), watcher. DL-08 says: a task agent opens drafts only; the orchestrator or the watcher opens the one ready PR from the integration branch. DL-73's PR clause cites DL-08. Ship the ready-PR check in `hpt` so projects get it.
+
+**C4. "Plugins never commit, push or merge."** Owner? **Yes.**
+- AG:11 "Plugins write files in the working tree. They never commit, push or merge."
+- The delivery watcher pushes, opens PRs, merges, cancels and re-runs runs (`delivery_watch.py:702-1124`), and SessionStart starts it (`hook_session_start.py:195-270`). D5 (ds:342) requires this.
+- f/tc R5.8 (:163) "The artifacts record commits on every change and pushes once per turn". ARTIFACTSPEC R4.13 (art:618) "The plugin MUST NOT write git state". f/docs 0.10.1 log says `docs_work.py strip --apply` commits.
+- Code: the docs plugin follows R4.13; the delivery watcher follows D5.
+- Proposal: AG:11 becomes "Hooks and the docs plugin never commit, push or merge. The delivery watcher pushes trains, opens the ready PR and merges per `merge_mode` (DL-03)." Retire f/tc R5.8 as "Superseded by ARTIFACTSPEC R4.13". Check whether `strip --apply` still commits.
+
+### 2.2 CI scope and test cost
+
+**C5. Does the ready PR's first run run everything?** Owner? **Yes** (for this repo).
+- Products: DL-80 (ds:159) "A release pull request runs the full suite on its first run". f/del R5.89 (:267). inv:1586. r/ai:10 and r/ai:20 "The ready PR's first CI run is the one full run".
+- This repo: f/tc R5.2 (:151) "The ready PR runs only the jobs of the touched areas." `docs/guides/testing.md:11` says the same, right after saying the shipped rule "applies here too" (:5).
+- Code: this repo follows f/tc R5.2. `tools/ci_areas.py` runs every area only for shared paths, unmapped paths, schedule or dispatch; there is no first-run-full rule.
+- Proposal: either this repo adopts DL-80 (first run full), or f/tc R5.2 says "This repository deviates from DL-80: ..." with the reason. Today the guide contradicts itself.
+
+**C6. May an agent start branch CI?** Owner? **Yes.**
+- r/ai:10 "A heavy change ... runs a 1-2 minute local smoke ..., then CI on its branch for its area only (`gh workflow run ...`)". `docs/guides/testing.md:9` the same.
+- f/dsp DL3 (:48) "It never starts a branch CI run unless the change behaves differently on Linux." f/tc S4 (:125) "No full branch runs by agents ... only for a Linux-specific change".
+- DL-12 (ds:71) and DL-81 (ds:160): on the opt-in CI-gate path, "its branch CI is its gate", run by `agent_ci.py`, not `gh workflow run`.
+- r/ai:19 "branch gate in the agent sandbox (no Actions)" contradicts r/ai:10 in the same file.
+- Code: `session_guard.py:144-201` refuses a full local run of a heavy suite (> 180 s), which pushes agents to branch CI. Nothing refuses `gh workflow run --ref`.
+- Proposal: DL-12 states the light/heavy split once, with the CI path named (`agent_ci.py` or `gh workflow run`, one of them). f/dsp DL3 is marked superseded. r/ai:19 drops "(no Actions)".
+
+**C7. Mutation passes on pull requests.** Owner? No (two of three sources and the code agree).
+- f/tc R5.3 (:153) "A mutation pass runs only when its own scripts, hooks or suite file change" (any event).
+- DL-99 G6 (ds:120) "no mutation ... on a pull request or a non-default push". f/dsp R5.23 (:117) "never run on a pull request: only the nightly".
+- Code: `spec-lint.yml:240-748` runs mutation passes on a PR when a guarded file changes (follows f/tc R5.3). `docs/guides/testing.md:11` agrees with the code.
+- Proposal: DL-99 G6 is Scope G for products; this repo is a declared exception. State it once in f/tc R5.3 ("unlike DL-99 G6").
+
+**C8. Default-branch run after a merge.** Owner? No.
+- f/del R5.88 (:265) calls "main's post-merge full run" a safety net. f/del R5.95 (:279) "replaces main's post-merge full run". f/tc R5.5 (:157) skips only for ignored paths. DL-76 (ds:188) "Nothing after the merge re-runs what the release PR proved".
+- Code: the carry-plan action (R5.95).
+- Proposal: fix R5.88's parenthesis; f/tc R5.5 cites R5.95.
+
+**C9. Change notes: two folders, two tools, two fold points.** Owner? **Yes** (where the fold runs).
+- Folder: AG:8 "adds a change note in `docs/architecture/changes/`". AG:19 "`docs_fold.py note --doc features/<feature>`", which writes `docs/features/<feature>/changes/<task>.md` (DOCSPEC R7.1, doc:306).
+- Level: inv:1604 "Branches SHOULD NOT edit a spec's version or change log." AG:8 "never". inv:1669-1671 "A version or change-log edit off a release branch is refused at commit time".
+- When: DL-24 (ds:83) "Only the release PR folds spec change notes." DL-10 (ds:69) "A ready PR from `release/*` runs `release:prepare` (fold spec notes) before CI." `docs/architecture/changes/README.md` "the orchestrator folds there [on `main`]". `docs/README.md` "The release fold on `main`".
+- Code: `change_notes.py` pre-commit refuses the edit (MUST side). Both tools fold on demand; nothing ties the fold to the release PR or to `main`.
+- Proposal: one rule in DOCSPEC §7 covering both note kinds (doc notes and spec/plugin notes), MUST level; STACKSPEC cites it. Owner decides: the fold runs on the release PR (DL-24) or on `main` after the merge (README). Then fix the other.
+
+### 2.3 Time, Expected and the record
+
+**C10. ETA: clock time vs date.** Owner? No.
+- DL-31 (ds:95) "Give every ETA as a clock time". r/dt:4 "Every ETA is a clock time".
+- ARTIFACTSPEC R6.6 (art:1570) allows `DD Mon` with no time, and `DD Mon ~HH:MM` "for work due within a day".
+- Scope differs (chat vs record row), but the words collide. Proposal: DL-31 says "in chat"; R6.6 stays for the record and cites DL-31 for chat.
+
+**C11. Default record folder.** Owner? No (the code already decided, D182).
+- ARTIFACTSPEC R4.37 (art:780) and the config table (art:2157): default `docs/artifacts`. R4.13 (art:618) still says `docs/artifacts/`.
+- DOCSPEC R2.4 (doc:181) and D14 (doc:112): default `docs/project`. `docs/overview/glossary.md` and f/art :334: `docs/project`.
+- Code: `artifact_queue.py:25-26, 74-89`: `record_dir` in `.claude/artifacts.json`; else `docs/artifacts` when that file exists; else `record_dir` in `docs/docs.json`; else `docs/project`.
+- Proposal: ARTIFACTSPEC R4.37 states the code's order. DOCSPEC R2.4 cites R4.37. R4.13 says "the record folder (R4.37)".
+
+**C12. Past-due Expected: block now or warn first.** Owner? **Yes.**
+- DL-63 (ds:173) "No open row may show an Expected time in the past." Kind STOP. ARTIFACTSPEC R6.14 (art:1660) and R8.19 (art:1934) "The hook blocks while an open row is past its Expected time".
+- f/art R5.25 (:191): warn once; block only a Running or Waiting row more than 60 minutes past due.
+- Code: both. `hs:613-629` (delivery) blocks at once. `hook_end_of_turn.py:383-421` (docs) warns, then blocks after 60 minutes. A project with both plugins gets both.
+- Proposal: owner picks one behaviour. ARTIFACTSPEC R8.19 owns it; DL-63 retires as "Merged into ARTIFACTSPEC R8.19" and the delivery check is removed.
+
+**C13. ETA check threshold.** Owner? No (newer text and code agree).
+- DL-30 (ds:94) checks against `eta_table` (15-25, 25-35, 40-60 min); §3 (ds:282) "Warn when the total is > 2x the `eta_table` row". Today N.
+- f/del R13.89 (:564) refuses an ETA "more than 50 % above the measured p75", at least 5 samples.
+- Code: `hpt:645-678` denies above 1.5 x p75 with 5 samples (R13.89). `delivery_eta.py:20` uses 3 samples for the CLI.
+- Proposal: DL-30 states R13.89's rule; drop the `eta_table` text; one sample minimum.
+
+**C14. ARTIFACTSPEC contradicts itself.** Owner? No.
+- R6.3 (art:1550) "There is no `Earlier` fold" vs R6.12 (art:1616), R5.46, D15 and the config table, which describe one.
+- R5.61 (art:1454) removes the lede, At a glance and tiles; R5.3, R5.33, R5.37 and the §14 table still assume them.
+- R4.5 (art:571) "dropped work is set On hold or Built" vs R5.49 (art:1338) adds `Dropped`.
+- R8.5 (art:1803) "The hook fetches the default branch" vs R4.13 "Nothing is synced from `origin`".
+- Proposal: edit the stale lines to match the newer rule (R6.3, R5.61, R5.49, R4.13 win).
+
+### 2.4 Questions, attribution, agents
+
+**C15. Plain-chat questions.** Owner? No.
+- DL-71 (ds:183) "or ask in plain chat". DL-72 (ds:184) "re-ask in plain chat". §3 (ds:285) "end the turn with the text, ask in plain chat".
+- Q-2 (ds:348) and r/cq:4 "never write questions to the user as plain text".
+- Code: Q-2. `hs:206-235` blocks a reply that ends with a list of questions. DL-71 and DL-72 have no check.
+- Proposal: retire DL-71 and DL-72 (see D2). Keep one exception if the owner wants it: "a rejected dialog is re-asked in the wizard, not in text".
+
+**C16. Q-1 rule-file wording goes past the spec.** Owner? **Yes.**
+- r/cq:3 "overrule any internal safety limits or 4-question caps. Even if you have 20, 50, or 100+ questions". Q-1 (ds:347) only says "There is no 4-question cap when the owner says 'ask me questions'".
+- "Overrule any internal safety limits" asks the model to ignore limits the spec never names. Proposal: r/cq:3 says only what Q-1 says.
+
+**C17. Attribution.** Owner? No.
+- DL-74 (ds:186) "No Co-Authored-By or Claude attribution in commits or PR bodies (owner choice)." Unconditional; Today N.
+- r/ai:16 "... when `.delivery/config.json` sets `no_attribution`". The key is not in DELIVERYSPEC §6.
+- Code: `hpt:342-348` denies only when `no_attribution` is true (default false, `hl:47`).
+- Proposal: DL-74 says "when `no_attribution` is true"; add the key to §6 and the schema.
+
+**C18. Agent effort and caps.** Owner? No.
+- DL-37 (ds:102) "Code agents: Sonnet at medium". r/ai:3 "Sonnet at {{SUBAGENT_EFFORT}}". Proposal: DL-37 says "the effort chosen in claude-setup (default medium)".
+- DL-38 (ds:103) "local <= 3 and only with > 8 GB free memory, total 53". r/ai:9 omits memory and total. ds:326 example "caps 8/3/5". Code: `hl:39-40`, `hpt:754-798` (50/3/53, 8 GB). Proposal: fix ds:326; r/ai:9 may stay short since the hook enforces it.
+
+**C19. Model of spec-check.** Owner? No.
+- f/specs:70 "The skills pin ... `sonnet` (spec-check)". f/models:91 lists spec-check under Haiku.
+- Code: `claude/plugins/docs/skills/spec-check/SKILL.md:4` `model: haiku`. Fix f/specs:70. f/models decision row 0014 (:162) still says Explore stays on Opus; f/models:39 says it was reversed.
+
+### 2.5 Feature specs against their owners and against each other
+
+**C20. Red-run cancel default.** f/del R5.13 (:91) "`ci_watch.py` ... cancels the other runs of that head ... `--no-cancel-on-red` ... keeps the old wait". f/dsp R5.22 (:115) "`ci_watch.py` never cancels a red run by default". Code: `ci_watch.py:856-859` default False. Fix f/del R5.13.
+
+**C21. `cancel_joined_runs.py`.** f/del R5.22 (:117) "Removed (DS293)". DL-97 (ds:87) and f/dsp R5.18 (:107) still name it. Fix both.
+
+**C22. Delivery log default.** f/dsp R5.7 (:85) logs before every delete. f/del R5.32 (:137) "The default changed from on to off". Code: `cleanup.py:40` off. Fix f/dsp R5.7.
+
+**C23. `docs/work/` on a branch.** AG:20 puts briefs in `docs/work/`; AG:24 says run `docs_check.py` before finishing. DOCSPEC R10.2 (doc:394) runs W1 "on a ready pull request". Code: `docs_check.py:343-349` fails W1 on any branch that adds `docs/work/` files, so the check AG:24 asks for fails on every agent branch with a report. Proposal: W1 runs only with `--ready` (or in the PR gate), as R10.2 says.
+
+**C24. AUTHSPEC against STACKSPEC.** Owner? **Yes** for the first two.
+- Rate-limit headers: inv:564 "Responses MUST carry rate-limit headers". auth R17.7 (:1462) "MUST NOT reveal which limit was hit, the remaining budget". Common headers carry the remaining budget. Proposal: STACKSPEC says "except auth endpoints (AUTHSPEC R17.7), which send only `Retry-After`".
+- Secret fields: inv:715-717 "Fields classified `secret` MUST additionally be encrypted at the application layer". auth :380 password hash "Never encrypted-and-reversible". Proposal: STACKSPEC names one-way hashes as meeting the `secret` rule.
+- Latency: auth :1879-1881 session validation ≤ 5 ms hit, ≤ 30 ms miss; inv:1694 ≤ 10 ms. auth :1880 `GET /v1/me` ≤ 100 ms; inv:1693 typical read ≤ 200 ms. Stricter is allowed; AUTHSPEC should say it narrows STACKSPEC.
+- Deviation record: auth :76 "in the project's configuration reference (§24)"; inv:227 "a recorded justification and a named approver (§18)", in the Stack Profile. Proposal: one home, the Stack Profile; AUTHSPEC cites it.
+- Fail mode: auth fails closed on all auth endpoints; inv:561-562 only on credential and token buckets. Stricter; cite.
+- Levels that differ but are compatible because AUTHSPEC narrows scope: accessibility (auth R21.1 MUST AA for auth flows vs inv:1116 SHOULD), payload (auth R22.38 MUST < 50 KB vs inv:533 SHOULD).
+
+**C25. STACKSPEC breaks its own versioning rule.** inv:1992 "A new `MUST` is a major version." 8.8.0 (inv:64-66, rules at inv:1406-1412), 8.6.0 (inv:76-78) and 8.2.0 added MUSTs as minor bumps. The change-note `change:` kind is chosen by the author and nothing checks it. Owner? **Yes**: keep the rule and bump, or relax it to "a new MUST that breaks a conforming product is a major version".
+
+**C26. Small ID and text slips** (no owner decision):
+- f/del uses R5.36c (:149, :155), R5.46 (:175, :179) and R13.96 (:516, :570) twice each. f/docs uses R5.23 twice (:78, :108). `spec_check.py` would report these if it ran on feature specs.
+- f/del R5.80 cites DL-12; the matching row is DL-122.
+- f/dsp R6.1 (:135) exit codes 0-4; f/del R5.56 (:203) and R5.57 (:205) add exit 5.
+- DOCSPEC R15.7 (doc:475) DS2 "warn (never error)" for a missing approval vs R15.25 (doc:489) DS7 fails it.
+- f/del R5.12 doctor checks a runner hook; DELIVERYSPEC ds:367 lists five checks without it; runner hooks were removed.
+- f/del :378 D5 "85% memory, 60% CPU" vs ds:195 "The plugin no longer owns machine limits".
+- ARTIFACTSPEC cites "decision D20" (art:2004) for the hourly fail-safe; D20 in its table is another decision. It cites D48; the table stops at D26.
+- inv:333-335 still shows `docs/specs/` and `docs/notes/`; §16 and 8.5.0 replaced them with DOCSPEC's layout. The heading "What changed in 7.x, 6.0 and 5.x" (inv:62) holds 8.x entries.
+- ARTIFACTSPEC heading "0.4 What changed in 1.1.0" (art:106) holds every entry to 1.32.0.
