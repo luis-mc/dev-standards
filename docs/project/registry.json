@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T13:07+00:00",
+  "updated": "2026-11-27T13:08+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12818,6 +12818,27 @@
       "detail": "crsp ask 27 Nov 13:15: release rows show the PR plus each workflow run of its head (name, status, link, start, duration/ETA), the tag run and post-merge main runs until Live; task rows with a PR or pushed branch show the same. Data: gh run list --commit <sha>, refreshed by pending --refresh",
       "expected": "",
       "changed": "2026-11-27T13:07+00:00"
+    },
+    {
+      "id": "DS296",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Cloud sessions get the pinned dev-standards scripts and gitleaks",
+      "detail": "crsp ask 27 Nov 13:25: a delivery-installed cloud bootstrap (SessionStart hook or scripts/delivery/cloud_setup.sh) fetches the pinned dev-standards checkout into .dev-standards-tools and gives the scripts one path locally and in the cloud; installs pinned gitleaks (version + SHA-256 as ci.yml pins) and the Python test deps",
+      "expected": "",
+      "changed": "2026-11-27T13:08+00:00"
+    },
+    {
+      "id": "DS297",
+      "owner": "project",
+      "app": "",
+      "status": "Needs you",
+      "item": "claude-setup allows the GitHub MCP PR tools",
+      "detail": "crsp ask 27 Nov 13:25: auto mode refused mcp__github__create_pull_request in a cloud routine. claude-setup would add allow rules for the MCP create/update/ready PR tools (the gh pr create/ready/edit rules exist), and routine briefs would state the owner's PR authorisation; merge stays the owner's. Changes shipped permissions: owner OK first",
+      "expected": "27 Nov ~13:40",
+      "changed": "2026-11-27T13:08+00:00",
+      "expected_basis": "default ETA, other: 30 min"
     },
     {
       "id": "DU1",
