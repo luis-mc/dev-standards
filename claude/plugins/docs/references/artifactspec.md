@@ -2107,20 +2107,23 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 
   Since 1.1.0 it no longer copies the rule file (R10.4). Verified by
   `test_init_session_files`.
-- **R10.3** — The rule file holds one short imperative line per rule:
-  - record work as a task before starting it;
+- **R10.3** — The rule file `rules/project-artifacts.md` holds one short imperative line per rule, and no
+  definition (§1.4 has those) and no line that repeats another:
   - start branch names with the task ID;
   - change status only with `set-task-status`;
-  - publish Full Progress once, at the end of the turn, never mid-turn, and
+  - publish Full Progress once, at the end of the turn, never mid-turn (R9.1), with the steps of R9.10, and
     never publish a feature artifact;
-  - never type a status row by hand;
-  - put every doc under `docs/`;
+  - the plugin writes the record and never commits or pushes it (R4.13);
+  - the lines of R3.2 and R3.5;
   - record the options the owner chose between, and the choice, in the
     feature's `decisions.json` in the same turn (§5.4);
-  - the four lines of R3.2 to R3.5;
   - old claude.ai pages of feature artifacts are deleted only with the owner's
     confirmation (R4.23);
-  - an Expected time comes with its basis (R6.11).
+  - an Expected time comes with its basis (R6.11);
+  - the release lines of R5.47 and R5.47a, and `mark-deferred` when the daily limit refuses a publish (R9.7).
+
+  The file is the list; `rule_file_carries_the_activity_rules` and the other `rule_file_carries_*` cases of
+  `tools/test_project_artifacts_hooks.py` check it.
 - **R10.4** — The plugin delivers the rule file itself: the session-start hook
   (R8.9) prints it in every project that has a record, every session, so a rule
   change reaches every project with the plugin and no copy can go stale.

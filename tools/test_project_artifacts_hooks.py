@@ -1166,12 +1166,14 @@ def start_delivers_no_rule_without_a_manifest():
 
 @test
 def rule_file_carries_the_activity_rules():
-    """R3.2 to R3.5, R10.3: each of the four lines is in the plugin's rule file."""
+    """R3.2, R3.5, R10.3: the activity lines are in the plugin's rule file; the definitions of R3.3 and R3.4 and
+    the lines that only repeated another line are not (E19, E20: DS304)."""
     lines = [ln[2:] for ln in rule_file_text().splitlines() if ln.startswith('- ')]
-    for old in ('Record work as a task before starting it.', 'Start branch names with the task ID.',
-                'Change status only with `set-task-status`.',
-                'Never type a status row by hand.', 'Put every doc under `docs/`.'):
+    for old in ('Start branch names with the task ID.', 'Change status only with `set-task-status`.'):
         assert old in lines, old
+    for gone in ('Record work as a task before starting it.', 'Never type a status row by hand.',
+                 'Put every doc under `docs/`.'):
+        assert gone not in lines, gone
     assert 'Publish what `pending` lists in the same turn.' not in lines        # R3.1: not after every change
     publish = [ln for ln in lines if ln.startswith('Publish Full Progress')]
     assert len(publish) == 1 and 'once, at the end of the turn, never mid-turn' in publish[0], publish
@@ -1179,13 +1181,22 @@ def rule_file_carries_the_activity_rules():
     joined = '\n'.join(lines)
     for frag in ('Every activity is a task before it starts, whoever does it',
                  "the session's own", 'contracts', 'joins', 'test runs', 'releases', 'deploys', 'cleanup',
-                 'A task is Running while any work for it runs',
-                 'Waiting or Needs you when blocked on something or someone',
-                 'Built means the work is finished but not released', 'release work still to come',
-                 'is its own task, Running or To do',
                  'Before ending a turn that leaves work running in the background, its task is Running'):
         assert frag in joined, frag
     assert all(len(ln) < 260 for ln in lines), 'one short imperative line per rule'
+    assert 'A task is Running while' not in joined and 'Built means' not in joined, 'definitions live in ARTIFACTSPEC 1.4'
+
+
+@test
+def definitions_carry_running_and_built():
+    """R3.3, R3.4 (E20): ARTIFACTSPEC section 1.4 defines Running and Built; the rule file does not repeat them."""
+    with open(os.path.join(PLUGIN, 'references', 'artifactspec.md'), encoding='utf-8') as f:
+        spec = f.read()
+    defs = spec.split('### 1.4 Definitions', 1)[1].split('\n## ', 1)[0]
+    running = [ln for ln in defs.splitlines() if ln.startswith('| Running (task) |')]
+    built = [ln for ln in defs.splitlines() if ln.startswith('| Built (task) |')]
+    assert running and 'Any work for the task runs now' in running[0] and 'Waiting or Needs you' in running[0], running
+    assert built and 'finished but not released' in built[0] and 'its own task, Running or To do' in built[0], built
 
 
 # --- upgrading a project: the rule, migration, old pages (R8.12 to R8.15) -------------------
