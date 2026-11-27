@@ -130,7 +130,7 @@
     },
     "no_attribution": {
       "type": "boolean",
-      "description": "DL-74: refuse AI attribution in commits and PR text."
+      "description": "DL-74: when true, refuse Co-Authored-By or AI attribution in commits and PR text (default false)."
     },
     "measure_globs": {
       "type": "array",
@@ -158,7 +158,7 @@
       "items": {
         "type": "string"
       },
-      "description": ""
+      "description": "Not read since DS303: DL-63 merged into ARTIFACTSPEC R8.19, and the docs plugin checks past-due Expected times."
     },
     "install_state_files": {
       "type": "array",
@@ -259,7 +259,7 @@
             "manual"
           ],
           "default": "auto",
-          "description": "auto: merge on green (the watcher merges a green PR). manual: the owner merges; the watcher never merges and the hooks refuse an agent's gh pr merge (DP16)."
+          "description": "DL-03: auto: the watcher merges a green PR. manual: the owner merges and the watcher never does. In both modes the hooks refuse a session's gh pr merge (DS303)."
         },
         "merge_on_green": {
           "type": "boolean",

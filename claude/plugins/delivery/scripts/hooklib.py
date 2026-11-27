@@ -48,7 +48,6 @@ DEFAULTS = {
     'train_label_re': r'\b(?:T-\d{4}-\d{2}-\d{2}-\d+|train[- ]?[A-Za-z0-9]+|release/\d+)\b',   # DL-64
     'gate_markers': ['gate', 'join.py', 'ci_watch'],      # DL-23 commands that count as gate context
     'md_allow': [],                           # DL-75 extra allowed globs
-    'registry_open': ['Running', 'Waiting', 'Needs you', 'To do'],    # DL-63
     'join_push_min': 5,                       # DL-02
     'check_min': 30,                          # DL-32
     'watcher_min': 20,                        # DL-33

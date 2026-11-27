@@ -28,7 +28,7 @@ pending (run on every push to the default branch): fails while any note waits to
 be folded, so a note merged without a fold cannot leave a plugin or spec at its
 old version unnoticed.
 
-fold (run on a release branch before the ready PR): for each spec with notes,
+fold (run on the default branch after the release merges, DELIVERYSPEC DL-24): for each spec with notes,
 bumps its **Version:** by the highest change kind, writes one change-log entry
 under the change-log heading (new version, date, one bullet per note) and
 deletes the folded notes. A note's "plugin:" is bumped the same way: the

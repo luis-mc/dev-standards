@@ -582,10 +582,8 @@ WARN_ONLY = ('DL-124',)
 
 def check_running_idle(root, ledger, cfg):
     """DL-124 (DS267, warn only): a task is Running, no agent row is open for it and no CI run is active for it.
-    DS276 (DL-130): a merged entry not yet cleaned and smoked counts as active. `checks_off` lists DL-124; the old key
-    DL-123 still turns it off (DS303 fixed the key)."""
-    if not H.check_on(cfg, 'DL-123'):
-        return []
+    DS276 (DL-130): a merged entry not yet cleaned and smoked counts as active. DS303: the key is DL-124 (it was
+    DL-123, so `checks_off: ["DL-124"]` did nothing)."""
     reg = H.read_json(os.path.join(root, H.record_dir(root), 'registry.json'))
     if reg is None:
         reg = H.read_json(os.path.join(root, 'docs', 'artifacts', 'registry.json'))
@@ -667,7 +665,7 @@ def findings(root, data, cfg):
     except Exception:  # noqa: BLE001
         pass
     ledger = H.load_ledger(root)
-    H.use_record(root)                # DS275: names every release of a pull request
+    H.use_record(root)                # DS275 (DL-129): names every release of a pull request
     text = last_assistant_text(data)
     out = []
     out += check_trains(ledger, cfg, at, grouped=True)
