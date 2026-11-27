@@ -4,7 +4,7 @@ title: Project artifacts
 apps: [luismc-docs]
 topics: [artifacts]
 status: live
-version: 0.25.3
+version: 0.26.0
 owner: agents
 type: reference
 code:
@@ -372,6 +372,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.26.0 | 2026-11-27 | RELEASE-207 | Full Progress shows live CI runs: each release row lists the PR link and the workflow runs (name, state, link, UTC start, duration or elapsed); a task row with a PR or a pushed branch shows the same compact list. pending --refresh and render store the runs as ci_runs (R5.39 to R5.41). | DS295 |
 | 0.25.3 | 2026-11-27 | RELEASE-209 | The description under a page's title fills the header width instead of wrapping at 46em. | DS291 |
 | 0.25.2 | 2026-11-27 | RELEASE-208 | Full Progress and feature pages use 90% of the previous font sizes (docs R5.18). | DS289 |
 | 0.25.1 | 2026-11-27 | RELEASE-206 | open_local also skips when CLAUDE_ARTIFACTS_NO_OPEN is set; the artifact tests set it, so local test runs no longer open browser tabs (R5.9a). | DS283 |

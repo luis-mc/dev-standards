@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.7.1
+**Version:** 8.8.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -60,6 +60,10 @@ records the choice in its Stack Profile (§18). This document does not name or
 rank vendors.
 
 ### 0.1 What changed in 7.x, 6.0 and 5.x, and why
+
+**8.8.0 — 2026-11-27.**
+
+- A later push to a pull request reruns only the jobs its changes reach and carries the rest; the ready pull request's first CI run is the one full run; every tracked file belongs to an area.
 
 **8.7.1 — 2026-11-01.**
 

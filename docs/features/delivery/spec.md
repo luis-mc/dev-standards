@@ -4,7 +4,7 @@ title: Delivery guard rails
 apps: [luismc-delivery, luismc-project-setup]
 topics: [delivery, hooks, ci]
 status: live
-version: 0.57.1
+version: 0.58.0
 owner: agents
 type: reference
 code:
@@ -592,6 +592,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.58.0 | 2026-11-27 | RELEASE-207 | CI carry-forward: a pull request's later heads run only the jobs with no proof head or whose areas the new commits touch; the rest are carried with a link to the proving run (R5.88). A release pull request runs everything on its first run only (R5.89). Narrower valves (R5.90), carried counts as pass in the required check and one carry-plan action for every workflow (R5.91), failed tests first then affected packages on every trigger (R5.92), replay proof (R5.93).<br>DELIVERYSPEC ships in the delivery plugin at references/deliveryspec.md, so projects can read the DL IDs their rules cite; cancel_joined_runs.py is removed (R5.22); the shared-runners guide moved to docs/guides.<br>Cloud sessions get the docs scripts and gitleaks: `cloud_setup.sh` fetches the pinned dev-standards checkout and installs gitleaks from `tools.json`, a SessionStart hook runs it, and `ds_scripts.py` gives one scripts path (R5.96 to R5.98). The brief tells cloud agents to use `gh pr create` and never hand-write change notes. | DS287, DS293, DS296 |
 | 0.57.1 | 2026-11-26 | RELEASE-204 | Stop hook warn-mode message folds 3+ findings of one rule to the first, a count and the ids; the model's block reason stays full. Changes claude/plugins/delivery/.claude-plugin/plugin.json. | DS280 |
 | 0.57.0 | 2026-11-26 | RELEASE-202 | R5.84 to R5.87: a fold takes only the notes of the named release; the Stop hook names every release a pull request carries; a merged entry is not idle work; link sets the pull request on its releases (DL-128 to DL-131). | DS274 |
 | 0.56.0 | 2026-11-26 | RELEASE-199 | R5.82: a pull request proves only the lifecycle targets its changes affect (DL-125). R5.83: DL-40 is enforced once per launch and a `PC-bound:` line with no PC-bound step warns (DL-126, DL-127, DS270). | DS269 |
