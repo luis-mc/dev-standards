@@ -152,6 +152,12 @@ jobs:
           # The base commit must be present to diff against it.
           fetch-depth: 0
 
+      # DS287 (R5.94): every tracked file belongs to an area, a `docs` glob or a `run_everything` entry. A new file
+      # must be mapped before it merges; the list below names each file that is not.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' && hashFiles('scripts/delivery/ci-areas.json') != '' }}
+        run: python3 scripts/delivery/area_select.py --unmapped --check
+
       - id: carry
         continue-on-error: true
         uses: ./.github/actions/carry-plan
@@ -345,8 +351,39 @@ jobs:
 
       # §11.1: server unit tests over core and service-package logic. Pure, fast,
       # no I/O — integration lives in the job below.
+      # DS287 (R5.92): on a pull request, ask rerun_tests.py what the previous head's run of this job leaves to run.
+      # Any error: `current`, and the normal command below runs.
+      - name: Narrow the rerun (Unit tests)
+        id: rerun
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: ./.github/actions/rerun-narrow
+        with:
+          runner: vitest
+          job: verify
+          job-name: lint, types, boundaries, unit + contract tests
+          report-name: test-report-verify
+
+      - name: Unit tests (failed tests first, then affected packages)
+        if: ${{ github.event_name == 'pull_request' && steps.rerun.outputs.mode == 'narrow' }}
+        run: >-
+          python3 scripts/delivery/rerun_step.py exec --decision .rerun/decision.json
+          --prefix 'pnpm vitest run --project unit --reporter=default --reporter=json --outputFile.json=test-report/vitest-unit.json' --then-prefix 'pnpm vitest' --then-suffix '--project unit'
+
       - name: Unit tests
-        run: pnpm vitest run --project unit
+        if: ${{ steps.rerun.outputs.mode != 'narrow' }}
+        run: |
+          mkdir -p test-report
+          pnpm vitest run --project unit --reporter=default --reporter=json --outputFile.json=test-report/vitest-unit.json
+
+      - name: Upload the test report (Unit tests)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-report-verify
+          path: test-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
       # §11.1: "the highest-value control in the entire repository" — every
       # client and the server verified against the same contract fixtures.
@@ -418,8 +455,39 @@ jobs:
       - name: Migrate (seed through the migration chain)
         run: pnpm turbo migrate
 
+      # DS287 (R5.92): on a pull request, ask rerun_tests.py what the previous head's run of this job leaves to run.
+      # Any error: `current`, and the normal command below runs.
+      - name: Narrow the rerun (Integration tests)
+        id: rerun
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: ./.github/actions/rerun-narrow
+        with:
+          runner: vitest
+          job: integration
+          job-name: integration tests (ephemeral Postgres)
+          report-name: test-report-integration
+
+      - name: Integration tests (failed tests first, then affected packages)
+        if: ${{ github.event_name == 'pull_request' && steps.rerun.outputs.mode == 'narrow' }}
+        run: >-
+          python3 scripts/delivery/rerun_step.py exec --decision .rerun/decision.json
+          --prefix 'pnpm vitest run --project integration --reporter=default --reporter=json --outputFile.json=test-report/vitest-integration.json' --then-prefix 'pnpm vitest' --then-suffix '--project integration'
+
       - name: Integration tests
-        run: pnpm vitest run --project integration
+        if: ${{ steps.rerun.outputs.mode != 'narrow' }}
+        run: |
+          mkdir -p test-report
+          pnpm vitest run --project integration --reporter=default --reporter=json --outputFile.json=test-report/vitest-integration.json
+
+      - name: Upload the test report (Integration tests)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-report-integration
+          path: test-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
       # §11.1: the route-authorization coverage test MUST fail the build when
       # any route ships without an explicit authorization declaration. It needs
@@ -475,8 +543,39 @@ jobs:
       - name: Migrate (seed through the migration chain)
         run: pnpm turbo migrate
 
+      # DS287 (R5.92): on a pull request, ask rerun_tests.py what the previous head's run of this job leaves to run.
+      # Any error: `current`, and the normal command below runs.
+      - name: Narrow the rerun (Integration tests)
+        id: rerun
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: ./.github/actions/rerun-narrow
+        with:
+          runner: vitest
+          job: integration-pool
+          job-name: integration tests (ephemeral Postgres)
+          report-name: test-report-integration
+
+      - name: Integration tests (failed tests first, then affected packages)
+        if: ${{ github.event_name == 'pull_request' && steps.rerun.outputs.mode == 'narrow' }}
+        run: >-
+          python3 scripts/delivery/rerun_step.py exec --decision .rerun/decision.json
+          --prefix 'pnpm vitest run --project integration --reporter=default --reporter=json --outputFile.json=test-report/vitest-integration.json' --then-prefix 'pnpm vitest' --then-suffix '--project integration'
+
       - name: Integration tests
-        run: pnpm vitest run --project integration
+        if: ${{ steps.rerun.outputs.mode != 'narrow' }}
+        run: |
+          mkdir -p test-report
+          pnpm vitest run --project integration --reporter=default --reporter=json --outputFile.json=test-report/vitest-integration.json
+
+      - name: Upload the test report (Integration tests)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-report-integration
+          path: test-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
       # §11.1: the route-authorization coverage test MUST fail the build when
       # any route ships without an explicit authorization declaration. It needs
