@@ -4,7 +4,7 @@ title: Documentation standard plugin (luismc-docs)
 apps: [luismc-docs]
 topics: [docs, hooks]
 status: live
-version: 1.18.0
+version: 1.19.0
 owner: agents
 type: reference
 code:
@@ -207,6 +207,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 1.19.0 | 2026-11-27 | RELEASE-210 | docs_work.py strip --apply deletes docs/work/ and prints the git commit command instead of committing (owner C4); docs_check.py runs W1 only at the ready-PR gate (R5.12). The second R5.23 is R5.23a. The vitest shim moves to claude/plugins/docs/tests/fixtures/ (S3). | DS304 |
 | 1.18.0 | 2026-11-27 | RELEASE-208 | Fonts in every page the docs plugin renders are 90% of the DL239 sizes; the root now carries the scale, so rem sizes shrink too (R5.18). | DS289 |
 | 1.17.1 | 2026-11-26 | RELEASE-203 | The artifacts spec gains R5.41a and R5.42c: a Running or Waiting release has phases or a --no-phases reason. | DS278 |
 | 1.17.0 | 2026-11-26 | RELEASE-202 | R5.27: fold --release folds only the notes of that release's tasks; --all folds every note (DL-128). | DS274 |

@@ -1,7 +1,7 @@
 # Product Invariants Specification
 
 **Spec ID:** `STACKSPEC`
-**Version:** 8.8.0
+**Version:** 8.9.0
 **Status:** Binding
 **Applies to:** every new product built by this organization
 
@@ -60,6 +60,10 @@ records the choice in its Stack Profile (§18). This document does not name or
 rank vendors.
 
 ### 0.1 What changed
+
+**8.9.0 — 2026-11-27.**
+
+- STACKSPEC moves to `project-setup/references/stackspec.md`. Auth endpoints send only `Retry-After` (AUTHSPEC R17.7); a one-way hash (AUTHSPEC §5.3) meets the `secret` rule; a new MUST is a major version only when it breaks a conforming product (§20); branches MUST NOT edit a spec's version (DOCSPEC R7.1); §12 owns secret scanning; the §2.1 tree points to DOCSPEC §2; §0.1 is "What changed".
 
 **8.8.0 — 2026-11-27.**
 

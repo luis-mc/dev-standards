@@ -4,7 +4,7 @@ title: Spec authoring and checking (luismc-docs)
 apps: [luismc-docs]
 topics: [specs]
 status: live
-version: 0.2.1
+version: 0.2.2
 owner: agents
 type: reference
 code:
@@ -102,6 +102,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.2.2 | 2026-11-27 | RELEASE-210 | Section 7 says spec-check pins haiku, as its SKILL.md does. | DS306 |
 | 0.2.1 | 2026-11-24 | RELEASE-171 | Mechanical skills move to the haiku model profile; claude-setup asks overwrite, merge or keep for a differing rules file and copies the delivery guide. Plugin: claude/plugins/docs/.claude-plugin/plugin.json. | MP10 |
 | 0.2.0 | 2026-11-10 | RELEASE-86 | The specs plugin is part of luismc-docs; spec-new and spec-check are luismc-docs:spec-new and luismc-docs:spec-check. | DS219 |
 | 0.1.2 | 2026-11-01 | RELEASE-25 | spec-new writes only specs that are not features; feature specs in a DOCSPEC repo are handed to feature-spec-new. | SO3 |

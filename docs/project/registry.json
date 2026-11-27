@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T20:15+00:00",
+  "updated": "2026-11-27T20:30+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12896,7 +12896,7 @@
       "item": "RELEASE: review fixes (DS298-DS300 decisions)",
       "detail": "Apply the no-decision batches and owner decisions D327-D344",
       "expected": "27 Nov ~20:33",
-      "changed": "2026-11-27T20:13+00:00",
+      "changed": "2026-11-27T20:30+00:00",
       "expected_basis": "4 cloud agents ~40 min, join, CI ~15 min, watcher merge",
       "release": 210,
       "phases": [
@@ -12922,7 +12922,7 @@
       },
       "started": "2026-11-27T16:45+00:00",
       "ci_runs": {
-        "fetched_at": "2026-11-27T20:15+00:00",
+        "fetched_at": "2026-11-27T20:21+00:00",
         "runs": [
           {
             "name": "spec-lint",
@@ -12956,16 +12956,17 @@
           },
           {
             "name": "spec-lint",
-            "state": "running",
+            "state": "passed",
             "url": "https://github.com/luis-mc/dev-standards/actions/runs/46062168664",
             "created": "2026-11-27T20:13:41Z",
-            "updated": "2026-11-27T20:13:59Z",
+            "updated": "2026-11-27T20:19:45Z",
             "branch": "DS302-integration",
             "event": "pull_request",
             "kind": "branch"
           }
         ]
-      }
+      },
+      "pr": 310
     },
     {
       "id": "DS303",
@@ -12979,7 +12980,7 @@
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00",
       "ci_runs": {
-        "fetched_at": "2026-11-27T20:15+00:00",
+        "fetched_at": "2026-11-27T20:21+00:00",
         "runs": [
           {
             "name": "spec-lint",
@@ -13016,7 +13017,7 @@
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00",
       "ci_runs": {
-        "fetched_at": "2026-11-27T20:15+00:00",
+        "fetched_at": "2026-11-27T20:21+00:00",
         "runs": [
           {
             "name": "spec-lint",
@@ -13055,7 +13056,7 @@
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00",
       "ci_runs": {
-        "fetched_at": "2026-11-27T20:15+00:00",
+        "fetched_at": "2026-11-27T20:21+00:00",
         "runs": [
           {
             "name": "spec-lint",

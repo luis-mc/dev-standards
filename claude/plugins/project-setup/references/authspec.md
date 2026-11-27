@@ -1,7 +1,7 @@
 # Authentication & Authorization Framework Specification
 
 **Status:** Normative
-**Version:** 3.2.1
+**Version:** 3.3.0
 **Applies to:** every web and mobile application in this organization
 **Audience:** Claude Code (as a generation guide) and human implementers/reviewers
 
