@@ -98,7 +98,7 @@
 */
 *, *::before, *::after { box-sizing: border-box; }
 
-html { scroll-behavior: smooth; scroll-padding-top: 4rem; }
+html { font-size: 90%; scroll-behavior: smooth; scroll-padding-top: 4rem; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 body {
@@ -106,7 +106,7 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--font-body);
-  font-size: 14.4px;
+  font-size: 12.96px;
   line-height: 1.55;
   overflow-x: hidden;
 }
@@ -184,7 +184,7 @@ h1 {
   font-family: var(--font-display);
   font-stretch: var(--font-display-stretch);
   font-weight: 800;
-  font-size: clamp(2rem, 4.5vw, 3rem);
+  font-size: clamp(2rem, 4.05vw, 3rem);
   line-height: 1.05;
   text-wrap: balance;
   margin: .2em 0 .4em;
@@ -195,7 +195,7 @@ header.artifact-header { position: relative; }
 .gen-latest { color: var(--live); }
 .gen-update { color: var(--running-mark); }
 .gen-unknown { color: var(--ink-muted); }
-header.artifact-header p { max-width: 46em; font-size: 1.08rem; }
+header.artifact-header p { max-width: none; font-size: 1.08rem; }  /* DS291: the description fills the header width */
 .artifact-meta {
   font-family: var(--font-mono);
   font-size: .8rem;
@@ -890,11 +890,11 @@ details.status-fold > summary strong { min-width: 0; }
 }
 .timeline-scroll { overflow-x: auto; }
 .release-timeline svg { width: 100%; height: auto; display: block; font-family: var(--font-body); }
-.release-timeline .rt-axis { font-size: 9.9px; fill: var(--ink-muted); text-anchor: middle; }
+.release-timeline .rt-axis { font-size: 8.91px; fill: var(--ink-muted); text-anchor: middle; }
 .release-timeline .rt-grid { stroke: var(--rule); }
 .release-timeline .rt-break { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; }
-.release-timeline .rt-name { font-size: 11.7px; font-weight: 600; fill: var(--ink); }
-.release-timeline .rt-sub { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-name { font-size: 10.53px; font-weight: 600; fill: var(--ink); }
+.release-timeline .rt-sub { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-bar.agents { fill: var(--running-mark); }
 .release-timeline .rt-bar.join { fill: var(--signal); }
 .release-timeline .rt-bar.ci { fill: var(--live); }
@@ -904,13 +904,13 @@ details.status-fold > summary strong { min-width: 0; }
 .release-timeline .rt-worst { fill: var(--paper); stroke: var(--ink-muted); stroke-width: 1.5; }
 .release-timeline .rt-expected { fill: var(--ink); }
 .release-timeline .rt-day { fill: none; stroke: var(--ink); stroke-width: 1.5; }
-.release-timeline .rt-day-label { font-size: 10.8px; fill: var(--ink); }
-.release-timeline .rt-live-label { font-size: 10.8px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
-.release-timeline .rt-risk-label { font-size: 9.45px; fill: var(--ink-muted); }
+.release-timeline .rt-day-label { font-size: 9.72px; fill: var(--ink); }
+.release-timeline .rt-live-label { font-size: 9.72px; font-weight: 600; text-anchor: middle; fill: var(--ink); }
+.release-timeline .rt-risk-label { font-size: 8.5px; fill: var(--ink-muted); }
 .release-timeline .rt-now { stroke: var(--failed); stroke-width: 2; }
-.release-timeline .rt-now-label { font-size: 9.9px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
-.release-timeline .rt-strip-title { font-size: 10.8px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
-.release-timeline .rt-other-label { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-now-label { font-size: 8.91px; font-weight: 600; text-anchor: middle; fill: var(--failed); }
+.release-timeline .rt-strip-title { font-size: 9.72px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; fill: var(--ink-muted); }
+.release-timeline .rt-other-label { font-size: 8.91px; fill: var(--ink-muted); }
 .release-timeline .rt-other.status-running { fill: var(--running-mark); }
 .release-timeline .rt-other.status-waiting { fill: var(--rule-strong); }
 .release-timeline .rt-other.status-needs-you { fill: var(--signal); }
@@ -938,7 +938,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-timeline .rt-trunk { stroke: var(--ink-muted); stroke-width: 2; }
 .release-timeline .rt-dep { stroke: var(--ink-muted); stroke-width: 1.5; fill: none; stroke-dasharray: 4 3; }
 .release-timeline .rt-arrow-head { fill: var(--ink-muted); }
-.release-timeline .rt-pr-tag { font-size: 9.9px; fill: var(--ink-muted); }
+.release-timeline .rt-pr-tag { font-size: 8.91px; fill: var(--ink-muted); }
 .release-tree { width: 100%; min-width: 640px; border-collapse: collapse; font-size: .85rem; }
 .release-tree th, .release-tree td { text-align: left; padding: 6px 8px; border-bottom: 1px solid var(--rule); }
 .release-tree .n { display: block; font-weight: 400; font-size: .75rem; color: var(--ink-muted); }
@@ -955,9 +955,9 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </head>
 <body>
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
-<header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.29.0 <span class="gen-flag gen-update">update: 2.29.1</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
+<header class="artifact-header"><span class="gen-badge" data-gen-state="latest">luismc-docs 2.30.1 <span class="gen-flag gen-latest">latest</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T13:11+00:00">27 Nov 13:11</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T13:16+00:00">27 Nov 13:16</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 13:11</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
@@ -1435,6 +1435,74 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D326">
+<h3 class="decision-head"><span class="decision-id">D326</span> <span class="decision-question">Move docs/features/delivery/shared-self-hosted-runners.md to docs/guides?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS293</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Move to docs/guides</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">git mv and fix 10 links</p>
+<blockquote class="decision-words">&ldquo;Move to docs/guides (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Leave it</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">keep it</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D325">
+<h3 class="decision-head"><span class="decision-id">D325</span> <span class="decision-question">Retire the finished record features and unread history.json files?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS293</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Retire all three + history</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">retire delivery-plugin-review, design-starter, design-field-updates; drop 9 history.json</p>
+<blockquote class="decision-words">&ldquo;Retire all three + history (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep the record</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">leave it</p>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D324">
+<h3 class="decision-head"><span class="decision-id">D324</span> <span class="decision-question">Which unused files should DS293 delete?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS293</p>
+<div class="decision-options">
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">cancel_joined_runs.py + test</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">no workflow calls it</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">change-note.md template</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">nothing names it</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Two upgrade guides</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">one-time migrations every project is past</p>
+</div>
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">All three</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">Delete the script and test, the template and the two guides (multi-select: all ticked).</p>
+<blockquote class="decision-words">&ldquo;cancel_joined_runs.py + test, change-note.md template, Two upgrade guides&rdquo;</blockquote>
+</div>
+</div>
+</article>
+<article class="decision decision-decided" data-decision="D323">
+<h3 class="decision-head"><span class="decision-id">D323</span> <span class="decision-question">Delete the 46 files of docs/archive/?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS293</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Delete all 46</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">git rm docs/archive, drop it from skip lists, rebuild index</p>
+<blockquote class="decision-words">&ldquo;Delete all 46 (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep archive</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">leave it</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D322">
 <h3 class="decision-head"><span class="decision-id">D322</span> <span class="decision-question">Should claude-setup allow the GitHub MCP PR tools (create, update, mark ready) for cloud agents?</span></h3>
 <p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS297</p>
@@ -7083,36 +7151,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s4"><h2><span class="section-number">&sect; 4</span>History</h2>
 <div class="table-scroll"><table class="history-table"><thead><tr><th>Date</th><th>Change</th></tr></thead><tbody>
-<tr><td>25 Nov 14:28</td><td>dropped: folded into RELEASE-173: Superseded: owner removed the whole pool now; DS245 did it</td></tr>
-<tr><td>25 Nov 14:28</td><td>dropped: folded into RELEASE-173: Superseded: owner removed the whole pool now; DS245 did it</td></tr>
-<tr><td>25 Nov 14:28</td><td>dropped: folded into RELEASE-173: Superseded: owner removed the whole pool now; DS245 did it</td></tr>
-<tr><td>25 Nov 14:28</td><td>dropped: Moot: the pool is removed from this PC</td></tr>
-<tr><td>25 Nov 14:28</td><td>dropped: Superseded: the pool is removed here; CRSP will define its own runner contract</td></tr>
-<tr><td>24 Nov 10:30</td><td>PR #268 merged 24 Nov 10:30 UTC; carried agent PR #267; smoke passed</td></tr>
-<tr><td>24 Nov 10:26</td><td>PR #266 merged 24 Nov 10:13 UTC after UX-69 guard-cell fix; luismc-docs 2.16.0</td></tr>
-<tr><td>22 Nov 12:03</td><td>dropped: folded into DL403</td></tr>
-<tr><td>22 Nov 12:03</td><td>dropped: folded into DL403</td></tr>
-<tr><td>21 Nov 15:33</td><td>dropped: folded into RELEASE-160</td></tr>
-<tr><td>15 Nov 02:20</td><td>DL362 item changed from &quot;Pool start-up task&quot; to &quot;Pool KVM loader service and no-KVM fallback&quot;</td></tr>
-<tr><td>14 Nov 13:42</td><td>dropped: folded into RELEASE-140: DL354 rides RELEASE-140 with DL353</td></tr>
-<tr><td>14 Nov 13:42</td><td>DL352 item changed from &quot;RELEASE-140: no ci-wait marker when the fallback is off&quot; to &quot;RELEASE-140: gate skips git when fallback off; swap waits only for container&quot;</td></tr>
-<tr><td>13 Nov 22:33</td><td>dropped: already shipped: peer ci_scope.py equals the luismc-delivery template</td></tr>
-<tr><td>13 Nov 20:36</td><td>DL317 item changed from &quot;Windows runner setup keeps a replaced runner&#x27;s custom labels&quot; to &quot;Shared Windows runner stays generic: projects target it by repo variable&quot;</td></tr>
-<tr><td>13 Nov 13:51</td><td>DL298 item changed from &quot;Watcher merged RELEASE-123 with template-build red&quot; to &quot;Watcher requires every CI run on the ready head&quot;</td></tr>
-<tr><td>13 Nov 12:31</td><td>DL293 item changed from &quot;RELEASE: Rust-only release scope and Rust CI speed (DL293, DL294)&quot; to &quot;RELEASE: Rust-only release scope and Rust CI speed (DL294, DL295)&quot;</td></tr>
-<tr><td>09 Nov 22:49</td><td>DL156 item changed from &quot;Ledger refuses agent rows without an id and duplicate release ids&quot; to &quot;Ledger refuses agent rows without a task and duplicate release ids&quot;</td></tr>
-<tr><td>09 Nov 16:29</td><td>dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release</td></tr>
-<tr><td>09 Nov 16:29</td><td>dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release</td></tr>
-<tr><td>09 Nov 16:29</td><td>dropped: folded into RELEASE-71: Owner merged RELEASE-71 to 75 into one release</td></tr>
-<tr><td>09 Nov 16:01</td><td>dropped: folded into DS200: covered by the Rust CI helper (D142)</td></tr>
-<tr><td>09 Nov 16:01</td><td>dropped: folded into DS200: covered by the Rust CI helper and tool fetcher (D140)</td></tr>
-<tr><td>09 Nov 15:27</td><td>dropped: folded into RELEASE-68: DL120 shipped in RELEASE-68</td></tr>
-<tr><td>05 Nov 15:38</td><td>DL60 item changed from &quot;Runner pool: SHA from the release notes&#x27; markers; CPU headroom below WSL&quot; to &quot;Runner pool on Windows: 4 bugs block setup (SHA, CPU headroom, CRLF, runner dir)&quot;</td></tr>
-<tr><td>05 Nov 15:33</td><td>DL60 item changed from &quot;Runner pool: read the runner SHA-256 from the release notes&#x27; SHA markers&quot; to &quot;Runner pool: SHA from the release notes&#x27; markers; CPU headroom below WSL&quot;</td></tr>
-<tr><td>04 Nov 23:02</td><td>DL49 item changed from &quot;RELEASE-41: release numbers, phases at midnight, bug review fixes&quot; to &quot;RELEASE-41: release numbers from the ledger, phases over midnight, R5.45 advice&quot;</td></tr>
-<tr><td>04 Nov 22:51</td><td>DL50 item changed from &quot;RELEASE-42: fixes from the six-plugin review&quot; to &quot;RELEASE-42: fixes from both plugin reviews (DL48, DL51), DL52&quot;</td></tr>
-<tr><td>02 Nov 19:49</td><td>RELEASE-32 live 19:49, CI green on 040345d</td></tr>
-<tr><td>11 Oct 11:52</td><td>Feature artifact created.</td></tr>
+
 </tbody></table></div>
 </section>
 </main></div>
