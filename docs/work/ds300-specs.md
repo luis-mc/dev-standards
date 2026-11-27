@@ -218,3 +218,36 @@ Each row quotes both sides. "Code" says which side the hooks or scripts follow. 
 - ARTIFACTSPEC cites "decision D20" (art:2004) for the hourly fail-safe; D20 in its table is another decision. It cites D48; the table stops at D26.
 - inv:333-335 still shows `docs/specs/` and `docs/notes/`; §16 and 8.5.0 replaced them with DOCSPEC's layout. The heading "What changed in 7.x, 6.0 and 5.x" (inv:62) holds 8.x entries.
 - ARTIFACTSPEC heading "0.4 What changed in 1.1.0" (art:106) holds every entry to 1.32.0.
+
+## 3. Definitions and one glossary home
+
+Today there are three formal term tables: DOCSPEC §1.1 (doc:120-132), ARTIFACTSPEC §1.4 (art:410-428) and the repo glossary `docs/overview/glossary.md`. DELIVERYSPEC, STACKSPEC and AUTHSPEC have none. The repo glossary does not ship, so projects never see it.
+
+### 3.1 The ten terms
+
+| Term | Meanings found (file:line) | Problem | Proposed single meaning |
+|---|---|---|---|
+| release | (a) a task row with `"release": <n>`, shown as RELEASE-n: art R5.40, R5.45 (art:1116, art:1249). (b) "One batch of task branches that are joined, tested by one ready pull request and merged together": glossary. (c) one PR can carry several releases: DL-129 (ds:144) "joined as `RELEASE-1 and RELEASE-2`". (d) a branch prefix: DL-10 (ds:69) `release/*`; DOCSPEC R15.25 (doc:489) "a release branch (a name starting `release`, or the default branch)". (e) the fold unit: DOCSPEC R7.3-R7.4 (doc:308-313). STACKSPEC uses it about eight ways (deploy, product version, release PR, release gate). | (b) and (c) disagree: is a release one PR or can one PR hold several? | **release**: a set of tasks that ship together, named RELEASE-n, recorded as a release task. It rides one ready PR; one ready PR may carry several releases. Use "release branch" and "release PR" only as compounds, defined once. |
+| train | The ledger's name for a release in flight: glossary; ledger `trains[]` (ds:206-224); "never say train" DL-64 (ds:174). | Fine, but the rule text (DL-01, DL-02, DL-03, DL-16, r/dt) still says "train" to the model, which then says it to the owner. | **train**: ledger-only word for the branch and PR that carry one or more releases. Rule text says "release PR" instead. |
+| task | "One unit of work with an ID, a status and an owner": art:418. ID format three ways: art R4.5 (art:569) "a registered prefix plus a positive integer"; DL-123 (ds:138) "2 to 5 capital letters and digits"; code `^([A-Z]{2,5}[0-9]+)-` (`hook_after_command.py:44`). | Three ID formats. | Keep art:418. One ID format in ARTIFACTSPEC R4.5; the hooks cite it. |
+| Built | art:1529 "Finished, but not merged or released yet"; art R3.4 (art:493) "finished but not released"; glossary "finished but not yet released"; r/pa:12. | "Not merged" appears only in art:1529. Is a merged, undeployed task Built or Live? | **Built**: the work is finished; its release has not reached Live. |
+| Live | art:1528 "Released or in production"; ledger `live_at` and train state `live` = smoke passed after deploy (DL-18, ds:77); DOCSPEC R4.3 (doc:231) feature `status: live` = "the code has shipped and the checks pass"; r/pa:16 a no-release task "goes Live, never Built". | Task Live, train live and feature live are three things. | **Live** (task): its release merged and, where there is a deploy, the smoke passed. Feature `live` and train `live` keep their own names in their own tables. |
+| area | (a) CI area: `.delivery/ci-areas.json` (DL-116, ds:131), `tools/ci_areas.py`, inv:1410 "every tracked file belongs to an area". (b) record task field: DL-126 (ds:141) "the same `app` (or `area`)". (c) a docs folder: DOCSPEC R7.1 (doc:306) `docs/<area>/changes/`. | Three meanings. | **area** = CI area only. Rename (b) to "app" (already the primary key) and (c) to "docs folder". |
+| full run | DL-11 (ds:70) "The ready PR's first CI run is the one full run"; `--full` local gate (DL-12, DL-122); `release_full` (DL-116); "nightly full run" (f/tc :182, f/del R5.95); "full-run valve" (r/ai:10). Stated four ways in STACKSPEC (inv:1409, 1511, 1579, 1586). | One phrase for a CI run, a local run and a nightly run. | **full run**: a CI run of every job of the required workflows. Local `--full` is "full local gate". Nightly is "nightly run". |
+| carry | (a) a CI job skipped because an earlier head proved it: DL-80 (ds:159), f/del R5.88 (:265), inv:1408. (b) a PR carries cargo or releases: DL-15 (ds:74) "Carries: #x, #y", DL-63, DL-129, DL-131. (c) plain verb for a row field: art R4.8. | (a) and (b) are both delivery terms. | **carried job** for (a). "includes" or "cargo" for (b). |
+| owner | (a) the person who decides: DELIVERYSPEC legend (ds:47), DL-73, Q-n, AG:10. (b) a task's feature: art:419 "The feature artifact it belongs to (its `key`), or `project`". (c) doc front matter `owner` (`owner` or `agents`): DOCSPEC R4.2 (doc:226). (d) a quarantine entry's task: DL-121 (ds:136). | (b) and (d) clash with (a), which every rule file uses. | **owner** = the person only. Rename (b) to "feature" (`key`), (c) to "maintainer", (d) to "task". |
+| join | Glossary "Merging the task branches of a release into one head, with a light check"; DL-11 (ds:70); inv:1573-1584; an artifacts phase name (art R5.40). | Consistent. Not defined in any shipped spec. | Keep the glossary text. |
+
+Also undefined in every shipped spec but used in rules: **wave** (Q-5, ds:351, r/cq:7), **integration branch** (DL-08, DL-45, art R5.59), **orchestrator** (r/ai:2, DL-83), **gate** (branch gate, release gate, conformance gate, docs gate, the CI-gate path), **open row** (three wordings: art:1570, art R5.44 at art:1239 "any status but Live", art R9.8 at art:2002), **stalled** (two definitions, ds:96 and ds:283).
+
+ID-form collisions: DOCSPEC decisions D1-D16 (doc:99-114), DELIVERYSPEC decisions D1-D9 (ds:338-353), ARTIFACTSPEC decisions D1-D26 and DOCSPEC check code D1 (doc:254) all use `Dn`. A citation "D5" is ambiguous (f/del R5.71 cites "owner decision D5", meaning a delivery feature decision).
+
+### 3.2 Proposal
+
+| ID | Proposal |
+|---|---|
+| G1 | One home: `docs/overview/glossary.md` stays the single place where terms are written and changed. |
+| G2 | Each shipped spec gets a short `Terms` table holding only the terms it uses, copied from G1. A test (like the byte-copy test for `clarifying-questions.md`, ds:352) fails when a copy differs from G1. Projects then see the same words without the repo glossary. |
+| G3 | Apply the ten meanings in 3.1. Rename the clashing senses (owner, area, carry, full run) in rule text, not in ledger field names, so no code changes. |
+| G4 | Add wave, integration branch, orchestrator, task agent, watcher, gate kinds and open row to G1. |
+| G5 | Prefix decision IDs per spec in citations (`DOC-D5`, `DEL-D5`, `ART-D5`). The IDs themselves stay (AG:9). |
