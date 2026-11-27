@@ -1400,7 +1400,7 @@ def check_workflow(track: str, text: str) -> list[str]:
 
     # every other job
     for name, block in jobs.items():
-        if name == "decide":
+        if name == "decide" or name in CARRY_AGGREGATE:
             continue
         if not re.search(r"^    needs: (decide|\[decide(, [\w-]+)+\])\s*$", block, re.M):
             problems.append(f"job {name}: missing 'needs: decide'")
@@ -1459,7 +1459,9 @@ def check_workflow(track: str, text: str) -> list[str]:
 # A job that no other job needs must be a required check (it judges); anything else only reports.
 # DL190: `integration-pool` is the pool twin of `integration` (same check name, no services block); the
 # pair is allowed only with the pool condition, see POOL_COND and check_pool_pair.
-FAMILY_JOBS = {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e"}
+FAMILY_JOBS = {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e", "carry", "carry-ok"}
+# DS287 (R5.91): carry-ok is the required aggregate that treats a carried job as passed; it needs the jobs it judges.
+CARRY_AGGREGATE = {"carry-ok"}
 
 
 def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
@@ -1473,7 +1475,7 @@ def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
     for name, block in jobs.items():
         if name not in FAMILY_JOBS:
             problems.append(f"job {name}: not a suite family (one job per family, not per tool)")
-        if name in needed:
+        if name in needed or name in CARRY_AGGREGATE:
             continue
         job_name = re.search(r"^    name: ['\"]?(.+?)['\"]?\s*$", block, re.M)
         if not job_name or job_name.group(1) not in required:
