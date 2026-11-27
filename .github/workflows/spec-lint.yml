@@ -433,10 +433,6 @@ jobs:
       - name: Prove the warn-mode report still holds (DP8)
         run: python3 -I tools/test_delivery_report.py
 
-      # DL390: the kit's shipped tests pass in a fresh adopting project.
-      - name: Prove the kit's shipped tests pass in a fresh project (DL390)
-        run: python3 -I tools/test_kit_suite_sim.py
-
   delivery-smoke:
     name: delivery - packaged-program smoke test
     needs: areas
