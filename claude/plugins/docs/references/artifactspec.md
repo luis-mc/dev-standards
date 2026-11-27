@@ -103,7 +103,7 @@ publication. Numbering is append-only: a retired number is never reused, and
 sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
-### 0.4 What changed
+### 0.4 What changed in 1.1.0
 
 **1.32.0 — 2026-11-26.**
 
