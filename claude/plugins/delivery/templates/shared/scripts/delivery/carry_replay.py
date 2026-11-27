@@ -104,7 +104,7 @@ def collect_runs(repo: str, workflow: str, pr: int, head_ref: str) -> list:
     return runs
 
 
-def replay_pr(repo: str, pr: int, workflow: str | None, tmp: str) -> dict:
+def replay_pr(repo: str, pr: int, workflow: str | None, tmp: str, map_ref: str = "") -> dict:
     info = CP.gh_api(f"repos/{repo}/pulls/{pr}")
     head_ref, base = info["head"]["ref"], info["base"]["ref"]
     if workflow:
@@ -119,6 +119,8 @@ def replay_pr(repo: str, pr: int, workflow: str | None, tmp: str) -> dict:
     CP.git(clone, "fetch", "-q", "origin", f"{base}:refs/remotes/origin/{base}", f"pull/{pr}/head:refs/pr/{pr}")
 
     def read_file(sha, path):
+        if map_ref and path == MAP_PATH:  # --map-ref: today's map for every head (a PR older than its map)
+            sha = f"origin/{base}" if map_ref == "base" else map_ref
         try:
             CP.ensure_commit(clone, sha)
             return CP.git(clone, "show", f"{sha}:{path}")
@@ -126,6 +128,7 @@ def replay_pr(repo: str, pr: int, workflow: str | None, tmp: str) -> dict:
             return None
 
     def changed(head, proof):
+        CP.ensure_commit(clone, head)  # an old head is not in pull/N/head: fetch it by sha
         return CP.changed_paths_since(clone, f"origin/{base}", head, proof)
 
     out = {"pr": pr, "workflows": {}}
@@ -158,6 +161,7 @@ def main(argv=None) -> int:
     ap.add_argument("--repo", required=True)
     ap.add_argument("--prs", required=True, help="comma list of pull request numbers")
     ap.add_argument("--workflow", default="")
+    ap.add_argument("--map-ref", default="", help="read the area map from this ref for every head ('base' = the base branch tip)")
     ap.add_argument("--json", action="store_true")
     a = ap.parse_args(argv)
     try:
@@ -167,7 +171,7 @@ def main(argv=None) -> int:
         return 2
     tmp = tempfile.mkdtemp(prefix="carry-replay-")
     try:
-        results = [replay_pr(a.repo, n, a.workflow or None, tmp) for n in prs]
+        results = [replay_pr(a.repo, n, a.workflow or None, tmp, a.map_ref) for n in prs]
     except (CP.Undecided, KeyError, TypeError) as exc:
         print(f"carry_replay: {exc}", file=sys.stderr)
         return 1
