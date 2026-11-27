@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """docs_check: the docs gate (D6 map plus executable checks, DOCSPEC section 8).
 
-  docs_check.py [check] [--base REF] [--strict] [--json] [--no-reference] [--root R]
+  docs_check.py [check] [--base REF] [--ready] [--strict] [--json] [--no-reference] [--root R]
   docs_check.py map --base REF       code changed without docs (the Stop-hook and gate check)
   docs_check.py drift                doc versus code freshness report (warnings only)
 
@@ -15,7 +15,8 @@ Checks (each finding has a code):
   G1  generated files are fresh (features/index.md, decisions.md, docs-map.json, llms.txt)
   G2  generated reference (docs.json "generated_reference") equals the committed copy
   M1  code mapped to a doc changed on this branch but no doc, change note or `Docs: none` did
-  W1  the branch adds files under docs/work/ (branch-only, D9)
+  W1  the branch adds files under docs/work/ (branch-only, D9). It runs only at the ready-PR gate (R10.2):
+      with --ready, with DOCS_GATE=ready, or in a GitHub pull_request run whose PR is not a draft
   R1  a project that uses delivery (`.delivery/`) cites a removed delivery rule ID (DL-50, DL-51, DL-77, DL-78,
       DL-79, DL-90, DL-91): an error that names the ID and says to delete the citation; the fix is in
       docs/guides/removed-delivery-ids.md
@@ -349,6 +350,23 @@ def check_work_guard(root: Path, base: str | None) -> list[Finding]:
     return [f(ERR, "W1", bad[0], f"{len(bad)} file(s) under docs/work/ are added on this branch; briefs and reports never reach the default branch (D9). Run docs_work.py strip before the join.")]
 
 
+def ready_gate(flag: bool = False, env=None) -> bool:
+    """True at the ready-PR gate, where W1 runs (DOCSPEC R10.2): --ready, DOCS_GATE=ready, or a GitHub
+    pull_request run whose pull request is not a draft. An agent branch with a report passes without it."""
+    env = os.environ if env is None else env
+    if flag or env.get("DOCS_GATE", "").strip().lower() == "ready":
+        return True
+    if env.get("GITHUB_EVENT_NAME") not in ("pull_request", "pull_request_target"):
+        return False
+    try:
+        with open(env.get("GITHUB_EVENT_PATH") or "", encoding="utf-8") as fh:
+            event = json.load(fh)
+    except (OSError, ValueError):
+        return True
+    pr = event.get("pull_request") if isinstance(event, dict) else None
+    return not (isinstance(pr, dict) and pr.get("draft") is True)
+
+
 def is_shallow(root: Path) -> bool:
     r = D.git(root, "rev-parse", "--is-shallow-repository")
     return r.stdout.strip() == "true"
@@ -395,7 +413,7 @@ def last_commit_date(root: Path, paths: list[str]) -> str | None:
     return datetime.datetime.fromtimestamp(int(s), datetime.timezone.utc).date().isoformat()
 
 
-def run_checks(root: Path, base: str | None, reference: bool = True) -> list[Finding]:
+def run_checks(root: Path, base: str | None, reference: bool = True, ready: bool = False) -> list[Finding]:
     cfg = D.load_config(root)
     res = check_layout(root, cfg)
     res += check_features(root, cfg)
@@ -404,9 +422,10 @@ def run_checks(root: Path, base: str | None, reference: bool = True) -> list[Fin
     res += check_versions(root, cfg)
     res += check_generated(root, cfg, reference)
     if not base:
-        res.append(f(WARN, "M1", "docs/docs.json", f"no base ref found (tried origin/{cfg['default_branch']} and {cfg['default_branch']}): the map check (M1) and the work guard (W1) were skipped. Set default_branch in docs/docs.json or pass --base"))
+        res.append(f(WARN, "M1", "docs/docs.json", f"no base ref found (tried origin/{cfg['default_branch']} and {cfg['default_branch']}): the map check (M1) and the work guard (W1, ready PR only) were skipped. Set default_branch in docs/docs.json or pass --base"))
     res += check_map(root, cfg, base)
-    res += check_work_guard(root, base)
+    if ready:
+        res += check_work_guard(root, base)
     res += check_removed_ids(root)
     res += check_freshness(root, cfg)
     res += check_design_system(root, base)
@@ -419,6 +438,7 @@ def main(argv=None) -> int:
     ap.add_argument("--root", default=None)
     ap.add_argument("--base", default=None, help="git ref of the default branch (default: origin/<default_branch> if it exists)")
     ap.add_argument("--strict", action="store_true")
+    ap.add_argument("--ready", action="store_true", help="the ready-PR gate: also run W1 (docs/work/ added on this branch, R10.2)")
     ap.add_argument("--json", action="store_true")
     ap.add_argument("--no-reference", action="store_true", help="skip generated_reference commands (they run shell commands from docs/docs.json; review it first)")
     argv = list(sys.argv[1:] if argv is None else argv)
@@ -436,7 +456,7 @@ def main(argv=None) -> int:
     elif a.command == "drift":
         res = check_freshness(root, cfg)
     else:
-        res = run_checks(root, base, reference=not a.no_reference)
+        res = run_checks(root, base, reference=not a.no_reference, ready=ready_gate(a.ready))
     if a.json:
         print(json.dumps(res, indent=2))
     else:

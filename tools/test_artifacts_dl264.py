@@ -4,6 +4,7 @@
 Run:  python -I tools/test_artifacts_dl264.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
+import json
 import os
 import sys
 import tempfile
@@ -31,7 +32,8 @@ def check(form):
     r = p.run('mark-deferred', 'full-progress', '--until', UNTIL, '--no-open', '--local', str(arg))
     assert r.code == 0, r.all
     want = root / 'full-progress' / p.clone.name
-    lp = Path(p.man()['full_progress_artifact']['local_path'])
+    local = json.loads((p.clone / '.claude' / 'artifacts-local.json').read_text(encoding='utf-8'))   # U11 (DS304)
+    lp = Path(local['deferred_local']['full-progress']['local_path'])
     assert lp.is_file() and lp.parent == want, lp
     assert not (root / 'full-progress' / 'full-progress').exists()
     assert not (want / 'full-progress').exists()

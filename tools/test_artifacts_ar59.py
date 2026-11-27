@@ -25,9 +25,9 @@ import publish_hourly as PH  # noqa: E402
 import render_artifacts as R  # noqa: E402
 import importlib.util  # noqa: E402
 
-# the artifacts session hook sits in scripts/artifacts/ (the docs plugin has its own hook_session_start.py)
+# the artifacts session hook is scripts/hook_session_start_artifacts.py (the docs plugin has its own hook_session_start.py)
 _spec = importlib.util.spec_from_file_location('artifacts_hook_session_start',
-                                               os.path.join(SCRIPTS, 'artifacts', 'hook_session_start.py'))
+                                               os.path.join(SCRIPTS, 'hook_session_start_artifacts.py'))
 S = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(S)
 

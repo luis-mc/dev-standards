@@ -16,7 +16,7 @@ The documentation standard for every project, to **DOCSPEC** (`references/docspe
 
 Bundled: `vendor/mermaid.min.js`, Mermaid 11.4.1 from the npm package `mermaid@11.4.1` (MIT, `vendor/LICENSE-mermaid`). `docs_index.py` uses it by default (`--mermaid PATH` and `fetch-mermaid` override).
 
-Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py`, `design_system.py`, `docs_lib.py`, `hook_stop.py`, `hook_session_start.py`, and for the artifacts `project_artifacts.py`, `render_artifacts.py`, `artifact_*.py`, `publish_hourly.py`, `hook_after_command.py`, `hook_end_of_turn.py`, `artifacts/hook_session_start.py`. Tests: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
+Scripts (`scripts/`, Python standard library only): `docs_setup.py`, `docs_index.py`, `docs_fold.py`, `docs_check.py`, `docs_work.py`, `design_system.py`, `docs_lib.py`, `hook_stop.py`, `hook_session_start.py`, and for the artifacts `project_artifacts.py`, `render_artifacts.py`, `artifact_*.py`, `publish_hourly.py`, `hook_after_command.py`, `hook_end_of_turn.py`, `hook_session_start_artifacts.py`. Tests: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.
 
 Install: `claude plugin install luismc-docs@dev-standards --scope project`. First use in a repo: `python3 <plugin>/scripts/docs_setup.py migrate` (plan), then `--apply`, set `apps` and `topics` in `docs/docs.json`, `docs_index.py build`, `docs_check.py`.
 
