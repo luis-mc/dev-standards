@@ -11,5 +11,8 @@
     "local": 3,
     "total": 53
   },
-  "smoke_workflow": "Plugin smoke"
+  "smoke_workflow": "Plugin smoke",
+  "md_allow": [
+    "claude/plugins/*"
+  ]
 }

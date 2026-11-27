@@ -12,6 +12,11 @@ What is checked against a repo root:
   S1  the settings template registers the SessionStart effort_drift.py hook
       and the hook file ships next to it
   M1  no model-delegation.md remains in the claude-setup assets
+  X1  assets/.claude/agents/Explore.md names the agent Explore, pins model
+      haiku and effort medium, denies Edit, Write and NotebookEdit, and keeps
+      its description under 400 characters (every session loads it)
+  O1  SKILL.md names opusplan in its report and the settings template never
+      sets it as the model
   E1  the settings template enables luismc-docs@{{MARKETPLACE}} and
       SKILL.md says how the placeholder is filled
   K1  assets/keybindings.json parses and holds exactly the Global context with
@@ -54,13 +59,17 @@ RULE = ASSETS + "/.claude/rules/agents-and-integration.md"
 OLD_RULE = ASSETS + "/.claude/rules/model-delegation.md"
 SETTINGS = ASSETS + "/.claude/settings.json"
 HOOK = ASSETS + "/.claude/hooks/effort_drift.py"
+EXPLORE = ASSETS + "/.claude/agents/Explore.md"
 
 RULE_LINES = [
     "## Agents",
     "- Orchestrator (strongest model):",
     "- Code agents: Sonnet at {{SUBAGENT_EFFORT}} effort;",
-    "pass `effort: \"{{SUBAGENT_EFFORT}}\"` on every implementation Agent call.",
+    "pass `effort: \"{{SUBAGENT_EFFORT}}\"` on every implementation Agent call",
     "- Merges and checks: scripts.",
+    "Use Opus after one failed Sonnet try",
+    "never Sonnet at xhigh",
+    "Lookups and read-only search: the Explore agent (Haiku)",
     "Log triage: `model: \"haiku\"`.",
     "- Opus agents (`model: \"opus\"`) and Sonnet agents both pass "
     "`effort: \"medium\"` unless the user chose otherwise in claude-setup.",
@@ -235,6 +244,34 @@ def check(root):
 
     if (root / OLD_RULE).exists():
         found.append("M1 model-delegation.md is still in the assets")
+
+    explore = root / EXPLORE
+    if not explore.is_file():
+        found.append("X1 agents/Explore.md is missing from the assets")
+    else:
+        fm = frontmatter(explore.read_text(encoding="utf-8"))
+        for key, want in (("name", "Explore"), ("model", "haiku"), ("effort", "medium")):
+            if fm.get(key) != want:
+                found.append(f"X1 Explore.md {key} is {fm.get(key)}, want {want}")
+        denied = {t.strip() for t in fm.get("disallowedTools", "").split(",")}
+        for tool in ("Edit", "Write", "NotebookEdit"):
+            if tool not in denied:
+                found.append(f"X1 Explore.md does not deny {tool}")
+        if len(fm.get("description", "")) >= 400:
+            found.append("X1 Explore.md description is 400 characters or more")
+
+    try:
+        skill_body = (root / SKILL).read_text(encoding="utf-8")
+    except OSError:
+        skill_body = ""
+    if "opusplan" not in skill_body:
+        found.append("O1 SKILL.md does not name opusplan")
+    try:
+        model = json.loads((root / SETTINGS).read_text(encoding="utf-8")).get("model")
+    except (OSError, ValueError, AttributeError):
+        model = None
+    if model == "opusplan":
+        found.append("O1 settings template sets opusplan as the model")
 
     try:
         enabled = json.loads((root / SETTINGS).read_text(encoding="utf-8"))["enabledPlugins"]
@@ -426,6 +463,22 @@ def m_skill_no_folds(r):
         "~/.claude/keybindings.json", "the keys file"), encoding="utf-8")
 
 
+def m_explore_model(r):
+    edit(r / EXPLORE, "model: haiku", "model: sonnet")
+
+
+def m_explore_edit_tool(r):
+    edit(r / EXPLORE, "disallowedTools: Edit, ", "disallowedTools: ")
+
+
+def m_escalation_line(r):
+    edit(r / RULE, "never Sonnet at xhigh", "or Sonnet at xhigh")
+
+
+def m_opusplan_set(r):
+    edit(r / SETTINGS, '"model": "sonnet"', '"model": "opusplan"')
+
+
 def m_bad_json(r):
     (r / PROFILES).write_text("{", encoding="utf-8")
 
@@ -449,6 +502,10 @@ MUTATIONS = [
     ("S1 hook not registered", m_no_hook_registration, "registers no SessionStart"),
     ("S1 hook file missing", m_no_hook_file, "effort_drift.py is missing"),
     ("M1 old rule file present", m_old_rule, "model-delegation.md is still"),
+    ("X1 Explore not on Haiku", m_explore_model, "Explore.md model is sonnet, want haiku"),
+    ("X1 Explore may edit", m_explore_edit_tool, "Explore.md does not deny Edit"),
+    ("R1 escalation line gone", m_escalation_line, "rule file lacks: never Sonnet at xhigh"),
+    ("O1 opusplan set", m_opusplan_set, "sets opusplan as the model"),
     ("E1 plugin not enabled", m_no_enabled_plugins, "does not enable luismc-docs"),
     ("E1 marketplace hard-coded", m_hardcoded_marketplace, "does not enable luismc-docs"),
     ("E1 placeholder unexplained", m_marketplace_unexplained, "does not say how {{MARKETPLACE}}"),

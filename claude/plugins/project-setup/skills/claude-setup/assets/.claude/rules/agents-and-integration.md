@@ -1,8 +1,8 @@
 ## Agents
 - Orchestrator (strongest model): plan, write contracts, decide, review risky diffs. Never do mechanical work. <!-- advice -->
-- Code agents: Sonnet at {{SUBAGENT_EFFORT}} effort; pass `effort: "{{SUBAGENT_EFFORT}}"` on every implementation Agent call. <!-- check: DL-37 -->
-- Opus agents (`model: "opus"`) and Sonnet agents both pass `effort: "medium"` unless the user chose otherwise in claude-setup. Use Opus for an unknown root cause, a failed Sonnet attempt, architecture, security and risky migrations (`luismc-agents:architect`). <!-- check: DL-37 -->
-- Merges and checks: scripts. Conflicts a script cannot resolve: one Sonnet agent. Log triage: `model: "haiku"`. Read-only search and summaries of command output: `model: "haiku"`, never for edits. <!-- advice -->
+- Code agents: Sonnet at {{SUBAGENT_EFFORT}} effort; pass `effort: "{{SUBAGENT_EFFORT}}"` on every implementation Agent call (code, bug fixes, migrations, tests). <!-- check: DL-37 -->
+- Opus agents (`model: "opus"`) and Sonnet agents both pass `effort: "medium"` unless the user chose otherwise in claude-setup. Use Opus after one failed Sonnet try (its test fails or it reports NOT READY; medium, then high; never Sonnet at xhigh), and for architecture, ambiguous specs, PR and security review (`luismc-agents:architect`). Hard root causes and cross-file refactors: the main session on Opus by `/model`. <!-- check: DL-37 -->
+- Merges and checks: scripts. Conflicts a script cannot resolve: one Sonnet agent. Log triage: `model: "haiku"`. Lookups and read-only search: the Explore agent (Haiku); never Haiku for edits or judgment. <!-- advice -->
 - Agents whose definition pins a model or effort keep it. <!-- advice -->
 - Trivial edits (a typo, a one-line value) and tasks of about 3 tool calls or less: do them directly, because a subagent starts with a fresh context. <!-- advice -->
 - Group tasks into one agent when they share files, a module, or one reads what the other wrote; brief it with all its tasks in order. Split only when the files are disjoint and the work can run in parallel, or one agent would pass about 5 tasks or half its context. Each extra agent re-reads the same files. <!-- advice -->

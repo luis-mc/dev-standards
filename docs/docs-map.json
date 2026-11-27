@@ -147,6 +147,9 @@
     "claude/plugins/project-setup/**": [
       "docs/features/project-setup/spec.md"
     ],
+    "claude/plugins/project-setup/skills/claude-setup/assets/.claude/agents/Explore.md": [
+      "docs/features/models/spec.md"
+    ],
     "claude/plugins/project-setup/skills/claude-setup/assets/.claude/hooks/effort_drift.py": [
       "docs/features/models/spec.md"
     ],

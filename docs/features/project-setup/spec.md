@@ -20,7 +20,7 @@ code:
   - tools/test_project_setup_fixes.py
   - claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py
   - tools/test_check_stack_rust.py
-last_verified: 2026-11-08
+last_verified: 2026-11-27
 ---
 # Project setup (luismc-project-setup)
 

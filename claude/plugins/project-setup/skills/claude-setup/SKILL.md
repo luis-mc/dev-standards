@@ -72,6 +72,7 @@ the split, and all are needed:
 | `settings.json` `modelSettings.<Sonnet ID>.effortLevel` | the Sonnet effort for the session itself; subagent effort comes from the rule file, because the docs do not say this entry reaches subagents |
 | `.claude/rules/agents-and-integration.md` | the behaviour — the main loop hands implementation to subagents instead of writing it itself, and passes the chosen `effort` on each Agent call |
 | `.claude/hooks/effort_drift.py` | the warning when a model has no saved effort (see "The alias-drift warning") |
+| `.claude/agents/Explore.md` | lookups on Haiku at medium: it replaces the built-in Explore, which would run on Sonnet (MP14: same answers on 10 of 10 lookups, about a seventeenth of the cost) |
 | `~/.claude/hooks/questions_stop.py` | the Stop hook that enforces Q-1 and Q-2, user level only (see "The questions Stop hook") |
 
 Settings alone pick only models and effort. Without the rule, the main session
@@ -490,6 +491,14 @@ Copy it alongside the `outputStyle` setting. The setting names a style that
 must exist as a file. If it does not, Claude falls back to the default with no
 error.
 
+### `agents/Explore.md` — project target, overwrite unconditionally
+
+Copy `assets/.claude/agents/Explore.md` to the project's `.claude/agents/`.
+Plugin-owned: replace it without asking. Its frontmatter pins `model: haiku`
+and `effort: medium` and denies every editing tool. A project agent named
+`Explore` replaces the built-in one. Never write it to `~/.claude/agents/`.
+Keep its description short: every session loads it.
+
 ### `hooks/effort_drift.py` — overwrite unconditionally
 
 `.claude/hooks/effort_drift.py` (project) or `~/.claude/hooks/effort_drift.py`
@@ -852,6 +861,9 @@ only the plugins that are enabled in this project.
 
 Add the model split (Sonnet by default, Opus by `/model` for planning only;
 `/model` switches the current session now) and, for each offer that ran, what it now enforces.
+Add one line on `opusplan`: `/model opusplan` plans on Opus and builds on
+Sonnet, useful for planning a multi-file feature. It is off by default because
+each switch re-reads the whole context on the new model. Never set it.
 
 ### Enforcement report — after "Left for you"
 
