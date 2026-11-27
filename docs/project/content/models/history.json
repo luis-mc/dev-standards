@@ -1,5 +1,17 @@
 [
   {
+    "date": "27 Nov 10:33",
+    "change": "Section 7 of the page written: research, hypotheses, both tests, routing, D6 to D10"
+  },
+  {
+    "date": "27 Nov 10:33",
+    "change": "Done: Sonnet high 3 of 5 fixes, Opus medium 4 of 5; Opus 1.8x per run, Sonnet cheaper per pass"
+  },
+  {
+    "date": "27 Nov 10:30",
+    "change": "Routing research added (section 7, MP13 to MP15): the suggested policy checked against docs and benchmarks; Test 1 Haiku and Sonnet Explore both 10 of 10, Haiku about a seventeenth of the cost; Test 2 Sonnet high 3 of 5 fixes, Opus medium 4 of 5. Open decisions D6 to D10."
+  },
+  {
     "date": "24 Nov 10:30",
     "change": "Shipped in RELEASE-169 (luismc-project-setup 1.14.0), merged 24 Nov 10:30 UTC"
   },

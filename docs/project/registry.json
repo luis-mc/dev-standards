@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-26T17:47+00:00",
+  "updated": "2026-11-27T10:33+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12571,6 +12571,27 @@
       "rides": "DS279"
     },
     {
+      "id": "DS282",
+      "owner": "project",
+      "app": "",
+      "status": "Live",
+      "item": "Study: model and effort routing for claude-setup",
+      "detail": "Check a suggested Haiku/Sonnet/Opus routing policy against Claude Code docs and benchmarks",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T07:04+00:00",
+      "no_release": "study only, no code"
+    },
+    {
+      "id": "DS283",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Artifact tests open a browser tab",
+      "detail": "tools/test_project_artifacts.py runs mark-deferred, whose open_local (DL238) skips only when CI is set, so a local run opens the demo Full Progress page in the browser. Tests should set CI or a no-open variable",
+      "expected": "",
+      "changed": "2026-11-27T10:08+00:00"
+    },
+    {
       "id": "DU1",
       "owner": "design-field-updates",
       "app": "luismc-docs",
@@ -12950,6 +12971,53 @@
       "changed": "2026-11-26T07:25+00:00",
       "release": 185,
       "started": "2026-11-26T07:21+00:00"
+    },
+    {
+      "id": "MP13",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Live",
+      "item": "Page: model routing research, hypotheses and proposals",
+      "detail": "Section 07 of the Model and effort profiles page, with charts and open decisions",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T10:33+00:00",
+      "no_release": "record page only",
+      "started": "2026-11-27T09:31+00:00"
+    },
+    {
+      "id": "MP14",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Live",
+      "item": "Test: Haiku Explore against Sonnet Explore",
+      "detail": "10 real repo lookups each, graded against known answers; tokens and time",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T09:41+00:00",
+      "no_release": "study only",
+      "started": "2026-11-27T09:31+00:00"
+    },
+    {
+      "id": "MP15",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Live",
+      "item": "Test: Sonnet high against Opus medium on real fixes",
+      "detail": "5 past fixes replayed in worktrees at the commit before the fix; pass the fix's test or not; tokens",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T10:33+00:00",
+      "no_release": "study only",
+      "started": "2026-11-27T09:41+00:00"
+    },
+    {
+      "id": "MP16",
+      "owner": "models",
+      "app": "luismc-project-setup",
+      "status": "Needs you",
+      "item": "Choose model routing for claude-setup (D6 to D10)",
+      "detail": "Owner picks: Haiku Explore, escalation rule, bug-fix model, routing table, opusplan offer",
+      "expected": "27 Nov ~11:05",
+      "changed": "2026-11-27T10:33+00:00",
+      "expected_basis": "default ETA, other: 30 min"
     },
     {
       "id": "SO1",
@@ -13378,6 +13446,16 @@
       "changed": "2026-11-04T23:59+00:00",
       "rides": "DL50",
       "started": "2026-11-04T23:29+00:00"
+    },
+    {
+      "id": "TF7",
+      "owner": "transcript-folds",
+      "app": "",
+      "status": "To do",
+      "item": "Spec R6.3 still says three chords",
+      "detail": "transcript-folds spec R6.3 (check K1) says the keybindings asset holds three chords; it holds two since RELEASE-204. Found by a Haiku Explore run in MP14",
+      "expected": "",
+      "changed": "2026-11-27T09:44+00:00"
     }
   ]
 }

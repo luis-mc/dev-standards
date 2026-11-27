@@ -101,6 +101,121 @@
    ],
    "chosen": "Warn at session start",
    "decided": "2026-10-10"
+  },
+  {
+   "id": "D6",
+   "question": "Run Explore lookups on Haiku?",
+   "asked": "2026-11-27",
+   "status": "open",
+   "options": [
+    {
+     "label": "Ship Explore.md on Haiku",
+     "summary": "claude-setup writes a user or project agent named Explore with model: haiku and effort medium. Test 1: same answers on 10 of 10 lookups for about a seventeenth of the cost. Needs R5 changed.",
+     "recommended": true
+    },
+    {
+     "label": "Keep Explore on Sonnet",
+     "summary": "No change. Explore keeps following CLAUDE_CODE_SUBAGENT_MODEL (Sonnet). Simplest, costs about 17 times more per lookup.",
+     "recommended": false
+    },
+    {
+     "label": "Ask in claude-setup",
+     "summary": "claude-setup asks Haiku or Sonnet for Explore, Haiku preselected.",
+     "recommended": false
+    }
+   ]
+  },
+  {
+   "id": "D7",
+   "question": "Escalation rule when Sonnet fails?",
+   "asked": "2026-11-27",
+   "status": "open",
+   "options": [
+    {
+     "label": "Opus after one failed try",
+     "summary": "A Sonnet agent that fails its test or reports NOT READY once is relaunched on Opus (medium; high if it fails again), not on Sonnet xhigh. Test 2: Opus passed a fix Sonnet high missed.",
+     "recommended": true
+    },
+    {
+     "label": "Sonnet xhigh first, then Opus",
+     "summary": "Raise Sonnet to xhigh once, then go to Opus. Cheaper per token, but Sonnet xhigh costs more per task than Opus high on the general index.",
+     "recommended": false
+    },
+    {
+     "label": "No written rule",
+     "summary": "The orchestrator decides each time.",
+     "recommended": false
+    }
+   ]
+  },
+  {
+   "id": "D8",
+   "question": "Model and effort for bug-fix agents?",
+   "asked": "2026-11-27",
+   "status": "open",
+   "options": [
+    {
+     "label": "Sonnet high, Opus on failure",
+     "summary": "Test 2: Sonnet high passed 3 of 5 at $0.31 per pass; escalating its 2 failures to Opus gives 4 of 5 for about the cost of Opus alone. A loose spec or git logic goes straight to Opus medium.",
+     "recommended": true
+    },
+    {
+     "label": "Opus medium for every fix",
+     "summary": "Test 2: 4 of 5 passed, $0.42 per pass, about 1.8 times Sonnet per run. Fewer reruns and fewer gaps to fill in the brief.",
+     "recommended": false
+    },
+    {
+     "label": "Sonnet medium, as today",
+     "summary": "No change: every code agent at medium. Not tested here.",
+     "recommended": false
+    }
+   ]
+  },
+  {
+   "id": "D9",
+   "question": "Write a per-task routing table?",
+   "asked": "2026-11-27",
+   "status": "open",
+   "options": [
+    {
+     "label": "Table in agents-and-integration.md",
+     "summary": "claude-setup writes the routing table of section 7 into the rule file, so every Agent call sets model and effort by kind of work.",
+     "recommended": true
+    },
+    {
+     "label": "Split the effort question only",
+     "summary": "Keep the rule file; claude-setup asks review effort and implementation effort apart.",
+     "recommended": false
+    },
+    {
+     "label": "No change",
+     "summary": "The rule file keeps one line per role.",
+     "recommended": false
+    }
+   ]
+  },
+  {
+   "id": "D10",
+   "question": "Offer opusplan for the main session?",
+   "asked": "2026-11-27",
+   "status": "open",
+   "options": [
+    {
+     "label": "Offer, off by default",
+     "summary": "claude-setup mentions opusplan as an option for multi-file planning and warns that each switch re-reads the context.",
+     "recommended": true
+    },
+    {
+     "label": "Make it the default",
+     "summary": "The main session runs opusplan: Opus to plan, Sonnet to build.",
+     "recommended": false
+    },
+    {
+     "label": "Do not offer",
+     "summary": "Keep Sonnet with Opus by /model.",
+     "recommended": false
+    }
+   ]
   }
  ]
 }

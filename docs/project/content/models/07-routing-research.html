@@ -1,0 +1,150 @@
+<!-- title: Routing research: which model for which task -->
+<p>Study of 27 Nov (MP13 to MP15). Question: can <code>claude-setup</code> say which model and effort each kind of task uses, for the best result at the lowest cost? Start point: a routing policy suggested by another assistant. Each of its claims was checked against Anthropic&rsquo;s docs and public benchmarks, then the two claims that matter most were tested on this repository&rsquo;s own work. Nothing in <code>claude-setup</code> has changed yet; the proposals below are open decisions.</p>
+
+<h3>1. Prices</h3>
+<div class="table-scroll"><table><thead><tr><th>Model</th><th>Input, per M tokens</th><th>Output, per M tokens</th><th>Note</th></tr></thead><tbody>
+<tr><td>Haiku 5.5</td><td>$0.10</td><td>$0.50</td><td>Up to 100K prompt tokens. Past that $0.50 / $2.50, five times more.</td></tr>
+<tr><td>Sonnet 5.5</td><td>$2</td><td>$10</td><td>20 times Haiku per token.</td></tr>
+<tr><td>Opus 5.5</td><td>$4</td><td>$20</td><td>2 times Sonnet per token.</td></tr>
+</tbody></table></div>
+<p>Price per token is not price per task. A larger model can need fewer steps and cost less per finished task on hard work. On a Max plan the cost shows as usage limits, and subagents draw on the same limits as the main session.</p>
+
+<h3>2. What the benchmarks say</h3>
+<figure class="diagram"><div class="diagram-scroll">
+<svg class="dg" viewBox="0 0 600 260" role="img" aria-labelledby="aa-t aa-d">
+<title id="aa-t">Artificial Analysis index against cost per task</title>
+<desc id="aa-d">Haiku high: index 30 at $0.16. Sonnet medium: 31 at $0.78. Opus medium: 48 at $2.45. Opus high: 52 at $3.46. Sonnet xhigh: 50 at $4.09.</desc>
+<line class="dg-line" x1="60" y1="220" x2="560" y2="220"/><line class="dg-line" x1="60" y1="20" x2="60" y2="220"/>
+<g style="stroke:var(--rule);stroke-width:1"><line x1="60" y1="186.7" x2="560" y2="186.7"/><line x1="60" y1="120" x2="560" y2="120"/><line x1="60" y1="53.3" x2="560" y2="53.3"/></g>
+<text class="dg-mono dg-muted" x="52" y="190.7" text-anchor="end">30</text><text class="dg-mono dg-muted" x="52" y="124" text-anchor="end">40</text><text class="dg-mono dg-muted" x="52" y="57.3" text-anchor="end">50</text>
+<text class="dg-mono dg-muted" x="60" y="238" text-anchor="middle">$0</text><text class="dg-mono dg-muted" x="171.1" y="238" text-anchor="middle">$1</text><text class="dg-mono dg-muted" x="282.2" y="238" text-anchor="middle">$2</text><text class="dg-mono dg-muted" x="393.3" y="238" text-anchor="middle">$3</text><text class="dg-mono dg-muted" x="504.4" y="238" text-anchor="middle">$4</text>
+<text class="dg-head" x="310" y="256" text-anchor="middle">COST PER TASK</text><text class="dg-head" x="14" y="120" text-anchor="middle" transform="rotate(-90 14 120)">INDEX</text>
+<g style="fill:var(--signal);stroke:var(--surface);stroke-width:2">
+<circle cx="77.8" cy="186.7" r="6"><title>Haiku high: index 30, $0.16 per task</title></circle>
+<circle cx="146.7" cy="180" r="6"><title>Sonnet medium: index 31, $0.78 per task</title></circle>
+<circle cx="332.2" cy="66.7" r="6"><title>Opus medium: index 48, $2.45 per task</title></circle>
+<circle cx="444.4" cy="40" r="6"><title>Opus high: index 52, $3.46 per task</title></circle>
+<circle cx="514.4" cy="53.3" r="6"><title>Sonnet xhigh: index 50, $4.09 per task</title></circle>
+</g>
+<text x="88" y="206">Haiku high</text><text x="156" y="172">Sonnet medium</text><text x="342" y="84">Opus medium</text><text x="430" y="28" text-anchor="end">Opus high</text><text x="514.4" y="76" text-anchor="middle">Sonnet xhigh</text>
+</svg></div>
+<figcaption><b>General intelligence index against cost per task</b> (Artificial Analysis). Haiku high scores about what Sonnet medium scores, for a fifth of the cost. Opus high scores more than Sonnet xhigh, for less.</figcaption></figure>
+
+<figure class="diagram"><div class="diagram-scroll">
+<svg class="dg" viewBox="0 0 600 190" role="img" aria-labelledby="tb-t tb-d">
+<title id="tb-t">Terminal-Bench 4.1 scores</title>
+<desc id="tb-d">Haiku medium 15.2%, Sonnet medium 30.3%, Opus medium 53.0%, Sonnet xhigh 56.6%, Opus max 59.1%, Sonnet max 65.2%.</desc>
+<g style="fill:var(--signal)">
+<rect x="150" y="10" width="82.5" height="18" rx="4"><title>Haiku medium: 15.2%</title></rect>
+<rect x="150" y="38" width="164.5" height="18" rx="4"><title>Sonnet medium: 30.3%</title></rect>
+<rect x="150" y="66" width="287.7" height="18" rx="4"><title>Opus medium: 53.0%</title></rect>
+<rect x="150" y="94" width="307.3" height="18" rx="4"><title>Sonnet xhigh: 56.6%</title></rect>
+<rect x="150" y="122" width="320.8" height="18" rx="4"><title>Opus max: 59.1%</title></rect>
+<rect x="150" y="150" width="354" height="18" rx="4"><title>Sonnet max: 65.2%</title></rect>
+</g>
+<g text-anchor="end"><text x="140" y="23">Haiku medium</text><text x="140" y="51">Sonnet medium</text><text x="140" y="79">Opus medium</text><text x="140" y="107">Sonnet xhigh</text><text x="140" y="135">Opus max</text><text x="140" y="163">Sonnet max</text></g>
+<g class="dg-mono"><text x="238" y="23">15.2%</text><text x="320" y="51">30.3%</text><text x="443" y="79">53.0%</text><text x="463" y="107">56.6%</text><text x="476" y="135">59.1%</text><text x="510" y="163">65.2%</text></g>
+<line class="dg-line" x1="150" y1="4" x2="150" y2="174"/>
+</svg></div>
+<figcaption><b>Terminal-Bench 4.1</b>, agent work in a shell. Sonnet at high effort beats Opus at the same effort here, so &ldquo;never raise Sonnet&rsquo;s effort&rdquo; is too strong. Haiku is weak at multi-step tool work (AutomationBench: 28.6% against Sonnet medium&rsquo;s 54.9%).</figcaption></figure>
+
+<h3>3. The suggested policy, checked</h3>
+<div class="table-scroll"><table><thead><tr><th>Claim</th><th>Verdict</th><th>Evidence</th></tr></thead><tbody>
+<tr><td>Prices Haiku $0.10/$0.50, Sonnet $2/$10, Opus $4/$20</td><td>Mostly right</td><td>Misses Haiku&rsquo;s 5&times; rate past 100K prompt tokens.</td></tr>
+<tr><td><code>opusplan</code>: Opus in plan mode, Sonnet to build</td><td>Right</td><td>Documented alias.</td></tr>
+<tr><td>Built-in Explore uses the main model</td><td>Right</td><td>Docs. A user or project agent named <code>Explore</code> with <code>model: haiku</code> replaces it.</td></tr>
+<tr><td>Sonnet xhigh $2.74 per task, Opus medium $1.34</td><td>Numbers wrong</td><td>Artificial Analysis: $4.09 (index 50) and $2.45 (index 48).</td></tr>
+<tr><td>Never push Sonnet to xhigh</td><td>Too strong</td><td>Fine for shell-heavy agent work (chart above); for judgment, Opus high is the better buy.</td></tr>
+<tr><td>Haiku for ambiguous coding: avoid</td><td>Right</td><td>Terminal-Bench 15.2% against 30.3%.</td></tr>
+<tr><td>Haiku for search and summaries</td><td>Right, for reading</td><td>Index 30 at a fifth of Sonnet medium&rsquo;s cost.</td></tr>
+<tr><td>Haiku xhigh triples the cost</td><td>Unverified</td><td>A forum claim. Artificial Analysis: $0.25 per task, still a third of Sonnet medium.</td></tr>
+<tr><td>Send every research subagent to Haiku</td><td>Wrong for real research</td><td>Lookups yes; research that needs a synthesis goes to Sonnet.</td></tr>
+</tbody></table></div>
+
+<h3>4. What it misses</h3>
+<ul>
+<li><b>Effort defaults.</b> Opus, Sonnet and Haiku 5.5 all default to medium in Claude Code. Anthropic&rsquo;s advice: raise effort when Claude skips steps; change model when the problem is beyond it.</li>
+<li><b>Which setting wins.</b> For a subagent: the Agent call&rsquo;s <code>model</code>, then the definition&rsquo;s <code>model</code>, then <code>CLAUDE_CODE_SUBAGENT_MODEL</code>, then the parent&rsquo;s model. A rule file can route each call without new agent files.</li>
+<li><b>Caches belong to one model.</b> Each <code>/model</code> switch, and each <code>opusplan</code> switch out of plan mode, re-reads the whole context once.</li>
+<li><b>Tiny tasks stay inline.</b> A subagent&rsquo;s start (its prompt, tools, hand-back) costs more than a commit message.</li>
+<li><b>This repo&rsquo;s own rule R5</b> (section 6) says Explore and Plan are not overridden. A Haiku Explore needs R5 changed.</li>
+</ul>
+
+<h3>5. Hypotheses</h3>
+<div class="table-scroll"><table><thead><tr><th>ID</th><th>Hypothesis</th><th>How it is tested</th><th>Status</th></tr></thead><tbody>
+<tr><td>H1</td><td>Haiku Explore answers this repo&rsquo;s lookups as well as Sonnet Explore, at about a twentieth of the token price.</td><td>Test 1 (MP14): 10 real lookups, each run on both, graded against a known answer.</td><td>Holds for lookups (10 of 10 on both)</td></tr>
+<tr><td>H2</td><td>Sonnet at high effort fixes real bugs on the first try as often as Opus at medium, for less per finished fix.</td><td>Test 2 (MP15): 5 past fixes replayed from the commit before each fix; the fix&rsquo;s own test decides.</td><td>Does not hold: 3 of 5 against 4 of 5; Sonnet cheaper per pass</td></tr>
+<tr><td>H3</td><td>Switching model mid-session costs a full cache re-read, so <code>opusplan</code> saves less than list prices suggest.</td><td>Documented; not measured here.</td><td>Open</td></tr>
+</tbody></table></div>
+
+<h3>6. Test results</h3>
+<h4>Test 1 (MP14): Haiku Explore against Sonnet Explore</h4>
+<p>Ten real questions about this repository, each with a known answer checked by hand first: constants, agent definitions, the keybindings asset, the merge-mode default, the U+FFFD refusal, the Full Progress settle time, the CI job of transcript-folds, the CI badge logic, the Stop hook&rsquo;s two modes, and the ETA check. Questions 7 to 10 need reading logic across files, not one grep. Each ran on the built-in Explore agent with the model set on the call, effort medium, three at a time.</p>
+<div class="table-scroll"><table><thead><tr><th>Measure</th><th>Haiku</th><th>Sonnet</th></tr></thead><tbody>
+<tr><td>Right answers</td><td>10 of 10</td><td>10 of 10</td></tr>
+<tr><td>Tokens per lookup (mean)</td><td>32,800</td><td>28,400</td></tr>
+<tr><td>Tool calls per lookup (mean)</td><td>4.4</td><td>3.1</td></tr>
+<tr><td>Time per lookup (mean)</td><td>9.7 s</td><td>8.9 s</td></tr>
+<tr><td>Cost of all 10, at the input price</td><td>$0.03</td><td>$0.57</td></tr>
+</tbody></table></div>
+<figure class="diagram"><div class="diagram-scroll">
+<svg class="dg" viewBox="0 0 600 84" role="img" aria-labelledby="t1-t t1-d">
+<title id="t1-t">Cost of the ten lookups</title><desc id="t1-d">Haiku $0.03, Sonnet $0.57.</desc>
+<g style="fill:var(--signal)"><rect x="150" y="10" width="17.5" height="22" rx="4"><title>Haiku: $0.03 for 10 lookups</title></rect><rect x="150" y="46" width="332" height="22" rx="4"><title>Sonnet: $0.57 for 10 lookups</title></rect></g>
+<g text-anchor="end"><text x="140" y="26">Haiku Explore</text><text x="140" y="62">Sonnet Explore</text></g>
+<g class="dg-mono"><text x="174" y="26">$0.03</text><text x="489" y="62">$0.57</text></g>
+<line class="dg-line" x1="150" y1="4" x2="150" y2="76"/>
+</svg></div>
+<figcaption><b>Same answers, about a seventeenth of the cost.</b> Token counts are the subagent&rsquo;s total; cost uses the input price, since lookups read far more than they write. About 25,000 of each run&rsquo;s tokens are the agent&rsquo;s fixed start (system prompt and tools), so a lookup costs roughly what its start costs.</figcaption></figure>
+<p><b>H1 holds for lookups.</b> Haiku took a few more tool calls and wrote longer answers, and once it added a true finding nobody asked for: on question 3 it found that the transcript-folds spec&rsquo;s R6.3 still says the keybindings asset holds three chords (it holds two since RELEASE-204). Limit: these were questions with one right answer. Research that needs a judgment or a synthesis was not tested and stays on Sonnet.</p>
+
+<h4>Test 2 (MP15): Sonnet high against Opus medium on real fixes</h4>
+<p>Five real fixes from this repository&rsquo;s history (DS266, DL269, DL272, DL305, DS278). Each agent got a git worktree at the commit before the fix, a bug report written from the fix&rsquo;s change note, and a rule not to read later history. The fix&rsquo;s own test, which the agent never saw, decides pass or fail. Each hidden test was checked first: it fails at the parent commit and passes at the fix. Sonnet ran at high effort, Opus at medium, three agents at a time.</p>
+<div class="table-scroll"><table><thead><tr><th>Fix</th><th>Size of the real fix</th><th>Sonnet high</th><th>Opus medium</th></tr></thead><tbody>
+<tr><td>DS266 CI badge counts a fixed failure apart</td><td>small</td><td>pass &middot; 68k tokens &middot; 1 min</td><td>pass &middot; 62k &middot; 1 min</td></tr>
+<tr><td>DL305 <code>fix</code> as a release phase</td><td>small, 6 files</td><td>pass &middot; 79k &middot; 2 min</td><td>pass &middot; 87k &middot; 4 min</td></tr>
+<tr><td>DL269 refuse U+FFFD in task text</td><td>medium</td><td>pass &middot; 88k &middot; 8 min</td><td>pass &middot; 78k &middot; 10 min</td></tr>
+<tr><td>DL272 join: stacked branches merge unless they conflict</td><td>medium, git logic</td><td><b>fail</b> (3 of 4 cases) &middot; 96k &middot; 7.5 min</td><td>pass &middot; 75k &middot; 5 min</td></tr>
+<tr><td>DS278 a running release needs phases</td><td>large, 360 lines</td><td><b>fail</b> (1 of 8) &middot; 141k &middot; 34 min</td><td><b>fail</b> (2 of 8) &middot; 121k &middot; 33 min</td></tr>
+<tr><td><b>Total</b></td><td></td><td><b>3 of 5</b> &middot; 472k tokens &middot; $0.94</td><td><b>4 of 5</b> &middot; 423k tokens &middot; $1.69</td></tr>
+</tbody></table></div>
+<figure class="diagram"><div class="diagram-scroll">
+<svg class="dg" viewBox="0 0 600 84" role="img" aria-labelledby="t2-t t2-d">
+<title id="t2-t">Cost per passing fix</title><desc id="t2-d">Sonnet high $0.31 per passing fix, 3 of 5. Opus medium $0.42 per passing fix, 4 of 5.</desc>
+<g style="fill:var(--signal)"><rect x="150" y="10" width="246" height="22" rx="4"><title>Sonnet high: $0.31 per passing fix (3 of 5)</title></rect><rect x="150" y="46" width="334" height="22" rx="4"><title>Opus medium: $0.42 per passing fix (4 of 5)</title></rect></g>
+<g text-anchor="end"><text x="140" y="26">Sonnet high</text><text x="140" y="62">Opus medium</text></g>
+<g class="dg-mono"><text x="402" y="26">$0.31 &middot; 3 of 5</text><text x="490" y="62">$0.42 &middot; 4 of 5</text></g>
+<line class="dg-line" x1="150" y1="4" x2="150" y2="76"/>
+</svg></div>
+<figcaption><b>Opus costs about a third more per passing fix and passed one more.</b> Opus used about 10% fewer tokens than Sonnet at high effort, so its 2&times; price per token became 1.8&times; per run. Cost uses the input price.</figcaption></figure>
+<p><b>What the two failures say.</b></p>
+<ul>
+<li><b>DL272:</b> the hidden test also wants the conflict message to say the branch was cut from an older head. The bug report did not say so. Opus added that hint unasked; Sonnet did the rest right. This is the pattern Anthropic describes: the larger model fills gaps in a loose spec.</li>
+<li><b>DS278:</b> both failed, so the brief is at fault, not one model. Three of the eight hidden cases test rendering the brief never mentioned. Both agents also chose the same narrower rule for tasks riding a release that is still To do, because the test harness itself puts riders on such a release.</li>
+</ul>
+<p><b>H2 does not hold as stated.</b> Sonnet high fixed fewer bugs (3 against 4) for less money per pass. Escalation closes the gap: Sonnet first, then Opus on the two failures, costs about $0.94 + $0.68 = $1.62 for the same 4 passes, close to Opus alone ($1.69) but slower. Limits: five fixes is a small sample, and time includes waiting for each agent&rsquo;s own test runs.</p>
+<p>Side finding: the artifact test suite opens a demo Full Progress page in the browser on every local run, because the opener only stays quiet when <code>CI</code> is set (DS283).</p>
+
+<h3>7. Proposed routing</h3>
+<div class="table-scroll"><table><thead><tr><th>Work</th><th>Model</th><th>Effort</th><th>How it is set</th><th>Hangs on</th></tr></thead><tbody>
+<tr><td>Exploration, file lookups, reading logs</td><td>Haiku</td><td>medium</td><td>an <code>Explore.md</code> agent with <code>model: haiku</code></td><td>H1, D6</td></tr>
+<tr><td>Clear-spec code, CRUD, following a skill</td><td>Sonnet</td><td>medium</td><td>today&rsquo;s subagent default</td><td>&mdash;</td></tr>
+<tr><td>Bug fix with a tight spec and a known repro, migrations, tests</td><td>Sonnet</td><td>high</td><td><code>effort</code> on the Agent call</td><td>H2, D8</td></tr>
+<tr><td>Bug fix with a loose spec, or git and merge logic</td><td>Opus</td><td>medium</td><td><code>model</code> on the Agent call</td><td>H2, D8</td></tr>
+<tr><td>Sonnet high fails after a fair try</td><td>Opus</td><td>medium, then high</td><td>escalation rule</td><td>H2, D7</td></tr>
+<tr><td>Architecture, ambiguous specs, PR and security review</td><td>Opus</td><td>medium</td><td>the architect agent, review agents</td><td>&mdash;</td></tr>
+<tr><td>Hard root-cause bugs, cross-file refactors</td><td>Opus</td><td>high or xhigh</td><td>main session by <code>/model</code></td><td>&mdash;</td></tr>
+<tr><td>Planning a multi-file feature</td><td><code>opusplan</code></td><td>medium</td><td>optional main-session setting</td><td>H3, D10</td></tr>
+</tbody></table></div>
+<p>Each row that changes <code>claude-setup</code> is an open decision in Decisions (D6 to D10).</p>
+
+<h3>Sources</h3>
+<ul>
+<li><a href="https://code.claude.com/docs/en/model-config">Claude Code: model configuration</a></li>
+<li><a href="https://code.claude.com/docs/en/sub-agents">Claude Code: subagents</a></li>
+<li><a href="https://code.claude.com/docs/en/costs">Claude Code: costs</a></li>
+<li><a href="https://www.claude.com/blog/claude-model-and-effort-level-in-claude-code">Anthropic: choosing a model and effort level in Claude Code</a></li>
+<li><a href="https://www.anthropic.com/claude-sonnet-5-5">Anthropic: Sonnet 5.5</a></li>
+<li><a href="https://artificialanalysis.ai/models/releases/comparisons/claude-sonnet-5-5-vs-claude-opus-5-5">Artificial Analysis: Sonnet 5.5 against Opus 5.5</a></li>
+<li><a href="https://artificialanalysis.ai/models/releases/comparisons/claude-haiku-5-5-vs-claude-sonnet-5-5">Artificial Analysis: Haiku 5.5 against Sonnet 5.5</a></li>
+</ul>
