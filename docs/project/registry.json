@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T14:20+00:00",
+  "updated": "2026-11-27T14:58+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12839,6 +12839,45 @@
       "changed": "2026-11-27T14:20+00:00",
       "rides": "DS288",
       "started": "2026-11-27T13:13+00:00"
+    },
+    {
+      "id": "DS298",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Unused-files scan 2",
+      "detail": "Find every file today's plugins do not use; propose deletions",
+      "expected": "27 Nov ~15:40",
+      "changed": "2026-11-27T14:58+00:00",
+      "expected_basis": "cloud review from 15:00, ~40 min for a whole-repo scan",
+      "no_release": "study: proposal only",
+      "started": "2026-11-27T14:55+00:00"
+    },
+    {
+      "id": "DS299",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Folder structure review",
+      "detail": "Evaluate folder organization across repo and plugins; propose a consistent layout",
+      "expected": "27 Nov ~15:40",
+      "changed": "2026-11-27T14:58+00:00",
+      "expected_basis": "same cloud run as DS298, after its scan",
+      "no_release": "study: proposal only",
+      "started": "2026-11-27T14:55+00:00"
+    },
+    {
+      "id": "DS300",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Spec rules dedupe review",
+      "detail": "Find duplicate and conflicting rules across specs; propose minimal rule sets",
+      "expected": "27 Nov ~15:45",
+      "changed": "2026-11-27T14:58+00:00",
+      "expected_basis": "cloud review from 15:00, ~45 min for ~7k spec lines",
+      "no_release": "study: proposal only",
+      "started": "2026-11-27T14:55+00:00"
     },
     {
       "id": "DU1",
