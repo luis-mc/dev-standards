@@ -80,7 +80,7 @@ class PcBoundTests(unittest.TestCase):
         self.assertEqual(notes, [])
 
     def test_no_line_still_denied(self):
-        self.assertIn("D4", launch(self.root, "Do it", "Agent")[0])
+        self.assertIn("DL-39", launch(self.root, "Do it", "Agent")[0])
 
     def test_checks_off(self):
         root = make_root(dict(OFF, checks_off=["DL-89", "DL-37", "DL-127"]))

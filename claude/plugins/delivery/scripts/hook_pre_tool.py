@@ -84,13 +84,23 @@ def run_state(root, repo, head):
     return 'green' if all(x.get('conclusion') in ('success', 'skipped') for x in runs) else 'red'
 
 
-def check_merge(root, seg, ledger, cfg=None):
-    if cfg is not None and C.merge_mode(cfg) == 'manual':
-        deny('DL-05 merge mode is manual (watcher.merge_mode in .delivery/config.json): the owner merges. '
+def check_merge_role(seg, cfg):
+    """DL-05 and DL-03 (DS303): the watcher is the only merger. A session never runs `gh pr merge`, in either merge mode.
+    `--auto` is refused under DL-05; every other merge under DL-03. `checks_off: ["DL-03"]` falls back to DL-06."""
+    if flag(seg, '--auto') and H.check_on(cfg, 'DL-05'):
+        deny('DL-05 gh pr merge --auto is never used. The watcher merges a green PR for its proven head.')
+    if not H.check_on(cfg, 'DL-03'):
+        return
+    if C.merge_mode(cfg) == 'manual':
+        deny('DL-03 merge mode is manual (watcher.merge_mode in .delivery/config.json): the owner merges. '
              'Leave the PR ready and say it is green. To let green PRs merge, set watcher.merge_mode to "auto".')
-    if flag(seg, '--auto'):
-        deny('DL-05 gh pr merge --auto is never used. Wait for ci_watch.py to pass for the current head, then run '
-             'gh pr merge without --auto.')
+    deny('DL-03 the watcher is the only merger (merge mode auto). It merges a green PR at once for its current head. '
+         'Do not run gh pr merge in a session; check that the watcher runs (delivery_watch.py), or record a hold '
+         'with its reason: delivery_ledger.py hold.')
+
+
+def check_merge(root, seg, ledger, cfg=None):
+    """DL-06: with DL-03 switched off, a merge needs a ledger CI success for the PR's current head."""
     target = H.gh_target(seg)
     arg, repo, number = target['selector'], target['repo'], target['number']
     ref = [arg] if arg else []
@@ -394,8 +404,10 @@ def check_bash(root, cfg, ledger, data, at):
                 branch = refs[-1]
         if H.check_on(cfg, 'DL-11') and runs_branch_gate(seg):
             check_join_gate(seg, cfg, branch if branch is not None else current_branch(cwd))
-        if H.starts_with(seg, ['gh', 'pr', 'merge']) and H.check_on(cfg, 'DL-05'):
-            check_merge(root, seg, ledger, cfg)
+        if H.starts_with(seg, ['gh', 'pr', 'merge']):
+            check_merge_role(seg, cfg)
+            if H.check_on(cfg, 'DL-06'):
+                check_merge(root, seg, ledger, cfg)
         if H.starts_with(seg, ['gh', 'pr', 'checks']) and flag(seg, '--watch') and H.check_on(cfg, 'DL-07'):
             deny('DL-07 do not watch the PR check list. Watch the workflow runs of the head commit: ci_watch.py <sha>.')
         if H.starts_with(seg, ['gh', 'run', 'watch']) and H.check_on(cfg, 'DL-95'):
@@ -758,8 +770,8 @@ def check_launch(cfg, ledger, data, where, root=None, notes=None):
         note = pc_bound_warning(text)
         if note:
             notes.append(note)
-    if where == 'local' and H.check_on(cfg, 'D4') and cloud_running < cap_cloud and not PC_BOUND_RE.search(text):
-        deny('D4 run non-PC-bound work in the cloud (cloud running %d of %d). Launch it with RemoteTrigger, or add a '
+    if where == 'local' and H.check_on(cfg, 'DL-39') and H.check_on(cfg, 'D4') and cloud_running < cap_cloud and not PC_BOUND_RE.search(text):
+        deny('DL-39 run non-PC-bound work in the cloud (cloud running %d of %d). Launch it with RemoteTrigger, or add a '
              '"PC-bound: <reason>" line to this brief.' % (cloud_running, cap_cloud))
     model = find_key(ti, 'model')
     effort = find_key(ti, 'effort_level') if where == 'cloud' else (find_key(ti, 'effort') or block.get('effort'))
@@ -821,18 +833,23 @@ def check_question(cfg, ledger, data, at):
                      '(text before the dialog is not seen) so it stands alone.' % minc)
     if H.check_on(cfg, 'Q-4'):
         # DL414: a train with no PR and no release number has nothing to merge, so it does not block.
-        todo = ['%s is green and unmerged%s' % (H.release_name(t), H.stale_hint(t))
-                for t in H.trains_green_unmerged(ledger, at) if t.get('pr') or t.get('release_no') is not None]
+        # DS303: in manual merge mode the owner merges, so a green PR is not an action for the session.
+        todo = []
+        if C.merge_mode(cfg) != 'manual':
+            todo = ['%s is green and unmerged%s (the watcher merges it: check that delivery_watch.py runs)'
+                    % (H.release_name(t), H.stale_hint(t))
+                    for t in H.trains_green_unmerged(ledger, at) if t.get('pr') or t.get('release_no') is not None]
         todo += ['%s is joined and not pushed' % H.release_name(t) for t in H.trains_joined_unpushed(ledger, at, 0)]
         todo += ['agent %s is queued to launch' % (a.get('task') or a.get('id')) for a in ledger['agents']
                  if a.get('state') == 'queued']
         if todo:
-            deny('Q-4 do the actions that do not need the answer first (%s): merge, push or launch, then ask.'
+            deny('Q-4 do the actions that do not need the answer first (%s): push, launch or let the watcher merge, '
+                 'then ask.'
                  % '; '.join(todo[:3]))
 
 
 def check_postpone(ledger, data, at):
-    """DL136: a warning (never a block) when a routine is set to run within 2 hours while a question is open."""
+    """DL-35: a warning (never a block) when a routine is set to run within 2 hours while a question is open."""
     ti = data.get('tool_input') or {}
     if str(ti.get('action') or '').lower() not in ('create', 'update'):
         return None
@@ -846,7 +863,7 @@ def check_postpone(ledger, data, at):
     open_q = [q for q in ledger.get('owner_questions') or [] if isinstance(q, dict) and not q.get('answered_at')]
     if not open_q:
         return None
-    return ('DL136 a question to the owner is open and this routine runs in %d min. A routine held for an owner '
+    return ('DL-35 a question to the owner is open and this routine runs in %d min. A routine held for an owner '
             'answer is paused (no run_once_at in the near future), never postponed by minutes: it would start on '
             'its old brief if the dialog stays open.' % round(-mins))
 

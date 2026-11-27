@@ -1,4 +1,4 @@
-"""DL171: DL-42 per segment, DL-63 in the record folder, Q-2 false positives."""
+"""DL171: DL-42 per segment, the record folder (DL-63 retired, DS303), Q-2 false positives."""
 import json
 import unittest
 from datetime import timedelta
@@ -58,20 +58,13 @@ class Dl63(unittest.TestCase):
         (root / "docs" / "docs.json").write_text(json.dumps({"record_dir": "rec/d"}))
         self.assertEqual(H.record_dir(str(root)), "rec/d")
 
-    def test_check_registry_reads_record_dir(self):
+    def test_past_expected_is_left_to_the_docs_plugin(self):
+        # DS303: DL-63 is merged into ARTIFACTSPEC R8.19; the delivery Stop hook no longer reads Expected times
         root = make_root()
         self.rows(root, "docs/project")
-        cfg = H.load_config(str(root))
-        out = S.check_registry(str(root), cfg, H.now().replace(year=2030))
-        self.assertTrue(any(k.startswith("DL-63:T1") for k, _ in out), out)
-
-    def test_check_registry_custom_dir(self):
-        root = make_root()
-        (root / "docs").mkdir()
-        (root / "docs" / "docs.json").write_text(json.dumps({"record_dir": "rec/x"}))
-        self.rows(root, "rec/x")
-        out = S.check_registry(str(root), H.load_config(str(root)), H.now().replace(year=2030))
-        self.assertEqual(len(out), 1)
+        self.assertFalse(hasattr(S, "check_registry"))
+        out = S.findings(str(root), {}, H.load_config(str(root)))
+        self.assertFalse(any(k.startswith("DL-63") for k, _ in out), out)
 
 
 class Q2(unittest.TestCase):
