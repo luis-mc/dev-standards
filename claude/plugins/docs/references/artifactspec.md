@@ -880,7 +880,10 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
 - **R5.11** — A token block defines every token of the contract in
   `design/DESIGN.md`, light values on `:root`, dark values under both
   `@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) }`
-  and `:root[data-theme="dark"]`.
+  and `:root[data-theme="dark"]`. The plugin's default design keeps the full
+  contract. A project's `design.css` needs only the accent tokens: the page,
+  surface, ink and rule tokens and the size tokens come from the default, and
+  a file that sets them is accepted with a warning that they are ignored.
 - **R5.12** — A project's own design is found by the `feature-artifact-new` or
   `full-progress-artifact-new` skill, in this order: design-token files,
   Tailwind or theme configuration, CSS custom properties in the app, the live
@@ -1007,8 +1010,8 @@ double-click.
   theme-toggle script is the template's own (R5.9). Verified by
   `feature_artifact_needs_no_host` and `check_r528_no_external_resources`.
 - **R5.29** — The full-progress artifact's rendered file stays a fragment
-  beginning with `<title>`, with no `<html>`, `<head>` or `<body>`, as the
-  Artifact tool expects. Verified by `full_progress_is_a_fragment_beginning_with_title`
+  beginning with `<meta charset="utf-8">` and then `<title>`, with no `<html>`,
+  `<head>` or `<body>`, as the Artifact tool expects. Verified by `full_progress_is_a_fragment_beginning_with_title`
   and `check_r529_full_progress_fragment`.
 
 **Links to the feature files**
@@ -2224,7 +2227,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 | The release timeline is present exactly when a release is open, between the key and the checklist, with its caption and `aria-label` | R5.42, R5.43 |
 | A feature page's Full Progress published line equals the manifest's | R5.38 |
 | `updated` and `published_at` in the manifest are ISO times with an offset | R4.30 |
-| A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<title>` | R5.27, R5.28, R5.29 |
+| A feature artifact is a complete HTML document with its CSS inlined and no external resource but the fonts link; Full Progress is a fragment beginning with `<meta charset="utf-8">`, then `<title>` | R5.27, R5.28, R5.29 |
 | IDs unique, prefixes registered | R4.5, R4.6 |
 | History last on feature artifacts, Date / Change | R5.4 |
 | `decisions.json` valid: fields, IDs, options, choice, previews, images, task | R5.14 to R5.18 |

@@ -97,7 +97,7 @@ The commands are listed in ARTIFACTSPEC section 7. They include `init`, `feature
 
 ## 4. Screens and states
 
-The two pages are HTML. Section 0 of each is always "Status and checklist". It holds a stamp, a lede, tiles and the checklist. The lede says what needs the owner, or "Nothing needs you". Both pages work in light and dark themes and at phone width. The structure stylesheet is fixed. A project's design tokens are free. See ARTIFACTSPEC section 5.
+The two pages are HTML. Section 0 of each is always "Status and checklist". A feature page holds a stamp, a lede, an At a glance block, tiles and the checklist (ARTIFACTSPEC R5.3). Full Progress holds a stamp, a row of badges, a "What is happening" list, the key and the checklist (ARTIFACTSPEC R5.61). Both pages work in light and dark themes and at phone width. The structure stylesheet is fixed. A project's design tokens are free. See ARTIFACTSPEC section 5.
 
 ### CI runs section (D48)
 
@@ -132,7 +132,7 @@ flowchart LR
 
 **R5.3** — `set-task-status` updates the registry, renders each page that shows the task, and writes the files in one run.
 
-**R5.4** — `set-task-status` rejects a status outside the eight. It names the nearest allowed one.
+**R5.4** — `set-task-status` rejects a status outside the nine of ARTIFACTSPEC section 6.1 and names the nearest allowed one (ARTIFACTSPEC R7.3).
 
 **R5.5** — Rendering is deterministic: the same record and stamp give identical HTML.
 
@@ -156,7 +156,7 @@ flowchart LR
 
 **R5.11a** — A release has a number, `RELEASE-n`. `--release` takes the next one past the delivery ledger and the record; `--release N` sets or corrects it and refuses a number in use. A phase may cross midnight: its end rolls to the next day. A phase given as HH:MM that starts before the previous phase ends is the next day, with or without a gap between them (DL359). When the ledger knows the number of an Item's `RELEASE-n` lead, `check` gives the exact `set-task-status <id> --release <n>` command.
 
-**R5.11d** — A project's `design.css` is checked against the accents contract: the token contract minus the page, surface and ink tokens (`--paper`, `--surface`, `--surface-2`, `--ink`, `--ink-muted`, `--rule`, `--rule-strong`) and the size tokens. `design set` and `check` accept a file without them; a file that sets them is accepted with the ignored-tokens warning; a missing accent token, or its dark value, is refused and named. The plugin's own default design keeps the full contract. (DL259)
+**R5.11d** — A project's `design.css` is checked against the accents contract: the token contract minus the page, surface and ink tokens (`--paper`, `--surface`, `--surface-2`, `--ink`, `--ink-muted`, `--rule`, `--rule-strong`) and the size tokens. `design set` and `check` accept a file without them; a file that sets them is accepted with the ignored-tokens warning; a missing accent token, or its dark value, is refused and named. The plugin's own default design keeps the full contract. (DL259; ARTIFACTSPEC R5.11)
 
 **R5.12** — A finished feature artifact can be retired. Its tasks and decisions are kept. Its file and content are deleted.
 
@@ -170,7 +170,7 @@ flowchart LR
 
 **R5.17** — The Full Progress and feature pages show the generator badge in the header (`luismc-docs X.Y.Z` and its latest flag) and use the plugin's default page colours and 0.9x font sizes; a project's `design.css` changes accents only (see [Documentation standard plugin](../docs/spec.md) R5.16 to R5.18). The latest flag does not make a page stale: INV-3 compares pages without it. (DL239)
 
-**R5.17a** — Every HTML page the docs plugin writes declares UTF-8 in its first 1024 bytes, so a page opened as a local file shows `·` and `…` correctly. A feature page has `<meta charset="utf-8">` in its head. The Full Progress fragment begins with `<meta charset="utf-8">`, then `<title>`; the artifact host wraps the fragment and keeps the tag. The local copy is the repo copy, so it carries the tag too. (DL260)
+**R5.17a** — Every HTML page the docs plugin writes declares UTF-8 in its first 1024 bytes, so a page opened as a local file shows `·` and `…` correctly. A feature page has `<meta charset="utf-8">` in its head. The Full Progress fragment begins with `<meta charset="utf-8">`, then `<title>`; the artifact host wraps the fragment and keeps the tag. The local copy is the repo copy, so it carries the tag too. (DL260; ARTIFACTSPEC R5.29)
 
 **R5.37a** — `check` warns (never an error) when the Full Progress lede names `RELEASE-n` and a higher-numbered release is Live. The text is `content/full-progress/meta.json: the lede names RELEASE-14 but RELEASE-35 is live; update it with edit-content`. `render` prints the same line as a note. Only the release-number test exists; the record keeps no content change times. (DL251, ARTIFACTSPEC R5.37)
 
@@ -188,7 +188,7 @@ flowchart LR
 
 **R5.24** — A task with no `--expected` gets a default Expected by task type. `task-add` and `set-task-status` take `--type agent|ci|join|test|docs|study|release|other`; the default is `other`. The minutes are 15, 5, 10, 10, 15, 20, 30 and 30. The time is now plus those minutes, rounded up to 5 minutes, in the project's zone, and the basis reads `default ETA, <type>: <n> min`. An explicit `--expected` wins; a To do or On hold row stays `Not scheduled`. (DP7, owner decision D2)
 
-**R5.25** — The end-of-turn hook tells once about an open row past its Expected, in a message that does not block. It tells again only when the row gets a new Expected. A Running or Waiting row more than 60 minutes past due blocks once, naming `overdue-sweep`, which moves it to Needs you. A Needs you row is not named. The hourly fail-safe and the other blocking stops are unchanged. (DP7, owner decision D2, ARTIFACTSPEC R6.14)
+**R5.25** — Past-due Expected follows ARTIFACTSPEC R8.19, the one past-due check: warn once, then block a Running or Waiting row more than 60 minutes past due, naming `overdue-sweep`. `overdue-sweep` is this plugin's command that moves such a row to Needs you. (DP7, owner decisions D2 and C12)
 
 **R5.26** — A release is the main unit and a pull request is its carrier. `task-add` and `set-task-status` take `--pr N` (or `#N`), `--release-start TIME` and `--release-waits-on RELEASE-n[,RELEASE-m]`; an empty value clears one. The fields sit on a release only. A waits-on entry must name another existing release, with no cycle. Without `pr` and `release-waits-on` on any open release, the timeline keeps its older look. (DS256, ARTIFACTSPEC R5.55)
 
@@ -331,7 +331,7 @@ The full list is the ARTIFACTSPEC decision record (D1 to D25). These are the las
 | ARTIFACTSPEC D25 | How does Full Progress know where a pull request lives? | A provider table and an optional `pr_links` setting | 2026-11-26 |
 | ARTIFACTSPEC D26 | What if a running release has no phases? | `set-task-status` refuses it; `--no-phases REASON` is the one way round | 2026-11-26 |
 
-Where the record lives when nothing says (D182, DS219): `docs/project`. `.claude/artifacts.json` with a `record_dir` wins. A `record_dir` in `docs/docs.json` is used when there is no `.claude/artifacts.json`. A `.claude/artifacts.json` without `record_dir` keeps the old `docs/artifacts`. With no setting at all, a record that already sits in `docs/artifacts` (and none in `docs/project`) is still found there. The tests are in `tools/test_artifacts_ds219.py`.
+Where the record lives: ARTIFACTSPEC R4.37 gives the lookup order (D182, DS219). With no setting at all it is `docs/project`. The tests are in `tools/test_artifacts_ds219.py`.
 
 The plugin is part of `luismc-docs` since DS219. The five skills are `luismc-docs:feature-artifact-new`, `full-progress-artifact-new`, `project-artifact-check`, `task-add` and `task-status-update`. The artifacts hooks run beside the docs hooks in one `hooks/hooks.json`. The artifacts session hook is `scripts/hook_session_start_artifacts.py`, because the docs plugin has a `scripts/hook_session_start.py` of its own (moved from `scripts/artifacts/` in DS304).
 
