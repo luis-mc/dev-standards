@@ -9,6 +9,11 @@
 #
 # The pattern: one cheap `areas` job, job-level `if` on the work, and an `ci-ok` job that always runs. `ci-ok`
 # is the one required check. A skipped job is a pass, a failed or cancelled job is not.
+#
+# DS287 (R5.88, R5.91): a carry-forward plan sits next to the area plan. On a pull request, `carry_plan.py`
+# (through the `carry-plan` action) names the jobs an earlier head already proved; those jobs are skipped and
+# `ci-ok` counts them as passed through `carry_verify.py`. Each job's `if` is an extra AND: the area rule and the
+# carry rule must both say run.
 on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
@@ -27,10 +32,26 @@ jobs:
       image: ${{ steps.areas.outputs.image }}
       installer: ${{ steps.areas.outputs.installer }}
       docs_only: ${{ steps.areas.outputs.docs_only }}
+      carry_plan: ${{ steps.carry.outputs.plan }}
+      carried: ${{ steps.carry.outputs.carried }}
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read  # R5.95: the merged pull request of a push
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+      # DS287 (R5.94): a file that no area, `docs` glob or `all` entry names fails the pull request and is listed.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' }}
+        run: python scripts/delivery/changed_areas.py unmapped --check
+
+      - id: carry
+        continue-on-error: true
+        uses: ./.github/actions/carry-plan
+        with:
+          workflow: ci.yml
       - id: areas
         # A push to the default branch runs everything. A release pull request runs everything unless
         # .delivery/ci-areas.json sets "release_full": false. An unknown path runs everything.
@@ -46,14 +67,14 @@ jobs:
 
   unit:
     needs: areas
-    if: needs.areas.outputs.code == 'true'
+    if: ${{ !cancelled() && needs.areas.outputs.code == 'true' && fromJSON(needs.areas.outputs.carry_plan || '{}').run_unit != 'false' }}
     runs-on: ubuntu-latest
     steps:
       - run: echo "the project's unit tests"
 
   installer:
     needs: areas
-    if: needs.areas.outputs.installer == 'true'
+    if: ${{ !cancelled() && needs.areas.outputs.installer == 'true' && fromJSON(needs.areas.outputs.carry_plan || '{}').run_installer != 'false' }}
     runs-on: windows-latest
     steps:
       - run: echo "the project's installer lane"
@@ -64,6 +85,9 @@ jobs:
     needs: [areas, unit, installer]
     runs-on: ubuntu-latest
     steps:
-      - name: Every needed job passed or was skipped
-        run: |
-          echo '${{ toJSON(needs) }}' | python -c "import json,sys; n=json.load(sys.stdin); bad=[k for k,v in n.items() if v['result'] not in ('success','skipped')]; print('not green:', bad) if bad else print('ok'); sys.exit(1 if bad else 0)"
+      - uses: actions/checkout@v4
+      - name: Every needed job passed, or was skipped and carried
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+          CARRIED: ${{ needs.areas.outputs.carried || '{}' }}
+        run: python scripts/delivery/carry_verify.py --needs "$NEEDS" --carried "$CARRIED" --ignore areas

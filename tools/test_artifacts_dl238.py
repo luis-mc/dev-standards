@@ -89,6 +89,7 @@ def open_is_skipped_and_stubbed():
         assert PA.open_local(__file__) is False
         popen.assert_not_called()
     env = {k: v for k, v in os.environ.items() if k != 'CI'}
+    env['CLAUDE_ARTIFACTS_NO_GH'] = '1'                    # DS295: no gh call, no network
     env['CLAUDE_ARTIFACTS_NO_OPEN'] = '1'                  # DS283: test runs never open a tab
     with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.object(PA.os, 'startfile', create=True) as sf, \
             mock.patch.dict(os.environ, env, clear=True):

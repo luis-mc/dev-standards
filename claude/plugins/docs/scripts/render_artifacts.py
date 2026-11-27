@@ -32,6 +32,7 @@ SPEC = 'ARTIFACTSPEC 1.0.0'
 PLUGIN_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gen_badge as BADGE  # noqa: E402
+import ci_live  # noqa: E402
 import ledger_links  # noqa: E402
 import pr_links as PRL  # noqa: E402
 
@@ -1330,6 +1331,10 @@ def _row(task: dict, kind: str, feature_links: dict, by_id=None, release_line: b
         item += '<span class="no-release-line">%s</span>' % esc(NO_RELEASE_LINE % no_release_reason(task))
     if task['status'] == 'Dropped':      # R5.49: why a dropped row was closed, in a muted line under the Item
         item += '<span class="dropped-line">%s</span>' % esc(dropped_line(task, by_id))
+    if kind == 'full-progress' and task.get('status') not in ('Live', 'Dropped'):     # R5.41: a compact CI cell
+        live = ci_runs_list(task, PR_LINKS_NOW, None, task.get('pr'))
+        if live:
+            item += '<span class="ci-live-cell">%s</span>' % live
     app = '<td>%s</td>' % ('<code>%s</code>' % esc(task['app']) if task.get('app') else '') if kind == 'full-progress' else ''
     expected = esc(task.get('expected') or NOT_SCHEDULED)     # R6.6: an empty Expected on To do / On hold
     if task.get('expected_basis') and task['status'] in OPEN_STATUSES:     # R6.10
@@ -1613,6 +1618,32 @@ def _dep_text(r, by_row) -> str:
     return ' and '.join(names) if names else 'nothing'
 
 
+PR_LINKS_NOW = None          # the manifest's pr_links of the page being drawn; set by render_one (R5.35)
+
+
+def ci_runs_list(task, pr_links=None, kinds=None, pr=None) -> str:
+    """R5.39, R5.40: the stored workflow runs of a task or release as compact chips: name, state, link, UTC start and
+    duration or elapsed. `kinds` limits which runs; `pr` adds the PR link first. Reads only the record."""
+    stored = task.get('ci_runs') if isinstance(task, dict) else None
+    runs = [r for r in (stored or {}).get('runs', []) if isinstance(r, dict) and (kinds is None or r.get('kind') in kinds)]
+    head = PRL.link('PR %s' % pr, pr, pr_links) if pr else ''
+    if not runs:
+        return head
+    fetched = (stored or {}).get('fetched_at', '')
+    items = []
+    for r in runs:
+        state = r.get('state') if r.get('state') in ci_live.STATES else 'queued'
+        text = '%s · %s · %s' % (r.get('name', ''), state, ci_live.timing(r, fetched))
+        url = str(r.get('url', ''))
+        if url.startswith('https://'):          # only https is linked, as for a PR (R5.35)
+            items.append('<li><a class="ci-chip ci-live-%s" href="%s" target="_blank" rel="noopener noreferrer">%s</a></li>'
+                         % (state, esc(url), esc(text)))
+        else:
+            items.append('<li><span class="ci-chip ci-live-%s">%s</span></li>' % (state, esc(text)))
+    note = '<span class="ci-live-fetched">as of %s UTC</span>' % esc(ci_live.clock(fetched)) if fetched else ''
+    return '%s<ul class="ci-live">%s</ul>%s' % (head + ' ' if head else '', ''.join(items), note)
+
+
 def release_tree_table(groups: list, pr_links=None) -> str:
     """R5.57: the table under the figure: Item, Live ETA, CI, Waits on, Status. A PR row, then its releases."""
     by_row = {r['task']['id']: r for g in groups for r in g['rows']}
@@ -1630,12 +1661,16 @@ def release_tree_table(groups: list, pr_links=None) -> str:
             out.append('<tr class="pr">%s</tr>' % cells(
                 PRL.link('PR %s' % g['pr'], g['pr'], pr_links),
                 esc('carrier · %s · carries %d release%s, listed below' % (ids, len(rows), '' if len(rows) == 1 else 's')),
-                _eta_text(first), '<span class="ci-note">see CI runs</span>', 'nothing', first['task'].get('status', '')))
+                _eta_text(first), ci_runs_list(first['task'], pr_links, ('pr',)) or '<span class="ci-note">see CI runs</span>', 'nothing', first['task'].get('status', '')))
         for i, r in enumerate(rows):
             t = r['task']
             sub = esc('%s · in ' % t['id']) + PRL.link('PR %s' % g['pr'], g['pr'], pr_links) if g['pr'] else esc(t['id'])
             cls = ('ch last' if i == len(rows) - 1 else 'ch') if g['pr'] else 'rel'
-            ci = '<span class="ci-note">via %s</span>' % PRL.link('PR %s' % g['pr'], g['pr'], pr_links) if g['pr'] else '<span class="ci-note">own run</span>'
+            if g['pr']:
+                ci = '<span class="ci-note">via %s</span>' % PRL.link('PR %s' % g['pr'], g['pr'], pr_links)
+                ci += ci_runs_list(t, pr_links, ('tag', 'merge'))
+            else:
+                ci = ci_runs_list(t, pr_links, None, t.get('pr')) or '<span class="ci-note">own run</span>'
             out.append('<tr class="%s">%s</tr>' % (cls, cells(
                 '<b>%s</b>' % esc(release_name(t)), sub + (esc(' · no phases: %s' % no_phases_reason(t)) if no_phases_reason(t) and not r['phases'] else ''),
                 _eta_cell(r), ci, _dep_text(r, by_row), t.get('status', ''))))
@@ -2726,6 +2761,8 @@ def render_artifact(manifest: dict, registry: dict, contents: dict, key: str, pl
     mine = _tasks_of(kind, key, tasks)
     feature_links = feature_links_of(manifest, links)
     pr_links = manifest.get('pr_links')     # R5.65: an input, never read from git here
+    global PR_LINKS_NOW
+    PR_LINKS_NOW = pr_links
     project = str(manifest.get('project', ''))
     meta = content['meta']
 
@@ -3270,7 +3307,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             item_cell = cells[1] if len(cells) > 1 else None
             idnode = find(item_cell, 'span', 'task-id') if item_cell else None
             row['label'] = text_of(idnode) if idnode else ''
-            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line') or has_class(n, 'no-release-line') or has_class(n, 'dropped-line')
+            skipped = lambda n: has_class(n, 'task-id') or has_class(n, 'release-name') or has_class(n, 'release-line') or has_class(n, 'no-release-line') or has_class(n, 'dropped-line') or has_class(n, 'ci-live-cell')
             row['item'] = text_of(item_cell, skip=skipped) if item_cell else ''
             line = find(item_cell, 'span', 'release-line') if item_cell else None
             row['release_line'] = text_of(line) if line else ''
@@ -3281,7 +3318,7 @@ def check_html(html: str, key: str, manifest: dict, registry: dict, plugin_dir: 
             leading = [n for n in find_all(item_cell, 'span', 'release-name')
                        if not has_ancestor(n, lambda a: has_class(a, 'release-line'))] if item_cell else []
             row['release_name'] = ' '.join(text_of(n) for n in leading)
-            anchor = find(item_cell, 'a') if item_cell else None
+            anchor = next((a for a in find_all(item_cell, 'a') if not has_ancestor(a, lambda x: has_class(x, 'ci-live-cell'))), None) if item_cell else None
             row['href'] = anchor.attrs.get('href') if anchor else None
             offset = 1 if kind == 'full-progress' else 0
             row['app'] = text_of(cells[2]) if kind == 'full-progress' and len(cells) > 2 else ''

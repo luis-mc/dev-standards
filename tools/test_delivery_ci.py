@@ -1303,8 +1303,18 @@ POOL_TEST = "contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')
 POOL_CLAUSE = re.compile(r" && (?:!)?" + re.escape(POOL_TEST) + r"(?= \}\}$)")
 
 
+# DS287 (R5.88): a job the carry plan can skip adds one clause, last; a carried job is an explicit 'false'.
+CARRY_CLAUSE = re.compile(
+    r"(?: && needs\.(?:plan|carry)\.result != '(?:failure|cancelled)')?"
+    r" && fromJSON\(needs\.(?:plan|carry)\.outputs\.carry_plan \|\| '\{\}'\)\.run_[\w-]+ != 'false'(?= \}\}$)")
+
+
+def strip_carry(text: str) -> str:
+    return "\n".join(CARRY_CLAUSE.sub("", ln) for ln in text.split("\n"))
+
+
 def if_cond_ok(block: str) -> bool:
-    for m in re.finditer(r"^    if: (.*)$", block, re.M):
+    for m in re.finditer(r"^    if: (.*)$", strip_carry(block), re.M):
         if m.group(1) in (IF_COND, E2E_AGGREGATE_COND) or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", POOL_CLAUSE.sub("", m.group(1)))) == IF_COND:
             return True
     return False
@@ -1390,7 +1400,7 @@ def check_workflow(track: str, text: str) -> list[str]:
 
     # every other job
     for name, block in jobs.items():
-        if name == "decide":
+        if name == "decide" or name in CARRY_AGGREGATE:
             continue
         if not re.search(r"^    needs: (decide|\[decide(, [\w-]+)+\])\s*$", block, re.M):
             problems.append(f"job {name}: missing 'needs: decide'")
@@ -1449,7 +1459,9 @@ def check_workflow(track: str, text: str) -> list[str]:
 # A job that no other job needs must be a required check (it judges); anything else only reports.
 # DL190: `integration-pool` is the pool twin of `integration` (same check name, no services block); the
 # pair is allowed only with the pool condition, see POOL_COND and check_pool_pair.
-FAMILY_JOBS = {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e"}
+FAMILY_JOBS = {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e", "carry", "carry-ok"}
+# DS287 (R5.91): carry-ok is the required aggregate that treats a carried job as passed; it needs the jobs it judges.
+CARRY_AGGREGATE = {"carry-ok"}
 
 
 def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
@@ -1463,7 +1475,7 @@ def check_job_shape(track: str, jobs: dict[str, str]) -> list[str]:
     for name, block in jobs.items():
         if name not in FAMILY_JOBS:
             problems.append(f"job {name}: not a suite family (one job per family, not per tool)")
-        if name in needed:
+        if name in needed or name in CARRY_AGGREGATE:
             continue
         job_name = re.search(r"^    name: ['\"]?(.+?)['\"]?\s*$", block, re.M)
         if not job_name or job_name.group(1) not in required:
@@ -1478,7 +1490,7 @@ def check_pool_pair(jobs: dict[str, str]) -> list[str]:
     if "integration-pool" not in jobs:
         return []
     problems = []
-    host, pool = jobs.get("integration", ""), jobs["integration-pool"]
+    host, pool = strip_carry(jobs.get("integration", "")), strip_carry(jobs["integration-pool"])
     nm = lambda b: (re.search(r"^    name: (.+)$", b, re.M) or [None, None])[1]
     if not nm(host) or nm(host) != nm(pool):
         problems.append("job name: integration-pool must have the same name as integration")

@@ -11,7 +11,7 @@ Runs `scripts/docs_setup.py` from the `luismc-docs` plugin (DOCSPEC §9). The la
 
 ## How this setup talks to you (setup pattern)
 
-This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
+This setup follows section 13 of `docs/guides/shared-self-hosted-runners.md`.
 
 1. **Plan first.** Before any change, show one plan: the folders and files it will create or move (with paths), that nothing is deleted, what lands outside the repository (nothing), what needs the owner (a yes, the app and topic names, the guesses to confirm) and about how long it takes (a minute for `init`, a few minutes for `migrate`). For an existing repo the plan is the `migrate` dry run. Ask for one yes.
 2. **Do the heavy lifting.** After the yes, run every command yourself: `init` or `migrate --apply`, the `docs.json` edit (`apps`, `topics`), `docs_index.py build` and `docs_check.py`. Leave to the owner only what you cannot do: the guesses only they can judge, and the commit and push. Give each an exact step and check it afterwards.

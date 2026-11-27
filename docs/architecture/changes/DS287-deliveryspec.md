@@ -1,0 +1,6 @@
+---
+spec: claude/plugins/delivery/references/deliveryspec.md
+change: minor
+task: DS287
+---
+DL-80: a release pull request runs the full suite on its first run only; later heads carry jobs whose areas did not change (DS287). DL-116: release_full applies to the first run only; with --carry later heads run only changed areas; an unmapped path fails the area check (R5.94). DL-11: the ready PR's first CI run is the one full run.

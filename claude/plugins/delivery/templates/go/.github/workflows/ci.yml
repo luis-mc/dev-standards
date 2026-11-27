@@ -67,14 +67,44 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
 
+  # DS287 (R5.88): which jobs an earlier head of this pull request already proved. Any doubt: every job runs.
+  carry:
+    name: carry-forward plan
+    needs: decide
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CRSP_CARRY || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+      pull-requests: read  # R5.95: the merged pull request of a push
+    outputs:
+      carry_plan: ${{ steps.carry.outputs.plan }}
+      carried: ${{ steps.carry.outputs.carried }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      # DS287 (R5.94): every tracked file belongs to an area, a `docs` glob or a `run_everything` entry. A new file
+      # must be mapped before it merges; the list below names each file that is not.
+      - name: Every tracked file is mapped (R5.94)
+        if: ${{ github.event_name == 'pull_request' && hashFiles('scripts/delivery/ci-areas.json') != '' }}
+        run: python3 scripts/delivery/area_select.py --unmapped --check
+
+      - id: carry
+        continue-on-error: true
+        uses: ./.github/actions/carry-plan
+        with:
+          workflow: ci.yml
+
   # ---------------------------------------------------------------------------
   # Static gates: everything that needs no database.
   # ---------------------------------------------------------------------------
   verify:
     name: lint, vet, boundaries, unit + contract tests
-    needs: decide
+    needs: [decide, carry]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.carry.result != 'cancelled' && fromJSON(needs.carry.outputs.carry_plan || '{}').run_verify != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_VERIFY || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 15
     env:
@@ -177,8 +207,40 @@ jobs:
       # §11.1: unit tests over core and service-package logic. -race because a
       # data race that only manifests under load is exactly what §5.3's
       # read-modify-write rule exists to prevent, and the detector is free here.
+      # DS287 (R5.92): on a pull request, ask rerun_tests.py what the previous head's run of this job leaves to run.
+      # Any error: `current`, and the normal command below runs.
+      - name: Narrow the rerun (Unit tests)
+        id: rerun
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: ./.github/actions/rerun-narrow
+        with:
+          runner: go
+          job: verify
+          job-name: lint, vet, boundaries, unit + contract tests
+          report-name: test-report-verify
+
+      - name: Unit tests (failed tests first, then affected packages)
+        if: ${{ github.event_name == 'pull_request' && steps.rerun.outputs.mode == 'narrow' }}
+        run: >-
+          python3 scripts/delivery/rerun_step.py exec --decision .rerun/decision.json
+          --prefix 'go test -race -short -json' --tee test-report/go-unit.json
+
       - name: Unit tests
-        run: go test -race -short ./...
+        if: ${{ steps.rerun.outputs.mode != 'narrow' }}
+        run: |
+          set -o pipefail
+          mkdir -p test-report
+          go test -race -short -json ./... | tee test-report/go-unit.json
+
+      - name: Upload the test report (Unit tests)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-report-verify
+          path: test-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
       # §11.1: "the highest-value control in the entire repository" — every
       # client and the server verified against the same contract fixtures.
@@ -204,9 +266,9 @@ jobs:
   # ---------------------------------------------------------------------------
   integration:
     name: integration tests (ephemeral database)
-    needs: decide
+    needs: [decide, carry]
     # DL147: a skipped need is fine, a failed one is not; never rely on the implicit success().
-    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    if: ${{ !cancelled() && needs.decide.result != 'failure' && needs.decide.outputs.skip != 'true' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.carry.result != 'cancelled' && fromJSON(needs.carry.outputs.carry_plan || '{}').run_integration != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_INTEGRATION || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     timeout-minutes: 30
     services:
@@ -243,8 +305,40 @@ jobs:
       - name: Migrate (seed through the migration chain)
         run: go run ./tools/migrate up
 
+      # DS287 (R5.92): on a pull request, ask rerun_tests.py what the previous head's run of this job leaves to run.
+      # Any error: `current`, and the normal command below runs.
+      - name: Narrow the rerun (Integration tests)
+        id: rerun
+        if: ${{ github.event_name == 'pull_request' }}
+        continue-on-error: true
+        uses: ./.github/actions/rerun-narrow
+        with:
+          runner: go
+          job: integration
+          job-name: integration tests (ephemeral database)
+          report-name: test-report-integration
+
+      - name: Integration tests (failed tests first, then affected packages)
+        if: ${{ github.event_name == 'pull_request' && steps.rerun.outputs.mode == 'narrow' }}
+        run: >-
+          python3 scripts/delivery/rerun_step.py exec --decision .rerun/decision.json
+          --prefix 'go test -race -json' --then-suffix '-run TestIntegration' --tee test-report/go-integration.json
+
       - name: Integration tests
-        run: go test -race -run TestIntegration ./...
+        if: ${{ steps.rerun.outputs.mode != 'narrow' }}
+        run: |
+          set -o pipefail
+          mkdir -p test-report
+          go test -race -run TestIntegration -json ./... | tee test-report/go-integration.json
+
+      - name: Upload the test report (Integration tests)
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-report-integration
+          path: test-report/
+          if-no-files-found: ignore
+          retention-days: 7
 
       # §11.1: the route-coverage test fails the build when any route ships
       # without an explicit authorization declaration OR without a declared
@@ -252,3 +346,28 @@ jobs:
       # here rather than in the static job.
       - name: Route coverage (authorization + rate limits)
         run: go test -race -run TestRouteCoverage ./...
+
+  # DS287 (R5.91): the required check. A job carried from an earlier head counts as passed.
+  carry-ok:
+    name: every job passed or was carried
+    needs: [carry, verify, integration]
+    if: ${{ !cancelled() && needs.carry.result != 'cancelled' && needs.verify.result != 'cancelled' && needs.integration.result != 'cancelled' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CRSP_CARRY_OK || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      NEEDS: ${{ toJSON(needs) }}
+      CARRIED: ${{ needs.carry.outputs.carried || '{}' }}
+      IGNORE: carry
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Every needed job passed, or was skipped and carried
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            # R5.94: the plan job also checks that every file is mapped; its failure fails this check.
+            if [ "${{ needs.carry.result }}" = failure ]; then echo "::error::the plan job failed (an unmapped file, R5.94)"; exit 1; fi
+            python3 scripts/delivery/carry_verify.py --needs "$NEEDS" --carried "$CARRIED" --ignore "$IGNORE"
+          else
+            echo "$NEEDS" | python3 -c "import json,sys; n=json.load(sys.stdin); bad=[k for k,v in n.items() if v['result'] not in ('success','skipped')]; print('not green:', bad) if bad else print('ok'); sys.exit(1 if bad else 0)"
+          fi

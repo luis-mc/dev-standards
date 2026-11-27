@@ -8,7 +8,8 @@ import unittest
 from pathlib import Path
 
 SCRIPT = Path(__file__).resolve().parent.parent / "scripts" / "project_artifacts.py"
-ENV = dict(os.environ, GIT_TERMINAL_PROMPT="0", CLAUDE_ARTIFACTS_NOW="2026-10-12T10:00:00+01:00")
+ENV = dict(os.environ, GIT_TERMINAL_PROMPT="0", CLAUDE_ARTIFACTS_NOW="2026-10-12T10:00:00+01:00",
+           CLAUDE_ARTIFACTS_NO_GH="1")  # DS295: tests never call gh
 for k in ("GIT_DIR", "GIT_WORK_TREE"):
     ENV.pop(k, None)
 

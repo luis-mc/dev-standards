@@ -313,7 +313,7 @@ a per-repository ledger, `.delivery/ledger.json`, and enforce trains and CI
 (ETA breakdown, concurrency caps, cloud first), owner questions (the
 questions wizard, context inside each question), and attribution. The
 rules are numbered in
-[`docs/architecture/DELIVERYSPEC.md`](docs/architecture/DELIVERYSPEC.md)
+[`claude/plugins/delivery/references/deliveryspec.md`](claude/plugins/delivery/references/deliveryspec.md)
 (DL-nn, Q-n); the rule files `claude-setup` installs tag each line with the id
 that enforces it.
 

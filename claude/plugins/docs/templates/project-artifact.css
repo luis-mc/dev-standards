@@ -857,3 +857,17 @@ details.status-fold.release-group > summary { color: var(--ink); }
 .release-tree tr.ch td:first-child::before { content: ""; position: absolute; left: 20px; top: 0; bottom: 0; border-left: 2px solid var(--ink-muted); }
 .release-tree tr.ch.last td:first-child::before { bottom: 50%; }
 .release-tree tr.ch td:first-child::after { content: ""; position: absolute; left: 20px; top: 50%; width: 16px; border-top: 2px solid var(--ink-muted); }
+
+/* DS295: live CI runs in the release table and task rows (R5.39 to R5.41). Existing .ci-chip look and status colours. */
+.ci-live, .ci-live-cell { --ci-teal: color-mix(in srgb, var(--live) 70%, var(--signal)); }
+.ci-live { list-style: none; margin: .2em 0 0; padding: 0; display: flex; flex-direction: column; gap: .2em; }
+.ci-live li { margin: 0; }
+.ci-live a.ci-chip { color: inherit; text-decoration: none; }
+.ci-live a.ci-chip:hover, .ci-live a.ci-chip:focus-visible { text-decoration: underline; }
+.ci-live-passed { background: var(--done-bg); }
+.ci-live-failed { background: var(--failed); color: var(--on-failed); border-color: var(--failed); }
+.ci-live-running { background: var(--ci-teal); color: var(--on-live); border-color: var(--ci-teal); }
+.ci-live-queued { background: var(--running-bg); color: var(--ink); border-color: var(--running-mark); }
+.ci-live-cancelled { background: var(--surface-2); color: var(--ink); }
+.ci-live-fetched { display: block; font-size: .75rem; color: var(--muted, var(--ink)); }
+.ci-live-cell { display: block; margin-top: .25em; }

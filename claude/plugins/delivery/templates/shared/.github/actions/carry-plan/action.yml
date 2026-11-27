@@ -1,0 +1,83 @@
+name: Carry-forward plan
+description: >-
+  DS287 (R5.88, R5.91). On a pull_request, or a push to the default branch (R5.95), run scripts/delivery/carry_plan.py for one workflow: it says which jobs
+  an earlier head of the pull request already proved (carried) and which must run. Any other event, a missing
+  script or a failed script: every job runs. The caller checks out the repository first, with fetch-depth 0.
+inputs:
+  workflow:
+    description: The workflow file name, for example ci.yml
+    required: true
+  map:
+    description: The area map
+    default: scripts/delivery/ci-areas.json
+  always:
+    description: On a push, comma list of jobs that always run (release, publish, smoke); R5.95
+    default: ''
+  default-branch:
+    description: The branch whose pushes are planned from the merged pull request (R5.95)
+    default: main
+outputs:
+  run:
+    description: The jobs that run
+    value: ${{ steps.plan.outputs.run }}
+  carried:
+    description: 'JSON {job: {sha, run_url}} of the carried jobs'
+    value: ${{ steps.plan.outputs.carried }}
+  reason:
+    description: One line
+    value: ${{ steps.plan.outputs.reason }}
+  plan:
+    description: 'JSON of the run_<job> outputs, for example {"run_verify":"false"}'
+    value: ${{ steps.plan.outputs.plan }}
+runs:
+  using: composite
+  steps:
+    - id: plan
+      shell: bash
+      env:
+        GH_TOKEN: ${{ github.token }}  # the job's permissions: actions, pull-requests read
+        WORKFLOW: ${{ inputs.workflow }}
+        MAP: ${{ inputs.map }}
+        EVENT: ${{ github.event_name }}
+        PR_NUMBER: ${{ github.event.pull_request.number }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        PUSH_SHA: ${{ github.sha }}
+        REF_NAME: ${{ github.ref_name }}
+        ALWAYS: ${{ inputs.always }}
+        DEFAULT_BRANCH: ${{ inputs.default-branch }}
+      run: |
+        real_out="$GITHUB_OUTPUT"
+        tmp="$(mktemp)"
+        reason=""
+        if [ "$EVENT" = push ] && [ "$REF_NAME" = "$DEFAULT_BRANCH" ] && [ -f scripts/delivery/carry_plan.py ]; then
+          if ! GITHUB_OUTPUT="$tmp" python3 scripts/delivery/carry_plan.py --repo "$GITHUB_REPOSITORY"                 --workflow "$WORKFLOW" --push --sha "$PUSH_SHA" --always "$ALWAYS" --map "$MAP" --github-output; then
+            echo "::warning::carry plan failed; every job runs"
+            : > "$tmp"
+            reason="carry plan failed: every job runs"
+          fi
+        elif [ "$EVENT" != pull_request ]; then
+          reason="not a pull request or a default-branch push: every job runs"
+        elif [ ! -f scripts/delivery/carry_plan.py ]; then
+          echo "::warning::scripts/delivery/carry_plan.py is missing; every job runs"
+          reason="carry plan missing: every job runs"
+        elif ! GITHUB_OUTPUT="$tmp" python3 scripts/delivery/carry_plan.py --repo "$GITHUB_REPOSITORY" \
+              --workflow "$WORKFLOW" --pr "$PR_NUMBER" --sha "$HEAD_SHA" --map "$MAP" --github-output; then
+          echo "::warning::carry plan failed; every job runs"
+          : > "$tmp"
+          reason="carry plan failed: every job runs"
+        fi
+        python3 - "$tmp" "$real_out" "$reason" <<'PY'
+        import json, sys
+        src, dst, reason = sys.argv[1:4]
+        vals = {}
+        for line in open(src, encoding="utf-8"):
+            k, sep, v = line.rstrip("\n").partition("=")
+            if sep:
+                vals[k] = v
+        plan = {k: v for k, v in vals.items() if k.startswith("run_")}
+        with open(dst, "a", encoding="utf-8") as f:
+            f.write("run=%s\n" % vals.get("run", ""))
+            f.write("carried=%s\n" % (vals.get("carried") or "{}"))
+            f.write("reason=%s\n" % (vals.get("reason") or reason))
+            f.write("plan=%s\n" % json.dumps(plan, separators=(",", ":")))
+        PY

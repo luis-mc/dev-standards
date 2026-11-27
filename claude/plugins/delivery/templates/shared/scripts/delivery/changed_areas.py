@@ -3,7 +3,8 @@
 
     changed_areas.py [--map .delivery/ci-areas.json] [--base REF | --changed-file FILE|- | PATH...]
                      [--release] [--all] [--github-output] [--json]
-    changed_areas.py [--map FILE] unmapped [PATH...]     paths that fall to "all" (default: git ls-files)
+    changed_areas.py [--map FILE] unmapped [--check] [PATH...]   paths that fall to "all" (default: git ls-files)
+                     --check (DS287, R5.94): print each such path and exit 1; exit 0 when every file is mapped
 
 The project owns `.delivery/ci-areas.json`:
 
@@ -18,7 +19,8 @@ The project owns `.delivery/ci-areas.json`:
 Rules, per changed path: a path under `all` runs everything; a `docs` path needs no job; a path in an area
 selects that area (a path may sit in several); a path in none of them runs everything. An unknown path is never
 skipped. No changed path is "all" too. On a release pull request (`--release`) the whole set runs unless
-`release_full` is false (DL-97, DL-98 unchanged). `--all` forces everything (push to the default branch).
+`release_full` is false (DL-97, DL-98 unchanged). `--all` forces everything (push to the default branch). `--carry` (a later head of the pull request, DS287 R5.89)
+turns the release rule off: only the first run of a release pull request runs everything.
 
 Output: `all=true|false`, `areas=a,b` (every area when all), `docs_only=true|false`, `<area>=true|false` for each
 area, and `reason`. A job reads `needs.areas.outputs.<area>` in a job-level `if`; it never uses a workflow-level
@@ -67,12 +69,12 @@ def classify(path: str, cmap: dict):
     return "areas", res["areas"]
 
 
-def decide(changed, cmap: dict, release: bool = False, force_all: bool = False) -> dict:
+def decide(changed, cmap: dict, release: bool = False, force_all: bool = False, carry: bool = False) -> dict:
     names = list(cmap["areas"])
     why = ""
     if force_all:
         why = "forced: run everything"
-    elif release and cmap.get("release_full", True):
+    elif release and not carry and cmap.get("release_full", True):
         force_all, why = True, "release pull request: run everything"
     res = AS.select(list(changed), _as_select_map(cmap), force_all)
     is_all = res["mode"] == "all"
@@ -114,9 +116,12 @@ def main(argv=None) -> int:
     p.add_argument("--base")
     p.add_argument("--changed-file")
     p.add_argument("--release", action="store_true", help="a release pull request")
+    p.add_argument("--carry", action="store_true",
+                   help="a later head of the pull request: `release_full` is not applied (R5.89)")
     p.add_argument("--all", action="store_true")
     p.add_argument("--github-output", action="store_true")
     p.add_argument("--json", action="store_true")
+    p.add_argument("--check", action="store_true", help="with `unmapped`: exit 1 when a file is unmapped (R5.94)")
     p.add_argument("paths", nargs="*")
     a = p.parse_args(argv)
     list_unmapped = bool(a.paths) and a.paths[0] == "unmapped"
@@ -126,9 +131,13 @@ def main(argv=None) -> int:
         cmap = load_map(a.map)
         changed = list(a.paths)
         if list_unmapped:
-            for q in unmapped(changed or git_files(), cmap):
+            bad = unmapped(changed or git_files(), cmap)
+            for q in bad:
                 print(q)
-            return 0
+            if a.check and bad:
+                print("changed_areas: %d file(s) match no area, no docs glob and no `all` entry; map them in %s"
+                      % (len(bad), a.map), file=sys.stderr)
+            return 1 if (a.check and bad) else 0
         if a.changed_file:
             text = sys.stdin.read() if a.changed_file == "-" else Path(a.changed_file).read_text(encoding="utf-8")
             changed += text.splitlines()
@@ -137,7 +146,7 @@ def main(argv=None) -> int:
     except (OSError, ValueError) as e:
         print("changed_areas: %s" % e, file=sys.stderr)
         return 2
-    res = decide(changed, cmap, a.release, a.all)
+    res = decide(changed, cmap, a.release, a.all, a.carry)
     print(json.dumps(res, indent=1) if a.json else "\n".join(lines(res)))
     target = os.environ.get("GITHUB_OUTPUT")
     if a.github_output and target:

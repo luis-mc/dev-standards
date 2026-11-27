@@ -62,7 +62,7 @@ can go stale in a way that can be detected.
 
 ## Setup pattern — how this wizard talks to you
 
-This setup follows section 13 of `docs/features/delivery/shared-self-hosted-runners.md`.
+This setup follows section 13 of `docs/guides/shared-self-hosted-runners.md`.
 
 1. **Plan first.** After the consequence review (Phase 5) and before Phase 7 changes anything, show one plan: the folders, files, packages and CI files it will generate (with paths), the installs it will run (`pnpm install`, the hooks), what it changes outside the repository (new cloud projects and buckets from the provisioning ledger), what needs the owner (a yes, a sign-in, a production secret) and about how long it takes. Ask for one yes. Phase 6 questions stay.
 2. **Do the heavy lifting.** After the yes, run every install and configuration yourself: the generation steps of Phase 7, `pnpm install`, the git hooks, dev provisioning where a CLI exists, and the checks of Phase 8. Leave to the owner only what you cannot do: production secrets (run with the `!` prefix), a web-only setting, a sign-in. Give each an exact step and check it afterwards.

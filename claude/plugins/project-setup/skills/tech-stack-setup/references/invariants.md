@@ -1399,6 +1399,13 @@ rounded up to a whole unit of time:
   skipped area is only skipped, not tested, so the full suite SHOULD still run on
   the default branch on a schedule, and only when the default branch moved since
   the last successful scheduled run.
+- A later push to a pull request MUST NOT rerun a job that passed on an earlier
+  head of that pull request unless a commit since that head reaches the job's
+  areas. Such a job is carried: it is skipped, counts as passed in the required
+  check, and names the run that proved it. A release pull request runs everything
+  on its first run only. Every tracked file MUST belong to an area, the
+  documentation paths or the explicit run-everything list; the pull request check
+  fails and names any file that does not.
 - Test shards SHOULD be balanced by measured seconds from a committed timings
   file, longest file first, rather than by file count. A file with no measurement
   weighs the median. The ts template ships this (`shard_balance.py`,
@@ -1565,14 +1572,16 @@ scanner CI runs.
   lint of every package any joined branch changed, and the fast guards of the
   pre-push hook. The join runs no test and no branch gate. It waits for no
   sandbox gate before the ready pull request and does not re-run a gate after a
-  join fix. The ready pull request's CI is the one full run. A project picks the
+  join fix. The ready pull request's first CI run is the one full run; a later
+  push runs only the jobs its changes reach and carries the rest. A project picks the
   steps in `gate.json` (`"join"` on a step, `join_guards`). The script can skip
   that check when the joined tree equals the tree of a joined branch head whose
   gate result is trusted for that head and the same base. It records the time of
   each step.
 - When the last join is pushed, one ready pull request goes from the integration
-  branch to the default branch. Its CI is the only full suite, end-to-end tests
-  included (§11.2). It merges when that run is green, never by auto-merge.
+  branch to the default branch. Its first CI run is the only full suite,
+  end-to-end tests included (§11.2). A fix push after a red run reruns the jobs
+  that did not pass and the jobs its changes reach; every other job is carried. It merges when that run is green, never by auto-merge.
 - While that run is going, the train is frozen. A push to the branch the ready
   pull request comes from is refused until its CI has finished, passed or failed
   (so a fix goes forward), or the ready pull request is closed unmerged. When
