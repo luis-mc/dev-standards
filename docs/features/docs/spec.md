@@ -87,7 +87,7 @@ Skills: `docs-setup`, `feature-spec-new`, `docs-index`, `docs-check`, `docs-note
 
 **R5.11b** — `docs_fold.py note` sets the doc's `last_verified` to today, because a change note says the author checked the doc. That clears T2 for a change that touched only shared code. Proof: `claude/plugins/docs/tests/test_dl421_dl422.py`.
 
-**R5.12** — `docs_work.py guard` exits 1 when a branch adds files under `docs/work/`. `strip` and `summaries` serve the join step (DOCSPEC R10.2, R10.3).
+**R5.12** — `docs_work.py guard` exits 1 when a branch adds files under `docs/work/`. `strip` and `summaries` serve the join step (DOCSPEC R10.2, R10.3). `strip --apply` deletes `docs/work/` from the working tree and prints the `git commit` command; it never commits (owner decision C4).
 
 **R5.13** — The Stop hook prints a warning, never a block, when mapped code changed without docs. The SessionStart hook adds the docs rule. Both do nothing without `docs/docs.json`. Both fail open on error (DOCSPEC R8.7).
 
@@ -162,7 +162,7 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.23 | `claude/plugins/docs/tests/test_ds252_fold_stale_notice.py` |
 | R5.27 | `claude/plugins/docs/tests/test_ds274_fold_release.py` |
 | R5.10, R5.11 | `claude/plugins/docs/tests/test_check.py` |
-| R5.12 | `claude/plugins/docs/tests/test_work.py` |
+| R5.12 | `claude/plugins/docs/tests/test_work.py`, `claude/plugins/docs/tests/test_ds193_strip.py` |
 | R5.13 | `claude/plugins/docs/tests/test_hooks.py` |
 | R5.14 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
 | R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
