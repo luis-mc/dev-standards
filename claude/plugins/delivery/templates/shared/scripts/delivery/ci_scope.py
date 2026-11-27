@@ -21,6 +21,9 @@ Four scopes, from the changed paths and the event:
   affected   everything else (agent branches, fix pushes, the default branch after a merge): only what the
              change reaches. Pick the jobs and areas with area_select.py (`mode`, `areas`).
 
+`--carry` (DS287, R5.89): the plan job passes it on a later head of a pull request. The release-PR answer
+(`full`, `rust-release`) is then not applied and the change decides; `full_files` and `ci-smoke` still apply.
+
 Order: no diff -> full; a `full_files` match -> full; every non-doc file in `ci_files` -> ci-smoke;
 release PR -> rust-release when Rust-only, else full; else affected. Any doubt (no diff) is full.
 
@@ -123,7 +126,7 @@ def is_release_pr(cfg: dict, event: str | None, head_ref: str, base_ref: str) ->
 
 
 def decide(cfg: dict, changed: list[str] | None, event: str | None = None,
-           head_ref: str = "", base_ref: str = "", read_pair=None) -> dict:
+           head_ref: str = "", base_ref: str = "", read_pair=None, carry: bool = False) -> dict:
     """`read_pair(path)` -> (old text, new text) of a changed file, for the package.json rule. Without it, or with
     a missing side, a changed package.json counts."""
     smoke = cfg.get("smoke") or {}
@@ -156,7 +159,8 @@ def decide(cfg: dict, changed: list[str] | None, event: str | None = None,
     # A change of CI files alone touches no product code: the CI tests and the smoke set prove it, even on a release PR.
     if code and all(any_match(f, ci) for f in code):
         return out("ci-smoke", "only CI scripts and workflows changed", True)
-    if is_release_pr(cfg, event, head_ref, base_ref):
+    # DS287 (R5.89): with --carry (a later head of the pull request) the release-PR answer is not applied.
+    if not carry and is_release_pr(cfg, event, head_ref, base_ref):
         rule = cfg.get("rust_release") or {}
         if is_rust_only(rule, code):
             return out("rust-release", rule.get("why") or "release PR, Rust-only: Node suites skipped", ci_changed)
@@ -199,6 +203,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--head-ref", default=os.environ.get("GITHUB_HEAD_REF", ""))
     p.add_argument("--base-ref", default=os.environ.get("GITHUB_BASE_REF", ""))
     p.add_argument("--base")
+    p.add_argument("--carry", action="store_true",
+                   help="a later head of the pull request: do not apply the release-PR full / rust-release answer (R5.89)")
     p.add_argument("--changed-file")
     p.add_argument("--github-output", action="store_true")
     p.add_argument("--json", action="store_true")
@@ -220,7 +226,7 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as e:
         print(f"ci_scope: {e}", file=sys.stderr)
         return EXIT_USAGE
-    res = decide(cfg, changed, a.event, a.head_ref, a.base_ref, git_pair(base) if base else None)
+    res = decide(cfg, changed, a.event, a.head_ref, a.base_ref, git_pair(base) if base else None, a.carry)
     print(json.dumps(res, indent=1) if a.json else "\n".join(lines(res)))
     target = os.environ.get("GITHUB_OUTPUT")
     if a.github_output and target:

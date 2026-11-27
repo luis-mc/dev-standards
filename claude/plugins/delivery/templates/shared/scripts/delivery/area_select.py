@@ -35,6 +35,15 @@ empty in mode all because everything runs), one `<job>=true|false` per job, and 
 true when a selected area names it or it is in `always_jobs`, else false: a planned skip, which a
 workflow must never count as a failure (a job gated on `== 'false'`, an aggregator that reads the plan).
 
+Valves (R5.90, DS287), all optional; with none of these keys and no `workflow_path` the rules above are unchanged:
+  `lock_jobs`    {"<glob>": ["job", ...]}: a changed lockfile or toolchain file runs only the listed jobs
+                 (not everything). Checked before `run_everything`.
+  `script_jobs`  true: a changed script under scripts/ci/** or scripts/delivery/** runs the jobs whose workflow text
+                 names that script, plus the `ci_tests` area. It needs the workflow text (`workflow_text` of
+                 select(), `--workflow FILE` on the CLI); without it the script falls to `run_everything`.
+  workflow file  with `workflow_path` (`--workflow-path`): a change to that file runs every job (mode `all`); another
+                 file under .github/workflows/ is no change for this workflow; .github/actions/** runs everything.
+
 Exit: 0; 2 unreadable map, bad usage or `git` failure. Any doubt the script can see is mode `all`;
 the workflow runs everything when the step itself fails (empty outputs).
 Python 3.8+, standard library only.
@@ -87,17 +96,67 @@ def all_jobs(cmap: dict) -> list[str]:
     return jobs
 
 
-def select(changed: list[str], cmap: dict, force_all: bool = False) -> dict:
+def _indent(line: str) -> int:
+    return len(line) - len(line.lstrip(" "))
+
+
+def parse_workflow_jobs(text: str) -> dict[str, dict]:
+    """{job key: {"name": display name or "", "text": the job's source}} read by indentation (no PyYAML)."""
+    lines = text.splitlines()
+    out: dict[str, dict] = {}
+    start = next((i for i, ln in enumerate(lines) if re.match(r"^jobs:\s*(#.*)?$", ln)), None)
+    if start is None:
+        return out
+    key_indent = None
+    current = None
+    for ln in lines[start + 1:]:
+        if not ln.strip() or ln.lstrip().startswith("#"):
+            if current:
+                out[current]["text"] += ln + "\n"
+            continue
+        ind = _indent(ln)
+        if ind == 0:
+            break
+        if key_indent is None:
+            key_indent = ind
+        m = re.match(r"^(['\"]?)([^\s:'\"#][^:'\"#]*)\1\s*:\s*(#.*)?$", ln.strip())
+        if ind == key_indent and m:
+            current = m.group(2).strip()
+            out[current] = {"name": "", "text": ln + "\n"}
+            continue
+        if current:
+            out[current]["text"] += ln + "\n"
+            nm = re.match(r"^name:\s*(.*?)\s*$", ln.strip())
+            if nm and not out[current]["name"] and ind <= key_indent + 4:
+                val = re.sub(r"\s+#.*$", "", nm.group(1)).strip()
+                out[current]["name"] = val[1:-1] if len(val) > 1 and val[0] == val[-1] and val[0] in "'\"" else val
+    return out
+
+
+def jobs_naming_script(workflow_text: str, script: str) -> list[str]:
+    """Job keys whose workflow text names `script` (its path or its file name)."""
+    base = script.rsplit("/", 1)[-1]
+    pat = re.compile(r"(?<![\w.\-])(?:" + re.escape(script) + "|" + re.escape(base) + r")(?![\w])")
+    return [k for k, j in parse_workflow_jobs(workflow_text).items() if pat.search(j["text"])]
+
+
+SCRIPT_DIRS = ["scripts/ci/**", "scripts/delivery/**"]
+
+
+def select(changed: list[str], cmap: dict, force_all: bool = False, workflow_text: str | None = None,
+           workflow_path: str | None = None) -> dict:
     jobs = all_jobs(cmap)
     always = set(cmap.get("always_jobs") or [])
     paths = [re.sub(r"^\./", "", c.strip().replace("\\", "/")) for c in changed if c.strip()]
+
+    extra: set[str] = set()
 
     def result(mode: str, areas: list[str], reason: str) -> dict:
         if mode == "all":
             on = set(jobs)
             tests: list[str] = []
         else:
-            on = set(always)
+            on = set(always) | extra
             tests = []
             for a in areas:
                 on |= set(cmap["areas"][a].get("jobs") or [])
@@ -115,7 +174,27 @@ def select(changed: list[str], cmap: dict, force_all: bool = False) -> dict:
     if not paths:
         return result("all", [], "no changed paths: run everything")
     areas: list[str] = []
+    wf_dir = ".github/workflows/"
+    lock_jobs = cmap.get("lock_jobs") if isinstance(cmap.get("lock_jobs"), dict) else {}
     for p in paths:
+        if workflow_path:
+            if p == workflow_path.lstrip("./"):
+                return result("all", [], f"{p} is this workflow: run all its jobs")
+            if p.startswith(wf_dir) and any_match(p, ["**/*.yml", "**/*.yaml"]):
+                continue  # another workflow file: no change for this one
+            if matches(p, ".github/actions"):
+                return result("all", [], f"{p} is a shared action: run everything")
+        locked = [j for g, js in lock_jobs.items() if matches(p, g) for j in js or []]
+        if locked:
+            extra.update(locked)
+            continue
+        if cmap.get("script_jobs") is True and workflow_text is not None and any_match(p, SCRIPT_DIRS):
+            named = jobs_naming_script(workflow_text, p)
+            if "ci_tests" in cmap["areas"] or named:
+                extra.update(named)
+                if "ci_tests" in cmap["areas"] and "ci_tests" not in areas:
+                    areas.append("ci_tests")
+                continue
         if any_match(p, cmap.get("run_everything") or []):
             return result("all", [], f"{p} is shared: run everything")
         if any_match(p, cmap.get("docs") or []):
@@ -124,6 +203,8 @@ def select(changed: list[str], cmap: dict, force_all: bool = False) -> dict:
         if not hit:
             return result("all", [], f"{p} is in no area: run everything")
         areas += [n for n in hit if n not in areas]
+    if not areas and extra:
+        return result("areas", [], "valves: " + ", ".join(sorted(extra)))
     if not areas:
         return result("none", [], "documentation only: no tests")
     return result("areas", sorted(areas), "areas: " + ", ".join(sorted(areas)))
@@ -152,6 +233,8 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--map", default=DEFAULT_MAP)
     p.add_argument("--base")
     p.add_argument("--changed-file")
+    p.add_argument("--workflow", help="the workflow file's text, for script_jobs")
+    p.add_argument("--workflow-path", help="the path of the current workflow file, e.g. .github/workflows/ci.yml")
     p.add_argument("--all", action="store_true", help="run everything (push to the default branch, manual run)")
     p.add_argument("--github-output", action="store_true")
     p.add_argument("--json", action="store_true")
@@ -168,7 +251,14 @@ def main(argv: list[str] | None = None) -> int:
     except (OSError, ValueError) as e:
         print(f"area_select: {e}", file=sys.stderr)
         return EXIT_USAGE
-    res = select(changed, cmap, args.all)
+    wtext = None
+    if args.workflow:
+        try:
+            wtext = Path(args.workflow).read_text(encoding="utf-8")
+        except OSError as e:
+            print(f"area_select: {e}", file=sys.stderr)
+            return EXIT_USAGE
+    res = select(changed, cmap, args.all, wtext, args.workflow_path)
     print(json.dumps(res, indent=1) if args.json else "\n".join(lines(res)))
     target = os.environ.get("GITHUB_OUTPUT")
     if args.github_output and target:
