@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T13:09+00:00",
+  "updated": "2026-11-27T13:11+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12800,12 +12800,11 @@
       "id": "DS294",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Scan for files today's plugins no longer need",
       "detail": "Every tracked file: keep only what the current plugins, their tests, CI and the live docs use; list the rest for owner confirmation before any delete",
-      "expected": "27 Nov ~13:35",
-      "changed": "2026-11-27T13:04+00:00",
-      "expected_basis": "default ETA, other: 30 min",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T13:11+00:00",
       "no_release": "a read-only scan that writes a list",
       "started": "2026-11-27T13:04+00:00"
     },
