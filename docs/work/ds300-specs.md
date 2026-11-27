@@ -414,3 +414,34 @@ AGENTS.md, minimal text (keeps every current objective):
 ```
 
 The rule files keep one line per rule, tagged. Changes are in E18-E24. r/ai shrinks by about a fifth; r/pa by about a tenth.
+
+## 6. Ranking: clarity gain against churn
+
+Gain: how much a reader's or a hook's confusion drops. Churn: how many files, citations and tests move. H, M, L.
+
+| Rank | Proposal | Gain | Churn | Owner decision? |
+|---|---|---|---|---|
+| 1 | C2, E3: manual merge mode stops asking the session to merge (Q-4, DL-03 Stop) | H | L (two checks, one test) | No |
+| 2 | C1, C3, C4, M1 DL-03/DL-08/DL-73, M7: name the roles (task agent, orchestrator, watcher) and say who merges, who opens the ready PR, who pushes | H | M (3 rows, AG, 2 rule lines, 1 feature spec) | Yes |
+| 3 | D2, E10, M1: Q-1..Q-5 into the table; retire DL-04, DL-70..72 | H | L | No |
+| 4 | E1, E2: generated Today column, one test that every cited ID exists; fix DL-123/124, D4/DL-39, DL136, R17.7g | H | M (script + test) | No |
+| 5 | C6, D8, E18, M1 DL-12: one agent test rule; r/ai:10 becomes one line | H | L | Yes (branch CI or not) |
+| 6 | C9, D11, M2 R7.1, M1 DL-24: one change-note rule for both tools, one fold point | H | M | Yes (fold point) |
+| 7 | G1-G5: one glossary, checked copies in each shipped spec; fix owner, area, carry, full run | M | M | No |
+| 8 | C12, E9: one past-due Expected check | M | L | Yes (block now or warn first) |
+| 9 | C11, M3 R4.37: record folder rule matches code | M | L | No |
+| 10 | C23, E8: W1 only on the ready PR | M | L | No |
+| 11 | D22, M4: STACKSPEC §13 keeps outcomes, cites DELIVERYSPEC | M | M (STACKSPEC major if MUSTs move) | No |
+| 12 | C24, M4, M5: AUTHSPEC vs STACKSPEC (rate-limit headers, secret class, deviation home) | M | L | Yes |
+| 13 | E5, E6, E7: ship the ready-PR check, deny push to `main`, hashed-name check repo-wide | M | M | No |
+| 14 | C5, C7, M6 f/tc: this repo's declared deviations from DL-80 and DL-99 G6 | M | L | Yes (C5) |
+| 15 | D9, D10, M3: publish and no-commit rules said once in ARTIFACTSPEC | M | M (many citations) | No |
+| 16 | C14, C20-C22, C26, M6: stale lines inside ARTIFACTSPEC and feature specs | L-M | L | No |
+| 17 | C25, E17: STACKSPEC "a new MUST is a major" | L | L | Yes |
+| 18 | D20, D21, M5: AUTHSPEC internal repeats | L | H (49 sites) | No |
+
+## 7. Findings outside the brief
+
+- DL-66 (ds:176) is Scope G but names one city as the label. A generic rule should say "labelled with the zone".
+- ARTIFACTSPEC's "Last reviewed" date (2026-10-11) is older than its 1.32.0 entry (2026-11-26).
+- `docs_check.py` (run as AG:24 asks) is expected to fail W1 on this branch, because this report is under `docs/work/` (C23). The result is in section 8.
