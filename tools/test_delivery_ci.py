@@ -1303,8 +1303,18 @@ POOL_TEST = "contains(vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '', 'pool-')
 POOL_CLAUSE = re.compile(r" && (?:!)?" + re.escape(POOL_TEST) + r"(?= \}\}$)")
 
 
+# DS287 (R5.88): a job the carry plan can skip adds one clause, last; a carried job is an explicit 'false'.
+CARRY_CLAUSE = re.compile(
+    r"(?: && needs\.(?:plan|carry)\.result != '(?:failure|cancelled)')?"
+    r" && fromJSON\(needs\.(?:plan|carry)\.outputs\.carry_plan \|\| '\{\}'\)\.run_[\w-]+ != 'false'(?= \}\}$)")
+
+
+def strip_carry(text: str) -> str:
+    return "\n".join(CARRY_CLAUSE.sub("", ln) for ln in text.split("\n"))
+
+
 def if_cond_ok(block: str) -> bool:
-    for m in re.finditer(r"^    if: (.*)$", block, re.M):
+    for m in re.finditer(r"^    if: (.*)$", strip_carry(block), re.M):
         if m.group(1) in (IF_COND, E2E_AGGREGATE_COND) or RUN_TIMES_CLAUSE.sub("", PLAN_CLAUSE.sub("", POOL_CLAUSE.sub("", m.group(1)))) == IF_COND:
             return True
     return False
@@ -1478,7 +1488,7 @@ def check_pool_pair(jobs: dict[str, str]) -> list[str]:
     if "integration-pool" not in jobs:
         return []
     problems = []
-    host, pool = jobs.get("integration", ""), jobs["integration-pool"]
+    host, pool = strip_carry(jobs.get("integration", "")), strip_carry(jobs["integration-pool"])
     nm = lambda b: (re.search(r"^    name: (.+)$", b, re.M) or [None, None])[1]
     if not nm(host) or nm(host) != nm(pool):
         problems.append("job name: integration-pool must have the same name as integration")
