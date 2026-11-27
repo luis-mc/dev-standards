@@ -4,7 +4,7 @@ title: Project setup (luismc-project-setup)
 apps: [luismc-project-setup]
 topics: [stack, auth, delivery, models, testing, ci]
 status: live
-version: 0.18.1
+version: 0.19.0
 owner: agents
 type: reference
 code:
@@ -213,6 +213,7 @@ Written by the release fold. Do not edit by hand.
 
 | Version | Date | Release | What changed | Tasks |
 |---|---|---|---|---|
+| 0.19.0 | 2026-11-27 | RELEASE-205 | claude-setup copies an Explore agent on Haiku at medium to the project's .claude/agents/ (plugin-owned, overwritten each run), and its report names /model opusplan as an option it never sets. Detail in features/models R5.6, R5.8, R5.9. | MP17 |
 | 0.18.1 | 2026-11-26 | RELEASE-204 | claude-setup binds two chords, not three: ctrl+x h is dropped with the hooks fold. Changes claude/plugins/project-setup/.claude-plugin/plugin.json. | DS281 |
 | 0.18.0 | 2026-11-26 | RELEASE-188 | The update offer and claude-setup suggest the branch name <task>-integration when they tell the owner to commit. claude-setup installs tzdata as a confirmed, checked step and status reports it. | DL423 |
 | 0.17.0 | 2026-11-26 | RELEASE-186 | tech-stack-setup and claude-setup write .delivery/* and !.delivery/config.json to .gitignore. Touches claude/plugins/project-setup/.claude-plugin/plugin.json. | DL419 |
