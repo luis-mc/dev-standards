@@ -163,6 +163,28 @@ class CheckTests(unittest.TestCase):
         self.assertEqual(codes(res), ["W1"])
         self.assertEqual(C.check_work_guard(d, None), [])
 
+    def test_work_guard_runs_only_at_the_ready_gate(self):
+        """C23/E8 (DS304): a report on an agent branch passes docs_check; --ready (the ready PR) fails it (R10.2)."""
+        d = proj()
+        git(d, "checkout", "-q", "-b", "feat")
+        w(d, "docs/work/reports/T1.md", "# r\n")
+        git(d, "add", "-A"); git(d, "commit", "-q", "-m", "report")
+        self.assertNotIn("W1", codes(C.run_checks(d, "main", reference=False)))
+        self.assertIn("W1", codes(C.run_checks(d, "main", reference=False, ready=True)))
+
+    def test_ready_gate_sources(self):
+        import json as _json, tempfile as _tf, os as _os
+        self.assertTrue(C.ready_gate(True, env={}))
+        self.assertTrue(C.ready_gate(False, env={"DOCS_GATE": "ready"}))
+        self.assertFalse(C.ready_gate(False, env={}))
+        self.assertFalse(C.ready_gate(False, env={"GITHUB_EVENT_NAME": "push"}))
+        with _tf.TemporaryDirectory() as t:
+            ev = _os.path.join(t, "e.json")
+            for draft, want in ((True, False), (False, True)):
+                with open(ev, "w", encoding="utf-8") as fh:
+                    _json.dump({"pull_request": {"draft": draft}}, fh)
+                self.assertEqual(C.ready_gate(False, env={"GITHUB_EVENT_NAME": "pull_request", "GITHUB_EVENT_PATH": ev}), want)
+
     def test_ux_rules_need_a_design_system_citation(self):
         body = ("# T\n```mermaid\nflowchart LR\n```\n\n## 4. Screens and states\n\n"
                 "The save button must always be blue.\n"

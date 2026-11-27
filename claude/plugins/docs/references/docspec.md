@@ -340,7 +340,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
   | G1 | generated files are fresh |
   | G2 | generated reference equals the committed copy |
   | M1 | mapped code changed without a doc |
-  | W1 | files added under `docs/work/` |
+  | W1 | files added under `docs/work/`; only at the ready-PR gate (R10.2) |
 - **R8.2** — `docs_check.py` MUST warn (T1, T2, D1, U1) in these cases:
 
   - a feature's `last_verified` is missing or older than `stale_days`
@@ -391,7 +391,7 @@ These are the owner's choices of 31 October 2026, from the documentation standar
 ## 10. Temporary documents
 
 - **R10.1** — Agent briefs, reports, prompts and scratch notes MUST live under `docs/work/` on the agent's branch, for example `docs/work/reports/<task>.md`. They MUST NOT reach the default branch.
-- **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`. The gate runs it on a ready pull request to the default branch (W1).
+- **R10.2** — `docs_work.py guard --base <ref>` MUST exit 1 when the branch adds a file under `docs/work/`. The gate runs it on a ready pull request to the default branch (W1). `docs_check.py` runs W1 only there: with `--ready`, with `DOCS_GATE=ready`, or in a GitHub `pull_request` run whose pull request is not a draft. On an agent branch a report under `docs/work/` passes `docs_check.py`.
 - **R10.3** — The join step MUST run `docs_work.py strip --apply` on the joined head, then the `git commit` command it prints, and put each report's summary line (`docs_work.py summaries`) into the release pull request body. `strip --apply` deletes `docs/work/` from the working tree only. Like every script and hook of the plugin, it writes no git state.
 - **R10.4** — A finding or measurement worth keeping MUST be promoted into a lasting doc in the same branch before the join.
 - **R10.5** — Standing rules are not temporary. They live in `AGENTS.md`, which `CLAUDE.md` imports.
