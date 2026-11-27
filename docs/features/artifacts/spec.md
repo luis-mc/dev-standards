@@ -105,7 +105,7 @@ Full Progress ends with a folded section, `CI runs`. The summary line reads, for
 
 ![The CI runs section, opened, in the light theme](ci-runs-section.png)
 
-The picture is made from fixture data. A live copy of the same markup, with both themes and the phone layout, is [ci-runs-mockup.html](ci-runs-mockup.html).
+The picture is made from fixture data.
 
 Where the data comes from:
 
