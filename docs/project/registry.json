@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T11:21+00:00",
+  "updated": "2026-11-27T11:22+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12585,11 +12585,14 @@
       "id": "DS283",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Artifact tests open a browser tab",
       "detail": "tools/test_project_artifacts.py runs mark-deferred, whose open_local (DL238) skips only when CI is set, so a local run opens the demo Full Progress page in the browser. Tests should set CI or a no-open variable",
-      "expected": "",
-      "changed": "2026-11-27T10:08+00:00"
+      "expected": "27 Nov ~11:40",
+      "changed": "2026-11-27T11:22+00:00",
+      "expected_basis": "PR CI ~5 min, watcher merge",
+      "rides": "DS286",
+      "started": "2026-11-27T11:22+00:00"
     },
     {
       "id": "DS284",
@@ -12624,11 +12627,14 @@
       "id": "DS285",
       "owner": "project",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Dogfood: Explore agent on Haiku in dev-standards",
       "detail": "Copy the claude-setup Explore.md into this repo's .claude/agents/ and test that the copy matches",
-      "expected": "",
-      "changed": "2026-11-27T11:19+00:00"
+      "expected": "27 Nov ~11:40",
+      "changed": "2026-11-27T11:22+00:00",
+      "expected_basis": "PR CI ~5 min, watcher merge",
+      "rides": "DS286",
+      "started": "2026-11-27T11:22+00:00"
     },
     {
       "id": "DS286",
@@ -13531,11 +13537,14 @@
       "id": "TF7",
       "owner": "transcript-folds",
       "app": "",
-      "status": "To do",
+      "status": "Running",
       "item": "Spec R6.3 still says three chords",
       "detail": "transcript-folds spec R6.3 (check K1) says the keybindings asset holds three chords; it holds two since RELEASE-204. Found by a Haiku Explore run in MP14",
-      "expected": "",
-      "changed": "2026-11-27T09:44+00:00"
+      "expected": "27 Nov ~11:40",
+      "changed": "2026-11-27T11:22+00:00",
+      "expected_basis": "PR CI ~5 min, watcher merge",
+      "rides": "DS286",
+      "started": "2026-11-27T11:22+00:00"
     }
   ]
 }
