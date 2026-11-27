@@ -57,7 +57,7 @@ runs:
         fi
         if python3 scripts/delivery/rerun_tests.py --runner "${{ inputs.runner }}" --job "${{ inputs.job }}" \
              --prev-conclusion "$PREV" $report --changed-file - --json < .rerun/changed.txt > .rerun/decision.json; then
-          python3 scripts/delivery/rerun_step.py mode .rerun/decision.json >> "$GITHUB_OUTPUT"
+          python3 scripts/delivery/rerun_step.py mode .rerun/decision.json
         else
           echo "::warning::rerun_tests.py failed; the normal test command runs"
           echo "mode=current" >> "$GITHUB_OUTPUT"
