@@ -8,7 +8,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 CS = ROOT / "claude/plugins/project-setup/skills/claude-setup"
-spec = importlib.util.spec_from_file_location("ci_pin", CS / "assets/ci_pin.py")
+spec = importlib.util.spec_from_file_location(
+    "ci_pin", ROOT / "claude/plugins/project-setup/scripts/ci_pin.py")
 ci_pin = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(ci_pin)
 

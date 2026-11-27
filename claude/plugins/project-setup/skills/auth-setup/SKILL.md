@@ -7,7 +7,7 @@ effort: medium
 # Auth setup — build and check
 
 Builds authentication and authorization to **`AUTHSPEC`**, the binding
-specification at `references/authentication.md` alongside this file. Version
+specification at the plugin's `references/authspec.md`. Version
 3.1.0. It governs authentication flows, authorization, sessions, MFA and
 step-up, account recovery, consent, data-subject rights, abuse prevention,
 notifications, audit, and retention.
@@ -22,7 +22,7 @@ Code written from a paraphrase gets these wrong.
 ## Step 0 — Preflight. Do this before anything else
 
 ```bash
-python3 "${CLAUDE_PLUGIN_ROOT}/skills/tech-stack-setup/assets/preflight.py" --require stack --for-skill auth-setup
+python3 "${CLAUDE_PLUGIN_ROOT}/scripts/preflight.py" --require stack --for-skill auth-setup
 ```
 
 **If it exits non-zero, stop and report its message verbatim. Write nothing.**

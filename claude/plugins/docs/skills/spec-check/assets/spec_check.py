@@ -4,7 +4,7 @@ Structural checker for the binding specs — numbering and internal references.
 
 One script, one job: everything about how a spec is *numbered* and how its
 internal pointers *resolve*. It is spec-agnostic and runs over every spec, so
-`invariants.md` and `authentication.md` are held to the same structural rules
+`stackspec.md` and `authspec.md` are held to the same structural rules
 even though only one of them declares requirement identifiers.
 
 It replaces `spec_refcheck.py` (section references only) and absorbs the
@@ -92,14 +92,11 @@ from pathlib import Path
 ERROR = "error"
 WARNING = "warning"
 
-# Each binding spec is owned by the skill that acts on it, so they no longer
-# share a directory: STACKSPEC belongs to tech-stack-setup, AUTHSPEC to
-# auth-setup. Two constants rather than one join, because a single "the
-# references directory" is exactly the assumption that broke when the skills
-# were split.
-_SKILLS = "claude/plugins/project-setup/skills"
-_STACKSPEC = f"{_SKILLS}/tech-stack-setup/references/invariants.md"
-_AUTHSPEC = f"{_SKILLS}/auth-setup/references/authentication.md"
+# Both binding specs live in the project-setup plugin's shared `references/`
+# folder. Two constants, so a caller can name either spec on its own.
+_REFS = "claude/plugins/project-setup/references"
+_STACKSPEC = f"{_REFS}/stackspec.md"
+_AUTHSPEC = f"{_REFS}/authspec.md"
 
 DEFAULT_SPECS = (
     _STACKSPEC,

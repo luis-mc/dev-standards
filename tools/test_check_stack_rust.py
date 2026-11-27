@@ -5,8 +5,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
-CHECK = (Path(__file__).resolve().parent.parent / "claude/plugins/project-setup/skills/"
-         "tech-stack-setup/assets/check_stack.py")
+CHECK = (Path(__file__).resolve().parent.parent
+         / "claude/plugins/project-setup/scripts/check_stack.py")
 
 
 def run(text, mode="--selection"):

@@ -4,7 +4,7 @@
 Two modes, because they fail differently and both failures are expensive:
 
   --catalog        Check the catalog files parse and are internally consistent.
-                   Run this after editing any YAML under assets/catalog/.
+                   Run this after editing any YAML under skills/tech-stack-setup/assets/catalog/.
 
   --selection F    Check one product's selections. F is a YAML or JSON mapping
                    of role -> technology id, which is what the wizard produces
@@ -33,7 +33,8 @@ except ImportError:
     print("BLOCKED: PyYAML is required.\n\n  pip install pyyaml", file=sys.stderr)
     sys.exit(2)
 
-CATALOG = Path(__file__).parent / "catalog"
+CATALOG = (Path(__file__).resolve().parent.parent
+           / "skills/tech-stack-setup/assets/catalog")
 
 # Hosting scores that mean "do not put an API deployable here".
 UNUSABLE = {"none", "degraded"}

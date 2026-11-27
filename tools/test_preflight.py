@@ -22,8 +22,7 @@ import sys
 import tempfile
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-PREFLIGHT = (ROOT / "claude/plugins/project-setup/skills/tech-stack-setup"
-             / "assets/preflight.py")
+PREFLIGHT = ROOT / "claude/plugins/project-setup/scripts/preflight.py"
 
 
 def build(kind: str) -> pathlib.Path:
