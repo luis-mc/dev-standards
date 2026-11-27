@@ -17,7 +17,7 @@ Cases:
             type="date", "time", "datetime-local" and "number" in app code fails;
             a listed entry in raw-inputs.known.json passes.
 
-Run:  python3 tools/test_ds_guard_templates.py
+Run:  python3 claude/plugins/docs/tests/test_ds_guard_templates.py
 """
 from __future__ import annotations
 
@@ -32,7 +32,7 @@ VITEST = "3.2.4"
 # The component templates' test stack, exact versions.
 COMPONENT_DEPS = {"vitest": VITEST, "jsdom": "26.1.0", "react": "19.1.0", "react-dom": "19.1.0",
                   "typescript": "5.8.3", "@types/react": "19.1.8", "@types/react-dom": "19.1.6"}
-ROOT = Path(__file__).resolve().parent.parent
+ROOT = Path(__file__).resolve().parents[4]  # claude/plugins/docs/tests
 PLUGIN = ROOT / "claude" / "plugins" / "docs"
 SCRIPT = PLUGIN / "scripts" / "design_system.py"
 TEMPLATES = PLUGIN / "templates" / "design-system" / "guards" / "typescript-vitest"

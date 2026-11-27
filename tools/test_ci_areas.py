@@ -15,6 +15,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import ci_areas as ca  # noqa: E402
 
 PSP = "claude/plugins/project-setup"
+DT = "claude/plugins/docs/tests"
 TS = PSP + "/skills/tech-stack-setup"
 FAILS: list[str] = []
 
@@ -46,7 +47,7 @@ for path, want in [
     ("claude/plugins/docs/skills/spec-check/assets/spec_check.py", {"specs"}),
     (f"{TS}/assets/stack-profile.md", {"specs"}),
     ("tools/authspec_check.py", {"specs"}),
-    ("tools/test_spec_check.py", {"specs"}),
+    (f"{DT}/test_spec_check.py", {"specs"}),
     ("tools/route-ratelimit-map.json", {"specs"}),
     (".claude/settings.json", {"specs"}),
     (".claude/suites.json", {"specs"}),
@@ -67,11 +68,11 @@ for path, want in [
     ("claude/plugins/project-setup/skills/claude-setup/assets/.claude/rules/agents-and-integration.md", {"specs", "profiles"}),
     ("claude/plugins/docs/scripts/render_artifacts.py", {"artifacts"}),
     ("claude/plugins/docs/scripts/hook_session_start_artifacts.py", {"artifacts"}),
-    ("tools/test_artifacts_dl251.py", {"artifacts"}),
-    ("tools/test_artifacts_dl269.py", {"artifacts"}),
+    (f"{DT}/test_artifacts_dl251.py", {"artifacts"}),
+    (f"{DT}/test_artifacts_dl269.py", {"artifacts"}),
     ("claude/plugins/docs/design/DESIGN.md", {"artifacts"}),
-    ("tools/test_project_artifacts_hooks.py", {"artifacts"}),
-    ("tools/test_render_artifacts.py", {"artifacts"}),
+    (f"{DT}/test_project_artifacts_hooks.py", {"artifacts"}),
+    (f"{DT}/test_render_artifacts.py", {"artifacts"}),
     ("claude/plugins/audits/skills/security-audit/SKILL.md", {"profiles"}),
     ("claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json", {"profiles"}),
     ("claude/plugins/agents/agents/architect.md", {"profiles"}),
@@ -89,6 +90,11 @@ for path, want in [
     ("claude/plugins/transcript-folds/types/state.d.ts", {"transcript-folds"}),
     ("claude/plugins/docs/scripts/docs_check.py", {"docs"}),
     ("claude/plugins/docs/tests/test_check.py", {"docs"}),
+    # DS307: the docs plugin tests that came from tools/ keep their areas
+    (f"{DT}/test_artifacts_dp7.py", {"artifacts"}),
+    (f"{DT}/test_project_artifacts.py", {"artifacts"}),
+    (f"{DT}/test_ds_enforcement.py", {"docs"}),
+    (f"{DT}/test_ds_guard_templates.py", {"docs"}),
     ("claude/plugins/docs/hooks/hooks.json", {"docs", "artifacts"}),
     ("claude/plugins/docs/templates/feature-spec.md", {"docs"}),
     ("claude/plugins/docs/references/docspec.md", {"specs", "docs"}),
@@ -118,9 +124,9 @@ for path in ["docs/artifacts/feature-x.html", "docs/plans/test-cost-train.md",
 check("docs-only mix", hit(["docs/a.md", "docs/artifacts/b.html", "README.md"]), set())
 
 # a union, and Windows separators
-check("union", hit(["docs/a.md", "tools/test_render_artifacts.py",
+check("union", hit(["docs/a.md", f"{DT}/test_render_artifacts.py",
                     "tools/test_model_profiles.py"]), {"artifacts", "profiles"})
-check("backslashes", hit(["tools\\test_render_artifacts.py"]), {"artifacts"})
+check("backslashes", hit(["claude\\plugins\\docs\\tests\\test_render_artifacts.py"]), {"artifacts"})
 check("transcript-folds with a manifest bump and docs",
       hit(["claude/plugins/transcript-folds/.claude-plugin/plugin.json", "docs/a.md"]), set())
 check("transcript-folds union",
@@ -165,7 +171,7 @@ for path, want in [
     ("tools/test_delivery_ci.py", (F, F, F, F)),
     (f"{PSP}/scripts/preflight.py", (F, F, F, F)),
     (f"{TS}/assets/tooling/ts/vitest.config.ts", (F, F, F, F)),
-    ("tools/test_render_artifacts.py", (F, F, F, F)),
+    (f"{DT}/test_render_artifacts.py", (F, F, F, F)),
     ("docs/a.md", (F, F, F, F)),
 ]:
     check(f"mutants {path}", mflags([path]), want)

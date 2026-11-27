@@ -10,7 +10,7 @@ type: reference
 code:
   - claude/plugins/docs/skills/spec-new/**
   - claude/plugins/docs/skills/spec-check/**
-  - tools/test_spec_check.py
+  - claude/plugins/docs/tests/test_spec_check.py
 last_verified: 2026-11-27
 ---
 # Spec authoring and checking (luismc-docs)
@@ -79,14 +79,14 @@ flowchart LR
 
 | Requirement | Test |
 |---|---|
-| R5.1, R5.2, R5.3, R5.4, R5.5 | `tools/test_spec_check.py` |
+| R5.1, R5.2, R5.3, R5.4, R5.5 | `claude/plugins/docs/tests/test_spec_check.py` |
 | R5.6 | not covered by a test yet; see section 11 |
 | R5.7 | not covered by a test yet; see section 11 |
 | R6.1 | not covered by a test yet; see section 11 |
 
 ## 11. Not built yet
 
-NOT YET IMPLEMENTED: a test that a spec written from `spec-template.md` passes `spec-check`, and a test of the exit codes and flags (R5.6). The seam is `tools/test_spec_check.py`.
+NOT YET IMPLEMENTED: a test that a spec written from `spec-template.md` passes `spec-check`, and a test of the exit codes and flags (R5.6). The seam is `claude/plugins/docs/tests/test_spec_check.py`.
 
 ## 12. Code map
 
@@ -94,7 +94,7 @@ Source: claude/plugins/docs/skills/spec-new/SKILL.md
 Source: claude/plugins/docs/skills/spec-new/assets/spec-template.md
 Source: claude/plugins/docs/skills/spec-check/SKILL.md
 Source: claude/plugins/docs/skills/spec-check/assets/spec_check.py
-Source: tools/test_spec_check.py
+Source: claude/plugins/docs/tests/test_spec_check.py
 
 ## Versions
 

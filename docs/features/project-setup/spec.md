@@ -13,7 +13,7 @@ code:
   - tools/test_claude_setup_plugins.py
   - tools/test_setup_pattern.py
   - tools/test_authspec_check.py
-  - tools/test_spec_check.py
+  - claude/plugins/docs/tests/test_spec_check.py
   - tools/test_model_profiles.py
   - tools/test_rule_tags.py
   - tools/test_questions_stop.py
@@ -181,7 +181,7 @@ flowchart TD
 | R5.24 | `claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py`, `tools/test_delivery_hooks.py` (the deny list still blocks outbound sends and never blocks PR create, ready or edit) |
 | R5.25 | `f31` in `tools/test_project_setup_fixes.py` (typed names and a Rust path committed; quoted and assigned values blocked) |
 | R5.13, R5.15 | `tools/test_questions_stop.py` (the hook on recorded inputs, its wiring, and the user-level-only copy) |
-| R5.12 | `tools/test_spec_check.py`, `tools/test_authspec_check.py` |
+| R5.12 | `claude/plugins/docs/tests/test_spec_check.py`, `tools/test_authspec_check.py` |
 | R5.23 | `claude/plugins/project-setup/tests/test_dl332_ci_node_version.py` |
 | R5.1 to R5.5, R5.8, R5.9, R6.1 | not covered by a test yet; see section 11 |
 

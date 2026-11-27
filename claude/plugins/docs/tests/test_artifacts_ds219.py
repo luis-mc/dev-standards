@@ -8,7 +8,7 @@
   5. a broken artifacts.json falls back to docs/artifacts for the hooks, raises for the script
   6. the session hook (scripts/hook_session_start_artifacts.py) finds a record in docs/project
 
-Run:  python -I tools/test_artifacts_ds219.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_ds219.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json
@@ -19,7 +19,7 @@ import tempfile
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-SCRIPTS = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts')
+SCRIPTS = os.path.join(os.path.dirname(HERE), 'scripts')
 sys.path.insert(0, SCRIPTS)
 import artifact_queue as Q  # noqa: E402
 

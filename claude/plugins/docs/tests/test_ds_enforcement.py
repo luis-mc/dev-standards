@@ -5,7 +5,7 @@ Covers: the kit templates of luismc-docs (copied by `design_system.py guards --s
 self-tested with plain Node through a small vitest stand-in), the edit-time hook of luismc-delivery
 (`hook_design_edit.py`) and the plan-rows check of luismc-docs (`plan_rows_check.py`).
 
-Run: python -I tools/test_ds_enforcement.py
+Run: python -I claude/plugins/docs/tests/test_ds_enforcement.py
 Standard library only (the Node self-tests are skipped when Node 22.6 or later is not on PATH).
 Prints "N passed, 0 failed" and exits 0 when all pass.
 """
@@ -21,7 +21,7 @@ import time
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-REPO = os.path.dirname(HERE)
+REPO = os.path.abspath(os.path.join(HERE, '..', '..', '..', '..'))  # claude/plugins/docs/tests
 PLUGINS = os.path.join(REPO, 'claude', 'plugins')
 KIT = os.path.join(PLUGINS, 'docs', 'templates', 'design-system', 'guards', 'typescript-vitest-kit')
 SHIM = os.path.join(PLUGINS, 'docs', 'tests', 'fixtures', 'vitest_shim', 'run.mjs')

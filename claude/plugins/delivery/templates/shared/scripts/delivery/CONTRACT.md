@@ -766,7 +766,7 @@ workflow watch (0, 1, 4).
   of `nightly-full.yml` and its compare step run with bash against a stub `gh`; scripts with one rule
   broken must each fail a scenario.
 
-Each test proves its check can fail, like `tools/test_spec_check.py`.
+Each test proves its check can fail, like `claude/plugins/docs/tests/test_spec_check.py`.
 
 ## STACKSPEC 7.1.0 additions
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for DS272 (Full Progress links every pull request number; R5.65, R5.66).
 
-Run:  python -I tools/test_artifacts_ds272.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_ds272.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import copy
@@ -15,7 +15,7 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'scripts'))
 import test_artifacts_dl429 as D          # reuses its fixtures and helpers
 import test_render_artifacts as TR
 import test_project_artifacts as T          # the throwaway-repository harness

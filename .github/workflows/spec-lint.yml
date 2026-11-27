@@ -173,7 +173,7 @@ jobs:
       # reporting a clean spec forever. Two checks in authspec_check.py did exactly
       # that for their whole existence before this test existed.
       - name: Prove every check still fires
-        run: python3 tools/test_spec_check.py
+        run: python3 claude/plugins/docs/tests/test_spec_check.py
 
       # ARTIFACTSPEC is what the luismc-docs artifacts are built from, so it obeys the
       # same numbering and reference rules as the other binding specs.
@@ -672,90 +672,90 @@ jobs:
       # section 5 must hold in what it produces. A renderer that drifts makes
       # every project's artifacts disagree with their own record.
       - name: Prove the artifact renderer still holds
-        run: python3 -I tools/test_render_artifacts.py
+        run: python3 -I claude/plugins/docs/tests/test_render_artifacts.py
 
       # The only writer of the record. The test builds throwaway repositories
       # with a bare remote and runs each command, each conformance check and the
       # push-race and protected-branch exits, so a check that went quiet fails
       # here instead of reporting a clean record forever.
       - name: Prove the artifact commands and checks still hold
-        run: python3 -I tools/test_project_artifacts.py
+        run: python3 -I claude/plugins/docs/tests/test_project_artifacts.py
 
       # Each review finding fixed in AR59 keeps a test that failed before the fix.
       - name: Prove the AR59 artifact fixes still hold
-        run: python3 -I tools/test_artifacts_ar59.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar59.py
 
       # AR60 (state temp files) and AR61 (hourly publish only while work is open).
       - name: Prove the AR60 and AR61 artifact fixes still hold
-        run: python3 -I tools/test_artifacts_ar60.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar60.py
 
       # AR63 (mark-published steps), AR64 (Expected without ~), AR65 (Expected optional on To do).
       - name: Prove the AR63 to AR65 artifact fixes still hold
-        run: python3 -I tools/test_artifacts_ar63.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar63.py
 
       # AR66: a release with no Expected is headed "not scheduled" and passes R5.46.
       - name: Prove the AR66 artifact fix still holds
-        run: python3 -I tools/test_artifacts_ar66.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar66.py
 
       - name: Prove the AR67 artifact fix still holds
-        run: python3 -I tools/test_artifacts_ar67.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ar67.py
 
       # DP7 (D2): default Expected by task type; the overdue sweep.
       - name: Prove the DP7 default Expected and overdue sweep still hold
-        run: python3 -I tools/test_artifacts_dp7.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dp7.py
 
       # DS219 (D182): the record defaults to docs/project when nothing says.
       - name: Prove the record default still holds
-        run: python3 -I tools/test_artifacts_ds219.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds219.py
       - name: Prove the release tree still holds
-        run: python3 -I tools/test_artifacts_ds256.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds256.py
 
       # DL429: Full Progress section 0 shows status badges and a generated What is happening text.
       - name: Prove the DL429 status badges still hold
-        run: python3 -I tools/test_artifacts_dl429.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl429.py
 
       # DS258: Full Progress shows a ci-waste badge from the CI runs file.
       - name: Prove the DS258 ci-waste badge still holds
-        run: python3 -I tools/test_artifacts_ds258.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds258.py
 
       # DS272: Full Progress links every pull request number to its page.
       - name: Prove the DS272 pull request links still hold
-        run: python3 -I tools/test_artifacts_ds272.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds272.py
 
       # DS278: a Running or Waiting release has phases or a --no-phases reason; no phases is an outline diamond.
       - name: Prove the DS278 release phases rule still holds
-        run: python3 -I tools/test_artifacts_ds278.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_ds278.py
 
       # DL173: a ledger or ci-runs file with a missing or newer schema warns.
       - name: Prove the DL173 schema check still holds
-        run: python3 -I tools/test_artifacts_dl173.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl173.py
 
       # DL251: a stale Full Progress lede is a warning.
       - name: Prove the DL251 stale lede warning still holds
-        run: python3 -I tools/test_artifacts_dl251.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl251.py
 
       # DL259: a project design file is checked against the accents contract.
       - name: Prove the DL259 design accents check still holds
-        run: python3 -I tools/test_artifacts_dl259.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl259.py
 
       # DL260: every generated HTML page declares UTF-8 early.
       - name: Prove the DL260 UTF-8 declaration still holds
-        run: python3 -I tools/test_artifacts_dl260.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl260.py
 
       # DL264: mark-deferred --local accepts each of its folders.
       - name: Prove the DL264 mark-deferred folders still hold
-        run: python3 -I tools/test_artifacts_dl264.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl264.py
 
       # DL269: the record refuses U+FFFD.
       - name: Prove the DL269 U+FFFD refusal still holds
-        run: python3 -I tools/test_artifacts_dl269.py
+        run: python3 -I claude/plugins/docs/tests/test_artifacts_dl269.py
 
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
       # let a turn end after three blocks, or a session that cannot publish
       # would loop forever.
       - name: Prove the artifact hooks still hold
-        run: python3 -I tools/test_project_artifacts_hooks.py
+        run: python3 -I claude/plugins/docs/tests/test_project_artifacts_hooks.py
 
   transcript-folds:
     name: transcript folds plugin
@@ -806,9 +806,9 @@ jobs:
       # The TypeScript guard templates run for real: fixture projects are built with
       # design_system.py, vitest (exact version, temp dir only) runs the four files.
       - name: Run the design-system guard templates
-        run: python3 -I tools/test_ds_guard_templates.py
+        run: python3 -I claude/plugins/docs/tests/test_ds_guard_templates.py
 
       # The enforcement kit: its Python checks, the design edit hook, the plan-rows
       # check, and the kit's TypeScript self-tests under the Node shim (Node 24 above).
       - name: Prove the design-system enforcement kit still holds
-        run: python3 -I tools/test_ds_enforcement.py
+        run: python3 -I claude/plugins/docs/tests/test_ds_enforcement.py

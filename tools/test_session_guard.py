@@ -332,9 +332,13 @@ def this_repo_registers_the_hook_and_declares_suites():
     shipped = {"%s@dev-standards" % p["name"] for p in market["plugins"]}
     assert set(cfg.get("enabledPlugins", {})) <= shipped, set(cfg["enabledPlugins"]) - shipped
     suites = rs.load_suites(ROOT)
-    on_disk = {p.stem for p in (ROOT / "tools").glob("test_*.py")}
-    declared = {Path(s["full"].split()[1]).stem for s in suites.values()}
-    assert on_disk == declared, (on_disk ^ declared)
+    # DS307: a suite is tools/test_*.py or a test that moved to its plugin's tests/.
+    # Every tools/ test is declared, and every declared file exists.
+    declared = {s["full"].split()[1] for s in suites.values()}
+    on_disk = {p.relative_to(ROOT).as_posix() for p in (ROOT / "tools").glob("test_*.py")}
+    assert on_disk <= declared, on_disk - declared
+    missing = sorted(p for p in declared if not (ROOT / p).is_file())
+    assert not missing, missing
     for name in ("project-artifacts", "project-artifacts-hooks",
                  "delivery-gate", "delivery-cleanup", "delivery-ci"):
         assert suites[name]["measure"] is False, name

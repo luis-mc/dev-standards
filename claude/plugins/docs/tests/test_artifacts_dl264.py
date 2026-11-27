@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DL264: mark-deferred --local accepts the work root, the full-progress folder, or the project folder.
 
-Run:  python -I tools/test_artifacts_dl264.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_dl264.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json

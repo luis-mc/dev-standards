@@ -12,7 +12,7 @@ read were absent from the document.
 The last two cases are negative: they assert the checker stays silent on things
 that only look like defects (statutory citations, lettered insertions).
 
-Run:  python3 tools/test_spec_check.py
+Run:  python3 claude/plugins/docs/tests/test_spec_check.py
 """
 import importlib.util, sys, pathlib
 
@@ -22,12 +22,12 @@ for _stream in (sys.stdout, sys.stderr):
     if hasattr(_stream, "reconfigure"):
         _stream.reconfigure(encoding="utf-8")
 
-TOOLS = pathlib.Path(__file__).resolve().parent
+PLUGIN = pathlib.Path(__file__).resolve().parents[1]  # claude/plugins/docs
 
 
 def load_spec_check():
     """Import the spec-check plugin asset."""
-    target = TOOLS.parent / "claude/plugins/docs/skills/spec-check/assets/spec_check.py"
+    target = PLUGIN / "skills/spec-check/assets/spec_check.py"
     spec = importlib.util.spec_from_file_location("spec_check", target)
     module = importlib.util.module_from_spec(spec)
     sys.modules["spec_check"] = module
@@ -128,25 +128,30 @@ CASES = [
 ]
 
 fails = 0
-for case in CASES:
-    name, text, expect = case[0], case[1], case[2]
-    externals = case[3] if len(case) > 3 else None
-    spec = SC.Spec(text, externals)
-    msgs = [f.message for _, _, _, fs in SC.run(spec, None) for f in fs]
-    blob = " | ".join(msgs)
-    if expect is None:
-        ok = not msgs
-        detail = "no findings" if ok else f"UNEXPECTED: {blob}"
-    else:
-        ok = expect in blob
-        detail = "fired" if ok else f"DID NOT FIRE (got: {blob or 'nothing'})"
-    print(f"{'PASS' if ok else 'FAIL'}  {name:36} {detail}")
-    fails += not ok
+
+
+def run_cases():
+    global fails
+    for case in CASES:
+        name, text, expect = case[0], case[1], case[2]
+        externals = case[3] if len(case) > 3 else None
+        spec = SC.Spec(text, externals)
+        msgs = [f.message for _, _, _, fs in SC.run(spec, None) for f in fs]
+        blob = " | ".join(msgs)
+        if expect is None:
+            ok = not msgs
+            detail = "no findings" if ok else f"UNEXPECTED: {blob}"
+        else:
+            ok = expect in blob
+            detail = "fired" if ok else f"DID NOT FIRE (got: {blob or 'nothing'})"
+        print(f"{'PASS' if ok else 'FAIL'}  {name:36} {detail}")
+        fails += not ok
+
 
 # DS186: command-line cases (F31, F32, F41, F42). Each runs the script from a
 # directory that is not the repo root.
 import subprocess, tempfile
-CLI = TOOLS.parent / "claude/plugins/docs/skills/spec-check/assets/spec_check.py"
+CLI = PLUGIN / "skills/spec-check/assets/spec_check.py"
 
 
 def cli(name, files, args, want_code, want_text):
@@ -167,17 +172,26 @@ def cli(name, files, args, want_code, want_text):
 
 
 GOOD = "## 1. Intro\n\nSee STACKSPEC §1.\n".encode()
-cli("F31 runs outside the repo root", {"t.md": GOOD}, ["t.md"], 0, "0 error(s)")
-cli("F32 non-UTF-8 spec exits 2", {"l.md": b"## 1. Intro caf\xe9\n"},
-    ["l.md"], 2, "could not read")
-cli("F32 non-UTF-8 external exits 2", {"l.md": b"## 1. Intro caf\xe9\n", "a.md": GOOD},
-    ["--external", "OTHER=l.md", "a.md"], 2, "could not read")
-cli("F41 BOM is ignored", {"b.md": b"\xef\xbb\xbf## 1. Intro\n### 1.1 Sub\nSee \xc2\xa71.\n"},
-    ["b.md"], 0, "0 error(s)")
-cli("F42 directory expands to *.md", {"s/a.md": GOOD, "s/b.md": GOOD},
-    ["s"], 0, "b.md")
-cli("explicit missing external is fatal", {"t.md": GOOD},
-    ["--external", "NOPE=missing.md", "t.md"], 2, "does not exist")
 
-print(f"\n{len(CASES) - fails}/{len(CASES)} cases behaved as specified")
-sys.exit(1 if fails else 0)
+
+def main():
+    run_cases()
+    cli("F31 runs outside the repo root", {"t.md": GOOD}, ["t.md"], 0, "0 error(s)")
+    cli("F32 non-UTF-8 spec exits 2", {"l.md": b"## 1. Intro caf\xe9\n"},
+        ["l.md"], 2, "could not read")
+    cli("F32 non-UTF-8 external exits 2", {"l.md": b"## 1. Intro caf\xe9\n", "a.md": GOOD},
+        ["--external", "OTHER=l.md", "a.md"], 2, "could not read")
+    cli("F41 BOM is ignored", {"b.md": b"\xef\xbb\xbf## 1. Intro\n### 1.1 Sub\nSee \xc2\xa71.\n"},
+        ["b.md"], 0, "0 error(s)")
+    cli("F42 directory expands to *.md", {"s/a.md": GOOD, "s/b.md": GOOD},
+        ["s"], 0, "b.md")
+    cli("explicit missing external is fatal", {"t.md": GOOD},
+        ["--external", "NOPE=missing.md", "t.md"], 2, "does not exist")
+
+    print(f"\n{len(CASES) - fails}/{len(CASES)} cases behaved as specified")
+    sys.exit(1 if fails else 0)
+
+
+# DS307: import-safe, so unittest discover over this folder does not run it.
+if __name__ == "__main__":
+    main()

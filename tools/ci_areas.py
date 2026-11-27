@@ -83,6 +83,8 @@ TEMPLATES = "claude/plugins/delivery/templates"
 DELIVERY_SCRIPTS = TEMPLATES + "/shared/scripts/delivery/"
 HOOKS = TEMPLATES + "/shared/.githooks/"
 DS = DELIVERY_SCRIPTS
+# DS307: the plugin tests that left tools/ for their plugin's tests/ folder.
+DOCS_TESTS = "claude/plugins/docs/tests"
 # TC7: suite -> the files whose change turns its mutation pass on. Derived from
 # what each suite copies, imports or mutates. A path ending in "/" is a folder.
 SUITE_MUTANTS: dict[str, frozenset[str]] = {
@@ -131,8 +133,8 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/docs/skills/spec-new/assets/.*", frozenset({"specs"})),
     (r"claude/plugins/docs/skills/spec-check/assets/.*", frozenset({"specs"})),
     (re.escape(TS) + r"/assets/stack-profile\.md", frozenset({"specs"})),
-    (r"tools/(authspec_check|test_spec_check|test_authspec_check)\.py",
-     frozenset({"specs"})),
+    (r"tools/(authspec_check|test_authspec_check)\.py", frozenset({"specs"})),
+    (re.escape(DOCS_TESTS) + r"/test_spec_check\.py", frozenset({"specs"})),
     (r"tools/route-ratelimit-map\.json", frozenset({"specs"})),
     # this repository's .claude/ settings and suites: test_session_guard.py (specs) reads them (DS91)
     (r"\.claude/(settings|suites)\.json", frozenset({"specs"})),
@@ -161,20 +163,19 @@ RULES: list[tuple[str, frozenset[str]]] = [
     # the design-system enforcement kit test (docs job) also covers these two scripts
     (r"claude/plugins/delivery/scripts/hook_design_edit\.py", frozenset({"delivery", "docs"})),
     (r"claude/plugins/docs/scripts/plan_rows_check\.py", frozenset({"artifacts", "docs"})),
-    (r"tools/test_ds_enforcement\.py", frozenset({"docs"})),
+    (re.escape(DOCS_TESTS) + r"/test_ds_enforcement\.py", frozenset({"docs"})),
     # the artifacts files that live in the docs plugin (DS219), before the docs rules below
     (r"claude/plugins/docs/hooks/hooks\.json", frozenset({"docs", "artifacts"})),
     (r"claude/plugins/docs/scripts/(hook_session_start_artifacts|artifact_[a-z]+|project_artifacts|render_artifacts|publish_hourly"
      r"|hook_after_command|hook_end_of_turn)\.py", frozenset({"artifacts"})),
     (r"claude/plugins/docs/(design|templates/(feature-artifact|full-progress-artifact|project-artifact))[^/]*(/.*)?",
      frozenset({"artifacts"})),
+    # the artifacts tests (DS307 moved them from tools/ into the docs plugin's tests/)
+    (re.escape(DOCS_TESTS) + r"/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+"
+     r"|test_artifacts_dl[0-9]+|test_artifacts_dp[0-9]+|test_artifacts_ds[0-9]+)\.py", frozenset({"artifacts"})),
     # docs (SKILL.md and the manifest are matched above)
     (r"claude/plugins/docs/references/.*", frozenset({"specs", "docs"})),
     (r"claude/plugins/docs/.*", frozenset({"docs"})),
-    (r"tools/test_ds_guard_templates\.py", frozenset({"docs"})),
-    # artifacts
-    (r"tools/(test_render_artifacts|test_project_artifacts[a-z_]*|test_artifacts_ar[0-9]+|test_artifacts_dl[0-9]+|test_artifacts_ds[0-9]+)\.py",
-     frozenset({"artifacts"})),
     # delivery
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),

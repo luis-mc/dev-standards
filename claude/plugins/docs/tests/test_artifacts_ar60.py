@@ -2,7 +2,7 @@
 """Regression tests for AR60 (the stop state leaves no temp files) and AR61 (the hourly
 Full Progress fail-safe applies only while work is open, R9.8, decision D20).
 
-Run:  python -I tools/test_artifacts_ar60.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_ar60.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json
@@ -14,7 +14,7 @@ import traceback
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs')
+PLUGIN = os.path.dirname(HERE)
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 sys.path.insert(0, SCRIPTS)
 

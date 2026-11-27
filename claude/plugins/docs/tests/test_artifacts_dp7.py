@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DP7 (decision D2): a default Expected by task type, and the overdue sweep.
 
-Run:  python -I tools/test_artifacts_dp7.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_dp7.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import os
@@ -12,7 +12,7 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'scripts'))
 import test_project_artifacts as T          # the throwaway-repository harness
 import artifact_hourly as H
 

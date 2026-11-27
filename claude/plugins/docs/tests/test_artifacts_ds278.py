@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for DS278 (a Running or Waiting release has phases; R5.41a, R5.42c).
 
-Run:  python -I tools/test_artifacts_ds278.py [CASE ...]
+Run:  python -I claude/plugins/docs/tests/test_artifacts_ds278.py [CASE ...]
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json

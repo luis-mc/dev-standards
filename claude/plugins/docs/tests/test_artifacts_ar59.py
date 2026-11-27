@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Regression tests for the artifacts plugin review findings F20 to F27 (AR59).
 
-Run:  python -I tools/test_artifacts_ar59.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_ar59.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json
@@ -13,7 +13,7 @@ import traceback
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs')
+PLUGIN = os.path.dirname(HERE)
 SCRIPTS = os.path.join(PLUGIN, 'scripts')
 sys.path.insert(0, SCRIPTS)
 

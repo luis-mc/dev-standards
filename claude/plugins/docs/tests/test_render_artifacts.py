@@ -4,7 +4,7 @@
 Every check of check_html gets a fixture that breaks exactly that rule and must produce exactly that
 requirement ID; the clean fixtures must produce nothing. A check nobody has seen fire is not a check.
 
-Run:  python -I tools/test_render_artifacts.py     (prints "N passed, 0 failed")
+Run:  python -I claude/plugins/docs/tests/test_render_artifacts.py     (prints "N passed, 0 failed")
 """
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ import tempfile
 import traceback
 from html.parser import HTMLParser
 
-ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..'))  # claude/plugins/docs/tests
 PLUGIN = os.path.join(ROOT, 'claude', 'plugins', 'docs')
 sys.path.insert(0, os.path.join(PLUGIN, 'scripts'))
 

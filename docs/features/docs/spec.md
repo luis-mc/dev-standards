@@ -9,7 +9,7 @@ owner: agents
 type: reference
 code:
   - claude/plugins/docs/**
-  - tools/test_ds_enforcement.py
+  - claude/plugins/docs/tests/test_ds_enforcement.py
 last_verified: 2026-11-27
 ---
 # Documentation standard plugin (luismc-docs)
@@ -163,14 +163,14 @@ Settings live in the project's `docs/docs.json` (DOCSPEC R12.3). The plugin work
 | R5.10, R5.11 | `claude/plugins/docs/tests/test_check.py` |
 | R5.12 | `claude/plugins/docs/tests/test_work.py`, `claude/plugins/docs/tests/test_ds193_strip.py`, `claude/plugins/docs/tests/test_check.py` |
 | R5.13 | `claude/plugins/docs/tests/test_hooks.py` |
-| R5.14 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
-| R5.15 | `claude/plugins/docs/tests/test_components.py`, `tools/test_ds_guard_templates.py` |
+| R5.14 | `claude/plugins/docs/tests/test_components.py`, `claude/plugins/docs/tests/test_ds_guard_templates.py` |
+| R5.15 | `claude/plugins/docs/tests/test_components.py`, `claude/plugins/docs/tests/test_ds_guard_templates.py` |
 | R5.16, R5.17, R5.18 | `claude/plugins/docs/tests/test_dl239_badge_colour_fonts.py` |
 | R5.19 | `claude/plugins/docs/tests/test_dl331_picker_strict.py` |
 | R5.20 | `claude/plugins/docs/tests/test_du13_install_update.py`, `claude/plugins/docs/tests/test_design_system.py` |
 | R5.21, R5.22 | `claude/plugins/docs/tests/test_ds235a_lifecycle_contract.py` |
 | R5.23a | `claude/plugins/docs/tests/test_ds235b_guards.py`, `claude/plugins/docs/tests/test_ds235b_parts.py` |
-| R5.24 | `claude/plugins/docs/tests/test_design_system.py`, `tools/test_ds_guard_templates.py` |
+| R5.24 | `claude/plugins/docs/tests/test_design_system.py`, `claude/plugins/docs/tests/test_ds_guard_templates.py` |
 | R6.1, R6.2 | `claude/plugins/docs/tests/test_lib.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/docs/tests`.

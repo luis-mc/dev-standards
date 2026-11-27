@@ -9,7 +9,7 @@ stand-in renderer group used to run them a second time and never caught a bug
 the real one missed); the file reports a skip, with a message, while that
 module is not importable.
 
-Run:  python -I tools/test_project_artifacts.py
+Run:  python -I claude/plugins/docs/tests/test_project_artifacts.py
 """
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ import tempfile
 import traceback
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[4]  # claude/plugins/docs/tests
 REAL_PLUGIN = ROOT / 'claude' / 'plugins' / 'docs'
 NOW = '2026-10-10T11:39:00+00:00'
 

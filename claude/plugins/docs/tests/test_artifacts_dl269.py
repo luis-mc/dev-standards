@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DL269: task-add and set-task-status refuse U+FFFD; check flags one already held.
 
-Run:  python -I tools/test_artifacts_dl269.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_dl269.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json

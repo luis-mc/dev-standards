@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DL260: every generated HTML page declares UTF-8 in its first 1024 bytes.
 
-Run:  python -I tools/test_artifacts_dl260.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_dl260.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import os
@@ -12,7 +12,7 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'scripts'))
 import test_project_artifacts as T
 
 TESTS = []
@@ -62,7 +62,7 @@ def local_copies_declare_utf8():
 
 @case
 def template_has_charset_first():
-    root = Path(HERE).parent / 'claude' / 'plugins' / 'docs' / 'templates'
+    root = Path(HERE).parent / 'templates'
     assert (root / 'full-progress-artifact.html').read_text(encoding='utf-8').startswith(META)
     assert META in first_k(root / 'feature-artifact.html')
 

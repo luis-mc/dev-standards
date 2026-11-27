@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """DL173: the artifacts readers check the schema of the delivery ledger and ci-runs file.
 
-Run:  python -I tools/test_artifacts_dl173.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_dl173.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import json
@@ -13,7 +13,7 @@ from pathlib import Path
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'scripts'))
 import test_project_artifacts as T
 import project_artifacts as PA
 

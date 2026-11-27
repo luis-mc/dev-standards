@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for DL429 (Full Progress section 0: status badges and "What is happening"; R5.61 to R5.63).
 
-Run:  python -I tools/test_artifacts_dl429.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_dl429.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import copy
@@ -13,7 +13,7 @@ import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'scripts'))
 import test_render_artifacts as TR          # the renderer harness
 import render_artifacts as R
 

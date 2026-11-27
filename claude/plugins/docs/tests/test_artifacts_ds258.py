@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Tests for DS258 (Full Progress ci-waste badge; R5.64).
 
-Run:  python -I tools/test_artifacts_ds258.py
+Run:  python -I claude/plugins/docs/tests/test_artifacts_ds258.py
 Standard library only. Prints "N passed, M failed" and exits 0 when all pass.
 """
 import os
@@ -10,7 +10,7 @@ import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
-sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs', 'scripts'))
+sys.path.insert(0, os.path.join(os.path.dirname(HERE), 'scripts'))
 import test_artifacts_dl429 as D          # reuses its fixtures and helpers
 import render_artifacts as R
 

@@ -7,7 +7,7 @@ R8.6, the CLAUDE_ARTIFACTS_HOOKS=off switch of section 12 and INV-4 (the hooks
 never modify docs/artifacts/). project_artifacts.py and gh are replaced by
 small Python stubs through CLAUDE_ARTIFACTS_SCRIPT and CLAUDE_ARTIFACTS_GH.
 
-Run: python -I tools/test_project_artifacts_hooks.py
+Run: python -I claude/plugins/docs/tests/test_project_artifacts_hooks.py
 Standard library only. Prints "N passed, 0 failed" and exits 0 when all pass.
 """
 import hashlib
@@ -23,7 +23,7 @@ import time
 import traceback
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-PLUGIN = os.path.join(os.path.dirname(HERE), 'claude', 'plugins', 'docs')
+PLUGIN = os.path.dirname(HERE)
 
 
 def rule_file_text():
@@ -105,6 +105,12 @@ def _rm_error(func, path, _exc):
 
 def cleanup():
     shutil.rmtree(TMP_ROOT, onerror=_rm_error)
+
+
+# DS307: unittest discover over this folder imports this script. Nothing runs then,
+# so drop the spy folder made above instead of leaving it in the temp directory.
+if __name__ != '__main__':
+    cleanup()
 
 
 # --- fixtures -------------------------------------------------------------------------
