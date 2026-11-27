@@ -118,7 +118,7 @@ class Templates(unittest.TestCase):
 
     def test_action_falls_back_to_everything_runs(self):
         text = ACTION.read_text(encoding="utf-8")
-        for name in ("workflow", "map", "github-token"):
+        for name in ("workflow", "map", "always", "default-branch"):  # the token is github.token (secret scan)
             self.assertRegex(text, rf"(?m)^  {name}:")
         for name in ("run", "carried", "reason", "plan"):
             self.assertRegex(text, rf"(?m)^  {name}:")

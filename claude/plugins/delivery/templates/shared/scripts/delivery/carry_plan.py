@@ -18,6 +18,11 @@ counts with the paths it brings (diff to its first parent).
 
 Any error, or a proof head that cannot be fetched: that job runs (or every job, with the reason).
 
+With --push (R5.95), on a push to the default branch: SHA is the merge commit of a pull request. Each job's proof
+head is searched among that pull request's heads; the changed paths are the tree diff from the proof head to the
+merge commit. Same tree: every job is carried. A job named in --always (release, publish, smoke) always runs. A
+push that no merged pull request made runs every job.
+
 Outputs (lines to $GITHUB_OUTPUT with --github-output; JSON with --json):
   run=a,b               the jobs to run
   run_<job>=true|false  one per job
@@ -45,6 +50,14 @@ MAX_HEADS = 12
 
 class Undecided(Exception):
     """A step failed; the caller runs the job (or everything)."""
+
+
+class _Done(Exception):
+    """Carries a finished push plan out of the try block."""
+
+    def __init__(self, res: dict):
+        super().__init__("done")
+        self.res = res
 
 
 # ---------------------------------------------------------------- job names
@@ -181,6 +194,40 @@ def plan(job_keys: list[str], defs: dict, runs: list, head_sha: str, fetch_jobs,
     return decide(job_keys, proofs, changed_since, cmap, workflow_text, workflow_path)
 
 
+def push_plan(job_keys: list[str], defs: dict, runs: list, merge_sha: str, fetch_jobs, changed_since, cmap: dict,
+              workflow_text: str | None, workflow_path: str | None, always: list[str]) -> dict:
+    """R5.95: the plan for a push of a merge commit; runs = completed pull_request runs of the merged PR."""
+    heads = group_heads(runs, merge_sha)
+    if not heads:
+        res = everything(job_keys, "no pull request run proves this merge: every job runs")
+    else:
+        proofs = find_proofs(heads, job_keys, defs, fetch_jobs)
+        res = decide(job_keys, proofs, changed_since, cmap, workflow_text, workflow_path)
+    for k in always:
+        if k in res["carried"]:
+            del res["carried"][k]
+        if k in job_keys and k not in res["run"]:
+            res["run"].append(k)
+    res["run"] = [k for k in job_keys if k in res["run"]]
+    res["reason"] = "push of a merge: " + res["reason"]
+    return res
+
+
+def tree_diff(repo: str, proof: str, sha: str) -> list[str]:
+    """R5.95: paths whose content differs between the proof head and the merge commit."""
+    ensure_commit(repo, proof)
+    out = git(repo, "diff", "--name-only", "--no-renames", "-z", proof, sha)
+    return [p for p in out.split("\0") if p]
+
+
+def merged_pr(repo: str, sha: str) -> dict | None:
+    data = gh_api(f"repos/{repo}/commits/{sha}/pulls")
+    for pr in data if isinstance(data, list) else []:
+        if isinstance(pr, dict) and pr.get("merge_commit_sha") == sha and pr.get("merged_at"):
+            return pr
+    return None
+
+
 # ---------------------------------------------------------------- git
 
 def git(repo: str, *args: str, input_text: str | None = None) -> str:
@@ -289,7 +336,9 @@ def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description="which jobs of this workflow must run on this pull request head")
     ap.add_argument("--repo", default=os.environ.get("GITHUB_REPOSITORY", ""))
     ap.add_argument("--workflow", required=True)
-    ap.add_argument("--pr", type=int, required=True)
+    ap.add_argument("--pr", type=int, default=0)
+    ap.add_argument("--push", action="store_true", help="a push of a merge commit to the default branch (R5.95)")
+    ap.add_argument("--always", default="", help="comma list of jobs that run on every push (release, publish, smoke)")
     ap.add_argument("--sha", default=os.environ.get("GITHUB_SHA", "HEAD"))
     ap.add_argument("--map", default=DEFAULT_MAP)
     ap.add_argument("--workflow-path", default="")
@@ -312,6 +361,17 @@ def main(argv=None) -> int:
         try:
             cmap = AS.load_map(Path(a.map))
             sha = git(".", "rev-parse", a.sha).strip()
+            if a.push:
+                mpr = merged_pr(a.repo, sha)
+                always = [j for j in a.always.split(",") if j]
+                if not mpr:
+                    raise Undecided("no merged pull request made this push")
+                runs = pr_runs(a.repo, a.workflow, int(mpr["number"]), mpr["head"]["ref"])
+                res = push_plan(job_keys, defs, runs, sha, lambda rid: jobs_of_run(a.repo, rid),
+                                lambda proof: tree_diff(".", proof, sha), cmap, text, wf_path, always)
+                raise _Done(res)
+            if not a.pr:
+                raise Undecided("--pr is required without --push")
             pr = gh_api(f"repos/{a.repo}/pulls/{a.pr}")
             head_ref = pr["head"]["ref"]
             base = a.base_ref or pr["base"]["ref"]
@@ -319,6 +379,8 @@ def main(argv=None) -> int:
             runs = pr_runs(a.repo, a.workflow, a.pr, head_ref)
             res = plan(job_keys, defs, runs, sha, lambda rid: jobs_of_run(a.repo, rid),
                        lambda proof: changed_paths_since(".", base_ref, sha, proof), cmap, text, wf_path)
+        except _Done as done:
+            res = done.res
         except (Undecided, OSError, ValueError, KeyError, TypeError) as exc:
             res = everything(job_keys, f"could not plan, every job runs: {exc}")
         except Exception as exc:  # fail open

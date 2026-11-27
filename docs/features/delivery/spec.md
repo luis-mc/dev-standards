@@ -276,6 +276,8 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.93** — Proof of the carry-forward plan (DS287). `carry_replay.py --repo OWNER/REPO --prs N,N,...` replays each pull request's heads through `carry_plan.py` from the recorded runs and prints, per head, the jobs that ran, the jobs the plan would run, and the job-minutes saved; it reads only the GitHub API and the repository's git history, and changes nothing. Tests: `claude/plugins/delivery/tests/test_ds287_carry_forward.py` (planner on git fixture repositories, patch-id on rebase, valves, verify, replay on recorded fixtures).
 
+**R5.95** — A push of a merge commit to the default branch carries what the pull request proved (DS287, owner decision 27 Nov; replaces main's post-merge full run, the nightly full run stays). The carry-plan action runs `carry_plan.py --push` on a push to the default branch. It finds the merged pull request of the commit and searches each job's proof head among that pull request's heads. The changed paths are the tree diff from the proof head to the merge commit: the same tree carries every job; a differing tree runs only the jobs those paths reach. A job named in the action's `always` input (release, publish, smoke) always runs; a job with no proof on the pull request (one that runs only on main) runs. A push that no merged pull request made, or any error, runs every job.
+
 ## 6. Non-functional requirements
 
 **R6.1** — Every hook fails open on its own error. It prints a warning and exits 0, except a deliberate deny (exit 2).

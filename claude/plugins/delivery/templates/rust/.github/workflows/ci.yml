@@ -98,6 +98,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      pull-requests: read  # R5.95: the merged pull request of a push
     outputs:
       carry_plan: ${{ steps.carry.outputs.plan }}
       carried: ${{ steps.carry.outputs.carried }}

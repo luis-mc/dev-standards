@@ -37,6 +37,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      pull-requests: read  # R5.95: the merged pull request of a push
     steps:
       - uses: actions/checkout@v4
         with:

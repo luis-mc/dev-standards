@@ -28,6 +28,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      pull-requests: read  # R5.95: the merged pull request of a push
     outputs:
       carry_plan: ${{ steps.carry.outputs.plan }}
       carried: ${{ steps.carry.outputs.carried }}
@@ -65,6 +66,7 @@ jobs:
     permissions:
       contents: read
       actions: read
+      pull-requests: read  # R5.95: the merged pull request of a push
     runs-on: ${{ fromJSON(vars.CRSP_PUBLISH || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: publish
