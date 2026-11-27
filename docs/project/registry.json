@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T13:05+00:00",
+  "updated": "2026-11-27T13:07+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12808,6 +12808,16 @@
       "expected_basis": "default ETA, other: 30 min",
       "no_release": "a read-only scan that writes a list",
       "started": "2026-11-27T13:04+00:00"
+    },
+    {
+      "id": "DS295",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "Full Progress shows live CI runs per release and per task",
+      "detail": "crsp ask 27 Nov 13:15: release rows show the PR plus each workflow run of its head (name, status, link, start, duration/ETA), the tag run and post-merge main runs until Live; task rows with a PR or pushed branch show the same. Data: gh run list --commit <sha>, refreshed by pending --refresh",
+      "expected": "",
+      "changed": "2026-11-27T13:07+00:00"
     },
     {
       "id": "DU1",
