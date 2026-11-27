@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T16:27+00:00",
+  "updated": "2026-11-27T16:48+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12880,14 +12880,118 @@
       "id": "DS301",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Live",
       "item": "Review decisions page",
       "detail": "Gather DS298-DS300 proposals into one page; ask the owner's open decisions",
-      "expected": "27 Nov ~16:55",
-      "changed": "2026-11-27T16:27+00:00",
-      "expected_basis": "read reports, write and publish page ~30 min from 16:25",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T16:48+00:00",
       "no_release": "study: decision page only",
       "started": "2026-11-27T16:27+00:00"
+    },
+    {
+      "id": "DS302",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "RELEASE: review fixes (DS298-DS300 decisions)",
+      "detail": "Apply the no-decision batches and owner decisions D327-D344",
+      "expected": "27 Nov ~18:08",
+      "changed": "2026-11-27T16:45+00:00",
+      "expected_basis": "4 cloud agents ~40 min, join, CI ~15 min, watcher merge",
+      "release": 210,
+      "phases": [
+        {
+          "name": "agents",
+          "start": "2026-11-27T16:55+00:00",
+          "end": "2026-11-27T17:35+00:00"
+        },
+        {
+          "name": "join",
+          "start": "2026-11-27T17:35+00:00",
+          "end": "2026-11-27T17:50+00:00"
+        },
+        {
+          "name": "ci",
+          "start": "2026-11-27T17:50+00:00",
+          "end": "2026-11-27T18:05+00:00"
+        },
+        {
+          "name": "merge",
+          "start": "2026-11-27T18:05+00:00",
+          "end": "2026-11-27T18:08+00:00"
+        }
+      ],
+      "risk": {
+        "label": "fix round",
+        "minutes": 15
+      },
+      "started": "2026-11-27T16:45+00:00"
+    },
+    {
+      "id": "DS303",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Delivery plugin: merge roles, question rules, cited-ID test",
+      "detail": "C1 C2 C3 C12 C13 C15 C16 C17 D2 D14 E1 E2 E3 M1; DELIVERYSPEC and delivery hooks",
+      "expected": "27 Nov ~17:35",
+      "changed": "2026-11-27T16:46+00:00",
+      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "rides": "DS302",
+      "started": "2026-11-27T16:46+00:00"
+    },
+    {
+      "id": "DS304",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Docs plugin: record and DOCSPEC/ARTIFACTSPEC fixes",
+      "detail": "C4 C9 C10 C11 C14 C23 D9 D10 U4 U5 U11 S3 S4 E19 E20; docs plugin and its specs",
+      "expected": "27 Nov ~17:35",
+      "changed": "2026-11-27T16:46+00:00",
+      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "rides": "DS302",
+      "started": "2026-11-27T16:46+00:00"
+    },
+    {
+      "id": "DS305",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Project-setup: spec moves, STACKSPEC/AUTHSPEC fixes",
+      "detail": "S2 S5 S6 U7 S9 C24 C25 M5 E18 E21 E22; project-setup plugin",
+      "expected": "27 Nov ~17:35",
+      "changed": "2026-11-27T16:46+00:00",
+      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "rides": "DS302",
+      "started": "2026-11-27T16:46+00:00"
+    },
+    {
+      "id": "DS306",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Repo: AGENTS.md, feature specs, CI wiring, deletions",
+      "detail": "M7 C5 C6 C7 C8 C19-C22 C26 S1 U1-U3 U6 U9 U10 U12 U20; repo files",
+      "expected": "27 Nov ~17:35",
+      "changed": "2026-11-27T16:46+00:00",
+      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "rides": "DS302",
+      "started": "2026-11-27T16:46+00:00"
+    },
+    {
+      "id": "DS307",
+      "owner": "project",
+      "app": "",
+      "status": "To do",
+      "item": "RELEASE: plugin tests out of tools/ (S7)",
+      "detail": "Move plugin tests from tools/ into each plugin's tests/, one area at a time",
+      "expected": "",
+      "changed": "2026-11-27T16:46+00:00",
+      "release": 211,
+      "release_waits_on": [
+        "DS302"
+      ]
     },
     {
       "id": "DU1",
