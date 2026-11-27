@@ -103,7 +103,7 @@ publication. Numbering is append-only: a retired number is never reused, and
 sections are never renumbered to close a gap. Invariants are numbered
 `INV-<n>`: a property that holds at every instant.
 
-### 0.4 What changed in 1.1.0
+### 0.4 What changed
 
 **1.32.0 — 2026-11-26.**
 
@@ -362,9 +362,9 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | D10 | How does the activity rule reach a project? | The session-start hook prints the plugin's rule file as context, every session, in any project with a record. | No copy goes stale; a rule update reaches every project with the next plugin version (R8.9, R10.4). |
 | D11 | Does the record format change in 1.1.0? | No. | `spec` in the manifest and the registry stays `"ARTIFACTSPEC 1.0.0"` (§4.2). |
 | D12 | How are the owner's choices between options kept? | Every option offered and the one chosen, in the feature's `decisions.json`; the script draws the Decisions section. | The options, the recommendation and the choice are never lost in free text (§5.4). |
-| D13 | How often is Full Progress published? | Once per turn, at the end of it, never mid-turn. | Status changes accumulate during the turn and cost one of the account's 200 publishes a day, not one per change (R3.1, R9.1). |
+| D13 | How often is Full Progress published? | Once per turn, at the end of it, never mid-turn. | Status changes accumulate during the turn and cost one publish (R9.1; why: §15). |
 | D14 | Are feature artifacts published? | No. Each is a standalone HTML file in the repository, `docs/artifacts/feature-<slug>.html`. | It opens by double-click in any browser and costs no publish; Full Progress links to it as a local file (R5.27, §5.5, R9.5). |
-| D15 | Which rows fold into Earlier? | `Live` rows older than 14 days; `Built` rows never fold. | Unreleased work is never hidden (R6.3). |
+| D15 | Which rows fold into Earlier? | `Live` rows older than 14 days are not drawn; one earlier-rows line counts them. `Built` rows never drop out. | Unreleased work is never hidden (R6.3). |
 | D16 | What arms the end-of-turn background check? | A background `Agent`, `Task` or `Bash` call: `tool_input.run_in_background` is true. | A foreground sub-agent no longer asks for a Running task (R8.8). |
 | D17 | What happens to the claude.ai pages of feature artifacts published before feature artifacts became files? | Each URL moves to the manifest's `retired` list, recovered from the history of `manifest.json` when an earlier version already dropped it; a page is deleted only with the owner's confirmation, then recorded with `mark-deleted`. | No old page is orphaned, and none is deleted without the owner (R4.19 to R4.23). |
 | D18 | Does a retired page block anything? | No: not `pending`'s exit code, not the end-of-turn hook. They are listed, and the session is told once to ask the owner. | Publishing never waits for a decision only the owner can take (R4.22, R8.13). |
@@ -415,8 +415,10 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
 | feature artifact | The artifact of one feature, titled `Feature: <name>`: a standalone HTML file in the repository, `docs/artifacts/feature-<slug>.html`, never published (§5.1, R9.5). |
 | full-progress artifact | The project's one artifact of all ongoing work, titled `Full Progress: <project>`: the only claude.ai artifact of the project, published once per turn (R9.1). |
 | publish copy | The full-progress artifact rendered for publishing, with absolute `file:///` links to the feature files, written by `pending` to a git-ignored path (R5.31). |
-| task | One unit of work with an ID, a status and an owner. |
-| owner (of a task) | The feature artifact it belongs to (its `key`), or `project`. |
+| task | One unit of work with an ID, a status and a feature (the field `owner`). |
+| owner (of a task) | The task's feature: the feature artifact it belongs to (its `key`), or `project`. The JSON field keeps the name `owner`; in text, "owner" means the person. |
+| Running (task) | Any work for the task runs now. A task blocked on something or someone is Waiting or Needs you instead (R3.3). |
+| Built (task) | The work is finished but not released. Release work still to come (join, CI, release) is its own task, Running or To do (R3.4). |
 | project task | A task whose owner is `project`. |
 | task registry | `docs/artifacts/registry.json`, the only store of task state. |
 | manifest | `docs/artifacts/manifest.json`, the list of the project's artifacts and settings. |
@@ -478,21 +480,19 @@ The record format string stays `ARTIFACTSPEC 1.0.0`; a record without the new fi
    has a Running task (R8.10).
 
 - **R3.1** — Steps 3 to 5 complete in the same turn as the event. Status
-  changes accumulate during the turn. The session publishes Full Progress once,
-  at the end of the turn, and never mid-turn: claude.ai allows 200 artifact
-  publishes per account per day, and every republish counts. The end-of-turn
-  hook keeps blocking until it is published (R8.3). Verified by
+  changes accumulate during the turn, and Full Progress is published as R9.1
+  says. The end-of-turn hook keeps blocking until it is published (R8.3). Verified by
   `stop_blocks_when_an_artifact_is_pending` and `test_session_sequence_ends_clean`.
 - **R3.2** — Every activity is a task before it starts, whoever does it: work
   given to agents and the session's own work (contracts, specs, reviews, joins,
   test runs, releases, deploys, cleanup). The rule file has a line saying so.
   Verified by `rule_file_carries_the_activity_rules`.
 - **R3.3** — A task is Running while any work for it runs, and Waiting or Needs
-  you when it is blocked on something or someone. The rule file has a line
-  saying so. Verified by `rule_file_carries_the_activity_rules`.
+  you when it is blocked on something or someone (§1.4). Verified by
+  `definitions_carry_running_and_built`.
 - **R3.4** — Built means the work is finished but not released. Release work
-  still to come (join, CI, release) is its own task, Running or To do. The rule
-  file has a line saying so. Verified by `rule_file_carries_the_activity_rules`.
+  still to come (join, CI, release) is its own task, Running or To do (§1.4).
+  Verified by `definitions_carry_running_and_built`.
 - **R3.5** — Before ending a turn that leaves work running in the background,
   its task is Running. The rule file has a line saying so, and R8.10 enforces
   it. Verified by `rule_file_carries_the_activity_rules` and
@@ -568,8 +568,8 @@ docs/artifacts/
 
 - **R4.5** — A task's `id` is a registered prefix plus a positive integer; IDs
   are unique and never reused. A task is never removed from the registry (there
-  is no remove command); dropped work is set On hold or Built with a detail
-  saying so, so the next number, the highest plus one, is always unused.
+  is no remove command); dropped work is set `Dropped` (R5.49), so the next
+  number, the highest plus one, is always unused.
 - **R4.6** — `owner` is a feature `key` from the manifest or `project`. A
   feature task's prefix is its feature's prefix; a project task's prefix is
   in `project_prefixes`. A task moved into a feature after it got its ID keeps
@@ -615,7 +615,7 @@ docs/artifacts/
 
 ### 4.6 Writing the record
 
-- **R4.13** — The script writes the record in `<repo root>/docs/artifacts/` of
+- **R4.13** — The script writes the record in the record folder (R4.37) of
   the session's working tree (the repo root is `git rev-parse --show-toplevel`
   of the current directory) and stops. Every writing command validates, applies,
   renders and writes the files there; they stay uncommitted. Nothing is synced
@@ -626,7 +626,7 @@ docs/artifacts/
   `symbolic-ref`, `status`, `diff`, `log`, `show`, `ls-files`, `config --get` and
   `worktree list`. Verified by `test_writing_commands_change_files_and_leave_git_alone`
   and `test_only_read_only_git_is_run`.
-- **R4.14** — Retired in 1.8.0: the script commits nothing. A writing command
+- **R4.14** — Retired in 1.8.0: the script commits nothing (R4.13). A writing command
   changes only paths under `docs/artifacts/` (and `.gitignore` for `init` and
   `feature-new`, R10.2, and the deletion of a stale rule copy, R10.6); the project
   decides what to commit.
@@ -721,7 +721,7 @@ docs/artifacts/
 - **R4.28** — The commands `commit` and `push` are removed: calling either
   exits 1 with `the plugin no longer commits or pushes (ARTIFACTSPEC 1.8.0);
   commit docs/artifacts/ when you choose`. Exit codes 3 and 4 are no longer
-  used. No hook pushes, and `pending` does not push. Verified by
+  used. No hook and no `pending` pushes (R4.13). Verified by
   `test_commit_and_push_are_removed` and `test_pending_does_not_push`.
 - **R4.29** — Retired in 1.8.0: nothing is fetched or rebased, so the merge of
   concurrent record commits is the project's own git work.
@@ -778,14 +778,22 @@ entry (R4.1). `retire` removes a finished feature cleanly and keeps what history
 
 ### 4.11 The record folder
 
-- **R4.37** — The record folder is a per-project setting: `record_dir` in `.claude/artifacts.json` (committed with the
-  project), a folder relative to the repository root and strictly under `docs/` (for example `docs/work/artifacts`).
-  When the file or the key is absent the folder is `docs/artifacts`, so a project that sets nothing is unchanged. A
-  value that is absolute, contains `..`, is `docs` itself or lies outside `docs/` is refused: every command that needs
-  the record exits 2 naming the setting, and the hooks read the default. Every path this specification gives as
-  `docs/artifacts/` means this folder. Verified by `test_record_dir_setting_absent_is_the_old_path`,
-  `test_record_dir_setting_is_used_by_every_command`, `test_record_dir_setting_outside_docs_is_refused`,
-  `test_hooks_read_the_record_dir_setting`.
+- **R4.37** — The record folder is a per-project setting, a folder relative to the repository root and strictly
+  under `docs/` (for example `docs/work/artifacts`). The script and the hooks resolve it with one function
+  (`artifact_queue.record_rel`), in this order:
+  1. `record_dir` in `.claude/artifacts.json` (committed with the project);
+  2. `docs/artifacts`, when `.claude/artifacts.json` exists without `record_dir`;
+  3. `record_dir` in `docs/docs.json`, when `.claude/artifacts.json` does not exist;
+  4. `docs/artifacts`, when it holds a `manifest.json` and `docs/project` does not, so a record in the old default
+     folder keeps working;
+  5. else `docs/project`.
+
+  A value that is absolute, contains `..`, is `docs` itself or lies outside `docs/` is refused: every command that
+  needs the record exits 2 naming the setting, and the hooks read `docs/artifacts` when `.claude/artifacts.json`
+  exists, else `docs/project`. Every path this specification gives as `docs/artifacts/` means this folder. Verified by
+  `test_record_dir_setting_absent_is_the_old_path`, `test_record_dir_setting_is_used_by_every_command`,
+  `test_record_dir_setting_outside_docs_is_refused`, `test_hooks_read_the_record_dir_setting` and the cases of
+  `tools/test_artifacts_ds219.py`.
 - **R4.38** — `move-record NEW_DIR [--yes]` moves the record folder to NEW_DIR (same rules as R4.37) and writes the
   setting; moving back to `docs/artifacts` removes the key. It is a plain file move: it does not run git, so the
   project commits the moved folder and `.claude/artifacts.json` when it chooses (R4.28). Without `--yes` it is a
@@ -814,9 +822,10 @@ The templates hold `{{placeholders}}`: `title`, `fonts_link`, `design_css`,
   artifact's is `Full Progress: <project>`.
 - **R5.2** — Sections are numbered from 0 in order with no gaps, and the
   contents list shows the same numbers and titles.
-- **R5.3** — Section 0 is titled `Status and checklist` and holds, in order:
-  the stamp, the lede (omitted when empty, R5.7), the At a glance block (R5.33),
-  the tiles, the status key and the checklist.
+- **R5.3** — Section 0 is titled `Status and checklist`. In a feature artifact
+  it holds, in order: the stamp, the lede (omitted when empty, R5.7), the At a
+  glance block (R5.33), the tiles, the status key and the checklist. Full
+  Progress's section 0 follows R5.61.
 - **R5.4** — A feature artifact's last section is `History`, a table
   `Date | Change`, newest first. The full-progress artifact has no History.
 - **R5.5** — The stamp reads `Last update: DD Mon HH:MM (<timezone_label>)` in
@@ -975,8 +984,7 @@ written as a content section.
 
 ### 5.5 Standalone files, the publish copy and links
 
-claude.ai allows 200 artifact publishes per account per day, and every
-republish counts. Only the full-progress artifact is published. A feature
+Only the full-progress artifact is published (R9.1; why: §15). A feature
 artifact is a file in the repository. Anyone with a checkout opens it by
 double-click.
 
@@ -1041,10 +1049,9 @@ double-click.
   with one `<details class="glance-group" data-glance="<kind>">` per kind (a
   collapsible group, R6.13), a `glance-label` and a list of items one per line. An item is the task ID
   (`<span class="task-id">`), the item text and, for an open status, the
-  Expected (and its `expected_basis`, R6.10). The block is the same on a feature
-  artifact (its own tasks and decisions) and on the full-progress artifact (all
-  tasks; decisions as in R5.25, which the full-progress artifact has none of),
-  and is deterministic (R7.4).
+  Expected (and its `expected_basis`, R6.10). The block is drawn on feature
+  artifacts only, from the feature's own tasks and decisions; Full Progress has
+  none (R5.61). It is deterministic (R7.4).
 - **R5.34** — The groups, in this order, each omitted when empty except the
   first:
   1. `you` *Needs you*: tasks in Needs you, then Waiting or On hold tasks that
@@ -1089,7 +1096,7 @@ double-click.
 - **R5.37** — `check` warns, without failing, for a lede over 300 characters:
   keep the note to one or two sentences; the At a glance block lists the
   statuses. Records written before this requirement stay valid.
-  The same warning applies to a lede (Full Progress or a feature) that names a train
+  The same warning applies to a lede that names a train
   label such as `train-2026-10-11-47` or a pull request as `#NN`; both go stale.
 
 - **R5.38** — Right under the stamp, a feature artifact shows `Full Progress
@@ -1294,7 +1301,7 @@ double-click.
      release, earliest Expected first;
   3. `Needs you, failed or on hold`, then `Live or built`, as in R6.2, holding
      only tasks that ride no open release.
-  A task appears in exactly one group. In `Live or built` (and `Earlier`), and
+  A task appears in exactly one group. In `Live or built`, and
   in a feature artifact's checklist, a row that rides a release shows
   `<span class="release-name">RELEASE-<n></span>` in a muted line under its
   Item, so what shipped in each release stays visible. Feature artifacts keep
@@ -1370,8 +1377,8 @@ double-click.
   `feature_artifacts_split_all_complete`, `feature_artifacts_split_none_complete`
   and `feature_artifacts_split_checker_finds_faults`.
 
-- **R5.51** — Full Progress draws a foldable section `CI runs` (owner decision
-  D48) as its last section, from `.delivery/ci-runs.json` (written by the
+- **R5.51** — Full Progress draws a foldable section `CI runs` (delivery-speed
+  feature decision D48) as its last section, from `.delivery/ci-runs.json` (written by the
   delivery plugin's `ci_runs.py`, git-ignored). With no file, a file that is
   not JSON, or one whose `active` or `finished` is not a list, the section is
   not drawn. A feature artifact never has it. It is drawn into the publish copy
@@ -1575,7 +1582,8 @@ double-click.
   without anyone changing it. `task-add` and `set-task-status` also take
   `DD Mon HH:MM` (no `~`) and store it as `DD Mon ~HH:MM`. On a To do or On
   hold row Expected may be empty; the page shows `Not scheduled`. A move to
-  Running or Waiting with no Expected, stored or given, is refused.
+  Running or Waiting with no Expected, stored or given, is refused. This is the
+  form of a record row; an ETA given in chat is a clock time (DELIVERYSPEC DL-31).
 - **R6.7** — On a Live or Built row, Expected is the date it happened.
 - **R6.8** — `set-task-status` to Live or Built sets Expected to the current
   date when no `--expected` is given.
@@ -1634,8 +1642,7 @@ double-click.
   groups expanded where the browser supports `::details-content`. Columns stay
   aligned across groups with a `<colgroup>` and a fixed table layout. `check`
   reports a group that is not such a `<details>`, a heading kept as a table row,
-  a group whose open state differs from the rule above, and an
-  `Earlier` fold outside `Live or built` (R6.12). Verified by
+  and a group whose open state differs from the rule above (R6.12). Verified by
   `groups_are_collapsible_details`, `live_or_built_starts_closed`,
   `check_finds_a_wrong_open_state` and `collapsible_group_style_is_accessible`.
 
@@ -1648,9 +1655,7 @@ double-click.
   for an empty `you` group, the sentence `Nothing needs you.`. The groups `built`
   and `live` (done work) are rendered closed, without `open`; `you`, `running`
   and `waiting` are rendered `open`, and `you` is always shown, open, with its
-  sentence when empty. In Full Progress every glance group, `you` included, is
-  rendered closed; the count in its summary still shows how many items it holds
-  (DL313). The summary is styled by the rules of R6.12 (chevron,
+  sentence when empty. Full Progress has no At a glance block (R5.61). The summary is styled by the rules of R6.12 (chevron,
   tap target of at least 2.75rem, `:focus-visible` outline, no script); the
   coloured left bar of each group stays; the groups stack at every width, so a
   phone never scrolls sideways. `check` reports a glance group that is not such
@@ -1659,11 +1664,12 @@ double-click.
   `check_finds_a_wrong_glance_state` and `at_a_glance_css_uses_tokens_and_fits_a_phone`.
 
 - **R6.14** — An open row (Running, Waiting, To do, Needs you, On hold) whose
-  Expected time is in the past is flagged (DL-63). A date alone (`DD Mon`)
+  Expected time is in the past is flagged. A date alone (`DD Mon`)
   ends at 23:59 of that day in the project's zone. `check` prints one warning
   per such row, in `--json` under `warnings`, naming the task and its
   Expected. It is a warning and not a finding, so a writing command is never
-  refused for it. The end-of-turn hook blocks on it (R8.19). Verified by
+  refused for it. The end-of-turn hook warns on it first and blocks only a row
+  more than 60 minutes past due (R8.19). Verified by
   `test_check_flags_open_rows_past_their_expected_time`.
 
 - **R6.15** — `task-add` of a To do, Running or Built task with no `--rides`,
@@ -1741,7 +1747,7 @@ they do nothing (R4.17).
   the stylesheet brings every page up to date at the next change, not only the
   pages that change names (INV-3). An artifact whose content is invalid is
   skipped as in R7.1a. A page that is already up to date keeps its stamp.
-- **R7.6** — `pending` does not push or write git state: it reads the record in
+- **R7.6** — `pending` writes no git state (R4.13): it reads the record in
   the working tree and lists, as before. Its output format is unchanged.
   Verified by `test_pending_does_not_push`.
 
@@ -1801,7 +1807,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 
 ### 8.3 Session-start hook (SessionStart)
 
-- **R8.5** — The hook fetches the default branch, lists pull requests with
+- **R8.5** — The hook writes no git state (R4.13). It lists pull requests with
   `gh pr list --state all --json headRefName,state,mergedAt --limit 200`, and
   queues `merged_status` for every task in Running, Waiting or To do whose
   branch `<ID>-*` was merged, and `On hold` for one whose only pull request
@@ -1914,7 +1920,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   registers no `PreToolUse` hook, nothing pushes the record before `gh pr create`,
   `gh pr ready` or `gh pr merge`, and `hook_before_command.py` is removed (DS304). Verified by
   `hooks_json_registers_no_before_command_hook` in `tools/test_project_artifacts_hooks.py`.
-- **R8.17** — The end-of-turn hook does not push. The publish gate and the
+- **R8.17** — The end-of-turn hook does not push (R4.13). The publish gate and the
   background-work checks (R8.4, R8.8 to R8.10) are unchanged. Verified by
   `hooks_never_write_record` in the same file.
 
@@ -1930,10 +1936,15 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   `stop_blocks_when_full_progress_is_over_an_hour_old`,
   `stop_blocks_when_a_release_task_changed_since_the_publish` and
   `stop_hourly_and_overdue_checks_need_a_published_record_and_respect_the_ceiling`.
-- **R8.19** — The hook blocks while an open row is past its Expected time
-  (R6.14). It names each row and the `set-task-status ... --expected` command
-  that fixes it. The R8.4 ceiling applies. Verified by
-  `stop_blocks_on_open_rows_past_their_expected_time`.
+- **R8.19** — The one past-due check (owner decision C12). For an open row past
+  its Expected time (R6.14) the hook first warns: it prints a `systemMessage`
+  naming each row and the fix, and does not block. It tells again only when the
+  row gets a new Expected. A Running or Waiting row more than 60 minutes past
+  due blocks the stop once, naming `overdue-sweep` (which moves it to Needs you)
+  and the `set-task-status ... --expected` command. A Needs you row is not
+  named. The R8.4 ceiling applies. Verified by
+  `stop_warns_once_on_open_rows_past_their_expected_time` and
+  `stop_blocks_once_to_move_a_row_over_an_hour_past_due_and_leaves_needs_you_alone`.
 
 ---
 
@@ -2003,7 +2014,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 - **R9.8** — Full Progress is published at least every 60 minutes while
   work is open: while a task is Running, Waiting or Needs you (the hourly
   fail-safe). With no open work nothing changes on the page, so the hook and
-  `publish_hourly.py` ask for no hourly publish (decision D20). `pending --refresh` lists it
+  `publish_hourly.py` ask for no hourly publish (artifacts feature decision D20, AR61). `pending --refresh` lists it
   even when nothing changed (reason `refresh requested ...`) and writes a
   fresh publish copy; the end-of-turn hook asks for it (R8.18). Verified by
   `test_pending_refresh_lists_an_unchanged_full_progress`.
@@ -2021,9 +2032,8 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   copy in `.claude/artifacts-publish/<file>.meta.json`). `mark-published`
   refuses, changing nothing, when that copy was edited since, or when the
   registry, content, design or a rendered page changed after it was written:
-  the refusal names the steps in order: run `pending --json --refresh`,
-  publish that copy unedited with the Artifact tool, run `mark-published`
-  again. The command never refreshes the copy itself. Make every status change
+  the refusal names the three steps of R9.10, in order. The command never
+  refreshes the copy itself. Make every status change
   first, then run `pending`, then publish. With
   no recorded copy it behaves as before. Verified by
   `test_pending_records_the_publish_copy_hash_and_time` and
@@ -2037,8 +2047,7 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
   R9.6, and the R9.11 check is unchanged. `render` prints
   `record already rendered; publish copy is current` or `... publish copy
   refreshed` when nothing new rendered, never a bare `nothing to do`. The
-  end-of-turn hook and the rule line give the same order: `pending --json
-  --refresh`, publish the path it prints, then `mark-published`. Verified by
+  end-of-turn hook and the rule line give the order of R9.10. Verified by
   `test_copy_follows_set_task_status_and_task_add`,
   `test_detail_only_change_reaches_copy_but_is_not_listed`,
   `test_render_wording` and `test_order_in_hook_and_rule`.
@@ -2153,10 +2162,10 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 | Key | Default | Ceiling | Direction | Section |
 |---|---|---|---|---|
 | `merged_status` | `Live` | — | `Live` or `Built` | §8.1 |
-| Earlier fold age (`Live` rows only) | 14 days | 60 days | may only be lengthened | §6.2 |
+| Earlier-rows age (`Live` rows only, R6.3) | 14 days | 60 days | may only be lengthened | §6.2 |
 | End-of-turn blocks | 3 | 3 | fixed | §8.2 |
 | `CLAUDE_ARTIFACTS_HOOKS` | `on` | — | `off` disables all hooks | §8 |
-| `record_dir` in `.claude/artifacts.json` | `docs/artifacts` | under `docs/` | any folder under `docs/` | §4.11 |
+| `record_dir` in `.claude/artifacts.json` | the order of R4.37 (`docs/project` when nothing is set) | under `docs/` | any folder under `docs/` | §4.11 |
 
 ---
 
@@ -2187,14 +2196,14 @@ the queue `<repo>/.claude/artifacts-queue.json` (gitignored):
 |---|---|
 | Titles start with `Feature: ` or `Full Progress: ` | R5.1 |
 | Exactly one full-progress artifact when any feature artifact exists | INV-2 |
-| Section 0 first, named `Status and checklist`, holding the stamp, the lede (optional), At a glance, tiles, key and checklist in order | R5.3 |
-| At a glance block: groups in order; each group lists exactly its tasks; Live within 24 hours, at most 8 | R5.33 to R5.35 |
-| Each glance group a `<details class="glance-group">` with label and count in the `<summary>`; Full Progress: all closed; feature artifact: `built` and `live` closed, the others open | R6.13 |
+| Section 0 first, named `Status and checklist`; a feature artifact holds the stamp, the lede (optional), At a glance, tiles, key and checklist in order; Full Progress as R5.61 | R5.3, R5.61 |
+| At a glance block (feature artifacts): groups in order; each group lists exactly its tasks; Live within 24 hours, at most 8 | R5.33 to R5.35 |
+| Each glance group a `<details class="glance-group">` with label and count in the `<summary>`; `built` and `live` closed, the others open | R6.13 |
 | Sections numbered 0..N without gaps; contents match | R5.2 |
 | Stamp format, `datetime` attribute and zone label | R5.5 |
 | Checklist columns per kind | R6.4 |
-| Only the nine statuses; each row in its group; only `Live` rows older than 14 days in Earlier | R6.1, R6.2, R6.3 |
-| Every group a `<details class="status-fold">` with its heading in the `<summary>`; Full Progress: all closed; feature artifact: `Live or built` closed, the others open; `Earlier` inside `Live or built` | R6.12 |
+| Only the nine statuses; each row in its group; no `Live` row older than 14 days drawn, one earlier-rows line instead | R6.1, R6.2, R6.3 |
+| Every group a `<details class="status-fold">` with its heading in the `<summary>`; Full Progress: all closed; feature artifact: `Live or built` closed, the others open; the earlier-rows line inside `Live or built` | R6.12 |
 | Expected format on open rows | R6.6 |
 | Warning: open row whose Expected time has passed | R6.14 |
 | `expected_basis`: a string of 1 to 80 characters, on open rows only | R6.10 |
