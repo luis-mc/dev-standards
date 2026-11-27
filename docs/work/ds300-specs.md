@@ -48,7 +48,7 @@ Each row names the canonical home first. "Copies" are the places that restate it
 | D10 | The docs plugin never commits or pushes the record | ARTIFACTSPEC R4.13 (art:618) | R4.14, R4.28, R7.6, R8.17, D23, §11, §15, the 1.8.0 log, r/pa:9, AG:11 | Keep R4.13. Others cite it. Fix AG:11 scope (see C4). |
 | D11 | Version lines and change logs are written only by the release fold | DOCSPEC R7.1 (doc:306) | DOCSPEC R4.3 (doc:231), AG:8, AG:19, inv:1604, inv:1669-1671, `docs/architecture/changes/README.md`, `docs/README.md` "Change notes", DL-10 (ds:69), DL-24 (ds:83), DL-128 (ds:143) | One rule, two tools (`docs_fold.py`, `change_notes.py`). See C9. |
 | D12 | ETA and Expected: clock time, named basis, never padded | DL-31 (ds:95) for chat; ARTIFACTSPEC R6.6 and R6.10 (art:1570, art:1595) for the record | DL-30 (ds:94), D9 (ds:353), r/dt:4-5, r/pa:15-16, f/del R5.16 (:105), f/del R13.89 | Merge DL-30's "state the breakdown" with R6.10's `expected_basis`: one idea, the basis. See C13. |
-| D13 | Every doc goes under `docs/` | DOCSPEC §2 (doc:16 says it in prose; no requirement line says it) | DL-75 (ds:187), r/ai:26, r/pa:9 | DOCSPEC R12.2 (doc:426) says other plugins MUST NOT restate docs rules. Add one sentence to DOCSPEC R2.1 (doc:178). Retire DL-75 as "Merged into DOCSPEC R2.1". Drop r/pa:9 (r/ai:26 stays as the one prompt line). |
+| D13 | Every doc goes under `docs/` | DOCSPEC §2 (doc:16 says it in prose; no requirement line says it) | DL-75 (ds:187), r/ai:26, r/pa:8 | DOCSPEC R12.2 (doc:426) says other plugins MUST NOT restate docs rules. Add one sentence to DOCSPEC R2.1 (doc:178). Retire DL-75 as "Merged into DOCSPEC R2.1". Drop r/pa:8 (r/ai:26 stays as the one prompt line). |
 | D14 | Task branch is `<task-id>-<slug>` | None today | AG:7, r/ai:19 (tagged `check: DL-08`, which is the ready-PR rule), r/pa:4, art D2 (art:354), art:2101, inv:1569 ("named after its task ID") | No rule ID owns it, yet three hooks parse it (`hook_after_command.py:44`, `hook_post_tool.py` DL-123, `session_guard.py`). Add one DELIVERYSPEC row. Others cite it. |
 | D15 | Record work as a task before starting | ARTIFACTSPEC R3.2 (art:486) | r/pa:3 and r/pa:10 (same file, two lines) | Keep r/pa:10, drop r/pa:3. |
 | D16 | Secret scanning (pre-commit, pre-push, gate, CI over full history) | STACKSPEC §12 (inv:1309) | inv:1370, inv:1500, inv:1557, inv:1955-1966 checklist, auth R24.3 (:2035), auth R27.4 (:2281), f/del R13.57, R13.78, f/dsp R5.10 | No conflict: the CI templates use `--log-opts=HEAD`, which scans all history reachable from the commit. AUTHSPEC cites STACKSPEC §12. |
@@ -291,9 +291,9 @@ Sizes today: r/ai 723 words, r/pa 446, r/cq 242 (twice, once per plugin), r/dt 1
 | ID | Proposal | Words saved (rough) |
 |---|---|---|
 | E18 | r/ai:10 (about 140 words, the test-cost rule) becomes one line citing DL-12 and the guide: "Test only what you touch; follow `ci_areas.py --branch-advice` (DL-12)." | ~120 |
-| E19 | r/pa:7, r/pa:9, r/pa:3 duplicate r/pa:8, r/ai:26 and r/pa:10. Drop them. | ~50 |
+| E19 | r/pa:3 repeats r/pa:10; r/pa:7 repeats r/pa:5; r/pa:8 repeats r/ai:26; r/pa:4 repeats r/ai:19. Drop r/pa:3, r/pa:7 and r/pa:8; r/pa:4 stays only if the docs plugin can ship without the claude-setup rules. | ~40 |
 | E20 | r/pa:11-12 (Running, Built definitions) move to the glossary copy in ARTIFACTSPEC; a definition is not a rule. | ~45 |
-| E21 | r/cq:3 drops the "safety limits" and number list (C16). r/cq:9 (routine pause) is advice on one tool; keep, it is short. | ~35 |
+| E21 | r/cq:3 drops the "safety limits" and number list (C16). r/cq:8 (routine pause) is advice on one tool; keep, it is short. | ~35 |
 | E22 | r/ai:19 drops "(no Actions)" and cites the new branch-name row (D14), not DL-08. | ~5 |
 | E23 | A line tagged `check:` whose check exists can be shorter: the hook's deny message carries the detail. Lines tagged `advice` need the full text. | — |
 | E24 | AG:3 says "`CLAUDE.md` imports this file", but the repo has no `CLAUDE.md` (never tracked). Either add a one-line `CLAUDE.md` (`@AGENTS.md`) or drop the sentence. | — |
