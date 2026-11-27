@@ -29,9 +29,15 @@ from pathlib import Path
 
 try:
     import yaml
-except ImportError:
-    print("BLOCKED: PyYAML is required.\n\n  pip install pyyaml", file=sys.stderr)
-    sys.exit(2)
+except ImportError:            # --help works without PyYAML; a catalog read stops in need_yaml()
+    yaml = None
+
+
+def need_yaml():
+    if yaml is None:
+        print("BLOCKED: PyYAML is required.\n\n  pip install pyyaml", file=sys.stderr)
+        sys.exit(2)
+    return yaml
 
 CATALOG = (Path(__file__).resolve().parent.parent
            / "skills/tech-stack-setup/assets/catalog")
@@ -44,7 +50,7 @@ def load(name: str) -> dict:
     path = CATALOG / name
     if not path.exists():
         raise FileNotFoundError(f"catalog file missing: {path}")
-    return yaml.safe_load(path.read_text()) or {}
+    return need_yaml().safe_load(path.read_text()) or {}
 
 
 def ids(node: dict, key: str) -> set[str]:
@@ -216,7 +222,7 @@ def check_catalog() -> list[str]:
 def check_selection(path: Path) -> tuple[list[str], list[str]]:
     """Returns (errors, warnings) for one product's role assignments."""
     text = path.read_text()
-    sel = json.loads(text) if path.suffix == ".json" else yaml.safe_load(text)
+    sel = json.loads(text) if path.suffix == ".json" else need_yaml().safe_load(text)
     if not isinstance(sel, dict):
         return ([f"{path}: expected a mapping of role -> technology id"], [])
 
