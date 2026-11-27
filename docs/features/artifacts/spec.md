@@ -38,7 +38,7 @@ code:
   - tools/test_render_artifacts.py
   - tools/test_artifact_prune.py
   - tools/test_artifacts_ar*.py
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact: feature-project-artifacts-standard.html
 ---
 # Project artifacts
@@ -144,7 +144,7 @@ flowchart LR
 
 **R5.9** — When claude.ai refuses a publish for its daily limit, the publish is deferred until the reset, and the end-of-turn hook does not block on it.
 
-**R5.9a** — While the publish is deferred, `mark-deferred` writes a local copy of Full Progress: the repo copy, with every `feature-*.html` beside it so each row link opens offline. The folder is `<work root>/full-progress/<project slug>/`. `--local DIR` may also name the `full-progress` folder or the full `full-progress/<project slug>` folder; all three give the same folder, and a nested `full-progress/full-progress` is never made. The command prints the folder used. The work root is `--local DIR`, else `work_root` in the project's `.delivery/config.json`, else `work_root` in `machine.json` of the delivery machine folder, else the publish-copy folder with a warning. Each local page has a 60-second auto-refresh tag; the repo and publish copies do not. The page opens in the browser once per deferral, recorded as `local_opened` on the entry. Every writing command refreshes the copies until the reset. (DL246, DL264, D245, D246; ARTIFACTSPEC R9.7)
+**R5.9a** — While the publish is deferred, `mark-deferred` writes a local copy of Full Progress: the repo copy, with every `feature-*.html` beside it so each row link opens offline. The folder is `<work root>/full-progress/<project slug>/`. `--local DIR` may also name the `full-progress` folder or the full `full-progress/<project slug>` folder; all three give the same folder, and a nested `full-progress/full-progress` is never made. The command prints the folder used. The work root is `--local DIR`, else `work_root` in the project's `.delivery/config.json`, else `work_root` in `machine.json` of the delivery machine folder, else the publish-copy folder with a warning. Each local page has a 60-second auto-refresh tag; the repo and publish copies do not. The page opens in the browser once per deferral, recorded as `local_opened` on the entry; it never opens when `CI` or `CLAUDE_ARTIFACTS_NO_OPEN` is set, and the artifact tests set the second (DS283). Every writing command refreshes the copies until the reset. (DL246, DL264, D245, D246; ARTIFACTSPEC R9.7)
 
 **R5.10** — Full Progress is published at least every 60 minutes while work is open (a task is Running, Waiting or Needs you).
 

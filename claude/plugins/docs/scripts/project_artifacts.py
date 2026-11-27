@@ -2992,8 +2992,9 @@ def cmd_mark_deferred(args):
 
 
 def open_local(path):
-    """DL238: opens the local page once in the default browser; skipped with no display or when CI is set."""
-    if os.environ.get('CI'):
+    """DL238: opens the local page once in the default browser; skipped with no display, when CI is set,
+    or when CLAUDE_ARTIFACTS_NO_OPEN is set (DS283: test runs)."""
+    if os.environ.get('CI') or os.environ.get('CLAUDE_ARTIFACTS_NO_OPEN'):
         return False
     if sys.platform.startswith('linux') and not (os.environ.get('DISPLAY') or os.environ.get('WAYLAND_DISPLAY')):
         return False

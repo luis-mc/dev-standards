@@ -30,7 +30,7 @@
 |---|---|---|---|---|---|
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.17.1 | 2026-11-26 |
 | [Install, update and remove](lifecycle/spec.md) | luismc-docs, luismc-delivery | delivery, docs, testing | live | 0.4.0 | 2026-11-26 |
-| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.25.0 | 2026-11-26 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.25.0 | 2026-11-27 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.1 | 2026-11-01 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.3.2 | 2026-11-26 |
 
@@ -57,7 +57,7 @@
 
 | Feature | Apps | Topics | Status | Version | Last verified |
 |---|---|---|---|---|---|
-| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.25.0 | 2026-11-26 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.25.0 | 2026-11-27 |
 
 ### audits
 
@@ -152,7 +152,7 @@
 | [Documentation standard plugin (luismc-docs)](docs/spec.md) | luismc-docs | docs, hooks | live | 1.17.1 | 2026-11-26 |
 | [Install, update and remove](lifecycle/spec.md) | luismc-docs, luismc-delivery | delivery, docs, testing | live | 0.4.0 | 2026-11-26 |
 | [Model and effort profiles](models/spec.md) | luismc-project-setup, luismc-agents | models | live | 0.5.0 | 2026-11-27 |
-| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.25.0 | 2026-11-26 |
+| [Project artifacts](artifacts/spec.md) | luismc-docs | artifacts | live | 0.25.0 | 2026-11-27 |
 | [Project setup (luismc-project-setup)](project-setup/spec.md) | luismc-project-setup | stack, auth, delivery, models, testing, ci | live | 0.19.0 | 2026-11-27 |
 | [Spec authoring and checking (luismc-docs)](specs/spec.md) | luismc-docs | specs | live | 0.2.1 | 2026-11-01 |
 | [Test and validation cost](test-cost/spec.md) | luismc-project-setup, luismc-docs | ci, testing | live | 0.3.2 | 2026-11-26 |
