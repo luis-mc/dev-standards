@@ -7292,6 +7292,30 @@
       "chosen": "Add to DS287 now",
       "decided": "2026-11-27",
       "owner_words": "Add to DS287 now (Recommended)"
+    },
+    {
+      "id": "D322",
+      "question": "Should claude-setup allow the GitHub MCP PR tools (create, update, mark ready) for cloud agents?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS297",
+      "options": [
+        {
+          "label": "Allow MCP PR tools",
+          "summary": "Allow create, update and mark-ready; merge stays denied."
+        },
+        {
+          "label": "Keep gh only",
+          "summary": "Cloud briefs tell agents to use gh pr create from Bash; no permission change."
+        },
+        {
+          "label": "Not now",
+          "summary": "DS297 stays parked."
+        }
+      ],
+      "chosen": "Keep gh only",
+      "decided": "2026-11-27",
+      "owner_words": "Keep gh only"
     }
   ]
 }

@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T13:08+00:00",
+  "updated": "2026-11-27T13:09+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12833,11 +12833,11 @@
       "id": "DS297",
       "owner": "project",
       "app": "",
-      "status": "Needs you",
+      "status": "To do",
       "item": "claude-setup allows the GitHub MCP PR tools",
       "detail": "crsp ask 27 Nov 13:25: auto mode refused mcp__github__create_pull_request in a cloud routine. claude-setup would add allow rules for the MCP create/update/ready PR tools (the gh pr create/ready/edit rules exist), and routine briefs would state the owner's PR authorisation; merge stays the owner's. Changes shipped permissions: owner OK first",
       "expected": "27 Nov ~13:40",
-      "changed": "2026-11-27T13:08+00:00",
+      "changed": "2026-11-27T13:09+00:00",
       "expected_basis": "default ETA, other: 30 min"
     },
     {
