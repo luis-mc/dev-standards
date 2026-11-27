@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T13:03+00:00",
+  "updated": "2026-11-27T13:05+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12670,9 +12670,9 @@
       "status": "Running",
       "item": "CI carry-forward: PR reruns run only what changed since the last proven head",
       "detail": "crsp ask 27 Nov: carry-forward planner (diff from last finished head, patch-id on rebase), verify treats carried as pass, failed-test-first rerun inside a job on every trigger, narrower run-all valves, one reusable plan step. Owner decisions as relayed: carried may merge (main full run and nightly are the net), on at once, proof = planner unit tests + replay of 20 PRs",
-      "expected": "27 Nov ~13:55",
-      "changed": "2026-11-27T12:56+00:00",
-      "expected_basis": "agent D 13:03 ~20 min, join, PR CI ~10 min, merge",
+      "expected": "27 Nov ~14:15",
+      "changed": "2026-11-27T13:05+00:00",
+      "expected_basis": "agent D from 13:03 ~20 min; join D+E; replay fix; PR CI ~10 min; merge",
       "rides": "DS288",
       "started": "2026-11-27T12:32+00:00"
     },
@@ -12795,6 +12795,19 @@
       "detail": "docs/architecture/DELIVERYSPEC.md -> claude/plugins/delivery/references/deliveryspec.md, IDs and version kept; change-notes config, tests, links and docs map follow; pointer at the old path. Starts after DS287 merges (DS287 edits DL-11, DL-80, DL-116)",
       "expected": "",
       "changed": "2026-11-27T12:55+00:00"
+    },
+    {
+      "id": "DS294",
+      "owner": "project",
+      "app": "",
+      "status": "Running",
+      "item": "Scan for files today's plugins no longer need",
+      "detail": "Every tracked file: keep only what the current plugins, their tests, CI and the live docs use; list the rest for owner confirmation before any delete",
+      "expected": "27 Nov ~13:35",
+      "changed": "2026-11-27T13:04+00:00",
+      "expected_basis": "default ETA, other: 30 min",
+      "no_release": "a read-only scan that writes a list",
+      "started": "2026-11-27T13:04+00:00"
     },
     {
       "id": "DU1",

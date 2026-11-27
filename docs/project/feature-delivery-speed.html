@@ -957,7 +957,7 @@ details.status-fold.release-group > summary { color: var(--ink); }
 <div class="layout"><nav aria-label="Contents" class="contents"><button class="contents-toggle" id="contents-toggle" type="button" aria-expanded="true" aria-controls="contents-links"><span class="contents-toggle-icon" aria-hidden="true">&lsaquo;</span><span class="contents-toggle-label">Hide contents</span></button><div class="contents-title">Contents</div><div class="contents-links" id="contents-links"><a href="#s0"><b>0</b>Status and checklist</a><a href="#s1"><b>1</b>What and why</a><a href="#s2"><b>2</b>The plan (rewritten prompt)</a><a href="#s3"><b>3</b>Decisions</a><a href="#s4"><b>4</b>History</a></div><button class="theme-toggle" id="theme-toggle" type="button">Light / dark</button></nav><main>
 <header class="artifact-header"><span class="gen-badge" data-gen-state="update">luismc-docs 2.29.0 <span class="gen-flag gen-update">update: 2.29.1</span></span><div class="artifact-kind">Feature artifact &middot; dev-standards</div><h1>Feature: Delivery speed</h1><p>Each delivery layer does only its share, so a finished change goes live sooner</p><div class="artifact-meta">dev-standards &middot; feature artifact</div></header>
 <section id="s0"><h2><span class="section-number">&sect; 0</span>Status and checklist</h2>
-<p class="last-update">Last update: <time datetime="2026-11-27T13:03+00:00">27 Nov 13:03</time> (Lisbon)</p>
+<p class="last-update">Last update: <time datetime="2026-11-27T13:05+00:00">27 Nov 13:05</time> (Lisbon)</p>
 <p class="full-progress-published">Full Progress published: <a href="https://claude.ai/artifact/Niw1dVxGJczpzPrnyg2arv">27 Nov 12:54</a> (Lisbon)</p>
 <p class="lede">Live: RELEASE-156 (luismc-delivery 1.51.0, 20 Nov): red release runs finish, rerun narrowing for every test job, test guardrails G1-G7. Waiting: DL346-DL348 on the new pool (about 23 Nov); then DL349.</p>
 <div class="at-a-glance">
@@ -1435,6 +1435,25 @@ details.status-fold.release-group > summary { color: var(--ink); }
 </section>
 <section id="s3"><h2><span class="section-number">&sect; 3</span>Decisions</h2>
 <div class="decision-list">
+<article class="decision decision-decided" data-decision="D321">
+<h3 class="decision-head"><span class="decision-id">D321</span> <span class="decision-question">After a release PR goes green and merges, should main&#x27;s push re-run the jobs the PR already proved?</span></h3>
+<p class="decision-meta">Asked 27 Nov · Decided 27 Nov · Task DS287</p>
+<div class="decision-options">
+<div class="decision-option decision-chosen">
+<div class="decision-option-head"><span class="decision-label">Add to DS287 now</span> <span class="decision-chip decision-chip-chosen">Chosen by the owner &middot; 27 Nov</span></div>
+<p class="decision-summary">R5.95: a main push carries what the merged PR proved (same tree: carry all; else only reached jobs); release, publish and smoke always run; the nightly full run stays.</p>
+<blockquote class="decision-words">&ldquo;Add to DS287 now (Recommended)&rdquo;</blockquote>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Separate task after DS287</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">DS287 ships first; main-push carry follows as its own task.</p>
+</div>
+<div class="decision-option decision-muted">
+<div class="decision-option-head"><span class="decision-label">Keep main full run</span> <span class="decision-chip decision-chip-muted">Not chosen</span></div>
+<p class="decision-summary">Keep main&#x27;s post-merge full run, as crsp&#x27;s owner had decided.</p>
+</div>
+</div>
+</article>
 <article class="decision decision-decided" data-decision="D320">
 <h3 class="decision-head"><span class="decision-id">D320</span> <span class="decision-question">Until delivery supports npm and yarn, should doctor stack.tools block or only warn on a project that uses them without declaring them under stack?</span></h3>
 <p class="decision-meta">Asked 24 Nov · Decided 24 Nov · Task DL406</p>

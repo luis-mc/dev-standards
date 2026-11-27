@@ -7268,6 +7268,30 @@
       "chosen": "Block, as now",
       "decided": "2026-11-24",
       "owner_words": "Block, as now (Recommended)"
+    },
+    {
+      "id": "D321",
+      "question": "After a release PR goes green and merges, should main's push re-run the jobs the PR already proved?",
+      "asked": "2026-11-27",
+      "status": "decided",
+      "task": "DS287",
+      "options": [
+        {
+          "label": "Add to DS287 now",
+          "summary": "R5.95: a main push carries what the merged PR proved (same tree: carry all; else only reached jobs); release, publish and smoke always run; the nightly full run stays."
+        },
+        {
+          "label": "Separate task after DS287",
+          "summary": "DS287 ships first; main-push carry follows as its own task."
+        },
+        {
+          "label": "Keep main full run",
+          "summary": "Keep main's post-merge full run, as crsp's owner had decided."
+        }
+      ],
+      "chosen": "Add to DS287 now",
+      "decided": "2026-11-27",
+      "owner_words": "Add to DS287 now (Recommended)"
     }
   ]
 }
