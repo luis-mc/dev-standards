@@ -88,7 +88,9 @@ def mode(path):
 
 
 def run_one(prefix, args, suffix, tee):
-    cmd = shlex.split(prefix) + [str(x) for x in args] + shlex.split(suffix)
+    # a prefix that is one existing path (a Windows python.exe under Program Files) is not split
+    head = [prefix] if prefix and os.path.exists(prefix) else shlex.split(prefix)
+    cmd = head + [str(x) for x in args] + shlex.split(suffix)
     print("+ " + " ".join(cmd), flush=True)
     p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     fh = open(tee, "ab") if tee else None
