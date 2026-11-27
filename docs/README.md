@@ -10,12 +10,11 @@ Start with the [overview](overview/README.md).
 |---|---|
 | `overview/` | What is this, who is it for, how do the parts fit? |
 | `features/` | What does feature X do, and how is it built? One folder per feature. |
-| `design-system/` | What are the UX rules, tokens, components? The only home of UX rules. |
+| `design-system/` | What are the UX rules, tokens, components? The only home of UX rules. Not present here: this repository has no UI. |
 | `architecture/` | How is the system built, and why? Binding cross-cutting specs, decision records and change notes. |
 | `guides/` | How do I do task Y (set up, release, restore)? |
 | `reference/` | What exactly is the value (API, CLI, config keys)? Generated. |
 | `project/` | The artifacts record: progress and decisions in flight. |
-| `archive/` | Superseded docs and old reports. Never binding. |
 
 ## Settings
 
@@ -27,9 +26,9 @@ A branch never edits a spec's `**Version:**` line or a plugin's `version`. It ad
 
 A change that needs no doc puts `Docs: none, <reason>` in a commit message.
 
-## Archive
+## Replaced docs
 
-A doc that is replaced moves to `archive/`, keeps a link to what replaced it, and is never cited as a rule. The old reports stay unchanged in `archive/reports/`.
+A replaced doc is deleted, not archived. This repository has no `archive/` folder. Git history keeps the old text.
 
 ## Generated files
 
