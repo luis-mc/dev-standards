@@ -13,14 +13,14 @@ code:
   - .github/workflows/nightly.yml
   - tools/test_ci_areas.py
   - tools/test_delivery_gate.py
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact: feature-test-and-validation-cost.html
 ---
 # Test and validation cost
 
 ## 1. In one paragraph
 
-All eight fixes shipped in #47: CI runs only the areas a change touches, mutation passes only when their files change, and the record pushes once per turn.
+All eight fixes shipped in #47: CI runs only the areas a change touches, and mutation passes run only when their files change. The record push fix (S8) was later replaced: the record plugin no longer commits or pushes (ARTIFACTSPEC R4.13).
 
 ### What is wrong
 
@@ -148,19 +148,19 @@ flowchart LR
 
 **R5.1** — `tools/ci_areas.py` maps a change to the areas it touches. A shared path (the workflow, the script, its test, `change-notes.json`, any `tools/*common*`) runs every area. A path no rule names also runs every area.
 
-**R5.2** — The ready PR runs only the jobs of the touched areas.
+**R5.2** — The ready PR runs only the jobs of the touched areas. This repository deviates from DELIVERYSPEC DL-80, where a release pull request runs the full suite on its first run. Why: a change to one plugin would wait for every area's jobs (about 17.5 minutes instead of 3.8, measured above). A shared or unknown path already runs every area (R5.1), and the nightly full run catches drift.
 
-**R5.3** — A mutation pass runs only when its own scripts, hooks or suite file change. `nightly.yml` and the `mutants` dispatch input force all on.
+**R5.3** — A mutation pass runs only when its own scripts, hooks or suite file change. `nightly.yml` and the `mutants` dispatch input force all on. This deviates from DELIVERYSPEC DL-99 G6, which allows no mutation run on a pull request. Why: here the mutants guard the delivery scripts this repository ships, so the pull request that changes them is the one that must prove them.
 
 **R5.4** — In mutant mode a scenario stops at its first failed check. A crash counts as caught. An uncaught mutant fails loudly.
 
-**R5.5** — A push to main that differs from the tested PR only under ignored paths skips the run.
+**R5.5** — A push to main that differs from the tested PR only under ignored paths skips the run. The delivery feature's R5.95 states the general rule: a merge push carries what the pull request proved.
 
 **R5.6** — A newer commit cancels an older ready-PR run.
 
 **R5.7** — Delivery suites run as parallel jobs. The gate mutation pass runs as 4 shards (`--shard I/N`) when on. A small final job keeps the required-check name.
 
-**R5.8** — The artifacts record commits on every change and pushes once per turn, before any PR, merge or publish.
+**R5.8** — Superseded by ARTIFACTSPEC R4.13.
 
 **R5.9** — `python tools/ci_areas.py --branch-advice` prints `light` or `heavy` for the branch.
 
@@ -180,7 +180,6 @@ Areas: `specs`, `delivery`, `artifacts`, `profiles`, `transcript-folds`, `docs`.
 |---|---|---|
 | Unknown path in `ci_areas.py` | closed (runs all) | A missed area is worse than a slow run. |
 | Drift between a skipped main run and the PR tree | caught nightly | The nightly full run covers it. |
-| Session dies before the end-of-turn push | record lags | The next push, or any PR/merge/publish, pushes first. |
 
 ## 9. How it is proven
 
@@ -189,7 +188,6 @@ Areas: `specs`, `delivery`, `artifacts`, `profiles`, `transcript-folds`, `docs`.
 | R5.1, R5.2, R5.3, R5.5, R5.9 | `tools/test_ci_areas.py` |
 | R5.4, R5.7 | `tools/test_delivery_gate.py`, `tools/test_delivery_cleanup.py` |
 | R5.6 | `tools/test_ci_speedups.py` |
-| R5.8 | `tools/test_project_artifacts_hooks.py` |
 | R6.2 | `tools/test_rule_tags.py` |
 
 ## 10. Decisions
@@ -215,7 +213,7 @@ Areas: `specs`, `delivery`, `artifacts`, `profiles`, `transcript-folds`, `docs`.
 | D17 | When a check catches a break, block or warn? | Block | 2026-10-11 |
 | D18 | When does a suite count as heavy? | Over 3 min locally | 2026-10-11 |
 
-Decisions in MADR form: [0035](../../architecture/decisions/0035-ci-by-area-and-nightly-mutants.md), [0036](../../architecture/decisions/0036-retire-fake-renderer-group.md), [0037](../../architecture/decisions/0037-record-push-once-per-turn.md), [0038](../../architecture/decisions/0038-parallel-delivery-suites-and-shards.md), [0040](../../architecture/decisions/0040-rule-tags-and-blocking-checks.md).
+Decisions in MADR form: [0035](../../architecture/decisions/0035-ci-by-area-and-nightly-mutants.md), [0038](../../architecture/decisions/0038-parallel-delivery-suites-and-shards.md), [0040](../../architecture/decisions/0040-rule-tags-and-blocking-checks.md).
 
 ## 11. Not built yet
 

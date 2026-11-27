@@ -49,7 +49,7 @@ elif [ -f scripts/delivery/gate.json ]; then
   cn_on=1
 fi
 if [ -n "$cn_script" ] && [ "$cn_on" -eq 1 ]; then
-  py=$(command -v python3 || command -v python || true)
+  py=$(command -v python3 2>/dev/null | grep -v WindowsApps || command -v python || true)
   if [ -n "$py" ]; then
     cn_code=0
     cn_out=$("$py" -B "$cn_script" check --staged "${cn_config[@]}" 2>&1) || cn_code=$?

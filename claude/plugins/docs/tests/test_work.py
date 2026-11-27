@@ -47,9 +47,11 @@ class WorkTests(unittest.TestCase):
         self.assertTrue((d / "docs/work/reports/DOC2.md").is_file())
         K.main(["strip", "--root", str(d), "--apply"])
         self.assertFalse((d / "docs/work").exists())
-        self.assertEqual(git(d, "ls-files", "docs/work").stdout.strip(), "")
         self.assertTrue((d / "docs/features/a/spec.md").is_file(), "lasting docs untouched")
-        self.assertEqual(K.main(["guard", "--root", str(d), "--base", "main"]), 0, "the strip is committed (DS193), so the guard passes")
+        self.assertEqual(K.main(["guard", "--root", str(d), "--base", "main"]), 1, "the strip is not committed (C4): the guard still sees the branch")
+        git(d, "commit", "-q", "-m", "strip", "--", "docs/work")
+        self.assertEqual(git(d, "ls-files", "docs/work").stdout.strip(), "")
+        self.assertEqual(K.main(["guard", "--root", str(d), "--base", "main"]), 0, "after the printed commit the guard passes")
 
 
 if __name__ == "__main__":

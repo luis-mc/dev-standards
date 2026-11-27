@@ -120,6 +120,12 @@ def main():
     for need in ("questions_stop.py", "CLAUDE_QUESTIONS_STOP", "hooks.Stop"):
         if need not in skill:
             errors.append(f"SKILL.md lacks {need}")
+    # S2 (DS305): the delivery plugin's rule is the source. claude-setup writes
+    # its copy only to a user-level target and removes an identical project copy.
+    for need in ("### `rules/clarifying-questions.md` — user level only",
+                 "For a project target, write no copy"):
+        if need not in skill:
+            errors.append(f"SKILL.md lacks {need!r}")
     for rule in (SKILL / "assets/.claude/rules/clarifying-questions.md",
                  ROOT / "claude/plugins/delivery/rules/clarifying-questions.md"):
         # SO7: a rule tag names a rule ID, never the hook path; DELIVERYSPEC Q-1/Q-2 name the hook.

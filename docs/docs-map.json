@@ -81,13 +81,13 @@
     "claude/plugins/docs/scripts/artifact_*.py": [
       "docs/features/artifacts/spec.md"
     ],
-    "claude/plugins/docs/scripts/artifacts/**": [
-      "docs/features/artifacts/spec.md"
-    ],
     "claude/plugins/docs/scripts/hook_after_command.py": [
       "docs/features/artifacts/spec.md"
     ],
     "claude/plugins/docs/scripts/hook_end_of_turn.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/scripts/hook_session_start_artifacts.py": [
       "docs/features/artifacts/spec.md"
     ],
     "claude/plugins/docs/scripts/plan_rows_check.py": [
@@ -173,9 +173,6 @@
     ],
     "tools/ci_areas.py": [
       "docs/features/test-cost/spec.md"
-    ],
-    "tools/fixtures/vitest_shim/*.mjs": [
-      "docs/features/docs/spec.md"
     ],
     "tools/test_artifact_prune.py": [
       "docs/features/artifacts/spec.md"

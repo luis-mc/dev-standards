@@ -1,4 +1,4 @@
-"""DL133 (Git Bash and WSL paths in the DL-53 check) and DL136 (postpone warning). Pure functions; no network."""
+"""DL133 (Git Bash and WSL paths in the DL-53 check) and DL136 (postpone warning, keyed DL-35 since DS303). Pure functions; no network."""
 import sys
 import unittest
 from datetime import datetime, timedelta, timezone
@@ -47,8 +47,8 @@ class PostponeWarning(unittest.TestCase):
         return P.check_postpone({"owner_questions": qs}, data, self.AT)
 
     def test_warns_when_soon_and_open(self):
-        self.assertIn("DL136", self.call(10))
-        self.assertIn("DL136", self.call(10, action="create"))
+        self.assertIn("DL-35", self.call(10))
+        self.assertIn("DL-35", self.call(10, action="create"))
 
     def test_quiet_otherwise(self):
         self.assertIsNone(self.call(180))

@@ -26,8 +26,8 @@ last_verified: 2026-11-27
 
 Two binding specs hold the rules this plugin builds to. Read them there. This page does not copy them.
 
-- STACKSPEC: [invariants.md](../../../claude/plugins/project-setup/skills/tech-stack-setup/references/invariants.md)
-- AUTHSPEC: [authentication.md](../../../claude/plugins/project-setup/skills/auth-setup/references/authentication.md)
+- STACKSPEC: [stackspec.md](../../../claude/plugins/project-setup/references/stackspec.md)
+- AUTHSPEC: [authspec.md](../../../claude/plugins/project-setup/references/authspec.md)
 
 ## 1. In one paragraph
 
@@ -57,7 +57,7 @@ flowchart LR
 
 1. `tech-stack-setup` interviews the user. After each answer, it filters the options in `assets/catalog/` so that only compatible ones remain. It shows the consequences. Then it generates the repository and a Stack Profile. The profile records the spec versions claimed.
 2. `auth-setup` runs `preflight.py` first and refuses until the stack exists. It reads the Stack Profile and interviews the user for the decisions the spec will not default. Then it builds in dependency order. Its second mode audits an existing implementation.
-3. `claude-setup` asks for project, user level or both. Project is preselected and marked (Recommended). Rules, `CLAUDE.md`, status line, output style, hook, model split and auto-compact env go to the project's `.claude/` by default. It turns on all six plugins in the project's `enabledPlugins`, installs missing ones with `--scope project`, and adds `extraKnownMarketplaces` to the project's settings when the entry is missing. Only the transcript-folds chords stay in `~/.claude/keybindings.json`. It shows one batch plan and confirms once. Then it writes the settings, rules, hooks and status line. It never overwrites a hand-written `CLAUDE.md` or an existing settings key. It then asks every question of every offer in one grouped round: docs, design system, delivery, project record, CI, branch protection, other setups and three separate audits (security, compliance, performance). After the yes it runs the picked setups in the same session: the tech-stack-setup audit, auth-setup when repo gates exist, then each audit, holding a heavy step when memory is over 85% or CPU over 60%. For branch protection it reads the current protection, merges the dev-standards check and runs the PUT when the workflow has already run on the default branch. Otherwise it records `pending_protection: true` in `.delivery/config.json`. It never commits or pushes. The CI workflow pins the dev-standards checkout to a ref. `claude-setup status` compares that pin with the installed luismc-docs release and flags an older pin, because docs built by a newer plugin fail G1 in CI under an older pin. `assets/ci_pin.py --bump` rewrites only the `ref:` value in the working tree; `--check` exits 1 when the pin is stale (DL263). Its final report ends with one numbered "Left for you" list, followed by the enforcement table, whose rows name the step that fixes them.
+3. `claude-setup` asks for project, user level or both. Project is preselected and marked (Recommended). Rules, `CLAUDE.md`, status line, output style, hook, model split and auto-compact env go to the project's `.claude/` by default. It turns on all six plugins in the project's `enabledPlugins`, installs missing ones with `--scope project`, and adds `extraKnownMarketplaces` to the project's settings when the entry is missing. Only the transcript-folds chords stay in `~/.claude/keybindings.json`. It shows one batch plan and confirms once. Then it writes the settings, rules, hooks and status line. It never overwrites a hand-written `CLAUDE.md` or an existing settings key. It then asks every question of every offer in one grouped round: docs, design system, delivery, project record, CI, branch protection, other setups and three separate audits (security, compliance, performance). After the yes it runs the picked setups in the same session: the tech-stack-setup audit, auth-setup when repo gates exist, then each audit, holding a heavy step when memory is over 85% or CPU over 60%. For branch protection it reads the current protection, merges the dev-standards check and runs the PUT when the workflow has already run on the default branch. Otherwise it records `pending_protection: true` in `.delivery/config.json`. It never commits or pushes. The CI workflow pins the dev-standards checkout to a ref. `claude-setup status` compares that pin with the installed luismc-docs release and flags an older pin, because docs built by a newer plugin fail G1 in CI under an older pin. `scripts/ci_pin.py --bump` rewrites only the `ref:` value in the working tree; `--check` exits 1 when the pin is stale (DL263). Its final report ends with one numbered "Left for you" list, followed by the enforcement table, whose rows name the step that fixes them.
 
 All three skills follow the setup pattern (plan first, do the work after a yes, one line per step, a summary with Done, Left for you and What you can do now, safe to run again). See [the setup skills guide](../../guides/setup-skills.md) for a flow of each and what you can do after.
 
@@ -93,7 +93,7 @@ All three skills follow the setup pattern (plan first, do the work after a yes, 
 
 The hook reads only the current turn from the end of the transcript, in 1 MiB blocks. A turn larger than 32 MiB is not read and the stop is allowed. The delivery `hook_stop.py` reads the transcript the same way. (DL208)
 
-**R5.15** — Both copies of `clarifying-questions.md` carry one rule line, in the same words: the hook can see an open question, and a `RemoteTrigger` `create` or `update` due in under 2 hours then draws a warning, never a block. (DL136)
+**R5.15** — The delivery plugin's `rules/clarifying-questions.md` is the source of the question rules. `claude-setup` writes its byte copy only to a user-level target (`~/.claude/rules/`) that is not a project. For a project target it writes no copy, and it deletes an old `.claude/rules/clarifying-questions.md` from the working tree (left uncommitted) when its text, with line endings normalised and surrounding whitespace stripped, equals the asset; an edited copy stays and the report names it. Both copies carry one rule line, in the same words: the hook can see an open question, and a `RemoteTrigger` `create` or `update` due in under 2 hours then draws a warning, never a block. (DL136, DS305)
 
 **R5.16** — The pre-push hook exits 1 with `pre-push: node_modules is missing in this worktree; run pnpm install --frozen-lockfile here.` when `package.json` and `pnpm-lock.yaml` exist, `scripts/delivery/gate.json` has a command that starts with `pnpm `, and `node_modules` does not exist. The check runs after the `scripts/delivery` check and before the Python and guard steps. (DL130)
 
@@ -133,12 +133,13 @@ flowchart TB
     as[auth-setup]
   end
   ts --> cat[assets/catalog<br/>roles, bundles, tech]
-  ts --> chk[check_stack.py]
+  ts --> chk[scripts/check_stack.py]
   ts --> tool[assets/tooling<br/>shared and per-track]
   ts --> sp[assets/stack-profile.md]
-  ts --> inv[references/invariants.md STACKSPEC]
-  as --> pre[preflight.py]
-  as --> auth[references/authentication.md AUTHSPEC]
+  ts --> inv[references/stackspec.md STACKSPEC]
+  as --> pre[scripts/preflight.py]
+  as --> auth[references/authspec.md AUTHSPEC]
+  cs --> pin[scripts/ci_pin.py]
   cs --> ca[assets: settings, rules, hooks, statusline, model-profiles.json]
 ```
 
@@ -179,7 +180,7 @@ flowchart TD
 | R5.11 | `tools/test_rule_tags.py` |
 | R5.24 | `claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py`, `tools/test_delivery_hooks.py` (the deny list still blocks outbound sends and never blocks PR create, ready or edit) |
 | R5.25 | `f31` in `tools/test_project_setup_fixes.py` (typed names and a Rust path committed; quoted and assigned values blocked) |
-| R5.13 | `tools/test_questions_stop.py` (the hook on recorded inputs and its wiring) |
+| R5.13, R5.15 | `tools/test_questions_stop.py` (the hook on recorded inputs, its wiring, and the user-level-only copy) |
 | R5.12 | `tools/test_spec_check.py`, `tools/test_authspec_check.py` |
 | R5.23 | `claude/plugins/project-setup/tests/test_dl332_ci_node_version.py` |
 | R5.1 to R5.5, R5.8, R5.9, R6.1 | not covered by a test yet; see section 11 |
@@ -197,8 +198,11 @@ NOT YET IMPLEMENTED: tests for the wizard's filtering and for `check_stack.py` (
 ## 12. Code map
 
 Source: claude/plugins/project-setup/skills/tech-stack-setup/SKILL.md
-Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/check_stack.py
-Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py
+Source: claude/plugins/project-setup/scripts/check_stack.py
+Source: claude/plugins/project-setup/scripts/preflight.py
+Source: claude/plugins/project-setup/scripts/ci_pin.py
+Source: claude/plugins/project-setup/references/stackspec.md
+Source: claude/plugins/project-setup/references/authspec.md
 Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md
 Source: claude/plugins/project-setup/skills/tech-stack-setup/assets/catalog/roles.yaml
 Source: claude/plugins/project-setup/skills/auth-setup/SKILL.md

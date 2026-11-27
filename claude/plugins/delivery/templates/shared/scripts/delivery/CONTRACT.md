@@ -918,7 +918,7 @@ One or two sentences for the change log.
 - `change_notes.py pending` (run on every push to the default branch): fails
   and names each note while any note waits to be folded, so a merged note can
   not leave a version unraised unnoticed; passes when there are none.
-- `change_notes.py fold` (run on a release branch before the ready PR): for
+- `change_notes.py fold` (run on the default branch after the release merges, DL-24): for
   each spec with notes, bumps `**Version:**` by the highest change kind, writes
   one change-log entry under the change-log heading (new version, date, one
   bullet per note), deletes the folded notes, prints a summary. Idempotent; no

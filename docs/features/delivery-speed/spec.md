@@ -14,7 +14,7 @@ code:
   - claude/plugins/delivery/templates/rust/scripts/delivery/*.py
   - claude/plugins/delivery/references/release-asset-names.md
   - tools/test_delivery_*.py
-last_verified: 2026-11-26
+last_verified: 2026-11-27
 artifact: feature-delivery-speed.html
 ---
 # Delivery speed
@@ -39,13 +39,13 @@ The numbers describe one product. They stay here, not in the specs. The work cha
 
 ### The plan (rewritten prompt)
 
-The owner's prompt, reviewed on 11 October and rewritten with the review's fixes and the owner's answers (decisions below). Order matters. Each step builds on the one before.
+The owner's prompt, reviewed on 11 October and rewritten with the review's fixes and the owner's answers (decisions below). Order matters. Each step builds on the one before. Each row is a speed point. Speed points 1 to 7 carry the IDs DL1 to DL7. These are not DELIVERYSPEC rows (`DL-n`) or task IDs (`DLnnn`).
 
-| Task | Change | Settled by the review |
+| Speed point | Change | Settled by the review |
 |---|---|---|
 | DL1 | **Stale results.** `gate.json` gets `inert_paths` (default `docs/**`; tech-stack-setup adds `docs/artifacts/**` when luismc-docs is enabled). `gate_verify.py` keeps a result valid when the base moved only by commits touching inert paths. | The setup writes it. A sibling plugin does not declare it. It is trusted only because the ready PR's CI still tests the real merge. |
 | DL2 | **Quick join check.** `join.py` replaces the second full gate with install, build, typecheck and the tests of the union of the branches' affected packages *plus their dependents*. It keeps TC6's skip when the joined tree equals a trusted branch head. The join report records per-step times. | Builds on DS45 (TC6). Union plus dependents (D6). |
-| DL3 | **Agent rule.** Locally, an agent runs the affected suites only. It runs a full suite only when its change trips a full-run valve. It never starts a branch CI run unless the change behaves differently on Linux. | Merged with DS45's rule, which is stricter on CI. |
+| DL3 | **Agent rule.** Superseded by DELIVERYSPEC DL-12, the one agent test rule. | Merged with DS45's rule, which is stricter on CI. |
 | DL4 | **Gate scope.** Steps already scope by package (`changed`, `changed+dependents`, `widen_on`). New: a lockfile change widens only when it changes an affected package's dependencies. A shared-UI change runs the end-to-end tests of the apps that import the changed files (found from imports, so `e2e_map` becomes optional). `--full` stays. The e2e step widens to the whole suite only on an explicit `--full` (DL389): other widening, such as a lockfile or root config change on a release head, leaves it to the changed UI files and changed specs, and a change with neither needs no e2e. The whole suite runs in CI on the ready PR. | Half of the original point existed already. |
 | DL5 | **Build-artifact workflows** (installers, bundles, packages) run only when the paths that feed them change. They never run for docs-only or record-only merges. | Extends 7.1.0's `ci_skip_check`. |
 | DL6 | **Train freeze.** Once the ready PR opens, the pre-push hook refuses pushes to that train branch until its CI finishes (pass or fail, so fix forward works) or the train is abandoned (the ready PR closed unmerged). Offline, it allows the push and warns. `DELIVERY_FREEZE_OVERRIDE=1` allows a push and prints that the running CI will restart. Late branches ride the next train. | Offline behaviour (D4), override (D9) and a definition of abandoned. |
@@ -82,7 +82,7 @@ flowchart LR
 
 **R5.6** — Before the ready PR opens, `join.py` checks that an online runner exists for every label the jobs need. `ci_watch.py` warns when a job has been queued over 10 minutes with no online runner for its labels. Both only warn.
 
-**R5.7** — Before `cleanup.py` deletes a branch, it records the branch's finished, joined, CI start, CI end and merged times. The log is appended to the train's release notes. Times are UTC. CI start is the earliest run on the ready PR's branch since the PR was created.
+**R5.7** — When the delivery log is on, `cleanup.py` records a branch's finished, joined, CI start, CI end and merged times before it deletes the branch. The log is off by default (the delivery feature's R5.32). The log is appended to the train's release notes. Times are UTC. CI start is the earliest run on the ready PR's branch since the PR was created.
 
 **R5.8** — A product that ships a packaged program has CI start the packaged form. CI exercises every child process (`smoke_packaged.py`, `smoke.json`).
 
@@ -132,7 +132,7 @@ flowchart LR
 
 ## 6. Non-functional requirements
 
-**R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out.
+**R6.1** — Every script is Python standard library only and exits 0 pass, 1 failed, 2 usage, 3 join conflict, 4 timed out. `ci_watch.py` and `join.py` also exit 5 (the delivery feature's R5.56 and R5.57).
 
 **R6.2** — The freeze and the log never block on a GitHub outage. They allow the work and warn.
 

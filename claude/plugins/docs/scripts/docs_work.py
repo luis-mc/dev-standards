@@ -5,8 +5,9 @@
                                       (run it on a ready PR to the default branch)
   docs_work.py summaries [--dir D]    one line per report in docs/work/reports/: `- TASK: summary`,
                                       for the release PR body
-  docs_work.py strip [--apply]        remove docs/work/ from the working tree and index (the join
-                                      step). Dry run by default; prints the summaries first.
+  docs_work.py strip [--apply]        remove docs/work/ from the working tree (the join step) and
+                                      print the git commit command; it never runs git writes.
+                                      Dry run by default; prints the summaries first.
 
 Standing rules are not temporary: they live in AGENTS.md, never in docs/work/.
 A report's summary line is its `Summary:` line, else its `Status:` line plus the first sentence
@@ -91,40 +92,27 @@ def main(argv=None) -> int:
     if not a.apply:
         print("dry run. Add --apply.")
         return 0
-    if D.is_git(root):
-        D.git(root, "rm", "-r", "-q", "-f", "--ignore-unmatch", "--", "docs/work")
     if work.is_dir():
         shutil.rmtree(work)
     if D.is_git(root):
-        return commit_strip(root)
+        print_commit_command(root, len(files))
     return 0
 
 
-def staged_work(root: Path) -> list[str]:
-    r = D.git(root, "-c", "core.quotePath=false", "diff", "--cached", "--name-only", "--", "docs/work")
-    return [x for x in r.stdout.split("\n") if x.strip()]
+def commit_command(count: int) -> str:
+    """The git command that records the strip. The plugin writes no git state (DOCSPEC R10.3, owner C4)."""
+    msg = f"Strip docs/work/ before the join ({count} file(s))"
+    return f'git commit -m "{msg}" -- docs/work'
 
 
-def commit_strip(root: Path) -> int:
-    """Commit the staged deletions under docs/work/. Exit 0 only when none are left staged (DS193).
-
-    The commit is limited to docs/work/, so other staged changes stay as they were. If git refuses
-    (a hook, no author name, a lock), say what is left staged and how to finish.
-    """
-    staged = staged_work(root)
-    if not staged:
-        print("nothing under docs/work/ to commit")
-        return 0
-    msg = f"Strip docs/work/ before the join ({len(staged)} file(s))"
-    r = D.git(root, "commit", "-q", "-m", msg, "--only", "--", "docs/work")
-    left = staged_work(root)
-    if r.returncode == 0 and not left:
-        print(f"committed: {msg}")
-        return 0
-    print(f"strip failed: git commit exited {r.returncode}. {(r.stderr or r.stdout).strip()}", file=sys.stderr)
-    print(f"{len(left)} deletion(s) under docs/work/ are still staged. Finish with: "
-          f'git commit -m "{msg}" -- docs/work', file=sys.stderr)
-    return 1
+def print_commit_command(root: Path, count: int) -> None:
+    """Name the commit to run when tracked files under docs/work/ were removed; the plugin never commits."""
+    r = D.git(root, "-c", "core.quotePath=false", "ls-files", "--", "docs/work")
+    if not r.stdout.strip():
+        print("nothing under docs/work/ is tracked: no commit needed")
+        return
+    print("removed from the working tree only; the plugin never commits. Record the strip with:")
+    print(f"  {commit_command(count)}")
 
 
 if __name__ == "__main__":

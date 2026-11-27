@@ -28,7 +28,7 @@ sys.dont_write_bytecode = True
 
 REPO = Path(__file__).resolve().parent.parent
 TAG_RE = re.compile(r"<!-- (advice|check: (.+?)) -->$")
-ID_RE = re.compile(r"^(DL-\d\d|Q-\d+)$")
+ID_RE = re.compile(r"^(DL-\d{2,3}[a-z]?|Q-\d+)$")   # DS303: three-digit ids (DL-124) are rule ids too
 SPEC = "claude/plugins/delivery/references/deliveryspec.md"
 BULLET_RE = re.compile(r"^\s*[-*] ")
 LATE = ("claude/plugins/delivery/templates/shared/scripts/delivery/session_guard.py",)
@@ -44,11 +44,16 @@ EXPECTED = (
 )
 
 
+ROW_RE = re.compile(r"^\| ((?:DL-\d{2,3}[a-z]?)|Q-\d+) \|([^|]*)\|", re.M)
+RETIRED_RE = re.compile(r"^\s*(removed|merged into|retired)\b", re.I)
+
+
 def spec_ids(text: str | None = None) -> set[str]:
-    """Ids DELIVERYSPEC defines: DL-nn rows of section 1 and the Q-n lines of decision D8."""
+    """Live ids DELIVERYSPEC defines: the DL-n and Q-n rows of section 1. A retired row ("removed: ...",
+    "Merged into Q-4.") keeps its id in the table but is no rule a line can name (DS303)."""
     if text is None:
         text = (REPO / SPEC).read_text(encoding="utf-8")
-    return set(re.findall(r"^\| (DL-\d\d) \|", text, re.M)) | set(re.findall(r"^\s*- (Q-\d+) ", text, re.M))
+    return {m.group(1) for m in ROW_RE.finditer(text) if not RETIRED_RE.match(m.group(2))}
 
 
 def rule_files() -> list[str]:
@@ -125,8 +130,13 @@ def selftest() -> list[str]:
         bad.append("a path where a rule ID belongs was not reported in a claude-setup asset rule file")
     if problems("claude/plugins/docs/rules/x.md", path_tag):
         bad.append("a path tag was refused in a rule file that may name code")
-    if not {"DL-31", "DL-74", "Q-2", "Q-5"} <= spec_ids():
+    if not {"DL-31", "DL-74", "Q-2", "Q-5", "DL-124"} <= spec_ids():
         bad.append("DELIVERYSPEC ids were not read")
+    if problems("x.md", "- a rule <!-- check: DL-124, DL-32a -->\n", ids={"DL-124", "DL-32a"}):
+        bad.append("a three-digit or lettered id was refused")
+    table = "| DL-70 | Merged into Q-1. |\n| DL-09 | removed: x |\n| Q-1 | Ask all at once. | x |\n"
+    if spec_ids(table) != {"Q-1"}:
+        bad.append("retired rows were read as live ids, or a Q-n row was missed")
     if not problems("x.md", "- a rule <!-- advice --> trailing\n"):
         bad.append("a tag that is not at the end of the line was accepted")
     return bad

@@ -17,52 +17,20 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | cross-cutting | 0017-test-the-fold-logic-with-the-node-runner | [Test the fold logic with Node's own test runner](decisions/0017-test-the-fold-logic-with-the-node-runner.md) |  | accepted | 2026-10-13 |
 | cross-cutting | 0018-marketplace-is-named-dev-standards | [The marketplace is named dev-standards](decisions/0018-marketplace-is-named-dev-standards.md) |  | accepted | 2026-10-13 |
 | cross-cutting | 0030-delivery-hooks-and-watcher | [Hooks enforce in sessions, a watcher acts on time](decisions/0030-delivery-hooks-and-watcher.md) |  | accepted | 2026-10-14 |
-| cross-cutting | 0031-machine-load-guard | [The load guard holds new work and never touches running work](decisions/0031-machine-load-guard.md) |  | accepted | 2026-10-14 |
 | cross-cutting | 0032-delivery-speed-plan | [Each delivery layer does its own share of testing](decisions/0032-delivery-speed-plan.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0033-packaged-smoke-test-must | [A packaged program must be smoke-tested in its packaged form](decisions/0033-packaged-smoke-test-must.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0034-delivery-log-in-release-notes | [The delivery log lives in the train's release notes](decisions/0034-delivery-log-in-release-notes.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0035-ci-by-area-and-nightly-mutants | [CI runs the areas a change touches; mutation passes run when their files change](decisions/0035-ci-by-area-and-nightly-mutants.md) |  | accepted | 2026-10-11 |
-| cross-cutting | 0036-retire-fake-renderer-group | [Retire the artifacts suite's fake-renderer test group](decisions/0036-retire-fake-renderer-group.md) |  | accepted | 2026-10-11 |
-| cross-cutting | 0037-record-push-once-per-turn | [The artifacts record pushes once per turn](decisions/0037-record-push-once-per-turn.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0038-parallel-delivery-suites-and-shards | [Delivery suites run in parallel jobs with their own mutant flags and shards](decisions/0038-parallel-delivery-suites-and-shards.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0039-generic-ci-speed-for-products | [Generic CI speed is a SHOULD in STACKSPEC 13.1](decisions/0039-generic-ci-speed-for-products.md) |  | accepted | 2026-10-11 |
 | cross-cutting | 0040-rule-tags-and-blocking-checks | [Every shipped rule line is tagged, and a check that finds a break blocks](decisions/0040-rule-tags-and-blocking-checks.md) |  | accepted | 2026-10-11 |
-| cross-cutting | 0050-upgrade-notes-are-guides | [Upgrade notes are how-to guides, the originals are archived](decisions/0050-upgrade-notes-are-guides.md) |  | accepted | 2026-11-01 |
 | cross-cutting | 0070-claude-setup-all-plugins | [claude-setup turns on and configures all plugins in the project](decisions/0070-claude-setup-all-plugins.md) |  | accepted | 2026-10-31 |
-| artifacts | D1 | How is a task’s status stored so both artifacts update automatically? | One registry | decided | 2026-10-10 |
-| artifacts | D10 | Full Progress: release timeline above the status table and a State column in the feature table (preview, Version 70); adopt for the plugin? | With the two changes | decided | 2026-10-11 |
-| artifacts | D11 | How does a release get its RELEASE-<n> number? | Number on the release task | decided | 2026-10-11 |
-| artifacts | D12 | How does Full Progress show which items go into each release? | Group rows by release | decided | 2026-10-11 |
-| artifacts | D13 | Must items be assigned to a release? | Built and Running must name one | decided | 2026-10-11 |
-| artifacts | D14 | Should the status tiles say they count tasks? | Relabel | decided | 2026-10-11 |
-| artifacts | D15 | How is Running work that ships nothing (a publish, a study, a cleanup) handled under the rule that Running and Built ride a release? | Mark it 'ships nothing' | decided | 2026-10-12 |
-| artifacts | D16 | How should the plugin handle the 200-publishes-a-day limit? | Defer + publish less | decided | 2026-10-12 |
-| artifacts | D17 | Start AR47 and AR48 now as the next release? | Now | decided | 2026-10-12 |
-| artifacts | D18 | Does the plugin commit or push the record? | Write files only, never commit or push | decided | 2026-10-12 |
-| artifacts | D19 | The artifacts stop hook leaves .claude/artifacts-stop-state.json.<pid>.tmp files behind when a state write is interrupted. What should we do? | Fix and ship | decided | 2026-11-07 |
-| artifacts | D2 | Do branch names start with the task ID? | Yes, task ID first | decided | 2026-10-10 |
-| artifacts | D20 | The end-of-turn hook asks for an hourly Full Progress publish even when no work is open. Should the hourly fail-safe (R9.8) apply only while work is open? | Only while work open | decided | 2026-11-07 |
-| artifacts | D21 | B9: after a status change, mark-published refuses a copy older than the record until pending --refresh and a second publish. How to fix? | Refuse early, name steps | decided | 2026-11-07 |
-| artifacts | D22 | B10: --expected "DD Mon HH:MM" without ~ is refused (R6.6). What should happen? | Accept, store with ~ | decided | 2026-11-07 |
-| artifacts | D23 | B12: task-add needs --expected even for a To do task with no schedule. What should change? | To do may omit Expected | decided | 2026-11-07 |
-| artifacts | D24 | AR60: when the stop state write still fails after its retries, what should the hook do? | Warn and go on | decided | 2026-11-07 |
-| artifacts | D25 | Full Progress size (1.84 MB, slow on phones): slim the embedded registry? | Build it (Recommended) | decided | 2026-11-11 |
-| artifacts | D26 | Full Progress size: stop rendering Live rows older than 14 days? | Build it (Recommended) | decided | 2026-11-11 |
-| artifacts | D27 | Full Progress size: drop the per-cell data-label attribute? | Build it (Recommended) | decided | 2026-11-11 |
-| artifacts | D28 | Full Progress size: load one web font family instead of three? | Skip | decided | 2026-11-11 |
-| artifacts | D29 | How should Live rows older than 14 days appear on Full Progress? | Count only (Recommended) | decided | 2026-11-11 |
-| artifacts | D3 | How do changes made outside a session reach the artifacts? | Next session start | decided | 2026-10-10 |
-| artifacts | D4 | What look do artifacts get? | Each project’s own design, else a default | decided | 2026-10-10 |
-| artifacts | D5 | An App / service column on the full-progress artifact? | Yes, full-progress only | decided | 2026-10-10 |
-| artifacts | D6 | Where is the record kept? | The repo’s docs/artifacts folder | decided | 2026-10-10 |
-| artifacts | D7 | How does a project get the plugin? | Project-setup installs it, plus independent install | decided | 2026-10-10 |
-| artifacts | D8 | Which clock do Expected times use? | Owner's zone, per project | decided | 2026-10-10 |
-| artifacts | D9 | Does dev-standards move other projects onto the plugin? | Leave other projects alone | decided | 2026-10-10 |
 | delivery | D1 | [How are rules enforced?](../features/delivery/spec.md) | Hooks inside sessions, scripts for time-critical steps (MADR 0030) | decided | 2026-10-14 |
 | delivery | D2 | [When does the watcher merge?](../features/delivery/spec.md) | At green on the current head, never `--auto` | decided | 2026-10-14 |
 | delivery | D3 | [Do findings block or warn?](../features/delivery/spec.md) | Block, with a ceiling | decided | 2026-10-14 |
 | delivery | D4 | [Local or cloud agents?](../features/delivery/spec.md) | Cloud first | decided | 2026-10-14 |
-| delivery | D5 | [Machine limits?](../features/delivery/spec.md) | 85% memory, 60% CPU, hold new work only (MADR 0031) | decided | 2026-10-14 |
+| delivery | D5 | [Machine limits?](../features/delivery/spec.md) | Removed: the plugin no longer owns machine limits (DELIVERYSPEC, "Removed rules") | decided | 2026-10-14 |
+| delivery | D6 | [Who merges a green PR?](../features/delivery/spec.md) | The watcher only. A session never runs `gh pr merge`, in either merge mode (DS303, DL-03) | decided | 2026-11-27 |
 | delivery-speed | D1 | Rewrite the pasted delivery prompt with the review’s fixes and queue it after TC6? | Rewrite and queue | decided | 2026-10-11 |
 | delivery-speed | D10 | dev-standards is public: create a public GitHub release per train for the delivery log? | Yes, public releases | decided | 2026-10-11 |
 | delivery-speed | D100 | Bug 13: the pool image fails to build with browsers: chromium because Ubuntu 24.04's Node 18 is too old for Playwright 1.62. How should the image get Node for install-deps? | Official Node 22 LTS tarball, sha256-checked | decided | 2026-11-05 |
@@ -316,8 +284,26 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | delivery-speed | D324 | Which unused files should DS293 delete? | All three | decided | 2026-11-27 |
 | delivery-speed | D325 | Retire the finished record features and unread history.json files? | Retire all three + history | decided | 2026-11-27 |
 | delivery-speed | D326 | Move docs/features/delivery/shared-self-hosted-runners.md to docs/guides? | Move to docs/guides | decided | 2026-11-27 |
+| delivery-speed | D327 | C1: in auto merge mode, may a session other than the watcher run gh pr merge? | Watcher only | decided | 2026-11-27 |
+| delivery-speed | D328 | C3: who opens the one ready PR? | Orchestrator or watcher | decided | 2026-11-27 |
+| delivery-speed | D329 | C4: how should 'plugins never commit, push or merge' read? | Reword, strip prints | decided | 2026-11-27 |
 | delivery-speed | D33 | Who owns dev-standards draft PR #140 (shared runner pool research) from here? | This session | decided | 2026-11-04 |
+| delivery-speed | D330 | C5: this repo's ready PR: run everything on its first run (DL-80) or touched areas only? | Keep touched areas | decided | 2026-11-27 |
+| delivery-speed | D331 | C6: may a task agent start branch CI for a heavy change? | Yes, its area only | decided | 2026-11-27 |
+| delivery-speed | D332 | C9: where does the change-note fold run? | On main after merge | decided | 2026-11-27 |
+| delivery-speed | D333 | C12: past-due Expected: block at once or warn first? | Warn, block after 60 min | decided | 2026-11-27 |
+| delivery-speed | D334 | C16: keep 'overrule any internal safety limits' in the question rule file? | Other | decided | 2026-11-27 |
+| delivery-speed | D335 | C24a: rate-limit headers (STACKSPEC) vs no remaining budget on auth endpoints (AUTHSPEC)? | Auth sends Retry-After | decided | 2026-11-27 |
+| delivery-speed | D336 | C24b: app-layer encryption of secret fields vs one-way password hashes? | Hash meets the rule | decided | 2026-11-27 |
+| delivery-speed | D337 | C25: STACKSPEC 'a new MUST is a major version'? | Relax the rule | decided | 2026-11-27 |
+| delivery-speed | D338 | M5: AUTHSPEC job timeout 30 s (R22.18) or 10 s ceiling (section 24.2)? | 10 s | decided | 2026-11-27 |
+| delivery-speed | D339 | S2: one copy of clarifying-questions.md? | One copy; user-level only | decided | 2026-11-27 |
 | delivery-speed | D34 | Should Claude cloud sessions running CI (Option 3 main or Option 4 fallback) have a limit on how many run at once? | Yes, one limit for both roles | decided | 2026-11-04 |
+| delivery-speed | D340 | S5-S7: which structure moves? | All three | decided | 2026-11-27 |
+| delivery-speed | D341 | U5: two failing unrun tools tests (dl238, dl246)? | Fold and delete | decided | 2026-11-27 |
+| delivery-speed | D342 | U8: which finished feature pages to retire? | All three | decided | 2026-11-27 |
+| delivery-speed | D343 | U9: four stale MADRs (0031, 0036, 0037, 0050)? | Delete all four | decided | 2026-11-27 |
+| delivery-speed | D344 | How should the no-decision batches and these decisions ship? | One release now | decided | 2026-11-27 |
 | delivery-speed | D35 | How do DL27 (PC-wide CI queue) and PR #140 (Docker runner pool) combine? | One combined design first | decided | 2026-11-04 |
 | delivery-speed | D36 | How many heavy local Claude jobs may run at once on this PC (own limit, separate from CI slots)? | 2 at once | decided | 2026-11-04 |
 | delivery-speed | D37 | How many Claude cloud sessions may run CI at once (main and fallback together)? | 10 at once | decided | 2026-11-04 |
@@ -399,36 +385,24 @@ Feature decisions come from each feature's `decisions.json` (and the Decisions t
 | models | D7 | Escalation rule when Sonnet fails? | Opus after one failed try | decided | 2026-11-27 |
 | models | D8 | Model and effort for bug-fix agents? | Sonnet medium, Opus on failure | decided | 2026-11-27 |
 | models | D9 | Write a per-task routing table? | Table in agents-and-integration.md | decided | 2026-11-27 |
-| setup-offers | D1 | How should claude-setup ask about enforcing each plugin? | Grouped pages | decided | 2026-11-01 |
-| setup-offers | D10 | How should claude-setup offer the three audits? | Three separate options | decided | 2026-11-02 |
-| setup-offers | D11 | What should claude-setup do about branch protection for the dev-standards check? | Ask, then run when possible | decided | 2026-11-02 |
-| setup-offers | D12 | How should the final report show what is left for the owner? | One numbered 'Left for you' list | decided | 2026-11-02 |
-| setup-offers | D2 | Which delivery mode should a project start in? | Ask, warn preselected | decided | 2026-11-01 |
-| setup-offers | D3 | Should claude-setup write a CI workflow for the docs, design-system and spec checks? | Yes, in claude-setup | decided | 2026-11-01 |
-| setup-offers | D4 | Should the docs Stop hook be able to block? | Warn only, block in CI | decided | 2026-11-01 |
-| setup-offers | D5 | Three paths can write a feature spec (specs spec-new, docs feature-spec-new, artifacts promote-to-spec). How should they split? | Split by kind | decided | 2026-11-01 |
-| setup-offers | D6 | Where should transcript-folds be installed and turned on? | Project level | decided | 2026-11-01 |
-| setup-offers | D7 | Where should claude-setup write its config files (rules, CLAUDE.md, statusline, output style, effort hook, model split) by default? | Project by default | decided | 2026-11-01 |
-| setup-offers | D8 | Should claude-setup register the dev-standards marketplace in each project? | Add per project | decided | 2026-11-01 |
-| setup-offers | D9 | What should claude-setup do with the other setups the owner picks? | Run them in order | decided | 2026-11-02 |
-| test-cost | D1 | Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question) | Yes | decided | 2026-10-11 |
-| test-cost | D10 | Shorten the PR CI run (11 min, one serial delivery job with every suite's mutants on for any delivery change)? | Add to DL12 now | decided | 2026-10-11 |
-| test-cost | D11 | Which of the three CI cuts go into DL12 now? | 1+2+3 | decided | 2026-10-11 |
-| test-cost | D12 | How should the CI-speed ideas reach other projects? | Generic SHOULD, next train | decided | 2026-10-11 |
-| test-cost | D13 | When should TC8 run? (its 12 Oct date had no basis) | Start now, in parallel | decided | 2026-10-11 |
-| test-cost | D14 | How should TC8 get past the pre-commit false positive on `GH_TOKEN: ${{ github.token }}`? | Hook: allow GitHub expressions | decided | 2026-10-11 |
-| test-cost | D15 | Build the four checks (measured suite times, test-run hook, change-note check at commit, ready PR only from *-integration, join.py fix) in luismc-project-setup? | Yes, next train | decided | 2026-10-11 |
-| test-cost | D16 | Tag every line of the shipped rule files with its check or 'advice', with a test that fails on an untagged line? | Yes, in TC9 | decided | 2026-10-11 |
-| test-cost | D17 | When a check catches a break, block or warn? | Block | decided | 2026-10-11 |
-| test-cost | D18 | When does a suite count as heavy? | Over 3 min locally | decided | 2026-10-11 |
-| test-cost | D2 | Skip the main re-run when its files equal what the ready PR tested? (same multi-select question) | Yes | decided | 2026-10-11 |
-| test-cost | D3 | Agents test only what they touch? (same multi-select question) | Yes | decided | 2026-10-11 |
-| test-cost | D4 | Audit the suites for duplicates? (same multi-select question) | Yes | decided | 2026-10-11 |
-| test-cost | D5 | AR35 and AR37 are being tested now. Cut their testing short? | One CI run only | decided | 2026-10-11 |
-| test-cost | D6 | When should the mutation passes run? | When their files change, plus nightly | decided | 2026-10-11 |
-| test-cost | D7 | Retire the artifacts suite's fake-renderer group? | Retire it | decided | 2026-10-11 |
-| test-cost | D8 | How often should the record push to main? | Once per turn | decided | 2026-10-11 |
-| test-cost | D9 | When does the nightly full run with mutants start? | 03:00 UTC | decided | 2026-10-11 |
+| test-cost | D1 | [Make path-scoped CI jobs? (asked as one of four cuts in a single multi-select question)](../features/test-cost/spec.md) | Yes | decided | 2026-10-11 |
+| test-cost | D10 | [Shorten the PR CI run (11 min, one serial delivery job with every suite's mutants on for any delivery change)?](../features/test-cost/spec.md) | Add to DL12 now | decided | 2026-10-11 |
+| test-cost | D11 | [Which of the three CI cuts go into DL12 now?](../features/test-cost/spec.md) | 1+2+3 | decided | 2026-10-11 |
+| test-cost | D12 | [How should the CI-speed ideas reach other projects?](../features/test-cost/spec.md) | Generic SHOULD, next train | decided | 2026-10-11 |
+| test-cost | D13 | [When should TC8 run? (its 12 Oct date had no basis)](../features/test-cost/spec.md) | Start now, in parallel | decided | 2026-10-11 |
+| test-cost | D14 | [How should TC8 get past the pre-commit false positive on `GH_TOKEN: ${{ github.token }}`?](../features/test-cost/spec.md) | Hook: allow GitHub expressions | decided | 2026-10-11 |
+| test-cost | D15 | [Build the four checks (measured suite times, test-run hook, change-note check at commit, ready PR only from *-integration, join.py fix) in luismc-project-setup?](../features/test-cost/spec.md) | Yes, next train | decided | 2026-10-11 |
+| test-cost | D16 | [Tag every line of the shipped rule files with its check or 'advice', with a test that fails on an untagged line?](../features/test-cost/spec.md) | Yes, in TC9 | decided | 2026-10-11 |
+| test-cost | D17 | [When a check catches a break, block or warn?](../features/test-cost/spec.md) | Block | decided | 2026-10-11 |
+| test-cost | D18 | [When does a suite count as heavy?](../features/test-cost/spec.md) | Over 3 min locally | decided | 2026-10-11 |
+| test-cost | D2 | [Skip the main re-run when its files equal what the ready PR tested? (same multi-select question)](../features/test-cost/spec.md) | Yes | decided | 2026-10-11 |
+| test-cost | D3 | [Agents test only what they touch? (same multi-select question)](../features/test-cost/spec.md) | Yes | decided | 2026-10-11 |
+| test-cost | D4 | [Audit the suites for duplicates? (same multi-select question)](../features/test-cost/spec.md) | Yes | decided | 2026-10-11 |
+| test-cost | D5 | [AR35 and AR37 are being tested now. Cut their testing short?](../features/test-cost/spec.md) | One CI run only | decided | 2026-10-11 |
+| test-cost | D6 | [When should the mutation passes run?](../features/test-cost/spec.md) | When their files change, plus nightly | decided | 2026-10-11 |
+| test-cost | D7 | [Retire the artifacts suite's fake-renderer group?](../features/test-cost/spec.md) | Retire it | decided | 2026-10-11 |
+| test-cost | D8 | [How often should the record push to main?](../features/test-cost/spec.md) | Once per turn | decided | 2026-10-11 |
+| test-cost | D9 | [When does the nightly full run with mutants start?](../features/test-cost/spec.md) | 03:00 UTC | decided | 2026-10-11 |
 | transcript-folds | D1 | Adopt the third-party hide-diffs plugin, or build our own? | Build our own | decided | 2026-10-13 |
 | transcript-folds | D10 | What happens to hide-diffs on the owner's machine once this plugin is live? | Owner uninstalls it | decided | 2026-10-13 |
 | transcript-folds | D2 | How are the plugin's hooks tested? | Node test runner on pure logic | decided | 2026-10-13 |

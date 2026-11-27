@@ -1301,6 +1301,213 @@ def test_deferred_publish_does_not_block_until_the_reset(env):
     assert p.head() == before
 
 
+# --- the local Full Progress page while the publish is deferred (R9.7; DL238, DL246; U11) ----------------
+
+DEFER_UNTIL = '2026-10-12T00:00:00+00:00'
+REFRESH_TAG = '<meta http-equiv="refresh" content="60">'
+PUBLISH_DIR = os.path.join('.claude', 'artifacts-publish')
+
+
+def _tmpdir(prefix):
+    return Path(tempfile.mkdtemp(prefix=prefix, dir=str(TMP)))
+
+
+def _local_state(p):
+    """The git-ignored .claude/artifacts-local.json of the clone (U11)."""
+    path = p.clone / '.claude' / 'artifacts-local.json'
+    return json.loads(path.read_text(encoding='utf-8')) if path.is_file() else {}
+
+
+def _local_of(p):
+    return Path(_local_state(p)['deferred_local']['full-progress']['local_path'])
+
+
+def _machine(work_root):
+    d = _tmpdir('dl246m-')
+    if work_root is not None:
+        (d / 'machine.json').write_text(json.dumps({'work_root': str(work_root)}), encoding='utf-8')
+    return {'DELIVERY_MACHINE_DIR': str(d)}
+
+
+@case
+def test_deferred_local_page_lives_in_the_local_file_not_the_manifest(env):
+    """U11 (DS304): the local path and the opened flag go to .claude/artifacts-local.json; the committed manifest
+    never holds a machine path. An older manifest that still holds them loses them on the next write."""
+    p = env.baseline()
+    out = _tmpdir('u11-')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--local', str(out), '--no-open')
+    disk = json.loads((p.rdir / 'manifest.json').read_text(encoding='utf-8'))['full_progress_artifact']
+    assert 'local_path' not in disk and 'local_opened' not in disk, disk
+    assert disk['deferred_until'], disk
+    entry = _local_state(p)['deferred_local']['full-progress']
+    assert out in Path(entry['local_path']).parents and entry['local_opened'] is False, entry
+    # an older manifest with the fields: the next write moves them to the local file and drops them
+    (p.clone / '.claude' / 'artifacts-local.json').unlink()
+    m = json.loads((p.rdir / 'manifest.json').read_text(encoding='utf-8'))
+    m['full_progress_artifact'].update({'local_path': str(out / 'old.html'), 'local_opened': True})
+    (p.rdir / 'manifest.json').write_text(json.dumps(m, indent=2) + '\n', encoding='utf-8')
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    disk = json.loads((p.rdir / 'manifest.json').read_text(encoding='utf-8'))['full_progress_artifact']
+    assert 'local_path' not in disk and 'local_opened' not in disk, disk
+    assert _local_state(p)['deferred_local']['full-progress'] == {'local_path': str(out / 'old.html'), 'local_opened': True}
+
+
+@case
+def test_deferred_local_page_is_opened_once_per_deferral(env):
+    """DL246, U11: the open is asked for once per deferral (local_opened in the local file); a new deferral after
+    the reset may open it again. The tests never open a tab (CLAUDE_ARTIFACTS_NO_OPEN)."""
+    p = env.baseline()
+    out = _tmpdir('dl246o-')
+    r = p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--local', str(out), '--json')
+    assert r.json()['open'] is True and _local_state(p)['deferred_local']['full-progress']['local_opened'] is True
+    r = p.ok('mark-deferred', 'full-progress', '--until', '2026-10-12T02:00:00+00:00', '--local', str(out), '--json')
+    assert r.json()['open'] is False, r.all
+    later = {'CLAUDE_ARTIFACTS_NOW': '2026-10-12T03:00:00+00:00'}
+    r = p.ok('mark-deferred', 'full-progress', '--until', '2026-10-12T06:00:00+00:00', '--local', str(out), '--json', env=later)
+    assert r.json()['open'] is True, r.all
+
+
+@case
+def test_deferred_local_page_goes_to_the_project_work_root(env):
+    """DL238: with no --local, the project's work_root (.delivery/config.json) holds the local page."""
+    p = env.baseline()
+    work = _tmpdir('dl238w-')
+    d = p.clone / '.delivery'
+    d.mkdir(exist_ok=True)
+    (d / 'config.json').write_text(json.dumps({'work_root': str(work)}), encoding='utf-8')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--no-open')
+    lp = _local_of(p)
+    assert lp.is_file() and work in lp.parents, lp
+
+
+@case
+def test_deferred_local_page_refreshes_while_deferred_not_after(env):
+    """DL238: every writing command refreshes the local copy until the reset; after it the copy is left alone."""
+    p = env.baseline()
+    out = _tmpdir('dl238r-')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--local', str(out), '--no-open')
+    lp = _local_of(p)
+    first = lp.read_bytes()
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    second = lp.read_bytes()
+    assert second != first
+    p.ok('set-task-status', 'AR1', 'Running', env={'CLAUDE_ARTIFACTS_NOW': '2026-10-12T01:00:00+00:00'})
+    assert lp.read_bytes() == second
+
+
+@case
+def test_deferred_pending_json_names_the_local_path(env):
+    """DL238: pending --json and pending name the local copy of a deferred Full Progress."""
+    p = env.baseline()
+    out = _tmpdir('dl238p-')
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--local', str(out), '--no-open')
+    j = p.run('pending', '--json').json()
+    assert j['deferred'][0]['local_path'] == str(_local_of(p)), j
+    assert 'local copy: ' in p.run('pending').out
+
+
+@case
+def test_deferred_local_page_open_is_skipped_in_ci_tests_and_without_a_display(env):
+    """DL238, DS283: open_local never opens a page with CI or CLAUDE_ARTIFACTS_NO_OPEN set, or with no display."""
+    from unittest import mock
+    sys.path.insert(0, str(REAL_PLUGIN / 'scripts'))
+    import project_artifacts as PA
+    with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.dict(os.environ, {'CI': '1'}):
+        assert PA.open_local(__file__) is False
+        popen.assert_not_called()
+    clean = {k: v for k, v in os.environ.items() if k != 'CI'}
+    clean['CLAUDE_ARTIFACTS_NO_OPEN'] = '1'
+    with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.object(PA.os, 'startfile', create=True) as sf, \
+            mock.patch.dict(os.environ, clean, clear=True):
+        assert PA.open_local(__file__) is False
+        popen.assert_not_called()
+        sf.assert_not_called()
+    clean = {k: v for k, v in os.environ.items() if k not in ('CI', 'DISPLAY', 'WAYLAND_DISPLAY', 'CLAUDE_ARTIFACTS_NO_OPEN')}
+    with mock.patch.object(PA.subprocess, 'Popen') as popen, mock.patch.dict(os.environ, clean, clear=True):
+        if sys.platform.startswith('linux'):
+            assert PA.open_local(__file__) is False
+            popen.assert_not_called()
+
+
+@case
+def test_deferred_hook_line_names_the_local_copy(env):
+    """DL238: the end-of-turn line names the local copy."""
+    sys.path.insert(0, str(REAL_PLUGIN / 'scripts'))
+    import hook_end_of_turn as HE
+    msg = HE.deferred_message([{'reason': 'deferred until 01:00 (Lisbon)', 'local_path': '/work/full-progress/demo/fp.html'}])
+    assert 'Full Progress is deferred until 01:00 (Lisbon); local copy: /work/full-progress/demo/fp.html' in msg, msg
+
+
+@case
+def test_deferred_local_page_uses_the_machine_work_root(env):
+    """DL246: with no project work_root, machine.json's work_root holds the local page."""
+    p = env.baseline()
+    root = _tmpdir('dl246w-')
+    r = p.run('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--no-open', env=_machine(root))
+    assert r.code == 0, r.all
+    lp = _local_of(p)
+    assert lp.is_file() and lp.parent == root / 'full-progress' / p.clone.name, lp
+
+
+@case
+def test_deferred_project_work_root_wins_over_the_machine(env):
+    """DL246: the project's work_root wins over machine.json."""
+    p = env.baseline()
+    mine, theirs = _tmpdir('dl246a-'), _tmpdir('dl246b-')
+    d = p.clone / '.delivery'
+    d.mkdir(exist_ok=True)
+    (d / 'config.json').write_text(json.dumps({'work_root': str(mine)}), encoding='utf-8')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--no-open', env=_machine(theirs))
+    assert mine in _local_of(p).parents and not (theirs / 'full-progress').exists()
+
+
+@case
+def test_deferred_fallback_warns_and_names_machine_json(env):
+    """DL246: with no work root, the page goes under the publish-copy folder and a warning names machine.json."""
+    p = env.baseline()
+    r = p.run('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--no-open', env=_machine(None))
+    assert r.code == 0, r.all
+    assert 'work_root' in r.err and 'machine.json' in r.err, r.err
+    assert str(p.clone / PUBLISH_DIR) in str(_local_of(p)), _local_of(p)
+
+
+@case
+def test_deferred_copy_is_the_repo_copy_with_its_feature_pages(env):
+    """DL246 (R5.9a): the local page is the repo copy plus every feature page, so each link opens offline."""
+    p = env.baseline()
+    out = _tmpdir('dl246c-')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--local', str(out), '--no-open')
+    lp = _local_of(p)
+    repo = p.rdir / lp.name
+    assert lp.read_text(encoding='utf-8').replace(REFRESH_TAG, '', 1) == repo.read_text(encoding='utf-8')
+    feats = sorted(x.name for x in p.rdir.glob('feature-*.html'))
+    assert feats, 'the sample record has no feature pages'
+    for name in feats:
+        assert (lp.parent / name).is_file(), name
+    links = set(re.findall(r'href="(feature-[^"#]+\.html)', lp.read_text(encoding='utf-8')))
+    assert links, 'Full Progress links no feature page'
+    for link in links:
+        assert (lp.parent / link).is_file(), link
+
+
+@case
+def test_deferred_refresh_tag_only_in_the_local_copies(env):
+    """DL246: only the local copies carry the 60-second refresh tag; the repo and publish copies do not."""
+    p = env.baseline()
+    out = _tmpdir('dl246t-')
+    p.ok('mark-deferred', 'full-progress', '--until', DEFER_UNTIL, '--local', str(out), '--no-open')
+    p.ok('set-task-status', 'AR1', 'Waiting')
+    lp = _local_of(p)
+    for f in lp.parent.glob('*.html'):
+        assert f.read_text(encoding='utf-8').count(REFRESH_TAG) == 1, f
+    for f in p.rdir.glob('*.html'):
+        assert REFRESH_TAG not in f.read_text(encoding='utf-8'), f
+    pub = p.clone / PUBLISH_DIR
+    for f in pub.glob('*.html') if pub.is_dir() else []:
+        assert REFRESH_TAG not in f.read_text(encoding='utf-8'), f
+
+
 def _stamp_of(text):
     return re.search(r'<time datetime="([^"]+)"', text).group(1)
 

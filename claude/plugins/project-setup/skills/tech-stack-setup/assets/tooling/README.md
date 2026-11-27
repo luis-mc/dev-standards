@@ -18,7 +18,7 @@ track's jobs.
 ```
 tooling/
 ├── shared/     copied for every product, whatever the track
-│   ├── .githooks/          pre-commit, pre-push, commit-msg
+│   ├── .githooks/          pre-commit
 │   └── .gitattributes
 ├── ts/         TypeScript / Node
 ├── go/         Go
@@ -27,6 +27,8 @@ tooling/
 ```
 
 `shared/` is separate because the hooks do not care what language the code is in.
+The `pre-push` and `commit-msg` hooks are not here: they live in `luismc-delivery`
+(`templates/shared/.githooks/`), and `delivery_ci_install.py` writes them.
 The gitleaks config is not here: `.gitleaks.toml` lives once in `luismc-delivery`
 (`templates/shared/.gitleaks.toml`) and `delivery_ci_install.py` writes it (DL186).
 

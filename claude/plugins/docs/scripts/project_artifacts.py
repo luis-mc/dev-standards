@@ -1417,6 +1417,7 @@ def finish_change(ctx, rec, result):
     if rec.entry(FP_NAME) is not None and any(
             v == 'new' and k != FP_NAME for k, v in rec.render_keys.items()):
         rec.render_keys.setdefault(FP_NAME, 'new')     # section 1 shows each feature's stamp (R5.6)
+    move_local_fields(ctx, rec)                         # U11: no machine path in the committed manifest
     rec.touch()
     now = rec.now()
     for key, how in rec.render_keys.items():           # the stamp Full Progress shows for a feature (R4.30)
@@ -2998,18 +2999,20 @@ def cmd_mark_deferred(args):
         if rec.kind(args.key) != 'full-progress':
             raise Fail(1, '%s is a feature artifact: feature artifacts are never published; only the full-progress '
                           'artifact is (R9.5)' % args.key)
-        if deferral(rec, e) is None:
-            e.pop('local_opened', None)             # a new deferral may open the page once more
+        local = local_entry(ctx.root, args.key, e)
+        new = deferral(rec, e) is None              # a new deferral may open the page once more
+        for name in LOCAL_FIELDS:                   # U11: never in the committed manifest
+            e.pop(name, None)
         e['deferred_until'] = until.isoformat(timespec='minutes')
         folder = local_page_dir(ctx, local_work_dir(ctx, getattr(args, 'local', None)))
-        target = folder / str(e.get('file', ''))
-        e['local_path'] = str(target)
+        target = str(folder / str(e.get('file', '')))
         rec.message = ctx.rel + ': %s publish deferred' % args.key
-        opens = not getattr(args, 'no_open', False) and not e.get('local_opened')
-        if opens:
-            e['local_opened'] = True                # DL246: opened once per deferral
+        opened = bool(local.get('local_opened')) and not new
+        opens = not getattr(args, 'no_open', False) and not opened
+        # DL246: opened once per deferral; the path and the flag live in the git-ignored local file (U11)
+        set_local_entry(ctx.root, args.key, {'local_path': target, 'local_opened': opened or opens})
         return {'command': 'mark-deferred', 'key': args.key, 'until': e['deferred_until'],
-                'local_path': e['local_path'], 'open': opens}
+                'local_path': target, 'open': opens}
 
     res = run_change(ctx, apply)
     emit(args, res, ['recorded %s deferred until %s (%s)' % (args.key, res['until'], short(res)),
@@ -3609,11 +3612,70 @@ def write_local_copy(rec, key, e, target):
             out.write_bytes(data)
 
 
+LOCAL_STATE_REL = os.path.join('.claude', 'artifacts-local.json')    # git-ignored, per machine (R4.26)
+LOCAL_STATE_FIELD = 'deferred_local'          # {artifact key: {"local_path": str, "local_opened": bool}}
+LOCAL_FIELDS = ('local_path', 'local_opened')
+
+
+def read_local_state(root):
+    """The git-ignored .claude/artifacts-local.json as a dict; {} when it is missing or unreadable."""
+    try:
+        data = json.loads((Path(root) / LOCAL_STATE_REL).read_text(encoding='utf-8'))
+    except (OSError, ValueError):
+        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def local_entry(root, key, e=None):
+    """U11: the local page fields of one artifact, from the local file; an older manifest entry `e` that still
+    holds them is read when the local file has none."""
+    entries = read_local_state(root).get(LOCAL_STATE_FIELD)
+    got = entries.get(key) if isinstance(entries, dict) else None
+    if isinstance(got, dict) and got:
+        return got
+    if isinstance(e, dict):
+        return {k: e[k] for k in LOCAL_FIELDS if k in e}
+    return {}
+
+
+def set_local_entry(root, key, value):
+    """Write one artifact's local page fields into .claude/artifacts-local.json, keeping its other keys.
+    A write that fails is a warning: the local page is a convenience."""
+    data = read_local_state(root)
+    entries = data.get(LOCAL_STATE_FIELD) if isinstance(data.get(LOCAL_STATE_FIELD), dict) else {}
+    entries[key] = value
+    data[LOCAL_STATE_FIELD] = entries
+    path = Path(root) / LOCAL_STATE_REL
+    tmp = path.with_name(path.name + '.tmp')
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        tmp.write_text(json.dumps(data, indent=2, ensure_ascii=False) + '\n', encoding='utf-8')
+        os.replace(tmp, path)
+    except OSError as ex:
+        warn('%s was not written (%s)' % (LOCAL_STATE_REL.replace(os.sep, '/'), ex))
+        with contextlib.suppress(OSError):
+            tmp.unlink()
+
+
+def move_local_fields(ctx, rec):
+    """U11: a manifest entry from an older plugin may hold local_path and local_opened, a machine path. Move them
+    to the local file (unless it has its own) and drop them from the manifest, so the next write leaves them out."""
+    for key, _kind, e in rec.artifacts():
+        old = {k: e[k] for k in LOCAL_FIELDS if k in e}
+        if not old:
+            continue
+        entries = read_local_state(ctx.root).get(LOCAL_STATE_FIELD)
+        if not (isinstance(entries, dict) and isinstance(entries.get(key), dict) and entries[key]):
+            set_local_entry(ctx.root, key, old)
+        for k in LOCAL_FIELDS:
+            e.pop(k, None)
+
+
 def refresh_local_copies(ctx, rec):
     """DL238/DL246: while a deferral is active, overwrite the local copies (Full Progress and its feature pages).
     After the until time the copies are left as they are."""
     for key, kind, e in rec.artifacts():
-        lp = e.get('local_path')
+        lp = local_entry(ctx.root, key, e).get('local_path')
         if kind != 'full-progress' or not isinstance(lp, str) or not lp or deferral(rec, e) is None:
             continue
         try:
@@ -3716,8 +3778,9 @@ def cmd_pending(args):
                     deferred.append({'key': key, 'kind': kind, 'title': e.get('title', ''), 'file': e.get('file', ''),
                                      'until': wait[0].isoformat(timespec='minutes'),
                                      'reason': 'deferred until %s' % wait[1]})
-                    if e.get('local_path'):
-                        deferred[-1]['local_path'] = e['local_path']
+                    lp = local_entry(ctx.root, key, e).get('local_path')
+                    if lp:
+                        deferred[-1]['local_path'] = lp
                     continue
                 hourly = reason.startswith('refresh requested')
                 # R9.13: at the end of a turn the burst is over, so only the previous publish holds it back

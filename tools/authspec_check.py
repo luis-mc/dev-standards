@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Content checker for `authentication.md` (AUTHSPEC) — and only that document.
+Content checker for `authspec.md` (AUTHSPEC) — and only that document.
 
 It is named for its scope: every check here reads a structure that exists in
 AUTHSPEC and nowhere else, so pointing it at `tech-stack.md` is meaningless
@@ -41,10 +41,10 @@ written against. Two consequences of that, both deliberate:
     retired nothing) from a *missing* one (the check cannot run — an error).
 
 Usage:
-    python3 tools/authspec_check.py path/to/authentication.md
-    python3 tools/authspec_check.py path/to/authentication.md --strict
-    python3 tools/authspec_check.py path/to/authentication.md --json
-    python3 tools/authspec_check.py path/to/authentication.md --only retention
+    python3 tools/authspec_check.py path/to/authspec.md
+    python3 tools/authspec_check.py path/to/authspec.md --strict
+    python3 tools/authspec_check.py path/to/authspec.md --json
+    python3 tools/authspec_check.py path/to/authspec.md --only retention
 
 Exit codes:
     0  no errors (warnings may be present unless --strict)
@@ -620,7 +620,7 @@ def check_route_buckets(spec: Spec, route_map: Path | None) -> list[Finding]:
             return out
     else:
         out.append(Finding("routes", ERROR, sec.start,
-                           f"R17.7g requires CI to assert that each of the "
+                           f"R17.1 and STACKSPEC §4.6 require CI to assert that each of the "
                            f"{len(routes)} §19.4 routes maps to a §17.3 row "
                            f"or the default bucket. No route map was supplied "
                            f"(--route-map); the mapping cannot be derived from "
@@ -631,7 +631,7 @@ def check_route_buckets(spec: Spec, route_map: Path | None) -> list[Finding]:
         if route not in mapping:
             out.append(Finding("routes", ERROR, idx,
                                f"route {route} has no entry in {route_map.name} "
-                               f"(R17.7g)"))
+                               f"(R17.1, STACKSPEC §4.6)"))
     declared = {r for _, r in routes}
     for route in mapping:
         if route.startswith("_"):
@@ -874,7 +874,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="AUTHSPEC consistency linter.")
     ap.add_argument("spec", type=Path, help="path to the specification markdown")
     ap.add_argument("--route-map", type=Path, default=None,
-                    help="JSON mapping of §19.4 route -> §17.3 bucket (R17.7g)")
+                    help="JSON mapping of §19.4 route -> §17.3 bucket (R17.1, STACKSPEC §4.6)")
     ap.add_argument("--strict", action="store_true",
                     help="treat warnings as errors")
     ap.add_argument("--json", action="store_true", dest="as_json",
