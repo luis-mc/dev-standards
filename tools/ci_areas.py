@@ -13,17 +13,17 @@ and printed):
 Area map (first matching rule wins; see RULES):
 
   specs      spec_check, templates, AUTHSPEC and ARTIFACTSPEC numbering and
-             content: the specs' references/, the spec-new template, the
+             content: STACKSPEC and AUTHSPEC in project-setup/references/, the spec-new template, the
              spec-check script, the Stack Profile template, authspec_check.py,
              route-ratelimit-map.json and their tests.
-  delivery   the tech-stack-setup preflight and everything under
+  delivery   the project-setup preflight and everything under
              assets/tooling/ (git hooks, linters, guards) and claude/plugins/delivery/
              (hooks, scripts, templates/ with the delivery scripts and ci.yml files),
-             the delivery/cleanup/prune/change-notes/preflight tests.
+             the delivery/cleanup/prune/change-notes/preflight/kit-suite tests.
   artifacts  the artifacts files in claude/plugins/docs/ (renderer, commands, hooks,
              templates, design) and their tests; ARTIFACTSPEC itself counts as specs.
-  profiles   every SKILL.md, the claude-setup assets, the architect agent and
-             test_model_profiles.py.
+  profiles   every SKILL.md, the claude-setup assets, the architect agent,
+             ci_pin.py, project-setup/tests/ and test_model_profiles.py.
   transcript-folds  everything under claude/plugins/transcript-folds/ except
              its .claude-plugin/ manifest (node --test over hooks/fold/*.ts).
   docs       everything under claude/plugins/docs/ except its manifest, SKILL.md
@@ -75,7 +75,8 @@ ALL = frozenset(AREAS)
 NONE: frozenset[str] = frozenset()
 HEAVY = ("delivery", "artifacts")
 
-PS = "claude/plugins/project-setup/skills"
+PSP = "claude/plugins/project-setup"
+PS = PSP + "/skills"
 TS = PS + "/tech-stack-setup"
 TOOLING = TS + "/assets/tooling"
 TEMPLATES = "claude/plugins/delivery/templates"
@@ -121,11 +122,11 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"docs/.*", NONE),
     (r"claude/plugins/[^/]+/\.claude-plugin/.*", NONE),
     (re.escape(TS) + r"/assets/catalog/.*", NONE),
-    (re.escape(TS) + r"/assets/check_stack\.py", NONE),
+    (re.escape(PSP) + r"/scripts/check_stack\.py", NONE),
     (r"tools/template_build_check\.py", NONE),
     # specs
-    (re.escape(TS) + r"/references/.*", frozenset({"specs"})),
-    (re.escape(PS) + r"/auth-setup/references/.*", frozenset({"specs"})),
+    # STACKSPEC and AUTHSPEC (DS305 moved them out of the skills)
+    (re.escape(PSP) + r"/references/(stackspec|authspec)\.md", frozenset({"specs"})),
     (r"claude/plugins/docs/references/artifactspec\.md", frozenset({"specs"})),
     (r"claude/plugins/docs/skills/spec-new/assets/.*", frozenset({"specs"})),
     (r"claude/plugins/docs/skills/spec-check/assets/.*", frozenset({"specs"})),
@@ -149,6 +150,11 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/(test_claude_setup_plugins|test_check_stack_rust)\.py", frozenset({"profiles"})),
     (r"tools/test_setup_pattern\.py", frozenset({"profiles"})),
     (r"tools/(test_questions_stop|test_project_setup_fixes)\.py", frozenset({"profiles"})),
+    # ci_pin.py and its test (DS305 moved the script out of the claude-setup assets)
+    (re.escape(PSP) + r"/scripts/ci_pin\.py", frozenset({"profiles"})),
+    (r"tools/test_dl263_ci_pin\.py", frozenset({"profiles"})),
+    # the project-setup plugin's own tests run in the profiles job (DS306)
+    (re.escape(PSP) + r"/tests/.*", frozenset({"profiles"})),
     (r"\.claude-plugin/marketplace\.json", frozenset({"profiles"})),
     # transcript-folds (its .claude-plugin/ manifest is matched above: nothing heavy)
     (r"claude/plugins/transcript-folds/.*", frozenset({"transcript-folds"})),
@@ -158,7 +164,7 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"tools/test_ds_enforcement\.py", frozenset({"docs"})),
     # the artifacts files that live in the docs plugin (DS219), before the docs rules below
     (r"claude/plugins/docs/hooks/hooks\.json", frozenset({"docs", "artifacts"})),
-    (r"claude/plugins/docs/scripts/(artifacts/.*|artifact_[a-z]+|project_artifacts|render_artifacts|publish_hourly"
+    (r"claude/plugins/docs/scripts/(hook_session_start_artifacts|artifact_[a-z]+|project_artifacts|render_artifacts|publish_hourly"
      r"|hook_after_command|hook_end_of_turn)\.py", frozenset({"artifacts"})),
     (r"claude/plugins/docs/(design|templates/(feature-artifact|full-progress-artifact|project-artifact))[^/]*(/.*)?",
      frozenset({"artifacts"})),
@@ -172,8 +178,8 @@ RULES: list[tuple[str, frozenset[str]]] = [
     # delivery
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
-    (re.escape(TS) + r"/assets/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z_]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged|test_ci_speedups|test_shard_guard)\.py",
+    (re.escape(PSP) + r"/scripts/preflight\.py", frozenset({"delivery"})),
+    (r"tools/(test_delivery_[a-z_]+|test_artifact_prune|test_change_notes|test_preflight|test_smoke_packaged|test_ci_speedups|test_shard_guard|test_kit_suite_sim)\.py",
      frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]

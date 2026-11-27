@@ -21,13 +21,12 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
     paths:
-      - 'claude/plugins/project-setup/skills/tech-stack-setup/references/**'
-      - 'claude/plugins/project-setup/skills/auth-setup/references/**'
+      - 'claude/plugins/project-setup/references/**'
       - 'claude/plugins/docs/skills/spec-new/assets/spec-template.md'
       - 'claude/plugins/docs/skills/spec-check/assets/spec_check.py'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/stack-profile.md'
       - 'tools/**'
-      - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/preflight.py'
+      - 'claude/plugins/project-setup/scripts/**'
       - 'claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/**'
       - 'claude/plugins/delivery/templates/**'
       - 'claude/plugins/**'   # DS102: any plugin change needs its change note
@@ -70,7 +69,7 @@ permissions:
   pull-requests: read
 
 env:
-  AUTHSPEC: claude/plugins/project-setup/skills/auth-setup/references/authentication.md
+  AUTHSPEC: claude/plugins/project-setup/references/authspec.md
 
 jobs:
   # Reads the changed paths and says which areas below run (DS43). Every area
@@ -434,6 +433,10 @@ jobs:
       - name: Prove the warn-mode report still holds (DP8)
         run: python3 -I tools/test_delivery_report.py
 
+      # DL390: the kit's shipped tests pass in a fresh adopting project.
+      - name: Prove the kit's shipped tests pass in a fresh project (DL390)
+        run: python3 -I tools/test_kit_suite_sim.py
+
   delivery-smoke:
     name: delivery - packaged-program smoke test
     needs: areas
@@ -641,6 +644,20 @@ jobs:
       - name: Prove the questions stop hook still holds
         run: python3 tools/test_questions_stop.py
 
+      # DL263: ci_pin.py pins a project's dev-standards workflow to a release.
+      - name: Prove ci_pin.py still holds (DL263)
+        run: python3 -I tools/test_dl263_ci_pin.py
+
+      - name: Prove the project-setup fixes still hold
+        run: python3 -I tools/test_project_setup_fixes.py
+
+      - name: Prove every setup skill follows the setup pattern
+        run: python3 -I tools/test_setup_pattern.py
+
+      # DS306: the project-setup plugin's own tests, by unittest discovery.
+      - name: Prove the project-setup plugin tests still hold
+        run: python3 -I -m unittest discover -s claude/plugins/project-setup/tests -t claude/plugins/project-setup/tests
+
   artifacts:
     name: artifact renderer, commands and hooks
     needs: areas
@@ -716,6 +733,26 @@ jobs:
       # DL173: a ledger or ci-runs file with a missing or newer schema warns.
       - name: Prove the DL173 schema check still holds
         run: python3 -I tools/test_artifacts_dl173.py
+
+      # DL251: a stale Full Progress lede is a warning.
+      - name: Prove the DL251 stale lede warning still holds
+        run: python3 -I tools/test_artifacts_dl251.py
+
+      # DL259: a project design file is checked against the accents contract.
+      - name: Prove the DL259 design accents check still holds
+        run: python3 -I tools/test_artifacts_dl259.py
+
+      # DL260: every generated HTML page declares UTF-8 early.
+      - name: Prove the DL260 UTF-8 declaration still holds
+        run: python3 -I tools/test_artifacts_dl260.py
+
+      # DL264: mark-deferred --local accepts each of its folders.
+      - name: Prove the DL264 mark-deferred folders still hold
+        run: python3 -I tools/test_artifacts_dl264.py
+
+      # DL269: the record refuses U+FFFD.
+      - name: Prove the DL269 U+FFFD refusal still holds
+        run: python3 -I tools/test_artifacts_dl269.py
 
       # The hooks only queue and never write the record, and every one does
       # nothing in a project without a manifest. The end-of-turn hook must also
