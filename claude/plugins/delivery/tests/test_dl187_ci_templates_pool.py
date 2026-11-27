@@ -69,7 +69,8 @@ class RustSteps(unittest.TestCase):
         job = integration(RUST)
         self.assertIn("cargo metadata", job)
         for name in ("integration", "route_coverage"):
-            self.assertIn("if: ${{ steps.targets.outputs.%s == 'true' }}" % name, job)
+            # DS287 (R5.92): the narrow-rerun step may add clauses after the targets test
+            self.assertRegex(job, r"if: \$\{\{ steps\.targets\.outputs\.%s == 'true'(?: && [^}]+)? \}\}" % name)
             self.assertIn("cargo test --locked --test %s" % name, job)
 
     def test_ts_unchanged_steps(self):

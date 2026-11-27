@@ -767,9 +767,9 @@ jobs:
       # always() so it runs after a failed step or a cancel. (A run cancelled before this job starts leaves the
       # status pending, which keeps the merge blocked.)
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ !cancelled() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
+        if: ${{ always() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
       - name: Close the rerun-first/held status
-        if: ${{ !cancelled() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
+        if: ${{ always() && ((github.event_name == 'pull_request' && needs.plan.outputs.rerun == 'true') || (github.event_name == 'workflow_dispatch' && inputs.only != '')) }}
         env:
           GH_TOKEN: ${{ github.token }}
           EVENT: ${{ github.event_name }}
@@ -806,17 +806,17 @@ jobs:
       # How long the run took, as a job summary and the artifact `ci-run-times` (a stable name; artifact-prune.yml
       # keeps the newest). Report only: no step here ever fails the run.
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
-        if: ${{ !cancelled() && vars.CI_RUN_TIMES == 'true' }}
+        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
         continue-on-error: true
       - name: Write the run times
-        if: ${{ !cancelled() && vars.CI_RUN_TIMES == 'true' }}
+        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
         continue-on-error: true
         env:
           GITHUB_TOKEN: ${{ github.token }}
           CI_SCOPE: ${{ needs.plan.outputs.scope }}
         run: python3 scripts/delivery/ci_run_times.py
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: ${{ !cancelled() && vars.CI_RUN_TIMES == 'true' }}
+        if: ${{ always() && vars.CI_RUN_TIMES == 'true' }}
         continue-on-error: true
         with:
           name: ci-run-times
