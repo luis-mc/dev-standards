@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T20:37+00:00",
+  "updated": "2026-11-27T21:40+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -13077,8 +13077,8 @@
       "status": "Running",
       "item": "RELEASE: plugin tests out of tools/ (S7)",
       "detail": "Move plugin tests from tools/ into each plugin's tests/, one area at a time",
-      "expected": "27 Nov ~22:18",
-      "changed": "2026-11-27T20:37+00:00",
+      "expected": "27 Nov ~21:58",
+      "changed": "2026-11-27T21:40+00:00",
       "release": 211,
       "release_waits_on": [
         "DS302"
@@ -13088,25 +13088,51 @@
         {
           "name": "agents",
           "start": "2026-11-27T20:50+00:00",
-          "end": "2026-11-27T21:50+00:00"
+          "end": "2026-11-27T21:26+00:00"
         },
         {
           "name": "join",
-          "start": "2026-11-27T21:50+00:00",
-          "end": "2026-11-27T22:00+00:00"
+          "start": "2026-11-27T21:26+00:00",
+          "end": "2026-11-27T21:40+00:00"
         },
         {
           "name": "ci",
-          "start": "2026-11-27T22:00+00:00",
-          "end": "2026-11-27T22:15+00:00"
+          "start": "2026-11-27T21:40+00:00",
+          "end": "2026-11-27T21:55+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-27T22:15+00:00",
-          "end": "2026-11-27T22:18+00:00"
+          "start": "2026-11-27T21:55+00:00",
+          "end": "2026-11-27T21:58+00:00"
         }
       ],
-      "started": "2026-11-27T20:37+00:00"
+      "started": "2026-11-27T20:37+00:00",
+      "pr": 312,
+      "ci_runs": {
+        "fetched_at": "2026-11-27T21:40+00:00",
+        "runs": [
+          {
+            "name": "spec-lint",
+            "state": "running",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46071780702",
+            "created": "2026-11-27T21:40:08Z",
+            "updated": "2026-11-27T21:40:22Z",
+            "branch": "DS307-integration",
+            "event": "pull_request",
+            "kind": "pr"
+          },
+          {
+            "name": "secret-scan",
+            "state": "passed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46071780807",
+            "created": "2026-11-27T21:40:08Z",
+            "updated": "2026-11-27T21:40:27Z",
+            "branch": "DS307-integration",
+            "event": "pull_request",
+            "kind": "pr"
+          }
+        ]
+      }
     },
     {
       "id": "DS308",
