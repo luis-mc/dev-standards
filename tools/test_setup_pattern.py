@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """DL33: the five setup skills follow the setup pattern (section 13 of
-docs/features/delivery/shared-self-hosted-runners.md). Each must contain the plan
+docs/guides/shared-self-hosted-runners.md). Each must contain the plan
 step, the step lines rule, the safe-to-run-again rule and the three summary
 headings Done, Left for you, What you can do now. No network."""
 import pathlib

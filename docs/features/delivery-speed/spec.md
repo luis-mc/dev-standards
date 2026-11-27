@@ -56,7 +56,7 @@ The owner's prompt, reviewed on 11 October and rewritten with the review's fixes
 
 Each delivery-script change gets scenarios and mutants. Versions come from change notes: STACKSPEC 8.0.0, luismc-project-setup major.
 
-Related: [delivery](../delivery/spec.md), [test cost](../test-cost/spec.md). Rules: STACKSPEC 13.5 and 13.6, [DELIVERYSPEC](../../architecture/DELIVERYSPEC.md). Contract: the `CONTRACT.md` beside the delivery scripts.
+Related: [delivery](../delivery/spec.md), [test cost](../test-cost/spec.md). Rules: STACKSPEC 13.5 and 13.6, [DELIVERYSPEC](../../../claude/plugins/delivery/references/deliveryspec.md). Contract: the `CONTRACT.md` beside the delivery scripts.
 
 ```mermaid
 flowchart LR

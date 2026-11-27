@@ -29,7 +29,7 @@ sys.dont_write_bytecode = True
 REPO = Path(__file__).resolve().parent.parent
 TAG_RE = re.compile(r"<!-- (advice|check: (.+?)) -->$")
 ID_RE = re.compile(r"^(DL-\d\d|Q-\d+)$")
-SPEC = "docs/architecture/DELIVERYSPEC.md"
+SPEC = "claude/plugins/delivery/references/deliveryspec.md"
 BULLET_RE = re.compile(r"^\s*[-*] ")
 LATE = ("claude/plugins/delivery/templates/shared/scripts/delivery/session_guard.py",)
 # Rule files that ship to projects name rule IDs only. A path there is a mistake: the tag test

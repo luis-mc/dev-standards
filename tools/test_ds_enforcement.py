@@ -720,7 +720,7 @@ def the_harness_source_requires_the_ten_states_and_the_readme_names_the_stack():
 def the_delivery_spec_maps_the_gate_reference_and_the_specs_carry_the_new_ids():
     spec = open(os.path.join(REPO, 'docs', 'features', 'delivery', 'spec.md'), encoding='utf-8').read()
     assert 'claude/plugins/delivery/references/design-gate.md' in spec
-    assert '| DL-92 |' in open(os.path.join(REPO, 'docs', 'architecture', 'DELIVERYSPEC.md'), encoding='utf-8').read()
+    assert '| DL-92 |' in open(os.path.join(REPO, *'claude/plugins/delivery/references/deliveryspec.md'.split('/')), encoding='utf-8').read()
     assert '**R15.9**' in open(os.path.join(PLUGINS, 'docs', 'references', 'docspec.md'), encoding='utf-8').read()
 
 

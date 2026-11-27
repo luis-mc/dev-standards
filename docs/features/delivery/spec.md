@@ -24,7 +24,7 @@ last_verified: 2026-11-27
 ---
 # Delivery guard rails
 
-Related: [delivery speed](../delivery-speed/spec.md), [test cost](../test-cost/spec.md), [agents](../agents/spec.md), [artifacts](../artifacts/spec.md). The normative rules (DL-nn, Q-n) live in [DELIVERYSPEC](../../architecture/DELIVERYSPEC.md). This page does not copy them.
+Related: [delivery speed](../delivery-speed/spec.md), [test cost](../test-cost/spec.md), [agents](../agents/spec.md), [artifacts](../artifacts/spec.md). The normative rules (DL-nn, Q-n) live in [DELIVERYSPEC](../../../claude/plugins/delivery/references/deliveryspec.md). This page does not copy them.
 
 ## 1. In one paragraph
 
@@ -114,7 +114,7 @@ use: { launchOptions: { executablePath: process.env.E2E_CHROMIUM_PATH || undefin
 
 **R5.21** — Every sibling module a shipped delivery script imports ships with it, and a test checks this. When one is missing, `ci_watch.py` and `fallback_launch.py` print one line that names the missing file, its folder and the fix (`delivery_ci_install.py update --track <track>`, then commit `scripts/delivery/`), and exit 2. After an install or update, and on a dry run, `delivery_ci_install.py` lists `missing imports:`. In a git repository it also lists the managed files git does not track, under `not in git yet (commit them):`. A missing import makes it exit 3. Untracked files never change the exit code. (DL112)
 
-**R5.22** — `cancel_joined_runs.py --into <INTEGRATION> [--remote origin] [--repo OWNER/NAME] [--yes]` finds the active CI runs (queued, waiting, requested, pending, in progress) of branches already merged into the integration branch whose head commit the integration branch contains. A branch pushed again after the join is left alone. Runs of the integration branch, the default branch and unmerged branches are never touched. It is a dry run by default and prints one `cancel <id> <branch> <workflow> <url>` line per run. With `--yes` it runs `gh run cancel` for each run. It exits 0 when done, 1 when a cancel fails, and 2 on a usage error, a missing integration branch, or gh missing or failing. `DELIVERY_GH` names another gh program. Run it after a join so the ready PR's CI gets the runner. (DL113)
+**R5.22** — Removed (DS293, owner decision D324): `cancel_joined_runs.py` had no caller; a joined branch's runs finish on their own.
 
 **R5.23** — CI jobs keep pinned tools on the runner's own disk. `scripts/delivery/ci_tool.py fetch <url> --sha256 <hex> --name <tool>/<version>/<file>` prints the path of a verified file in the per-runner cache. The cache is `CI_TOOLS_DIR`, else `C:/ci-tools` on Windows and `~/.cache/ci-tools` elsewhere, laid out as `<tool>/<version>/<file>`. It is never `$RUNNER_TEMP` or the workspace. A cached file is used only when its SHA-256 matches the pin; a mismatch is deleted and fetched again. A fetch makes 5 attempts (waits of 10, 20, 30 and 40 s; `CI_TOOL_RETRY_DELAY` sets the base) with a 20 s timeout. It downloads to a `.partial` file, verifies it, then renames it. `ci_tool.py gitleaks [--platform P]` does the same for the gitleaks pin in `tools.json` and prints the binary's path. Exit 0 prints the path, 1 is a failure (one stderr line with the URL, the attempts and the last error), 2 is a usage error. The shipped `ci.yml` gitleaks steps use it. (DL115)
 

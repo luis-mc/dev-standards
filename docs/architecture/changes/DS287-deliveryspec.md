@@ -1,4 +1,5 @@
 ---
+spec: claude/plugins/delivery/references/deliveryspec.md
 change: minor
 task: DS287
 ---

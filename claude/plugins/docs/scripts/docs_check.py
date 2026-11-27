@@ -309,7 +309,7 @@ R1_SKIP_DIRS = {".git", "node_modules", "__pycache__", ".venv", "dist", "build",
 # Records of the past or generated files: they may name a removed ID.
 R1_SKIP_PREFIXES = (".claude/worktrees/", "docs/archive/", "docs/work/", "docs/project/", "docs/reference/", "docs/architecture/changes/",
                     "docs/features/index.md", "docs/architecture/decisions.md", "docs/index.html", "docs/llms.txt",
-                    "docs/docs-map.json", "docs/architecture/DELIVERYSPEC.md", "docs/guides/removed-delivery-ids.md",
+                    "docs/docs-map.json", "claude/plugins/delivery/references/deliveryspec.md", "docs/guides/removed-delivery-ids.md",
                     "claude/plugins/docs/scripts/docs_check.py", "claude/plugins/docs/tests/test_ds246_removed_ids.py")
 
 
