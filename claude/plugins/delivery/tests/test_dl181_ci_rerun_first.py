@@ -147,7 +147,7 @@ class WorkflowTextTests(unittest.TestCase):
         import test_dl147_workflow_needs as N
         jobs = N.read_jobs(self.text)
         self.assertEqual(set(jobs), {"decide", "plan", "verify", "integration", "integration-pool", "e2e-shard", "e2e"})  # DL190: the pool twin
-        self.assertEqual(jobs["verify"]["needs"], ["decide"])
+        self.assertEqual(jobs["verify"]["needs"], ["decide", "plan"])  # DS287: verify reads the carry plan
         self.assertEqual(jobs["integration"]["needs"], ["decide", "plan"])
         self.assertEqual(jobs["integration-pool"]["needs"], ["decide", "plan"])
         self.assertEqual(jobs["e2e-shard"]["needs"], ["decide", "plan"])

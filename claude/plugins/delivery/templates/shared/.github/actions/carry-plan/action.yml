@@ -18,13 +18,13 @@ outputs:
     description: The jobs that run
     value: ${{ steps.plan.outputs.run }}
   carried:
-    description: JSON {job: {sha, run_url}} of the carried jobs
+    description: 'JSON {job: {sha, run_url}} of the carried jobs'
     value: ${{ steps.plan.outputs.carried }}
   reason:
     description: One line
     value: ${{ steps.plan.outputs.reason }}
   plan:
-    description: JSON of the run_<job> outputs, for example {"run_verify":"false"}
+    description: 'JSON of the run_<job> outputs, for example {"run_verify":"false"}'
     value: ${{ steps.plan.outputs.plan }}
 runs:
   using: composite

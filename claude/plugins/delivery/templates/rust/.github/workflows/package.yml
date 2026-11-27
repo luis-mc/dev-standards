@@ -47,9 +47,32 @@ permissions:
   contents: read
 
 jobs:
+  # DS287 (R5.88): which jobs an earlier head of this pull request already proved. Any doubt: every job runs.
+  carry:
+    name: carry-forward plan
+    if: ${{ (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CRSP_CARRY || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 10
+    permissions:
+      contents: read
+      actions: read
+    outputs:
+      carry_plan: ${{ steps.carry.outputs.plan }}
+      carried: ${{ steps.carry.outputs.carried }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+      - id: carry
+        continue-on-error: true
+        uses: ./.github/actions/carry-plan
+        with:
+          workflow: package.yml
+
   package:
     name: build, start and smoke-test the packaged program
-    if: ${{ github.event_name != 'pull_request' || !github.event.pull_request.draft }}
+    needs: carry
+    if: ${{ !cancelled() && (github.event_name != 'pull_request' || !github.event.pull_request.draft) && needs.carry.result != 'cancelled' && fromJSON(needs.carry.outputs.carry_plan || '{}').run_package != 'false' }}
     runs-on: ${{ fromJSON(vars.CRSP_PACKAGE || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
     env:
       DELIVERY_SHARD: package
@@ -144,3 +167,26 @@ jobs:
           path: dist-windows/
           if-no-files-found: ignore
           retention-days: 7
+
+  # DS287 (R5.91): the required check. A job carried from an earlier head counts as passed.
+  carry-ok:
+    name: every job passed or was carried
+    needs: [carry, package]
+    if: ${{ !cancelled() && needs.carry.result != 'cancelled' && needs.package.result != 'cancelled' && (github.event_name != 'pull_request' || !github.event.pull_request.draft) }}
+    runs-on: ${{ fromJSON(vars.CRSP_CARRY_OK || vars.CRSP_RUNS_ON_LINUX || vars.CI_RUNS_ON || '"ubuntu-latest"') }}
+    timeout-minutes: 5
+    permissions:
+      contents: read
+    env:
+      NEEDS: ${{ toJSON(needs) }}
+      CARRIED: ${{ needs.carry.outputs.carried || '{}' }}
+      IGNORE: carry
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Every needed job passed, or was skipped and carried
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            python3 scripts/delivery/carry_verify.py --needs "$NEEDS" --carried "$CARRIED" --ignore "$IGNORE"
+          else
+            echo "$NEEDS" | python3 -c "import json,sys; n=json.load(sys.stdin); bad=[k for k,v in n.items() if v['result'] not in ('success','skipped')]; print('not green:', bad) if bad else print('ok'); sys.exit(1 if bad else 0)"
+          fi
