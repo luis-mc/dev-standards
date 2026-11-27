@@ -1,6 +1,6 @@
 {
   "spec": "ARTIFACTSPEC 1.0.0",
-  "updated": "2026-11-27T16:48+00:00",
+  "updated": "2026-11-27T20:15+00:00",
   "tasks": [
     {
       "id": "AR2",
@@ -12895,74 +12895,151 @@
       "status": "Running",
       "item": "RELEASE: review fixes (DS298-DS300 decisions)",
       "detail": "Apply the no-decision batches and owner decisions D327-D344",
-      "expected": "27 Nov ~18:08",
-      "changed": "2026-11-27T16:45+00:00",
+      "expected": "27 Nov ~20:33",
+      "changed": "2026-11-27T20:13+00:00",
       "expected_basis": "4 cloud agents ~40 min, join, CI ~15 min, watcher merge",
       "release": 210,
       "phases": [
         {
-          "name": "agents",
-          "start": "2026-11-27T16:55+00:00",
-          "end": "2026-11-27T17:35+00:00"
+          "name": "fix",
+          "start": "2026-11-27T18:55+00:00",
+          "end": "2026-11-27T20:13+00:00"
         },
         {
-          "name": "join",
-          "start": "2026-11-27T17:35+00:00",
-          "end": "2026-11-27T17:50+00:00"
-        },
-        {
-          "name": "ci",
-          "start": "2026-11-27T17:50+00:00",
-          "end": "2026-11-27T18:05+00:00"
+          "name": "ci2",
+          "start": "2026-11-27T20:13+00:00",
+          "end": "2026-11-27T20:30+00:00"
         },
         {
           "name": "merge",
-          "start": "2026-11-27T18:05+00:00",
-          "end": "2026-11-27T18:08+00:00"
+          "start": "2026-11-27T20:30+00:00",
+          "end": "2026-11-27T20:33+00:00"
         }
       ],
       "risk": {
         "label": "fix round",
         "minutes": 15
       },
-      "started": "2026-11-27T16:45+00:00"
+      "started": "2026-11-27T16:45+00:00",
+      "ci_runs": {
+        "fetched_at": "2026-11-27T20:15+00:00",
+        "runs": [
+          {
+            "name": "spec-lint",
+            "state": "failed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46052127850",
+            "created": "2026-11-27T18:48:04Z",
+            "updated": "2026-11-27T18:52:41Z",
+            "branch": "DS302-integration",
+            "event": "pull_request",
+            "kind": "branch"
+          },
+          {
+            "name": "secret-scan",
+            "state": "failed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46052127835",
+            "created": "2026-11-27T18:48:04Z",
+            "updated": "2026-11-27T18:48:25Z",
+            "branch": "DS302-integration",
+            "event": "pull_request",
+            "kind": "branch"
+          },
+          {
+            "name": "secret-scan",
+            "state": "passed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46062168812",
+            "created": "2026-11-27T20:13:41Z",
+            "updated": "2026-11-27T20:13:58Z",
+            "branch": "DS302-integration",
+            "event": "pull_request",
+            "kind": "branch"
+          },
+          {
+            "name": "spec-lint",
+            "state": "running",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46062168664",
+            "created": "2026-11-27T20:13:41Z",
+            "updated": "2026-11-27T20:13:59Z",
+            "branch": "DS302-integration",
+            "event": "pull_request",
+            "kind": "branch"
+          }
+        ]
+      }
     },
     {
       "id": "DS303",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Delivery plugin: merge roles, question rules, cited-ID test",
       "detail": "C1 C2 C3 C12 C13 C15 C16 C17 D2 D14 E1 E2 E3 M1; DELIVERYSPEC and delivery hooks",
-      "expected": "27 Nov ~17:35",
-      "changed": "2026-11-27T16:46+00:00",
-      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T18:58+00:00",
       "rides": "DS302",
-      "started": "2026-11-27T16:46+00:00"
+      "started": "2026-11-27T16:46+00:00",
+      "ci_runs": {
+        "fetched_at": "2026-11-27T20:15+00:00",
+        "runs": [
+          {
+            "name": "spec-lint",
+            "state": "failed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46039560525",
+            "created": "2026-11-27T17:09:28Z",
+            "updated": "2026-11-27T17:15:13Z",
+            "branch": "DS303-delivery-review",
+            "event": "workflow_dispatch",
+            "kind": "branch"
+          },
+          {
+            "name": "spec-lint",
+            "state": "failed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46040641475",
+            "created": "2026-11-27T17:17:25Z",
+            "updated": "2026-11-27T17:20:32Z",
+            "branch": "DS303-delivery-review",
+            "event": "workflow_dispatch",
+            "kind": "branch"
+          }
+        ]
+      }
     },
     {
       "id": "DS304",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Docs plugin: record and DOCSPEC/ARTIFACTSPEC fixes",
       "detail": "C4 C9 C10 C11 C14 C23 D9 D10 U4 U5 U11 S3 S4 E19 E20; docs plugin and its specs",
-      "expected": "27 Nov ~17:35",
-      "changed": "2026-11-27T16:46+00:00",
-      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T18:58+00:00",
       "rides": "DS302",
-      "started": "2026-11-27T16:46+00:00"
+      "started": "2026-11-27T16:46+00:00",
+      "ci_runs": {
+        "fetched_at": "2026-11-27T20:15+00:00",
+        "runs": [
+          {
+            "name": "spec-lint",
+            "state": "failed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46040717745",
+            "created": "2026-11-27T17:17:59Z",
+            "updated": "2026-11-27T17:24:02Z",
+            "branch": "DS304-docs-review",
+            "event": "workflow_dispatch",
+            "kind": "branch"
+          }
+        ]
+      }
     },
     {
       "id": "DS305",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Project-setup: spec moves, STACKSPEC/AUTHSPEC fixes",
       "detail": "S2 S5 S6 U7 S9 C24 C25 M5 E18 E21 E22; project-setup plugin",
-      "expected": "27 Nov ~17:35",
-      "changed": "2026-11-27T16:46+00:00",
-      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T18:58+00:00",
       "rides": "DS302",
       "started": "2026-11-27T16:46+00:00"
     },
@@ -12970,14 +13047,28 @@
       "id": "DS306",
       "owner": "project",
       "app": "",
-      "status": "Running",
+      "status": "Built",
       "item": "Repo: AGENTS.md, feature specs, CI wiring, deletions",
       "detail": "M7 C5 C6 C7 C8 C19-C22 C26 S1 U1-U3 U6 U9 U10 U12 U20; repo files",
-      "expected": "27 Nov ~17:35",
-      "changed": "2026-11-27T16:46+00:00",
-      "expected_basis": "cloud agent from 16:55, ~40 min",
+      "expected": "27 Nov",
+      "changed": "2026-11-27T18:58+00:00",
       "rides": "DS302",
-      "started": "2026-11-27T16:46+00:00"
+      "started": "2026-11-27T16:46+00:00",
+      "ci_runs": {
+        "fetched_at": "2026-11-27T20:15+00:00",
+        "runs": [
+          {
+            "name": "spec-lint",
+            "state": "failed",
+            "url": "https://github.com/luis-mc/dev-standards/actions/runs/46038386724",
+            "created": "2026-11-27T17:01:00Z",
+            "updated": "2026-11-27T17:07:34Z",
+            "branch": "DS306-repo-review",
+            "event": "workflow_dispatch",
+            "kind": "branch"
+          }
+        ]
+      }
     },
     {
       "id": "DS307",
