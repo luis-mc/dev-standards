@@ -1,0 +1,64 @@
+name: Narrow the rerun of a test job
+description: >-
+  DS287 (R5.92). On a pull_request, find the previous head's run of this job and its test report, then ask
+  scripts/delivery/rerun_tests.py what to run. Output `mode`: `narrow` (run the failed tests, then the affected
+  packages), `whole` or `current` (run the job's normal test command). Any error: `current`, with a warning.
+inputs:
+  runner:
+    description: vitest, go or cargo
+    required: true
+  job:
+    description: The job id, for `ci.jobs.<id>.rerun` in .delivery/config.json
+    required: true
+  job-name:
+    description: The job's display name, as the API reports it
+    required: true
+  workflow:
+    description: The workflow file name
+    default: ci.yml
+  report-name:
+    description: The artifact name of the job's test report
+    required: true
+  github-token:
+    default: ${{ github.token }}
+outputs:
+  mode:
+    description: narrow, whole or current
+    value: ${{ steps.answer.outputs.mode }}
+  decision:
+    description: Path of the rerun_tests.py answer (JSON)
+    value: ${{ steps.answer.outputs.decision }}
+runs:
+  using: composite
+  steps:
+    - id: prev
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github-token }}
+      run: |
+        python3 scripts/delivery/rerun_step.py lookup --repo "$GITHUB_REPOSITORY" --workflow "${{ inputs.workflow }}" \
+          --pr "${{ github.event.pull_request.number }}" --sha "${{ github.event.pull_request.head.sha }}" \
+          --job-name "${{ inputs.job-name }}" --report-name "${{ inputs.report-name }}" --out .rerun \
+          || echo "::warning::rerun lookup failed; the normal test command runs"
+    - id: answer
+      shell: bash
+      env:
+        PREV: ${{ steps.prev.outputs.prev_conclusion }}
+        REPORT: ${{ steps.prev.outputs.report }}
+      run: |
+        echo "decision=.rerun/decision.json" >> "$GITHUB_OUTPUT"
+        if [ -z "$PREV" ]; then
+          echo "mode=current" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+        report=""
+        if [ -n "$REPORT" ]; then
+          case "$REPORT" in *.log) report="--log $REPORT";; *) report="--report $REPORT";; esac
+        fi
+        if python3 scripts/delivery/rerun_tests.py --runner "${{ inputs.runner }}" --job "${{ inputs.job }}" \
+             --prev-conclusion "$PREV" $report --changed-file - --json < .rerun/changed.txt > .rerun/decision.json; then
+          python3 scripts/delivery/rerun_step.py mode .rerun/decision.json >> "$GITHUB_OUTPUT"
+        else
+          echo "::warning::rerun_tests.py failed; the normal test command runs"
+          echo "mode=current" >> "$GITHUB_OUTPUT"
+        fi
