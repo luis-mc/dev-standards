@@ -63,6 +63,22 @@
     "claude/plugins/delivery/tests/*.py": [
       "docs/features/delivery/spec.md"
     ],
+    "claude/plugins/delivery/tests/test_artifact_prune.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/delivery/tests/test_delivery_*.py": [
+      "docs/features/delivery-speed/spec.md",
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/tests/test_delivery_cloud.py": [
+      "docs/features/delivery/spec.md"
+    ],
+    "claude/plugins/delivery/tests/test_delivery_gate.py": [
+      "docs/features/test-cost/spec.md"
+    ],
+    "claude/plugins/delivery/tests/test_rule_tags.py": [
+      "docs/features/project-setup/spec.md"
+    ],
     "claude/plugins/docs/**": [
       "docs/features/docs/spec.md"
     ],
@@ -144,6 +160,40 @@
     "claude/plugins/docs/templates/project-artifact.css": [
       "docs/features/artifacts/spec.md"
     ],
+    "claude/plugins/docs/tests/test_artifacts_ar*.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_artifacts_dl429.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_artifacts_dp7.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_artifacts_ds258.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_artifacts_ds272.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_artifacts_ds278.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_ds_enforcement.py": [
+      "docs/features/docs/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_project_artifacts.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_project_artifacts_hooks.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_render_artifacts.py": [
+      "docs/features/artifacts/spec.md"
+    ],
+    "claude/plugins/docs/tests/test_spec_check.py": [
+      "docs/features/project-setup/spec.md",
+      "docs/features/specs/spec.md"
+    ],
     "claude/plugins/project-setup/**": [
       "docs/features/project-setup/spec.md"
     ],
@@ -165,7 +215,32 @@
     "claude/plugins/project-setup/skills/claude-setup/assets/model-profiles.json": [
       "docs/features/models/spec.md"
     ],
+    "claude/plugins/project-setup/tests/test_check_stack_rust.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "claude/plugins/project-setup/tests/test_claude_setup_plugins.py": [
+      "docs/features/project-setup/spec.md"
+    ],
     "claude/plugins/project-setup/tests/test_dl334_pr_allow_rules.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "claude/plugins/project-setup/tests/test_model_profiles.py": [
+      "docs/features/agents/spec.md",
+      "docs/features/audits/spec.md",
+      "docs/features/models/spec.md",
+      "docs/features/project-setup/spec.md",
+      "docs/features/transcript-folds/spec.md"
+    ],
+    "claude/plugins/project-setup/tests/test_preflight.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "claude/plugins/project-setup/tests/test_project_setup_fixes.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "claude/plugins/project-setup/tests/test_questions_stop.py": [
+      "docs/features/project-setup/spec.md"
+    ],
+    "claude/plugins/project-setup/tests/test_setup_pattern.py": [
       "docs/features/project-setup/spec.md"
     ],
     "claude/plugins/transcript-folds/**": [
@@ -174,86 +249,11 @@
     "tools/ci_areas.py": [
       "docs/features/test-cost/spec.md"
     ],
-    "tools/test_artifact_prune.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_artifacts_ar*.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_artifacts_dl429.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_artifacts_dp7.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_artifacts_ds258.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_artifacts_ds272.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_artifacts_ds278.py": [
-      "docs/features/artifacts/spec.md"
-    ],
     "tools/test_authspec_check.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_check_stack_rust.py": [
       "docs/features/project-setup/spec.md"
     ],
     "tools/test_ci_areas.py": [
       "docs/features/test-cost/spec.md"
-    ],
-    "tools/test_claude_setup_plugins.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_delivery_*.py": [
-      "docs/features/delivery-speed/spec.md",
-      "docs/features/delivery/spec.md"
-    ],
-    "tools/test_delivery_cloud.py": [
-      "docs/features/delivery/spec.md"
-    ],
-    "tools/test_delivery_gate.py": [
-      "docs/features/test-cost/spec.md"
-    ],
-    "tools/test_ds_enforcement.py": [
-      "docs/features/docs/spec.md"
-    ],
-    "tools/test_model_profiles.py": [
-      "docs/features/agents/spec.md",
-      "docs/features/audits/spec.md",
-      "docs/features/models/spec.md",
-      "docs/features/project-setup/spec.md",
-      "docs/features/transcript-folds/spec.md"
-    ],
-    "tools/test_preflight.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_project_artifacts.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_project_artifacts_hooks.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_project_setup_fixes.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_questions_stop.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_render_artifacts.py": [
-      "docs/features/artifacts/spec.md"
-    ],
-    "tools/test_rule_tags.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_setup_pattern.py": [
-      "docs/features/project-setup/spec.md"
-    ],
-    "tools/test_spec_check.py": [
-      "docs/features/project-setup/spec.md",
-      "docs/features/specs/spec.md"
     ]
   }
 }
