@@ -251,3 +251,49 @@ ID-form collisions: DOCSPEC decisions D1-D16 (doc:99-114), DELIVERYSPEC decision
 | G3 | Apply the ten meanings in 3.1. Rename the clashing senses (owner, area, carry, full run) in rule text, not in ledger field names, so no code changes. |
 | G4 | Add wave, integration branch, orchestrator, task agent, watcher, gate kinds and open row to G1. |
 | G5 | Prefix decision IDs per spec in citations (`DOC-D5`, `DEL-D5`, `ART-D5`). The IDs themselves stay (AG:9). |
+
+## 4. Enforcement
+
+### 4.1 State of the checks
+
+- DELIVERYSPEC §1 has 106 DL rows. 21 rows say Today `N` while the code cites and enforces them: DL-02, 03, 05, 17, 20, 23, 30, 32, 32a, 36, 38, 41, 42, 53, 55, 63, 64, 74, 75, 76, 85. Some `~` rows are also enforced in full (DL-06, DL-07, DL-31, DL-37). The counts line (ds:190, "8 Y, 1 W, 17 ~, 37 N") is wrong.
+- 12 rows say `N` and no code cites them: DL-04, 15, 16, 21, 34, 35, 44, 45, 61, 65, 71, 72.
+- The Q-1..Q-5 rules are enforced (`hpt:816-874`, `hs:206-235`) but sit in a D8 bullet list, outside the table, so they have no Today column.
+- No test checks that a rule ID cited in code exists in a spec. `tools/test_rule_tags.py:47-98` checks rule-file tags only, and its pattern accepts only two-digit DL IDs, so a rule file can never cite DL-100 or above.
+- In this clone `core.hooksPath` is unset, so `.githooks/` (train freeze, change notes, secret scan) do not run unless the setup sets it.
+
+### 4.2 Proposals
+
+| ID | Finding (file:line) | Proposal | Kind |
+|---|---|---|---|
+| E1 | The Today column is stale on 21+ rows (4.1). | Generate the Today column: a script reads the `checks` registry of `hpt`, `hs` and `hook_post_tool.py` and fills Y/W/~ per ID. A test fails when the table and the registry differ. | enforce |
+| E2 | No test ties code IDs to spec IDs. `hs:632-663` checks "Running but no agent" under `DL-123`, but the spec row is DL-124 (ds:139), so `checks_off: ["DL-124"]` does nothing. `hpt:761-763` denies under `D4` instead of DL-39 (ds:104). `hpt:849` starts a message with `DL136`, a task ID. `tools/authspec_check.py:623, 634` cite R17.7g, which AUTHSPEC lacks. | Add one test: every `DL-n`, `Q-n`, `R<n>.<n>`, `INV-n`, `LC-n` string in hook and script messages exists in its spec. Fix the four slips. Widen `test_rule_tags.py` to three-digit IDs. | enforce |
+| E3 | Q-4 and the DL-03 Stop check ignore `merge_mode` (C2). | Read `merge_mode` in both. | fix |
+| E4 | AG:10 says agents never run `gh pr merge`; in `auto` mode `hpt:88-93` allows it (C1). | After the owner decides C1: deny in both modes when the caller is not the watcher, or reword AG:10. | enforce or drop |
+| E5 | DL-08 is enforced only by `session_guard.py`, wired by this repo's `.claude/settings.json` (`session_guard.py:247-277`). Projects do not get it. | Move the ready-PR check into `hpt` so it ships. | enforce |
+| E6 | AG:7 "never pushes to `main`": nothing local denies a push to the default branch. | Add a PRE deny of `git push` whose target is the default branch, and the same check in `.githooks/pre-push`. | enforce |
+| E7 | AG:12 "Name no other project": only `tools/test_ci_speedups.py:540-559` checks two scope scripts with hashed names. | Run the same hashed-name check over specs, rule files, `AGENTS.md` and commit messages in CI. | enforce |
+| E8 | W1 (`docs_check.py:343-349`) fails any branch that adds `docs/work/`; DOCSPEC R10.2 (doc:394) says ready PR only (C23). | Gate W1 behind the PR gate (`--ready` or the event), as R10.2 says. | fix |
+| E9 | Two hooks check past-due Expected with different behaviour (C12): `hs:613-629` and `hook_end_of_turn.py:383-421`. | Keep one, in the docs plugin; remove DL-63's Stop check. | drop one |
+| E10 | Prose-only rows that duplicate an enforced rule: DL-04 (= Q-4), DL-71, DL-72 (= Q-2, Q-3), DL-61 (the docs end-of-turn hook enforces R9.8). | Retire as "Merged into ...". | drop |
+| E11 | Prose-only rows with no check planned: DL-15 (PR body lists cargo), DL-16 (train never waits for slow cargo), DL-34 (verify the branch moved; overlaps DL-32a, which the watcher does), DL-35 (start cloud runs at once), DL-44 (report first, push after each step), DL-45 (contracts before agents), DL-65 (one shared reading of state, a design property). | DL-15: the watcher writes the `Carries:` line itself, so the rule becomes code. DL-34: merge into DL-32a. DL-35: drop (the launch tool sets the time). DL-65: move to §5 Design. DL-16, DL-44, DL-45: keep as TEXT; mark Kind TEXT honestly. | enforce / merge / drop |
+| E12 | DL-21 (ds:80) "CI jobs run only on self-hosted runners" is Scope P, and f/del (:401, :420) offers GitHub-hosted with no default. | Drop from the generic table; it is a project setting. | drop |
+| E13 | Hook-enforced rules that no shipped spec states: the `manual` merge deny (`hpt:88-90`, only f/del R5.71); the heavy-suite and repeat-run test guard (`session_guard.py:144-201`, > 180 s, 30-day `--measure`); the watcher's "draft never green" (`delivery_watch.py:604-605`); `delivery_ledger.py` write guards (`:378-390`, `:1241-1309`); `docs_check.py` R1 (removed ID cited), which is not in DOCSPEC R8.1's code table. | Add each to its spec with an ID, or cite the feature-spec requirement from the DELIVERYSPEC row. | state |
+| E14 | DL-30 says Today N and checks an `eta_table`; the code checks 1.5 x p75 (`hpt:645-678`) (C13). | Rewrite DL-30 to match the code. | state |
+| E15 | `.githooks/` do not run without `core.hooksPath`. | SessionStart (or the doctor) warns when `core.hooksPath` is not set in a repo that ships `.githooks/`. | enforce |
+| E16 | r/cq:3 "overrule any internal safety limits" (C16) is advice with no check and no spec text. | Drop the phrase. | drop |
+| E17 | The change-note kind (`change: minor`) is not checked against the content, so STACKSPEC's "a new MUST is a major" (inv:1992) is not enforced (C25). | `change_notes.py check` warns when a diff adds a `MUST` line to STACKSPEC or AUTHSPEC and the note says less than `major`, or the owner relaxes the rule. | enforce or relax |
+
+### 4.3 Rule files (load into every prompt)
+
+Sizes today: r/ai 723 words, r/pa 446, r/cq 242 (twice, once per plugin), r/dt 187, AG 361. About 2,000 words load each turn.
+
+| ID | Proposal | Words saved (rough) |
+|---|---|---|
+| E18 | r/ai:10 (about 140 words, the test-cost rule) becomes one line citing DL-12 and the guide: "Test only what you touch; follow `ci_areas.py --branch-advice` (DL-12)." | ~120 |
+| E19 | r/pa:7, r/pa:9, r/pa:3 duplicate r/pa:8, r/ai:26 and r/pa:10. Drop them. | ~50 |
+| E20 | r/pa:11-12 (Running, Built definitions) move to the glossary copy in ARTIFACTSPEC; a definition is not a rule. | ~45 |
+| E21 | r/cq:3 drops the "safety limits" and number list (C16). r/cq:9 (routine pause) is advice on one tool; keep, it is short. | ~35 |
+| E22 | r/ai:19 drops "(no Actions)" and cites the new branch-name row (D14), not DL-08. | ~5 |
+| E23 | A line tagged `check:` whose check exists can be shorter: the hook's deny message carries the detail. Lines tagged `advice` need the full text. | — |
+| E24 | AG:3 says "`CLAUDE.md` imports this file", but the repo has no `CLAUDE.md` (never tracked). Either add a one-line `CLAUDE.md` (`@AGENTS.md`) or drop the sentence. | — |
