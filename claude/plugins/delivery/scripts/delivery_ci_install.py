@@ -129,7 +129,7 @@ PRE_PUSH = ".githooks/pre-push"
 SETTINGS = ".claude/settings.json"
 GUARD_MARK = "scripts/delivery/session_guard.py"
 GUARD_COMMAND = ("[ -f \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\" ] || exit 0; "
-                 "if command -v python3 >/dev/null 2>&1; then python3 \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; "
+                 "if command -v python3 2>/dev/null | grep -qv WindowsApps; then python3 \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; "
                  "else python \"$CLAUDE_PROJECT_DIR/scripts/delivery/session_guard.py\"; fi")
 SKIP_DIRS = {"__pycache__"}
 SKIP_FILES = {"CONTRACT.md"}

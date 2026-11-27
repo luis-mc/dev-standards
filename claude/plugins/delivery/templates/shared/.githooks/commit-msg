@@ -16,7 +16,7 @@ config="$repo_root/.delivery/config.json"
 # Only the top-level "no_attribution" key decides: a nested copy (the template's
 # "_example_windows_monorepo" block) must not count. With Python the JSON is
 # parsed; without it a dependency-free grep stands in.
-py=$(command -v python3 || command -v python || true)
+py=$(command -v python3 2>/dev/null | grep -v WindowsApps || command -v python || true)
 if [ -n "$py" ]; then
   "$py" -c 'import json,sys
 try:

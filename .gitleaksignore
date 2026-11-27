@@ -76,3 +76,6 @@ d4fcb3ac64ed7d1386e89d7d5b82d16335835b77:docs/work/DL204/REPORT.md:project-named
 8d3bb09515f733212c7bf52fe08bccf171fc0618:docs/features/delivery/spec.md:project-named-secret:317
 # DS235c: self-test result flag in the updater template, not a secret
 8d582e8e169cc55194f0ea6b2f4f47d8d7283d54:claude/plugins/delivery/templates/lifecycle/rust/src/lib.rs:project-named-secret:358
+# DS302: constant names ending in _KEY (a state field, a warning tag), not secrets
+71bf184465d53608da1e7d545f732784b08e12b7:claude/plugins/docs/scripts/project_artifacts.py:project-named-secret:3616
+d65ae357f65318a1cd5ba915f04b4108a1969b25:claude/plugins/delivery/scripts/hook_stop.py:project-named-secret:251

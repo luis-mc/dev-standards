@@ -371,8 +371,8 @@ carries the project form; rewrite both occurrences of the path for a user-level
 install:
 
 ```
-project → if command -v python3 >/dev/null 2>&1; then python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py"; else python "$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py"; fi
-user    → if command -v python3 >/dev/null 2>&1; then python3 "$HOME/.claude/hooks/effort_drift.py"; else python "$HOME/.claude/hooks/effort_drift.py"; fi
+project → if command -v python3 2>/dev/null | grep -qv WindowsApps; then python3 "$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py"; else python "$CLAUDE_PROJECT_DIR/.claude/hooks/effort_drift.py"; fi
+user    → if command -v python3 2>/dev/null | grep -qv WindowsApps; then python3 "$HOME/.claude/hooks/effort_drift.py"; else python "$HOME/.claude/hooks/effort_drift.py"; fi
 ```
 
 The `else python` fallback is for machines where `python3` is missing or is only
@@ -526,7 +526,7 @@ under "writes outside the repo":
    `~/.claude/hooks/questions_stop.py`.** Overwrite unconditionally, like
    `effort_drift.py`. Create `hooks/` when absent.
 2. **Add one Stop hook to `~/.claude/settings.json`**, with the command
-   `if command -v python3 >/dev/null 2>&1; then python3 "$HOME/.claude/hooks/questions_stop.py"; else python "$HOME/.claude/hooks/questions_stop.py"; fi`.
+   `if command -v python3 2>/dev/null | grep -qv WindowsApps; then python3 "$HOME/.claude/hooks/questions_stop.py"; else python "$HOME/.claude/hooks/questions_stop.py"; fi`.
    Append it to `hooks.Stop`. Never remove or change another Stop hook (the
    delivery plugin has one, and so may the owner). Add nothing when a Stop
    entry already runs `questions_stop.py`.

@@ -162,6 +162,7 @@ def strip_temporary_docs(root: Path, base_ref: str | None = None) -> dict:
     if done.returncode != 0:
         dc.eprint("join: docs_work.py strip failed (exit %d); going on: %s" % (done.returncode, (done.stderr or done.stdout).strip()))
         return {"stripped": False, "reason": "strip failed", "summaries": summaries}
+    dc.run_git(["add", "-A", "--", "docs/work"], cwd=root, check=False)   # the docs plugin never stages (C4)
     if base_ref and dc.run_git(["ls-tree", "-r", "--name-only", base_ref, "--", "docs/work"], cwd=root, check=False).stdout.strip():
         dc.run_git(["checkout", base_ref, "--", "docs/work"], cwd=root, check=False)
         dc.run_git(["add", "-A", "--", "docs/work"], cwd=root, check=False)

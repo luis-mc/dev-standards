@@ -3613,7 +3613,7 @@ def write_local_copy(rec, key, e, target):
 
 
 LOCAL_STATE_REL = os.path.join('.claude', 'artifacts-local.json')    # git-ignored, per machine (R4.26)
-LOCAL_STATE_KEY = 'deferred_local'          # {artifact key: {"local_path": str, "local_opened": bool}}
+LOCAL_STATE_FIELD = 'deferred_local'          # {artifact key: {"local_path": str, "local_opened": bool}}
 LOCAL_FIELDS = ('local_path', 'local_opened')
 
 
@@ -3629,7 +3629,7 @@ def read_local_state(root):
 def local_entry(root, key, e=None):
     """U11: the local page fields of one artifact, from the local file; an older manifest entry `e` that still
     holds them is read when the local file has none."""
-    entries = read_local_state(root).get(LOCAL_STATE_KEY)
+    entries = read_local_state(root).get(LOCAL_STATE_FIELD)
     got = entries.get(key) if isinstance(entries, dict) else None
     if isinstance(got, dict) and got:
         return got
@@ -3642,9 +3642,9 @@ def set_local_entry(root, key, value):
     """Write one artifact's local page fields into .claude/artifacts-local.json, keeping its other keys.
     A write that fails is a warning: the local page is a convenience."""
     data = read_local_state(root)
-    entries = data.get(LOCAL_STATE_KEY) if isinstance(data.get(LOCAL_STATE_KEY), dict) else {}
+    entries = data.get(LOCAL_STATE_FIELD) if isinstance(data.get(LOCAL_STATE_FIELD), dict) else {}
     entries[key] = value
-    data[LOCAL_STATE_KEY] = entries
+    data[LOCAL_STATE_FIELD] = entries
     path = Path(root) / LOCAL_STATE_REL
     tmp = path.with_name(path.name + '.tmp')
     try:
@@ -3664,7 +3664,7 @@ def move_local_fields(ctx, rec):
         old = {k: e[k] for k in LOCAL_FIELDS if k in e}
         if not old:
             continue
-        entries = read_local_state(ctx.root).get(LOCAL_STATE_KEY)
+        entries = read_local_state(ctx.root).get(LOCAL_STATE_FIELD)
         if not (isinstance(entries, dict) and isinstance(entries.get(key), dict) and entries[key]):
             set_local_entry(ctx.root, key, old)
         for k in LOCAL_FIELDS:

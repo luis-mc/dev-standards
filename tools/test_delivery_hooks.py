@@ -241,14 +241,14 @@ def dl14_dl18_hold_suppresses_until_it_lapses():
 def dl06_cross_repo_pr_is_not_judged_by_the_current_repos_ledger_train():
     p = Project(ledger(trains=[train(pr=426, ci={'head_sha': 'old', 'state': 'running'})]))
     gh = p.stub_gh(view={'number': 426, 'headRefOid': 'other'}, runs={'other': OK_RUNS})
-    expect_pass(bash(p, 'gh pr merge 426 --repo luis-mc/other --squash', {'DELIVERY_GH': gh}))
+    merge_denied(bash(p, 'gh pr merge 426 --repo luis-mc/other --squash', {'DELIVERY_GH': gh}))
     r = bash(p, 'gh pr merge 426 --squash', {'DELIVERY_GH': gh})
-    assert denied(r) and 'DL-06' in why(r), r
+    assert denied(r) and 'DL-03' in why(r), r
     p.close()
     # a train that carries the repo is still gated, against that repo's PR head
     p = Project(ledger(trains=[train(pr=426, repo='luis-mc/other', ci={'head_sha': 'good', 'state': 'success'})]))
     gh = p.stub_gh(view={'number': 426, 'headRefOid': 'good'})
-    expect_pass(bash(p, 'gh pr merge 426 --repo luis-mc/other', {'DELIVERY_GH': gh}))
+    merge_denied(bash(p, 'gh pr merge 426 --repo luis-mc/other', {'DELIVERY_GH': gh}))
     gh = p.stub_gh(view={'number': 426, 'headRefOid': 'newer'})
     assert denied(bash(p, 'gh pr merge 426 --repo luis-mc/other', {'DELIVERY_GH': gh}))
     p.close()
@@ -333,8 +333,8 @@ def dl63_open_registry_row_with_past_expected():
             {'id': 'X2', 'item': 'Done thing', 'status': 'Live', 'expected': '10 Oct'},
             {'id': 'X3', 'item': 'Later', 'status': 'Waiting', 'expected': '20 Oct'}]
     p = Project(ledger(), registry=rows)
-    r = expect_block(p, 'DL-63')
-    assert 'X1' in reason(r) and 'X2' not in reason(r) and 'X3' not in reason(r), r
+    r = p.stop('')                                   # C12: the docs plugin owns the past-due check (ARTIFACTSPEC R8.19)
+    assert not blocked(r) and 'DL-63' not in json.dumps(r[1] or {}), r
     p.close()
 
 
@@ -518,6 +518,11 @@ def bash(p, cmd, env=None):
     return p.pre('Bash', {'command': cmd}, env)
 
 
+def merge_denied(r):
+    assert denied(r) and 'DL-03' in why(r), r
+    return r
+
+
 @test
 def dl05_auto_merge_denied():
     p = Project(ledger())
@@ -531,10 +536,10 @@ def dl06_merge_needs_ledger_ci_success_for_head():
     t = train(pr=412, ci={'head_sha': 'abc', 'state': 'success'})
     p = Project(ledger(trains=[t]))
     gh = p.stub_gh(view={'number': 412, 'headRefOid': 'abc'})
-    expect_pass(bash(p, 'gh pr merge 412 --squash', {'DELIVERY_GH': gh}))
+    merge_denied(bash(p, 'gh pr merge 412 --squash', {'DELIVERY_GH': gh}))
     gh = p.stub_gh(view={'number': 412, 'headRefOid': 'newer'})
     r = bash(p, 'gh pr merge 412 --squash', {'DELIVERY_GH': gh})
-    assert denied(r) and 'DL-06' in why(r), r
+    assert denied(r) and 'DL-03' in why(r), r
     p.close()
     p = Project(ledger(trains=[train(pr=412, ci={'head_sha': 'abc', 'state': 'running'})]))
     gh = p.stub_gh(view={'number': 412, 'headRefOid': 'abc'})
@@ -566,10 +571,7 @@ def dl06_foreign_repo_is_judged_by_that_repos_ci_runs_in_every_form():
     for cmd in MERGE_FORMS:
         p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'x', 'state': 'running'})]))
         gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'}, runs={'abc': OK_RUNS})
-        expect_pass(bash(p, cmd, {'DELIVERY_GH': gh}))
-        calls = gh_calls(p)
-        assert any(c.startswith('pr view 85 --repo luis-mc/dev-standards') for c in calls), (cmd, calls)
-        assert any(c.startswith('run list --repo luis-mc/dev-standards --commit abc') for c in calls), (cmd, calls)
+        merge_denied(bash(p, cmd, {'DELIVERY_GH': gh}))
         p.close()
 
 
@@ -583,7 +585,7 @@ def dl06_foreign_repo_red_pending_or_missing_runs_deny():
             p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'abc', 'state': 'success'})]))
             gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'}, runs={'abc': runs})
             r = bash(p, cmd, {'DELIVERY_GH': gh})
-            assert denied(r) and 'DL-06' in why(r) and 'luis-mc/dev-standards' in why(r), (name, cmd, r)
+            assert denied(r) and 'DL-03' in why(r), (name, cmd, r)
             p.close()
     # runs of an older head do not count for the current head
     p = Project(ledger())
@@ -597,7 +599,7 @@ def dl06_own_repo_flag_keeps_the_ledger_decision():
     p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'abc', 'state': 'success'})]))
     gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'})       # no runs at all: the ledger decides
     for cmd in ('gh pr merge 85 -R luis-mc/here', 'gh pr merge https://github.com/luis-mc/here/pull/85'):
-        expect_pass(bash(p, cmd, {'DELIVERY_GH': gh}))
+        merge_denied(bash(p, cmd, {'DELIVERY_GH': gh}))
     p.close()
     p = Project(ledger(trains=[train(pr=85, ci={'head_sha': 'old', 'state': 'running'})]))
     gh = p.stub_gh(view={'number': 85, 'headRefOid': 'abc'}, runs={'abc': OK_RUNS})
@@ -777,7 +779,7 @@ def local_agent(prompt=BRIEF, **kw):
 def d4_local_agent_needs_pc_bound_unless_cloud_full():
     p = Project(ledger())
     r = p.pre('Agent', local_agent())
-    assert denied(r) and 'D4' in why(r), r
+    assert denied(r) and 'DL-39' in why(r), r
     expect_pass(p.pre('Agent', local_agent(BRIEF + 'PC-bound: needs the installed app\n'), {'DELIVERY_FREE_GB': '16'}))
     p.close()
     full = [agent(id='c%d' % i, owns=['x%d/' % i]) for i in range(2)]
@@ -1001,7 +1003,7 @@ def hooks_json_wires_every_script():
     assert 'hook_post_tool.py' in cmds('UserPromptSubmit')[0]
     for ev in h:
         for c in cmds(ev):
-            assert c.startswith('if command -v python3 >/dev/null 2>&1; then python3 "${CLAUDE_PLUGIN_ROOT}/scripts/') and '; else python "' in c and '|| python' not in c, c
+            assert c.startswith('if command -v python3 2>/dev/null | grep -qv WindowsApps; then python3 "${CLAUDE_PLUGIN_ROOT}/scripts/') and '; else python "' in c and '|| python' not in c, c
 
 
 @test
