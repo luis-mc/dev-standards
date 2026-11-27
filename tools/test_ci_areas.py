@@ -57,13 +57,13 @@ for path, want in [
     (f"{LT}/test_kit_suite_sim.py", {"delivery"}),
     ("claude/plugins/delivery/templates/shared/scripts/delivery/join.py", {"delivery"}),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", {"delivery"}),
-    ("tools/test_delivery_gate.py", {"delivery"}),
+    (f"{LT}/test_delivery_gate.py", {"delivery"}),
     (f"{LT}/test_artifact_prune.py", {"delivery"}),
     (f"{LT}/test_delivery_shared_fixes.py", {"delivery"}),
     (f"{LT}/test_ci_speedups.py", {"delivery"}),
     ("claude/plugins/delivery/scripts/delivery_ledger.py", {"delivery"}),
     (f"{LT}/test_delivery_hooks.py", {"delivery"}),
-    ("tools/test_change_notes.py", {"delivery"}),
+    (f"{LT}/test_change_notes.py", {"delivery"}),
     (f"{PT}/test_preflight.py", {"delivery"}),
     (f"{LT}/test_rule_tags.py", {"specs"}),
     ("claude/plugins/docs/rules/project-artifacts.md", {"specs", "artifacts"}),
@@ -173,9 +173,9 @@ for path, want in [
     ("claude/plugins/delivery/templates/shared/.githooks/pre-push", (T, T, F, F)),
     ("claude/plugins/delivery/templates/shared/.github/workflows/train-cleanup.yml", (T, F, T, F)),
     ("claude/plugins/delivery/templates/ts/.github/workflows/ci.yml", (T, F, T, F)),
-    ("tools/test_delivery_gate.py", (T, T, T, F)),
-    ("tools/test_delivery_cleanup.py", (T, F, T, F)),
-    ("tools/test_change_notes.py", (T, F, F, T)),
+    (f"{LT}/test_delivery_gate.py", (T, T, T, F)),
+    (f"{LT}/test_delivery_cleanup.py", (T, F, T, F)),
+    (f"{LT}/test_change_notes.py", (T, F, F, T)),
     (f"{LT}/test_delivery_ci.py", (F, F, F, F)),
     (f"{PSP}/scripts/preflight.py", (F, F, F, F)),
     (f"{TS}/assets/tooling/ts/vitest.config.ts", (F, F, F, F)),
@@ -184,7 +184,7 @@ for path, want in [
 ]:
     check(f"mutants {path}", mflags([path]), want)
 check("mutants: delivery_log + cleanup test only cleanup",
-      mflags([D + "delivery_log.py", "tools/test_delivery_cleanup.py"]), (T, F, T, F))
+      mflags([D + "delivery_log.py", f"{LT}/test_delivery_cleanup.py"]), (T, F, T, F))
 check("mutants with other changes", mflags(["docs/a.md", D + "join.py"]), (T, T, T, F))
 check("forced mutants need delivery work",
       mflags([f"{PT}/test_model_profiles.py"], force_mutants=True), (F, F, F, F))
@@ -265,7 +265,7 @@ with tempfile.TemporaryDirectory() as tmp:
     base = commit(tmp, "README.md")
     docs = commit(tmp, "docs/artifacts/x.html")
     prof = commit(tmp, f"{PT}/test_model_profiles.py")
-    dgate = commit(tmp, "tools/test_delivery_gate.py")
+    dgate = commit(tmp, f"{LT}/test_delivery_gate.py")
     none = {"specs": "false", "delivery": "false", "artifacts": "false", "profiles": "false",
             "transcript-folds": "false", "docs": "false", "mutants": "false", "mutants_gate": "false", "mutants_cleanup": "false",
             "mutants_notes": "false"}

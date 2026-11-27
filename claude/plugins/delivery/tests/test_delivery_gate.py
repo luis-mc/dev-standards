@@ -16,7 +16,7 @@ scripts, breaks one rule in the copy (an `if` made unconditional, a flag
 dropped) and requires the scenario that guards that rule to report a failure.
 A mutant that goes undetected is a check that cannot fail, and fails this run.
 
-Run:  python3 tools/test_delivery_gate.py [--no-mutants] [--shard I/N] [--no-scenarios] [-k SUBSTRING]
+Run:  python3 claude/plugins/delivery/tests/test_delivery_gate.py [--no-mutants] [--shard I/N] [--no-scenarios] [-k SUBSTRING]
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations
@@ -43,7 +43,7 @@ import traceback
 import zipfile
 from pathlib import Path
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 TOOLING = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling"
 TEMPLATES = REPO / "claude/plugins/delivery/templates"
 SHARED = TEMPLATES / "shared"

@@ -733,7 +733,7 @@ workflow watch (0, 1, 4).
 
 ## Tests (in `tools/` of this repository)
 
-- `tools/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (light check,
+- `claude/plugins/delivery/tests/test_delivery_gate.py` — branch_gate, gate_verify, fast_guards, join (light check,
   train freeze)
   against throwaway git repositories with a local bare remote and a `gate.json`
   whose steps are small Python commands. Every trust-rule branch and every exit
@@ -743,12 +743,12 @@ workflow watch (0, 1, 4).
   four `ci.yml` files (decide job, job conditions, e2e not advisory).
 - `claude/plugins/project-setup/tests/test_model_profiles.py` — every SKILL.md's `model` and `effort` match
   the profile table.
-- `tools/test_delivery_cleanup.py` — cleanup.py against throwaway repositories
+- `claude/plugins/delivery/tests/test_delivery_cleanup.py` — cleanup.py against throwaway repositories
   with a local bare remote, linked worktrees and a stub `gh`: finished, kept,
   locked, dirty and detached cases, `--pr`, `--local`, `--remote-only`,
   `--dry-run`, join.py's best-effort call, and the structure of
   `train-cleanup.yml`.
-- `tools/test_smoke_packaged.py` — smoke_packaged.py against a fake packaged program
+- `claude/plugins/delivery/tests/test_smoke_packaged.py` — smoke_packaged.py against a fake packaged program
   that starts workers: all up, one missing, the program exiting, health probes,
   the declaration's errors, the process tree stopped on every path, and the
   structure of the tracks' `package.yml` and `smoke.json`.

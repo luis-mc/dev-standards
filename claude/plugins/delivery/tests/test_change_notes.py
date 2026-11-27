@@ -10,7 +10,7 @@ sides of each rule (an edit that is refused on a feature branch and accepted on 
 release branch), and a mutation pass breaks one rule in a copy of the script and
 requires the scenario guarding it to fail. An undetected mutant fails this run.
 
-Run:  python3 tools/test_change_notes.py [--no-mutants] [-k SUBSTRING]
+Run:  python3 claude/plugins/delivery/tests/test_change_notes.py [--no-mutants] [-k SUBSTRING]
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations
@@ -28,7 +28,7 @@ from pathlib import Path
 
 sys.dont_write_bytecode = True
 
-REPO = Path(__file__).resolve().parent.parent
+REPO = Path(__file__).resolve().parents[4]
 TEMPLATES = REPO / "claude/plugins/delivery/templates"
 SHARED = REPO / "claude/plugins/project-setup/skills/tech-stack-setup/assets/tooling/shared"
 SRC = TEMPLATES / "shared/scripts/delivery"

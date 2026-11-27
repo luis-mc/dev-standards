@@ -368,7 +368,7 @@ Ledger fields: `trains`, `agents`, `jobs`, `installs`, `publishes`, `runners`, `
 | R5.12 | `claude/plugins/delivery/tests/test_config.py`, `claude/plugins/delivery/tests/test_doctor.py` |
 | R13.36 | `claude/plugins/delivery/tests/test_delivery_records.py` (TreeKeyTests) |
 | R13.1 to R13.9 | `claude/plugins/delivery/tests/test_ci_options.py`, `claude/plugins/delivery/tests/test_delivery_cloud.py` |
-| R5.13, R5.14 | `tools/test_delivery_gate.py`, `claude/plugins/delivery/tests/test_delivery_ci.py`, `tools/test_delivery_cleanup.py`, `claude/plugins/delivery/tests/test_session_guard.py` |
+| R5.13, R5.14 | `claude/plugins/delivery/tests/test_delivery_gate.py`, `claude/plugins/delivery/tests/test_delivery_ci.py`, `claude/plugins/delivery/tests/test_delivery_cleanup.py`, `claude/plugins/delivery/tests/test_session_guard.py` |
 
 Run: `python3 -I -m unittest discover -s claude/plugins/delivery/tests -t claude/plugins/delivery/tests` and `python3 -I claude/plugins/delivery/tests/test_delivery_hooks.py`. For the shared scripts see `docs/guides/testing.md`.
 

@@ -281,10 +281,10 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the branch gate and its trust rule still hold
-        run: python3 tools/test_delivery_gate.py --no-mutants
+        run: python3 claude/plugins/delivery/tests/test_delivery_gate.py --no-mutants
 
   # Mutants on: the mutation pass as a 4-way matrix, every shard running every
-  # 4th mutant (tools/test_delivery_gate.py --shard I/N). A shard with no
+  # 4th mutant (claude/plugins/delivery/tests/test_delivery_gate.py --shard I/N). A shard with no
   # mutants passes.
   delivery-gate-shards:
     name: delivery - branch gate and trust rule (shard ${{ matrix.shard }}/4)
@@ -304,7 +304,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove every gate rule is guarded by a check (mutation pass)
-        run: python3 tools/test_delivery_gate.py --no-scenarios --shard ${{ matrix.shard }}/4
+        run: python3 claude/plugins/delivery/tests/test_delivery_gate.py --no-scenarios --shard ${{ matrix.shard }}/4
 
   # The CI half of the same scripts: the watcher that waits for a commit's
   # workflow runs, the default-branch skip check, and the reachability check,
@@ -366,7 +366,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove train cleanup removes only what is finished
-        run: python3 tools/test_delivery_cleanup.py ${{ (needs.areas.outputs.mutants_cleanup != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
+        run: python3 claude/plugins/delivery/tests/test_delivery_cleanup.py ${{ (needs.areas.outputs.mutants_cleanup != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
 
   # STACKSPEC 7.0.0 section 13.1: only the newest build artifact of each name is
   # kept, because artifact storage is billed. A pruner that keeps the oldest,
@@ -447,7 +447,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove the packaged-program smoke test starts and stops what it declares
-        run: python3 tools/test_smoke_packaged.py
+        run: python3 claude/plugins/delivery/tests/test_smoke_packaged.py
 
       - name: Prove the Windows learnings (test table, hold artifacts, token retry, MSI recipe)
         run: python3 claude/plugins/delivery/tests/test_delivery_windows.py
@@ -470,7 +470,7 @@ jobs:
           python-version: '3.13'
 
       - name: Prove change notes are enforced and folded correctly
-        run: python3 tools/test_change_notes.py ${{ (needs.areas.outputs.mutants_notes != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
+        run: python3 claude/plugins/delivery/tests/test_change_notes.py ${{ (needs.areas.outputs.mutants_notes != 'true' || github.event_name == 'pull_request') && '--no-mutants' || '' }}
 
   # The area mapping is what decides which of these jobs run at all, so a
   # wrong rule silently skips a suite. Shared paths (this file, ci_areas.py

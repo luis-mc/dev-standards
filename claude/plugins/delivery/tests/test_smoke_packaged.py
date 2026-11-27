@@ -9,11 +9,11 @@ staying up without it), stop the whole process tree on every path, and refuse a
 declaration that would check nothing. The track templates' smoke.json files and
 package.yml workflows are checked structurally.
 
-"Every check must be able to fail" is proved as in tools/test_delivery_gate.py: the
+"Every check must be able to fail" is proved as in claude/plugins/delivery/tests/test_delivery_gate.py: the
 mutation pass copies the scripts, breaks one rule in the copy and requires the
 scenario that guards it to fail.
 
-Run:  python3 tools/test_smoke_packaged.py [--no-mutants] [-k SUBSTRING]
+Run:  python3 claude/plugins/delivery/tests/test_smoke_packaged.py [--no-mutants] [-k SUBSTRING]
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations

@@ -15,15 +15,18 @@ Area map (first matching rule wins; see RULES):
   specs      spec_check, templates, AUTHSPEC and ARTIFACTSPEC numbering and
              content: STACKSPEC and AUTHSPEC in project-setup/references/, the spec-new template, the
              spec-check script, the Stack Profile template, authspec_check.py,
-             route-ratelimit-map.json and their tests.
+             route-ratelimit-map.json and their tests, and the rule-tags and
+             session-guard tests in delivery/tests/.
   delivery   the project-setup preflight and everything under
              assets/tooling/ (git hooks, linters, guards) and claude/plugins/delivery/
-             (hooks, scripts, templates/ with the delivery scripts and ci.yml files),
-             the delivery/cleanup/prune/change-notes/preflight/kit-suite tests.
+             (hooks, scripts, templates/ with the delivery scripts and ci.yml files,
+             tests/ with the gate, cleanup, prune and change-notes suites), and
+             project-setup/tests/test_preflight.py.
   artifacts  the artifacts files in claude/plugins/docs/ (renderer, commands, hooks,
-             templates, design) and their tests; ARTIFACTSPEC itself counts as specs.
+             templates, design) and their tests in docs/tests/; ARTIFACTSPEC itself
+             counts as specs.
   profiles   every SKILL.md, the claude-setup assets, the architect agent,
-             ci_pin.py, project-setup/tests/ and test_model_profiles.py.
+             ci_pin.py and project-setup/tests/ (model profiles, setup pattern and the rest).
   transcript-folds  everything under claude/plugins/transcript-folds/ except
              its .claude-plugin/ manifest (node --test over hooks/fold/*.ts).
   docs       everything under claude/plugins/docs/ except its manifest, SKILL.md
@@ -92,7 +95,7 @@ DELIVERY_TESTS = "claude/plugins/delivery/tests"
 SUITE_MUTANTS: dict[str, frozenset[str]] = {
     # test_delivery_gate.py: copies the whole shared tree and mutates these.
     "gate": frozenset({
-        "tools/test_delivery_gate.py",
+        DELIVERY_TESTS + "/test_delivery_gate.py",
         DS + "agent_setup.sh", DS + "branch_gate.py", DS + "delivery_common.py",
         DS + "e2e_push_check.py", DS + "fast_guards.py", DS + "gate_verify.py", DS + "join.py",
         DS + "tools.json", DS + "train_freeze.py",
@@ -101,7 +104,7 @@ SUITE_MUTANTS: dict[str, frozenset[str]] = {
     # test_delivery_cleanup.py: DELIVERY_FILES plus join.py (calls cleanup), the
     # train-cleanup.yml and ts ci.yml it checks, and the gate suite's harness.
     "cleanup": frozenset({
-        "tools/test_delivery_cleanup.py", "tools/test_delivery_gate.py",
+        DELIVERY_TESTS + "/test_delivery_cleanup.py", DELIVERY_TESTS + "/test_delivery_gate.py",
         DS + "delivery_common.py", DS + "fast_guards.py", DS + "delivery_log.py",
         DS + "cleanup.py", DS + "join.py",
         TEMPLATES + "/shared/.github/workflows/train-cleanup.yml",
@@ -109,7 +112,7 @@ SUITE_MUTANTS: dict[str, frozenset[str]] = {
     }),
     # test_change_notes.py: copies delivery_common.py and change_notes.py.
     "notes": frozenset({
-        "tools/test_change_notes.py", DS + "delivery_common.py", DS + "change_notes.py",
+        DELIVERY_TESTS + "/test_change_notes.py", DS + "delivery_common.py", DS + "change_notes.py",
     }),
 }
 MUTANT_KEYS = {suite: "mutants_" + suite for suite in SUITE_MUTANTS}
@@ -181,8 +184,6 @@ RULES: list[tuple[str, frozenset[str]]] = [
     (r"claude/plugins/delivery/.*", frozenset({"delivery"})),
     (re.escape(TOOLING) + r"/.*", frozenset({"delivery"})),
     (re.escape(PSP) + r"/scripts/preflight\.py", frozenset({"delivery"})),
-    (r"tools/(test_delivery_[a-z_]+|test_change_notes|test_smoke_packaged)\.py",
-     frozenset({"delivery"})),
 ]
 COMPILED = [(re.compile(p), a) for p, a in RULES]
 

@@ -7,13 +7,13 @@ clone holding the delivery scripts, linked worktrees (locked, dirty, with unpush
 commits, detached) and a stub `gh` on PATH that answers `gh pr list` / `gh pr view`
 from a JSON fixture. Nothing here touches a real repository or GitHub.
 
-"Every check must be able to fail" is proved as in tools/test_delivery_gate.py:
+"Every check must be able to fail" is proved as in claude/plugins/delivery/tests/test_delivery_gate.py:
 scenarios hold both sides of a rule (finished and kept), then the mutation pass
 copies the scripts, breaks one safety rule in the copy and requires the scenario
 that guards it to report a failure. The workflow checker is run on deliberately
 broken copies and must name each defect.
 
-Run:  python3 tools/test_delivery_cleanup.py [--no-mutants] [-k SUBSTRING]
+Run:  python3 claude/plugins/delivery/tests/test_delivery_cleanup.py [--no-mutants] [-k SUBSTRING]
 Exit: 0 all passed, 1 otherwise.
 """
 from __future__ import annotations
