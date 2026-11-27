@@ -248,7 +248,7 @@ def _prs(rows):
     return ', '.join(str(t.get('pr')) for t in rows)
 
 
-MANUAL_KEY = 'DL-03:manual:'     # a warning said once per session (DS303), never a block
+MANUAL_PREFIX = 'DL-03:manual:'     # a warning said once per session (DS303), never a block
 WATCHER_MERGES = ('the watcher merges it (a session never merges): check that delivery_watch.py runs, '
                   'or record a hold with its reason: delivery_ledger.py hold')
 
@@ -265,7 +265,7 @@ def check_trains(ledger, cfg, at, grouped=False):
         (merge if t.get('pr') else nopr).append(t)
     if merge and H.C.merge_mode(cfg) == 'manual':
         # DS303 (DL-03): in manual merge mode the owner merges. A green PR is said once, as a warning, never a block.
-        out.append((MANUAL_KEY + ','.join(str(t.get('pr')) for t in merge),
+        out.append((MANUAL_PREFIX + ','.join(str(t.get('pr')) for t in merge),
                     'DL-03 green, waiting for the owner to merge (merge mode manual): PRs %s.' % _prs(merge)))
         merge = []
     for t in ledger['trains']:
@@ -691,8 +691,8 @@ def main():
     found = findings(root, data, cfg)
     sid = str(data.get('session_id') or 'default')
     warns = [m for k, m in found if k.split(':')[0] in WARN_ONLY]       # DS267: said, never blocking
-    warns += [m for k, m in found if k.startswith(MANUAL_KEY) and first_warning(root, sid, k)]
-    found = [(k, m) for k, m in found if k.split(':')[0] not in WARN_ONLY and not k.startswith(MANUAL_KEY)]
+    warns += [m for k, m in found if k.startswith(MANUAL_PREFIX) and first_warning(root, sid, k)]
+    found = [(k, m) for k, m in found if k.split(':')[0] not in WARN_ONLY and not k.startswith(MANUAL_PREFIX)]
     if warns and not found:
         print(json.dumps({'systemMessage': 'luismc-delivery: ' + '; '.join(warns)}))
         return 0

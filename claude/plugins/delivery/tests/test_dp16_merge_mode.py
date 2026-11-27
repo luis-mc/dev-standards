@@ -108,7 +108,7 @@ class ManualModeDoesNotDeadlock(unittest.TestCase):
     def test_stop_check_is_one_warning_in_manual(self):
         cfg = H.load_config(str(green_root("manual")))
         out = ST.check_trains(L.load(green_root("manual")), cfg, H.now(), grouped=True)
-        self.assertEqual([k for k, _ in out], [ST.MANUAL_KEY + "41"])
+        self.assertEqual([k for k, _ in out], [ST.MANUAL_PREFIX + "41"])
         self.assertIn("waiting for the owner to merge", out[0][1])
 
     def test_stop_hook_warns_once_and_never_blocks(self):
